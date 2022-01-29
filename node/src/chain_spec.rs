@@ -36,6 +36,14 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
+fn hashed_properties() -> sc_chain_spec::Properties {
+	let mut p = Properties::new();
+	p.insert("tokenSymbol".into(), "HSD".into());
+	p.insert("tokenDecimals".into(), 12.into());
+	p.insert("ss58Format".into(), 30.into());
+	p
+}
+
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
@@ -145,6 +153,7 @@ fn testnet_genesis(
 		grandpa: GrandpaConfig {
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
+		indices: Default::default(),
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: root_key,
