@@ -165,6 +165,7 @@ fn testnet_genesis(
 		},
 		society: Default::default(),
 		treasury: Default::default(),
+		assets: Default::default(),
 		// bounties: Default::default(),
 		sudo: SudoConfig {
 			// Assign network admin rights.
