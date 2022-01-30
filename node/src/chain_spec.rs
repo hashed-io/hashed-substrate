@@ -125,7 +125,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Protocol ID
 		None,
 		// Properties
-		hashed_properties(),
+		Some(hashed_properties()),
 		// Extensions
 		None,
 	))
