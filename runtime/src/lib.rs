@@ -16,7 +16,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, Verify},
 	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, MultiSignature,
+	ApplyExtrinsicResult, MultiSignature, Percent,
 };
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
@@ -24,6 +24,8 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 pub mod constants;
 use constants::*;
+use frame_system::EnsureRoot;
+
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -33,7 +35,7 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee, Weight,
 	},
-	StorageValue,
+	StorageValue,PalletId,
 };
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
@@ -94,8 +96,8 @@ pub mod opaque {
 //   https://docs.substrate.io/v3/runtime/upgrades#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("node-template"),
-	impl_name: create_runtime_str!("node-template"),
+	spec_name: create_runtime_str!("hashed"),
+	impl_name: create_runtime_str!("hashedx"),
 	authoring_version: 1,
 	// The version of the runtime specification. A full node will not attempt to use its native
 	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,
@@ -295,6 +297,114 @@ impl pallet_indices::Config for Runtime {
 	type WeightInfo = ();
 }
 
+
+parameter_types! {
+	pub const MaxWellKnownNodes: u32 = 8;
+	pub const MaxPeerIdLength: u32 = 128;
+}
+
+impl pallet_node_authorization::Config for Runtime {
+	type Event = Event;
+	type MaxWellKnownNodes = MaxWellKnownNodes;
+	type MaxPeerIdLength = MaxPeerIdLength;
+	type AddOrigin = EnsureRoot<AccountId>;
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type SwapOrigin = EnsureRoot<AccountId>;
+	type ResetOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
+}
+
+// parameter_types! {
+// 	pub const MembershipMaxMembers: u32 = 100_000;
+// }
+
+// impl pallet_membership::Config for Runtime {
+// 	type Event = Event;
+// 	type AddOrigin = EnsureRoot<AccountId>;
+// 	type RemoveOrigin = EnsureRoot<AccountId>;
+// 	type SwapOrigin = EnsureRoot<AccountId>;
+// 	type ResetOrigin = EnsureRoot<AccountId>;
+// 	type PrimeOrigin = EnsureRoot<AccountId>;
+// 	type MembershipInitialized = Council;
+// 	type MembershipChanged = Council;
+// 	type MaxMembers = MembershipMaxMembers;
+// 	type WeightInfo = ();
+// }
+
+// impl pallet_society::Config for Runtime {
+// 	type Event = Event;
+// 	type Currency = Balances;
+// 	type Randomness = RandomnessCollectiveFlip;
+// 	type CandidateDeposit = CandidateDeposit;
+// 	type WrongSideDeduction = WrongSideDeduction;
+// 	type MaxStrikes = MaxStrikes;
+// 	type PeriodSpend = PeriodSpend;
+// 	type MembershipChanged = ();
+// 	type RotationPeriod = RotationPeriod;
+// 	type MaxLockDuration = MaxLockDuration;
+// 	type FounderSetOrigin = EnsureRoot<AccountId>;
+// 	type SuspensionJudgementOrigin = pallet_society::EnsureFounder<Runtime>;
+// 	type ChallengePeriod = ChallengePeriod;
+// 	type MaxCandidateIntake = MaxCandidateIntake;
+// 	type PalletId = SocietyPalletId;
+// }
+
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 2000 * CENTS;
+	pub const ProposalBondMaximum: Balance = 1 * GRAND;
+	pub const SpendPeriod: BlockNumber = 6 * DAYS;
+	pub const Burn: Permill = Permill::from_perthousand(2);
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+	pub const TipCountdown: BlockNumber = 1 * DAYS;
+	pub const TipFindersFee: Percent = Percent::from_percent(20);
+	pub const TipReportDepositBase: Balance = 100 * CENTS;
+	pub const DataDepositPerByte: Balance = 1 * CENTS;
+	pub const BountyDepositBase: Balance = 100 * CENTS;
+	pub const BountyDepositPayoutDelay: BlockNumber = 4 * DAYS;
+	pub const BountyUpdatePeriod: BlockNumber = 90 * DAYS;
+	pub const MaximumReasonLength: u32 = 16384;
+	pub const BountyCuratorDeposit: Permill = Permill::from_percent(50);
+	pub const BountyValueMinimum: Balance = 200 * CENTS;
+	pub const MaxApprovals: u32 = 100;
+	pub const MaxKeys: u32 = 10_000;
+	pub const MaxPeerInHeartbeats: u32 = 10_000;
+	pub const MaxPeerDataEncodingSize: u32 = 1_000;
+}
+
+impl pallet_treasury::Config for Runtime {
+	type PalletId = TreasuryPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EnsureRoot<AccountId>;
+	type RejectOrigin = EnsureRoot<AccountId>;
+	type Event = Event;
+	type OnSlash = Treasury;
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	// type ProposalBondMaximum = ProposalBondMaximum;
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+	type BurnDestination = Treasury;
+	type MaxApprovals = MaxApprovals;
+	type WeightInfo = ();
+	type SpendFunds = Bounties;
+}
+
+impl pallet_bounties::Config for Runtime {
+	type BountyDepositBase = BountyDepositBase;
+	type BountyDepositPayoutDelay = BountyDepositPayoutDelay;
+	type BountyUpdatePeriod = BountyUpdatePeriod;
+	type BountyCuratorDeposit = BountyCuratorDeposit;
+	type BountyValueMinimum = BountyValueMinimum;
+	// type ChildBountyManager = ();
+	type DataDepositPerByte = DataDepositPerByte;
+	type Event = Event;
+	type MaximumReasonLength = MaximumReasonLength;
+	type WeightInfo = ();
+}
+
+// use node_template_runtime::GenesisConfig;
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -313,6 +423,11 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template,
 		Indices: pallet_indices,
+		Treasury: pallet_treasury,
+		// Membership: pallet_membership,
+		NodeAuthorization: pallet_node_authorization,
+		// Society: pallet_society,
+		Bounties: pallet_bounties,
 	}
 );
 

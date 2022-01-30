@@ -155,6 +155,11 @@ fn testnet_genesis(
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		indices: Default::default(),
+		// membership: Default::default(),
+		node_authorization: Default::default(),
+		// society: Default::default(),
+		treasury: Default::default(),
+		// bounties: Default::default(),
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: root_key,
