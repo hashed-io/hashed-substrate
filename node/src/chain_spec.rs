@@ -160,7 +160,6 @@ fn testnet_genesis(
 			members: vec![
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				get_account_id_from_seed::<sr25519::Public>("Bob"),
-				root_key.clone(),
 			],
 			phantom: Default::default(),
 		},
