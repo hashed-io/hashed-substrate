@@ -1,13 +1,13 @@
 use hashed_runtime::{
-	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, WASM_BINARY,
+	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
+	SudoConfig, SystemConfig, WASM_BINARY,
 };
+use sc_chain_spec::Properties;
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use sc_chain_spec::Properties;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -39,9 +39,14 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 
 fn hashed_properties() -> sc_chain_spec::Properties {
 	let mut p = Properties::new();
+	p.insert("prefix".into(), 51.into());
+	p.insert("network".into(), "hashed".into());
+	p.insert("displayName".into(), "Hashed Systems".into());
 	p.insert("tokenSymbol".into(), "HSD".into());
 	p.insert("tokenDecimals".into(), 12.into());
-	p.insert("ss58Format".into(), 30.into());
+	p.insert("standardAccount".into(), "*25519".into());
+	p.insert("ss58Format".into(), 51.into());
+	p.insert("website".into(), "https://hashed.systems".into());
 	p
 }
 
@@ -123,7 +128,44 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
+		Some("hashed"),
+		// Properties
+		Some(hashed_properties()),
+		// Extensions
 		None,
+	))
+}
+
+pub fn chaos_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "Testnet wasm not available".to_string())?;
+
+	Ok(ChainSpec::from_genesis(
+		// Name
+		"Hashed Chain - Chaos",
+		// ID
+		"chaos",
+		ChainType::Live,
+		move || {
+			testnet_genesis(
+				wasm_binary,
+				// Initial PoA authorities
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
+				// Sudo account
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Pre-funded accounts
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+				],
+				true,
+			)
+		},
+		// Bootnodes
+		vec![],
+		// Telemetry
+		None,
+		// Protocol ID
+		Some("hashed"),
 		// Properties
 		Some(hashed_properties()),
 		// Extensions
@@ -140,12 +182,8 @@ fn testnet_genesis(
 	_enable_println: bool,
 ) -> GenesisConfig {
 	GenesisConfig {
-		system: SystemConfig {
-			// Add Wasm runtime to storage.
-			code: wasm_binary.to_vec(),
-		},
+		system: SystemConfig { code: wasm_binary.to_vec() },
 		balances: BalancesConfig {
-			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
 		aura: AuraConfig {
@@ -167,10 +205,7 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		assets: Default::default(),
 		// bounties: Default::default(),
-		sudo: SudoConfig {
-			// Assign network admin rights.
-			key: root_key,
-		},
+		sudo: SudoConfig { key: root_key },
 		transaction_payment: Default::default(),
 	}
 }
