@@ -314,40 +314,70 @@ impl pallet_indices::Config for Runtime {
 // 	type WeightInfo = ();
 // }
 
-// parameter_types! {
-// 	pub const MembershipMaxMembers: u32 = 100_000;
-// }
+parameter_types! {
+	pub const MembershipMaxMembers: u32 = 100_000;
+}
 
-// impl pallet_membership::Config for Runtime {
-// 	type Event = Event;
-// 	type AddOrigin = EnsureRoot<AccountId>;
-// 	type RemoveOrigin = EnsureRoot<AccountId>;
-// 	type SwapOrigin = EnsureRoot<AccountId>;
-// 	type ResetOrigin = EnsureRoot<AccountId>;
-// 	type PrimeOrigin = EnsureRoot<AccountId>;
-// 	type MembershipInitialized = Council;
-// 	type MembershipChanged = Council;
-// 	type MaxMembers = MembershipMaxMembers;
-// 	type WeightInfo = ();
-// }
+impl pallet_membership::Config for Runtime {
+	type Event = Event;
+	type AddOrigin = EnsureRoot<AccountId>;
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type SwapOrigin = EnsureRoot<AccountId>;
+	type ResetOrigin = EnsureRoot<AccountId>;
+	type PrimeOrigin = EnsureRoot<AccountId>;
+	type MembershipInitialized = Council;
+	type MembershipChanged = Council;
+	type MaxMembers = MembershipMaxMembers;
+	type WeightInfo = ();
+}
 
-// impl pallet_society::Config for Runtime {
-// 	type Event = Event;
-// 	type Currency = Balances;
-// 	type Randomness = RandomnessCollectiveFlip;
-// 	type CandidateDeposit = CandidateDeposit;
-// 	type WrongSideDeduction = WrongSideDeduction;
-// 	type MaxStrikes = MaxStrikes;
-// 	type PeriodSpend = PeriodSpend;
-// 	type MembershipChanged = ();
-// 	type RotationPeriod = RotationPeriod;
-// 	type MaxLockDuration = MaxLockDuration;
-// 	type FounderSetOrigin = EnsureRoot<AccountId>;
-// 	type SuspensionJudgementOrigin = pallet_society::EnsureFounder<Runtime>;
-// 	type ChallengePeriod = ChallengePeriod;
-// 	type MaxCandidateIntake = MaxCandidateIntake;
-// 	type PalletId = SocietyPalletId;
-// }
+
+parameter_types! {
+	pub CouncilMotionDuration: BlockNumber = 3 * DAYS;
+	pub const CouncilMaxProposals: u32 = 100;
+	pub const CouncilMaxMembers: u32 = 100;
+}
+
+impl pallet_collective::Config for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = CouncilMotionDuration;
+	type MaxProposals = CouncilMaxProposals;
+	type MaxMembers = CouncilMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const CandidateDeposit: Balance = 1000 * CENTS;
+	pub const WrongSideDeduction: Balance = 200 * CENTS;
+	pub const MaxStrikes: u32 = 10;
+	pub const RotationPeriod: BlockNumber = 7 * DAYS;
+	pub const PeriodSpend: Balance = 50000 * CENTS;
+	pub const MaxLockDuration: BlockNumber = 36 * 30 * DAYS;
+	pub const ChallengePeriod: BlockNumber = 7 * DAYS;
+	pub const MaxCandidateIntake: u32 = 1;
+	pub const SocietyPalletId: PalletId = PalletId(*b"py/socie");
+}
+
+impl pallet_society::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
+	type CandidateDeposit = CandidateDeposit;
+	type WrongSideDeduction = WrongSideDeduction;
+	type MaxStrikes = MaxStrikes;
+	type PeriodSpend = PeriodSpend;
+	type MembershipChanged = ();
+	type RotationPeriod = RotationPeriod;
+	type MaxLockDuration = MaxLockDuration;
+	type FounderSetOrigin = EnsureRoot<AccountId>;
+	type SuspensionJudgementOrigin = pallet_society::EnsureFounder<Runtime>;
+	type ChallengePeriod = ChallengePeriod;
+	type MaxCandidateIntake = MaxCandidateIntake;
+	type PalletId = SocietyPalletId;
+}
 
 parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
@@ -424,9 +454,10 @@ construct_runtime!(
 		TemplateModule: pallet_template,
 		Indices: pallet_indices,
 		Treasury: pallet_treasury,
-		// Membership: pallet_membership,
-		// NodeAuthorization: pallet_node_authorization,
-		// Society: pallet_society,
+		Council: pallet_collective::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		Membership: pallet_membership,
+	 	// NodeAuthorization: pallet_node_authorization,
+		Society: pallet_society,
 		Bounties: pallet_bounties,
 	}
 );

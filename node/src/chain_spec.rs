@@ -1,5 +1,5 @@
 use node_template_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
+	AccountId, AuraConfig, BalancesConfig, ConcilConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
 	SystemConfig, WASM_BINARY,
 };
 use sc_service::ChainType;
@@ -155,9 +155,16 @@ fn testnet_genesis(
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		indices: Default::default(),
-		// membership: Default::default(),
-		// node_authorization: Default::default(),
-		// society: Default::default(),
+		membership: Default::default(),
+		council: CouncilConfig {
+			members: vec![
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<sr25519::Public>("Bob"),
+				root_key,
+			],
+			phantom: Default::default(),
+		},
+		society: Default::default(),
 		treasury: Default::default(),
 		// bounties: Default::default(),
 		sudo: SudoConfig {
