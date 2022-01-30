@@ -26,7 +26,6 @@ pub mod constants;
 use constants::*;
 use frame_system::EnsureRoot;
 
-
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
@@ -35,7 +34,7 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee, Weight,
 	},
-	StorageValue,PalletId,
+	PalletId, StorageValue,
 };
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
@@ -305,7 +304,6 @@ impl pallet_identity::Config for Runtime {
 	type WeightInfo = ();
 }
 
-
 parameter_types! {
 	pub const ConfigDepositBase: Balance = 500 * CENTS;
 	pub const FriendDepositFactor: Balance = 50 * CENTS;
@@ -323,7 +321,6 @@ impl pallet_recovery::Config for Runtime {
 	type RecoveryDeposit = RecoveryDeposit;
 }
 
-
 /// Configure the pallet-template in pallets/template.
 impl pallet_template::Config for Runtime {
 	type Event = Event;
@@ -340,7 +337,6 @@ impl pallet_indices::Config for Runtime {
 	type Event = Event;
 	type WeightInfo = ();
 }
-
 
 // parameter_types! {
 // 	pub const MaxWellKnownNodes: u32 = 8;
@@ -374,7 +370,6 @@ impl pallet_membership::Config for Runtime {
 	type MaxMembers = MembershipMaxMembers;
 	type WeightInfo = ();
 }
-
 
 parameter_types! {
 	pub CouncilMotionDuration: BlockNumber = 3 * DAYS;
@@ -477,7 +472,6 @@ impl pallet_bounties::Config for Runtime {
 	type WeightInfo = ();
 }
 
-
 parameter_types! {
 	pub const AssetDeposit: Balance = 100 * DOLLARS;
 	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
@@ -527,7 +521,10 @@ impl pallet_uniques::Config for Runtime {
 	type WeightInfo = ();
 }
 
-// Create the runtime by composing the FRAME pallets that were previously configured.
+impl pallet_fruniques::Config for Runtime {
+	type Event = Event;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -550,10 +547,11 @@ construct_runtime!(
 		Treasury: pallet_treasury,
 		Council: pallet_collective::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Membership: pallet_membership,
-	 	// NodeAuthorization: pallet_node_authorization,
+		 // NodeAuthorization: pallet_node_authorization,
 		Society: pallet_society,
 		Bounties: pallet_bounties,
 		Uniques: pallet_uniques,
+		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
 	}
 );

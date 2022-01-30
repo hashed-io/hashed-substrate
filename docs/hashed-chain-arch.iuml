@@ -1,0 +1,34 @@
+@startuml
+package "Application Layer" {
+  [Afloat/Tax Credit Marketplace]
+  [ALEX Lease Exchange]
+  [Gift NFTs]
+  [Document Graph Explorer] as DGE
+}
+
+node "Hashed Chain" as HC {
+  [Fruniques Pallet]
+  [Document Graph Pallet] as DGP
+  DGE --> DGP
+  [Afloat/Tax Credit Marketplace] --> [Fruniques Pallet]
+  [ALEX Lease Exchange] --> [Fruniques Pallet]
+}
+
+node "Statemint Chain" as SC {
+  [Uniques Pallet]
+  [Assets Pallet]
+  [Fruniques Pallet] --> [Uniques Pallet]
+  [Fruniques Pallet] --> [Assets Pallet]
+  [Gift NFTs] --> [Uniques Pallet]
+}
+
+note right of SC
+  Public good chain built by Parity
+end note
+
+note right of [Fruniques Pallet]
+  Fruniques = FRactionalized Uniques
+  Start as standalone Substrate chain while pursuing 
+  existing parachain integrations or deploy new Hashed parachain.
+end note
+@enduml
