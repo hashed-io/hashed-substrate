@@ -3295,7 +3295,6 @@ dependencies = [
  "pallet-bounties",
  "pallet-grandpa",
  "pallet-indices",
- "pallet-node-authorization",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-template",
@@ -3587,22 +3586,6 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keyring",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-node-authorization"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?tag=devhub/latest#e6fbbd5cdf72a5ed7fd65138072ed1f8a320a33d"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
  "sp-runtime",
  "sp-std",
 ]

@@ -156,7 +156,7 @@ fn testnet_genesis(
 		},
 		indices: Default::default(),
 		// membership: Default::default(),
-		node_authorization: Default::default(),
+		// node_authorization: Default::default(),
 		// society: Default::default(),
 		treasury: Default::default(),
 		// bounties: Default::default(),
