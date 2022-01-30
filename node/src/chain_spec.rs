@@ -1,5 +1,5 @@
 use node_template_runtime::{
-	AccountId, AuraConfig, BalancesConfig, ConcilConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
+	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
 	SystemConfig, WASM_BINARY,
 };
 use sc_service::ChainType;
@@ -160,7 +160,7 @@ fn testnet_genesis(
 			members: vec![
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				get_account_id_from_seed::<sr25519::Public>("Bob"),
-				root_key,
+				root_key.clone(),
 			],
 			phantom: Default::default(),
 		},
