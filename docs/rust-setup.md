@@ -34,9 +34,7 @@ brew install openssl cmake
 Use a terminal shell to execute the following commands:
 
 ```bash
-sudo apt update
-# May prompt for location information
-sudo apt install -y cmake pkg-config libssl-dev git build-essential clang libclang-dev curl
+sudo apt update && sudo apt install -y cmake pkg-config libssl-dev git build-essential clang libclang-dev curl
 ```
 
 ### Arch Linux

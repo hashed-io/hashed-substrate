@@ -3,7 +3,6 @@
 ### [Open Hashed Chain on polkadot.js.org](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fn1.hashed.systems#/explorer)
 
 ## Features
-
 ### Standard Pallets
 #### [Identity](https://wiki.polkadot.network/docs/learn-identity)
 Hashed Chain provides a naming system that allows participants to add information, such as social media accounts, web domains, email addresses, etc. to their on-chain account and subsequently ask for verification of this information by registrars.
@@ -34,9 +33,14 @@ A Frunique is a type of Non-Fungible Token (NFT). Fruniques allow token holders 
 
 Fruniques are compatible with the `Uniques` pallet referenced above.
 
-## Quick start
+## Quick Start
+
+### Rust Setup
+First, complete the [basic Rust setup instructions](./docs/rust-setup.md).
 
 ```bash
+git clone https://github.com/hashed-io/hashed-substrate.git
+cd hashed-substrate
 cargo build --release 
 
 ./target/release/hashed --chain ./hashed-chaos-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
