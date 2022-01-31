@@ -15,6 +15,7 @@ An index is a short and easy-to-remember version of an address. Claiming an inde
 The Recovery pallet is an M-of-N social recovery tool for users to gain access to their accounts if the private key or other authentication mechanism is lost. Through this pallet, a user is able to make calls on-behalf-of another account which they have recovered. The recovery process is protected by trusted "friends" whom the original account owner chooses. A threshold (M) out of N friends are needed to give another account access to the recoverable account.
 
 #### [Uniques (NFTs)](https://github.com/paritytech/substrate/tree/master/frame/uniques)
+A simple, secure module for dealing with non-fungible assets.
 
 #### [Treasury](https://wiki.polkadot.network/docs/learn-treasury)
 The Treasury pallet provides a "pot" of funds that can be managed by stakeholders in the system and a structure for making spending proposals from this pot.
