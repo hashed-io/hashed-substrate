@@ -16,6 +16,6 @@
 .direnv
 
 data*
-*spec*.json
+*spec-raw.json
 
 hasher*.txt
