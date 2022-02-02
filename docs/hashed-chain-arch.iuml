@@ -1,4 +1,4 @@
-@startuml
+@startuml architecture
 node "Other Polkadot Ecosystem" as OPE {
   [Other Marketplaces]
 }

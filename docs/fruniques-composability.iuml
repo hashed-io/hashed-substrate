@@ -1,4 +1,4 @@
-@startuml
+@startuml composability
 title "Fruniques Composability"
 node "Statemine NFT A" as statemine_nft_a
 node "Statemine NFT B" as statemine_nft_b
