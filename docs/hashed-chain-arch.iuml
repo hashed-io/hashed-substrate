@@ -1,34 +1,31 @@
 @startuml
-package "Application Layer" {
-  [Afloat/Tax Credit Marketplace]
-  [ALEX Lease Exchange]
-  [Gift NFTs]
-  [Document Graph Explorer] as DGE
+node "Other Polkadot Ecosystem" as OPE {
+  [Other Marketplaces]
 }
 
-node "Hashed Chain" as HC {
+package "Protocol Layer/Hashed Chain" {
   [Fruniques Pallet]
-  [Document Graph Pallet] as DGP
-  DGE --> DGP
-  [Afloat/Tax Credit Marketplace] --> [Fruniques Pallet]
-  [ALEX Lease Exchange] --> [Fruniques Pallet]
+  [Marketplace Pallet] --> [Other Marketplaces]
+  [Advanced Frunique UI/UX]
+  [Services and Caching]
 }
 
 node "Statemint Chain" as SC {
   [Uniques Pallet]
-  [Assets Pallet]
   [Fruniques Pallet] --> [Uniques Pallet]
   [Fruniques Pallet] --> [Assets Pallet]
-  [Gift NFTs] --> [Uniques Pallet]
+  [Assets Pallet]
+  [Assets Pallet] --> [Other Marketplaces]
 }
 
-note right of SC
-  Public good chain built by Parity
-end note
-
-note right of [Fruniques Pallet]
-  Fruniques = FRactionalized Uniques
-  Start as standalone Substrate chain while pursuing 
-  existing parachain integrations or deploy new Hashed parachain.
-end note
+package "End User Experiences" {
+  [Afloat/Tax Credits] --> [Fruniques Pallet]
+  [Afloat/Tax Credits] --> [Services and Caching]
+  [DAO LLC Registrations] --> [Fruniques Pallet]
+  [DAO LLC Registrations] --> [Services and Caching]
+  ['Get Gifted' NFTs] --> [Fruniques Pallet]
+  [Marketplace UI/UX] --> [Fruniques Pallet]
+  [Marketplace UI/UX] --> [Marketplace Pallet]
+  ['Get Gifted' NFTs] --> [Marketplace UI/UX]
+}
 @enduml
