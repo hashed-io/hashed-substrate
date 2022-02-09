@@ -5,6 +5,10 @@ Below is a workflow for the create, read, update, delete of Uniques. You can run
 set SEED="bargain album current caught tragic slab identify squirrel embark black drip imitate"
 set ADDR="5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym"
 ```
+### Install `polkadot-js-api`
+```bash
+yarn add @polkadot/api
+```
 ### Check Steve's Identity
 ```bash
 polkadot-js-api --ws wss://n1.hashed.systems query.identity.identityOf 5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym
