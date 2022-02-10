@@ -2,16 +2,16 @@ version: "3.2"
 
 services:
   dev:
-    container_name: hashed
+    container_name: hypha
     image: paritytech/ci-linux:974ba3ac-20201006
-    working_dir: /var/www/hashed
+    working_dir: /var/www/hypha
     ports:
       - "9944:9944"
     environment:
-      - CARGO_HOME=/var/www/hashed/.cargo
+      - CARGO_HOME=/var/www/hypha/.cargo
     volumes:
-      - .:/var/www/hashed
+      - .:/var/www/hypha
       - type: bind
         source: ./.local
         target: /root/.local
-    command: bash -c "cargo build --release && ./target/release/hashed --dev --ws-external"
+    command: bash -c "cargo build --release && ./target/release/hypha --dev --ws-external"

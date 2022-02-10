@@ -1,4 +1,4 @@
-use hashed_runtime::{
+use hypha_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
 	SudoConfig, SystemConfig, WASM_BINARY,
 };
@@ -37,7 +37,7 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
-fn hashed_properties() -> sc_chain_spec::Properties {
+fn hypha_properties() -> sc_chain_spec::Properties {
 	let mut p = Properties::new();
 	p.insert("prefix".into(), 52.into());
 	p.insert("network".into(), "hypha".into());
@@ -128,9 +128,9 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("hashed"),
+		Some("hypha"),
 		// Properties
-		Some(hashed_properties()),
+		Some(hypha_properties()),
 		// Extensions
 		None,
 	))
@@ -163,9 +163,9 @@ pub fn spores_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("hashed"),
+		Some("hypha"),
 		// Properties
-		Some(hashed_properties()),
+		Some(hypha_properties()),
 		// Extensions
 		None,
 	))

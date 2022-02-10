@@ -43,7 +43,7 @@ git clone https://github.com/hypha-dao/hypha-substrate.git
 cd hypha-substrate
 cargo build --release 
 
-./target/release/hashed --chain ./hypha-spores-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
+./target/release/hypha --chain ./hypha-spores-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
 ```
 
 ![hypha-chain-arch](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/hypha-dao/hypha-substrate/main/docs/hypha-chain-arch.iuml)
@@ -76,7 +76,7 @@ Once the project has been built, the following command can be used to explore al
 subcommands:
 
 ```sh
-./target/release/hashed -h
+./target/release/hypha -h
 ```
 
 ## Run
@@ -90,24 +90,24 @@ node.
 This command will start the single-node development chain with non-persistent state:
 
 ```bash
-./target/release/hashed --dev
+./target/release/hypha --dev
 ```
 
 Purge the development chain's state:
 
 ```bash
-./target/release/hashed purge-chain --dev
+./target/release/hypha purge-chain --dev
 ```
 
 Start the development chain with detailed logging:
 
 ```bash
-RUST_BACKTRACE=1 ./target/release/hashed -ldebug --dev
+RUST_BACKTRACE=1 ./target/release/hypha -ldebug --dev
 ```
 
 > Development chain means that the state of our chain will be in a tmp folder while the nodes are
 > running. Also, **alice** account will be authority and sudo account as declared in the
-> [genesis state](https://github.com/substrate-developer-hub/substrate-hashed/blob/main/node/src/chain_spec.rs#L49).
+> [genesis state](https://github.com/substrate-developer-hub/substrate-hypha/blob/main/node/src/chain_spec.rs#L49).
 > At the same time the following accounts will be pre-funded:
 > - Alice
 > - Bob 
@@ -124,7 +124,7 @@ is ran. The following commands shows how to use a newly created folder as our db
 $ mkdir my-chain-state
 
 // Use of that folder to store the chain state
-$ ./target/release/hashed --dev --base-path ./my-chain-state/
+$ ./target/release/hypha --dev --base-path ./my-chain-state/
 
 // Check the folder structure created inside the base path after running the chain
 $ ls ./my-chain-state
@@ -191,7 +191,7 @@ After the node has been [built](#build), refer to the embedded documentation to 
 capabilities and configuration parameters that it exposes:
 
 ```shell
-./target/release/hashed --help
+./target/release/hypha --help
 ```
 
 ### Runtime
@@ -252,15 +252,15 @@ Then run the following command to start a single node development chain.
 
 This command will firstly compile your code, and then start a local development network. You can
 also replace the default command
-(`cargo build --release && ./target/release/hashed --dev --ws-external`)
+(`cargo build --release && ./target/release/hypha --dev --ws-external`)
 by appending your own. A few useful ones are as follow.
 
 ```bash
 # Run Substrate node without re-compiling
-./scripts/docker_run.sh ./target/release/hashed --dev --ws-external
+./scripts/docker_run.sh ./target/release/hypha --dev --ws-external
 
 # Purge the local dev chain
-./scripts/docker_run.sh ./target/release/hashed purge-chain --dev
+./scripts/docker_run.sh ./target/release/hypha purge-chain --dev
 
 # Check whether the code is compilable
 ./scripts/docker_run.sh cargo check

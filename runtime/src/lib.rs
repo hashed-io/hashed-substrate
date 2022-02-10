@@ -95,8 +95,8 @@ pub mod opaque {
 //   https://docs.substrate.io/v3/runtime/upgrades#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("hashed"),
-	impl_name: create_runtime_str!("hashedx"),
+	spec_name: create_runtime_str!("hypha"),
+	impl_name: create_runtime_str!("hyphax"),
 	authoring_version: 1,
 	// The version of the runtime specification. A full node will not attempt to use its native
 	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,

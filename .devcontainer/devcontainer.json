@@ -15,7 +15,7 @@
     9944
   ],
   "onCreateCommand": ["cargo build", "cargo check"],
-  "postStartCommand": "./target/debug/hashed --dev --ws-external",
+  "postStartCommand": "./target/debug/hypha --dev --ws-external",
   "menuActions": [
     {"id": "polkadotjs",
      "label": "Open PolkadotJS Apps",
