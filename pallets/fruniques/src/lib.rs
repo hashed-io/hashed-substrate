@@ -41,6 +41,7 @@ use super::*;
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config<I>, I: 'static = ()> {
 		FruniqueCreated(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
+		// A frunique/unique was succesfully divided!
 		FruniqueDivided(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
 	}
 
@@ -179,46 +180,49 @@ use super::*;
 		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
 		/// so they're not explicitly declared on this pallet 
 		/// 
-		/// (por ahora dejar de lado la division del valor numerico)
+		/// (for now I'll leave aside the division of the numerical value)
 		/// 
-		/// Boilerplate parameters:
-		/// origin, admin
-		/// Para dividir un nft se necesita :
-		/// class_id, instance_id (el que será padre), num_fractions
+		/// ### Boilerplate parameters:
 		/// 
-		/// 1.- Boilerplate (setup, conversions, ensure_signed)
-		/// 2.- Instance n number of nfts (with the respective parentId)
-		/// 3.- Freeze the nft? Not clear, so not at the moment
-		/// 4.- Ok(()) ??
+		/// - `admin`: The admin of this class of assets. The admin is the initial address of each
+		/// member of the asset class's admin team.
+		/// 
+		/// ### Parameters needed in order to divide a unique:
+		/// - `class_id`: The type of NFT that the function will create, categorized by numbers.
+		/// - `instance_id`: The unique identifier of the instance to be fractioned/divided 
+		/// - `num_fractions`: The number of fractions in which the NFT will be split.
+		/// 
 		/// 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn divide2(
 			origin: OriginFor<T>, 
-			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 			class_id: T::ClassId, 
 			instance_id: T::InstanceId,
 			num_fractions:u32,
+			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		)->DispatchResult{
-			// 1.- Boilerplate (setup, conversions, ensure_signed)
-			let _owner = ensure_signed( origin.clone())?;
-			// create the fractions in a loop
-			let b = instance_id.encode();
-			let vector = BoundedVec::<u8,T::ValueLimit>::try_from(b).unwrap();
+			// Boilerplate (setup, conversions, ensure_signed)
+			let owner = ensure_signed( origin.clone())?;
+			let enconded_id = instance_id.encode();
+			// TODO: Helper function to convert a enconded product to BoundedVec? (consider the BoundedVec Length)
+			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode()).unwrap();
+			let parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id).unwrap();
+			// Instance n number of nfts (with the respective parentId)
 			for i in 0..num_fractions{
-				//get the tentaitve id?
-				//let mut parent_id = BoundedVec::<u8,T::KeyLimit>::default();
-				//let mut value = BoundedVec::<u8,T::ValueLimit>::default();
-				let parent_id = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode()).unwrap();
-				//parent_id.try_push('i' as u8 ).map_err(|_| Error::<T, I>::StorageOverflow)?;
-				//value.try_push('f' as u8 ).map_err(|_| Error::<T, I>::StorageOverflow)?;
+				// Mint a unique
 				pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, Self::u16_to_instance_id(i as u16) , admin.clone())?;
-				//set the respective attributtes
+				// Set the respective attributtes 
+				// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
 				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(i as u16)),
-				parent_id ,vector.clone())?;
+				parent_id_key.clone() ,parent_id_val.clone())?;
+				// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 
-				//emit event: fruniques created?
 			}
-			
+			// Emit event: fruniques created?
+			let admin = T::Lookup::lookup(admin)?;
+			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
+			// Freeze the nft to prevent trading it? Burn it? Not clear, so nothing at the moment
+			// Ok(())
 			Ok(())
 		}
 
