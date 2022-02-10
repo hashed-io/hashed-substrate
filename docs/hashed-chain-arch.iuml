@@ -3,7 +3,7 @@ node "Other Polkadot Ecosystem" as OPE {
   [Other Marketplaces]
 }
 
-package "Protocol Layer/Hashed Chain" {
+package "Protocol Layer/Hypha Spores" {
   [Fruniques Pallet]
   [Marketplace Pallet] --> [Other Marketplaces]
   [Advanced Frunique UI/UX]

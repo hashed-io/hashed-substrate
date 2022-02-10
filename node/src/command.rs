@@ -9,7 +9,7 @@ use sc_service::PartialComponents;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Hashed Chain".into()
+		"Hypha Spores".into()
 	}
 
 	fn impl_version() -> String {
@@ -25,7 +25,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"https://hashed.systems".into()
+		"https://hypha.earth".into()
 	}
 
 	fn copyright_start_year() -> i32 {
@@ -34,7 +34,7 @@ impl SubstrateCli for Cli {
 
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
-			"chaos" => Box::new(chain_spec::chaos_config()?),
+			"spores" => Box::new(chain_spec::spores_config()?),
 			"dev" => Box::new(chain_spec::development_config()?),
 			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
 			path => {

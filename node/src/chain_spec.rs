@@ -39,14 +39,14 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 
 fn hashed_properties() -> sc_chain_spec::Properties {
 	let mut p = Properties::new();
-	p.insert("prefix".into(), 51.into());
-	p.insert("network".into(), "hashed".into());
-	p.insert("displayName".into(), "Hashed Systems".into());
-	p.insert("tokenSymbol".into(), "HSD".into());
+	p.insert("prefix".into(), 52.into());
+	p.insert("network".into(), "hypha".into());
+	p.insert("displayName".into(), "Hypha".into());
+	p.insert("tokenSymbol".into(), "HYPH".into());
 	p.insert("tokenDecimals".into(), 12.into());
 	p.insert("standardAccount".into(), "*25519".into());
-	p.insert("ss58Format".into(), 51.into());
-	p.insert("website".into(), "https://hashed.systems".into());
+	p.insert("ss58Format".into(), 52.into());
+	p.insert("website".into(), "https://hypha.earth".into());
 	p
 }
 
@@ -136,14 +136,12 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn chaos_config() -> Result<ChainSpec, String> {
+pub fn spores_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Testnet wasm not available".to_string())?;
 
 	Ok(ChainSpec::from_genesis(
-		// Name
-		"Hashed Chain - Chaos",
-		// ID
-		"chaos",
+		"Hypha Spores",
+		"spores",
 		ChainType::Live,
 		move || {
 			testnet_genesis(

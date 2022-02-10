@@ -1,13 +1,13 @@
 [package]
 name = "hashed"
 version = "0.1.0-dev"
-description = "Hashed Chain"
-authors = ["Hashed <https://github.com/hashed-io>"]
-homepage = "https://hashed.io"
+description = "Hypha Spores"
+authors = ["Hypha <https://github.com/hypha-dao>"]
+homepage = "https://hypha.earth"
 edition = "2021"
 license = "MIT"
 publish = false
-repository = "https://github.com/hashed-io/hashed-substrate"
+repository = "https://github.com/hypha-dao/hypha-substrate"
 build = "build.rs"
 
 [package.metadata.docs.rs]
@@ -54,7 +54,7 @@ frame-benchmarking = { version = "4.0.0-dev", git = "https://github.com/parityte
 frame-benchmarking-cli = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", tag = "devhub/latest" }
 
 # Local Dependencies
-hashed-runtime = { version = "0.1.0-dev", path = "../runtime" }
+hypha-runtime = { version = "0.1.0-dev", path = "../runtime" }
 
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git", tag = "devhub/latest" }
@@ -62,5 +62,5 @@ substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/pa
 [features]
 default = []
 runtime-benchmarks = [
-	"hashed-runtime/runtime-benchmarks",
+	"hypha-runtime/runtime-benchmarks",
 ]

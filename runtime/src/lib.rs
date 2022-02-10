@@ -521,10 +521,6 @@ impl pallet_uniques::Config for Runtime {
 	type WeightInfo = ();
 }
 
-impl pallet_fruniques::Config for Runtime {
-	type Event = Event;
-}
-
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -551,7 +547,6 @@ construct_runtime!(
 		Society: pallet_society,
 		Bounties: pallet_bounties,
 		Uniques: pallet_uniques,
-		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
 	}
 );

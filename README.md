@@ -1,11 +1,11 @@
-## Hashed Chain
+## Hypha Spores
 
-### [Open Hashed Chain on polkadot.js.org](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fn1.hashed.systems#/explorer)
+### [Open Hypha Spores on polkadot.js.org](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Fn1.hypha.earth#/explorer)
 
 ## Features
 ### Standard Pallets
 #### [Identity](https://wiki.polkadot.network/docs/learn-identity)
-Hashed Chain provides a naming system that allows participants to add information, such as social media accounts, web domains, email addresses, etc. to their on-chain account and subsequently ask for verification of this information by registrars.
+Hypha Spores provides a naming system that allows participants to add information, such as social media accounts, web domains, email addresses, etc. to their on-chain account and subsequently ask for verification of this information by registrars.
 
 #### [Indices](https://wiki.polkadot.network/docs/learn-accounts#indices)
 An index is a short and easy-to-remember version of an address. Claiming an index requires a deposit that is released when the index is cleared.
@@ -28,7 +28,7 @@ The Society module is an economic game which incentivizes users to participate a
 Bounties Spending proposals aim to delegate the curation activity of spending proposals to experts called Curators: They can be defined as addresses with agency over a portion of the Treasury with the goal of fixing a bug or vulnerability, developing a strategy, or monitoring a set of tasks related to a specific topic: all for the benefit of the whole ecosystem.
 
 ## Custom Pallets
-#### [Fruniques (FRactional UNIQUES)](https://github.com/hashed-io/hashed-substrate/tree/main/pallets/fruniques)
+#### [Fruniques (FRactional UNIQUES)](https://github.com/hypha-dao/hypha-substrate/tree/main/pallets/fruniques)
 A Frunique is a type of Non-Fungible Token (NFT). Fruniques allow token holders to lock any set of fungible and/or non-fungible tokens into a new NFT backed by the tokens. The source/parent asset(s) can be unlocked if and only if all of its child fruniques are held by the same account. Any Frunique may be transformed to become 1..n new Fruniques or a fungible token.
 
 Fruniques are compatible with the `Uniques` pallet referenced above.
@@ -39,14 +39,14 @@ Fruniques are compatible with the `Uniques` pallet referenced above.
 First, complete the [basic Rust setup instructions](./docs/rust-setup.md).
 
 ```bash
-git clone https://github.com/hashed-io/hashed-substrate.git
-cd hashed-substrate
+git clone https://github.com/hypha-dao/hypha-substrate.git
+cd hypha-substrate
 cargo build --release 
 
-./target/release/hashed --chain ./hashed-chaos-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
+./target/release/hashed --chain ./hypha-spores-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
 ```
 
-![hashed-chain-arch](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/hashed-io/hashed-substrate/main/docs/hashed-chain-arch.iuml)
+![hypha-chain-arch](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/hypha-dao/hypha-substrate/main/docs/hypha-chain-arch.iuml)
 
 ## Starting a node
 ### Rust Setup

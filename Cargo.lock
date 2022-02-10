@@ -1730,7 +1730,7 @@ version = "0.1.0-dev"
 dependencies = [
  "frame-benchmarking",
  "frame-benchmarking-cli",
- "hashed-runtime",
+ "hypha-runtime",
  "jsonrpc-core",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -1760,53 +1760,6 @@ dependencies = [
  "structopt",
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
-]
-
-[[package]]
-name = "hashed-runtime"
-version = "0.1.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-executive",
- "frame-support",
- "frame-system",
- "frame-system-benchmarking",
- "frame-system-rpc-runtime-api",
- "hex-literal",
- "pallet-assets",
- "pallet-aura",
- "pallet-balances",
- "pallet-bounties",
- "pallet-collective",
- "pallet-fruniques",
- "pallet-grandpa",
- "pallet-identity",
- "pallet-indices",
- "pallet-membership",
- "pallet-randomness-collective-flip",
- "pallet-recovery",
- "pallet-society",
- "pallet-sudo",
- "pallet-template",
- "pallet-timestamp",
- "pallet-transaction-payment",
- "pallet-transaction-payment-rpc-runtime-api",
- "pallet-treasury",
- "pallet-uniques",
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-block-builder",
- "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
- "sp-offchain",
- "sp-runtime",
- "sp-session",
- "sp-std",
- "sp-transaction-pool",
- "sp-version",
- "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -1960,6 +1913,52 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "webpki",
+]
+
+[[package]]
+name = "hypha-runtime"
+version = "0.1.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "frame-system-rpc-runtime-api",
+ "hex-literal",
+ "pallet-assets",
+ "pallet-aura",
+ "pallet-balances",
+ "pallet-bounties",
+ "pallet-collective",
+ "pallet-grandpa",
+ "pallet-identity",
+ "pallet-indices",
+ "pallet-membership",
+ "pallet-randomness-collective-flip",
+ "pallet-recovery",
+ "pallet-society",
+ "pallet-sudo",
+ "pallet-template",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-treasury",
+ "pallet-uniques",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-inherents",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -3608,22 +3607,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-fruniques"
-version = "0.1.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-uniques",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
 ]
 
 [[package]]
