@@ -13,15 +13,24 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use super::*;
-	use frame_support::pallet_prelude::*;
+use super::*;
+	use frame_support::{pallet_prelude::*, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::StaticLookup;
-
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config<I: 'static = ()>: frame_system::Config + pallet_uniques::Config {
 		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+
+		// The maximum length of an attribute key.
+		/*
+		#[pallet::constant]
+		type KeyLimit: Get<u32>;
+
+		/// The maximum length of an attribute value.
+		#[pallet::constant]
+		type ValueLimit: Get<u32>;*/
+
 	}
 
 	#[pallet::pallet]
@@ -119,10 +128,11 @@ pub mod pallet {
 			_amount: u64,
 		) -> DispatchResult {
 			ensure!(false, Error::<T, I>::NotYetImplemented);
-
-			// only owner can divide
-			// let owner = ensure_signed(origin.clone())?;
-
+			//let owner = ensure_signed(_origin.clone())?;
+			//let instance = Asset::<T, I>::insert(&_class_id, &_instance_id, details);
+			//let instance = pallet_uniques::Pallet::<T>::
+			// Get the members from `special-pallet` pallet
+			//let who = special_pallet::Pallet::<T>::get();
 			// retrieve the instance being divided
 			// let instance: T::InstanceId = Self.Asset::<T, _>::get(class_id.clone(), instance_id.clone())
 			// 	.ok_or(Error::<T, _>::Unknown)?;
@@ -163,5 +173,64 @@ pub mod pallet {
 			// )); // fungible token parameters
 			Ok(())
 		}
+
+		/// ## NFT Division
+		/// 
+		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
+		/// so they're not explicitly declared on this pallet 
+		/// 
+		/// (por ahora dejar de lado la division del valor numerico)
+		/// 
+		/// Boilerplate parameters:
+		/// origin, admin
+		/// Para dividir un nft se necesita :
+		/// class_id, instance_id (el que será padre), num_fractions
+		/// 
+		/// 1.- Boilerplate (setup, conversions, ensure_signed)
+		/// 2.- Instance n number of nfts (with the respective parentId)
+		/// 3.- Freeze the nft? Not clear, so not at the moment
+		/// 4.- Ok(()) ??
+		/// 
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
+		pub fn divide2(
+			origin: OriginFor<T>, 
+			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+			class_id: T::ClassId, 
+			instance_id: T::InstanceId,
+			num_fractions:u32,
+		)->DispatchResult{
+			// 1.- Boilerplate (setup, conversions, ensure_signed)
+			let _owner = ensure_signed( origin.clone())?;
+			// create the fractions in a loop
+			let b = instance_id.encode();
+			let vector = BoundedVec::<u8,T::ValueLimit>::try_from(b).unwrap();
+			for i in 0..num_fractions{
+				//get the tentaitve id?
+				//let mut parent_id = BoundedVec::<u8,T::KeyLimit>::default();
+				//let mut value = BoundedVec::<u8,T::ValueLimit>::default();
+				let parent_id = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode()).unwrap();
+				//parent_id.try_push('i' as u8 ).map_err(|_| Error::<T, I>::StorageOverflow)?;
+				//value.try_push('f' as u8 ).map_err(|_| Error::<T, I>::StorageOverflow)?;
+				pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, Self::u16_to_instance_id(i as u16) , admin.clone())?;
+				//set the respective attributtes
+				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(i as u16)),
+				parent_id ,vector.clone())?;
+
+				//emit event: fruniques created?
+			}
+			
+			Ok(())
+		}
+
+		
+		
 	}
+
+	impl<T: Config<I>, I: 'static> Pallet<T, I> {
+		pub fn u16_to_instance_id(input: u16) -> T::InstanceId where <T as pallet_uniques::Config>::InstanceId: From<u16> {
+			input.into()
+		}
+
+	}
+
 }
