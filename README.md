@@ -28,10 +28,8 @@ The Society module is an economic game which incentivizes users to participate a
 Bounties Spending proposals aim to delegate the curation activity of spending proposals to experts called Curators: They can be defined as addresses with agency over a portion of the Treasury with the goal of fixing a bug or vulnerability, developing a strategy, or monitoring a set of tasks related to a specific topic: all for the benefit of the whole ecosystem.
 
 ## Custom Pallets
-#### [Fruniques (FRactional UNIQUES)](https://github.com/hypha-dao/hypha-substrate/tree/main/pallets/fruniques)
-A Frunique is a type of Non-Fungible Token (NFT). Fruniques allow token holders to lock any set of fungible and/or non-fungible tokens into a new NFT backed by the tokens. The source/parent asset(s) can be unlocked if and only if all of its child fruniques are held by the same account. Any Frunique may be transformed to become 1..n new Fruniques or a fungible token.
+#### [Template Pallet)](https://github.com/hypha-dao/hypha-substrate/tree/main/pallets/template)
 
-Fruniques are compatible with the `Uniques` pallet referenced above.
 
 ## Quick Start
 
@@ -43,11 +41,8 @@ git clone https://github.com/hypha-dao/hypha-substrate.git
 cd hypha-substrate
 cargo build --release 
 
-./target/release/hypha --chain ./hypha-spores-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
+./target/release/hypha --chain ./hypha-spores-spec-raw.json --name MyNode --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/x.x.x.x/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU
 ```
-
-![hypha-chain-arch](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/hypha-dao/hypha-substrate/main/docs/hypha-chain-arch.iuml)
-
 ## Starting a node
 ### Rust Setup
 
