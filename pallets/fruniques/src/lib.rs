@@ -51,7 +51,13 @@ use super::*;
 		NoPermission,
 		StorageOverflow,
 		NotYetImplemented,
+		FruniqueCntOverflow,
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_cnt)]
+	/// Keeps track of the number of Kitties in existence.
+	pub(super) type FruniqueCnt<T, I = ()> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::call]
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
@@ -83,6 +89,8 @@ use super::*;
 		) -> DispatchResult {
 			let owner = ensure_signed(origin.clone())?;
 
+			let new_cnt = Self::frunique_cnt().checked_add(1)
+				.ok_or(<Error<T,I>>::FruniqueCntOverflow)?;
 			// create an NFT in the uniques pallet
 			pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
 			pallet_uniques::Pallet::<T>::mint(
@@ -91,7 +99,7 @@ use super::*;
 				instance_id.clone(),
 				admin.clone(),
 			)?;
-
+			<FruniqueCnt<T,I>>::put(new_cnt);
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
 
@@ -200,21 +208,28 @@ use super::*;
 			instance_id: T::InstanceId,
 			num_fractions:u32,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-		)->DispatchResult{
+		)->DispatchResult {
 			// Boilerplate (setup, conversions, ensure_signed)
 			let owner = ensure_signed( origin.clone())?;
 			let enconded_id = instance_id.encode();
+			ensure!(Self::frunique_cnt().checked_add(num_fractions) != None,<Error<T,I>>::FruniqueCntOverflow);
 			// TODO: Helper function to convert a enconded product to BoundedVec? (consider the BoundedVec Length)
-			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode()).unwrap();
-			let parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id).unwrap();
+			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode())
+				.expect("Error on encoding the parent_id key to BoundedVec");
+			let parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
+				.expect("Error on converting the parent_id to BoundedVec");
 			// Instance n number of nfts (with the respective parentId)
 			for i in 0..num_fractions{
+				let new_instance_id = Self::frunique_cnt();
 				// Mint a unique
-				pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, Self::u16_to_instance_id(i as u16) , admin.clone())?;
+				pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, 
+				Self::u16_to_instance_id(new_instance_id.try_into().unwrap() ), admin.clone())?;
 				// Set the respective attributtes 
 				// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
-				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(i as u16)),
+				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id.try_into().unwrap())),
 				parent_id_key.clone() ,parent_id_val.clone())?;
+				
+				<FruniqueCnt<T,I>>::put(Self::frunique_cnt() + 1 );
 				// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 
 			}
@@ -222,7 +237,6 @@ use super::*;
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
 			// Freeze the nft to prevent trading it? Burn it? Not clear, so nothing at the moment
-			// Ok(())
 			Ok(())
 		}
 
