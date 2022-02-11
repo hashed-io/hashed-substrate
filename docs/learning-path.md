@@ -36,7 +36,7 @@ https://github.com/hashed-io/hashed-substrate/blob/main/docs/identity.md
 You can read the notes and copy/paste the commands from:
 https://github.com/hashed-io/hashed-substrate/blob/main/docs/uniques.md
 
-#### Training - Deeper Dive
+#### Rust Developer Deeper Training 
 Now that you have an idea for the environment, dive deeper into both the Rust training and Substrate training. As opposed to do them consecutively, I recommend starting both of the trainings and switch back and forth between the two as you progress.
 
 1. Rustlings 
@@ -46,8 +46,20 @@ Now that you have an idea for the environment, dive deeper into both the Rust tr
 2. [Parity Substrate Tutorials](https://docs.substrate.io/tutorials/v3/)
     - No particular order 
     - Some may be out-dated; don't get stuck on a versioning issue, just skip ahead.
+#### Substrate UI Developer Deeper Training 
+Build a Custom UI for one of the pallets using one of the available UI templates/toolkits:
 
+    - [polkadot{.js} Web Application](https://github.com/polkadot-js/apps)
+    - [React Native Library from Parity](https://github.com/paritytech/react-native-substrate-sign)
+    - [PolkaWallet Flutter SDK](https://github.com/polkawallet-io/sdk)
+    - [Front End template](https://github.com/substrate-developer-hub/substrate-front-end-template) from Parity
+
+Review tooling for data caching and query
+    -[Useful API sidecar](https://github.com/paritytech/substrate-api-sidecar) from Parity
+    -[Awesome Substrate tools section](https://substrate.io/ecosystem/resources/awesome-substrate/#tools)
+    
 #### Tools and Tips
-- [`polkadot-js-api`](https://github.com/polkadot-js/tools/)-
+- [polkadot{.js}](https://github.com/polkadot-js)
+- CLI tool: [`polkadot-js-api`](https://github.com/polkadot-js/tools/)
 - [Awesome Substrate](https://github.com/substrate-developer-hub/awesome-substrate)
 - Spend time learning about the [keys types and related commands](https://docs.substrate.io/v3/tools/subkey/)
