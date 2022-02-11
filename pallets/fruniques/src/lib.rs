@@ -199,40 +199,44 @@ use super::*;
 		/// - `class_id`: The type of NFT that the function will create, categorized by numbers.
 		/// - `instance_id`: The unique identifier of the instance to be fractioned/divided 
 		/// - `num_fractions`: The number of fractions in which the NFT will be split.
-		/// 
+		/// - `_inherit_attrs`: Doesn't do anything fow now. Intended to enable the attribute inheritance
 		/// 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
-		pub fn divide2(
+		pub fn spawn(
 			origin: OriginFor<T>, 
 			class_id: T::ClassId, 
 			instance_id: T::InstanceId,
-			num_fractions:u32,
+			_inherit_attrs: bool,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		)->DispatchResult {
 			// Boilerplate (setup, conversions, ensure_signed)
 			let owner = ensure_signed( origin.clone())?;
 			let enconded_id = instance_id.encode();
-			ensure!(Self::frunique_cnt().checked_add(num_fractions) != None,<Error<T,I>>::FruniqueCntOverflow);
+			let new_cnt = Self::frunique_cnt().checked_add(1)
+				.ok_or(<Error<T,I>>::FruniqueCntOverflow)?;
 			// TODO: Helper function to convert a enconded product to BoundedVec? (consider the BoundedVec Length)
 			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode())
 				.expect("Error on encoding the parent_id key to BoundedVec");
 			let parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
 				.expect("Error on converting the parent_id to BoundedVec");
 			// Instance n number of nfts (with the respective parentId)
-			for i in 0..num_fractions{
-				let new_instance_id = Self::frunique_cnt();
-				// Mint a unique
-				pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, 
-				Self::u16_to_instance_id(new_instance_id.try_into().unwrap() ), admin.clone())?;
-				// Set the respective attributtes 
-				// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
-				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id.try_into().unwrap())),
-				parent_id_key.clone() ,parent_id_val.clone())?;
-				
-				<FruniqueCnt<T,I>>::put(Self::frunique_cnt() + 1 );
-				// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
-
-			}
+			let new_instance_id:u16 = Self::frunique_cnt().try_into().unwrap();
+			// Mint a unique
+			pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, 
+			Self::u16_to_instance_id(new_instance_id ), admin.clone())?;
+			// Set the respective attributtes 
+			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
+			pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id)),
+			parent_id_key ,parent_id_val)?;
+			// TODO: Copy the attributes from the parent to the new frunique
+			/* 
+			Doesnt work, getting: type alias `Attribute` is private.
+			Even when the trait pallet_uniques::Config<I> is specified 
+			let attr = <pallet_uniques::Attribute<T,I>  >::get("placeholder-key");
+			*/
+			
+			<FruniqueCnt<T,I>>::put(new_cnt);
+			// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 			// Emit event: fruniques created?
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
