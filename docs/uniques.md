@@ -1,4 +1,4 @@
-Below is a workflow for the create, read, update, delete of Uniques. You can run them as Steve.
+Below is a workflow for Uniques. You can run them as Steve.
 
 ```
 # steve's info
@@ -9,7 +9,7 @@ set ADDR="5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym"
 ```bash
 yarn add @polkadot/api
 ```
-### Check Steve's Identity
+### Check Steve's Identity for awareness
 ```bash
 polkadot-js-api --ws wss://n1.hashed.systems query.identity.identityOf 5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym
 ```
@@ -17,9 +17,9 @@ polkadot-js-api --ws wss://n1.hashed.systems query.identity.identityOf 5HGZfBpqU
 ```bash
 polkadot-js-api --ws wss://n1.hashed.systems tx.uniques.create 1 5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
 ```
-### Set a Class Attribute (WIP)
+### Set a Class Attribute 
 ```bash
-polkadot-js-api --ws wss://n1.hashed.systems tx.uniques.setAttribute 1 <empty> "project" "cannabis" --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
+polkadot-js-api --ws wss://n1.hashed.systems tx.uniques.setAttribute 1 null "project" "cannabis" --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
 ```
 ### Mint a New Unique, class=1, id=0, Steve as owner
 ```bash
@@ -45,7 +45,7 @@ polkadot-js-api --ws wss://n1.hashed.systems query.uniques.attribute 1 1 label
 ```bash
 polkadot-js-api --ws wss://n1.hashed.systems tx.uniques.setAttribute 1 1 "parent" "0" --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
 ```
-### Check Steve's Balance?
+### Check Steve's Balance
 ```bash
 polkadot-js-api --ws wss://n1.hashed.systems query.uniques.account 5HGZfBpqUUqGY7uRCYA6aRwnRHJVhrikn8to31GcfNcifkym 1 
 ```
