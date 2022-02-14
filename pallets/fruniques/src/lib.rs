@@ -20,18 +20,11 @@ use super::*;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config<I: 'static = ()>: frame_system::Config + pallet_uniques::Config {
+
 		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
 
-		// The maximum length of an attribute key.
-		/*
-		#[pallet::constant]
-		type KeyLimit: Get<u32>;
-
-		/// The maximum length of an attribute value.
-		#[pallet::constant]
-		type ValueLimit: Get<u32>;*/
-
 	}
+
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -198,7 +191,6 @@ use super::*;
 		/// ### Parameters needed in order to divide a unique:
 		/// - `class_id`: The type of NFT that the function will create, categorized by numbers.
 		/// - `instance_id`: The unique identifier of the instance to be fractioned/divided 
-		/// - `num_fractions`: The number of fractions in which the NFT will be split.
 		/// - `_inherit_attrs`: Doesn't do anything fow now. Intended to enable the attribute inheritance
 		/// 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
@@ -233,8 +225,13 @@ use super::*;
 			Doesnt work, getting: type alias `Attribute` is private.
 			Even when the trait pallet_uniques::Config<I> is specified 
 			let attr = <pallet_uniques::Attribute<T,I>  >::get("placeholder-key");
+			let attribute = <pallet_uniques::Attribute<T,_>  >::get((class_id, 
+				Some(Self::u16_to_instance_id(new_instance_id) ) , 
+				&parent_id_key));
+				let attribute = pallet_uniques::Pallet<T,_>::Attribute::get((class_id, 
+					Some(Self::u16_to_instance_id(new_instance_id) ) , 
+					&parent_id_key));
 			*/
-			
 			<FruniqueCnt<T,I>>::put(new_cnt);
 			// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 			// Emit event: fruniques created?
