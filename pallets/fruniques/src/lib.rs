@@ -14,7 +14,7 @@ mod benchmarking;
 #[frame_support::pallet]
 pub mod pallet {
 use super::*;
-	use frame_support::{pallet_prelude::*, BoundedVec};
+	use frame_support::{pallet_prelude::*, BoundedVec,traits::tokens::nonfungibles::Inspect};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::StaticLookup;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -198,7 +198,7 @@ use super::*;
 			origin: OriginFor<T>, 
 			class_id: T::ClassId, 
 			instance_id: T::InstanceId,
-			_inherit_attrs: bool,
+			inherit_attrs: bool,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		)->DispatchResult {
 			// Boilerplate (setup, conversions, ensure_signed)
@@ -206,11 +206,10 @@ use super::*;
 			let enconded_id = instance_id.encode();
 			let new_cnt = Self::frunique_cnt().checked_add(1)
 				.ok_or(<Error<T,I>>::FruniqueCntOverflow)?;
-			// TODO: Helper function to convert a enconded product to BoundedVec? (consider the BoundedVec Length)
-			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from("parent_id".encode())
+			// TODO: Check if the instance_id exists?
+			let parent_id_key = BoundedVec::<u8,T::KeyLimit>::try_from(r#"parent_id"#.encode())
 				.expect("Error on encoding the parent_id key to BoundedVec");
-			let parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
-				.expect("Error on converting the parent_id to BoundedVec");
+			let parent_id_val : BoundedVec::<u8,T::ValueLimit>;
 			// Instance n number of nfts (with the respective parentId)
 			let new_instance_id:u16 = Self::frunique_cnt().try_into().unwrap();
 			// Mint a unique
@@ -218,20 +217,34 @@ use super::*;
 			Self::u16_to_instance_id(new_instance_id ), admin.clone())?;
 			// Set the respective attributtes 
 			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
+
+			if inherit_attrs{
+				// TODO: Check all the parent's instance attributes
+				// Let's start with some static attributes check (does parent_id exist?)
+				// Options:
+				// 1.- Constant &str array containing the keys
+				// 2.- Set a whole single attribute as bytes, containing all the fruniques metadata (parent_id, numerical_value, etc..)
+				// 3.- Keep our own metadata (or whole nfts) storage on
+				// 3.1.- Consider the 3 above but with interfaces/traits
+				// I'm assuming doing it via scripts on the front-end isn't viable option 
+				if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(&class_id, &instance_id,&"parent_id".encode() ){
+					println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
+					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(parent_attr)
+						.expect("Error on converting the parent_id to BoundedVec");
+				}else{
+					println!("The parent doesn't have a parent_id");
+					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
+					.expect("Error on converting the parent_id to BoundedVec");
+				}
+			}else{
+				parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
+					.expect("Error on converting the parent_id to BoundedVec");
+			}
 			pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id)),
 			parent_id_key ,parent_id_val)?;
-			// TODO: Copy the attributes from the parent to the new frunique
-			/* 
-			Doesnt work, getting: type alias `Attribute` is private.
-			Even when the trait pallet_uniques::Config<I> is specified 
-			let attr = <pallet_uniques::Attribute<T,I>  >::get("placeholder-key");
-			let attribute = <pallet_uniques::Attribute<T,_>  >::get((class_id, 
-				Some(Self::u16_to_instance_id(new_instance_id) ) , 
-				&parent_id_key));
-				let attribute = pallet_uniques::Pallet<T,_>::Attribute::get((class_id, 
-					Some(Self::u16_to_instance_id(new_instance_id) ) , 
-					&parent_id_key));
-			*/
+
+			let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
+			println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) ); 
 			<FruniqueCnt<T,I>>::put(new_cnt);
 			// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 			// Emit event: fruniques created?
@@ -248,6 +261,19 @@ use super::*;
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		pub fn u16_to_instance_id(input: u16) -> T::InstanceId where <T as pallet_uniques::Config>::InstanceId: From<u16> {
 			input.into()
+		}
+
+		pub fn bytes_to_string(input: Vec<u8>)->String{
+			let mut s = String::default();
+			for x in input{
+				//let c: char = x.into();
+				s.push(x as char);
+			}
+			s
+		}
+		/// Helper function for printing purposes
+		pub fn bytes_to_u32(input: Vec<u8>)->u32{
+			u32::from_ne_bytes(input.try_into().unwrap())
 		}
 
 	}

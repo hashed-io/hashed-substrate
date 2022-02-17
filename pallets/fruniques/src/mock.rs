@@ -101,6 +101,6 @@ impl pallet_balances::Config for Test {
 }
 
 // Build genesis storage according to the mock runtime.
-pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
-	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
-}
+// pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
+// 	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+// }

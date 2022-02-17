@@ -35,8 +35,8 @@ fn create_frunique_works() {
 #[test]
 fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, 1));
-		assert_ok!(
-		Fruniques::spawn(Origin::signed(1), 1, 0, false,1));
+		assert_ok!(Fruniques::create(Origin::signed(1), 1, 255, 1));
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 255, true,1));
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true,1));
 	});
 }
