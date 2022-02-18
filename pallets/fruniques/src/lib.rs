@@ -14,8 +14,10 @@ mod benchmarking;
 #[frame_support::pallet]
 pub mod pallet {
 use super::*;
-	use frame_support::{pallet_prelude::*, BoundedVec,traits::tokens::nonfungibles::Inspect};
+	use frame_support::{pallet_prelude::*, BoundedVec,traits::tokens::nonfungibles::{Inspect,InspectEnumerable}};
 	use frame_system::pallet_prelude::*;
+	use scale_info::prelude::string::String;
+	use scale_info::prelude::vec::Vec;
 	use sp_runtime::traits::StaticLookup;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -33,9 +35,12 @@ use super::*;
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config<I>, I: 'static = ()> {
+		// A frunique and asset class were succesfully created! 
 		FruniqueCreated(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
 		// A frunique/unique was succesfully divided!
 		FruniqueDivided(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
+		// Counter should work?
+		FruniqueCounter(u32),
 	}
 
 	#[pallet::error]
@@ -45,6 +50,8 @@ use super::*;
 		StorageOverflow,
 		NotYetImplemented,
 		FruniqueCntOverflow,
+		// The asset_id is not linked to a frunique or it doesn't exists
+		NotAFrunique,
 	}
 
 	#[pallet::storage]
@@ -181,7 +188,6 @@ use super::*;
 		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
 		/// so they're not explicitly declared on this pallet 
 		/// 
-		/// (for now I'll leave aside the division of the numerical value)
 		/// 
 		/// ### Boilerplate parameters:
 		/// 
@@ -216,8 +222,6 @@ use super::*;
 			pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, 
 			Self::u16_to_instance_id(new_instance_id ), admin.clone())?;
 			// Set the respective attributtes 
-			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
-
 			if inherit_attrs{
 				// TODO: Check all the parent's instance attributes
 				// Let's start with some static attributes check (does parent_id exist?)
@@ -228,11 +232,11 @@ use super::*;
 				// 3.1.- Consider the 3 above but with interfaces/traits
 				// I'm assuming doing it via scripts on the front-end isn't viable option 
 				if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(&class_id, &instance_id,&"parent_id".encode() ){
-					println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
+					//println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
 					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(parent_attr)
 						.expect("Error on converting the parent_id to BoundedVec");
 				}else{
-					println!("The parent doesn't have a parent_id");
+					//println!("The parent doesn't have a parent_id");
 					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
 					.expect("Error on converting the parent_id to BoundedVec");
 				}
@@ -240,17 +244,32 @@ use super::*;
 				parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
 					.expect("Error on converting the parent_id to BoundedVec");
 			}
+			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
 			pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id)),
 			parent_id_key ,parent_id_val)?;
-
-			let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
-			println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) ); 
+			//let _e = Self::instance_exists(origin,class_id,instance_id);
+			//let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
+			//println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) ); 
 			<FruniqueCnt<T,I>>::put(new_cnt);
 			// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
-			// Emit event: fruniques created?
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
 			// Freeze the nft to prevent trading it? Burn it? Not clear, so nothing at the moment
+			Ok(())
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
+		pub fn instance_exists(
+			_origin: OriginFor<T>, 
+			_class_id: T::ClassId, 
+			_instance_id: T::InstanceId,
+		) -> DispatchResult{
+			// Always returns an empty iterator?
+			let instances = pallet_uniques::Pallet::<T>::classes();
+			//println!("Instances found in class {:?}",class_id);
+			//println!("\tIterator? {}",instances.count());
+			Self::deposit_event(Event::FruniqueCounter(instances.count().try_into().unwrap()  ));
+			//instances.into_iter().for_each(|f| println!("\tInstance:{:?}",f));
 			Ok(())
 		}
 

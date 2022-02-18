@@ -38,5 +38,6 @@ fn spawn_extrinsic_works() {
 		assert_ok!(Fruniques::create(Origin::signed(1), 1, 255, 1));
 		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 255, true,1));
 		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true,1));
+		assert_ok!(Fruniques::instance_exists(Origin::signed(1), 1, 1));
 	});
 }
