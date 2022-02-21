@@ -263,5 +263,5 @@ polkadot-js-api --ws wss://n1.hashed.systems query.identity.identityOf 5HGZfBpqU
     }
   }
 }
-
+```
 The marketplace eligibility check looks for both the `ApprovedForMarketplace` field and a `KnownGood` certification from our trusted `registrar(s)`
