@@ -1,7 +1,7 @@
 
 
 # Bitcoin Treasury Wallet- powered by a pallet
-## Bitcoin xpub
+## Bitcoin xpub as Identity attribute
 A user can set their xpub information on their profile, such as: 
 ```bash
 $ polkadot-js-api --ws wss://n1.hashed.systems tx.identity.setIdentity '{
@@ -17,7 +17,7 @@ $ polkadot-js-api --ws wss://n1.hashed.systems tx.identity.setIdentity '{
     ]
 }' --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
 ```
-# Bitcoin Developer Kit (BDK) 
+## Bitcoin Developer Kit (BDK) 
 [Bitcoin Dev Kit](https://bitcoindevkit.org) is a Rust-based library for working with Bitcoin wallets, with a special focus on output descriptors. There's a CLI (`bdk-cli`) to run the commands, and there's also a library/crate that I imagine can be used from within a pallet.
 
 Here are some helpful commands.
@@ -42,8 +42,8 @@ bdk-cli key derive --path m/84'/1'/0'/0 '--xprv tprv8ZgxMBicQKsPdRxBuQZegC2R3k9R
 }
 ```
 
-# Multisig wallet
-## Receiving
+## Multisig wallet
+### Receiving
 If 5 users all generated xpub keys on their own and attested them in the profile, the pallet would be able to generate an output descriptor for a 3 of 5 multisig wallet, such as below:
 
 ```
@@ -52,7 +52,7 @@ wsh(multi(3,tpubDEQ2wZuuDfizYa8Vxo92Jz96nDhwwHTczsHTpSt4hnSRaWhQbj8Nrb46QitDpeEA
 
 Once we have the descriptor for the full wallet, we can generate new receiving addresses.
 
-### BENEFIT: Verifiable Receiving Addresses 
+#### BENEFIT: Verifiable Receiving Addresses 
 Contributors/investors of BTC to a multisig wallet can be highly confident that the intended signers have control over the sent BTC (UTXO).
 
 ```bash 
@@ -64,7 +64,7 @@ $ bdk-cli wallet --descriptor 'wsh(multi(3,tpubDEQ2wZuuDfizYa8Vxo92Jz96nDhwwHTcz
 }
 ```
 
-## Sending
+### Sending
 There are existing wallet UIs (Spectre Desktop, Caravan, Sparrow) that support output descriptors and facilitate the user experience, including signing via a variety of hot or cold wallets. 
 
 To focus only on the pallet logic, we can use `bdk-cli` to simulate the signing steps.
@@ -95,7 +95,7 @@ OPTIONS:
 
 
 The intermediate PSBT files (the output from above) are only needed temporarily and can be saved directly on chain or in IPFS. These files then are combined and broadcast.
-### BENEFIT: User doesn't need to transport PSBT files 
+#### BENEFIT: User doesn't need to transport PSBT files 
 
 ```bash
 $ bdk-cli wallet combine_psbt -h
