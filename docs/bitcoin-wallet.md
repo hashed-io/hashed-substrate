@@ -1,10 +1,10 @@
 
 
-# Bitcoin xpub
-
+# Bitcoin Treasury Wallet- powered by a pallet
+## Bitcoin xpub
 A user can set their xpub information on their profile, such as: 
 ```bash
-polkadot-js-api --ws wss://n1.hashed.systems tx.identity.setIdentity '{
+$ polkadot-js-api --ws wss://n1.hashed.systems tx.identity.setIdentity '{
     "display": {
         "Raw": "Paul McCartney"
     },
@@ -17,12 +17,14 @@ polkadot-js-api --ws wss://n1.hashed.systems tx.identity.setIdentity '{
     ]
 }' --seed "bargain album current caught tragic slab identify squirrel embark black drip imitate"
 ```
+# Bitcoin Developer Kit (BDK) 
+[Bitcoin Dev Kit](https://bitcoindevkit.org) is a Rust-based library for working with Bitcoin wallets, with a special focus on output descriptors. There's a CLI (`bdk-cli`) to run the commands, and there's also a library/crate that I imagine can be used from within a pallet.
 
-# BDK
-BDK Command for generating a new key pair: 
-```json
+Here are some helpful commands.
+```bash
 $ bdk-cli key generate
-
+```
+```json
 {
   "fingerprint": "dca67f77",
   "mnemonic": "rose poet odor pole impose stamp boat cruel melt nut eight anchor jar obey tip mention accuse dry member stay pepper final alert live",
@@ -30,9 +32,10 @@ $ bdk-cli key generate
 }
 ```
 
-```json
+```bash
 bdk-cli key derive --path m/84'/1'/0'/0 '--xprv tprv8ZgxMBicQKsPdRxBuQZegC2R3k9R1m4SB2Vy8wAaonownndjLrAdTsTiapvWNXQSN8N9XUvKAWukvm2evPS8yCqmvd1mmL8qAEnbe3PDNpD
-
+```
+```json
 {
   "xprv": "[dca67f77/84/1/0/0]tprv8hhzo9sf5J3KZZYfoWYbKMqTeuzetF8BwaZGCuKVmx1HBnRGmVPyqBfeXRWZPCBkSAbZabuDCZZ26J6eWeDk9qAQq8oYK97WpXmkQdpT6S8/*",
   "xpub": "[dca67f77/84/1/0/0]tpubDEQ2wZuuDfizT2aThADBimVaDwWb3aK6WtA3VRMoCDog2Gg3PtDa1gHWhZYEiGba5XA2D2opry9MxZVVjgAaGM8MCnvW6kt6v5AURRyLHPh/*"
@@ -53,9 +56,9 @@ Once we have the descriptor for the full wallet, we can generate new receiving a
 Contributors/investors of BTC to a multisig wallet can be highly confident that the intended signers have control over the sent BTC (UTXO).
 
 ```bash 
-
-bdk-cli wallet --descriptor 'wsh(multi(3,tpubDEQ2wZuuDfizYa8Vxo92Jz96nDhwwHTczsHTpSt4hnSRaWhQbj8Nrb46QitDpeEABLQSHPSyxdCn8gUDE6uZ2TWPLreLzvhFZLPPyrSizBz/1/0/*,tpubDEQ2wZuuDfizZR2aCmD5gpHJtsXET1zpYmR1JA9nMp4EWDcnnC957ekfaysjF4T8hSNJj98fEcUocnhds3Gwot8G145AZDsYjpwuJto4DFQ/0/0/*,tpubDEQ2wZuuDfizUWke1ZhreeVoybZiYiRept7ifSNSefbmPEM7yeNkbH1Kx4uMBnCtq2bB95oT1YX1ZAFuTfA1LetiTTrYuP6ShXsUUv6Bd8Q/0/0/*,tpubDEQ2wZuuDfizT2aThADBimVaDwWb3aK6WtA3VRMoCDog2Gg3PtDa1gHWhZYEiGba5XA2D2opry9MxZVVjgAaGM8MCnvW6kt6v5AURRyLHPh/0/0/*,tpubDEQ2wZuuDfizdnKYinDkouHHo7CeDdgScMfPYLMR8cnq3PYj85SccVnXa2Yt9HfVXq1riCkDLQG7R5YwcR8HY5z79M5b6zNsX4pZ12ngu1i/0/0/*))' get_new_address
-
+$ bdk-cli wallet --descriptor 'wsh(multi(3,tpubDEQ2wZuuDfizYa8Vxo92Jz96nDhwwHTczsHTpSt4hnSRaWhQbj8Nrb46QitDpeEABLQSHPSyxdCn8gUDE6uZ2TWPLreLzvhFZLPPyrSizBz/1/0/*,tpubDEQ2wZuuDfizZR2aCmD5gpHJtsXET1zpYmR1JA9nMp4EWDcnnC957ekfaysjF4T8hSNJj98fEcUocnhds3Gwot8G145AZDsYjpwuJto4DFQ/0/0/*,tpubDEQ2wZuuDfizUWke1ZhreeVoybZiYiRept7ifSNSefbmPEM7yeNkbH1Kx4uMBnCtq2bB95oT1YX1ZAFuTfA1LetiTTrYuP6ShXsUUv6Bd8Q/0/0/*,tpubDEQ2wZuuDfizT2aThADBimVaDwWb3aK6WtA3VRMoCDog2Gg3PtDa1gHWhZYEiGba5XA2D2opry9MxZVVjgAaGM8MCnvW6kt6v5AURRyLHPh/0/0/*,tpubDEQ2wZuuDfizdnKYinDkouHHo7CeDdgScMfPYLMR8cnq3PYj85SccVnXa2Yt9HfVXq1riCkDLQG7R5YwcR8HY5z79M5b6zNsX4pZ12ngu1i/0/0/*))' get_new_address
+```
+```json
 {
   "address": "tb1q433j97374mss5na5eu7f0ja29rx2fsretgs2h4f5p886x5mqg65q74fhzv"
 }
