@@ -1,5 +1,3 @@
-
-
 # Bitcoin Treasury Wallet- powered by a pallet
 ## Bitcoin xpub as Identity attribute
 A user can set their xpub information on their profile, such as: 
@@ -117,3 +115,5 @@ OPTIONS:
 ```
 - [ ] TODO: Add example combine-psbt and broadcast 
 
+## Appendix: How PSBTs work
+![image](https://user-images.githubusercontent.com/32852271/155020594-ccca7a2f-68fd-41b3-a54c-a0ea682a0798.png)
