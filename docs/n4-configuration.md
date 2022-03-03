@@ -9,7 +9,11 @@
       - [Liberland frontend](#liberland-frontend)
       - [Liberland backend](#liberland-backend)
     - [Hashed chain](#hashed-chain)
-  - [Configuring services](#configuring-services)
+  - [Configuring systemd and pm2 services](#configuring-systemd-and-pm2-services)
+    - [Polkadot](#polkadot-1)
+    - [Liberland projects](#liberland-projects-1)
+      - [Liberland frontend](#liberland-frontend-1)
+      - [Liberland backend](#liberland-backend-1)
   - [Nginx configuration](#nginx-configuration)
   - [Appendix](#appendix)
     - [List of ports per project](#list-of-ports-per-project)
@@ -20,17 +24,37 @@
       - [Liberland backend: 3000](#liberland-backend-3000)
 
 ## Prerequisites
-- Update rust (just in case): `rustup update`
+
+- Install nginx:
+```
+sudo apt update
+sudo apt install nginx
+```
+- Update rust (just in case)
+ 
+ ```
+ rustup update
+ ```
+
 - Install node version manager, node and yarn:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 # Terminal restart needed
-# Install the latest LTS (v16.14.0 aka Gallium)
-nvm install Gallium
+# Install a LTS node version (v14.19.0 aka Fermium)
+nvm install lts/fermium
 
 npm install --global yarn
+# Node daemon manager, it'll come handy when deploying services
+npm install pm2 -g
+
 ```
+
+- The liberland frontend project uses some dependencies that strictly require some version of python2 or lower (setting up an alias and exporting the python3 path were tried without success):
+```
+sudo apt install python2
+``` 
+
 
 ## Clone and build git projects
 
@@ -72,31 +96,89 @@ git clone https://github.com/liberland/liberland_backend.git
 The node is built in a similar way to the polkadot project:
 
 ```bash
+# Assuming you're at ~/liberland directory
 cd liberland_node
-# Check for updates:
-git fetch origin main
-git pull origin main
-# Build the project
 cargo build --release
 ```
 
 #### Liberland frontend
 
+The frontend consists on a yarn/npm project, so it is needed to install the dependencies before building the project:
+
+```bash
+cd ~/liberland/liberland_frontend
+# There's some minor versioning issues, so the --force flag will
+# allow the installation 
+npm install
+yarn build
+```
+
 #### Liberland backend
+The backend project doesn't need any additonal configuration besides installing its dependencies:
+
+```bash
+cd ~/liberland/liberland_backend
+npm install
+```
 
 ### Hashed chain
 A hashed chain project is already deployed on the n4 machine; only an update on the main branch was performed:
 
 ```bash 
 cd ~/hashed
+# Check for updates:
+git fetch origin main
+git pull origin main
+# Build the project (Unfortunately, the main branch gets some compilation
+# errors at the current moment)
+cargo build --release
+```
 
-# Unfortunately, the main branch gets some compilation errors 
-# at the current moment
+## Configuring systemd and pm2 services
+
+### Polkadot
+
+### Liberland projects
+Because both frontend and backend are node-based projects, it was decided to use pm2 to daemonize and manage them.
+
+
+In order to create the pm2 service on systemd, the easiest way is typing the following commands:
+
+```bash
+
+pm2 startup systemd
+# The output of the previous command should print something similar to the next command:
+sudo env PATH=$PATH:/home/max/.nvm/versions/node/v14.19.0/bin /home/max/.nvm/versions/node/v14.19.0/lib/node_modules/pm2/bin/pm2 startup systemd -u max --hp /home/max
+
+reboot
+# After those two commands, it is possible to consult the service status:
+systemctl status pm2-max
 
 ```
 
-## Configuring services
+#### Liberland frontend
 
+In oder to daemonize the built, static frontend project, the following command was typed:
+
+```bash
+# 8080 being the port
+pm2 serve /home/max/liberland/liberland_frontend/build/ 8080 -n frontend
+
+# save the current process list
+pm2 save
+```
+#### Liberland backend
+
+The backend project can't be directly built, so the commands may differ from the previous project:
+
+```
+pm2 start /home/max/liberland/liberland_backend/app.js -n backend
+
+# save the current process list
+pm2 save
+```
+
+Note: It isn't needed to specify or change the port because the default port is the desired one (3000 for backend)
 
 Useful conmmands
 
@@ -109,6 +191,8 @@ Useful conmmands
 
 # check if nginx conf is ok
 sudo nginx -t
+
+pm2 list
 ```
 ## Nginx configuration
 
