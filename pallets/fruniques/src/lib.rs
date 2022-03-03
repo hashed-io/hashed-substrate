@@ -18,7 +18,8 @@ use super::*;
 	use frame_system::pallet_prelude::*;
 	use scale_info::prelude::string::String;
 	use scale_info::prelude::vec::Vec;
-	use sp_runtime::traits::StaticLookup;
+	//use sp_runtime::traits::StaticLookup;
+	use sp_runtime::{traits::StaticLookup, Permill};
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config<I: 'static = ()>: frame_system::Config + pallet_uniques::Config {
@@ -85,6 +86,7 @@ use super::*;
 			origin: OriginFor<T>,
 			#[pallet::compact] class_id: T::ClassId,
 			instance_id: T::InstanceId,
+			numeric_value: Option<Permill>,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		) -> DispatchResult {
 			let owner = ensure_signed(origin.clone())?;
@@ -100,6 +102,14 @@ use super::*;
 				admin.clone(),
 			)?;
 			<FruniqueCnt<T,I>>::put(new_cnt);
+			if let Some(n) = numeric_value{
+				let num_value_key = BoundedVec::<u8,T::KeyLimit>::try_from(r#"num_value"#.encode())
+					.expect("Error on encoding the numeric value key to BoundedVec");
+				let num_value = BoundedVec::<u8,T::ValueLimit>::try_from(n.encode())
+					.expect("Error on encoding the numeric value to BoundedVec");
+				pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(instance_id),
+				num_value_key ,num_value)?;
+			}
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
 
@@ -205,6 +215,7 @@ use super::*;
 			class_id: T::ClassId, 
 			instance_id: T::InstanceId,
 			inherit_attrs: bool,
+			p: Permill,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		)->DispatchResult {
 			// Boilerplate (setup, conversions, ensure_signed)
@@ -230,16 +241,34 @@ use super::*;
 				// 2.- Set a whole single attribute as bytes, containing all the fruniques metadata (parent_id, numerical_value, etc..)
 				// 3.- Keep our own metadata (or whole nfts) storage on
 				// 3.1.- Consider the 3 above but with interfaces/traits
-				// I'm assuming doing it via scripts on the front-end isn't viable option 
-				if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(&class_id, &instance_id,&"parent_id".encode() ){
-					//println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
-					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(parent_attr)
-						.expect("Error on converting the parent_id to BoundedVec");
+				// I'm assuming doing it via scripts on the front-end isn't viable option
+				let parent_id = Self::get_nft_attribute(&class_id, &instance_id , &"parent_id".encode() );
+				if parent_id.len() > 0{
+					parent_id_val  = parent_id;
 				}else{
-					//println!("The parent doesn't have a parent_id");
-					parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
+					parent_id_val = BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
 					.expect("Error on converting the parent_id to BoundedVec");
 				}
+				let  num_value = Self::get_nft_attribute(&class_id, &instance_id , &"num_value".encode() );
+				if num_value.len() > 0{
+					let num_value_key = BoundedVec::<u8,T::KeyLimit>::try_from(r#"num_value"#.encode())
+						.expect("Error on encoding the num_value key to BoundedVec");
+					// TODO: Call bytes_to_u32 & divide the numeric value before setting it 
+					pallet_uniques::Pallet::<T>::set_attribute(
+						origin.clone(), class_id, 
+						Some(Self::u16_to_instance_id(new_instance_id)),
+						num_value_key ,num_value
+					)?;
+				}
+				// if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(&class_id, &instance_id,&"parent_id".encode() ){
+				// 	//println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
+				// 	parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(parent_attr)
+				// 		.expect("Error on converting the parent_id to BoundedVec");
+				// }else{
+				// 	//println!("The parent doesn't have a parent_id");
+				// 	parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
+				// 	.expect("Error on converting the parent_id to BoundedVec");
+				// }
 			}else{
 				parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
 					.expect("Error on converting the parent_id to BoundedVec");
@@ -247,7 +276,7 @@ use super::*;
 			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
 			pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u16_to_instance_id(new_instance_id)),
 			parent_id_key ,parent_id_val)?;
-			//let _e = Self::instance_exists(origin,class_id,instance_id);
+			let _e = Self::instance_exists(origin,class_id,instance_id);
 			//let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
 			//println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) ); 
 			<FruniqueCnt<T,I>>::put(new_cnt);
@@ -266,9 +295,10 @@ use super::*;
 		) -> DispatchResult{
 			// Always returns an empty iterator?
 			let instances = pallet_uniques::Pallet::<T>::classes();
-			//println!("Instances found in class {:?}",class_id);
+			//println!("Instances found in class {:?}",instances.count());
+			log::info!("Instances found in class {:?}", instances.count());
 			//println!("\tIterator? {}",instances.count());
-			Self::deposit_event(Event::FruniqueCounter(instances.count().try_into().unwrap()  ));
+			//Self::deposit_event(Event::FruniqueCounter(instances.count().try_into().unwrap()  ));
 			//instances.into_iter().for_each(|f| println!("\tInstance:{:?}",f));
 			Ok(())
 		}
@@ -293,6 +323,15 @@ use super::*;
 		/// Helper function for printing purposes
 		pub fn bytes_to_u32(input: Vec<u8>)->u32{
 			u32::from_ne_bytes(input.try_into().unwrap())
+		}
+
+		//get uniques attribute? 
+		pub fn get_nft_attribute(class_id:&T::ClassId, instance_id:&T::InstanceId, key:&Vec<u8> )->BoundedVec<u8,T::ValueLimit>{
+			if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id,key ){
+				return BoundedVec::<u8,T::ValueLimit>::try_from(a)
+							.expect("Error on converting the attribute to BoundedVec")
+			}
+			BoundedVec::<u8,T::ValueLimit>::default()
 		}
 
 	}

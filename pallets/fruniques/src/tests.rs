@@ -1,5 +1,6 @@
 use crate::mock::*;
 use frame_support::assert_ok;
+use sp_runtime::Permill;
 
 pub struct ExtBuilder;
 
@@ -28,16 +29,17 @@ impl ExtBuilder {
 fn create_frunique_works() {
 	// Create a frunique
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, 1));
+		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0,Some(Permill::from_percent(50)) ,1));
 	});
 }
 
 #[test]
 fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 1, 255, 1));
-		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 255, true,1));
-		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true,1));
+		//assert_ok!(Fruniques::create(Origin::signed(1), 1,255,Some(100), 1));
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 255,true,Permill::from_float(20.525),1) );
+		//Fruniques::spawn(Origin::signed(1),1,255,true,Permill::from_float(20.525),1 );
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true,Permill::from_float(20.525),1));
 		assert_ok!(Fruniques::instance_exists(Origin::signed(1), 1, 1));
 	});
 }
