@@ -5,15 +5,17 @@
   - [Clone and build git projects](#clone-and-build-git-projects)
     - [Polkadot](#polkadot)
     - [Liberland projects](#liberland-projects)
-      - [Liberland node](#liberland-node)
       - [Liberland frontend](#liberland-frontend)
       - [Liberland backend](#liberland-backend)
+      - [Liberland node](#liberland-node)
     - [Hashed chain](#hashed-chain)
   - [Configuring systemd and pm2 services](#configuring-systemd-and-pm2-services)
     - [Polkadot](#polkadot-1)
     - [Liberland projects](#liberland-projects-1)
       - [Liberland frontend](#liberland-frontend-1)
       - [Liberland backend](#liberland-backend-1)
+      - [Liberland node](#liberland-node-1)
+      - [Hashed node](#hashed-node)
   - [Nginx configuration](#nginx-configuration)
   - [Appendix](#appendix)
     - [List of ports per project](#list-of-ports-per-project)
@@ -87,18 +89,10 @@ cd ~
 mkdir liberland
 cd liberland
 # Clone all the github repos:
-git clone https://github.com/liberland/liberland_node.git
 git clone https://github.com/liberland/liberland_frontend.git
 git clone https://github.com/liberland/liberland_backend.git
+git clone https://github.com/liberland/liberland_node.git
 
-```
-#### Liberland node
-The node is built in a similar way to the polkadot project:
-
-```bash
-# Assuming you're at ~/liberland directory
-cd liberland_node
-cargo build --release
 ```
 
 #### Liberland frontend
@@ -121,6 +115,15 @@ cd ~/liberland/liberland_backend
 npm install
 ```
 
+#### Liberland node
+The node is built in a similar way to the polkadot project:
+
+```bash
+# Assuming you're at ~/liberland directory
+cd liberland_node
+cargo build --release
+```
+
 ### Hashed chain
 A hashed chain project is already deployed on the n4 machine; only an update on the main branch was performed:
 
@@ -137,6 +140,32 @@ cargo build --release
 ## Configuring systemd and pm2 services
 
 ### Polkadot
+In order to set-up a kusama validator as a systemd service, it is needed to create a service configuration file:
+
+```bash
+sudo touch /etc/systemd/system/kusama-validator.service
+sudo nano /etc/systemd/system/kusama-validator.service
+```
+
+The file contents consist in defining which command it will execute:
+
+```vim
+[Unit]
+Description=Kusama Validator
+
+[Service]
+ExecStart=/home/max/polkadot/target/release/polkadot --validator --name "name on telemetry" --chain kusama
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Finally, the service can be enabled:
+```bash
+systemctl enable polkadot-validator.service
+```
 
 ### Liberland projects
 Because both frontend and backend are node-based projects, it was decided to use pm2 to daemonize and manage them.
@@ -194,6 +223,73 @@ sudo nginx -t
 
 pm2 list
 ```
+
+#### Liberland node
+
+Firstly, a chain spec needs to be generated:
+
+```bash
+cd ~/liberland/liberland_node
+#Generate the chain spec
+./target/release/liberland-node build-spec > chain-spec-plain.json
+
+./target/release/liberland-node build-spec --chain chain-spec-plain.json --raw > chain-spec.json
+```
+
+Create the service file:
+
+```
+sudo touch /etc/systemd/system/liberland-validator.service
+sudo nano /etc/systemd/system/liberland-validator.service
+```
+
+Service file contents:
+
+```vim
+[Unit]
+Description=Liberland Validator
+
+[Service]
+ExecStart=/home/max/liberland/liberland_node/target/release/liberland-node --chain /home/max/liberland/liberland_node/chain-spec.json --name n1 --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --port 30334 --ws-port 9945 --rpc-port 9934
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Finally, the service can be enabled:
+```bash
+systemctl enable liberland-validator.service
+```
+
+#### Hashed node
+
+For this project, a chain spec and systemd service were already defined, so it will be modified in order to avoid port issues:
+
+```bash
+sudo nano /etc/systemd/system/hashed-validator.service
+```
+
+```bash
+#Added at the end of ExecStart command
+--port 30335 --ws-port 9946 --rpc-port 9935
+```
+Final hashed service configuration:
+```bash
+[Unit]
+Description=Hashed Chaos Validator
+
+[Service]
+ExecStart=/home/max/hashed/hashed-substrate/target/release/hashed --base-path /home/max/hashed/hashed-substrate/hashed-chaos-data --chain /home/max/hashed/hashed-substrate/hashed-chaos-spec-raw.json --name n4 --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU --port 30335 --ws-port 9945 --rpc-port 9935 
+WorkingDirectory=/home/max/hashed/hashed-substrate
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## Nginx configuration
 
 
@@ -213,17 +309,17 @@ pm2 list
 
 | Service | flag/option | port |
 |---------|-------------|------|
-| p2p port | `--port` |  |
-| WebSocket port | `--ws-port` |  |
-| rcp port | `--rpc-port` |  |
+| p2p port | `--port` | 30334 |
+| WebSocket port | `--ws-port` | 9945 |
+| rcp port | `--rpc-port` | 9934 |
 
 #### Hashed (increment by 2)
 
 | Service | flag/option | port |
 |---------|-------------|------|
-| p2p port | `--port` |  |
-| WebSocket port | `--ws-port` |  |
-| rcp port | `--rpc-port` |  |
+| p2p port | `--port` | 30335 |
+| WebSocket port | `--ws-port` | 9946 |
+| rcp port | `--rpc-port` | 9935 |
 
 #### Liberland frontend: 8080
 #### Liberland backend: 3000
