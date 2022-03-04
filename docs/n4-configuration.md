@@ -16,6 +16,7 @@
       - [Liberland backend](#liberland-backend-1)
       - [Liberland node](#liberland-node-1)
       - [Hashed node](#hashed-node)
+  - [SSL setup](#ssl-setup)
   - [Nginx configuration](#nginx-configuration)
   - [Appendix](#appendix)
     - [List of ports per project](#list-of-ports-per-project)
@@ -289,6 +290,8 @@ RestartSec=120
 [Install]
 WantedBy=multi-user.target
 ```
+
+## SSL setup
 
 ## Nginx configuration
 
