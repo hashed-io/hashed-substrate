@@ -16,8 +16,9 @@
       - [Liberland backend](#liberland-backend-1)
       - [Liberland node](#liberland-node-1)
       - [Hashed node](#hashed-node)
-  - [SSL setup](#ssl-setup)
+  - [SSL setup (firewall configuration)](#ssl-setup-firewall-configuration)
   - [Nginx configuration](#nginx-configuration)
+  - [Certbot Certificates](#certbot-certificates)
   - [Appendix](#appendix)
     - [List of ports per project](#list-of-ports-per-project)
       - [Kusama (using the default ports)](#kusama-using-the-default-ports)
@@ -25,6 +26,7 @@
       - [Hashed (increment by 2)](#hashed-increment-by-2)
       - [Liberland frontend: 8080](#liberland-frontend-8080)
       - [Liberland backend: 3000](#liberland-backend-3000)
+    - [Useful commands](#useful-commands)
 
 ## Prerequisites
 
@@ -58,6 +60,14 @@ npm install pm2 -g
 sudo apt install python2
 ``` 
 
+- Installing certbot is essential:
+
+```
+sudo apt install snapd
+sudo snap install core; sudo snap refresh core
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+```
 
 ## Clone and build git projects
 
@@ -78,7 +88,7 @@ git checkout -t origin/release-v0.9.17
 cargo build --release
 ```
 
-Note: It is known that apt & rnf package managers host their own polkadot release, allowing a faster installation and service setup. However, it was decided to build the project from a source level in order to provide us more control regarding the updating process in the future, as well as write a more explicit documentation.
+It is known that apt & rnf package managers host their own polkadot release, allowing a faster installation and service setup. However, it was decided to build the project from a source level in order to provide us more control regarding the updating process in the future, as well as write a more explicit documentation.
 
 ### Liberland projects
 There are currently 3 liberland-related projects: liberland-node, liberland-frontend and liberland-backend, it is required to download and build them:
@@ -155,7 +165,7 @@ The file contents consist in defining which command it will execute:
 Description=Kusama Validator
 
 [Service]
-ExecStart=/home/max/polkadot/target/release/polkadot --validator --name "name on telemetry" --chain kusama
+ExecStart=/home/max/polkadot/target/release/polkadot --validator --name "Hashed kusama node" --chain kusama
 Restart=always
 RestartSec=120
 
@@ -163,9 +173,12 @@ RestartSec=120
 WantedBy=multi-user.target
 ```
 
-Finally, the service can be enabled:
+It is important to mention the validation service can be enabled only after the chain sincronization process (which may take a while):
 ```bash
-systemctl enable polkadot-validator.service
+# It is necessary to sync with the kusama chain:
+
+#
+systemctl enable kusama-validator.service
 ```
 
 ### Liberland projects
@@ -291,10 +304,95 @@ RestartSec=120
 WantedBy=multi-user.target
 ```
 
-## SSL setup
+## SSL setup (firewall configuration)
+
+```bash
+# SSH was allowed beforehand the activation of the firewall as a security measure
+sudo ufw allow 22/tcp
+sudo ufw enable
+# Proxy port
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+# For kusama
+sudo ufw deny 30333/tcp
+sudo ufw deny 9944/tcp
+sudo ufw deny 9933/tcp
+# For Liberland
+sudo ufw deny 30334/tcp
+sudo ufw deny 9945/tcp
+sudo ufw deny 9934/tcp
+# For hashed-chain
+sudo ufw deny 30335/tcp
+sudo ufw deny 9946/tcp
+sudo ufw deny 9935/tcp
+
+sudo ufw reload
+sudo ufw verbose
+```
+
+```bash
+sudo nano /etc/systemd/journald.conf
+```
+
+```bash
+[Journal]
+Storage=persistent
+RateLimitIntervalSec=30s
+RateLimitBurst=20000
+SystemMaxUse=5G
+SystemMaxFileSize=512M
+SystemMaxFiles=100
+```
+
+```bash
+sudo systemctl restart systemd-journald
+```
 
 ## Nginx configuration
 
+Every service must have a reverse-proxi configuration file:
+
+```bash
+cd /etc/nginx/sites-available
+sudo touch /etc/nginx/sites-available/n1.liberland.network
+sudo touch /etc/nginx/sites-available/liberland.network
+sudo touch /etc/nginx/sites-available/backend.liberland.network
+sudo touch /etc/nginx/sites-available/kusama.hashed.systems
+sudo touch /etc/nginx/sites-available/n1.hashed.systems
+```
+
+It is crucial to replace the domain name and the assigned port (In case of being a susbtrate node config file, the port shall be the WS one, see [List of ports per project](#list-of-ports-per-project))
+
+```bash
+server {
+        listen 80;
+        listen [::]:80;
+
+        server_name <domain-name>;
+
+        location / {
+                proxy_pass http://127.0.0.1:<Port || WS port>;
+        }
+}
+
+```
+
+```bash
+#Create symbolic links for all the sites
+sudo ln -s /etc/nginx/sites-available/n1.liberland.network /etc/nginx/sites-enabled/n1.liberland.network
+sudo ln -s /etc/nginx/sites-available/liberland.network /etc/nginx/sites-enabled/liberland.network
+sudo ln -s /etc/nginx/sites-available/backend.liberland.network /etc/nginx/sites-enabled/backend.liberland.network
+sudo ln -s /etc/nginx/sites-available/kusama.hashed.systems /etc/nginx/sites-enabled/kusama.hashed.systems
+sudo ln -s /etc/nginx/sites-available/n1.hashed.systems /etc/nginx/sites-enabled/n1.hashed.systems
+```
+
+## Certbot Certificates
+
+```bash
+sudo certbot -d '*.liberland.network' --nginx
+sudo certbot -d 'liberland.network' --nginx
+sudo certbot -d 'kusama.hashed.systems' --nginx
+```
 
 ## Appendix
 
@@ -326,3 +424,10 @@ WantedBy=multi-user.target
 
 #### Liberland frontend: 8080
 #### Liberland backend: 3000
+
+### Useful commands
+
+```bash
+# See open ports
+sudo lsof -i -P -n | grep LISTEN
+```
