@@ -282,7 +282,7 @@ Final hashed service configuration:
 Description=Hashed Chaos Validator
 
 [Service]
-ExecStart=/home/max/hashed/hashed-substrate/target/release/hashed --base-path /home/max/hashed/hashed-substrate/hashed-chaos-data --chain /home/max/hashed/hashed-substrate/hashed-chaos-spec-raw.json --name n4 --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU --port 30335 --ws-port 9945 --rpc-port 9935 
+ExecStart=/home/max/hashed/hashed-substrate/target/release/hashed --base-path /home/max/hashed/hashed-substrate/hashed-chaos-data --chain /home/max/hashed/hashed-substrate/hashed-chaos-spec-raw.json --name n4 --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --bootnodes /ip4/206.221.189.10/tcp/30333/p2p/12D3KooWL7R8De1mPmCj3zA2pMEJXzbDrJVeEJf2SudV21EK9LxU --port 30335 --ws-port 9946 --rpc-port 9935 
 WorkingDirectory=/home/max/hashed/hashed-substrate
 Restart=always
 RestartSec=120
