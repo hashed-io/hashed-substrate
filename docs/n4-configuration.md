@@ -201,15 +201,8 @@ systemctl status pm2-max
 
 #### Liberland frontend
 
-In oder to daemonize the built, static frontend project, the following command was typed:
-
-```bash
-# 8080 being the port
-pm2 serve /home/max/liberland/liberland_frontend/build/ 8080 -n frontend
-
-# save the current process list
-pm2 save
-```
+Once built, the liberland frontend can be managed by [Nginx](#nginx-configuration).
+ 
 #### Liberland backend
 
 The backend project can't be directly built, so the commands may differ from the previous project:
@@ -264,7 +257,7 @@ Service file contents:
 Description=Liberland Validator
 
 [Service]
-ExecStart=/home/max/liberland/liberland_node/target/release/liberland-node --chain /home/max/liberland/liberland_node/chain-spec.json --name n1 --validator --ws-external --rpc-external --rpc-cors all --rpc-methods=unsafe --port 30334 --ws-port 9945 --rpc-port 9934
+ExecStart=ExecStart=/home/max/liberland/liberland-soil/target/release/liberland --base-path /home/max/liberland/liberland-soil/liberland-soil-data/ --chain /home/max/liberland/liberland-soil/soilSpecRaw.json --port 30334 --ws-port 9945 --rpc-port 9934 --validator --rpc-methods Unsafe --name MyNode01
 Restart=always
 RestartSec=120
 
@@ -377,6 +370,30 @@ server {
 
 ```
 
+Because the liberland front was built statically, nginx can easily serve it without needing pm2:
+```bash
+server {
+
+	server_name liberland.network;
+
+	root /home/max/liberland/liberland_frontend/build;
+
+        # Serve the index
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name liberland.network;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+}
+
+```
+
+Enabling the sites by creating symbolic links:
+
 ```bash
 #Create symbolic links for all the sites
 sudo ln -s /etc/nginx/sites-available/n1.liberland.network /etc/nginx/sites-enabled/n1.liberland.network
@@ -431,3 +448,13 @@ sudo certbot -d 'kusama.hashed.systems' --nginx
 # See open ports
 sudo lsof -i -P -n | grep LISTEN
 ```
+
+
+TODO:
+- [x] Check current state of services
+- [x] Tweak the hashed-node ports (that worked)
+- [x] Check if firewall works (it works as expected)
+- [ ] Sync sum (disk space at 98? how much does the db weight?)
+- [ ] Backend(test with postman?)
+- [ ] Have a brand-new liberland project (hashed chain fork and then rename all)
+
