@@ -50,6 +50,7 @@ use super::*;
 		NoPermission,
 		StorageOverflow,
 		NotYetImplemented,
+		// Too many fruniques were minted
 		FruniqueCntOverflow,
 		// The asset_id is not linked to a frunique or it doesn't exists
 		NotAFrunique,
@@ -116,83 +117,6 @@ use super::*;
 			Ok(())
 		}
 
-		/// Create a new frunique that is a child or subset of the parent frunique
-		///
-		/// A new NFT (unique) is created and reserved,
-		/// a fungible token (asset) is created and minted to the owner.
-		///
-		/// The origin must be Signed and the sender must have sufficient funds free.
-		///
-		/// `AssetDeposit` funds of sender are reserved.
-		///
-		/// Parameters:
-		/// - `class_id`: the class for the item that is spawning
-		/// - `instance_id`: the identifier of the asset that is spawning. This must not be currently in use to identify
-		/// an existing asset.
-		/// - `new_instance_id`: The identifier of the new asset being created. This must not be currently in use to identify
-		/// an existing asset.
-		/// - `admin`: The admin of this class of assets. The admin is the initial address of each
-		/// member of the asset class's admin team.
-		///
-		/// Emits `FruniqueDivided` event when successful.
-		///
-		/// Weight: `O(1)`		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(3))]
-		pub fn divide(
-			_origin: OriginFor<T>,
-			#[pallet::compact] _class_id: T::ClassId,
-			_instance_id: T::InstanceId,
-			_new_instance_id: T::InstanceId,
-			_amount: u64,
-		) -> DispatchResult {
-			ensure!(false, Error::<T, I>::NotYetImplemented);
-			//let owner = ensure_signed(_origin.clone())?;
-			//let instance = Asset::<T, I>::insert(&_class_id, &_instance_id, details);
-			//let instance = pallet_uniques::Pallet::<T>::
-			// Get the members from `special-pallet` pallet
-			//let who = special_pallet::Pallet::<T>::get();
-			// retrieve the instance being divided
-			// let instance: T::InstanceId = Self.Asset::<T, _>::get(class_id.clone(), instance_id.clone())
-			// 	.ok_or(Error::<T, _>::Unknown)?;
-			// pallet_uniques::Pallet::<T>::mint(
-			// 	origin.clone(),
-			// 	class_id.clone(),
-			// 	new_instance_id.clone(),
-			// 	instance.admin.clone(),
-			// )?;
-
-			// set the parent instance_id to the metadata
-			// // (probably will need to record this in the fruniques pallet storage)
-			// pallet_uniques::Pallet::<T>::set_attribute(
-			// 	origin.clone(),
-			// 	class_id.clone(),
-			// 	new_instance_id.clone(),
-			// 	"parent".into(),            // key: BoundedVec<u8, T::KeyLimit>,
-			// 	instance_id.clone().into(), // value: BoundedVec<u8, T::ValueLimit>,
-			// )?;
-
-			// pallet_uniques::Pallet::<T>::set_attribute(
-			// 	origin.clone(),
-			// 	class_id.clone(),
-			// 	new_instance_id.clone(),
-			// 	"amount".into(), // key: BoundedVec<u8, T::KeyLimit>,
-			// 	amount,          // value: BoundedVec<u8, T::ValueLimit>,
-			// )?;
-
-			// let admin = T::Lookup::lookup(instance.admin)?;
-			// Self::deposit_event(Event::FruniqueDivided(
-			// 	owner,
-			// 	admin,
-			// 	class_id,
-			// 	new_instance_id, // non-fungible token parameters
-			// 	0,
-			// 	0,
-			// 	0,
-			// )); // fungible token parameters
-			Ok(())
-		}
-
 		/// ## NFT Division
 		/// 
 		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
@@ -215,7 +139,7 @@ use super::*;
 			class_id: T::ClassId, 
 			instance_id: T::InstanceId,
 			inherit_attrs: bool,
-			p: Permill,
+			_p: Permill,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		)->DispatchResult {
 			// Boilerplate (setup, conversions, ensure_signed)

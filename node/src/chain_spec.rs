@@ -82,6 +82,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		None,
+		// Fork ID
+		None,
 		// Properties
 		None,
 		// Extensions
@@ -129,6 +131,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		Some("hashed"),
+		// Fork ID
+		None,
 		// Properties
 		Some(hashed_properties()),
 		// Extensions
@@ -166,6 +170,8 @@ pub fn chaos_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		Some("hashed"),
+		// Fork ID
+		None,
 		// Properties
 		Some(hashed_properties()),
 		// Extensions
@@ -205,7 +211,7 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		assets: Default::default(),
 		// bounties: Default::default(),
-		sudo: SudoConfig { key: root_key },
+		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
 	}
 }
