@@ -1,11 +1,11 @@
 use hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
-	SudoConfig, SystemConfig, WASM_BINARY,
+	SudoConfig, SystemConfig, NodeAuthorizationConfig, WASM_BINARY,
 };
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public, OpaquePeerId};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
@@ -207,6 +207,18 @@ fn testnet_genesis(
 			],
 			phantom: Default::default(),
 		},
+		node_authorization: NodeAuthorizationConfig {
+            nodes: vec![
+                (
+                    OpaquePeerId(bs58::decode("12D3KooWQxwQyQ3BaCs5tweoTmHNWHbpHePZt6P9SscBps1FWsUc").into_vec().unwrap()),
+                    endowed_accounts[0].clone()
+                ),
+                (
+                    OpaquePeerId(bs58::decode("12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm").into_vec().unwrap()),
+                    endowed_accounts[1].clone()
+                ),
+            ],
+        },
 		society: Default::default(),
 		treasury: Default::default(),
 		assets: Default::default(),

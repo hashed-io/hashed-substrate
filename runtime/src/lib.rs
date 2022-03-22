@@ -340,21 +340,21 @@ impl pallet_indices::Config for Runtime {
 	type WeightInfo = ();
 }
 
-// parameter_types! {
-// 	pub const MaxWellKnownNodes: u32 = 8;
-// 	pub const MaxPeerIdLength: u32 = 128;
-// }
+parameter_types! {
+	pub const MaxWellKnownNodes: u32 = 8;
+	pub const MaxPeerIdLength: u32 = 128;
+}
 
-// impl pallet_node_authorization::Config for Runtime {
-// 	type Event = Event;
-// 	type MaxWellKnownNodes = MaxWellKnownNodes;
-// 	type MaxPeerIdLength = MaxPeerIdLength;
-// 	type AddOrigin = EnsureRoot<AccountId>;
-// 	type RemoveOrigin = EnsureRoot<AccountId>;
-// 	type SwapOrigin = EnsureRoot<AccountId>;
-// 	type ResetOrigin = EnsureRoot<AccountId>;
-// 	type WeightInfo = ();
-// }
+impl pallet_node_authorization::Config for Runtime {
+	type Event = Event;
+	type MaxWellKnownNodes = MaxWellKnownNodes;
+	type MaxPeerIdLength = MaxPeerIdLength;
+	type AddOrigin = EnsureRoot<AccountId>; // Change EnsureRoot to a governance-based checking
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type SwapOrigin = EnsureRoot<AccountId>;
+	type ResetOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
+}
 
 parameter_types! {
 	pub const MembershipMaxMembers: u32 = 100_000;
@@ -549,7 +549,7 @@ construct_runtime!(
 		Treasury: pallet_treasury,
 		Council: pallet_collective::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Membership: pallet_membership,
-		 // NodeAuthorization: pallet_node_authorization,
+		NodeAuthorization: pallet_node_authorization,
 		Society: pallet_society,
 		Bounties: pallet_bounties,
 		Uniques: pallet_uniques,
