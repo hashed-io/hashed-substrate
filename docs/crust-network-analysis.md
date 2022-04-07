@@ -11,13 +11,14 @@ _"Crust implements the incentive layer protocol for decentralized storage with a
 - Tested on rococo/westend, Polkadot/Kusama ParaChain Technical Readiness. 
 
 
-## Current status of the main networks
+## Current status of the crust networks
 
 | Network | Token |Type | lease perdiod |
 |---|---|---|---|
 | Crust network (Polkadot version) | CRU |Parathread | NA |
 | Crust shadow (Kusama version) | CSM |Parachain | January 10, 2022 to December 19, 2022. |
-| Crust Maxwell (preview network) |  |
+| Crust Maxwell | Candy | Preview network | NA |
+| Crust Rocky | Testnet network | CRU | NA |
 
 ## Features/capabilities
 
@@ -32,6 +33,17 @@ _"Crust implements the incentive layer protocol for decentralized storage with a
 
 Note: Storage user guidance is coming soon.
 
+
+## Pros
+- Hosting for websites/dapps
+- Currently free for susbtrate chains
+- Available using pokladotjs frontend.
+ 
+## Cons
+- Unclear documentation
+- Too much project fragmentation
+- Two requests for every file upload (ipfs upload and remote pinning request)
+- The pinned files have an expiration date (6 months from the upload date) and it is required to inject tokens for a renewal.
 
 ## Links and references
 
