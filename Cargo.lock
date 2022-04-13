@@ -4042,6 +4042,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
+ "pallet-identity",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

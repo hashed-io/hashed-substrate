@@ -46,6 +46,7 @@ pub const WEEKS: BlockNumber = DAYS * 7;
 // 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
 pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
 
+pub const XPUB_LEN: u32 = 112;
 // #![cfg_attr(not(feature = "std"), no_std)]
 // Money matters.
 // pub mod currency {

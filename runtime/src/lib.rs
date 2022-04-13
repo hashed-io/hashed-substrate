@@ -544,9 +544,14 @@ impl pallet_preimage::Config for Runtime {
 	type ByteDeposit = PreimageByteDeposit;
 }
 
+parameter_types! {
+	pub const XPubLen: u32 = XPUB_LEN;
+}
+
 impl pallet_nbv_storage::Config for Runtime {
 	type Event = Event;
 	type PreimageProvider = Preimage;
+	type XPubLen = XPubLen;
 }
 construct_runtime!(
 	pub enum Runtime where
