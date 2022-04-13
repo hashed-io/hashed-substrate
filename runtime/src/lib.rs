@@ -527,6 +527,27 @@ impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const PreimageMaxSize: u32 = 4096 * 1024;
+	pub const PreimageBaseDeposit: Balance = 1 * DOLLARS;
+	// One cent: $10,000 / MB
+	pub const PreimageByteDeposit: Balance = 1 * CENTS;
+}
+
+impl pallet_preimage::Config for Runtime {
+	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
+	type Event = Event;
+	type Currency = Balances;
+	type ManagerOrigin = EnsureRoot<AccountId>;
+	type MaxSize = PreimageMaxSize;
+	type BaseDeposit = PreimageBaseDeposit;
+	type ByteDeposit = PreimageByteDeposit;
+}
+
+impl pallet_nbv_storage::Config for Runtime {
+	type Event = Event;
+	type PreimageProvider = Preimage;
+}
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -555,6 +576,8 @@ construct_runtime!(
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
+		Preimage: pallet_preimage,
+		NBVStorage: pallet_nbv_storage,
 	}
 );
 
