@@ -27,7 +27,6 @@ pub mod pallet {
 	use scale_info::prelude::boxed::Box;
 	use scale_info::prelude::string::String;
 	use scale_info::prelude::vec::Vec;
-	use frame_support::sp_io::hashing::blake2_256;
 
 	//use scale_info::TypeInfo;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -51,54 +50,91 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, T::AccountId),
+
+		/// Xpub stored and linked to an account identity
+		XPubStored(T::Hash, T::AccountId),
+		
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Work in progress!
+		NotYetImplemented,
+		/// Xpub shouldn't be empty. Use the identity pallet if needed.
+		NoneValue,
+		// The xpub has already been uploaded and taken by another account
+		XPubAlreadyTaken,
+		// Something went wrong when inserting the xpub preimage
+		XPubNotFound,
+		// Something went wrong when setting the account identity
+		SetIdentityFailed,
 	}
+
+	// Tentative, but maybe we don't need it, code review required
+	// #[pallet::storage]
+	// #[pallet::getter(fn xpubs_by_owner)]
+	// /// Keeps track of what accounts own what Kitty.
+	// pub(super) type XPubs_by_owner<T: Config> = StorageMap<
+	// 	_,
+	// 	Twox64Concat,
+	// 	T::AccountId,
+	// 	BoundedVec<u8, T::XPubLen>,
+	// 	ValueQuery,
+	// >;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn set_complete_identity(origin: OriginFor<T>, xpub: BoundedVec<u8, T::XPubLen>,
-			mut info: Box< pallet_identity::IdentityInfo<T::MaxAdditionalFields> >
+		//TODO: 
+		// set account-> xpub relationship ?
+		// add valition on request_preimage <=1
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
+		pub fn set_complete_identity(origin: OriginFor<T>, 
+			mut info: Box< pallet_identity::IdentityInfo<T::MaxAdditionalFields> >,
+			xpub: BoundedVec<u8, T::XPubLen>,
 		) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
-			// Storing the preimage doesn't give you the hash, but this gives you the same hash (?)
+			ensure!(xpub.len()>0,<Error<T>>::NoneValue);
+			// Storing the preimage doesn't give you the hash, but this gives you the same hash
 			let hash = T::Hashing::hash(&xpub);
-			log::info!("Manual Note result: {:?}",hash);
+			// Ensure that the xpub hasn't been taken before
+			let uploaded_before = T::PreimageProvider::have_preimage(&hash);
+			ensure!(!uploaded_before, <Error<T>>::XPubAlreadyTaken);
+			log::info!("Manual hash result: {:?}",hash);
 			// Requesting the hash first allows to insert data without a deposit
 			T::PreimageProvider::request_preimage(&hash);
 			// Inserting the xpub on pallet_preimage 
-			T::PreimageProvider::note_preimage(xpub.to_vec().try_into().expect("Error trying to convert xpb to vec"));
+			T::PreimageProvider::note_preimage(xpub.to_vec().try_into().expect("Error trying to convert xpub to vec"));
 			// Confirm the xpub was inserted
-			let retrieved = T::PreimageProvider::get_preimage(&hash).expect("Error getting the preimage");
-			log::info!("Retrieved file: {:?}",retrieved.to_ascii_lowercase() );
-			// Setting up a the 
-			let key = BoundedVec::<u8,ConstU32<32> >::try_from("extended_pub_key".encode())
+			ensure!(T::PreimageProvider::have_preimage(&hash),<Error<T>>::XPubNotFound);
+			// Setting up the xpub key/value pair
+			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
 			let hash_vec: BoundedVec<u8,ConstU32<32> > = hash.encode().try_into().expect("Error trying to convert the hash to vec");
-			//let mut copy_info = info.additional.clone();
+			// Try to push the key
 			info.additional.try_push(
 				(pallet_identity::Data::Raw(key),pallet_identity::Data::Raw(hash_vec) ) 
-			).expect("Error while trying to add the xpub to the identity data structure");
+			).map_err(|_| pallet_identity::Error::<T>::TooManyFields)?;
 			//info.additional = copy_info;
-			pallet_identity::Pallet::<T>::set_identity(origin, info).expect("Error on setting up the account identity");
-			let id = pallet_identity::Pallet::<T>::identity(&who).unwrap();
-			log::info!("Testing identity pallet: {:?}",id);
+			pallet_identity::Pallet::<T>::set_identity(origin, info).map_err(|_| <Error<T>>::SetIdentityFailed)?;
 			// Emit an event.
-			Self::deposit_event(Event::SomethingStored(45, who));
+			Self::deposit_event(Event::XPubStored(hash, who));
 
 			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
 
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_psbt(
+			origin: OriginFor<T>,
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			ensure!(false,<Error<T>>::NotYetImplemented);
+
+			Ok(())
+		}
 
 	}
 
