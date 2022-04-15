@@ -59,7 +59,7 @@ impl pallet_preimage::Config for Test {
 }
 
 parameter_types! {
-	pub const MaxAdditionalFields: u32 = 2;
+	pub const MaxAdditionalFields: u32 = 1;
 	pub const MaxRegistrars: u32 = 20;
 }
 ord_parameter_types! {
@@ -130,7 +130,7 @@ impl pallet_nbv_storage::Config for Test {
  pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, 10), (2, 10), (3, 10), (10, 100), (20, 100), (30, 100)],
+		balances: vec![(1, 1000000000), (2000000000, 10), (3, 10), (10, 100), (20, 100), (30, 100)],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

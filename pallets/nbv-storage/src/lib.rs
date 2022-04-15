@@ -22,7 +22,8 @@ pub mod pallet {
 	use frame_support::{
 		traits::{PreimageProvider, PreimageRecipient, Get},
 		sp_runtime::traits::Hash,
-		BoundedVec
+		BoundedVec,
+		transactional
 	};
 	use scale_info::prelude::boxed::Box;
 	use scale_info::prelude::string::String;
@@ -65,10 +66,8 @@ pub mod pallet {
 		NoneValue,
 		// The xpub has already been uploaded and taken by another account
 		XPubAlreadyTaken,
-		// Something went wrong when inserting the xpub preimage
+		/// Something went wrong when inserting the xpub preimage
 		XPubNotFound,
-		// Something went wrong when setting the account identity
-		SetIdentityFailed,
 	}
 
 	// Tentative, but maybe we don't need it, code review required
@@ -88,12 +87,12 @@ pub mod pallet {
 		//TODO: 
 		// set account-> xpub relationship ?
 		// add valition on request_preimage <=1
-
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn set_complete_identity(origin: OriginFor<T>, 
 			mut info: Box< pallet_identity::IdentityInfo<T::MaxAdditionalFields> >,
 			xpub: BoundedVec<u8, T::XPubLen>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
 			ensure!(xpub.len()>0,<Error<T>>::NoneValue);
@@ -118,12 +117,12 @@ pub mod pallet {
 				(pallet_identity::Data::Raw(key),pallet_identity::Data::Raw(hash_vec) ) 
 			).map_err(|_| pallet_identity::Error::<T>::TooManyFields)?;
 			//info.additional = copy_info;
-			pallet_identity::Pallet::<T>::set_identity(origin, info).map_err(|_| <Error<T>>::SetIdentityFailed)?;
+			let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, info)?;
 			// Emit an event.
 			Self::deposit_event(Event::XPubStored(hash, who));
 
 			// Return a successful DispatchResultWithPostInfo
-			Ok(())
+			Ok(identity_result)
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
