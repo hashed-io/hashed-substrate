@@ -75,6 +75,17 @@ fn inserting_same_xpub_should_fail() {
 }
 
 #[test]
+fn removing_xpub_should_work() {
+	new_test_ext().execute_with(|| {
+		// Dispatch a signed extrinsic.
+		let xpub = BoundedVec::<u8,XPubLen >::try_from(b"generic_xpub".encode())
+				.expect("Error on encoding the xpub key to BoundedVec");
+		assert_ok!(NBVStorage::set_complete_identity(Origin::signed(1), Box::new( dummy_identity() ), xpub ));
+		assert_ok!(NBVStorage::remove_xpub_from_identity(Origin::signed(1)));
+	});
+}
+
+#[test]
 fn set_psbt_not_implemented() {
 	new_test_ext().execute_with(|| {
 		assert_noop!(NBVStorage::set_psbt(Origin::signed(1)),Error::<Test>::NotYetImplemented);
