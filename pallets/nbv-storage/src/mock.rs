@@ -122,7 +122,6 @@ parameter_types! {
 
 impl pallet_nbv_storage::Config for Test {
 	type Event = Event;
-	type PreimageProvider = Preimage;
 	type XPubLen = XPubLen;
 }
 
