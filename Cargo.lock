@@ -2053,7 +2053,6 @@ dependencies = [
  "pallet-membership",
  "pallet-nbv-storage",
  "pallet-node-authorization",
- "pallet-preimage",
  "pallet-randomness-collective-flip",
  "pallet-recovery",
  "pallet-society",

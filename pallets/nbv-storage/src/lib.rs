@@ -1,8 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
 
 #[cfg(test)]
@@ -53,7 +50,7 @@ use frame_support::pallet_prelude::*;
 		/// Removed Xpub previously linked to the account
 		XpubRemoved(T::AccountId),
 		/// The PBST was succesuflly inserted and linked to the account
-		PSBTStored( [u8 ; 32] , T::AccountId),
+		PSBTStored(T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -69,8 +66,11 @@ use frame_support::pallet_prelude::*;
 		XPubNotFound,
 		/// The generated Hashes aren't the same
 		HashingError,
+		/// Found Invalid name on an additional field 
+		InvalidAdditionalField,
 	}
 
+	/// Stores hash-xpub pairs
 	#[pallet::storage]
 	#[pallet::getter(fn xpubs)]
 	pub(super) type Xpubs<T: Config> = StorageMap<
@@ -82,9 +82,6 @@ use frame_support::pallet_prelude::*;
 	>;
 
 	/// Keeps track of what accounts own what xpub.
-	/// The xpub needs to be the key in order to search for it
-	/// TODO: Have an additional data structure for individual xpubs?
-	/// have XpubsByOwner to save the xpub hash instead?
 	#[pallet::storage]
 	#[pallet::getter(fn xpubs_by_owner)]
 	pub(super) type XpubsByOwner<T: Config> = StorageMap<
@@ -97,7 +94,7 @@ use frame_support::pallet_prelude::*;
 
 	#[pallet::storage]
 	#[pallet::getter(fn psbts)]
-	pub(super) type PSBT<T: Config> = StorageMap<
+	pub(super) type PSBTs<T: Config> = StorageMap<
 		_,
 		Blake2_256,
 		T::AccountId,
@@ -105,9 +102,33 @@ use frame_support::pallet_prelude::*;
 		OptionQuery,
 	>;
 
+	pub enum XpubStatus {
+		Owned,
+		Free,
+		Taken,
+	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		/// ## Identity with XPub insertion
+		/// 
+		/// This extrinsic inserts a user-defined xpub as an additional field in the identity pallet,
+		/// as well as in the pallet storage.
+		///
+		/// ### Parameters:
+		/// - `info`: Contains all the default `pallet-identity` fields (display, legal, twitter, etc.).
+		/// Additional fields may also be inserted with some minor limitations (see Considerations)
+		/// - `xpub`: The unique identifier of the instance to be fractioned/divided 
+		/// 
+		/// ### Considerations 
+		/// - The origin must be Signed and the sender must have sufficient funds free for the identity insertion.
+		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
+		///  fees will be applied nonetheless).
+		/// - This extrinsic will insert an additional field named `xpub`. In order to avoid conflicts and malfunctioning,
+		/// it is highly advised to refrain naming an additional field like that.
+		/// - This extrinsic can handle a xpub update, but if other fields are needed to be updated, then using pallet-identity
+		/// is ideal (while adding explicitly the xpub additional field).
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn set_complete_identity(origin: OriginFor<T>, 
@@ -117,27 +138,26 @@ use frame_support::pallet_prelude::*;
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
 			ensure!(xpub.len()>0,<Error<T>>::NoneValue);
+			ensure!(Self::xpub_field_available(&info.additional),<Error<T>>::InvalidAdditionalField);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
-			// Ensure that the xpub hasn't been taken before
-			ensure!(!<Xpubs<T>>::contains_key(manual_hash) , <Error<T>>::XPubAlreadyTaken);
-			// If there's a previous identity set for that account, this process
-			// will overwrite it, so removing the xpub from the storage is necessary
-			log::info!("User has xpub? {:?}", <XpubsByOwner<T>>::contains_key(who.clone()));
-			log::info!("Xpub hash exists? {:?}", <Xpubs<T>>::contains_key(manual_hash));
-			if <XpubsByOwner<T>>::contains_key(who.clone()) {
-				Self::remove_xpub_from_pallet_storage(who.clone() );
-				log::info!("Previous xpub entries removed");
+			// Assert if the input xpub is free to take (or if the user owns it)
+			match Self::get_xpub_status(who.clone(),manual_hash.clone()) {
+				XpubStatus::Owned => log::info!("Xpub owned, nothing to insert"),
+				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken )?, //xpub taken: abort tx
+				XpubStatus::Free => { // xpub free: erase unused xpub and insert on maps
+					Self::remove_xpub_from_pallet_storage(who.clone());
+					<Xpubs<T>>::insert(manual_hash, xpub.clone() );
+					// Confirm the xpub was inserted
+					let mut inserted_hash  = <Xpubs<T>>::hashed_key_for(manual_hash);
+					// the 2nd half of the inserted_hash is the real key hash.
+					let partial_hash = inserted_hash.split_off(32);
+					// The manually calculated hash should always be equal to the StorageMap hash
+					ensure!(partial_hash.as_slice() == manual_hash,  <Error<T>>::HashingError);
+					// If everything is ok, insert the xpub in the owner->hash map
+					<XpubsByOwner<T>>::insert( who.clone() , manual_hash);
+				},
 			}
-			log::info!("After: User has xpub? {:?}", <XpubsByOwner<T>>::contains_key(who.clone()));
-			log::info!("After: Xpub hash exists? {:?}", <Xpubs<T>>::contains_key(manual_hash));
-			// Insert the xpubs on both of the maps (hash-xpub and account-hash)
-			<Xpubs<T>>::insert(manual_hash, xpub.clone() );
-			<XpubsByOwner<T>>::insert( who.clone() , manual_hash);
-			// Confirm the xpub was inserted
-			let mut inserted_hash  = <Xpubs<T>>::hashed_key_for(manual_hash);
-			// the 2nd half of the inserted_hash is the real key hash
-			let partial_hash = inserted_hash.split_off(32);
-			ensure!(partial_hash.as_slice() == manual_hash,  <Error<T>>::HashingError);
+
 			// Setting up the xpub key/value pair
 			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
@@ -154,6 +174,11 @@ use frame_support::pallet_prelude::*;
 			Ok(identity_result)
 		}
 
+		/// ## Xpub removal
+		/// 
+		/// Removes the linked xpub from the account which signs the transaction.
+		/// The xpub will be removed from both the pallet storage and identity registration.
+		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub_from_identity(
@@ -173,14 +198,12 @@ use frame_support::pallet_prelude::*;
 			let updated_fields = identity.info.additional.clone().try_mutate(
 				|addittional_fields|{
 					xpub_tuple = addittional_fields.remove(xpub_index);
-					//log::info!("xpub retrieved: {:?}", xpub_tuple.1.encode().drain(..0));
-					// TODO: fix this (try_into?)
-					//let old_xpub_hash: [u8 ; 32] = xpub_tuple.1.encode()[1..].try_into().expect("Error converting retireved xpub");
-					Self::remove_xpub_from_pallet_storage(who.clone());
 					()
 				}
 			).ok_or(Error::<T>::XPubNotFound)?;
-
+			let old_xpub_hash: [u8 ; 32] = xpub_tuple.1.encode()[1..].try_into().expect("Error converting retireved xpub");
+			ensure!( <Xpubs<T>>::contains_key(old_xpub_hash), Error::<T>::HashingError);
+			Self::remove_xpub_from_pallet_storage(who.clone());
 			identity.info.additional.clone_from(&updated_fields);
 		 	let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, Box::new( identity.info )  )?;
 
@@ -188,14 +211,22 @@ use frame_support::pallet_prelude::*;
 			 Ok(identity_result)
 		}
 
+		/// ## PSBT insertion
+		/// 
+		/// At the current moment, only one PSTB is allowed to be inserted per account
+		///
+		/// ### Parameters:
+		/// - `psbt`: Ideally encoded to base 64 and then to binary. Its size is restricted by 
+		/// the constant `T::PSBTMaxLen`
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_psbt(
 			origin: OriginFor<T>,
 			psbt: BoundedVec<u8, T::PSBTMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			<PSBT<T>>::insert(who.clone(),psbt);
-			//ensure!(false,<Error<T>>::NotYetImplemented);
+			<PSBTs<T>>::insert(who.clone(),psbt);
+
+			Self::deposit_event(Event::PSBTStored( who ) );
 
 			Ok(())
 		}
@@ -203,20 +234,40 @@ use frame_support::pallet_prelude::*;
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn bytes_to_string(input: Vec<u8>)->String{
-			let mut s = String::default();
-			for x in input{
-				//let c: char = x.into();
-				s.push(x as char);
-			}
-			s
-		}
 		/// Use with caution
 		pub fn remove_xpub_from_pallet_storage(who : T::AccountId){
 			// No error can be propagated from the remove functions
-			let old_hash = <XpubsByOwner<T>>::take(who ).expect("Old hash not found");
-			<Xpubs<T>>::remove(old_hash);
+			if <XpubsByOwner<T>>::contains_key(who.clone()){
+				let old_hash = <XpubsByOwner<T>>::take(who ).expect("Old hash not found");
+				<Xpubs<T>>::remove(old_hash);
+			}
 
+		}
+
+		// Ensure at that certain point, no xpub field exists on the identity
+		pub fn xpub_field_available(fields: &BoundedVec<(pallet_identity::Data, pallet_identity::Data), T::MaxAdditionalFields>) -> bool{
+			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
+				.expect("Error on encoding the xpub key to BoundedVec");
+			let xpub_count = fields.iter().find(|(k, _)| k == &pallet_identity::Data::Raw(key.clone()));
+			xpub_count.is_none()
+		}
+
+		// check if the xpub is free to take/update or if its owned by the account
+		pub fn get_xpub_status(who : T::AccountId, xpub_hash : [u8; 32]) -> XpubStatus{
+			if <Xpubs<T>>::contains_key(xpub_hash) {
+				if let Some(owned_hash) = <XpubsByOwner<T>>::get(who.clone()){
+					match xpub_hash == owned_hash{
+						true => return XpubStatus::Owned,
+						false => return XpubStatus::Taken,
+					}
+				}else{
+					// xpub registered and the account doesnt own it: unavailable
+					return XpubStatus::Taken;
+				}
+				// Does the user owns the registered xpub? if yes, available
+			}
+			// new xpub registry: available 
+			XpubStatus::Free
 		}
     }
 

@@ -118,13 +118,14 @@ impl frame_system::Config for Test {
 
 parameter_types! {
 	pub const XPubLen: u32 = 112;
+	pub const PSBTMaxLen: u32  = 2048;
 }
 
 impl pallet_nbv_storage::Config for Test {
 	type Event = Event;
 	type XPubLen = XPubLen;
+	type PSBTMaxLen = PSBTMaxLen;
 }
-
 // Build genesis storage according to the mock runtime.
  pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
