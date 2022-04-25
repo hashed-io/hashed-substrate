@@ -22,8 +22,6 @@ use frame_support::pallet_prelude::*;
 		sp_io::hashing::blake2_256,
 	};
 	use scale_info::prelude::boxed::Box;
-	use scale_info::prelude::string::String;
-	use scale_info::prelude::vec::Vec;
 
 	//use scale_info::TypeInfo;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
