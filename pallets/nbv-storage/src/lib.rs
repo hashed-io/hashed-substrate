@@ -46,7 +46,7 @@ use frame_support::pallet_prelude::*;
 		/// Xpub and hash stored. Linked to an account identity
 		XPubStored([u8 ; 32], T::AccountId),
 		/// Removed Xpub previously linked to the account
-		XpubRemoved(T::AccountId),
+		XPubRemoved(T::AccountId),
 		/// The PBST was succesuflly inserted and linked to the account
 		PSBTStored(T::AccountId),
 	}
@@ -143,7 +143,9 @@ use frame_support::pallet_prelude::*;
 				XpubStatus::Owned => log::info!("Xpub owned, nothing to insert"),
 				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken )?, //xpub taken: abort tx
 				XpubStatus::Free => { // xpub free: erase unused xpub and insert on maps
-					Self::remove_xpub_from_pallet_storage(who.clone());
+					if <XpubsByOwner<T>>::contains_key(who.clone()) {
+						Self::remove_xpub_from_pallet_storage(who.clone())?;
+					}
 					<Xpubs<T>>::insert(manual_hash, xpub.clone() );
 					// Confirm the xpub was inserted
 					let mut inserted_hash  = <Xpubs<T>>::hashed_key_for(manual_hash);
@@ -188,24 +190,26 @@ use frame_support::pallet_prelude::*;
 				.ok_or(pallet_identity::Error::<T>::NoIdentity)?;
 			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
+			// Search for the xpub field
 			let xpub_index = identity.info.additional.iter().position(
 				|field| field.0.eq(&pallet_identity::Data::Raw(key.clone()))
 			).ok_or(<Error<T>>::XPubNotFound)?;
-
-			let mut xpub_tuple = (pallet_identity::Data::None, pallet_identity::Data::None);
+			// Removing the xpub field on the account's identity
+			let mut xpub_id_field = (pallet_identity::Data::None, pallet_identity::Data::None);
 			let updated_fields = identity.info.additional.clone().try_mutate(
 				|addittional_fields|{
-					xpub_tuple = addittional_fields.remove(xpub_index);
+					xpub_id_field = addittional_fields.remove(xpub_index);
 					()
 				}
 			).ok_or(Error::<T>::XPubNotFound)?;
-			let old_xpub_hash: [u8 ; 32] = xpub_tuple.1.encode()[1..].try_into().expect("Error converting retireved xpub");
+			// Using the obtained xpub hash to remove it from the pallet's storage
+			let old_xpub_hash: [u8 ; 32] = xpub_id_field.1.encode()[1..].try_into().expect("Error converting retrieved xpub");
 			ensure!( <Xpubs<T>>::contains_key(old_xpub_hash), Error::<T>::HashingError);
-			Self::remove_xpub_from_pallet_storage(who.clone());
+			Self::remove_xpub_from_pallet_storage(who.clone())?;
 			identity.info.additional.clone_from(&updated_fields);
 		 	let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, Box::new( identity.info )  )?;
 
-		 	Self::deposit_event(Event::XpubRemoved( who));
+		 	Self::deposit_event(Event::XPubRemoved( who));
 			 Ok(identity_result)
 		}
 
@@ -233,12 +237,14 @@ use frame_support::pallet_prelude::*;
 
 	impl<T: Config> Pallet<T> {
 		/// Use with caution
-		pub fn remove_xpub_from_pallet_storage(who : T::AccountId){
+		pub fn remove_xpub_from_pallet_storage(who : T::AccountId) -> Result<(), Error<T> > {
 			// No error can be propagated from the remove functions
 			if <XpubsByOwner<T>>::contains_key(who.clone()){
 				let old_hash = <XpubsByOwner<T>>::take(who ).expect("Old hash not found");
 				<Xpubs<T>>::remove(old_hash);
+				return Ok(());
 			}
+			return Err(<Error<T>>::XPubNotFound );
 
 		}
 
