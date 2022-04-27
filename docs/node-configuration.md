@@ -53,7 +53,7 @@ ls hashed-chaos-data/chains/chaos/keystore/
 
 Now all that is left is to boot up the node, replacing the `--node-key` content with the generated node-key:
 ```bash
-sudo ./target/release/hashed --base-path hashed-chaos-data --chain chaos2.json --node-key=<your node key> --rpc-external --rpc-cors all --rpc-methods=unsafe --no-mdns --validator --bootnodes /ip4/206.221.189.10/tcp/30335/p2p/12D3KooWQxwQyQ3BaCs5tweoTmHNWHbpHePZt6P9SscBps1FWsUc
+sudo ./target/release/hashed --base-path hashed-chaos-data --chain chaos2.json --node-key=<your node key> --rpc-external --rpc-cors all --rpc-methods=unsafe --no-mdns --validator --bootnodes /ip4/206.221.189.10/tcp/30335/p2p/12D3KooWQxwQyQ3BaCs5tweoTmHNWHbpHePZt6P9SscBps1FWsUc --offchain-worker always
 ```
 
 ## References
