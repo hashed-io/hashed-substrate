@@ -42,12 +42,16 @@ fn dummy_wrong_identity() -> IdentityInfo<MaxAdditionalFields> {
 }
 
 fn dummy_xpub() -> BoundedVec<u8,XPubLen >{
-	BoundedVec::<u8,XPubLen >::try_from(b"tpubDEMkzn5sBo8Nct35y2BEFhJTqhsa72yeUf5S6ymb85G6LW2okSh1fDkrMhgCtYsrsCAuspm4yVjC63VUA6qrcQ54tVm5TKwhWFBLyyCjabX".encode())
+	BoundedVec::<u8,XPubLen >::try_from(
+		b"[adc450e3/84'/1'/0'/0]tpubDEMkzn5sBo8Nct35y2BEFhJTqhsa72yeUf5S6ymb85G6LW2okSh1fDkrMhgCtYsrsCAuspm4yVjC63VUA6qrcQ54tVm5TKwhWFBLyyCjabX/*"
+		.encode())
 	.expect("Error on encoding the xpub key to BoundedVec")
 }
 
 fn dummy_xpub_2() -> BoundedVec<u8,XPubLen >{
-	BoundedVec::<u8,XPubLen >::try_from(b"xpub6AHA9hZDN11k2ijHMeS5QqHx2KP9aMBRhTDqANMnwVtdyw2TDYRmF8PjpvwUFcL1Et8Hj59S3gTSMcUQ5gAqTz3Wd8EsMTmF3DChhqPQBnU".encode())
+	BoundedVec::<u8,XPubLen >::try_from(
+		b"[621c051d/123456789'/123456789'/123456789'/123456789]tpubDF3cwMypW7CJnZ4WwzwgYkd1bJzJsPTnLbFN3zdeGKfEx38jDjBzRntupghKC6A5szrjELasjrhBRXStKKUmS8wHZQxkVPN7P88iXxbC3s1/*"
+		.encode())
 	.expect("Error on encoding the xpub key to BoundedVec")
 }
 

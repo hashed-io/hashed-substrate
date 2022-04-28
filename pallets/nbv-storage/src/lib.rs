@@ -74,7 +74,7 @@ use frame_support::pallet_prelude::*;
 	pub(super) type Xpubs<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8 ; 32],
+		[u8 ; 32], //that's the blake 2 hash result
 		BoundedVec<u8, T::XPubLen>,
 		OptionQuery,
 	>;
@@ -197,8 +197,8 @@ use frame_support::pallet_prelude::*;
 			// Removing the xpub field on the account's identity
 			let mut xpub_id_field = (pallet_identity::Data::None, pallet_identity::Data::None);
 			let updated_fields = identity.info.additional.clone().try_mutate(
-				|addittional_fields|{
-					xpub_id_field = addittional_fields.remove(xpub_index);
+				|additional_fields|{
+					xpub_id_field = additional_fields.remove(xpub_index);
 					()
 				}
 			).ok_or(Error::<T>::XPubNotFound)?;

@@ -117,7 +117,7 @@ impl frame_system::Config for Test {
 }
 
 parameter_types! {
-	pub const XPubLen: u32 = 112;
+	pub const XPubLen: u32 = 166;
 	pub const PSBTMaxLen: u32  = 2048;
 }
 
