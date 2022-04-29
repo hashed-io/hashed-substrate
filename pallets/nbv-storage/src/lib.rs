@@ -11,10 +11,32 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+use sp_core::{crypto::KeyTypeId};
+pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"demo");
+
+pub mod crypto {
+    use super::KEY_TYPE;
+    use sp_core::sr25519::Signature as Sr25519Signature;
+    use sp_runtime::{
+        app_crypto::{app_crypto, sr25519},
+        traits::Verify, MultiSignature, MultiSigner
+    };
+    app_crypto!(sr25519, KEY_TYPE);
+
+    pub struct TestAuthId;
+
+    // implemented for runtime
+    impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
+    type RuntimeAppPublic = Public;
+    type GenericSignature = sp_core::sr25519::Signature;
+    type GenericPublic = sp_core::sr25519::Public;
+    }
+}
+
 #[frame_support::pallet]
 pub mod pallet {
 use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
+	use frame_system::{pallet_prelude::*, offchain::CreateSignedTransaction};
 
 	use frame_support::{
 		BoundedVec,
@@ -26,7 +48,7 @@ use frame_support::pallet_prelude::*;
 	//use scale_info::TypeInfo;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_identity::Config {
+	pub trait Config: frame_system::Config + pallet_identity::Config + CreateSignedTransaction<Call<Self>>{
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		#[pallet::constant]
@@ -104,6 +126,23 @@ use frame_support::pallet_prelude::*;
 		Owned,
 		Free,
 		Taken,
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		/// Offchain Worker entry point.
+		///
+		/// By implementing `fn offchain_worker` you declare a new offchain worker.
+		/// This function will be called when the node is fully synced and a new best block is
+		/// successfully imported.
+		/// Note that it's not guaranteed for offchain workers to run on EVERY block, there might
+		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
+		/// so the code should be able to handle that.
+		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("Hello from pallet-ocw. Block number {:?}",block_number);
+			// The entry point of your code called by off-chain worker
+		}
+		// ...
 	}
 
 	#[pallet::call]
