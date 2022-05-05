@@ -527,6 +527,16 @@ impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const XPubLen: u32 = XPUB_LEN;
+	pub const PSBTMaxLen: u32  = 2048;
+}
+
+impl pallet_nbv_storage::Config for Runtime {
+	type Event = Event;
+	type XPubLen = XPubLen;
+	type PSBTMaxLen = PSBTMaxLen;
+}
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -555,6 +565,7 @@ construct_runtime!(
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
+		NBVStorage: pallet_nbv_storage,
 	}
 );
 

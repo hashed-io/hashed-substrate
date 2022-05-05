@@ -422,6 +422,7 @@ sudo certbot -d 'kusama.hashed.systems' --nginx
 | p2p port | `--port` | 30333 |
 | WebSocket port | `--ws-port` | 9944 |
 | rcp port | `--rpc-port` | 9933 |
+| prometheus port | `--prometheus-port` | 9615 |
 
 #### Liberland node (increment by 1)
 
@@ -430,6 +431,7 @@ sudo certbot -d 'kusama.hashed.systems' --nginx
 | p2p port | `--port` | 30334 |
 | WebSocket port | `--ws-port` | 9945 |
 | rcp port | `--rpc-port` | 9934 |
+| prometheus port | `--prometheus-port` | 9616 |
 
 #### Hashed (increment by 2)
 
@@ -438,6 +440,7 @@ sudo certbot -d 'kusama.hashed.systems' --nginx
 | p2p port | `--port` | 30335 |
 | WebSocket port | `--ws-port` | 9946 |
 | rcp port | `--rpc-port` | 9935 |
+| prometheus port | `--prometheus-port` | 9617 |
 
 #### Liberland frontend: 8080
 #### Liberland backend: 3000
@@ -449,12 +452,4 @@ sudo certbot -d 'kusama.hashed.systems' --nginx
 sudo lsof -i -P -n | grep LISTEN
 ```
 
-
-TODO:
-- [x] Check current state of services
-- [x] Tweak the hashed-node ports (that worked)
-- [x] Check if firewall works (it works as expected)
-- [ ] Sync sum (disk space at 98? how much does the db weight?)
-- [ ] Backend(test with postman?)
-- [ ] Have a brand-new liberland project (hashed chain fork and then rename all)
 
