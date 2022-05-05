@@ -15,15 +15,79 @@ mod benchmarking;
 pub mod pallet {
 use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-
 	use frame_support::{
-		BoundedVec,
+		pallet_prelude::{BoundedVec, MaxEncodedLen},
+		traits::Get,
+	};
+	use frame_support::{
 		transactional,
 		sp_io::hashing::blake2_256,
+		
 	};
 	use scale_info::prelude::boxed::Box;
+	#[cfg(feature = "std")]
+    use frame_support::serde::{Deserialize, Serialize};
+	
+	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+	pub enum PSBTStatus {
+		Pending,
+		Broadcasted,
+	}
 
-	//use scale_info::TypeInfo;
+	// Struct for holding Vaults information.
+	//#[derive(
+		//	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
+		//)]
+		//#[codec(mel_bound())]
+		//#[cfg_attr(test, derive(frame_support::DefaultNoBound))]
+	#[derive( Encode, Decode, Eq, PartialEq, RuntimeDebug, Default, TypeInfo, MaxEncodedLen)]
+	#[scale_info(skip_type_params(T))]
+	#[codec(mel_bound())]
+	pub struct Vault<T: Config > {
+		pub owner: T::AccountId,
+		pub threshold: u32,
+		pub cosigners: BoundedVec<T::AccountId, T::PSBTMaxLen>,
+		pub description: BoundedVec<u8, T::PSBTMaxLen>,
+		pub descriptor: BoundedVec<u8, T::DescriptorLen>,
+		pub change_descriptor: Option<BoundedVec<u8, T::DescriptorLen> >,
+	}
+
+	impl<T: Config> Clone for Vault<T> {
+		fn clone(&self) -> Self {
+			Vault { 
+				owner: self.owner.clone(), 
+				threshold: self.threshold.clone(), 
+				cosigners: self.cosigners.clone(), 
+				description: self.description.clone(), 
+				descriptor: self.descriptor.clone(), 
+				change_descriptor: self.change_descriptor.clone(), 
+			}
+		}
+
+fn clone_from(&mut self, source: &Self) {
+        Self { owner: self.owner.clone(), threshold: self.threshold.clone(), cosigners: self.cosigners.clone(), description: self.description.clone(), descriptor: self.descriptor.clone(), change_descriptor: self.change_descriptor.clone() };
+		()
+    }
+	}
+
+	// Struct for holding Proposal information.
+	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	#[scale_info(skip_type_params(T))]
+	#[codec(mel_bound())]
+	pub struct Proposal<T: Config> {
+		pub proposer: T::AccountId,
+		pub vault_id: [u8 ; 32],
+		pub status: PSBTStatus,
+		pub to_address: BoundedVec<u8, T::PSBTMaxLen>,
+		pub amount: u64,
+		pub fee_sat_per_vb: u32,
+		pub description: BoundedVec<u8,T::PSBTMaxLen>,
+		pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
+		pub signed_psbts: ( T::AccountId , BoundedVec< BoundedVec<u8, T::PSBTMaxLen> , T::PSBTMaxLen>), // TODO: Cambiar a struct
+	}
+
+	use scale_info::TypeInfo;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_identity::Config {
@@ -33,6 +97,8 @@ use frame_support::pallet_prelude::*;
 		type XPubLen: Get<u32>;
 		#[pallet::constant]
 		type PSBTMaxLen: Get<u32>;
+		#[pallet::constant]
+		type DescriptorLen: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -47,8 +113,11 @@ use frame_support::pallet_prelude::*;
 		XPubStored([u8 ; 32], T::AccountId),
 		/// Removed Xpub previously linked to the account
 		XPubRemoved(T::AccountId),
-		/// The PBST was succesuflly inserted and linked to the account
+		/// The PBST was succesfully inserted and linked to the account
 		PSBTStored(T::AccountId),
+		/// The vault was succesfully inserted and linked to the account as owner
+		VaultStored([u8 ; 32] ,T::AccountId),
+
 	}
 
 	// Errors inform users that something went wrong.
@@ -66,6 +135,8 @@ use frame_support::pallet_prelude::*;
 		HashingError,
 		/// Found Invalid name on an additional field 
 		InvalidAdditionalField,
+		/// The vault threshold cannot be greater than the number of vault participants
+		InvalidVaultThreshold
 	}
 
 	/// Stores hash-xpub pairs
@@ -97,6 +168,26 @@ use frame_support::pallet_prelude::*;
 		Blake2_256,
 		T::AccountId,
 		BoundedVec<u8, T::PSBTMaxLen>,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn vaults)]
+	pub(super) type Vaults<T: Config> = StorageMap<
+		_,
+		Identity,
+		[u8 ; 32], //hash
+		Vault<T>,
+		OptionQuery,
+	>;
+	/// Keeps track of what accounts own what xpub.
+	#[pallet::storage]
+	#[pallet::getter(fn vaults_by_signer)]
+	pub(super) type VaultsBySigner<T: Config> = StorageMap<
+		_,
+		Blake2_256,
+		T::AccountId, // signer
+		[u8 ; 32], // vault id
 		OptionQuery,
 	>;
 
@@ -233,6 +324,33 @@ use frame_support::pallet_prelude::*;
 			Ok(())
 		}
 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn insert_vault(
+			origin: OriginFor<T>,
+			threshold: u32,
+			cosigners: BoundedVec<T::AccountId,T::PSBTMaxLen>,
+			description: BoundedVec<u8,T::PSBTMaxLen>,
+			descriptor: BoundedVec<u8, T::DescriptorLen>,
+			change_descriptor: Option<BoundedVec<u8, T::DescriptorLen>>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			ensure!(threshold >= cosigners.len().try_into().expect("Cosigners length conversion error"),
+				Error::<T>::InvalidVaultThreshold);
+			let vault = Vault::<T>{
+				owner: who.clone(),
+				threshold,
+				cosigners,
+				description,
+				descriptor,
+				change_descriptor: change_descriptor.clone(),
+			};
+			log::info!("change descriptor before: {}",change_descriptor.unwrap().len() );
+			log::info!("change descriptor length after: {}",vault.clone().change_descriptor.unwrap().len() );
+			Self::do_insert_vault(vault)
+		}
+
+
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -272,6 +390,15 @@ use frame_support::pallet_prelude::*;
 			}
 			// new xpub registry: available 
 			XpubStatus::Free
+		}
+
+		pub fn do_insert_vault(
+			vault: Vault<T>
+		)-> DispatchResult{
+			let vault_id = vault.using_encoded(blake2_256);
+			<Vaults<T>>::insert(vault_id,vault.clone());
+			Self::deposit_event(Event::VaultStored(vault_id, vault.owner ) );
+			Ok(())
 		}
     }
 

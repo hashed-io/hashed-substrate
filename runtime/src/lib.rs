@@ -530,12 +530,14 @@ impl pallet_fruniques::Config for Runtime {
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
+	pub const DescriptorLen: u32 = 2048;
 }
 
 impl pallet_nbv_storage::Config for Runtime {
 	type Event = Event;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
+	type DescriptorLen = DescriptorLen;
 }
 construct_runtime!(
 	pub enum Runtime where
