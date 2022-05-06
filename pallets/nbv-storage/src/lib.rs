@@ -13,21 +13,17 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
+	use frame_support::pallet_prelude::*;
+	#[cfg(feature = "std")]
+	use frame_support::serde::{Deserialize, Serialize};
 	use frame_support::{
 		pallet_prelude::{BoundedVec, MaxEncodedLen},
 		traits::Get,
 	};
-	use frame_support::{
-		transactional,
-		sp_io::hashing::blake2_256,
-		
-	};
+	use frame_support::{sp_io::hashing::blake2_256, transactional};
+	use frame_system::pallet_prelude::*;
 	use scale_info::prelude::boxed::Box;
-	#[cfg(feature = "std")]
-    use frame_support::serde::{Deserialize, Serialize};
-	
+
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 	pub enum PSBTStatus {
@@ -37,38 +33,45 @@ use frame_support::pallet_prelude::*;
 
 	// Struct for holding Vaults information.
 	//#[derive(
-		//	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
-		//)]
-		//#[codec(mel_bound())]
-		//#[cfg_attr(test, derive(frame_support::DefaultNoBound))]
-	#[derive( Encode, Decode, Eq, PartialEq, RuntimeDebug, Default, TypeInfo, MaxEncodedLen)]
+	//	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
+	//)]
+	//#[codec(mel_bound())]
+	//#[cfg_attr(test, derive(frame_support::DefaultNoBound))]
+	#[derive(Encode, Decode, Eq, PartialEq, RuntimeDebug, Default, TypeInfo, MaxEncodedLen)]
 	#[scale_info(skip_type_params(T))]
 	#[codec(mel_bound())]
-	pub struct Vault<T: Config > {
+	pub struct Vault<T: Config> {
 		pub owner: T::AccountId,
 		pub threshold: u32,
-		pub cosigners: BoundedVec<T::AccountId, T::PSBTMaxLen>,
-		pub description: BoundedVec<u8, T::PSBTMaxLen>,
-		pub descriptor: BoundedVec<u8, T::DescriptorLen>,
-		pub change_descriptor: Option<BoundedVec<u8, T::DescriptorLen> >,
+		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
+		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
+		pub descriptor: BoundedVec<u8, T::OutputDescriptorMaxLen>,
+		pub change_descriptor: Option<BoundedVec<u8, T::OutputDescriptorMaxLen>>,
 	}
 
 	impl<T: Config> Clone for Vault<T> {
 		fn clone(&self) -> Self {
-			Vault { 
-				owner: self.owner.clone(), 
-				threshold: self.threshold.clone(), 
-				cosigners: self.cosigners.clone(), 
-				description: self.description.clone(), 
-				descriptor: self.descriptor.clone(), 
-				change_descriptor: self.change_descriptor.clone(), 
+			Vault {
+				owner: self.owner.clone(),
+				threshold: self.threshold.clone(),
+				cosigners: self.cosigners.clone(),
+				description: self.description.clone(),
+				descriptor: self.descriptor.clone(),
+				change_descriptor: self.change_descriptor.clone(),
 			}
 		}
 
-fn clone_from(&mut self, source: &Self) {
-        Self { owner: self.owner.clone(), threshold: self.threshold.clone(), cosigners: self.cosigners.clone(), description: self.description.clone(), descriptor: self.descriptor.clone(), change_descriptor: self.change_descriptor.clone() };
-		()
-    }
+		fn clone_from(&mut self, source: &Self) {
+			Self {
+				owner: source.owner.clone(),
+				threshold: source.threshold.clone(),
+				cosigners: source.cosigners.clone(),
+				description: source.description.clone(),
+				descriptor: source.descriptor.clone(),
+				change_descriptor: source.change_descriptor.clone(),
+			};
+			()
+		}
 	}
 
 	// Struct for holding Proposal information.
@@ -77,14 +80,14 @@ fn clone_from(&mut self, source: &Self) {
 	#[codec(mel_bound())]
 	pub struct Proposal<T: Config> {
 		pub proposer: T::AccountId,
-		pub vault_id: [u8 ; 32],
+		pub vault_id: [u8; 32],
 		pub status: PSBTStatus,
 		pub to_address: BoundedVec<u8, T::PSBTMaxLen>,
 		pub amount: u64,
 		pub fee_sat_per_vb: u32,
-		pub description: BoundedVec<u8,T::PSBTMaxLen>,
+		pub description: BoundedVec<u8, T::PSBTMaxLen>,
 		pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
-		pub signed_psbts: ( T::AccountId , BoundedVec< BoundedVec<u8, T::PSBTMaxLen> , T::PSBTMaxLen>), // TODO: Cambiar a struct
+		pub signed_psbts: (T::AccountId, BoundedVec<BoundedVec<u8, T::PSBTMaxLen>, T::PSBTMaxLen>), // TODO: Cambiar a struct
 	}
 
 	use scale_info::TypeInfo;
@@ -93,12 +96,21 @@ fn clone_from(&mut self, source: &Self) {
 	pub trait Config: frame_system::Config + pallet_identity::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		/*--- PSBT params ---*/
 		#[pallet::constant]
 		type XPubLen: Get<u32>;
 		#[pallet::constant]
 		type PSBTMaxLen: Get<u32>;
+		/*--- Vault params ---*/
+		/// It counts both owned vaults and vaults where the user is a cosigner
 		#[pallet::constant]
-		type DescriptorLen: Get<u32>;
+		type MaxVaultsPerUser: Get<u32>;
+		#[pallet::constant]
+		type MaxCosignersPerVault: Get<u32>;
+		#[pallet::constant]
+		type VaultDescriptionMaxLen: Get<u32>;
+		#[pallet::constant]
+		type OutputDescriptorMaxLen: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -108,16 +120,14 @@ fn clone_from(&mut self, source: &Self) {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-
 		/// Xpub and hash stored. Linked to an account identity
-		XPubStored([u8 ; 32], T::AccountId),
+		XPubStored([u8; 32], T::AccountId),
 		/// Removed Xpub previously linked to the account
 		XPubRemoved(T::AccountId),
 		/// The PBST was succesfully inserted and linked to the account
 		PSBTStored(T::AccountId),
 		/// The vault was succesfully inserted and linked to the account as owner
-		VaultStored([u8 ; 32] ,T::AccountId),
-
+		VaultStored([u8; 32], T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -133,10 +143,12 @@ fn clone_from(&mut self, source: &Self) {
 		XPubNotFound,
 		/// The generated Hashes aren't the same
 		HashingError,
-		/// Found Invalid name on an additional field 
+		/// Found Invalid name on an additional field
 		InvalidAdditionalField,
 		/// The vault threshold cannot be greater than the number of vault participants
-		InvalidVaultThreshold
+		InvalidVaultThreshold,
+		/// A defined cosigner reached its vault limit
+		SignerVaultLimit,
 	}
 
 	/// Stores hash-xpub pairs
@@ -145,7 +157,7 @@ fn clone_from(&mut self, source: &Self) {
 	pub(super) type Xpubs<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8 ; 32], //that's the blake 2 hash result
+		[u8; 32], //that's the blake 2 hash result
 		BoundedVec<u8, T::XPubLen>,
 		OptionQuery,
 	>;
@@ -153,30 +165,20 @@ fn clone_from(&mut self, source: &Self) {
 	/// Keeps track of what accounts own what xpub.
 	#[pallet::storage]
 	#[pallet::getter(fn xpubs_by_owner)]
-	pub(super) type XpubsByOwner<T: Config> = StorageMap<
-		_,
-		Blake2_256,
-		T::AccountId,
-		[u8 ; 32],
-		OptionQuery,
-	>;
+	pub(super) type XpubsByOwner<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, [u8; 32], OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn psbts)]
-	pub(super) type PSBTs<T: Config> = StorageMap<
-		_,
-		Blake2_256,
-		T::AccountId,
-		BoundedVec<u8, T::PSBTMaxLen>,
-		OptionQuery,
-	>;
+	pub(super) type PSBTs<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, BoundedVec<u8, T::PSBTMaxLen>, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
 	pub(super) type Vaults<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8 ; 32], //hash
+		[u8; 32], //hash
 		Vault<T>,
 		OptionQuery,
 	>;
@@ -185,10 +187,10 @@ fn clone_from(&mut self, source: &Self) {
 	#[pallet::getter(fn vaults_by_signer)]
 	pub(super) type VaultsBySigner<T: Config> = StorageMap<
 		_,
-		Blake2_256,
-		T::AccountId, // signer
-		[u8 ; 32], // vault id
-		OptionQuery,
+		Twox64Concat,
+		T::AccountId,                                  // signer
+		BoundedVec<[u8; 32], T::MaxCosignersPerVault>, // vault ids
+		ValueQuery,
 	>;
 
 	pub enum XpubStatus {
@@ -199,18 +201,17 @@ fn clone_from(&mut self, source: &Self) {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// ## Identity with XPub insertion
-		/// 
+		///
 		/// This extrinsic inserts a user-defined xpub as an additional field in the identity pallet,
 		/// as well as in the pallet storage.
 		///
 		/// ### Parameters:
 		/// - `info`: Contains all the default `pallet-identity` fields (display, legal, twitter, etc.).
 		/// Additional fields may also be inserted with some minor limitations (see Considerations)
-		/// - `xpub`: The unique identifier of the instance to be fractioned/divided 
-		/// 
-		/// ### Considerations 
+		/// - `xpub`: The unique identifier of the instance to be fractioned/divided
+		///
+		/// ### Considerations
 		/// - The origin must be Signed and the sender must have sufficient funds free for the identity insertion.
 		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
 		///  fees will be applied nonetheless).
@@ -220,42 +221,50 @@ fn clone_from(&mut self, source: &Self) {
 		/// is ideal (while adding explicitly the xpub additional field).
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
-		pub fn set_complete_identity(origin: OriginFor<T>, 
-			mut info: Box< pallet_identity::IdentityInfo<T::MaxAdditionalFields> >,
+		pub fn set_complete_identity(
+			origin: OriginFor<T>,
+			mut info: Box<pallet_identity::IdentityInfo<T::MaxAdditionalFields>>,
 			xpub: BoundedVec<u8, T::XPubLen>,
 		) -> DispatchResultWithPostInfo {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
-			ensure!(xpub.len()>0,<Error<T>>::NoneValue);
-			ensure!(Self::xpub_field_available(&info.additional),<Error<T>>::InvalidAdditionalField);
+			ensure!(xpub.len() > 0, <Error<T>>::NoneValue);
+			ensure!(
+				Self::xpub_field_available(&info.additional),
+				<Error<T>>::InvalidAdditionalField
+			);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
 			// Assert if the input xpub is free to take (or if the user owns it)
-			match Self::get_xpub_status(who.clone(),manual_hash.clone()) {
+			match Self::get_xpub_status(who.clone(), manual_hash.clone()) {
 				XpubStatus::Owned => log::info!("Xpub owned, nothing to insert"),
-				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken )?, //xpub taken: abort tx
-				XpubStatus::Free => { // xpub free: erase unused xpub and insert on maps
+				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken)?, //xpub taken: abort tx
+				XpubStatus::Free => {
+					// xpub free: erase unused xpub and insert on maps
 					if <XpubsByOwner<T>>::contains_key(who.clone()) {
 						Self::remove_xpub_from_pallet_storage(who.clone())?;
 					}
-					<Xpubs<T>>::insert(manual_hash, xpub.clone() );
+					<Xpubs<T>>::insert(manual_hash, xpub.clone());
 					// Confirm the xpub was inserted
-					let mut inserted_hash  = <Xpubs<T>>::hashed_key_for(manual_hash);
+					let mut inserted_hash = <Xpubs<T>>::hashed_key_for(manual_hash);
 					// the 2nd half of the inserted_hash is the real key hash.
 					let partial_hash = inserted_hash.split_off(32);
 					// The manually calculated hash should always be equal to the StorageMap hash
-					ensure!(partial_hash.as_slice() == manual_hash,  <Error<T>>::HashingError);
+					ensure!(partial_hash.as_slice() == manual_hash, <Error<T>>::HashingError);
 					// If everything is ok, insert the xpub in the owner->hash map
-					<XpubsByOwner<T>>::insert( who.clone() , manual_hash);
+					<XpubsByOwner<T>>::insert(who.clone(), manual_hash);
 				},
 			}
 
 			// Setting up the xpub key/value pair
-			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
+			let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
 			// Try to push the key
-			info.additional.try_push(
-				(pallet_identity::Data::Raw(key),pallet_identity::Data::BlakeTwo256(manual_hash) ) 
-			).map_err(|_| pallet_identity::Error::<T>::TooManyFields)?;
+			info.additional
+				.try_push((
+					pallet_identity::Data::Raw(key),
+					pallet_identity::Data::BlakeTwo256(manual_hash),
+				))
+				.map_err(|_| pallet_identity::Error::<T>::TooManyFields)?;
 			// Insert identity
 			let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, info)?;
 			// Emit a success event.
@@ -266,50 +275,57 @@ fn clone_from(&mut self, source: &Self) {
 		}
 
 		/// ## Xpub removal
-		/// 
+		///
 		/// Removes the linked xpub from the account which signs the transaction.
 		/// The xpub will be removed from both the pallet storage and identity registration.
 		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
-		pub fn remove_xpub_from_identity(
-			origin: OriginFor<T>, 
-		) -> DispatchResultWithPostInfo {
+		pub fn remove_xpub_from_identity(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin.clone())?;
 			// Obtain account identity
 			let mut identity = pallet_identity::Pallet::<T>::identity(who.clone())
 				.ok_or(pallet_identity::Error::<T>::NoIdentity)?;
-			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
+			let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
 			// Search for the xpub field
-			let xpub_index = identity.info.additional.iter().position(
-				|field| field.0.eq(&pallet_identity::Data::Raw(key.clone()))
-			).ok_or(<Error<T>>::XPubNotFound)?;
+			let xpub_index = identity
+				.info
+				.additional
+				.iter()
+				.position(|field| field.0.eq(&pallet_identity::Data::Raw(key.clone())))
+				.ok_or(<Error<T>>::XPubNotFound)?;
 			// Removing the xpub field on the account's identity
 			let mut xpub_id_field = (pallet_identity::Data::None, pallet_identity::Data::None);
-			let updated_fields = identity.info.additional.clone().try_mutate(
-				|additional_fields|{
+			let updated_fields = identity
+				.info
+				.additional
+				.clone()
+				.try_mutate(|additional_fields| {
 					xpub_id_field = additional_fields.remove(xpub_index);
 					()
-				}
-			).ok_or(Error::<T>::XPubNotFound)?;
+				})
+				.ok_or(Error::<T>::XPubNotFound)?;
 			// Using the obtained xpub hash to remove it from the pallet's storage
-			let old_xpub_hash: [u8 ; 32] = xpub_id_field.1.encode()[1..].try_into().expect("Error converting retrieved xpub");
-			ensure!( <Xpubs<T>>::contains_key(old_xpub_hash), Error::<T>::HashingError);
+			let old_xpub_hash: [u8; 32] = xpub_id_field.1.encode()[1..]
+				.try_into()
+				.expect("Error converting retrieved xpub");
+			ensure!(<Xpubs<T>>::contains_key(old_xpub_hash), Error::<T>::HashingError);
 			Self::remove_xpub_from_pallet_storage(who.clone())?;
 			identity.info.additional.clone_from(&updated_fields);
-		 	let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, Box::new( identity.info )  )?;
+			let identity_result =
+				pallet_identity::Pallet::<T>::set_identity(origin, Box::new(identity.info))?;
 
-		 	Self::deposit_event(Event::XPubRemoved( who));
-			 Ok(identity_result)
+			Self::deposit_event(Event::XPubRemoved(who));
+			Ok(identity_result)
 		}
 
 		/// ## PSBT insertion
-		/// 
+		///
 		/// At the current moment, only one PSTB is allowed to be inserted per account
 		///
 		/// ### Parameters:
-		/// - `psbt`: Ideally encoded to base 64 and then to binary. Its size is restricted by 
+		/// - `psbt`: Ideally encoded to base 64 and then to binary. Its size is restricted by
 		/// the constant `T::PSBTMaxLen`
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_psbt(
@@ -317,90 +333,116 @@ fn clone_from(&mut self, source: &Self) {
 			psbt: BoundedVec<u8, T::PSBTMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			<PSBTs<T>>::insert(who.clone(),psbt);
+			<PSBTs<T>>::insert(who.clone(), psbt);
 
-			Self::deposit_event(Event::PSBTStored( who ) );
+			Self::deposit_event(Event::PSBTStored(who));
 
 			Ok(())
 		}
 
+		/// Vault insertion
+		/// 
+		/// Inserts the vault on chain.
+		/// 
+		/// ### Parameters:
+		/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized 
+		/// - `description`: A small definition. What will the vault be used for? 
+		/// - `cosigners`: The other accounts that will participate in vault proposals.
+		/// - `descriptor`: The output descriptor of the multisig wallet.
+		/// - `change_descriptor`: Optional parameter.
+		/// 
+		/// ### Considerations
+		/// - Do not include the vault owner on the `cosigners` list.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn insert_vault(
 			origin: OriginFor<T>,
 			threshold: u32,
-			cosigners: BoundedVec<T::AccountId,T::PSBTMaxLen>,
-			description: BoundedVec<u8,T::PSBTMaxLen>,
-			descriptor: BoundedVec<u8, T::DescriptorLen>,
-			change_descriptor: Option<BoundedVec<u8, T::DescriptorLen>>,
+			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
+			cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
+			descriptor: BoundedVec<u8, T::OutputDescriptorMaxLen>,
+			change_descriptor: Option<BoundedVec<u8, T::OutputDescriptorMaxLen>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(threshold >= cosigners.len().try_into().expect("Cosigners length conversion error"),
-				Error::<T>::InvalidVaultThreshold);
-			let vault = Vault::<T>{
+			ensure!(
+				threshold <= cosigners.len().try_into().expect("Cosigners length conversion error"),
+				Error::<T>::InvalidVaultThreshold
+			);
+			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
-				cosigners,
 				description,
+				cosigners,
 				descriptor,
 				change_descriptor: change_descriptor.clone(),
 			};
-			log::info!("change descriptor before: {}",change_descriptor.unwrap().len() );
-			log::info!("change descriptor length after: {}",vault.clone().change_descriptor.unwrap().len() );
+
 			Self::do_insert_vault(vault)
 		}
-
-
 	}
 
 	impl<T: Config> Pallet<T> {
 		/// Use with caution
-		pub fn remove_xpub_from_pallet_storage(who : T::AccountId) -> Result<(), Error<T> > {
+		pub fn remove_xpub_from_pallet_storage(who: T::AccountId) -> Result<(), Error<T>> {
 			// No error can be propagated from the remove functions
-			if <XpubsByOwner<T>>::contains_key(who.clone()){
-				let old_hash = <XpubsByOwner<T>>::take(who ).expect("Old hash not found");
+			if <XpubsByOwner<T>>::contains_key(who.clone()) {
+				let old_hash = <XpubsByOwner<T>>::take(who).expect("Old hash not found");
 				<Xpubs<T>>::remove(old_hash);
 				return Ok(());
 			}
-			return Err(<Error<T>>::XPubNotFound );
-
+			return Err(<Error<T>>::XPubNotFound);
 		}
 
 		// Ensure at that certain point, no xpub field exists on the identity
-		pub fn xpub_field_available(fields: &BoundedVec<(pallet_identity::Data, pallet_identity::Data), T::MaxAdditionalFields>) -> bool{
-			let key = BoundedVec::<u8,ConstU32<32> >::try_from(b"xpub".encode())
+		pub fn xpub_field_available(
+			fields: &BoundedVec<
+				(pallet_identity::Data, pallet_identity::Data),
+				T::MaxAdditionalFields,
+			>,
+		) -> bool {
+			let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
 				.expect("Error on encoding the xpub key to BoundedVec");
-			let xpub_count = fields.iter().find(|(k, _)| k == &pallet_identity::Data::Raw(key.clone()));
+			let xpub_count =
+				fields.iter().find(|(k, _)| k == &pallet_identity::Data::Raw(key.clone()));
 			xpub_count.is_none()
 		}
 
 		// check if the xpub is free to take/update or if its owned by the account
-		pub fn get_xpub_status(who : T::AccountId, xpub_hash : [u8; 32]) -> XpubStatus{
+		pub fn get_xpub_status(who: T::AccountId, xpub_hash: [u8; 32]) -> XpubStatus {
 			if <Xpubs<T>>::contains_key(xpub_hash) {
-				if let Some(owned_hash) = <XpubsByOwner<T>>::get(who.clone()){
-					match xpub_hash == owned_hash{
+				if let Some(owned_hash) = <XpubsByOwner<T>>::get(who.clone()) {
+					match xpub_hash == owned_hash {
 						true => return XpubStatus::Owned,
 						false => return XpubStatus::Taken,
 					}
-				}else{
+				} else {
 					// xpub registered and the account doesnt own it: unavailable
 					return XpubStatus::Taken;
 				}
 				// Does the user owns the registered xpub? if yes, available
 			}
-			// new xpub registry: available 
+			// new xpub registry: available
 			XpubStatus::Free
 		}
 
-		pub fn do_insert_vault(
-			vault: Vault<T>
-		)-> DispatchResult{
+
+		pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
+			// generate vault id
 			let vault_id = vault.using_encoded(blake2_256);
-			<Vaults<T>>::insert(vault_id,vault.clone());
-			Self::deposit_event(Event::VaultStored(vault_id, vault.owner ) );
+			// build a vector containing owner + signers
+			let vault_members = [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
+			log::info!("Total vault members count: {:?}",vault_members.len());
+			// iterate over that vector and add the vault id to the list of each user (signer)
+			let vaults_by_signer_insertion_result = vault_members.into_iter().try_for_each(|acc| {
+				<VaultsBySigner<T>>::try_mutate(acc, |vault_vec| {
+					vault_vec.try_push(vault_id.clone())
+				})
+			});
+			ensure!(vaults_by_signer_insertion_result.is_ok(), Error::<T>::SignerVaultLimit);
+			<Vaults<T>>::insert(vault_id.clone(), vault.clone());
+
+			Self::deposit_event(Event::VaultStored(vault_id, vault.owner));
 			Ok(())
 		}
-    }
-
-
+	}
 }

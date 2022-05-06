@@ -530,14 +530,20 @@ impl pallet_fruniques::Config for Runtime {
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
-	pub const DescriptorLen: u32 = 2048;
+	pub const MaxVaultsPerUser: u32 = 10;
+	pub const MaxCosignersPerVault: u32 = 5;
+	pub const VaultDescriptionMaxLen: u32 = 200;
+	pub const OutputDescriptorMaxLen: u32 = 2048;
 }
 
 impl pallet_nbv_storage::Config for Runtime {
 	type Event = Event;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
-	type DescriptorLen = DescriptorLen;
+	type MaxVaultsPerUser = MaxVaultsPerUser;
+	type MaxCosignersPerVault = MaxCosignersPerVault;
+	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
 }
 construct_runtime!(
 	pub enum Runtime where
