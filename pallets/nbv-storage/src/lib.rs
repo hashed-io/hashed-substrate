@@ -11,37 +11,51 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-use sp_core::{crypto::KeyTypeId};
+use sp_core::crypto::KeyTypeId;
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"demo");
 
 pub mod crypto {
-    use super::KEY_TYPE;
-    use sp_core::sr25519::Signature as Sr25519Signature;
-    use sp_runtime::{
-        app_crypto::{app_crypto, sr25519},
-        traits::Verify, MultiSignature, MultiSigner
-    };
-    app_crypto!(sr25519, KEY_TYPE);
+	use super::KEY_TYPE;
+	use sp_core::sr25519::Signature as Sr25519Signature;
+	use sp_runtime::{
+		app_crypto::{app_crypto, sr25519},
+		traits::Verify,
+		MultiSignature, MultiSigner,
+	};
+	app_crypto!(sr25519, KEY_TYPE);
 
-    pub struct TestAuthId;
+	pub struct TestAuthId;
 
-    // implemented for runtime
-    impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
-    type RuntimeAppPublic = Public;
-    type GenericSignature = sp_core::sr25519::Signature;
-    type GenericPublic = sp_core::sr25519::Public;
-    }
+	// implemented for runtime
+	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
+		type RuntimeAppPublic = Public;
+		type GenericSignature = sp_core::sr25519::Signature;
+		type GenericPublic = sp_core::sr25519::Public;
+	}
 }
 
 #[frame_support::pallet]
 pub mod pallet {
-use frame_support::pallet_prelude::*;
-#[cfg(feature = "std")]
+	use frame_support::pallet_prelude::*;
+	#[cfg(feature = "std")]
 	use frame_support::serde::{Deserialize, Serialize};
-	use frame_system::{pallet_prelude::*, offchain::{
-		AppCrypto, CreateSignedTransaction, SendSignedTransaction, SendUnsignedTransaction,
-		SignedPayload, Signer, SigningTypes, SubmitTransaction,},
+	use frame_support::{
+		pallet_prelude::{BoundedVec, MaxEncodedLen},
+		traits::Get,
 	};
+	use frame_support::{sp_io::hashing::blake2_256, transactional};
+	use frame_system::{
+		offchain::{
+			AppCrypto, CreateSignedTransaction, SendSignedTransaction, SendUnsignedTransaction,
+			SignedPayload, Signer, SigningTypes, SubmitTransaction,
+		},
+		pallet_prelude::*,
+	};
+	use scale_info::prelude::boxed::Box;
+	use sp_runtime::sp_std::str;
+	use sp_runtime::sp_std::vec::Vec;
+	use sp_io::offchain_index;
+	use sp_runtime::RuntimeString;
 	use sp_runtime::{
 		offchain::{
 			http,
@@ -52,15 +66,6 @@ use frame_support::pallet_prelude::*;
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
 		RuntimeDebug,
 	};
-	use sp_runtime::sp_std::str;
-	use sp_runtime::sp_std::vec::Vec;
-	use frame_support::{
-		pallet_prelude::{BoundedVec, MaxEncodedLen},
-		traits::Get,
-	};
-	use frame_support::{sp_io::hashing::blake2_256, transactional};
-	use frame_system::pallet_prelude::*;
-	use scale_info::prelude::boxed::Box;
 
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -128,12 +133,29 @@ use frame_support::pallet_prelude::*;
 		pub signed_psbts: (T::AccountId, BoundedVec<BoundedVec<u8, T::PSBTMaxLen>, T::PSBTMaxLen>), // TODO: Cambiar a struct
 	}
 
+	#[derive(Debug, Encode, Decode)]
+	pub enum Request<T: Config>{
+		CreateVault(Vault<T>),
+		Propose(Proposal<T>),
+		SignProposal([u8; 32]), // proposal id?
+		FinalizeTx([u8; 32]),
+	}
+
+	#[derive(Debug, Encode, Decode,)]
+	struct IndexingRequest<T: Config>{
+		pub request_author: T::AccountId,
+		pub request: Request<T>,
+	}
+
 	use scale_info::TypeInfo;
-	use lite_json::json::JsonValue;
-	
+	use lite_json::Serialize as jsonSerialize;
+	use lite_json::json::{JsonValue, NumberValue};
+	use lite_json::parse_json;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_identity::Config + CreateSignedTransaction<Call<Self>>{
+	pub trait Config:
+		frame_system::Config + pallet_identity::Config + CreateSignedTransaction<Call<Self>>
+	{
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		/*--- PSBT params ---*/
@@ -157,6 +179,9 @@ use frame_support::pallet_prelude::*;
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	const ONCHAIN_TX_KEY: &[u8] = b"nbv_storage::requests";
+	const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -179,7 +204,7 @@ use frame_support::pallet_prelude::*;
 		NoneValue,
 		// The xpub has already been uploaded and taken by an account
 		XPubAlreadyTaken,
-		/// The identity doesn't have an xpub
+		/// The Account doesn't have an xpub
 		XPubNotFound,
 		/// The generated Hashes aren't the same
 		HashingError,
@@ -250,9 +275,32 @@ use frame_support::pallet_prelude::*;
 		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
 		/// so the code should be able to handle that.
 		fn offchain_worker(block_number: T::BlockNumber) {
-			log::info!("Hello from pallet-ocw. Block number {:?}",block_number);
+			log::info!("Hello from pallet-ocw. Block number {:?}", block_number);
 			// The entry point of your code called by off-chain worker
-			log::info!("{:?}",Self::fetch_price() );
+			//log::info!("{:?}",Self::fetch_price() );
+			//let vaul_id: [u8;32] = e73199c614079"..try_into().expect("Error converting vaulid");
+			//log::info!("Off chain accessing to ON chain: {:?}", vaul.unwrap().owner );
+
+			// check for pending vaults to insert
+			let mut pending_vaults = Self::get_pending_vaults();
+			if pending_vaults.len() > 0 {
+				log::info!("Vaults pendientes {:?}",pending_vaults.len());
+				
+				// Contact bdk services
+				let result = Self::bdk_gen_vault(pending_vaults.pop().expect("No vaults left?"));
+				log::info!("Resultado desde OCW: {:?}",result);
+				//TODO: has_xpub? check xpubs by owner
+			}
+			//  let key = Self::derived_key(block_number);
+			//  log::info!("The key should be the same: {:?}", key);
+			//  let storage_ref = StorageValueRef::persistent(&key);
+			//  if let Ok(Some(data)) = storage_ref.get::<IndexingData>() {
+			// 	log::info!("local storage data: {:?}, {:?}",
+			// 		str::from_utf8(&data.0).unwrap_or("error"), data.1);
+			// } else {
+			// 	log::info!("Error reading from local storage.");
+			// }
+			//
 		}
 		// ...
 	}
@@ -399,21 +447,21 @@ use frame_support::pallet_prelude::*;
 		}
 
 		/// Vault insertion
-		/// 
-		/// Inserts the vault on chain.
-		/// 
+		///
+		/// Inserts the vault on chain. Meant to be used by an offchain worker.
+		///
 		/// ### Parameters:
-		/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized 
-		/// - `description`: A small definition. What will the vault be used for? 
+		/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized
+		/// - `description`: A small definition. What will the vault be used for?
 		/// - `cosigners`: The other accounts that will participate in vault proposals.
 		/// - `descriptor`: The output descriptor of the multisig wallet.
 		/// - `change_descriptor`: Optional parameter.
-		/// 
+		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn insert_vault(
+		pub fn create_vault(
 			origin: OriginFor<T>,
 			threshold: u32,
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
@@ -422,8 +470,9 @@ use frame_support::pallet_prelude::*;
 			change_descriptor: Option<BoundedVec<u8, T::OutputDescriptorMaxLen>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
+			let num_signers =  (cosigners.len() as u32) + 1;
 			ensure!(
-				threshold <= cosigners.len().try_into().expect("Cosigners length conversion error"),
+				threshold <= num_signers,
 				Error::<T>::InvalidVaultThreshold
 			);
 			let vault = Vault::<T> {
@@ -483,100 +532,237 @@ use frame_support::pallet_prelude::*;
 			XpubStatus::Free
 		}
 
-		fn fetch_price() -> Result<u32, http::Error> {
+		fn bdk_gen_vault(vault_id : [u8 ; 32 ]) -> Result<u32, http::Error> {
 			// We want to keep the offchain worker execution time reasonable, so we set a hard-coded
 			// deadline to 2s to complete the external call.
 			// You can also wait idefinitely for the response, however you may still get a timeout
 			// coming from the host machine.
-			let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(2_000));
+			let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
+			// We will create a bunch of elements that we will put into a JSON Object.
+			//let request_body =  Vec::new();
 			// Initiate an external HTTP GET request.
 			// This is using high-level wrappers from `sp_runtime`, for the low-level calls that
 			// you can find in `sp_io`. The API is trying to be similar to `reqwest`, but
 			// since we are running in a custom WASM execution environment we can't simply
 			// import the library here.
-			let request =
-				http::Request::get("https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD");
+			let raw_json = Self::generate_vault_json_body(vault_id);
+			let request_body = str::from_utf8( raw_json.as_slice() ).expect("Error converting Json to string");
+			//let mut body = Vec::new();
+			// let threshold = NumberValue{
+			// 	integer: 1,
+			// 	fraction: 0,
+			// 	fraction_length: 0,
+			// 	exponent: 0,
+			// };
+			// body.push( ("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold) ) );
+			// let json_object = JsonValue::Object(body);
+			// let json = jsonSerialize::format(&json_object,4);
+			// let json_output = str::from_utf8(&json).unwrap();
+			log::info!("Objecto JSON construido: {:?}",request_body.clone());
+			//let request_body = "{ \"threshold\": 2,\"cosigners\": [{\"xpub\": \"Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi\"},{\"xpub\": \"Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM\"}]}";
+			//let request_body = "{}";
+			// TODO: GET works, now get the POST working
+			let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
+			let request = http::Request::post(
+				str::from_utf8( &url ).expect("Error converting the BDK URL"),
+				[request_body.clone()].to_vec(),
+			)
+			.add_header("Content-Type", "application/json")
+			.add_header("Accept", "application/json");
 			// We set the deadline for sending of the request, note that awaiting response can
 			// have a separate deadline. Next we send the request, before that it's also possible
 			// to alter request headers or stream body content in case of non-GET requests.
-			let pending = request.deadline(deadline).send().map_err(|_| http::Error::IoError)?;
-	
+			let pending = request.body([request_body.clone()].to_vec())
+				.deadline(deadline).send().map_err(|_| http::Error::IoError)?;
+			//log::warn!("Pendiente: {:?}", pending);
+			//let resultado = pending.send();
+			//log::warn!("Enviado: {:?}", resultado);
+			//.map_err(|_| http::Error::IoError);
+			//if resultado.is_err() {
+			//	return Err(http::Error::IoError);
+			//}
 			// The request is already being processed by the host, we are free to do anything
 			// else in the worker (we can send multiple concurrent requests too).
 			// At some point however we probably want to check the response though,
 			// so we can block current thread and wait for it to finish.
 			// Note that since the request is being driven by the host, we don't have to wait
 			// for the request to have it complete, we will just not read the response.
-			let response = pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
+			let response = pending
+				.try_wait(deadline)
+				.map_err(|_| http::Error::DeadlineReached)??;
 			// Let's check the status code before we proceed to reading the response.
 			if response.code != 200 {
 				log::warn!("Unexpected status code: {}", response.code);
-				return Err(http::Error::Unknown)
+				return Err(http::Error::Unknown);
 			}
-	
+
 			// Next we want to fully read the response body and collect it to a vector of bytes.
 			// Note that the return object allows you to read the body in chunks as well
 			// with a way to control the deadline.
 			let body = response.body().collect::<Vec<u8>>();
-	
+
 			// Create a str slice from the body.
 			let body_str = str::from_utf8(&body).map_err(|_| {
 				log::warn!("No UTF8 body");
 				http::Error::Unknown
 			})?;
-	
-			let price = match Self::parse_price(body_str) {
-				Some(price) => Ok(price),
+			// Parse reponse: descriptor and change descriptor
+			let price = match Self::parse_vault_descriptors(body_str) {
+				Some(desc_tuple) => {
+					//extract fields
+					let desc_str = str::from_utf8(desc_tuple.0.as_slice());
+					log::info!("Al fin recuperados: {:?}",desc_str);
+					Ok(1)
+					//submit extrinsic
+				},
 				None => {
-					log::warn!("Unable to extract price from the response: {:?}", body_str);
+					log::warn!("Unable to extract descriptors from the response: {:?}", body_str);
 					Err(http::Error::Unknown)
 				},
 			}?;
-	
-			log::warn!("Got price: {} cents", price);
-	
-			Ok(price)
+
+			//log::warn!("Got price: {} cents", price);
+
+			Ok(1)
 		}
 
-		/// Parse the price from the given JSON string using `lite-json`.
-	///
-	/// Returns `None` when parsing failed or `Some(price in cents)` when parsing is successful.
-	fn parse_price(price_str: &str) -> Option<u32> {
-		let val = lite_json::parse_json(price_str);
-		let price = match val.ok()? {
-			JsonValue::Object(obj) => {
-				let (_, v) = obj.into_iter().find(|(k, _)| k.iter().copied().eq("USD".chars()))?;
-				match v {
-					JsonValue::Number(number) => number,
-					_ => return None,
-				}
-			},
-			_ => return None,
-		};
+		fn generate_vault_json_body(vault_id: [u8 ; 32 ]) -> Vec<u8>{
+			let mut body = Vec::new();
 
-		let exp = price.fraction_length.saturating_sub(2);
-		Some(price.integer as u32 * 100 + (price.fraction / 10_u64.pow(exp)) as u32)
-	}
-    
+			//Get vault properties
+			let vault = <Vaults<T>>::get(&vault_id).expect("Vault not found with id");
+			let threshold = NumberValue{
+				integer: vault.threshold.clone().into(),
+				fraction: 0,
+				fraction_length: 0,
+				exponent: 0,
+			};
+			body.push( ("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold) ) );
+			//get the xpub for each cosigner 
+			//let cosigners = vault.cosigners.
+			//let s = String::from("edgerg");
+			//let o = JsonValue::String(s.chars().collect()) ;
+			let vault_signers = [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
+			
+			 let mapped_xpubs: Vec<JsonValue> = Self::get_accounts_xpubs(vault_signers )
+			 	.iter().map(
+			 		|xpub|{
+						let xpub_field = JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  );
+						JsonValue::Object( [("xpub".chars().collect(),xpub_field)].to_vec() )
+						// JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  ) 
 
+					 }
+			 	).collect();
+			body.push( ("cosigners".chars().collect::<Vec<char>>(), JsonValue::Array(mapped_xpubs)) );
+			let json_object = JsonValue::Object(body);
+
+			// // This is the JSON string we will use.
+			// let json_string = 
+			// r#"
+			// 	{
+			// 		"threshold": 2,
+			// 		"cosigners": [
+			// 			{
+			// 				"xpub": "Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi"
+			// 			},
+			// 			{
+			// 				"xpub": "Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM"
+			// 			}
+			// 		]
+			// 	}
+			// "#;
+
+			// // Parse the JSON and print the resulting lite-json structure.
+			// let json_data = parse_json(json_string).expect("Invalid JSON specified!");
+			// log::info!("Prueba jason: {:#?}", json_data.;
+			jsonSerialize::format(&json_object,4)
+			//str::from_utf8(json.clone().as_ref()).unwrap()
+
+		}
+
+		/// Parse the descriptors from the given JSON string using `lite-json`.
+		///
+		/// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.
+		fn parse_vault_descriptors(body_str: &str) -> Option<(Vec<u8>,Vec<u8>)> {
+			let val = lite_json::parse_json(body_str);
+			match val.ok()? {
+				JsonValue::Object(obj) => {
+					let descriptor = Self::extract_json_str_by_name(obj.clone(),"descriptor").expect("Descriptor str not found");
+					let change_descriptor = Self::extract_json_str_by_name(obj.clone(),"change_descriptor").expect("Change str not found");
+					Some( (descriptor,change_descriptor) )
+				},
+				_ => return None ,
+			}
+		}
 
 		pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
 			// generate vault id
 			let vault_id = vault.using_encoded(blake2_256);
 			// build a vector containing owner + signers
-			let vault_members = [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
-			log::info!("Total vault members count: {:?}",vault_members.len());
+			let vault_members =
+				[vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
+			log::info!("Total vault members count: {:?}", vault_members.len());
 			// iterate over that vector and add the vault id to the list of each user (signer)
-			let vaults_by_signer_insertion_result = vault_members.into_iter().try_for_each(|acc| {
+			//let vaults_by_signer_insertion_result =
+			vault_members.into_iter().try_for_each(|acc| {
+				// check if all users have an xpub
+				if !<XpubsByOwner<T>>::contains_key(acc.clone()) {
+					return Err(Error::<T>::XPubNotFound);
+				}
 				<VaultsBySigner<T>>::try_mutate(acc, |vault_vec| {
 					vault_vec.try_push(vault_id.clone())
 				})
-			});
-			ensure!(vaults_by_signer_insertion_result.is_ok(), Error::<T>::SignerVaultLimit);
+				.map_err(|_| Error::<T>::SignerVaultLimit)
+			})?;
+			//ensure!(vaults_by_signer_insertion_result.is_ok(), Error::<T>::SignerVaultLimit);
 			<Vaults<T>>::insert(vault_id.clone(), vault.clone());
 
 			Self::deposit_event(Event::VaultStored(vault_id, vault.owner));
 			Ok(())
 		}
+
+		fn get_pending_vaults()-> Vec<[u8 ; 32]>{
+			<Vaults<T>>::iter().filter_map(
+				| (entry, vault)| 
+				if vault.descriptor.is_empty(){ Some(entry) }
+				else { None }
+			).collect()
+
+		}
+
+		fn get_accounts_xpubs(accounts: Vec<T::AccountId>)->Vec<Vec<u8>>{
+			// rely on pallet storage (just in case the identity gets reseted by user error)
+			let mut xpub_vec = Vec::<Vec<u8>>::default(); 
+			accounts.iter().for_each(
+				|account| {
+					let xpub_id  = <XpubsByOwner<T>>::get(account).expect("The account doesn't have an xpub");
+					let xpub = <Xpubs<T>>::get(xpub_id).expect("Error trying to retrieve xpub from its ID");
+					xpub_vec.push( 
+						// format the xpub to string
+						xpub.to_vec()
+					);
+				}
+			);
+			xpub_vec
+		}
+
+		fn chars_to_bytes(v : Vec<char>) -> Vec<u8>{
+			v.iter().map(| c | *c as u8 ).collect::<Vec<u8>>()
+
+		}
+
+		fn extract_json_str_by_name(tuple: Vec<(Vec<char>, JsonValue ) >,s: &str)->Option<Vec<u8>>{
+			let filtered = tuple.into_iter().find(| (key, value) |  {
+				key.iter().copied().eq(s.chars())
+			});
+			match filtered.expect("Error retrieving json field").1{
+				JsonValue::String(chars) => {
+					return Some(Self::chars_to_bytes(chars) )
+				},
+				_ => return None,
+			}
+		}
 	}
+
+
 }
