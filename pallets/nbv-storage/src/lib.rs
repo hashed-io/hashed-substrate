@@ -32,6 +32,16 @@ pub mod crypto {
 		type GenericSignature = sp_core::sr25519::Signature;
 		type GenericPublic = sp_core::sr25519::Public;
 	}
+
+
+	// implemented for mock runtime in test
+	impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
+		for TestAuthId
+	{
+		type RuntimeAppPublic = Public;
+		type GenericSignature = sp_core::sr25519::Signature;
+		type GenericPublic = sp_core::sr25519::Public;
+	}
 }
 
 #[frame_support::pallet]
@@ -156,6 +166,8 @@ pub mod pallet {
 	pub trait Config:
 		frame_system::Config + pallet_identity::Config + CreateSignedTransaction<Call<Self>>
 	{
+		/// The identifier type for an offchain worker.
+		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		/*--- PSBT params ---*/
@@ -181,7 +193,7 @@ pub mod pallet {
 
 	const ONCHAIN_TX_KEY: &[u8] = b"nbv_storage::requests";
 	const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
-
+	const UNSIGNED_TXS_PRIORITY: u64 = 100;
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -466,10 +478,9 @@ pub mod pallet {
 			threshold: u32,
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 			cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
-			descriptor: BoundedVec<u8, T::OutputDescriptorMaxLen>,
-			change_descriptor: Option<BoundedVec<u8, T::OutputDescriptorMaxLen>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
+			// Threshould account for the owner too
 			let num_signers =  (cosigners.len() as u32) + 1;
 			ensure!(
 				threshold <= num_signers,
@@ -480,11 +491,22 @@ pub mod pallet {
 				threshold,
 				description,
 				cosigners,
-				descriptor,
-				change_descriptor: change_descriptor.clone(),
+				descriptor: BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(b"".encode()).expect("Error on encoding the descriptor to BoundedVec"),
+				change_descriptor: None,
 			};
 
 			Self::do_insert_vault(vault)
+		}
+
+		#[transactional]
+		#[pallet::weight(0)]
+		pub fn ofw_insert_descriptors(
+			origin: OriginFor<T>,
+			payload: Payload<T::Public>,
+			_signature: T::Signature,
+		)-> DispatchResult {
+
+			Ok(())
 		}
 	}
 
@@ -764,5 +786,42 @@ pub mod pallet {
 		}
 	}
 
+	#[pallet::validate_unsigned]
+	impl<T: Config> ValidateUnsigned for Pallet<T> {
+		type Call = Call<T>;
+	
+		fn validate_unsigned(_source: TransactionSource, call: &Self::Call) -> TransactionValidity {
+			let valid_tx = |provide| ValidTransaction::with_tag_prefix("ocw-demo")
+				.priority(UNSIGNED_TXS_PRIORITY)
+				.and_provides([&provide])
+				.longevity(3)
+				.propagate(true)
+				.build();
+	
+			match call {
+				Call::ofw_insert_descriptors {
+				ref payload,
+				ref signature
+				} => {
+				if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
+					return InvalidTransaction::BadProof.into();
+				}
+				valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
+				},
+				_ => InvalidTransaction::Call.into(),
+			}
+		}
+	}
 
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, scale_info::TypeInfo)]
+	pub struct Payload<Public> {
+		number: u64,
+		public: Public,
+	}
+
+	impl<T: SigningTypes> SignedPayload<T> for Payload<T::Public> {
+		fn public(&self) -> T::Public {
+			self.public.clone()
+		}
+	}
 }
