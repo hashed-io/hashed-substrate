@@ -537,7 +537,7 @@ parameter_types! {
 }
 
 impl pallet_nbv_storage::Config for Runtime {
-	type AuthorityId = pallet_nbv_storage::crypto::TestAuthId;
+	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
 	type Event = Event;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;

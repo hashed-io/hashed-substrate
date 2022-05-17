@@ -11,43 +11,13 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-use sp_core::crypto::KeyTypeId;
-pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
-
-pub mod crypto {
-	use super::KEY_TYPE;
-	use sp_core::sr25519::Signature as Sr25519Signature;
-	use sp_runtime::{
-		app_crypto::{app_crypto, sr25519},
-		traits::Verify,
-		MultiSignature, MultiSigner,
-	};
-	app_crypto!(sr25519, KEY_TYPE);
-
-	pub struct TestAuthId;
-
-	// implemented for runtime
-	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
-		type RuntimeAppPublic = Public;
-		type GenericSignature = sp_core::sr25519::Signature;
-		type GenericPublic = sp_core::sr25519::Public;
-	}
-
-	// implemented for mock runtime in test
-	impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
-		for TestAuthId
-	{
-		type RuntimeAppPublic = Public;
-		type GenericSignature = sp_core::sr25519::Signature;
-		type GenericPublic = sp_core::sr25519::Public;
-	}
-}
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
-	#[cfg(feature = "std")]
-	use frame_support::serde::{Deserialize, Serialize};
+	//#[cfg(feature = "std")]
+	//use frame_support::serde::{Deserialize, Serialize};
 	use frame_support::{
 		pallet_prelude::{BoundedVec, MaxEncodedLen},
 		traits::Get,
@@ -56,7 +26,7 @@ pub mod pallet {
 	use frame_system::{
 		offchain::{
 			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
-			SignedPayload, Signer, SigningTypes,
+			SignedPayload, Signer, SigningTypes
 		},
 		pallet_prelude::*,
 	};
@@ -71,14 +41,12 @@ pub mod pallet {
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
 		RuntimeDebug,
 	};
+	use lite_json::json::{JsonValue, NumberValue};
+	use lite_json::parse_json;
+	use lite_json::Serialize as jsonSerialize;
+	use scale_info::TypeInfo;
 
-	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-	pub enum PSBTStatus {
-		Pending,
-		Broadcasted,
-	}
-
+	/*--- Structs Section ---*/
 	#[derive(
 		Encode,
 		Decode,
@@ -96,6 +64,23 @@ pub mod pallet {
 		pub output_descriptor: BoundedVec<u8, MaxLen>,
 		pub change_descriptor: Option<BoundedVec<u8, MaxLen>>,
 	}
+	
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[codec(mel_bound())]
+	pub struct Payload<Public> {
+		// Not successful, macros/generics issue
+		// descriptors: Descriptors<u8>,
+		pub vault_id: [u8;32],
+		pub output_descriptor: Vec<u8>,
+		pub change_descriptor: Vec<u8>,
+		pub public: Public,
+	}
+	
+	impl<S: SigningTypes> SignedPayload<S> for Payload<S::Public> {
+		fn public(&self) -> S::Public {
+			self.public.clone()
+		}
+	}
 
 	// Struct for holding Vaults information.
 	#[derive(
@@ -103,7 +88,7 @@ pub mod pallet {
 	)]
 	#[scale_info(skip_type_params(T))]
 	#[codec(mel_bound())]
-	pub struct Vault<T: Config> {
+	pub struct Vault<T : Config> {
 		pub owner: T::AccountId,
 		pub threshold: u32,
 		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
@@ -139,24 +124,23 @@ pub mod pallet {
 		pub signed_psbts: (T::AccountId, BoundedVec<BoundedVec<u8, T::PSBTMaxLen>, T::PSBTMaxLen>), // TODO: Cambiar a struct
 	}
 
-	// #[derive(Debug, Encode, Decode)]
-	// pub enum Request<T: Config>{
-	// 	CreateVault(Vault<T>),
-	// 	Propose(Proposal<T>),
-	// 	SignProposal([u8; 32]), // proposal id?
-	// 	FinalizeTx([u8; 32]),
-	// }
+	pub enum XpubStatus {
+		Owned,
+		Free,
+		Taken,
+	}
+	
+	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	pub enum PSBTStatus {
+		Pending,
+		Broadcasted,
+	}
 
-	// #[derive(Debug, Encode, Decode,)]
-	// struct IndexingRequest<T: Config>{
-	// 	pub request_author: T::AccountId,
-	// 	pub request: Request<T>,
-	// }
+	/*--- Constants section ---*/
+	const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
+	const UNSIGNED_TXS_PRIORITY: u64 = 100;
 
-	use lite_json::json::{JsonValue, NumberValue};
-	use lite_json::parse_json;
-	use lite_json::Serialize as jsonSerialize;
-	use scale_info::TypeInfo;
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
@@ -187,8 +171,6 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
-	const UNSIGNED_TXS_PRIORITY: u64 = 100;
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -227,6 +209,7 @@ pub mod pallet {
 		VaultNotFound,
 	}
 
+	/*--- Onchain storage section ---*/
 	/// Stores hash-xpub pairs
 	#[pallet::storage]
 	#[pallet::getter(fn xpubs)]
@@ -269,11 +252,6 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
-	pub enum XpubStatus {
-		Owned,
-		Free,
-		Taken,
-	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -630,25 +608,8 @@ pub mod pallet {
 				log::warn!("No UTF8 body");
 				http::Error::Unknown
 			})?;
-			// Parse reponse: descriptor and change descriptor
-			// let price = match Self::parse_vault_descriptors(body_str) {
-			// 	Some(desc_tuple) => {
-			// 		//extract fields
-			// 		// TODO: Extract both descriptors (on Vec<u8>)? and return them
-			// 		let desc_str = str::from_utf8(desc_tuple.0.as_slice());
-			// 		log::info!("Descriptor recuperado: {:?}",desc_str);
 
-			// 		Ok()
-			// 	},
-			// 	None => {
-			// 		log::warn!("Unable to extract descriptors from the response: {:?}", body_str);
-			// 		Err(http::Error::Unknown)
-			// 	},
-			// }?;
 			Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
-			//log::warn!("Got price: {} cents", price);
-
-			//Ok(1)
 		}
 
 		fn generate_vault_json_body(vault_id: [u8; 32]) -> Vec<u8> {
@@ -830,23 +791,6 @@ pub mod pallet {
 				},
 				_ => InvalidTransaction::Call.into(),
 			}
-		}
-	}
-
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-	#[codec(mel_bound())]
-	pub struct Payload<Public> {
-		// Not successful, macros/generics issue
-		// descriptors: Descriptors<u8>,
-		vault_id: [u8;32],
-		output_descriptor: Vec<u8>,
-		change_descriptor: Vec<u8>,
-		public: Public,
-	}
-
-	impl<S: SigningTypes> SignedPayload<S> for Payload<S::Public> {
-		fn public(&self) -> S::Public {
-			self.public.clone()
 		}
 	}
 }
