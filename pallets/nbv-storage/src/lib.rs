@@ -12,7 +12,7 @@ mod tests;
 mod benchmarking;
 
 use sp_core::crypto::KeyTypeId;
-pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"demo");
+pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
 
 pub mod crypto {
 	use super::KEY_TYPE;
@@ -32,7 +32,6 @@ pub mod crypto {
 		type GenericSignature = sp_core::sr25519::Signature;
 		type GenericPublic = sp_core::sr25519::Public;
 	}
-
 
 	// implemented for mock runtime in test
 	impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
@@ -56,23 +55,19 @@ pub mod pallet {
 	use frame_support::{sp_io::hashing::blake2_256, transactional};
 	use frame_system::{
 		offchain::{
-			AppCrypto, CreateSignedTransaction, SendSignedTransaction, SendUnsignedTransaction,
-			SignedPayload, Signer, SigningTypes, SubmitTransaction,
+			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
+			SignedPayload, Signer, SigningTypes,
 		},
 		pallet_prelude::*,
 	};
 	use scale_info::prelude::boxed::Box;
 	use sp_runtime::sp_std::str;
 	use sp_runtime::sp_std::vec::Vec;
-	use sp_io::offchain_index;
-	use sp_runtime::RuntimeString;
 	use sp_runtime::{
 		offchain::{
 			http,
-			storage::{MutateStorageError, StorageRetrievalError, StorageValueRef},
 			Duration,
 		},
-		traits::Zero,
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
 		RuntimeDebug,
 	};
@@ -84,13 +79,28 @@ pub mod pallet {
 		Broadcasted,
 	}
 
+	#[derive(
+		Encode,
+		Decode,
+		Default,
+		Eq,
+		PartialEq,
+		CloneNoBound,
+		RuntimeDebugNoBound,
+		TypeInfo,
+		MaxEncodedLen,
+	)]
+	#[scale_info(skip_type_params(MaxLen))]
+	#[codec(mel_bound())]
+	pub struct Descriptors<MaxLen: Get<u32>> {
+		pub output_descriptor: BoundedVec<u8, MaxLen>,
+		pub change_descriptor: Option<BoundedVec<u8, MaxLen>>,
+	}
+
 	// Struct for holding Vaults information.
-	//#[derive(
-	//	CloneNoBound, Encode, Decode, Eq, MaxEncodedLen, PartialEqNoBound, RuntimeDebugNoBound, TypeInfo,
-	//)]
-	//#[codec(mel_bound())]
-	//#[cfg_attr(test, derive(frame_support::DefaultNoBound))]
-	#[derive(Encode, Decode, Eq, PartialEq, RuntimeDebug, Default, TypeInfo, MaxEncodedLen)]
+	#[derive(
+		Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
+	)]
 	#[scale_info(skip_type_params(T))]
 	#[codec(mel_bound())]
 	pub struct Vault<T: Config> {
@@ -98,8 +108,7 @@ pub mod pallet {
 		pub threshold: u32,
 		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
-		pub descriptor: BoundedVec<u8, T::OutputDescriptorMaxLen>,
-		pub change_descriptor: Option<BoundedVec<u8, T::OutputDescriptorMaxLen>>,
+		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
 	}
 
 	impl<T: Config> Clone for Vault<T> {
@@ -109,21 +118,8 @@ pub mod pallet {
 				threshold: self.threshold.clone(),
 				cosigners: self.cosigners.clone(),
 				description: self.description.clone(),
-				descriptor: self.descriptor.clone(),
-				change_descriptor: self.change_descriptor.clone(),
+				descriptors: self.descriptors.clone(),
 			}
-		}
-
-		fn clone_from(&mut self, source: &Self) {
-			Self {
-				owner: source.owner.clone(),
-				threshold: source.threshold.clone(),
-				cosigners: source.cosigners.clone(),
-				description: source.description.clone(),
-				descriptor: source.descriptor.clone(),
-				change_descriptor: source.change_descriptor.clone(),
-			};
-			()
 		}
 	}
 
@@ -143,24 +139,24 @@ pub mod pallet {
 		pub signed_psbts: (T::AccountId, BoundedVec<BoundedVec<u8, T::PSBTMaxLen>, T::PSBTMaxLen>), // TODO: Cambiar a struct
 	}
 
-	#[derive(Debug, Encode, Decode)]
-	pub enum Request<T: Config>{
-		CreateVault(Vault<T>),
-		Propose(Proposal<T>),
-		SignProposal([u8; 32]), // proposal id?
-		FinalizeTx([u8; 32]),
-	}
+	// #[derive(Debug, Encode, Decode)]
+	// pub enum Request<T: Config>{
+	// 	CreateVault(Vault<T>),
+	// 	Propose(Proposal<T>),
+	// 	SignProposal([u8; 32]), // proposal id?
+	// 	FinalizeTx([u8; 32]),
+	// }
 
-	#[derive(Debug, Encode, Decode,)]
-	struct IndexingRequest<T: Config>{
-		pub request_author: T::AccountId,
-		pub request: Request<T>,
-	}
+	// #[derive(Debug, Encode, Decode,)]
+	// struct IndexingRequest<T: Config>{
+	// 	pub request_author: T::AccountId,
+	// 	pub request: Request<T>,
+	// }
 
-	use scale_info::TypeInfo;
-	use lite_json::Serialize as jsonSerialize;
 	use lite_json::json::{JsonValue, NumberValue};
 	use lite_json::parse_json;
+	use lite_json::Serialize as jsonSerialize;
+	use scale_info::TypeInfo;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
@@ -191,7 +187,6 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	const ONCHAIN_TX_KEY: &[u8] = b"nbv_storage::requests";
 	const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
 	const UNSIGNED_TXS_PRIORITY: u64 = 100;
 	#[pallet::event]
@@ -205,6 +200,8 @@ pub mod pallet {
 		PSBTStored(T::AccountId),
 		/// The vault was succesfully inserted and linked to the account as owner
 		VaultStored([u8; 32], T::AccountId),
+		/// An offchain worker inserted a vault's descriptor 
+		DescriptorsStored([u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -226,6 +223,8 @@ pub mod pallet {
 		InvalidVaultThreshold,
 		/// A defined cosigner reached its vault limit
 		SignerVaultLimit,
+		/// Vault not found
+		VaultNotFound,
 	}
 
 	/// Stores hash-xpub pairs
@@ -286,35 +285,43 @@ pub mod pallet {
 		/// Note that it's not guaranteed for offchain workers to run on EVERY block, there might
 		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
 		/// so the code should be able to handle that.
-		fn offchain_worker(block_number: T::BlockNumber) {
-			log::info!("Hello from pallet-ocw. Block number {:?}", block_number);
-			// The entry point of your code called by off-chain worker
-			//log::info!("{:?}",Self::fetch_price() );
-			//let vaul_id: [u8;32] = e73199c614079"..try_into().expect("Error converting vaulid");
-			//log::info!("Off chain accessing to ON chain: {:?}", vaul.unwrap().owner );
-
+		fn offchain_worker(_block_number: T::BlockNumber) {
+			// check if the node has an account available, the offchain worker can't submit
+			// transactions without it
+			let signer = Signer::<T, T::AuthorityId>::any_account();
+			if !signer.can_sign(){
+				return;	
+			}
 			// check for pending vaults to insert
 			let mut pending_vaults = Self::get_pending_vaults();
 			if pending_vaults.len() > 0 {
-				log::info!("Vaults pendientes {:?}",pending_vaults.len());
-				
+				log::info!("Pending vaults {:?}", pending_vaults.len());
+
+				let vault_to_complete = pending_vaults.pop().expect("No vaults left?");
 				// Contact bdk services
-				let result = Self::bdk_gen_vault(pending_vaults.pop().expect("No vaults left?"));
-				log::info!("Resultado desde OCW: {:?}",result);
-				//TODO: has_xpub? check xpubs by owner
+				let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
+					.expect("Error while generating the vault's output descriptors");
+				if let Some((_, res)) = signer.send_unsigned_transaction(
+					// this line is to prepare and return payload
+					|acct| Payload {
+						vault_id: vault_to_complete.clone(),
+						output_descriptor: vault_result.0.clone(),
+						change_descriptor: vault_result.1.clone(),
+						public: acct.public.clone(),
+					},
+					|payload, signature| Call::ocw_insert_descriptors { payload, signature },
+				) {
+					match res {
+						Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
+						Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+					};
+				} else {
+					// The case of `None`: no account is available for sending
+					log::error!("No local account available");
+				}
 			}
-			//  let key = Self::derived_key(block_number);
-			//  log::info!("The key should be the same: {:?}", key);
-			//  let storage_ref = StorageValueRef::persistent(&key);
-			//  if let Ok(Some(data)) = storage_ref.get::<IndexingData>() {
-			// 	log::info!("local storage data: {:?}, {:?}",
-			// 		str::from_utf8(&data.0).unwrap_or("error"), data.1);
-			// } else {
-			// 	log::info!("Error reading from local storage.");
-			// }
-			//
+
 		}
-		// ...
 	}
 
 	#[pallet::call]
@@ -481,18 +488,20 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			// Threshould account for the owner too
-			let num_signers =  (cosigners.len() as u32) + 1;
-			ensure!(
-				threshold <= num_signers,
-				Error::<T>::InvalidVaultThreshold
-			);
+			let num_signers = (cosigners.len() as u32) + 1;
+			ensure!(threshold <= num_signers, Error::<T>::InvalidVaultThreshold);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
 				description,
 				cosigners,
-				descriptor: BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(b"".encode()).expect("Error on encoding the descriptor to BoundedVec"),
-				change_descriptor: None,
+				descriptors: Descriptors::<T::OutputDescriptorMaxLen> {
+					output_descriptor: BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
+						b"".encode(),
+					)
+					.expect("Error on encoding the descriptor to BoundedVec"),
+					change_descriptor: None,
+				},
 			};
 
 			Self::do_insert_vault(vault)
@@ -500,13 +509,22 @@ pub mod pallet {
 
 		#[transactional]
 		#[pallet::weight(0)]
-		pub fn ofw_insert_descriptors(
+		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
 			payload: Payload<T::Public>,
 			_signature: T::Signature,
-		)-> DispatchResult {
-
-			Ok(())
+		) -> DispatchResult {
+			// This ensures that the function can only be called via unsigned transaction.
+			ensure_none(origin.clone())?;
+			let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
+				try_from(payload.output_descriptor).expect("Error trying to convert desc to bounded vec");
+			let change_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
+				try_from(payload.change_descriptor).expect("Error trying to convert change desc to bounded vec");
+			let descriptors = Descriptors::<T::OutputDescriptorMaxLen>{
+				output_descriptor : output_descriptor,
+				change_descriptor : Some(change_descriptor),
+			};
+			Self::do_insert_descriptors(payload.vault_id,descriptors)
 		}
 	}
 
@@ -554,7 +572,7 @@ pub mod pallet {
 			XpubStatus::Free
 		}
 
-		fn bdk_gen_vault(vault_id : [u8 ; 32 ]) -> Result<u32, http::Error> {
+		fn bdk_gen_vault(vault_id: [u8; 32]) -> Result<(Vec<u8>, Vec<u8>), http::Error> {
 			// We want to keep the offchain worker execution time reasonable, so we set a hard-coded
 			// deadline to 2s to complete the external call.
 			// You can also wait idefinitely for the response, however you may still get a timeout
@@ -568,25 +586,14 @@ pub mod pallet {
 			// since we are running in a custom WASM execution environment we can't simply
 			// import the library here.
 			let raw_json = Self::generate_vault_json_body(vault_id);
-			let request_body = str::from_utf8( raw_json.as_slice() ).expect("Error converting Json to string");
-			//let mut body = Vec::new();
-			// let threshold = NumberValue{
-			// 	integer: 1,
-			// 	fraction: 0,
-			// 	fraction_length: 0,
-			// 	exponent: 0,
-			// };
-			// body.push( ("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold) ) );
-			// let json_object = JsonValue::Object(body);
-			// let json = jsonSerialize::format(&json_object,4);
-			// let json_output = str::from_utf8(&json).unwrap();
-			log::info!("Objecto JSON construido: {:?}",request_body.clone());
-			//let request_body = "{ \"threshold\": 2,\"cosigners\": [{\"xpub\": \"Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi\"},{\"xpub\": \"Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM\"}]}";
-			//let request_body = "{}";
-			// TODO: GET works, now get the POST working
+			let request_body =
+				str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
+			log::info!("Objecto JSON construido: {:?}", request_body.clone());
+
 			let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
+
 			let request = http::Request::post(
-				str::from_utf8( &url ).expect("Error converting the BDK URL"),
+				str::from_utf8(&url).expect("Error converting the BDK URL"),
 				[request_body.clone()].to_vec(),
 			)
 			.add_header("Content-Type", "application/json")
@@ -594,24 +601,19 @@ pub mod pallet {
 			// We set the deadline for sending of the request, note that awaiting response can
 			// have a separate deadline. Next we send the request, before that it's also possible
 			// to alter request headers or stream body content in case of non-GET requests.
-			let pending = request.body([request_body.clone()].to_vec())
-				.deadline(deadline).send().map_err(|_| http::Error::IoError)?;
-			//log::warn!("Pendiente: {:?}", pending);
-			//let resultado = pending.send();
-			//log::warn!("Enviado: {:?}", resultado);
-			//.map_err(|_| http::Error::IoError);
-			//if resultado.is_err() {
-			//	return Err(http::Error::IoError);
-			//}
+			let pending = request
+				.body([request_body.clone()].to_vec())
+				.deadline(deadline)
+				.send()
+				.map_err(|_| http::Error::IoError)?;
 			// The request is already being processed by the host, we are free to do anything
 			// else in the worker (we can send multiple concurrent requests too).
 			// At some point however we probably want to check the response though,
 			// so we can block current thread and wait for it to finish.
 			// Note that since the request is being driven by the host, we don't have to wait
 			// for the request to have it complete, we will just not read the response.
-			let response = pending
-				.try_wait(deadline)
-				.map_err(|_| http::Error::DeadlineReached)??;
+			let response =
+				pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
 			// Let's check the status code before we proceed to reading the response.
 			if response.code != 200 {
 				log::warn!("Unexpected status code: {}", response.code);
@@ -629,57 +631,59 @@ pub mod pallet {
 				http::Error::Unknown
 			})?;
 			// Parse reponse: descriptor and change descriptor
-			let price = match Self::parse_vault_descriptors(body_str) {
-				Some(desc_tuple) => {
-					//extract fields
-					let desc_str = str::from_utf8(desc_tuple.0.as_slice());
-					log::info!("Al fin recuperados: {:?}",desc_str);
-					Ok(1)
-					//submit extrinsic
-				},
-				None => {
-					log::warn!("Unable to extract descriptors from the response: {:?}", body_str);
-					Err(http::Error::Unknown)
-				},
-			}?;
+			// let price = match Self::parse_vault_descriptors(body_str) {
+			// 	Some(desc_tuple) => {
+			// 		//extract fields
+			// 		// TODO: Extract both descriptors (on Vec<u8>)? and return them
+			// 		let desc_str = str::from_utf8(desc_tuple.0.as_slice());
+			// 		log::info!("Descriptor recuperado: {:?}",desc_str);
 
+			// 		Ok()
+			// 	},
+			// 	None => {
+			// 		log::warn!("Unable to extract descriptors from the response: {:?}", body_str);
+			// 		Err(http::Error::Unknown)
+			// 	},
+			// }?;
+			Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
 			//log::warn!("Got price: {} cents", price);
 
-			Ok(1)
+			//Ok(1)
 		}
 
-		fn generate_vault_json_body(vault_id: [u8 ; 32 ]) -> Vec<u8>{
+		fn generate_vault_json_body(vault_id: [u8; 32]) -> Vec<u8> {
 			let mut body = Vec::new();
 
 			//Get vault properties
 			let vault = <Vaults<T>>::get(&vault_id).expect("Vault not found with id");
-			let threshold = NumberValue{
+			let threshold = NumberValue {
 				integer: vault.threshold.clone().into(),
 				fraction: 0,
 				fraction_length: 0,
 				exponent: 0,
 			};
-			body.push( ("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold) ) );
-			//get the xpub for each cosigner 
+			body.push(("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold)));
+			//get the xpub for each cosigner
 			//let cosigners = vault.cosigners.
 			//let s = String::from("edgerg");
 			//let o = JsonValue::String(s.chars().collect()) ;
-			let vault_signers = [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
-			
-			 let mapped_xpubs: Vec<JsonValue> = Self::get_accounts_xpubs(vault_signers )
-			 	.iter().map(
-			 		|xpub|{
-						let xpub_field = JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  );
-						JsonValue::Object( [("xpub".chars().collect(),xpub_field)].to_vec() )
-						// JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  ) 
+			let vault_signers =
+				[vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
 
-					 }
-			 	).collect();
-			body.push( ("cosigners".chars().collect::<Vec<char>>(), JsonValue::Array(mapped_xpubs)) );
+			let mapped_xpubs: Vec<JsonValue> = Self::get_accounts_xpubs(vault_signers)
+				.iter()
+				.map(|xpub| {
+					let xpub_field =
+						JsonValue::String(str::from_utf8(xpub).unwrap().chars().collect());
+					JsonValue::Object([("xpub".chars().collect(), xpub_field)].to_vec())
+					// JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  )
+				})
+				.collect();
+			body.push(("cosigners".chars().collect::<Vec<char>>(), JsonValue::Array(mapped_xpubs)));
 			let json_object = JsonValue::Object(body);
 
 			// // This is the JSON string we will use.
-			// let json_string = 
+			// let json_string =
 			// r#"
 			// 	{
 			// 		"threshold": 2,
@@ -697,23 +701,25 @@ pub mod pallet {
 			// // Parse the JSON and print the resulting lite-json structure.
 			// let json_data = parse_json(json_string).expect("Invalid JSON specified!");
 			// log::info!("Prueba jason: {:#?}", json_data.;
-			jsonSerialize::format(&json_object,4)
+			jsonSerialize::format(&json_object, 4)
 			//str::from_utf8(json.clone().as_ref()).unwrap()
-
 		}
 
 		/// Parse the descriptors from the given JSON string using `lite-json`.
 		///
 		/// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.
-		fn parse_vault_descriptors(body_str: &str) -> Option<(Vec<u8>,Vec<u8>)> {
-			let val = lite_json::parse_json(body_str);
+		fn parse_vault_descriptors(body_str: &str) -> Option<(Vec<u8>, Vec<u8>)> {
+			let val = parse_json(body_str);
 			match val.ok()? {
 				JsonValue::Object(obj) => {
-					let descriptor = Self::extract_json_str_by_name(obj.clone(),"descriptor").expect("Descriptor str not found");
-					let change_descriptor = Self::extract_json_str_by_name(obj.clone(),"change_descriptor").expect("Change str not found");
-					Some( (descriptor,change_descriptor) )
+					let descriptor = Self::extract_json_str_by_name(obj.clone(), "descriptor")
+						.expect("Descriptor str not found");
+					let change_descriptor =
+						Self::extract_json_str_by_name(obj.clone(), "change_descriptor")
+							.expect("Change descriptor str not found");
+					Some((descriptor, change_descriptor))
 				},
-				_ => return None ,
+				_ => return None,
 			}
 		}
 
@@ -743,44 +749,59 @@ pub mod pallet {
 			Ok(())
 		}
 
-		fn get_pending_vaults()-> Vec<[u8 ; 32]>{
-			<Vaults<T>>::iter().filter_map(
-				| (entry, vault)| 
-				if vault.descriptor.is_empty(){ Some(entry) }
-				else { None }
-			).collect()
-
+		pub fn do_insert_descriptors(vault_id: [u8;32], descriptors: Descriptors<T::OutputDescriptorMaxLen>) -> DispatchResult {
+			<Vaults<T>>::try_mutate(vault_id, | v |{
+				match v {
+					Some(vault) =>{
+						vault.descriptors.clone_from(&descriptors);
+						Ok(())
+					},
+					None=> Err(Error::<T>::VaultNotFound),
+				}
+			})?;
+			Self::deposit_event(Event::DescriptorsStored(vault_id));
+			Ok(())
 		}
 
-		fn get_accounts_xpubs(accounts: Vec<T::AccountId>)->Vec<Vec<u8>>{
+		fn get_pending_vaults() -> Vec<[u8; 32]> {
+			<Vaults<T>>::iter()
+				.filter_map(|(entry, vault)| {
+					if vault.descriptors.output_descriptor.is_empty() {
+						Some(entry)
+					} else {
+						None
+					}
+				})
+				.collect()
+		}
+
+		fn get_accounts_xpubs(accounts: Vec<T::AccountId>) -> Vec<Vec<u8>> {
 			// rely on pallet storage (just in case the identity gets reseted by user error)
-			let mut xpub_vec = Vec::<Vec<u8>>::default(); 
-			accounts.iter().for_each(
-				|account| {
-					let xpub_id  = <XpubsByOwner<T>>::get(account).expect("The account doesn't have an xpub");
-					let xpub = <Xpubs<T>>::get(xpub_id).expect("Error trying to retrieve xpub from its ID");
-					xpub_vec.push( 
-						// format the xpub to string
-						xpub.to_vec()
-					);
-				}
-			);
+			let mut xpub_vec = Vec::<Vec<u8>>::default();
+			accounts.iter().for_each(|account| {
+				let xpub_id =
+					<XpubsByOwner<T>>::get(account).expect("The account doesn't have an xpub");
+				let xpub =
+					<Xpubs<T>>::get(xpub_id).expect("Error trying to retrieve xpub from its ID");
+				xpub_vec.push(
+					// format the xpub to string
+					xpub.to_vec(),
+				);
+			});
 			xpub_vec
 		}
 
-		fn chars_to_bytes(v : Vec<char>) -> Vec<u8>{
-			v.iter().map(| c | *c as u8 ).collect::<Vec<u8>>()
-
+		fn chars_to_bytes(v: Vec<char>) -> Vec<u8> {
+			v.iter().map(|c| *c as u8).collect::<Vec<u8>>()
 		}
 
-		fn extract_json_str_by_name(tuple: Vec<(Vec<char>, JsonValue ) >,s: &str)->Option<Vec<u8>>{
-			let filtered = tuple.into_iter().find(| (key, value) |  {
-				key.iter().copied().eq(s.chars())
-			});
-			match filtered.expect("Error retrieving json field").1{
-				JsonValue::String(chars) => {
-					return Some(Self::chars_to_bytes(chars) )
-				},
+		fn extract_json_str_by_name(
+			tuple: Vec<(Vec<char>, JsonValue)>,
+			s: &str,
+		) -> Option<Vec<u8>> {
+			let filtered = tuple.into_iter().find(|(key, _)| key.iter().copied().eq(s.chars()));
+			match filtered.expect("Error retrieving json field").1 {
+				JsonValue::String(chars) => return Some(Self::chars_to_bytes(chars)),
 				_ => return None,
 			}
 		}
@@ -789,38 +810,42 @@ pub mod pallet {
 	#[pallet::validate_unsigned]
 	impl<T: Config> ValidateUnsigned for Pallet<T> {
 		type Call = Call<T>;
-	
+
 		fn validate_unsigned(_source: TransactionSource, call: &Self::Call) -> TransactionValidity {
-			let valid_tx = |provide| ValidTransaction::with_tag_prefix("ocw-demo")
-				.priority(UNSIGNED_TXS_PRIORITY)
-				.and_provides([&provide])
-				.longevity(3)
-				.propagate(true)
-				.build();
-	
+			let valid_tx = |provide| {
+				ValidTransaction::with_tag_prefix("bdks")
+					.priority(UNSIGNED_TXS_PRIORITY)
+					.and_provides([&provide])
+					.longevity(3)
+					.propagate(true)
+					.build()
+			};
+
 			match call {
-				Call::ofw_insert_descriptors {
-				ref payload,
-				ref signature
-				} => {
-				if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
-					return InvalidTransaction::BadProof.into();
-				}
-				valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
+				Call::ocw_insert_descriptors { ref payload, ref signature } => {
+					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
+						return InvalidTransaction::BadProof.into();
+					}
+					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
 				},
 				_ => InvalidTransaction::Call.into(),
 			}
 		}
 	}
 
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, scale_info::TypeInfo)]
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[codec(mel_bound())]
 	pub struct Payload<Public> {
-		number: u64,
+		// Not successful, macros/generics issue
+		// descriptors: Descriptors<u8>,
+		vault_id: [u8;32],
+		output_descriptor: Vec<u8>,
+		change_descriptor: Vec<u8>,
 		public: Public,
 	}
 
-	impl<T: SigningTypes> SignedPayload<T> for Payload<T::Public> {
-		fn public(&self) -> T::Public {
+	impl<S: SigningTypes> SignedPayload<S> for Payload<S::Public> {
+		fn public(&self) -> S::Public {
 			self.public.clone()
 		}
 	}
