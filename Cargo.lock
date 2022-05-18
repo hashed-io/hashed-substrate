@@ -4077,7 +4077,6 @@ dependencies = [
  "lite-json",
  "log",
  "pallet-balances",
- "pallet-identity",
  "pallet-preimage",
  "parity-scale-codec",
  "scale-info",

@@ -17,28 +17,10 @@ use crate::types::{BDK_SERVICES_URL,};
 
 impl<T: Config> Pallet<T> {
     /// Use with caution
-    pub fn remove_xpub_from_pallet_storage(who: T::AccountId) -> Result<(), Error<T>> {
-        // No error can be propagated from the remove functions
-        if <XpubsByOwner<T>>::contains_key(who.clone()) {
-            let old_hash = <XpubsByOwner<T>>::take(who).expect("Old hash not found");
-            <Xpubs<T>>::remove(old_hash);
-            return Ok(());
-        }
-        return Err(<Error<T>>::XPubNotFound);
-    }
-
-    // Ensure at that certain point, no xpub field exists on the identity
-    pub fn xpub_field_available(
-        fields: &BoundedVec<
-            (pallet_identity::Data, pallet_identity::Data),
-            T::MaxAdditionalFields,
-        >,
-    ) -> bool {
-        let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
-            .expect("Error on encoding the xpub key to BoundedVec");
-        let xpub_count =
-            fields.iter().find(|(k, _)| k == &pallet_identity::Data::Raw(key.clone()));
-        xpub_count.is_none()
+    pub fn do_remove_xpub(who: T::AccountId) -> Result<(), Error<T>> {
+        let old_hash = <XpubsByOwner<T>>::take(who).expect("Old hash not found");
+        <Xpubs<T>>::remove(old_hash);
+        return Ok(());
     }
 
     // check if the xpub is free to take/update or if its owned by the account

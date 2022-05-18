@@ -32,12 +32,11 @@ pub mod pallet {
 		},
 		pallet_prelude::*,
 	};
-	use scale_info::prelude::boxed::Box;
 	use sp_runtime::sp_std::str;
 	use sp_runtime::sp_std::vec::Vec;
 	use sp_runtime::{
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
-		offchain::{Duration,storage::{StorageValueRef},storage_lock::{StorageLock,BlockAndTime}},
+		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 		RuntimeDebug,
 	};
 
@@ -142,7 +141,7 @@ pub mod pallet {
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_identity::Config + CreateSignedTransaction<Call<Self>>
+		frame_system::Config + CreateSignedTransaction<Call<Self>>
 	{
 		/// The identifier type for an offchain worker.
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
@@ -172,7 +171,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Xpub and hash stored. Linked to an account identity
+		/// Xpub and hash stored
 		XPubStored([u8; 32], T::AccountId),
 		/// Removed Xpub previously linked to the account
 		XPubRemoved(T::AccountId),
@@ -189,17 +188,21 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Work in progress!
 		NotYetImplemented,
-		/// Xpub shouldn't be empty. Use the identity pallet if needed.
+		/// Xpub shouldn't be empty
 		NoneValue,
 		// The xpub has already been uploaded and taken by an account
 		XPubAlreadyTaken,
 		/// The Account doesn't have an xpub
 		XPubNotFound,
+		/// The user already has an xpub, try to remove it first
+		UserAlreadyHasXpub,
+		/// The Xpub cant be removed/changed because a vault needs it
+		XpubLinkedToVault,
 		/// The generated Hashes aren't the same
 		HashingError,
 		/// Found Invalid name on an additional field
 		InvalidAdditionalField,
-		/// The vault threshold cannot be greater than the number of vault participants
+		/// The vault threshold cannot 0 nor be greater than the number of vault participants
 		InvalidVaultThreshold,
 		/// A defined cosigner reached its vault limit
 		SignerVaultLimit,
@@ -283,7 +286,6 @@ pub mod pallet {
 				if pending_vaults.len()<1 { return;}
 				let mut generated_vaults = Vec::<SingleVaultPayload>::new();
 				pending_vaults.iter().for_each(|vault_to_complete| {
-					//TODO: build the payload struct with all the requests
 					
 					log::warn!("Trying to gen vault at block {:?}", block_number);
 					// Contact bdk services and get descriptors
@@ -322,18 +324,16 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// ## Identity with XPub insertion
+		/// ## XPub insertion
 		///
-		/// This extrinsic inserts a user-defined xpub as an additional field in the identity pallet,
+		/// This extrinsic inserts a user-defined xpub
 		/// as well as in the pallet storage.
 		///
 		/// ### Parameters:
-		/// - `info`: Contains all the default `pallet-identity` fields (display, legal, twitter, etc.).
-		/// Additional fields may also be inserted with some minor limitations (see Considerations)
 		/// - `xpub`: The unique identifier of the instance to be fractioned/divided
 		///
 		/// ### Considerations
-		/// - The origin must be Signed and the sender must have sufficient funds free for the identity insertion.
+		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
 		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
 		///  fees will be applied nonetheless).
 		/// - This extrinsic will insert an additional field named `xpub`. In order to avoid conflicts and malfunctioning,
@@ -342,18 +342,14 @@ pub mod pallet {
 		/// is ideal (while adding explicitly the xpub additional field).
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
-		pub fn set_complete_identity(
+		pub fn set_xpub(
 			origin: OriginFor<T>,
-			mut info: Box<pallet_identity::IdentityInfo<T::MaxAdditionalFields>>,
 			xpub: BoundedVec<u8, T::XPubLen>,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
 			ensure!(xpub.len() > 0, <Error<T>>::NoneValue);
-			ensure!(
-				Self::xpub_field_available(&info.additional),
-				<Error<T>>::InvalidAdditionalField
-			);
+			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()) , <Error<T>>::UserAlreadyHasXpub);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
 			// Assert if the input xpub is free to take (or if the user owns it)
 			match Self::get_xpub_status(who.clone(), manual_hash.clone()) {
@@ -361,9 +357,9 @@ pub mod pallet {
 				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken)?, //xpub taken: abort tx
 				XpubStatus::Free => {
 					// xpub free: erase unused xpub and insert on maps
-					if <XpubsByOwner<T>>::contains_key(who.clone()) {
-						Self::remove_xpub_from_pallet_storage(who.clone())?;
-					}
+					// if <XpubsByOwner<T>>::contains_key(who.clone()) {
+					// 	Self::remove_xpub_from_pallet_storage(who.clone())?;
+					// }
 					<Xpubs<T>>::insert(manual_hash, xpub.clone());
 					// Confirm the xpub was inserted
 					let mut inserted_hash = <Xpubs<T>>::hashed_key_for(manual_hash);
@@ -375,24 +371,11 @@ pub mod pallet {
 					<XpubsByOwner<T>>::insert(who.clone(), manual_hash);
 				},
 			}
-
-			// Setting up the xpub key/value pair
-			let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
-				.expect("Error on encoding the xpub key to BoundedVec");
-			// Try to push the key
-			info.additional
-				.try_push((
-					pallet_identity::Data::Raw(key),
-					pallet_identity::Data::BlakeTwo256(manual_hash),
-				))
-				.map_err(|_| pallet_identity::Error::<T>::TooManyFields)?;
-			// Insert identity
-			let identity_result = pallet_identity::Pallet::<T>::set_identity(origin, info)?;
 			// Emit a success event.
 			Self::deposit_event(Event::XPubStored(manual_hash, who));
 
-			// Return a successful DispatchResultWithPostInfo
-			Ok(identity_result)
+			// Return a successful DispatchResult
+			Ok(())
 		}
 
 		/// ## Xpub removal
@@ -402,43 +385,17 @@ pub mod pallet {
 		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
-		pub fn remove_xpub_from_identity(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			// Obtain account identity
-			let mut identity = pallet_identity::Pallet::<T>::identity(who.clone())
-				.ok_or(pallet_identity::Error::<T>::NoIdentity)?;
-			let key = BoundedVec::<u8, ConstU32<32>>::try_from(b"xpub".encode())
-				.expect("Error on encoding the xpub key to BoundedVec");
-			// Search for the xpub field
-			let xpub_index = identity
-				.info
-				.additional
-				.iter()
-				.position(|field| field.0.eq(&pallet_identity::Data::Raw(key.clone())))
-				.ok_or(<Error<T>>::XPubNotFound)?;
-			// Removing the xpub field on the account's identity
-			let mut xpub_id_field = (pallet_identity::Data::None, pallet_identity::Data::None);
-			let updated_fields = identity
-				.info
-				.additional
-				.clone()
-				.try_mutate(|additional_fields| {
-					xpub_id_field = additional_fields.remove(xpub_index);
-					()
-				})
-				.ok_or(Error::<T>::XPubNotFound)?;
-			// Using the obtained xpub hash to remove it from the pallet's storage
-			let old_xpub_hash: [u8; 32] = xpub_id_field.1.encode()[1..]
-				.try_into()
-				.expect("Error converting retrieved xpub");
-			ensure!(<Xpubs<T>>::contains_key(old_xpub_hash), Error::<T>::HashingError);
-			Self::remove_xpub_from_pallet_storage(who.clone())?;
-			identity.info.additional.clone_from(&updated_fields);
-			let identity_result =
-				pallet_identity::Pallet::<T>::set_identity(origin, Box::new(identity.info))?;
+
+			// Removing
+			ensure!(<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::XPubNotFound);
+			ensure!(!<VaultsBySigner<T>>::contains_key(who.clone()),  Error::<T>::XpubLinkedToVault);
+
+			Self::do_remove_xpub(who.clone())?;
 
 			Self::deposit_event(Event::XPubRemoved(who));
-			Ok(identity_result)
+			Ok(())
 		}
 
 		/// ## PSBT insertion
@@ -485,7 +442,7 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 			// Threshould account for the owner too
 			let num_signers = (cosigners.len() as u32) + 1;
-			ensure!(threshold <= num_signers, Error::<T>::InvalidVaultThreshold);
+			ensure!( threshold>=1 && threshold<= num_signers, Error::<T>::InvalidVaultThreshold);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
