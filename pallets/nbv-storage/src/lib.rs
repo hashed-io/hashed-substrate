@@ -275,6 +275,7 @@ pub mod pallet {
 				log::info!("Pending vaults {:?}", pending_vaults.len());
 				pending_vaults.iter().for_each(|vault_to_complete| {
 					//TODO: build the payload struct with all the requests
+					
 					log::warn!("Trying to gen vault at block {:?}", block_number);
 					// Contact bdk services
 					let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
