@@ -1,0 +1,60 @@
+@startgantt RoadMap
+printscale weekly
+Project starts the 1st of May 2022
+hide ressources footbox
+today is 12 days after start and is colored in #AAF
+
+-- Native Bitcoin Vaults (NBV) --
+[NBV MVP Development] as [nbv-dev] on {Max, Abel, Seb, Chema} lasts 45 days
+[nbv-dev] is colored in Yellow/Black
+[NBV on Hashed Network] happens after [nbv-dev]'s end
+
+-- Afloat --
+[Afloat MVP Migration] as [afloat-dev] lasts 90 days
+[afloat-dev] is colored in Yellow/Black
+[Privacy Implementation] as [privacy-dev] lasts 60 days
+[Establish Bank Relationship] as [banking] lasts 30 days
+[Banking Implementation] as [banking-dev] lasts 30 days
+[privacy-dev] ends at [afloat-dev]'s end
+[banking-dev] ends at [afloat-dev]'s end
+[banking] -> [banking-dev]
+
+-- Proxy -- 
+[Proxy Phase 1 Dev] as [pot] lasts 2 weeks
+[pot] is colored in Coral/Green
+[Proxy Live on Telos] as [p-live] happens after [pot]'s end
+[Proxy Migration] as [p-mig] starts at [afloat-dev]'s end
+[p-mig] lasts 90 days
+[Proxy Live on Hashed Network] happens after [p-mig]'s end
+
+-- LeaseX --
+[LeaseX Design] as [l-design] lasts 2 weeks
+[l-design] is colored in Coral/Green
+[LeaseX MVP Development] as [l-dev] lasts 90 days
+[l-dev] starts at [afloat-dev]'s end
+[l-design] -> [l-dev]
+
+-- Digitally Native Organizations (Creation and Liquidity) --
+[DNO Creator Migration] as [dno-dev] lasts 45 days
+[dno-dev] starts at [l-dev]'s end
+[DNOs on Hashed Network] happens at [dno-dev]'s end
+
+-- Triple Entry Accounting -- 
+[Accounting MVP Migration] as [a-mig] lasts 90 days
+[a-mig] starts at [dno-dev]'s end
+[Accounting on Hashed Network] happens at [a-mig]'s end
+
+-- Hypha -- 
+[Hypha Wallet] as [h-wallet] on {HH Partners} lasts 60 days
+[Wallet Release] happens at [h-wallet]'s end
+[Hypha Migration] as [h-mig] starts at [h-wallet]'s end
+[h-mig] lasts 90 days
+[Hypha MVP Live on Hashed Network] happens at [h-mig]'s end
+
+-- Parachain -- 
+[Parachain Build] as [para-dev] lasts 120 days
+[nbv-dev] -> [para-dev]
+[Kusama Launch] as [ksm] happens at [para-dev]'s end
+[Polkadot Launch] as [dot] happens on 2023-02-02
+
+@endgantt

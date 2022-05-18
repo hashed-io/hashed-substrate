@@ -119,12 +119,20 @@ impl frame_system::Config for Test {
 parameter_types! {
 	pub const XPubLen: u32 = 166;
 	pub const PSBTMaxLen: u32  = 2048;
+	pub const MaxVaultsPerUser: u32 = 10;
+	pub const MaxCosignersPerVault: u32 = 5;
+	pub const VaultDescriptionMaxLen: u32 = 200;
+	pub const OutputDescriptorMaxLen: u32 = 2048;
 }
 
 impl pallet_nbv_storage::Config for Test {
 	type Event = Event;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
+	type MaxVaultsPerUser = MaxVaultsPerUser;
+	type MaxCosignersPerVault = MaxCosignersPerVault;
+	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
 }
 // Build genesis storage according to the mock runtime.
  pub fn new_test_ext() -> sp_io::TestExternalities {
