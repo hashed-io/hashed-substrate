@@ -3,6 +3,7 @@ use frame_support::pallet_prelude::*;
 use frame_support::{sp_io::hashing::blake2_256};
 use sp_runtime::sp_std::str;
 use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::traits::BlockNumberProvider;
 use sp_runtime::{
     offchain::{
         http,
@@ -74,7 +75,6 @@ impl<T: Config> Pallet<T> {
         let raw_json = Self::generate_vault_json_body(vault_id);
         let request_body =
             str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
-        log::info!("Objecto JSON construido: {:?}", request_body.clone());
 
         let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
 
@@ -254,5 +254,14 @@ impl<T: Config> Pallet<T> {
             JsonValue::String(chars) => return Some(Self::chars_to_bytes(chars)),
             _ => return None,
         }
+    }
+}
+
+/*--- Block Number provider section. Needed to implement locks on offchain storage*/
+impl<T: Config> BlockNumberProvider for Pallet<T> {
+    type BlockNumber = T::BlockNumber;
+
+    fn current_block_number() -> Self::BlockNumber {
+        <frame_system::Pallet<T>>::block_number()
     }
 }

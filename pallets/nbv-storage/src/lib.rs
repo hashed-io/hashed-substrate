@@ -19,7 +19,7 @@ pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	//#[cfg(feature = "std")]
 	//use frame_support::serde::{Deserialize, Serialize};
-	use crate::types::UNSIGNED_TXS_PRIORITY;
+	use crate::types::{UNSIGNED_TXS_PRIORITY, LOCK_BLOCK_EXPIRATION, LOCK_TIMEOUT_EXPIRATION};
 	use frame_support::{
 		pallet_prelude::{BoundedVec, MaxEncodedLen},
 		traits::Get,
@@ -28,7 +28,7 @@ pub mod pallet {
 	use frame_system::{
 		offchain::{
 			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
-			SignedPayload, Signer, SigningTypes
+			SignedPayload, Signer, SigningTypes,
 		},
 		pallet_prelude::*,
 	};
@@ -37,8 +37,10 @@ pub mod pallet {
 	use sp_runtime::sp_std::vec::Vec;
 	use sp_runtime::{
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
+		offchain::{Duration,storage::{StorageValueRef},storage_lock::{StorageLock,BlockAndTime}},
 		RuntimeDebug,
 	};
+
 	use scale_info::TypeInfo;
 
 	/*--- Structs Section ---*/
@@ -62,7 +64,7 @@ pub mod pallet {
 	
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 	#[codec(mel_bound())]
-	pub struct Payload<Public> {
+	pub struct VaultPayload<Public> {
 		// Not successful, macros/generics issue
 		// descriptors: Descriptors<u8>,
 		pub vault_id: [u8;32],
@@ -71,7 +73,7 @@ pub mod pallet {
 		pub public: Public,
 	}
 	
-	impl<S: SigningTypes> SignedPayload<S> for Payload<S::Public> {
+	impl<S: SigningTypes> SignedPayload<S> for VaultPayload<S::Public> {
 		fn public(&self) -> S::Public {
 			self.public.clone()
 		}
@@ -253,41 +255,54 @@ pub mod pallet {
 		/// Note that it's not guaranteed for offchain workers to run on EVERY block, there might
 		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
 		/// so the code should be able to handle that.
-		fn offchain_worker(_block_number: T::BlockNumber) {
+		fn offchain_worker(block_number: T::BlockNumber) {
 			// check if the node has an account available, the offchain worker can't submit
 			// transactions without it
 			let signer = Signer::<T, T::AuthorityId>::any_account();
 			if !signer.can_sign(){
 				return;	
 			}
-			// check for pending vaults to insert
-			let mut pending_vaults = Self::get_pending_vaults();
-			if pending_vaults.len() > 0 {
-				log::info!("Pending vaults {:?}", pending_vaults.len());
 
-				let vault_to_complete = pending_vaults.pop().expect("No vaults left?");
-				// Contact bdk services
-				let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
-					.expect("Error while generating the vault's output descriptors");
-				if let Some((_, res)) = signer.send_unsigned_transaction(
-					// this line is to prepare and return payload
-					|acct| Payload {
-						vault_id: vault_to_complete.clone(),
-						output_descriptor: vault_result.0.clone(),
-						change_descriptor: vault_result.1.clone(),
-						public: acct.public.clone(),
-					},
-					|payload, signature| Call::ocw_insert_descriptors { payload, signature },
-				) {
-					match res {
-						Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-						Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-					};
-				} else {
-					// The case of `None`: no account is available for sending
-					log::error!("No local account available");
-				}
-			}
+			// Check if this OCW can modify the vaults
+			let mut lock = StorageLock::<BlockAndTime<Self>>::with_block_and_time_deadline(
+				b"nbv::vault-storage-lock",
+				LOCK_BLOCK_EXPIRATION,
+				Duration::from_millis(LOCK_TIMEOUT_EXPIRATION)
+			);
+			if let Ok(_guard) = lock.try_lock() {
+				// check for pending vaults to insert
+				let pending_vaults = Self::get_pending_vaults();
+				log::info!("Pending vaults {:?}", pending_vaults.len());
+				pending_vaults.iter().for_each(|vault_to_complete| {
+					//TODO: build the payload struct with all the requests
+					log::warn!("Trying to gen vault at block {:?}", block_number);
+					// Contact bdk services
+					let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
+						.expect("Error while generating the vault's output descriptors");
+					if let Some((_, res)) = signer.send_unsigned_transaction(
+						// this line is to prepare and return payload
+						|acct| VaultPayload {
+							vault_id: vault_to_complete.clone(),
+							output_descriptor: vault_result.0.clone(),
+							change_descriptor: vault_result.1.clone(),
+							public: acct.public.clone(),
+						},
+						|payload, signature| Call::ocw_insert_descriptors { payload, signature },
+					) {
+						match res {
+							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
+							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+						};
+					} else {
+						// The case of `None`: no account is available for sending
+						log::error!("No local account available");
+					}
+				});
+
+				
+			}else {
+				log::error!("This OCW couln't get the locc");
+			};
 
 		}
 	}
@@ -479,7 +494,7 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
-			payload: Payload<T::Public>,
+			payload: VaultPayload<T::Public>,
 			_signature: T::Signature,
 		) -> DispatchResult {
 			// This ensures that the function can only be called via unsigned transaction.

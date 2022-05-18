@@ -4,6 +4,9 @@ pub const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
 pub const UNSIGNED_TXS_PRIORITY: u64 = 100;
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
 
+pub const LOCK_BLOCK_EXPIRATION: u32 = 5; // in block number
+pub const LOCK_TIMEOUT_EXPIRATION: u64 = 10000; // in milli-seconds
+
 /*--- Crypto module section---*/
 pub mod crypto {
 	use super::KEY_TYPE;
