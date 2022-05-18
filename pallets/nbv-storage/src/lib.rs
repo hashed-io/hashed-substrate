@@ -64,16 +64,22 @@ pub mod pallet {
 	
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 	#[codec(mel_bound())]
-	pub struct VaultPayload<Public> {
+	pub struct VaultsPayload<Public> {
+		pub vaults_payload:Vec<SingleVaultPayload>,
+		pub public: Public,
+	}
+
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[codec(mel_bound())]
+	pub struct SingleVaultPayload{
 		// Not successful, macros/generics issue
 		// descriptors: Descriptors<u8>,
 		pub vault_id: [u8;32],
 		pub output_descriptor: Vec<u8>,
 		pub change_descriptor: Vec<u8>,
-		pub public: Public,
 	}
 	
-	impl<S: SigningTypes> SignedPayload<S> for VaultPayload<S::Public> {
+	impl<S: SigningTypes> SignedPayload<S> for VaultsPayload<S::Public> {
 		fn public(&self) -> S::Public {
 			self.public.clone()
 		}
@@ -273,33 +279,39 @@ pub mod pallet {
 				// check for pending vaults to insert
 				let pending_vaults = Self::get_pending_vaults();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
+				// This validation needs to be done after the lock: 
+				if pending_vaults.len()<1 { return;}
+				let mut generated_vaults = Vec::<SingleVaultPayload>::new();
 				pending_vaults.iter().for_each(|vault_to_complete| {
 					//TODO: build the payload struct with all the requests
 					
 					log::warn!("Trying to gen vault at block {:?}", block_number);
-					// Contact bdk services
+					// Contact bdk services and get descriptors
 					let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
 						.expect("Error while generating the vault's output descriptors");
-					if let Some((_, res)) = signer.send_unsigned_transaction(
-						// this line is to prepare and return payload
-						|acct| VaultPayload {
-							vault_id: vault_to_complete.clone(),
-							output_descriptor: vault_result.0.clone(),
-							change_descriptor: vault_result.1.clone(),
-							public: acct.public.clone(),
-						},
-						|payload, signature| Call::ocw_insert_descriptors { payload, signature },
-					) {
-						match res {
-							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-						};
-					} else {
-						// The case of `None`: no account is available for sending
-						log::error!("No local account available");
-					}
+					// Build offchain vaults struct and push it to a Vec
+					generated_vaults.push(SingleVaultPayload{
+						vault_id: vault_to_complete.clone(),
+						output_descriptor: vault_result.0.clone(),
+						change_descriptor: vault_result.1.clone(),
+					});
 				});
-
+				if let Some((_, res)) = signer.send_unsigned_transaction(
+					// this line is to prepare and return payload
+					|acct| VaultsPayload {
+						vaults_payload: generated_vaults.clone(),
+						public: acct.public.clone(),
+					},
+					|payload, signature| Call::ocw_insert_descriptors { payload, signature },
+				) {
+					match res {
+						Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
+						Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+					};
+				} else {
+					// The case of `None`: no account is available for sending
+					log::error!("No local account available");
+				}
 				
 			}else {
 				log::error!("This OCW couln't get the locc");
@@ -495,20 +507,30 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
-			payload: VaultPayload<T::Public>,
+			payload: VaultsPayload<T::Public>,
 			_signature: T::Signature,
 		) -> DispatchResult {
 			// This ensures that the function can only be called via unsigned transaction.
 			ensure_none(origin.clone())?;
-			let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
-				try_from(payload.output_descriptor).expect("Error trying to convert desc to bounded vec");
-			let change_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
-				try_from(payload.change_descriptor).expect("Error trying to convert change desc to bounded vec");
-			let descriptors = Descriptors::<T::OutputDescriptorMaxLen>{
-				output_descriptor : output_descriptor,
-				change_descriptor : Some(change_descriptor),
-			};
-			Self::do_insert_descriptors(payload.vault_id,descriptors)
+			payload.vaults_payload.iter().find_map(
+				|vault_payload|{
+					let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
+						try_from(vault_payload.output_descriptor.clone()).expect("Error trying to convert desc to bounded vec");
+					let change_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
+						try_from(vault_payload.change_descriptor.clone()).expect("Error trying to convert change desc to bounded vec");
+					let descriptors = Descriptors::<T::OutputDescriptorMaxLen>{
+						output_descriptor : output_descriptor,
+						change_descriptor : Some(change_descriptor),
+					};
+					//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());
+					let tx_res = Self::do_insert_descriptors(vault_payload.vault_id,descriptors);
+					if tx_res.is_err(){
+						return Some(tx_res);
+					}
+					None
+
+			}).unwrap_or(Ok(()))?;
+			Ok(())
 		}
 	}
 
