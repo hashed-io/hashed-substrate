@@ -17,10 +17,25 @@ use crate::types::{BDK_SERVICES_URL,};
 
 impl<T: Config> Pallet<T> {
     /// Use with caution
-    pub fn do_remove_xpub(who: T::AccountId) -> Result<(), Error<T>> {
-        let old_hash = <XpubsByOwner<T>>::take(who).expect("Old hash not found");
+    pub fn do_remove_xpub(who: T::AccountId) -> DispatchResult {
+        let old_hash = <XpubsByOwner<T>>::take(who.clone()).ok_or(Error::<T>::XPubNotFound)?;
         <Xpubs<T>>::remove(old_hash);
-        return Ok(());
+        Self::deposit_event(Event::XPubRemoved(who));
+        Ok(())
+    }
+
+    pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
+        // This removes the vault while retrieving its values
+        let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
+        let vault_members = [
+            vault.cosigners.as_slice(),
+            &[vault.owner.clone()],
+        ].concat();
+        vault_members.iter().for_each(|signer|{
+            <VaultsBySigner<T>>::remove(signer);
+        });
+        Self::deposit_event(Event::VaultRemoved(vault_id, vault.owner));
+        Ok(())
     }
 
     // check if the xpub is free to take/update or if its owned by the account

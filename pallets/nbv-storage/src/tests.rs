@@ -196,6 +196,60 @@ fn signer_reached_max_vaults() {
 	});
 }
 
+#[test]
+fn removing_vault_should_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_vault_description(), cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		// Try to remove xpub (vault depends on it)
+		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(NBVStorage::remove_vault(Origin::signed(test_pub(1)),vault_id));
+
+	});
+}
+
+#[test]
+fn removing_vault_and_xpub_in_order_should_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_vault_description(), cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		// TODO: Remove vault
+		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(NBVStorage::remove_vault(Origin::signed(test_pub(1)),vault_id));
+		// Try to remove xpub (vault depends on it)
+		assert_ok!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))));
+
+	});
+}
+
+#[test]
+fn removing_xpub_before_vault_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_vault_description(), cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		// Try to remove xpub (vault depends on it)
+		assert_noop!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))), Error::<Test>::XpubLinkedToVault);
+
+	});
+}
 
 #[test]
 fn setting_psbt_should_work() {
