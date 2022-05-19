@@ -202,12 +202,14 @@ pub mod pallet {
 		HashingError,
 		/// Found Invalid name on an additional field
 		InvalidAdditionalField,
-		/// The vault threshold cannot 0 nor be greater than the number of vault participants
+		/// The vault threshold cannot be greater than the number of vault participants
 		InvalidVaultThreshold,
 		/// A defined cosigner reached its vault limit
 		SignerVaultLimit,
 		/// Vault not found
 		VaultNotFound,
+		/// A vault needs at least 1 cosigner
+		NotEnoughCosigners,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -440,9 +442,10 @@ pub mod pallet {
 			cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			// Threshould account for the owner too
-			let num_signers = (cosigners.len() as u32) + 1;
-			ensure!( threshold>=1 && threshold<= num_signers, Error::<T>::InvalidVaultThreshold);
+			//  Cosigners are already bounded, only is necessary to check if its not empty
+			ensure!( !cosigners.is_empty() , Error::<T>::NotEnoughCosigners);
+			// Threshold needs to be greater than 0 and less than the current owner+cosigners number
+			ensure!( threshold>0 && threshold <= (1+cosigners.len() as u32), Error::<T>::InvalidVaultThreshold);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
