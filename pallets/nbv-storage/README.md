@@ -27,6 +27,8 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Query vaults ids by signer](#query-vaults-ids-by-signer)
       - [Query vaults details by id](#query-vaults-details-by-id)
       - [Remove vault](#remove-vault-1)
+  - [Events](#events)
+  - [Errors](#errors)
   - [Assumptions](#assumptions)
 
 ## Overview
@@ -225,7 +227,52 @@ console.log(vaultDetails.toHuman());
 const removeVault = await api.tx.nbvStorage.removeVault("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf").signAndSend(alice);
 console.log('Tx sent with hash', removeVault.toHex());
 ```
-
+## Events
+```rust
+/// Xpub and hash stored
+XPubStored([u8; 32], T::AccountId),
+/// Removed Xpub previously linked to the account
+XPubRemoved(T::AccountId),
+/// The PBST was succesfully inserted and linked to the account
+PSBTStored(T::AccountId),
+/// The vault was succesfully inserted and linked to the account as owner
+VaultStored([u8; 32], T::AccountId),
+/// The vault was succesfully removed by its owner
+VaultRemoved([u8; 32],T::AccountId),
+/// An offchain worker inserted a vault's descriptor 
+DescriptorsStored([u8;32]),
+```
+## Errors
+```rust
+/// Work in progress!
+NotYetImplemented,
+/// Xpub shouldn't be empty
+NoneValue,
+// The xpub has already been uploaded and taken by an account
+XPubAlreadyTaken,
+/// The Account doesn't have an xpub
+XPubNotFound,
+/// The user already has an xpub, try to remove it first
+UserAlreadyHasXpub,
+/// The Xpub cant be removed/changed because a vault needs it
+XpubLinkedToVault,
+/// The generated Hashes aren't the same
+HashingError,
+/// Found Invalid name on an additional field
+InvalidAdditionalField,
+/// The vault threshold cannot be greater than the number of vault participants
+InvalidVaultThreshold,
+/// A defined cosigner reached its vault limit
+SignerVaultLimit,
+/// Vault not found
+VaultNotFound,
+/// A vault needs at least 1 cosigner
+NotEnoughCosigners,
+/// Only the owner of this vault can do this transaction
+VaultOwnerPermissionsNeeded,
+/// Vault members cannot be duplicate
+DuplicateVaultMembers,
+```
 
 ## Assumptions
 

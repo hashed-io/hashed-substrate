@@ -509,6 +509,32 @@ pub mod pallet {
 			).unwrap_or(Ok(()))?;
 			Ok(())
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn propose(
+			origin: OriginFor<T>,
+			_vault_id: [u8; 32],
+			_recipient_address: BoundedVec<u8, T::XPubLen>,
+			_amount_in_sats: u32,
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			ensure!(false, Error::<T>::NotYetImplemented);
+
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn generate_new_address(
+			origin: OriginFor<T>,
+			_vault_id: [u8; 32],
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			ensure!(false, Error::<T>::NotYetImplemented);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::validate_unsigned]
