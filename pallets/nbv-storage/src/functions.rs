@@ -38,6 +38,15 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    // Check for xpubs duplicates (requires owner to be on the vault_signers Vec)
+    pub fn members_are_unique( vault_signers: Vec<T::AccountId>) -> bool {
+        let mut filtered_signers = vault_signers.clone();
+        filtered_signers.sort();
+        filtered_signers.dedup();
+        // Signers length should be equal 
+        vault_signers.len() == filtered_signers.len()
+    }
+
     // check if the xpub is free to take/update or if its owned by the account
     pub fn get_xpub_status(who: T::AccountId, xpub_hash: [u8; 32]) -> XpubStatus {
         if <Xpubs<T>>::contains_key(xpub_hash) {
@@ -179,6 +188,7 @@ impl<T: Config> Pallet<T> {
         log::info!("Total vault members count: {:?}", vault_members.len());
         // iterate over that vector and add the vault id to the list of each user (signer)
         //let vaults_by_signer_insertion_result =
+        ensure!(Self::members_are_unique(vault_members.clone()), Error::<T>::DuplicateVaultMembers);
         vault_members.into_iter().try_for_each(|acc| {
             // check if all users have an xpub
             if !<XpubsByOwner<T>>::contains_key(acc.clone()) {

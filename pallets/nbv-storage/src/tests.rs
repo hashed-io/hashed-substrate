@@ -155,7 +155,33 @@ fn vault_with_invalid_threshold_shouldnt_work() {
 	});
 }
 
+#[test]
+fn vault_with_duplicate_members_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+			try_from([ test_pub(2),test_pub(1),].to_vec()).unwrap();
+		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_vault_description(), 
+			cosigners.clone()), Error::<Test>::DuplicateVaultMembers );
+		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+	});
+}
 
+#[test]
+fn vault_with_duplicate_incomplete_members() {
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+			try_from([ test_pub(2),test_pub(1),].to_vec()).unwrap();
+		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_vault_description(), 
+			cosigners.clone()), Error::<Test>::DuplicateVaultMembers );
+		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+	});
+}
 
 #[test]
 fn vault_signer_without_xpub_shouldnt_exist() {

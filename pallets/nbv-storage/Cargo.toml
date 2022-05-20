@@ -21,6 +21,7 @@ serde = {version="1.0.136"}
 
 lite-json = { version = "0.1", default-features = false }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+
 frame-support = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.17"}
 frame-system = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.17" }
 frame-benchmarking = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.17", optional = true }

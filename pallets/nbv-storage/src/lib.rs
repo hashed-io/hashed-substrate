@@ -39,7 +39,6 @@ pub mod pallet {
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 		RuntimeDebug,
 	};
-
 	use scale_info::TypeInfo;
 
 	/*--- Structs Section ---*/
@@ -214,6 +213,8 @@ pub mod pallet {
 		NotEnoughCosigners,
 		/// Only the owner of this vault can do this transaction
 		VaultOwnerPermissionsNeeded,
+		/// Vault members cannot be duplicate
+		DuplicateVaultMembers,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -504,7 +505,8 @@ pub mod pallet {
 					}
 					None
 
-			}).unwrap_or(Ok(()))?;
+				}
+			).unwrap_or(Ok(()))?;
 			Ok(())
 		}
 	}
