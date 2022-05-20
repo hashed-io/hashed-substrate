@@ -39,7 +39,6 @@ pub mod pallet {
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 		RuntimeDebug,
 	};
-
 	use scale_info::TypeInfo;
 
 	/*--- Structs Section ---*/
@@ -179,6 +178,8 @@ pub mod pallet {
 		PSBTStored(T::AccountId),
 		/// The vault was succesfully inserted and linked to the account as owner
 		VaultStored([u8; 32], T::AccountId),
+		/// The vault was succesfully removed by its owner
+		VaultRemoved([u8; 32],T::AccountId),
 		/// An offchain worker inserted a vault's descriptor 
 		DescriptorsStored([u8;32]),
 	}
@@ -202,12 +203,18 @@ pub mod pallet {
 		HashingError,
 		/// Found Invalid name on an additional field
 		InvalidAdditionalField,
-		/// The vault threshold cannot 0 nor be greater than the number of vault participants
+		/// The vault threshold cannot be greater than the number of vault participants
 		InvalidVaultThreshold,
 		/// A defined cosigner reached its vault limit
 		SignerVaultLimit,
 		/// Vault not found
 		VaultNotFound,
+		/// A vault needs at least 1 cosigner
+		NotEnoughCosigners,
+		/// Only the owner of this vault can do this transaction
+		VaultOwnerPermissionsNeeded,
+		/// Vault members cannot be duplicate
+		DuplicateVaultMembers,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -330,17 +337,14 @@ pub mod pallet {
 		/// as well as in the pallet storage.
 		///
 		/// ### Parameters:
-		/// - `xpub`: The unique identifier of the instance to be fractioned/divided
+		/// - `xpub`: Extended public key, it can be sent with or without fingerprint/derivation path
 		///
 		/// ### Considerations
 		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
 		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
 		///  fees will be applied nonetheless).
-		/// - This extrinsic will insert an additional field named `xpub`. In order to avoid conflicts and malfunctioning,
-		/// it is highly advised to refrain naming an additional field like that.
-		/// - This extrinsic can handle a xpub update, but if other fields are needed to be updated, then using pallet-identity
-		/// is ideal (while adding explicitly the xpub additional field).
-		#[transactional]
+		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
+		/// a new one.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn set_xpub(
 			origin: OriginFor<T>,
@@ -387,15 +391,12 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-
-			// Removing
+			// The xpub must exists
 			ensure!(<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::XPubNotFound);
+			// The xpub must not be used on a vault
 			ensure!(!<VaultsBySigner<T>>::contains_key(who.clone()),  Error::<T>::XpubLinkedToVault);
-
-			Self::do_remove_xpub(who.clone())?;
-
-			Self::deposit_event(Event::XPubRemoved(who));
-			Ok(())
+			
+			Self::do_remove_xpub(who.clone())
 		}
 
 		/// ## PSBT insertion
@@ -440,9 +441,10 @@ pub mod pallet {
 			cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			// Threshould account for the owner too
-			let num_signers = (cosigners.len() as u32) + 1;
-			ensure!( threshold>=1 && threshold<= num_signers, Error::<T>::InvalidVaultThreshold);
+			//  Cosigners are already bounded, only is necessary to check if its not empty
+			ensure!( !cosigners.is_empty() , Error::<T>::NotEnoughCosigners);
+			// Threshold needs to be greater than 0 and less than the current owner+cosigners number
+			ensure!( threshold>0 && threshold <= (1+cosigners.len() as u32), Error::<T>::InvalidVaultThreshold);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
@@ -458,6 +460,23 @@ pub mod pallet {
 			};
 
 			Self::do_insert_vault(vault)
+		}
+
+		// Vault removal
+		// Tries to remove vault
+		// TODO: Add PSBT validation when they get implemented
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_vault(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			// Ensure vault exists and get it
+			let vault = <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
+			ensure!(vault.owner.eq(&who), Error::<T>::VaultOwnerPermissionsNeeded);
+
+			Self::do_remove_vault(vault_id)
 		}
 
 		#[transactional]
@@ -486,7 +505,34 @@ pub mod pallet {
 					}
 					None
 
-			}).unwrap_or(Ok(()))?;
+				}
+			).unwrap_or(Ok(()))?;
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn propose(
+			origin: OriginFor<T>,
+			_vault_id: [u8; 32],
+			_recipient_address: BoundedVec<u8, T::XPubLen>,
+			_amount_in_sats: u32,
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			ensure!(false, Error::<T>::NotYetImplemented);
+
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn generate_new_address(
+			origin: OriginFor<T>,
+			_vault_id: [u8; 32],
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			ensure!(false, Error::<T>::NotYetImplemented);
+
 			Ok(())
 		}
 	}

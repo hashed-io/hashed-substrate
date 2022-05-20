@@ -17,10 +17,34 @@ use crate::types::{BDK_SERVICES_URL,};
 
 impl<T: Config> Pallet<T> {
     /// Use with caution
-    pub fn do_remove_xpub(who: T::AccountId) -> Result<(), Error<T>> {
-        let old_hash = <XpubsByOwner<T>>::take(who).expect("Old hash not found");
+    pub fn do_remove_xpub(who: T::AccountId) -> DispatchResult {
+        let old_hash = <XpubsByOwner<T>>::take(who.clone()).ok_or(Error::<T>::XPubNotFound)?;
         <Xpubs<T>>::remove(old_hash);
-        return Ok(());
+        Self::deposit_event(Event::XPubRemoved(who));
+        Ok(())
+    }
+
+    pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
+        // This removes the vault while retrieving its values
+        let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
+        let vault_members = [
+            vault.cosigners.as_slice(),
+            &[vault.owner.clone()],
+        ].concat();
+        vault_members.iter().for_each(|signer|{
+            <VaultsBySigner<T>>::remove(signer);
+        });
+        Self::deposit_event(Event::VaultRemoved(vault_id, vault.owner));
+        Ok(())
+    }
+
+    // Check for xpubs duplicates (requires owner to be on the vault_signers Vec)
+    pub fn members_are_unique( vault_signers: Vec<T::AccountId>) -> bool {
+        let mut filtered_signers = vault_signers.clone();
+        filtered_signers.sort();
+        filtered_signers.dedup();
+        // Signers length should be equal 
+        vault_signers.len() == filtered_signers.len()
     }
 
     // check if the xpub is free to take/update or if its owned by the account
@@ -164,6 +188,7 @@ impl<T: Config> Pallet<T> {
         log::info!("Total vault members count: {:?}", vault_members.len());
         // iterate over that vector and add the vault id to the list of each user (signer)
         //let vaults_by_signer_insertion_result =
+        ensure!(Self::members_are_unique(vault_members.clone()), Error::<T>::DuplicateVaultMembers);
         vault_members.into_iter().try_for_each(|acc| {
             // check if all users have an xpub
             if !<XpubsByOwner<T>>::contains_key(acc.clone()) {
