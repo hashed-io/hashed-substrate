@@ -1,6 +1,6 @@
 use sp_core::crypto::KeyTypeId;
 /*--- Constants section ---*/
-pub const BDK_SERVICES_URL: &[u8] = b"http://127.0.0.1:8000";
+pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems/";
 pub const UNSIGNED_TXS_PRIORITY: u64 = 100;
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
 

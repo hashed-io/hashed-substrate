@@ -628,7 +628,7 @@ construct_runtime!(
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
-		NBVStorage: pallet_nbv_storage,
+		NBVStorage: pallet_nbv_storage::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
 	}
 );
 
