@@ -394,7 +394,19 @@ pub mod pallet {
 			// The xpub must exists
 			ensure!(<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::XPubNotFound);
 			// The xpub must not be used on a vault
-			ensure!(!<VaultsBySigner<T>>::contains_key(who.clone()),  Error::<T>::XpubLinkedToVault);
+			let vaults: Vec<[u8;32]>= <VaultsBySigner<T>>::get(who.clone()).iter().filter(|id|{
+				match <Vaults<T>>::get(id){
+					Some(vault) =>{
+						let vault_members = [
+							vault.cosigners.as_slice(),
+							&[vault.owner.clone()],
+						].concat();
+						vault_members.contains(&who.clone())
+					},
+					None => false,
+				}
+			}).cloned().collect::<Vec<_>>();
+			ensure!(vaults.is_empty(),  Error::<T>::XpubLinkedToVault);
 			
 			Self::do_remove_xpub(who.clone())
 		}

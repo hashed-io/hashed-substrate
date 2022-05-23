@@ -32,7 +32,13 @@ impl<T: Config> Pallet<T> {
             &[vault.owner.clone()],
         ].concat();
         vault_members.iter().for_each(|signer|{
-            <VaultsBySigner<T>>::remove(signer);
+            <VaultsBySigner<T>>::mutate(signer, | vault_list |{
+                let vault_index = vault_list.iter().position(|v| *v==vault_id);
+                match vault_index{
+                    Some(index) => {vault_list.remove(index);},
+                    _ => log::warn!("Vault not found in membera"),
+                }
+            });
         });
         Self::deposit_event(Event::VaultRemoved(vault_id, vault.owner));
         Ok(())
