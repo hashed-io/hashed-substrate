@@ -226,6 +226,15 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_propose(proposal: Proposal<T>)->DispatchResult{
+        let proposal_id = proposal.using_encoded(blake2_256);
+        <Proposals<T>>::insert(proposal_id, proposal.clone());
+        <ProposalsByVault<T>>::try_mutate(proposal.vault_id,|proposals|{
+            proposals.try_push(proposal_id)
+        }).map_err(|_| Error::<T>::ExceedMaxProposalsPerVault)?;
+        Ok(())
+    }
+
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
         <Vaults<T>>::iter()
             .filter_map(|(entry, vault)| {
@@ -252,6 +261,11 @@ impl<T: Config> Pallet<T> {
             );
         });
         xpub_vec
+    }
+
+    pub fn get_vault_members(vault_id : [u8;32])-> Vec<T::AccountId> {
+        let vault =  <Vaults<T>>::get(vault_id).expect("Vault not found");
+        [vault.cosigners.as_slice(),&[vault.owner.clone()],].concat()
     }
 
     pub fn chars_to_bytes(v: Vec<char>) -> Vec<u8> {

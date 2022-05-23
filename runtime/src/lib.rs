@@ -103,7 +103,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 103,
+	spec_version: 104,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -534,6 +534,7 @@ parameter_types! {
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
+	pub const MaxProposalsPerVault: u32 = 5;
 }
 
 impl pallet_nbv_storage::Config for Runtime {
@@ -545,6 +546,7 @@ impl pallet_nbv_storage::Config for Runtime {
 	type MaxCosignersPerVault = MaxCosignersPerVault;
 	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
 	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
+	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
 
 use sp_runtime::generic::SignedPayload;

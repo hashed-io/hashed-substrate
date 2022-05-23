@@ -109,20 +109,52 @@ pub mod pallet {
 		}
 	}
 
+	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	#[scale_info(skip_type_params(T))]
+	#[codec(mel_bound())]
+	pub struct ProposalSignatures<T: Config> {
+		pub signer: T::AccountId,
+		pub signature: BoundedVec<u8, T::PSBTMaxLen>,
+	}
+
+	impl<T: Config> Clone for ProposalSignatures<T>{
+		fn clone(&self) -> Self {
+			Self{
+				signer: self.signer.clone(),
+				signature: self.signature.clone(),
+			}
+		}
+	}
 	// Struct for holding Proposal information.
-	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 	#[scale_info(skip_type_params(T))]
 	#[codec(mel_bound())]
 	pub struct Proposal<T: Config> {
 		pub proposer: T::AccountId,
 		pub vault_id: [u8; 32],
-		pub status: PSBTStatus,
-		pub to_address: BoundedVec<u8, T::PSBTMaxLen>,
+		pub status: ProposalStatus,
+		pub to_address: BoundedVec<u8, T::XPubLen>,
 		pub amount: u64,
 		pub fee_sat_per_vb: u32,
-		pub description: BoundedVec<u8, T::PSBTMaxLen>,
+		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
-		pub signed_psbts: (T::AccountId, BoundedVec<BoundedVec<u8, T::PSBTMaxLen>, T::PSBTMaxLen>), // TODO: Cambiar a struct
+		pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
+	}
+
+	impl<T: Config> Clone for Proposal<T>{
+		fn clone(&self) -> Self {
+			Self{
+				proposer: self.proposer.clone(),
+				vault_id: self.vault_id.clone(),
+				status: self.status.clone(),
+				to_address: self.to_address.clone(),
+				amount: self.amount.clone(),
+				fee_sat_per_vb: self.fee_sat_per_vb.clone(),
+				description: self.description.clone(),
+				psbt: self.psbt.clone(),
+				signed_psbts: self.signed_psbts.clone(),
+			}
+		}
 	}
 
 	pub enum XpubStatus {
@@ -132,7 +164,7 @@ pub mod pallet {
 	}
 	
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	pub enum PSBTStatus {
+	pub enum ProposalStatus {
 		Pending,
 		Broadcasted,
 	}
@@ -161,6 +193,8 @@ pub mod pallet {
 		type VaultDescriptionMaxLen: Get<u32>;
 		#[pallet::constant]
 		type OutputDescriptorMaxLen: Get<u32>;
+		#[pallet::constant]
+		type MaxProposalsPerVault: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -215,6 +249,10 @@ pub mod pallet {
 		VaultOwnerPermissionsNeeded,
 		/// Vault members cannot be duplicate
 		DuplicateVaultMembers,
+		/// The account must participate in the vault to make a proposal
+		SignerPermissionsNeeded,
+		/// The vault has too many proposals 
+		ExceedMaxProposalsPerVault
 	}
 
 	/*--- Onchain storage section ---*/
@@ -236,9 +274,24 @@ pub mod pallet {
 		StorageMap<_, Blake2_256, T::AccountId, [u8; 32], OptionQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn psbts)]
-	pub(super) type PSBTs<T: Config> =
-		StorageMap<_, Blake2_256, T::AccountId, BoundedVec<u8, T::PSBTMaxLen>, OptionQuery>;
+	#[pallet::getter(fn proposals)]
+	pub(super) type Proposals<T: Config> = StorageMap<
+		_,
+		Identity,
+		[u8; 32], //proposalid
+		Proposal<T>,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn proposals_by_vault)]
+	pub(super) type ProposalsByVault<T: Config> = StorageMap<
+		_,
+		Identity,
+		[u8; 32], //vaultId
+		BoundedVec<[u8; 32],T::MaxProposalsPerVault>, //proposalId
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
@@ -421,10 +474,10 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_psbt(
 			origin: OriginFor<T>,
-			psbt: BoundedVec<u8, T::PSBTMaxLen>,
+			_psbt: BoundedVec<u8, T::PSBTMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			<PSBTs<T>>::insert(who.clone(), psbt);
+			//<PSBTs<T>>::insert(who.clone(), psbt);
 
 			Self::deposit_event(Event::PSBTStored(who));
 
@@ -526,14 +579,29 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn propose(
 			origin: OriginFor<T>,
-			_vault_id: [u8; 32],
-			_recipient_address: BoundedVec<u8, T::XPubLen>,
-			_amount_in_sats: u32,
+			vault_id: [u8; 32],
+			recipient_address: BoundedVec<u8, T::XPubLen>,
+			amount_in_sats: u64,
+			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
-			let _who = ensure_signed(origin.clone())?;
-			ensure!(false, Error::<T>::NotYetImplemented);
-
-			Ok(())
+			let who = ensure_signed(origin.clone())?;
+			//ensure!(false, Error::<T>::NotYetImplemented);
+			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
+			// ensure user is in the vault
+			let proposal = Proposal::<T>{
+				proposer: who.clone(),
+				vault_id,
+				status: ProposalStatus::Pending,
+				to_address: recipient_address,
+				amount: amount_in_sats,
+				fee_sat_per_vb: 1,
+				description,
+				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
+					b"".encode()
+				).expect("Error on encoding the descriptor to BoundedVec"),
+				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
+			};
+			Self::do_propose(proposal)
 		}
 
 		#[transactional]
