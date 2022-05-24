@@ -83,6 +83,29 @@ pub mod pallet {
 		}
 	}
 
+	/// Struct for requesting a descriptor generation 
+	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	pub struct ProposalRequest<T: Config> {
+		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
+		pub to_address: BoundedVec<u8, T::XPubLen>,
+		pub amount: u64,
+		pub fee_sat_per_vb: u32,
+	}
+
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[codec(mel_bound())]
+	pub struct ProposalsPayload<Public, PSBTMaxLen:Get<u32> > {
+		pub vaults_payload:Vec<SingleProposalPayload<PSBTMaxLen> >,
+		pub public: Public,
+	}
+
+	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[codec(mel_bound())]
+	pub struct SingleProposalPayload< PSBTMaxLen:Get<u32> >{
+		pub proposal_id: [u8;32],
+		pub psbt: BoundedVec<u8, PSBTMaxLen>,
+	}
+
 	// Struct for holding Vaults information.
 	#[derive(
 		Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
@@ -341,44 +364,37 @@ pub mod pallet {
 			if let Ok(_guard) = lock.try_lock() {
 				// check for pending vaults to insert
 				let pending_vaults = Self::get_pending_vaults();
+				let pending_proposals = Self::get_pending_proposals();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
 				// This validation needs to be done after the lock: 
-				if pending_vaults.len()<1 { return;}
-				let mut generated_vaults = Vec::<SingleVaultPayload>::new();
-				pending_vaults.iter().for_each(|vault_to_complete| {
-					
-					log::warn!("Trying to gen vault at block {:?}", block_number);
-					// Contact bdk services and get descriptors
-					let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
-						.expect("Error while generating the vault's output descriptors");
-					// Build offchain vaults struct and push it to a Vec
-					generated_vaults.push(SingleVaultPayload{
-						vault_id: vault_to_complete.clone(),
-						output_descriptor: vault_result.0.clone(),
-						change_descriptor: vault_result.1.clone(),
-					});
-				});
-				if let Some((_, res)) = signer.send_unsigned_transaction(
-					// this line is to prepare and return payload
-					|acct| VaultsPayload {
-						vaults_payload: generated_vaults.clone(),
-						public: acct.public.clone(),
-					},
-					|payload, signature| Call::ocw_insert_descriptors { payload, signature },
-				) {
-					match res {
-						Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-						Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-					};
-				} else {
-					// The case of `None`: no account is available for sending
-					log::error!("No local account available");
+				if !pending_vaults.is_empty() {
+					let generated_vaults = Self::gen_vaults_payload_by_bulk(pending_vaults);
+
+					if let Some((_, res)) = signer.send_unsigned_transaction(
+						// this line is to prepare and return payload
+						|acct| VaultsPayload {
+							vaults_payload: generated_vaults.clone(),
+							public: acct.public.clone(),
+						},
+						|payload, signature| Call::ocw_insert_descriptors { payload, signature },
+					) {
+						match res {
+							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
+							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+						};
+					} else {
+						// The case of `None`: no account is available for sending
+						log::error!("No local account available");
+					}
 				}
-				
+				if !pending_proposals.is_empty(){
+					log::info!("Pending proposals {:?}", pending_proposals.len());
+					//let generated_proposal_psbts = Vec<>;
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals); 
+				}
 			}else {
 				log::error!("This OCW couln't get the locc");
 			};
-
 		}
 	}
 

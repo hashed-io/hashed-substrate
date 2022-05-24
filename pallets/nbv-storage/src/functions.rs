@@ -13,6 +13,7 @@ use sp_runtime::{
 use lite_json::json::{JsonValue, NumberValue};
 use lite_json::parse_json;
 use lite_json::Serialize as jsonSerialize;
+
 use crate::types::{BDK_SERVICES_URL,};
 
 impl<T: Config> Pallet<T> {
@@ -71,6 +72,29 @@ impl<T: Config> Pallet<T> {
         XpubStatus::Free
     }
 
+    pub fn gen_vaults_payload_by_bulk(pending_vaults : Vec<[u8;32]>) -> Vec<SingleVaultPayload>{
+        let mut generated_vaults = Vec::<SingleVaultPayload>::new();
+        pending_vaults.iter().for_each(|vault_to_complete| {
+            // Contact bdk services and get descriptors
+            let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
+                .expect("Error while generating the vault's output descriptors");
+            // Build offchain vaults struct and push it to a Vec
+            generated_vaults.push(SingleVaultPayload{
+                vault_id: vault_to_complete.clone(),
+                output_descriptor: vault_result.0.clone(),
+                change_descriptor: vault_result.1.clone(),
+            });
+        });
+        generated_vaults
+    }
+
+    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>) ->  Vec<SingleProposalPayload<T::PSBTMaxLen>>{
+        let generated_proposals = Vec::<SingleProposalPayload<T::PSBTMaxLen> >::new();
+        pending_proposals.iter().for_each(|propsal_to_complete|{
+            Self::bdk_gen_proposal(propsal_to_complete.clone()).expect("Error while generating proposal");
+        });
+        generated_proposals
+    }
     pub fn bdk_gen_vault(vault_id: [u8; 32]) -> Result<(Vec<u8>, Vec<u8>), http::Error> {
         // We want to keep the offchain worker execution time reasonable, so we set a hard-coded
         // deadline to 2s to complete the external call.
@@ -144,13 +168,10 @@ impl<T: Config> Pallet<T> {
             exponent: 0,
         };
         body.push(("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold)));
-        //get the xpub for each cosigner
-        //let cosigners = vault.cosigners.
-        //let s = String::from("edgerg");
-        //let o = JsonValue::String(s.chars().collect()) ;
         let vault_signers =
-            [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
-
+        [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
+        
+        //get the xpub for each cosigner
         let mapped_xpubs: Vec<JsonValue> = Self::get_accounts_xpubs(vault_signers)
             .iter()
             .map(|xpub| {
@@ -183,6 +204,88 @@ impl<T: Config> Pallet<T> {
             },
             _ => return None,
         }
+    }
+
+    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<(), http::Error>{
+        let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
+
+        let raw_json = Self::gen_proposal_json_body(proposal_id);
+        let request_body =
+            str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
+
+        let url = [BDK_SERVICES_URL.clone(), b"/gen_psbt"].concat();
+
+        let request = http::Request::post(
+            str::from_utf8(&url).expect("Error converting the BDK URL"),
+            [request_body.clone()].to_vec(),
+        )
+        .add_header("Content-Type", "application/json")
+        .add_header("Accept", "application/json");
+
+        let pending = request
+            .body([request_body.clone()].to_vec())
+            .deadline(deadline)
+            .send()
+            .map_err(|_| http::Error::IoError)?;
+        // The request is already being processed by the host, we are free to do anything
+        let response =
+            pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
+        // Let's check the status code before we proceed to reading the response.
+        if response.code != 200 {
+            log::warn!("Unexpected status code: {}", response.code);
+            return Err(http::Error::Unknown);
+        }
+
+        // Next we want to fully read the response body and collect it to a vector of bytes.
+        // Note that the return object allows you to read the body in chunks as well
+        // with a way to control the deadline.
+        let body = response.body().collect::<Vec<u8>>();
+
+        // Create a str slice from the body.
+        let body_str = str::from_utf8(&body).map_err(|_| {
+            log::warn!("No UTF8 body");
+            http::Error::Unknown
+        })?;
+        log::info!("Cuerpo respuesta de proposal: {:?}",body_str);
+        //Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
+        Ok(())
+    }
+
+    pub fn gen_proposal_json_body(proposal_id: [u8;32])-> Vec<u8>{
+        let mut body = Vec::new();
+        let proposal = <Proposals<T>>::get(proposal_id).expect("Proposal not found");
+        let vault = <Vaults<T>>::get(proposal.vault_id.clone()).expect("Vault not found with id");
+        let amount = NumberValue {
+            integer: proposal.amount.clone() as i64,
+            fraction: 0,
+            fraction_length: 0,
+            exponent: 0,
+        };
+        let fee = NumberValue {
+            integer: proposal.fee_sat_per_vb.clone().into(),
+            fraction: 0,
+            fraction_length: 0,
+            exponent: 0,
+        };
+        let to_address = str::from_utf8(proposal.to_address.as_slice()).expect("Error converting recipient address").chars().collect();
+        let output_descriptor: Vec<char> = str::from_utf8(
+            vault.descriptors.output_descriptor.as_slice())
+            .expect("Error converting descriptor").chars().collect();
+        let change_descriptor: Vec<char> = str::from_utf8(
+            vault.descriptors.change_descriptor.expect("Change descriptor not found").as_slice())
+            .expect("Error converting descriptor").chars().collect();
+        let descriptors_body = [
+            ("descriptor".chars().collect::<Vec<char>>(), JsonValue::String(output_descriptor)),
+            ("change_descriptor".chars().collect::<Vec<char>>(), JsonValue::String(change_descriptor)),
+        ].to_vec();
+        body.push(("amount".chars().collect::<Vec<char>>(), JsonValue::Number(amount) ));
+        body.push(("fee_sat_per_vb".chars().collect::<Vec<char>>(), JsonValue::Number(fee) ));
+        body.push(("to_address".chars().collect::<Vec<char>>(), JsonValue::String(to_address) ));
+        body.push(("descriptors".chars().collect::<Vec<char>>(), JsonValue::Object(descriptors_body) ));
+        let json_object = JsonValue::Object(body);
+
+        // // Parse the JSON and print the resulting lite-json structure.
+        jsonSerialize::format(&json_object, 4)
     }
 
     pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
@@ -233,6 +336,18 @@ impl<T: Config> Pallet<T> {
             proposals.try_push(proposal_id)
         }).map_err(|_| Error::<T>::ExceedMaxProposalsPerVault)?;
         Ok(())
+    }
+
+    pub fn get_pending_proposals() -> Vec<[u8; 32]>{
+        <Proposals<T>>::iter()
+            .filter_map(|(id, proposal)|{
+                if proposal.psbt.is_empty() {
+                    Some(id)
+                } else {
+                    None
+                }
+            })
+        .collect()
     }
 
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
