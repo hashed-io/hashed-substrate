@@ -94,16 +94,22 @@ pub mod pallet {
 
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 	#[codec(mel_bound())]
-	pub struct ProposalsPayload<Public, PSBTMaxLen:Get<u32> > {
-		pub vaults_payload:Vec<SingleProposalPayload<PSBTMaxLen> >,
+	pub struct ProposalsPayload<Public> {
+		pub proposals_payload:Vec<SingleProposalPayload>,
 		pub public: Public,
 	}
 
 	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 	#[codec(mel_bound())]
-	pub struct SingleProposalPayload< PSBTMaxLen:Get<u32> >{
+	pub struct SingleProposalPayload{
 		pub proposal_id: [u8;32],
-		pub psbt: BoundedVec<u8, PSBTMaxLen>,
+		pub psbt: Vec<u8>,
+	}
+
+	impl<S: SigningTypes > SignedPayload<S> for ProposalsPayload<S::Public> {
+		fn public(&self) -> S::Public {
+			self.public.clone()
+		}
 	}
 
 	// Struct for holding Vaults information.
@@ -275,7 +281,9 @@ pub mod pallet {
 		/// The account must participate in the vault to make a proposal
 		SignerPermissionsNeeded,
 		/// The vault has too many proposals 
-		ExceedMaxProposalsPerVault
+		ExceedMaxProposalsPerVault,
+		/// Proposal not found (id)
+		ProposalNotFound,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -347,7 +355,7 @@ pub mod pallet {
 		/// Note that it's not guaranteed for offchain workers to run on EVERY block, there might
 		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
 		/// so the code should be able to handle that.
-		fn offchain_worker(block_number: T::BlockNumber) {
+		fn offchain_worker(_block_number: T::BlockNumber) {
 			// check if the node has an account available, the offchain worker can't submit
 			// transactions without it
 			let signer = Signer::<T, T::AuthorityId>::any_account();
@@ -389,8 +397,23 @@ pub mod pallet {
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					//let generated_proposal_psbts = Vec<>;
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals); 
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals);
+					if let Some((_, res)) = signer.send_unsigned_transaction(
+						// this line is to prepare and return payload
+						|acct| ProposalsPayload {
+							proposals_payload: generated_proposals_payload.clone(),
+							public: acct.public.clone(),
+						},
+						|payload, signature| Call::ocw_insert_psbts { payload, signature },
+					) {
+						match res {
+							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
+							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+						};
+					} else {
+						// The case of `None`: no account is available for sending
+						log::error!("No local account available");
+					}
 				}
 			}else {
 				log::error!("This OCW couln't get the locc");
@@ -592,6 +615,28 @@ pub mod pallet {
 		}
 
 		#[transactional]
+		#[pallet::weight(0)]
+		pub fn ocw_insert_psbts(
+			origin: OriginFor<T>,
+			payload: ProposalsPayload<T::Public>,
+			_signature: T::Signature,
+		) -> DispatchResult {
+			ensure_none(origin.clone())?;
+			payload.proposals_payload.iter().find_map(
+				|proposal_psbt|{
+					let bounded_psbt = BoundedVec::<u8, T::PSBTMaxLen>::try_from(proposal_psbt.psbt.clone())
+						.expect("Error trying to bound the psbt");
+					let tx_res = Self::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt);
+					if tx_res.is_err(){
+						return Some(tx_res);
+					}
+					None
+				}
+			).unwrap_or(Ok(()))?;
+			Ok(())
+		}
+
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn propose(
 			origin: OriginFor<T>,
@@ -650,6 +695,12 @@ pub mod pallet {
 
 			match call {
 				Call::ocw_insert_descriptors { ref payload, ref signature } => {
+					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
+						return InvalidTransaction::BadProof.into();
+					}
+					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
+				},
+				Call::ocw_insert_psbts { ref payload, ref signature } => {
 					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
 						return InvalidTransaction::BadProof.into();
 					}

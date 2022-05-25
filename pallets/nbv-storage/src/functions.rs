@@ -88,53 +88,55 @@ impl<T: Config> Pallet<T> {
         generated_vaults
     }
 
-    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>) ->  Vec<SingleProposalPayload<T::PSBTMaxLen>>{
-        let generated_proposals = Vec::<SingleProposalPayload<T::PSBTMaxLen> >::new();
-        pending_proposals.iter().for_each(|propsal_to_complete|{
-            Self::bdk_gen_proposal(propsal_to_complete.clone()).expect("Error while generating proposal");
+    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>) ->  Vec<SingleProposalPayload>{
+        let mut generated_proposals = Vec::<SingleProposalPayload>::new();
+        pending_proposals.iter().for_each(|proposal_to_complete|{
+            let psbt = Self::bdk_gen_proposal(proposal_to_complete.clone()).expect("Error while generating proposal");
+            generated_proposals.push(SingleProposalPayload{
+                proposal_id:proposal_to_complete.clone(),
+                psbt,
+            })
         });
         generated_proposals
     }
+
     pub fn bdk_gen_vault(vault_id: [u8; 32]) -> Result<(Vec<u8>, Vec<u8>), http::Error> {
-        // We want to keep the offchain worker execution time reasonable, so we set a hard-coded
-        // deadline to 2s to complete the external call.
-        // You can also wait idefinitely for the response, however you may still get a timeout
-        // coming from the host machine.
-        let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
         // We will create a bunch of elements that we will put into a JSON Object.
-        //let request_body =  Vec::new();
-        // Initiate an external HTTP GET request.
-        // This is using high-level wrappers from `sp_runtime`, for the low-level calls that
-        // you can find in `sp_io`. The API is trying to be similar to `reqwest`, but
-        // since we are running in a custom WASM execution environment we can't simply
-        // import the library here.
         let raw_json = Self::generate_vault_json_body(vault_id);
         let request_body =
             str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
 
         let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
 
+        let response_body = Self::http_post(
+            str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
+            request_body
+        )?;
+        // Create a str slice from the body.
+        let body_str = str::from_utf8(&response_body).map_err(|_| {
+            log::warn!("No UTF8 body");
+            http::Error::Unknown
+        })?;
+
+        Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
+    }
+
+    fn http_post(url: &str, request_body: &str)->Result<Vec<u8>, http::Error>{
+        let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
+
         let request = http::Request::post(
-            str::from_utf8(&url).expect("Error converting the BDK URL"),
+            &url,
             [request_body.clone()].to_vec(),
         )
         .add_header("Content-Type", "application/json")
         .add_header("Accept", "application/json");
-        // We set the deadline for sending of the request, note that awaiting response can
-        // have a separate deadline. Next we send the request, before that it's also possible
-        // to alter request headers or stream body content in case of non-GET requests.
+
         let pending = request
             .body([request_body.clone()].to_vec())
             .deadline(deadline)
             .send()
             .map_err(|_| http::Error::IoError)?;
-        // The request is already being processed by the host, we are free to do anything
-        // else in the worker (we can send multiple concurrent requests too).
-        // At some point however we probably want to check the response though,
-        // so we can block current thread and wait for it to finish.
-        // Note that since the request is being driven by the host, we don't have to wait
-        // for the request to have it complete, we will just not read the response.
-        let response =
+            let response =
             pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
         // Let's check the status code before we proceed to reading the response.
         if response.code != 200 {
@@ -143,17 +145,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Next we want to fully read the response body and collect it to a vector of bytes.
-        // Note that the return object allows you to read the body in chunks as well
-        // with a way to control the deadline.
-        let body = response.body().collect::<Vec<u8>>();
-
-        // Create a str slice from the body.
-        let body_str = str::from_utf8(&body).map_err(|_| {
-            log::warn!("No UTF8 body");
-            http::Error::Unknown
-        })?;
-
-        Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
+        Ok(response.body().collect::<Vec<u8>>())
     }
 
     fn generate_vault_json_body(vault_id: [u8; 32]) -> Vec<u8> {
@@ -206,8 +198,7 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<(), http::Error>{
-        let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
+    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<Vec<u8>, http::Error>{
 
         let raw_json = Self::gen_proposal_json_body(proposal_id);
         let request_body =
@@ -215,40 +206,12 @@ impl<T: Config> Pallet<T> {
 
         let url = [BDK_SERVICES_URL.clone(), b"/gen_psbt"].concat();
 
-        let request = http::Request::post(
-            str::from_utf8(&url).expect("Error converting the BDK URL"),
-            [request_body.clone()].to_vec(),
-        )
-        .add_header("Content-Type", "application/json")
-        .add_header("Accept", "application/json");
-
-        let pending = request
-            .body([request_body.clone()].to_vec())
-            .deadline(deadline)
-            .send()
-            .map_err(|_| http::Error::IoError)?;
-        // The request is already being processed by the host, we are free to do anything
-        let response =
-            pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
-        // Let's check the status code before we proceed to reading the response.
-        if response.code != 200 {
-            log::warn!("Unexpected status code: {}", response.code);
-            return Err(http::Error::Unknown);
-        }
-
-        // Next we want to fully read the response body and collect it to a vector of bytes.
-        // Note that the return object allows you to read the body in chunks as well
-        // with a way to control the deadline.
-        let body = response.body().collect::<Vec<u8>>();
-
-        // Create a str slice from the body.
-        let body_str = str::from_utf8(&body).map_err(|_| {
-            log::warn!("No UTF8 body");
-            http::Error::Unknown
-        })?;
-        log::info!("Cuerpo respuesta de proposal: {:?}",body_str);
-        //Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
-        Ok(())
+        let response_body = Self::http_post(
+            str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
+            request_body
+        )?;
+        // The psbt is not a json object, its a byte blob
+        Ok(response_body)
     }
 
     pub fn gen_proposal_json_body(proposal_id: [u8;32])-> Vec<u8>{
@@ -335,6 +298,19 @@ impl<T: Config> Pallet<T> {
         <ProposalsByVault<T>>::try_mutate(proposal.vault_id,|proposals|{
             proposals.try_push(proposal_id)
         }).map_err(|_| Error::<T>::ExceedMaxProposalsPerVault)?;
+        Ok(())
+    }
+
+    pub fn do_insert_psbt(proposal_id: [u8;32], psbt: BoundedVec<u8, T::PSBTMaxLen>) ->DispatchResult{
+        <Proposals<T>>::try_mutate(proposal_id,|p|{
+            match p {
+                Some(proposal) =>{
+                    proposal.psbt.clone_from(&psbt);
+                    Ok(())
+                },
+                None=> Err(Error::<T>::ProposalNotFound),
+            }
+        })?;
         Ok(())
     }
 
