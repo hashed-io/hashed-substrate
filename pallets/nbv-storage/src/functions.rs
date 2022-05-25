@@ -32,19 +32,34 @@ impl<T: Config> Pallet<T> {
             vault.cosigners.as_slice(),
             &[vault.owner.clone()],
         ].concat();
+        // Removes the vault from user->vault vector
         vault_members.iter().for_each(|signer|{
             <VaultsBySigner<T>>::mutate(signer, | vault_list |{
                 let vault_index = vault_list.iter().position(|v| *v==vault_id);
                 match vault_index{
                     Some(index) => {vault_list.remove(index);},
-                    _ => log::warn!("Vault not found in membera"),
+                    _ => log::warn!("Vault not found in members"),
                 }
             });
         });
+        // Removes all vault proposals
+        let vault_proposals = <ProposalsByVault<T>>::get(vault_id);
+        vault_proposals.iter().try_for_each(|proposal_id|{
+            Self::do_remove_proposal(*proposal_id)
+        })?;
         Self::deposit_event(Event::VaultRemoved(vault_id, vault.owner));
         Ok(())
     }
 
+    pub fn do_remove_proposal(proposal_id: [u8;32]) -> DispatchResult{
+        let proposal = <Proposals<T>>::take(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+        <ProposalsByVault<T>>::try_mutate::<_,_,DispatchError,_>(proposal.vault_id, |proposal_list|{
+            let proposal_index= proposal_list.iter().position(|p| p==&proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+            proposal_list.remove(proposal_index);
+            Ok(())
+        })?;
+        Ok(())
+    }
     // Check for xpubs duplicates (requires owner to be on the vault_signers Vec)
     pub fn members_are_unique( vault_signers: Vec<T::AccountId>) -> bool {
         let mut filtered_signers = vault_signers.clone();

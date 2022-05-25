@@ -16,7 +16,7 @@ mod functions;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+	use frame_support::{pallet_prelude::*};
 	//#[cfg(feature = "std")]
 	//use frame_support::serde::{Deserialize, Serialize};
 	use crate::types::{UNSIGNED_TXS_PRIORITY, LOCK_BLOCK_EXPIRATION, LOCK_TIMEOUT_EXPIRATION};
@@ -284,6 +284,8 @@ pub mod pallet {
 		ExceedMaxProposalsPerVault,
 		/// Proposal not found (id)
 		ProposalNotFound,
+		/// The account must be the proposer to remove it
+		ProposerPermissionsNeeded,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -503,26 +505,6 @@ pub mod pallet {
 			Self::do_remove_xpub(who.clone())
 		}
 
-		/// ## PSBT insertion
-		///
-		/// At the current moment, only one PSTB is allowed to be inserted per account
-		///
-		/// ### Parameters:
-		/// - `psbt`: Ideally encoded to base 64 and then to binary. Its size is restricted by
-		/// the constant `T::PSBTMaxLen`
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn set_psbt(
-			origin: OriginFor<T>,
-			_psbt: BoundedVec<u8, T::PSBTMaxLen>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			//<PSBTs<T>>::insert(who.clone(), psbt);
-
-			Self::deposit_event(Event::PSBTStored(who));
-
-			Ok(())
-		}
-
 		/// Vault insertion
 		///
 		/// Inserts the vault on chain. Meant to be used by an offchain worker.
@@ -582,6 +564,19 @@ pub mod pallet {
 
 			Self::do_remove_vault(vault_id)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_proposal(
+			origin: OriginFor<T>,
+			proposal_id: [u8; 32],
+		) -> DispatchResult{
+			let who = ensure_signed(origin.clone())?;
+			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
+			Self::do_remove_proposal(proposal_id)
+		}
+
 
 		#[transactional]
 		#[pallet::weight(0)]
