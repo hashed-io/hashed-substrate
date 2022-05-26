@@ -92,7 +92,8 @@ impl<T: Config> Pallet<T> {
         pending_vaults.iter().for_each(|vault_to_complete| {
             // Contact bdk services and get descriptors
             let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
-                .expect("Error while generating the vault's output descriptors");
+                .map_err(|e| log::error!("Error while generating http vault:{:?}",e) ).unwrap();
+                //.expect("Error while generating the vault's output descriptors");
             // Build offchain vaults struct and push it to a Vec
             generated_vaults.push(SingleVaultPayload{
                 vault_id: vault_to_complete.clone(),
@@ -270,11 +271,9 @@ impl<T: Config> Pallet<T> {
         // generate vault id
         let vault_id = vault.using_encoded(blake2_256);
         // build a vector containing owner + signers
-        let vault_members =
-            [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
-        log::info!("Total vault members count: {:?}", vault_members.len());
+        let vault_members = vault.cosigners.clone().to_vec();
+        //log::info!("Total vault members count: {:?}", vault_members.len());
         // iterate over that vector and add the vault id to the list of each user (signer)
-        //let vaults_by_signer_insertion_result =
         ensure!(Self::members_are_unique(vault_members.clone()), Error::<T>::DuplicateVaultMembers);
         vault_members.into_iter().try_for_each(|acc| {
             // check if all users have an xpub
@@ -286,7 +285,6 @@ impl<T: Config> Pallet<T> {
             })
             .map_err(|_| Error::<T>::SignerVaultLimit)
         })?;
-        //ensure!(vaults_by_signer_insertion_result.is_ok(), Error::<T>::SignerVaultLimit);
         <Vaults<T>>::insert(vault_id.clone(), vault.clone());
 
         Self::deposit_event(Event::VaultStored(vault_id, vault.owner));

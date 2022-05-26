@@ -270,6 +270,8 @@ pub mod pallet {
 		InvalidVaultThreshold,
 		/// A defined cosigner reached its vault limit
 		SignerVaultLimit,
+		/// Too many cosigners
+		ExceedMaxCosignersPerVault,
 		/// Vault not found
 		VaultNotFound,
 		/// A vault needs at least 1 cosigner
@@ -342,7 +344,7 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		T::AccountId,                                  // signer
-		BoundedVec<[u8; 32], T::MaxCosignersPerVault>, // vault ids
+		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
 	>;
 
@@ -524,13 +526,18 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			threshold: u32,
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-			cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
+			include_owner_as_cosigner : bool,
+			mut cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
+			if include_owner_as_cosigner {
+				cosigners.try_push(who.clone())
+				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault ).unwrap();
+			}
 			//  Cosigners are already bounded, only is necessary to check if its not empty
-			ensure!( !cosigners.is_empty() , Error::<T>::NotEnoughCosigners);
-			// Threshold needs to be greater than 0 and less than the current owner+cosigners number
-			ensure!( threshold>0 && threshold <= (1+cosigners.len() as u32), Error::<T>::InvalidVaultThreshold);
+			ensure!( cosigners.len()>1 , Error::<T>::NotEnoughCosigners);
+			// Threshold needs to be greater than 0 and less than the current cosigners number
+			ensure!( threshold>0 && threshold <= (cosigners.len() as u32), Error::<T>::InvalidVaultThreshold);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,

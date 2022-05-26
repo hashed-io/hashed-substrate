@@ -44,7 +44,7 @@ parameter_types! {
 	pub const XPubLen: u32 = 166;
 	pub const PSBTMaxLen: u32  = 2048;
 	pub const MaxVaultsPerUser: u32 = 2;
-	pub const MaxCosignersPerVault: u32 = 2;
+	pub const MaxCosignersPerVault: u32 =3;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
 	pub const MaxProposalsPerVault : u32 = 5;
