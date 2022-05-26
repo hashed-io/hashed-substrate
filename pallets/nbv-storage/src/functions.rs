@@ -55,6 +55,7 @@ impl<T: Config> Pallet<T> {
             proposal_list.remove(proposal_index);
             Ok(())
         })?;
+        Self::deposit_event(Event::ProposalRemoved(proposal_id, proposal.proposer));
         Ok(())
     }
     // Check for xpubs duplicates (requires owner to be on the vault_signers Vec)
@@ -307,6 +308,8 @@ impl<T: Config> Pallet<T> {
         <ProposalsByVault<T>>::try_mutate(proposal.vault_id,|proposals|{
             proposals.try_push(proposal_id)
         }).map_err(|_| Error::<T>::ExceedMaxProposalsPerVault)?;
+
+        Self::deposit_event(Event::ProposalStored(proposal_id, proposal.proposer));
         Ok(())
     }
 
@@ -320,6 +323,7 @@ impl<T: Config> Pallet<T> {
                 None=> Err(Error::<T>::ProposalNotFound),
             }
         })?;
+        Self::deposit_event(Event::PSBTStored(proposal_id));
         Ok(())
     }
 

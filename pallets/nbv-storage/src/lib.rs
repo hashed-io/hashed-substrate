@@ -237,14 +237,18 @@ pub mod pallet {
 		XPubStored([u8; 32], T::AccountId),
 		/// Removed Xpub previously linked to the account
 		XPubRemoved(T::AccountId),
-		/// The PBST was succesfully inserted and linked to the account
-		PSBTStored(T::AccountId),
+		/// The PBST was succesfully inserted by an OCW
+		PSBTStored([u8;32]),
 		/// The vault was succesfully inserted and linked to the account as owner
 		VaultStored([u8; 32], T::AccountId),
 		/// The vault was succesfully removed by its owner
 		VaultRemoved([u8; 32],T::AccountId),
 		/// An offchain worker inserted a vault's descriptor 
 		DescriptorsStored([u8;32]),
+		/// A proposal has been inserted. 
+		ProposalStored([u8;32],T::AccountId),
+		/// A proposal has been removed.
+		ProposalRemoved([u8;32],T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
