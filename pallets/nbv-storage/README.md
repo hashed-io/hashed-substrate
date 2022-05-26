@@ -18,6 +18,10 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Query user's vaults (id)](#query-users-vaults-id)
       - [Query vault details](#query-vault-details)
       - [Remove Vault](#remove-vault)
+      - [Propose](#propose)
+      - [Query vault's proposals](#query-vaults-proposals)
+      - [Query proposals details](#query-proposals-details)
+      - [Remove a proposal](#remove-a-proposal)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
       - [Insert an xpub](#insert-an-xpub-1)
       - [Query stored xpubs](#query-stored-xpubs)
@@ -27,6 +31,10 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Query vaults ids by signer](#query-vaults-ids-by-signer)
       - [Query vaults details by id](#query-vaults-details-by-id)
       - [Remove vault](#remove-vault-1)
+      - [Propose](#propose-1)
+      - [Query vault's proposals](#query-vaults-proposals-1)
+      - [Query proposals details](#query-proposals-details-1)
+      - [Remove a proposal](#remove-a-proposal-1)
   - [Events](#events)
   - [Errors](#errors)
   - [Assumptions](#assumptions)
@@ -53,13 +61,15 @@ This module provides functionality for data management regarding the Native Bitc
 - `set_xpub` handles the identity `info` and `xpub` insertion on the pallet's storage. The xpub 
 - `remove_xpub` eliminates the user's xpub. It doesn't require any parameters but it will fire an error if a user's xpub is not found or if its part of a vault.
 - `create_vault` takes a vault `description`, a set or `BoundedVec` of accounts as well as the signature `threshold`.
-- `remove_vault` receives `vault_id` - remove vault and any open proposals or PSBTs from storage.
-- `propose` WIP
-- `generate_new_address` WIP
+- `remove_vault` receives `vault_id` - remove vault and any proposals or PSBTs from storage.
+- `propose` Propose an expense in a specified vault, takes a `vault_id`, `recipient_address` to which the `amount_in_sats` will be sent, and a `description`. You need to participate on the vault.
+- `remove_proposal` removes the specified proposal by taking `proposal_id`. You need to be the user who proposed it.
+- `generate_new_address`
 
 #### Offchain worker dispatchable functions
 
 - `ocw_insert_descriptors` is only an extrinsic that is meant to be called by the pallet's offchain worker, as it makes the output descriptors insertion.
+- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it makes the psbt proposal insertion.
 
 ### Getters
 - `xpubs`
@@ -80,7 +90,7 @@ The following examples will be using the following credentials and testing data:
 "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
 
 # Dummy xpub
-"xpub6AHA9hZDN11k2ijHMeS5QqHx2KP9aMBRhTDqANMnwVtdyw2TDYRmF8PjpvwUFcL1Et8Hj59S3gTSMcUQ5gAqTz3Wd8EsMTmF3DChhqPQBnU"
+"Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM"
 
 # The resulting hash from the previous xpub should look something like this
 "0x9ee1b23c479e03288d3d1d791abc580439598f70e7607c1de108c4bb6a9b5b6f"
@@ -92,7 +102,7 @@ The following examples will be using the following credentials and testing data:
 Note that the identity data structure is identical to the original setIdentity extrinsic from the identity pallet and additional fields can be specified.
 The xpub to store is sent on the second parameter and the pallet will handle the link between xpub and hash. 
 ```bash
-polkadot-js-api tx.nbvStorage.setXpub "xpub6AHA9hZDN11k2ijHMeS5QqHx2KP9aMBRhTDqANMnwVtdyw2TDYRmF8PjpvwUFcL1Et8Hj59S3gTSMcUQ5gAqTz3Wd8EsMTmF3DChhqPQBnU" --seed "//Alice"
+polkadot-js-api tx.nbvStorage.setXpub "Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM" --seed "//Alice"
 
 ```
 
@@ -120,7 +130,7 @@ polkadot-js-api tx.nbvStorage.removeXpub --seed "//Alice"
 In order to create a vault, refer to the following extrinsic structure:
 ```bash
 # All users need to have an xpub
-polkadot-js-api tx.nbvStorage.createVault 1 "description" '["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]' --seed "//Alice"
+polkadot-js-api tx.nbvStorage.createVault 1 "description" true '["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]' --seed "//Alice"
 ```
 
 #### Query user's vaults (id)
@@ -136,9 +146,29 @@ polkadot-js-api query.nbvStorage.vaults 0xdc08dcf7b4e6525bdd894433ffe45644262079
 ```
 
 #### Remove Vault
-Only the vault's owner can remove it, a `vault_id` needs to be provided:
+Only the vault's owner can remove it, a `vault_id` needs to be provided. This will remove all the vault proposals:
 ```bash
 polkadot-js-api tx.nbvStorage.removeVault "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" --seed "//Alice"
+```
+#### Propose
+```bash
+# Parameters in order: vault_id, recipient address, amount in satoshis, and description:
+polkadot-js-api tx.nbvStorage.propose 0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi 1000 "lorem ipsum" --seed "//Alice"
+```
+
+#### Query vault's proposals
+```bash
+polkadot-js-api query.nbvStorage.proposalsByVault 0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e
+```
+
+#### Query proposals details
+```bash
+polkadot-js-api query.nbvStorage.proposals 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675
+```
+
+#### Remove a proposal
+```bash
+polkadot-js-api tx.nbvStorage.removeProposal 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
 ```
 
 ### Polkadot-js api (javascript library)
@@ -150,7 +180,7 @@ While most of the data flow is almost identical to its CLI counter part, the jav
 
 ```js
 const setXpub = api.tx.nbvStorage.setXpub(
-     "xpub6AHA9hZDN11k2ijHMeS5QqHx2KP9aMBRhTDqANMnwVtdyw2TDYRmF8PjpvwUFcL1Et8Hj59S3gTSMcUQ5gAqTz3Wd8EsMTmF3DChhqPQBnU");
+     "Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi");
 const identityResult = await setCompleteIdentity.signAndSend(alice);
 console.log('Extrinsic sent with hash', identityResult.toHex());
 ```
@@ -227,6 +257,33 @@ console.log(vaultDetails.toHuman());
 const removeVault = await api.tx.nbvStorage.removeVault("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf").signAndSend(alice);
 console.log('Tx sent with hash', removeVault.toHex());
 ```
+
+#### Propose
+```js
+// Parameters in order: vault_id, recipient address, amount in satoshis, and description:
+const propose = await api.tx.nbvStorage
+    .propose("0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e", "Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi", 1000, "lorem ipsum").signAndSend(alice);
+console.log('Tx sent with hash', propose.toHuman());
+```
+
+#### Query vault's proposals
+```js
+const vaultsProposals = await api.query.nbvStorage.proposalsByVault("0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e");
+console.log(vaultsProposals.toHuman() );
+```
+
+#### Query proposals details
+```js
+const proposal = await api.query.nbvStorage.proposals("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675");
+console.log(proposal.toHuman());
+```
+
+#### Remove a proposal
+```js
+const removeProposal = await api.tx.nbvStorage.removeProposal("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+console.log(removeProposal.toHuman());
+```
+
 ## Events
 ```rust
 /// Xpub and hash stored
@@ -264,6 +321,8 @@ InvalidAdditionalField,
 InvalidVaultThreshold,
 /// A defined cosigner reached its vault limit
 SignerVaultLimit,
+/// Too many cosigners
+ExceedMaxCosignersPerVault,
 /// Vault not found
 VaultNotFound,
 /// A vault needs at least 1 cosigner
@@ -272,6 +331,14 @@ NotEnoughCosigners,
 VaultOwnerPermissionsNeeded,
 /// Vault members cannot be duplicate
 DuplicateVaultMembers,
+/// The account must participate in the vault to make a proposal
+SignerPermissionsNeeded,
+/// The vault has too many proposals 
+ExceedMaxProposalsPerVault,
+/// Proposal not found (id)
+ProposalNotFound,
+/// The account must be the proposer to remove it
+ProposerPermissionsNeeded,
 ```
 
 ## Assumptions
@@ -279,7 +346,7 @@ DuplicateVaultMembers,
 Below are assumptions that must be held when using this module.  If any of
 them are violated, the behavior of this module is undefined.
 
-- The pallet will contact the remote endpoint `bdk-services` to generate descriptors, proposals, and next adressesss.
+- The pallet relies on the remote endpoint `bdk-services` to generate descriptors, proposals, and next adressesss.
 
 
 License: Apache-2.0

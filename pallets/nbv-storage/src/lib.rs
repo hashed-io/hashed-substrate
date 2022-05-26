@@ -420,7 +420,7 @@ pub mod pallet {
 					}
 				}
 			}else {
-				log::error!("This OCW couln't get the locc");
+				log::error!("This OCW couln't get the lock");
 			};
 		}
 	}
@@ -514,9 +514,8 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized
 		/// - `description`: A small definition. What will the vault be used for?
+		/// - `include_owner_as_cosigner`: Add automatically the owner as cosigner
 		/// - `cosigners`: The other accounts that will participate in vault proposals.
-		/// - `descriptor`: The output descriptor of the multisig wallet.
-		/// - `change_descriptor`: Optional parameter.
 		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
@@ -638,6 +637,19 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Vault transaction proposal
+		/// 
+		/// Inserts a proposal on the specified vault.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proposal will be inserted
+		/// - `recipient_address`: Mainnet address to which the funds will be send
+		/// - `amount_in_sats`: Amount to send in satoshis.
+		/// - `description`: The reason for the proposal, why do you are proposing this?.
+		///
+		/// ### Considerations
+		/// - Do not include the vault owner on the `cosigners` list.
+		/// - Please ensure the recipient address is a valid mainnet address.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn propose(
@@ -648,8 +660,7 @@ pub mod pallet {
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			//ensure!(false, Error::<T>::NotYetImplemented);
-			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
+			ensure!(Self::get_vault_participants(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
 			// ensure user is in the vault
 			let proposal = Proposal::<T>{
 				proposer: who.clone(),

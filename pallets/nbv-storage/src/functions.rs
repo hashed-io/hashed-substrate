@@ -28,10 +28,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
         // This removes the vault while retrieving its values
         let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
-        let vault_members = [
-            vault.cosigners.as_slice(),
-            &[vault.owner.clone()],
-        ].concat();
+        let vault_members = vault.cosigners.to_vec();
         // Removes the vault from user->vault vector
         vault_members.iter().for_each(|signer|{
             <VaultsBySigner<T>>::mutate(signer, | vault_list |{
@@ -120,7 +117,8 @@ impl<T: Config> Pallet<T> {
         // We will create a bunch of elements that we will put into a JSON Object.
         let raw_json = Self::generate_vault_json_body(vault_id);
         let request_body =
-            str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
+        str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
+        log::warn!("Mi json: :{:?}", request_body.clone());
 
         let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
 
@@ -176,8 +174,7 @@ impl<T: Config> Pallet<T> {
             exponent: 0,
         };
         body.push(("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold)));
-        let vault_signers =
-        [vault.cosigners.clone().as_slice(), &[vault.owner.clone()]].concat();
+        let vault_signers = vault.cosigners.clone().to_vec();
         
         //get the xpub for each cosigner
         let mapped_xpubs: Vec<JsonValue> = Self::get_accounts_xpubs(vault_signers)
@@ -272,7 +269,6 @@ impl<T: Config> Pallet<T> {
         let vault_id = vault.using_encoded(blake2_256);
         // build a vector containing owner + signers
         let vault_members = vault.cosigners.clone().to_vec();
-        //log::info!("Total vault members count: {:?}", vault_members.len());
         // iterate over that vector and add the vault id to the list of each user (signer)
         ensure!(Self::members_are_unique(vault_members.clone()), Error::<T>::DuplicateVaultMembers);
         vault_members.into_iter().try_for_each(|acc| {
@@ -367,7 +363,7 @@ impl<T: Config> Pallet<T> {
         xpub_vec
     }
 
-    pub fn get_vault_members(vault_id : [u8;32])-> Vec<T::AccountId> {
+    pub fn get_vault_participants(vault_id : [u8;32])-> Vec<T::AccountId> {
         let vault =  <Vaults<T>>::get(vault_id).expect("Vault not found");
         [vault.cosigners.as_slice(),&[vault.owner.clone()],].concat()
     }
