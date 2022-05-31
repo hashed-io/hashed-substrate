@@ -29,7 +29,7 @@ pub mod pallet {
 	use frame_system::{
 		offchain::{
 			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
-			SignedPayload, Signer, SigningTypes,
+			SignedPayload, Signer,
 		},
 		pallet_prelude::*,
 	};
