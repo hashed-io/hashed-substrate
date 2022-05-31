@@ -577,6 +577,28 @@ pub mod pallet {
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn clean_vault_list(
+			origin: OriginFor<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			<VaultsBySigner<T>>::mutate_exists(who, | vault_list |{
+                match vault_list{
+                    Some(list) => {
+						let new_list: Vec<[u8;32]> = list.iter().filter(|vault_id|{
+							<Vaults<T>>::contains_key(vault_id)
+						}).copied().collect();
+						let bounded_list = BoundedVec::<[u8; 32], T::MaxVaultsPerUser>::try_from(new_list).unwrap();
+						list.clone_from(&bounded_list );
+						if list.len()<1 { *vault_list = None;}
+                    },
+                    _ =>log::warn!("Vault list not found for the user"),
+                }
+            });
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
