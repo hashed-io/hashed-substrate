@@ -14,7 +14,7 @@ use lite_json::json::{JsonValue, NumberValue};
 use lite_json::parse_json;
 use lite_json::Serialize as jsonSerialize;
 
-use crate::types::{BDK_SERVICES_URL,};
+use crate::types::*;
 
 impl<T: Config> Pallet<T> {
     /// Use with caution

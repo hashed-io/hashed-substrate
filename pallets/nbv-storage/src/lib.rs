@@ -19,7 +19,7 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*};
 	//#[cfg(feature = "std")]
 	//use frame_support::serde::{Deserialize, Serialize};
-	use crate::types::{UNSIGNED_TXS_PRIORITY, LOCK_BLOCK_EXPIRATION, LOCK_TIMEOUT_EXPIRATION};
+	use crate::types::*;
 	use frame_support::{
 		pallet_prelude::{BoundedVec},
 		traits::Get,
@@ -43,76 +43,6 @@ pub mod pallet {
 	use scale_info::TypeInfo;
 
 	/*--- Structs Section ---*/
-	#[derive(
-		Encode,
-		Decode,
-		Default,
-		Eq,
-		PartialEq,
-		CloneNoBound,
-		RuntimeDebugNoBound,
-		TypeInfo,
-		MaxEncodedLen,
-	)]
-	#[scale_info(skip_type_params(MaxLen))]
-	#[codec(mel_bound())]
-	pub struct Descriptors<MaxLen: Get<u32>> {
-		pub output_descriptor: BoundedVec<u8, MaxLen>,
-		pub change_descriptor: Option<BoundedVec<u8, MaxLen>>,
-	}
-	
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-	#[codec(mel_bound())]
-	pub struct VaultsPayload<Public> {
-		pub vaults_payload:Vec<SingleVaultPayload>,
-		pub public: Public,
-	}
-
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-	#[codec(mel_bound())]
-	pub struct SingleVaultPayload{
-		// Not successful, macros/generics issue
-		// descriptors: Descriptors<u8>,
-		pub vault_id: [u8;32],
-		pub output_descriptor: Vec<u8>,
-		pub change_descriptor: Vec<u8>,
-	}
-	
-	impl<S: SigningTypes> SignedPayload<S> for VaultsPayload<S::Public> {
-		fn public(&self) -> S::Public {
-			self.public.clone()
-		}
-	}
-
-	/// Struct for requesting a descriptor generation 
-	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	pub struct ProposalRequest<T: Config> {
-		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
-		pub to_address: BoundedVec<u8, T::XPubLen>,
-		pub amount: u64,
-		pub fee_sat_per_vb: u32,
-	}
-
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-	#[codec(mel_bound())]
-	pub struct ProposalsPayload<Public> {
-		pub proposals_payload:Vec<SingleProposalPayload>,
-		pub public: Public,
-	}
-
-	#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-	#[codec(mel_bound())]
-	pub struct SingleProposalPayload{
-		pub proposal_id: [u8;32],
-		pub psbt: Vec<u8>,
-	}
-
-	impl<S: SigningTypes > SignedPayload<S> for ProposalsPayload<S::Public> {
-		fn public(&self) -> S::Public {
-			self.public.clone()
-		}
-	}
-
 	// Struct for holding Vaults information.
 	#[derive(
 		Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
@@ -185,18 +115,6 @@ pub mod pallet {
 				signed_psbts: self.signed_psbts.clone(),
 			}
 		}
-	}
-
-	pub enum XpubStatus {
-		Owned,
-		Free,
-		Taken,
-	}
-	
-	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	pub enum ProposalStatus {
-		Pending,
-		Broadcasted,
 	}
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
