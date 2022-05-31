@@ -206,11 +206,12 @@ fn removing_vault_should_work() {
 	new_test_ext().execute_with(|| {
 		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
 		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
 		
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
-		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		try_from([ test_pub(2),test_pub(3)].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), false, cosigners) );
 		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
 		// Try to remove xpub (vault depends on it)
 		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();

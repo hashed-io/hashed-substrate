@@ -27,15 +27,23 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
         // This removes the vault while retrieving its values
+        let vault_members = Self::get_vault_members(vault_id);
         let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
-        let vault_members = vault.cosigners.to_vec();
         // Removes the vault from user->vault vector
         vault_members.iter().for_each(|signer|{
-            <VaultsBySigner<T>>::mutate(signer, | vault_list |{
-                let vault_index = vault_list.iter().position(|v| *v==vault_id);
-                match vault_index{
-                    Some(index) => {vault_list.remove(index);},
-                    _ => log::warn!("Vault not found in members"),
+            <VaultsBySigner<T>>::mutate_exists(signer, | vault_list |{
+                match vault_list{
+                    Some(list) => {
+                        let vault_index = list.iter().position(|v| *v==vault_id);
+                        match vault_index{
+                            Some(index) => {
+                                list.remove(index);
+                                if list.len()<1 { *vault_list = None;}
+                            },
+                            _ => log::warn!("Vault not found in members"),
+                        }
+                    },
+                    _ =>log::warn!("Vault list not found for the user"),
                 }
             });
         });
@@ -267,12 +275,12 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
         // generate vault id
+        ensure!(Self::members_are_unique(vault.cosigners.clone().to_vec()), Error::<T>::DuplicateVaultMembers);
         let vault_id = vault.using_encoded(blake2_256);
         // build a vector containing owner + signers
-        let vault_members = vault.cosigners.clone().to_vec();
+        let vault_members = vault.cosigners.to_vec();
         // iterate over that vector and add the vault id to the list of each user (signer)
-        ensure!(Self::members_are_unique(vault_members.clone()), Error::<T>::DuplicateVaultMembers);
-        vault_members.into_iter().try_for_each(|acc| {
+        vault_members.clone().into_iter().try_for_each(|acc| {
             // check if all users have an xpub
             if !<XpubsByOwner<T>>::contains_key(acc.clone()) {
                 return Err(Error::<T>::XPubNotFound);
@@ -282,6 +290,14 @@ impl<T: Config> Pallet<T> {
             })
             .map_err(|_| Error::<T>::SignerVaultLimit)
         })?;
+
+        // insert owner in case it isn't on the cosigners list
+        if !vault_members.contains(&vault.owner) {
+            <VaultsBySigner<T>>::try_mutate(&vault.owner, |vault_vec| {
+                vault_vec.try_push(vault_id.clone())
+            })
+            .map_err(|_| Error::<T>::SignerVaultLimit)?;
+        }
         <Vaults<T>>::insert(vault_id.clone(), vault.clone());
 
         Self::deposit_event(Event::VaultStored(vault_id, vault.owner));
@@ -367,9 +383,12 @@ impl<T: Config> Pallet<T> {
         xpub_vec
     }
 
-    pub fn get_vault_participants(vault_id : [u8;32])-> Vec<T::AccountId> {
+    pub fn get_vault_members(vault_id : [u8;32])-> Vec<T::AccountId> {
         let vault =  <Vaults<T>>::get(vault_id).expect("Vault not found");
-        [vault.cosigners.as_slice(),&[vault.owner.clone()],].concat()
+        let mut members = [vault.cosigners.as_slice(),&[vault.owner.clone()],].concat();
+        members.sort();
+        members.dedup();
+        members
     }
 
     pub fn chars_to_bytes(v: Vec<char>) -> Vec<u8> {

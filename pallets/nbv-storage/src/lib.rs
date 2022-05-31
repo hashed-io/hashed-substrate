@@ -664,7 +664,7 @@ pub mod pallet {
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::get_vault_participants(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
+			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
 			// ensure user is in the vault
 			let proposal = Proposal::<T>{
 				proposer: who.clone(),
