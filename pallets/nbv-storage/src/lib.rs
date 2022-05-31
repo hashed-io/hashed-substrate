@@ -21,9 +21,10 @@ pub mod pallet {
 	//use frame_support::serde::{Deserialize, Serialize};
 	use crate::types::{UNSIGNED_TXS_PRIORITY, LOCK_BLOCK_EXPIRATION, LOCK_TIMEOUT_EXPIRATION};
 	use frame_support::{
-		pallet_prelude::{BoundedVec, MaxEncodedLen},
+		pallet_prelude::{BoundedVec},
 		traits::Get,
 	};
+	use frame_support::pallet_prelude::MaxEncodedLen;
 	use frame_support::{sp_io::hashing::blake2_256, transactional};
 	use frame_system::{
 		offchain::{
