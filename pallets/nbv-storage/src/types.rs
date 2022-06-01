@@ -125,3 +125,11 @@ pub enum ProposalStatus {
 	Pending,
 	Broadcasted,
 }
+
+#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo,)]
+pub enum OffChainStatus<MaxLen: Get<u32> >{
+	Pending,
+	Done,
+	RecoverableError(BoundedVec<u8, MaxLen>),
+	IrrecoverableError(BoundedVec<u8, MaxLen>),
+}
