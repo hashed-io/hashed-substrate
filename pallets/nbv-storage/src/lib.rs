@@ -117,6 +117,25 @@ pub mod pallet {
 		}
 	}
 
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub bdk_services_url: [u8;32],
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { bdk_services_url: b"https://bdk.hashed.systems".as_slice() }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			<BDKServicesURL<T>>::put(&self.bdk_services_url);
+		}
+	}
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
@@ -270,6 +289,13 @@ pub mod pallet {
 		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
 	>;
+
+	// The getter attribute generate a function on `Pallet` placeholder:
+	// `fn getter_name() -> Type` for basic value items or
+	// `fn getter_name(key: KeyType) -> ValueType` for map items.
+	#[pallet::storage]
+	//#[pallet::getter(fn dummy)]
+	pub(super) type BDKServicesURL<T: Config> = StorageValue<_, [u8;32] >;
 
 
 	#[pallet::hooks]
