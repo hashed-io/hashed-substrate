@@ -37,9 +37,9 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		// A frunique and asset class were succesfully created!
-		FruniqueCreated(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
+		FruniqueCreated(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// A frunique/unique was succesfully divided!
-		FruniqueDivided(T::AccountId, T::AccountId, T::ClassId, T::InstanceId),
+		FruniqueDivided(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// Counter should work?
 		FruniqueCounter(u32),
 	}
@@ -64,7 +64,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> 
 	where 
-		T: pallet_uniques::Config<ClassId = u32, InstanceId = u32>,
+		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
 		/// Issue a new frunique from a public origin.
 		///
@@ -88,8 +88,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create(
 			origin: OriginFor<T>,
-			class_id: T::ClassId,
-			instance_id: T::InstanceId,
+			class_id: T::CollectionId,
+			instance_id: T::ItemId,
 			numeric_value: Option<Permill>,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		) -> DispatchResult {
@@ -129,13 +129,13 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn instance_exists(
 			_origin: OriginFor<T>,
-			_class_id: T::ClassId,
-			_instance_id: T::InstanceId,
+			_class_id: T::CollectionId,
+			_instance_id: T::ItemId,
 		) -> DispatchResult {
 			// Always returns an empty iterator?
-			let instances = pallet_uniques::Pallet::<T>::classes();
+			//let instances = pallet_uniques::Pallet::<T>::;
 			//println!("Instances found in class {:?}",instances.count());
-			log::info!("Instances found in class {:?}", instances.count());
+			//log::info!("Instances found in class {:?}", instances.count());
 			//println!("\tIterator? {}",instances.count());
 			//Self::deposit_event(Event::FruniqueCounter(instances.count().try_into().unwrap()  ));
 			//instances.into_iter().for_each(|f| println!("\tInstance:{:?}",f));
@@ -161,12 +161,12 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
-			class_id: T::ClassId,
-			instance_id: T::InstanceId,
+			class_id: T::CollectionId,
+			instance_id: T::ItemId,
 			inherit_attrs: bool,
 			_p: Permill,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-		) -> DispatchResult where <T as pallet_uniques::Config>::InstanceId: From<u32>{
+		) -> DispatchResult where <T as pallet_uniques::Config>::ItemId: From<u32>{
 			// Boilerplate (setup, conversions, ensure_signed)
 			let owner = ensure_signed(origin.clone())?;
 			let enconded_id = instance_id.encode();
@@ -242,10 +242,10 @@ pub mod pallet {
 
 	impl<T: Config> Pallet<T> 
 	where
-	T: pallet_uniques::Config<ClassId = u32, InstanceId = u32>,
+	T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
-		pub fn u32_to_instance_id(input: u32) -> T::InstanceId where <T as pallet_uniques::Config>::InstanceId: From<u32> {
-		 	T::InstanceId::from(input)
+		pub fn u32_to_instance_id(input: u32) -> T::ItemId where <T as pallet_uniques::Config>::ItemId: From<u32> {
+		 	T::ItemId::from(input)
 		}
 
 		pub fn bytes_to_string(input: Vec<u8>) -> String {
@@ -263,8 +263,8 @@ pub mod pallet {
 
 		//get uniques attribute?
 		pub fn get_nft_attribute(
-			class_id: &T::ClassId,
-			instance_id: &T::InstanceId,
+			class_id: &T::CollectionId,
+			instance_id: &T::ItemId,
 			key: &Vec<u8>,
 		) -> BoundedVec<u8, T::ValueLimit> {
 			if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {

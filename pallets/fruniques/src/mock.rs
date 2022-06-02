@@ -1,5 +1,6 @@
 use crate as pallet_fruniques;
-use frame_support::{construct_runtime, parameter_types};
+use frame_support::{construct_runtime, parameter_types, traits::AsEnsureOriginWithArg};
+use frame_system::EnsureSigned;
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
@@ -69,12 +70,12 @@ parameter_types! {
 
 impl pallet_uniques::Config for Test {
 	type Event = Event;
-	type ClassId = u32;
-	type InstanceId = u32;
+	type CollectionId = u32;
+	type ItemId = u32;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<Self::AccountId>;
-	type ClassDeposit = ClassDeposit;
-	type InstanceDeposit = InstanceDeposit;
+	type CollectionDeposit = ClassDeposit;
+	type ItemDeposit = InstanceDeposit;
 	type MetadataDepositBase = MetadataDepositBase;
 	type AttributeDepositBase = MetadataDepositBase;
 	type DepositPerByte = MetadataDepositPerByte;
@@ -82,6 +83,11 @@ impl pallet_uniques::Config for Test {
 	type KeyLimit = KeyLimit;
 	type ValueLimit = ValueLimit;
 	type WeightInfo = ();
+	#[cfg(feature = "runtime-benchmarks")]
+	type Helper = ();
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
+	type Locker = ();
+	
 }
 
 parameter_types! {

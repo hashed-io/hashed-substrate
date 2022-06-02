@@ -104,7 +104,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 105,
+	spec_version: 106,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -511,20 +511,20 @@ impl pallet_assets::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ClassDeposit: Balance = 100 * DOLLARS;
-	pub const InstanceDeposit: Balance = 1 * DOLLARS;
+	pub const CollectionDeposit: Balance = 100 * DOLLARS;
+	pub const ItemDeposit: Balance = 1 * DOLLARS;
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
 }
 
 impl pallet_uniques::Config for Runtime {
 	type Event = Event;
-	type ClassId = u32;
-	type InstanceId = u32;
+	type CollectionId = u32;
+	type ItemId = u32;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-	type ClassDeposit = ClassDeposit;
-	type InstanceDeposit = InstanceDeposit;
+	type CollectionDeposit = CollectionDeposit;
+	type ItemDeposit = ItemDeposit;
 	type MetadataDepositBase = MetadataDepositBase;
 	type AttributeDepositBase = MetadataDepositBase;
 	type DepositPerByte = MetadataDepositPerByte;
@@ -535,7 +535,7 @@ impl pallet_uniques::Config for Runtime {
 	#[cfg(feature = "runtime-benchmarks")]
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
-	type Locker = pallet_rmrk_core::Pallet<Runtime>;
+	type Locker = ();
 }
 
 impl pallet_fruniques::Config for Runtime {
@@ -575,27 +575,6 @@ parameter_types! {
 	pub const PartsLimit: u32 = 3;
 	pub const MaxPriorities: u32 = 3;
 	pub const CollectionSymbolLimit: u32 = 100;
-}
-
-impl pallet_rmrk_core::Config for Runtime {
-	type Event = Event;
-	type ProtocolOrigin = frame_system::EnsureRoot<AccountId>;
-	type MaxRecursions = MaxRecursions;
-	type ResourceSymbolLimit = ResourceSymbolLimit;
-	type PartsLimit = PartsLimit;
-	type MaxPriorities = MaxPriorities;
-	type CollectionSymbolLimit = CollectionSymbolLimit;
-}
-
-parameter_types! {
-	pub const MinimumOfferAmount: Balance = UNITS / 10_000;
-}
-
-impl pallet_rmrk_market::Config for Runtime {
-	type Event = Event;
-	type ProtocolOrigin = frame_system::EnsureRoot<AccountId>;
-	type Currency = Balances;
-	type MinimumOfferAmount = MinimumOfferAmount;
 }
 
 use sp_runtime::SaturatedConversion;
@@ -680,8 +659,6 @@ construct_runtime!(
 		Fruniques: pallet_fruniques,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
-		RmrkCore: pallet_rmrk_core::{Pallet, Call, Event<T>, Storage},
-		RmrkMarket: pallet_rmrk_market::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
