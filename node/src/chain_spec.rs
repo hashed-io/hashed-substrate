@@ -1,6 +1,6 @@
 use hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
-	SudoConfig, SystemConfig, NodeAuthorizationConfig, WASM_BINARY,
+	SudoConfig, SystemConfig, NodeAuthorizationConfig, NBVStorageConfig ,WASM_BINARY,
 };
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
@@ -11,8 +11,7 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-//const BDK_SERVICES_MAINNET_URL : &str = "https://bdk.hashed.systems";
-//const BDK_SERVICES_TESTNET_URL : &str = "https://bdk-test.hashed.systems";
+const BDK_SERVICES_MAINNET_URL : &str = "https://bdk.hashed.systems";
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
@@ -278,8 +277,8 @@ fn testnet_genesis(
 		// bounties: Default::default(),
 		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
-		// nbv_storage : NBVStorageConfig{
-		// 	bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes();
-		// }
+		nbv_storage : NBVStorageConfig{
+			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
+		}
 	}
 }

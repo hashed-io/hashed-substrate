@@ -116,28 +116,26 @@ pub mod pallet {
 			}
 		}
 	}
-
-	// Waiting for the next polkadot version: BoundedVec serialization
-	/* 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig{
-		pub bdk_services_url: BoundedVec<u8, ConstU32<32>>,
+		pub bdk_services_url: Vec<u8>,
 	}
 
 	#[cfg(feature = "std")]
 	impl Default for GenesisConfig {
 		fn default() -> Self {
-			Self { bdk_services_url: "https://bdk.hashed.systems".as_bytes().into() }
+			Self { bdk_services_url: b"https://bdk.hashed.systems".encode() }
 		}
 	}
 	
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
-			<BDKServicesURL<T>>::put(&self.bdk_services_url);
+			<BDKServicesURL<T>>::put(
+				BoundedVec::<u8,ConstU32<32>>::try_from(self.bdk_services_url.clone()).unwrap_or_default()
+			);
 		}
 	}
-	*/
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
