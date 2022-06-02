@@ -29,7 +29,7 @@ use frame_system::{EnsureRoot, EnsureSigned};
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg},
+	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EnsureOneOf},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight, 
@@ -381,7 +381,8 @@ parameter_types! {
 	pub const CouncilMaxMembers: u32 = 100;
 }
 
-impl pallet_collective::Config for Runtime {
+type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Config<CouncilCollective>  for Runtime {
 	type Origin = Origin;
 	type Proposal = Call;
 	type Event = Event;
@@ -554,6 +555,10 @@ parameter_types! {
 impl pallet_nbv_storage::Config for Runtime {
 	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
 	type Event = Event;
+	type ChangeBDKOrigin = EnsureOneOf<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
 	type MaxVaultsPerUser = MaxVaultsPerUser;
@@ -666,7 +671,7 @@ construct_runtime!(
 		Recovery: pallet_recovery,
 		Indices: pallet_indices,
 		Treasury: pallet_treasury,
-		Council: pallet_collective::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		Council: pallet_collective::<Instance1>,
 		Membership: pallet_membership,
 		NodeAuthorization: pallet_node_authorization,
 		Society: pallet_society,

@@ -5,7 +5,7 @@ use sp_runtime::{sp_std::vec::Vec};
 use frame_system::offchain::{SigningTypes, SignedPayload};
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 /*--- Constants section ---*/
-pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems";
+//pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems";
 pub const UNSIGNED_TXS_PRIORITY: u64 = 100;
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
 

@@ -1,6 +1,7 @@
 use crate as pallet_nbv_storage;
 use frame_support::{parameter_types, traits::ConstU32};
 use frame_support::traits::{ConstU64};
+use frame_system::EnsureRoot;
 //use frame_system as system;
 use pallet_balances;
 use sp_core::H256;
@@ -53,6 +54,7 @@ parameter_types! {
 impl pallet_nbv_storage::Config for Test {
 	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
 	type Event = Event;
+	type ChangeBDKOrigin = EnsureRoot<AccountId>;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
 	type MaxVaultsPerUser = MaxVaultsPerUser;

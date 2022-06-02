@@ -129,8 +129,7 @@ impl<T: Config> Pallet<T> {
         str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
         log::warn!("Mi json: :{:?}", request_body.clone());
 
-        let url = [BDK_SERVICES_URL.clone(), b"/gen_output_descriptor"].concat();
-
+        let url = [<BDKServicesURL<T>>::get().to_vec(), b"/gen_output_descriptor".encode()].concat();
         let response_body = Self::http_post(
             str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
             request_body
@@ -226,7 +225,7 @@ impl<T: Config> Pallet<T> {
         let request_body =
             str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
 
-        let url = [BDK_SERVICES_URL.clone(), b"/gen_psbt"].concat();
+        let url = [<BDKServicesURL<T>>::get().to_vec(), b"/gen_psbt".encode()].concat();
 
         let response_body = Self::http_post(
             str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
