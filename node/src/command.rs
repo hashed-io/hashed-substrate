@@ -38,6 +38,7 @@ impl SubstrateCli for Cli {
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
 			"chaos" => Box::new(chain_spec::chaos_config()?),
+			"md5" => Box::new(chain_spec::md5_config()?),
 			"dev" => Box::new(chain_spec::development_config()?),
 			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
 			path => {

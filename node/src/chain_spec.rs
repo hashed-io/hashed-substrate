@@ -1,6 +1,6 @@
 use hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
-	SudoConfig, SystemConfig, NodeAuthorizationConfig, WASM_BINARY,
+	SudoConfig, SystemConfig, NodeAuthorizationConfig, NBVStorageConfig ,WASM_BINARY,
 };
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
@@ -11,7 +11,7 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-
+const BDK_SERVICES_MAINNET_URL : &str = "https://bdk.hashed.systems";
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
@@ -46,6 +46,19 @@ fn hashed_properties() -> sc_chain_spec::Properties {
 	p.insert("tokenDecimals".into(), 12.into());
 	p.insert("standardAccount".into(), "*25519".into());
 	p.insert("ss58Format".into(), 51.into());
+	p.insert("website".into(), "https://hashed.systems".into());
+	p
+}
+
+fn md5_properties() -> sc_chain_spec::Properties {
+	let mut p = Properties::new();
+	p.insert("prefix".into(), 52.into());
+	p.insert("network".into(), "md5".into());
+	p.insert("displayName".into(), "Hashed Systems".into());
+	p.insert("tokenSymbol".into(), "MD".into());
+	p.insert("tokenDecimals".into(), 12.into());
+	p.insert("standardAccount".into(), "*25519".into());
+	p.insert("ss58Format".into(), 52.into());
 	p.insert("website".into(), "https://hashed.systems".into());
 	p
 }
@@ -179,6 +192,45 @@ pub fn chaos_config() -> Result<ChainSpec, String> {
 	))
 }
 
+pub fn md5_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "Testnet wasm not available".to_string())?;
+
+	Ok(ChainSpec::from_genesis(
+		// Name
+		"MD5 Chain",
+		// ID
+		"md5",
+		ChainType::Live,
+		move || {
+			testnet_genesis(
+				wasm_binary,
+				// Initial PoA authorities
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
+				// Sudo account
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Pre-funded accounts
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+				],
+				true,
+			)
+		},
+		// Bootnodes
+		vec![],
+		// Telemetry
+		None,
+		// Protocol ID
+		Some("md5"),
+		// Fork ID
+		None,
+		// Properties
+		Some(md5_properties()),
+		// Extensions
+		None,
+	))
+}
+
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
@@ -225,5 +277,8 @@ fn testnet_genesis(
 		// bounties: Default::default(),
 		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
+		nbv_storage : NBVStorageConfig{
+			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
+		}
 	}
 }

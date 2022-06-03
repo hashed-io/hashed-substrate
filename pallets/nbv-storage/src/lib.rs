@@ -116,6 +116,26 @@ pub mod pallet {
 			}
 		}
 	}
+	#[pallet::genesis_config]
+	pub struct GenesisConfig{
+		pub bdk_services_url: Vec<u8>,
+	}
+
+	#[cfg(feature = "std")]
+	impl Default for GenesisConfig {
+		fn default() -> Self {
+			Self { bdk_services_url: b"https://bdk.hashed.systems".encode() }
+		}
+	}
+	
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig {
+		fn build(&self) {
+			<BDKServicesURL<T>>::put(
+				BoundedVec::<u8,ConstU32<32>>::try_from(self.bdk_services_url.clone()).unwrap_or_default()
+			);
+		}
+	}
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -126,6 +146,7 @@ pub mod pallet {
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type ChangeBDKOrigin : EnsureOrigin<Self::Origin>;
 		/*--- PSBT params ---*/
 		#[pallet::constant]
 		type XPubLen: Get<u32>;
@@ -270,6 +291,14 @@ pub mod pallet {
 		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
 	>;
+
+	#[pallet::type_value]
+	pub(super) fn DefaultURL() -> BoundedVec<u8, ConstU32<32>> { 
+		BoundedVec::<u8, ConstU32<32>>::try_from(b"https://bdk.hashed.systems".encode()).unwrap_or_default()
+	}
+	#[pallet::storage]
+	//#[pallet::getter(fn dummy)]
+	pub(super) type BDKServicesURL<T: Config> = StorageValue<_, BoundedVec<u8, ConstU32<32>>, ValueQuery, DefaultURL>;
 
 
 	#[pallet::hooks]
@@ -516,6 +545,47 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Vault transaction proposal
+		/// 
+		/// Inserts a proposal on the specified vault.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proposal will be inserted
+		/// - `recipient_address`: Mainnet address to which the funds will be send
+		/// - `amount_in_sats`: Amount to send in satoshis.
+		/// - `description`: The reason for the proposal, why do you are proposing this?.
+		///
+		/// ### Considerations
+		/// - Do not include the vault owner on the `cosigners` list.
+		/// - Please ensure the recipient address is a valid mainnet address.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn propose(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			recipient_address: BoundedVec<u8, T::XPubLen>,
+			amount_in_sats: u64,
+			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
+			// ensure user is in the vault
+			let proposal = Proposal::<T>{
+				proposer: who.clone(),
+				vault_id,
+				status: ProposalStatus::Pending,
+				to_address: recipient_address,
+				amount: amount_in_sats,
+				fee_sat_per_vb: 1,
+				description,
+				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
+					b"".encode()
+				).expect("Error on encoding the descriptor to BoundedVec"),
+				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
+			};
+			Self::do_propose(proposal)
+		}
+
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
@@ -527,6 +597,18 @@ pub mod pallet {
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_bdk_url(
+			origin: OriginFor<T>,
+			new_url: BoundedVec<u8, ConstU32<32> >
+		) -> DispatchResult{
+			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
+			<BDKServicesURL<T>>::put(new_url);
+			Ok(())
+		}
+
 
 
 		#[transactional]
@@ -579,59 +661,6 @@ pub mod pallet {
 					None
 				}
 			).unwrap_or(Ok(()))?;
-			Ok(())
-		}
-
-		/// Vault transaction proposal
-		/// 
-		/// Inserts a proposal on the specified vault.
-		/// 
-		/// ### Parameters:
-		/// - `vault_id`: the vault identifier in which the proposal will be inserted
-		/// - `recipient_address`: Mainnet address to which the funds will be send
-		/// - `amount_in_sats`: Amount to send in satoshis.
-		/// - `description`: The reason for the proposal, why do you are proposing this?.
-		///
-		/// ### Considerations
-		/// - Do not include the vault owner on the `cosigners` list.
-		/// - Please ensure the recipient address is a valid mainnet address.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn propose(
-			origin: OriginFor<T>,
-			vault_id: [u8; 32],
-			recipient_address: BoundedVec<u8, T::XPubLen>,
-			amount_in_sats: u64,
-			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
-			// ensure user is in the vault
-			let proposal = Proposal::<T>{
-				proposer: who.clone(),
-				vault_id,
-				status: ProposalStatus::Pending,
-				to_address: recipient_address,
-				amount: amount_in_sats,
-				fee_sat_per_vb: 1,
-				description,
-				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
-					b"".encode()
-				).expect("Error on encoding the descriptor to BoundedVec"),
-				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
-			};
-			Self::do_propose(proposal)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn generate_new_address(
-			origin: OriginFor<T>,
-			_vault_id: [u8; 32],
-		) -> DispatchResult {
-			let _who = ensure_signed(origin.clone())?;
-			ensure!(false, Error::<T>::NotYetImplemented);
-
 			Ok(())
 		}
 	}
