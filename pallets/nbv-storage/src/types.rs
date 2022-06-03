@@ -126,10 +126,28 @@ pub enum ProposalStatus {
 	Broadcasted,
 }
 
-#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo,)]
+#[derive(Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[codec(mel_bound())]
 pub enum OffChainStatus<MaxLen: Get<u32> >{
 	Pending,
-	Done,
+	Valid,
 	RecoverableError(BoundedVec<u8, MaxLen>),
 	IrrecoverableError(BoundedVec<u8, MaxLen>),
+}
+// Default macro didnt work
+impl<MaxLen: Get<u32> > Default for OffChainStatus<MaxLen>{
+	fn default() -> Self {
+		OffChainStatus::Pending
+	}
+}
+// Clone macro didnt work
+impl<MaxLen: Get<u32> >  Clone for OffChainStatus<MaxLen>{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Pending => Self::Pending,
+            Self::Valid => Self::Valid,
+            Self::RecoverableError(arg0) => Self::RecoverableError(arg0.clone()),
+            Self::IrrecoverableError(arg0) => Self::IrrecoverableError(arg0.clone()),
+        }
+    }
 }

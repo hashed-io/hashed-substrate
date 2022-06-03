@@ -55,6 +55,7 @@ pub mod pallet {
 		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
+		pub offchain_status: OffChainStatus<T::VaultDescriptionMaxLen>,
 	}
 
 	impl<T: Config> Clone for Vault<T> {
@@ -65,6 +66,7 @@ pub mod pallet {
 				cosigners: self.cosigners.clone(),
 				description: self.description.clone(),
 				descriptors: self.descriptors.clone(),
+				offchain_status: self.offchain_status.clone(),
 			}
 		}
 	}
