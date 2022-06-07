@@ -13,7 +13,6 @@ use sp_runtime::{
 use lite_json::json::{JsonValue, NumberValue};
 use lite_json::parse_json;
 use lite_json::Serialize as jsonSerialize;
-
 use crate::types::*;
 
 impl<T: Config> Pallet<T> {
@@ -93,19 +92,26 @@ impl<T: Config> Pallet<T> {
         XpubStatus::Free
     }
 
-    pub fn gen_vaults_payload_by_bulk(pending_vaults : Vec<[u8;32]>) -> Vec<SingleVaultPayload>{
-        let mut generated_vaults = Vec::<SingleVaultPayload>::new();
+    pub fn gen_vaults_payload_by_bulk(pending_vaults : Vec<[u8;32]>) -> Vec<SingleVaultPayload >{
+        let mut generated_vaults = Vec::<SingleVaultPayload >::new();
         pending_vaults.iter().for_each(|vault_to_complete| {
             // Contact bdk services and get descriptors
-            let vault_result = Self::bdk_gen_vault(vault_to_complete.clone())
-                .map_err(|e| log::error!("Error while generating http vault:{:?}",e) ).unwrap();
-                //.expect("Error while generating the vault's output descriptors");
-            // Build offchain vaults struct and push it to a Vec
-            generated_vaults.push(SingleVaultPayload{
+            let vault_result = Self::bdk_gen_vault(vault_to_complete.clone());
+            let mut vault_payload = SingleVaultPayload{
                 vault_id: vault_to_complete.clone(),
-                output_descriptor: vault_result.0.clone(),
-                change_descriptor: vault_result.1.clone(),
-            });
+                output_descriptor: Vec::default(),
+                change_descriptor: Vec::default(),
+                status: OffchainStatus::Valid,
+            };
+            match vault_result{
+                Ok(descriptors) => {
+                    vault_payload.output_descriptor.clone_from(&descriptors.0);
+                    vault_payload.change_descriptor.clone_from(&descriptors.1);
+                },
+                Err(status) => {vault_payload.status.clone_from(&status)},
+            };     
+            // Build offchain vaults struct and push it to a Vec
+            generated_vaults.push(vault_payload);
         });
         generated_vaults
     }
@@ -122,28 +128,27 @@ impl<T: Config> Pallet<T> {
         generated_proposals
     }
 
-    pub fn bdk_gen_vault(vault_id: [u8; 32]) -> Result<(Vec<u8>, Vec<u8>), http::Error> {
+    pub fn bdk_gen_vault(vault_id: [u8; 32]) -> Result<(Vec<u8>, Vec<u8>), OffchainStatus > {
         // We will create a bunch of elements that we will put into a JSON Object.
-        let raw_json = Self::generate_vault_json_body(vault_id);
+        let raw_json = Self::generate_vault_json_body(vault_id)?;
         let request_body =
-        str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
-        log::warn!("Mi json: :{:?}", request_body.clone());
+        str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Vault json is not utf-8") )?;
 
         let url = [<BDKServicesURL<T>>::get().to_vec(), b"/gen_output_descriptor".encode()].concat();
         let response_body = Self::http_post(
-            str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
+            str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not utf-8") )?,
             request_body
         )?;
         // Create a str slice from the body.
         let body_str = str::from_utf8(&response_body).map_err(|_| {
             log::warn!("No UTF8 body");
-            http::Error::Unknown
+            Self::build_offchain_err(false, "No UTF8 body")
         })?;
 
-        Self::parse_vault_descriptors(body_str).ok_or(http::Error::Unknown)
+        Self::parse_vault_descriptors(body_str)
     }
 
-    fn http_post(url: &str, request_body: &str)->Result<Vec<u8>, http::Error>{
+    fn http_post(url: &str, request_body: &str)->Result<Vec<u8>, OffchainStatus >{
         let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));
 
         let request = http::Request::post(
@@ -157,24 +162,37 @@ impl<T: Config> Pallet<T> {
             .body([request_body.clone()].to_vec())
             .deadline(deadline)
             .send()
-            .map_err(|_| http::Error::IoError)?;
-            let response =
-            pending.try_wait(deadline).map_err(|_| http::Error::DeadlineReached)??;
+            .map_err(|_|
+                Self::build_offchain_err(true, "I/O error")
+            )?;
+        let response =
+            pending.try_wait(deadline).map_err(|_| Self::build_offchain_err(true, "Request to bdk timed out"))?.
+            map_err(|_|Self::build_offchain_err(false, "Unknown error on server's side"))?;
         // Let's check the status code before we proceed to reading the response.
-        if response.code != 200 {
-            log::warn!("Unexpected status code: {}", response.code);
-            return Err(http::Error::Unknown);
+        // if response.code != 200 {
+        //     log::warn!("Unexpected status code: {}", response.code);
+            
+        //     return Err(Self::build_offchain_err(recoverable, msj));
+        // }
+        match response.code{
+            200..=299 => return Ok(response.body().collect::<Vec<u8>>()),
+            400..=599 => {
+                let code_encoded = response.code.to_ne_bytes();
+                let code_str = str::from_utf8(&code_encoded).unwrap_or_default();
+                log::warn!("Codigo? {} vs {:?}",response.code,code_encoded);
+                //let form = [b"Error contacting bdk-services, error:"., code_str].join(" ");
+                return Err(Self::build_offchain_err(response.code>=500, code_str ))
+            },
+            _ =>return Err(Self::build_offchain_err(false, "Unknown error"))
         }
-
-        // Next we want to fully read the response body and collect it to a vector of bytes.
-        Ok(response.body().collect::<Vec<u8>>())
     }
 
-    fn generate_vault_json_body(vault_id: [u8; 32]) -> Vec<u8> {
+    fn generate_vault_json_body(vault_id: [u8; 32]) -> Result<Vec<u8>, OffchainStatus >{
         let mut body = Vec::new();
 
         //Get vault properties
-        let vault = <Vaults<T>>::get(&vault_id).expect("Vault not found with id");
+        let vault = <Vaults<T>>::get(&vault_id).ok_or(
+            Self::build_offchain_err(false,"Vault not found"))?;
         let threshold = NumberValue {
             integer: vault.threshold.clone().into(),
             fraction: 0,
@@ -191,44 +209,45 @@ impl<T: Config> Pallet<T> {
                 let xpub_field =
                     JsonValue::String(str::from_utf8(xpub).unwrap().chars().collect());
                 JsonValue::Object([("xpub".chars().collect(), xpub_field)].to_vec())
-                // JsonValue::String(  str::from_utf8(xpub).unwrap().chars().collect()  )
             })
             .collect();
         body.push(("cosigners".chars().collect::<Vec<char>>(), JsonValue::Array(mapped_xpubs)));
         let json_object = JsonValue::Object(body);
 
         // // Parse the JSON and print the resulting lite-json structure.
-        jsonSerialize::format(&json_object, 4)
+        Ok(jsonSerialize::format(&json_object, 4))
     }
 
     /// Parse the descriptors from the given JSON string using `lite-json`.
     ///
     /// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.
-    fn parse_vault_descriptors(body_str: &str) -> Option<(Vec<u8>, Vec<u8>)> {
+    fn parse_vault_descriptors(body_str: &str) -> Result<(Vec<u8>, Vec<u8>), OffchainStatus > {
         let val = parse_json(body_str);
-        match val.ok()? {
-            JsonValue::Object(obj) => {
+        match val.ok() {
+            Some(JsonValue::Object(obj) )=> {
                 let descriptor = Self::extract_json_str_by_name(obj.clone(), "descriptor")
-                    .expect("Descriptor str not found");
+                    .ok_or(Self::build_offchain_err(false,"Descriptor not found in bdk response"))?;
                 let change_descriptor =
                     Self::extract_json_str_by_name(obj.clone(), "change_descriptor")
-                        .expect("Change descriptor str not found");
-                Some((descriptor, change_descriptor))
+                        .ok_or(Self::build_offchain_err(false,"Change descriptor not found in bdk response"))?;
+                Ok((descriptor, change_descriptor))
             },
-            _ => return None,
+            _ => {
+                return Err(Self::build_offchain_err(false,"Error parsing response json"))
+            },
         }
     }
 
-    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<Vec<u8>, http::Error>{
+    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<Vec<u8>, OffchainStatus >{
 
         let raw_json = Self::gen_proposal_json_body(proposal_id);
         let request_body =
-            str::from_utf8(raw_json.as_slice()).expect("Error converting Json to string");
+            str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request body is not UTF-8") )?;
 
         let url = [<BDKServicesURL<T>>::get().to_vec(), b"/gen_psbt".encode()].concat();
 
         let response_body = Self::http_post(
-            str::from_utf8(url.as_slice()).expect("Error converting Json to string"),
+            str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not UTF-8") )?,
             request_body
         )?;
         // The psbt is not a json object, its a byte blob
@@ -303,11 +322,12 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_insert_descriptors(vault_id: [u8;32], descriptors: Descriptors<T::OutputDescriptorMaxLen>) -> DispatchResult {
+    pub fn do_insert_descriptors(vault_id: [u8;32], descriptors: Descriptors<T::OutputDescriptorMaxLen>, status: BDKStatus<T::VaultDescriptionMaxLen>) -> DispatchResult {
         <Vaults<T>>::try_mutate(vault_id, | v |{
             match v {
                 Some(vault) =>{
                     vault.descriptors.clone_from(&descriptors);
+                    vault.offchain_status.clone_from(&status);
                     Ok(())
                 },
                 None=> Err(Error::<T>::VaultNotFound),
@@ -357,7 +377,10 @@ impl<T: Config> Pallet<T> {
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
         <Vaults<T>>::iter()
             .filter_map(|(entry, vault)| {
-                if vault.descriptors.output_descriptor.is_empty() {
+                if vault.descriptors.output_descriptor.is_empty() && 
+                (vault.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) || 
+                 vault.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::RecoverableError(
+                    BoundedVec::<u8,T::VaultDescriptionMaxLen>::default() )) )  {
                     Some(entry)
                 } else {
                     None
@@ -388,6 +411,14 @@ impl<T: Config> Pallet<T> {
         members.sort();
         members.dedup();
         members
+    }
+    
+    fn build_offchain_err(recoverable: bool, msj: &str )-> OffchainStatus{
+        let bounded_msj = msj.encode();
+        match recoverable{
+            true => OffchainStatus::RecoverableError(bounded_msj),
+            false => OffchainStatus::IrrecoverableError(bounded_msj),
+        }
     }
 
     pub fn chars_to_bytes(v: Vec<char>) -> Vec<u8> {

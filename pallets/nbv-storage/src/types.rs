@@ -1,7 +1,7 @@
 //use super::*;
 use sp_core::crypto::KeyTypeId;
 use frame_support::pallet_prelude::*;
-use sp_runtime::{sp_std::vec::Vec};
+use sp_runtime::{sp_std::vec::Vec, traits::Bounded};
 use frame_system::offchain::{SigningTypes, SignedPayload};
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 /*--- Constants section ---*/
@@ -64,12 +64,13 @@ pub struct Descriptors<MaxLen: Get<u32>> {
 	
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
-pub struct VaultsPayload<Public> {
-	pub vaults_payload:Vec<SingleVaultPayload>,
+pub struct VaultsPayload<Public > {
+	pub vaults_payload:Vec<SingleVaultPayload >,
 	pub public: Public,
 }
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[scale_info(skip_type_params(MaxLen))]
 #[codec(mel_bound())]
 pub struct SingleVaultPayload{
 	// Not successful, macros/generics issue
@@ -77,9 +78,21 @@ pub struct SingleVaultPayload{
 	pub vault_id: [u8;32],
 	pub output_descriptor: Vec<u8>,
 	pub change_descriptor: Vec<u8>,
+	pub status: OffchainStatus
 }
 
-impl<S: SigningTypes> SignedPayload<S> for VaultsPayload<S::Public> {
+impl Clone for SingleVaultPayload{
+	fn clone(&self) -> Self {
+		Self { 
+			vault_id: self.vault_id.clone(), 
+			output_descriptor: self.output_descriptor.clone(), 
+			change_descriptor: self.change_descriptor.clone(), 
+			status: self.status.clone() 
+		}
+    }
+}
+ 
+impl<S: SigningTypes > SignedPayload<S> for VaultsPayload<S::Public> {
 	fn public(&self) -> S::Public {
 		self.public.clone()
 	}
@@ -126,28 +139,78 @@ pub enum ProposalStatus {
 	Broadcasted,
 }
 
-#[derive(Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+pub enum OffchainStatus{
+	Pending,
+	Valid,
+	RecoverableError(Vec<u8>),
+	IrrecoverableError(Vec<u8>),
+}
+
+
+//Default macro didnt work
+impl Default for OffchainStatus{
+	fn default() -> Self {
+		OffchainStatus::Pending
+	}
+}
+
+impl<MaxLen: Get<u32> > From<OffchainStatus> for BDKStatus<MaxLen>{
+    fn from( status: OffchainStatus) -> Self {
+        match status {
+			OffchainStatus::Pending => BDKStatus::Pending,
+			OffchainStatus::Valid => BDKStatus::Valid,
+			OffchainStatus::RecoverableError(msj) => BDKStatus::RecoverableError(
+				BoundedVec::<u8,MaxLen>::try_from(msj).unwrap_or_default()
+			),
+			OffchainStatus::IrrecoverableError(msj) => BDKStatus::IrrecoverableError(
+				BoundedVec::<u8, MaxLen>::try_from(msj).unwrap_or_default()
+			),
+		}
+    }
+}
+
+
+#[derive(Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxLen))]
 #[codec(mel_bound())]
-pub enum OffChainStatus<MaxLen: Get<u32> >{
+pub enum BDKStatus<MaxLen: Get<u32> >{
 	Pending,
 	Valid,
 	RecoverableError(BoundedVec<u8, MaxLen>),
 	IrrecoverableError(BoundedVec<u8, MaxLen>),
 }
-// Default macro didnt work
-impl<MaxLen: Get<u32> > Default for OffChainStatus<MaxLen>{
+impl<MaxLen: Get<u32> > Default for BDKStatus<MaxLen>{
 	fn default() -> Self {
-		OffChainStatus::Pending
+		BDKStatus::Pending
 	}
 }
 // Clone macro didnt work
-impl<MaxLen: Get<u32> >  Clone for OffChainStatus<MaxLen>{
+impl<MaxLen: Get<u32> >  Clone for BDKStatus<MaxLen>{
     fn clone(&self) -> Self {
         match self {
             Self::Pending => Self::Pending,
             Self::Valid => Self::Valid,
             Self::RecoverableError(arg0) => Self::RecoverableError(arg0.clone()),
             Self::IrrecoverableError(arg0) => Self::IrrecoverableError(arg0.clone()),
+        }
+    }
+}
+
+impl<MaxLen: Get<u32> >  PartialEq for BDKStatus<MaxLen> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::RecoverableError(_), Self::RecoverableError(_)) => true,
+            (Self::IrrecoverableError(l0), Self::IrrecoverableError(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::RecoverableError(l0), Self::RecoverableError(r0)) => l0 == r0,
+            (Self::IrrecoverableError(l0), Self::IrrecoverableError(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
 }

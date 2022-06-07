@@ -45,7 +45,7 @@ pub mod pallet {
 	/*--- Structs Section ---*/
 	// Struct for holding Vaults information.
 	#[derive(
-		Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
+		Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
 	)]
 	#[scale_info(skip_type_params(T))]
 	#[codec(mel_bound())]
@@ -55,7 +55,13 @@ pub mod pallet {
 		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
-		pub offchain_status: OffChainStatus<T::VaultDescriptionMaxLen>,
+		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
+	}
+
+	impl<T: Config> PartialEq for Vault<T>{
+		fn eq(&self, other: &Self) -> bool{
+			self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
+		}
 	}
 
 	impl<T: Config> Clone for Vault<T> {
@@ -503,6 +509,7 @@ pub mod pallet {
 					.expect("Error on encoding the descriptor to BoundedVec"),
 					change_descriptor: None,
 				},
+				offchain_status: BDKStatus::default(),
 			};
 
 			Self::do_insert_vault(vault)
@@ -632,16 +639,16 @@ pub mod pallet {
 						output_descriptor : output_descriptor,
 						change_descriptor : Some(change_descriptor),
 					};
+					let status: BDKStatus<T::VaultDescriptionMaxLen> = vault_payload.clone().status.into();
 					//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());
-					let tx_res = Self::do_insert_descriptors(vault_payload.vault_id,descriptors);
+					let tx_res = Self::do_insert_descriptors(vault_payload.vault_id,descriptors, status);
 					if tx_res.is_err(){
 						return Some(tx_res);
 					}
 					None
 
 				}
-			).unwrap_or(Ok(()))?;
-			Ok(())
+			).unwrap_or(Ok(()))
 		}
 
 		#[transactional]
