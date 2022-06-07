@@ -101,6 +101,7 @@ pub mod pallet {
 		pub proposer: T::AccountId,
 		pub vault_id: [u8; 32],
 		pub status: ProposalStatus,
+		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
 		pub to_address: BoundedVec<u8, T::XPubLen>,
 		pub amount: u64,
 		pub fee_sat_per_vb: u32,
@@ -115,6 +116,7 @@ pub mod pallet {
 				proposer: self.proposer.clone(),
 				vault_id: self.vault_id.clone(),
 				status: self.status.clone(),
+				offchain_status: self.offchain_status.clone(),
 				to_address: self.to_address.clone(),
 				amount: self.amount.clone(),
 				fee_sat_per_vb: self.fee_sat_per_vb.clone(),
@@ -583,6 +585,7 @@ pub mod pallet {
 				proposer: who.clone(),
 				vault_id,
 				status: ProposalStatus::Pending,
+				offchain_status: BDKStatus::default(),
 				to_address: recipient_address,
 				amount: amount_in_sats,
 				fee_sat_per_vb: 1,
@@ -663,7 +666,8 @@ pub mod pallet {
 				|proposal_psbt|{
 					let bounded_psbt = BoundedVec::<u8, T::PSBTMaxLen>::try_from(proposal_psbt.psbt.clone())
 						.expect("Error trying to bound the psbt");
-					let tx_res = Self::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt);
+					let status: BDKStatus<T::VaultDescriptionMaxLen> = proposal_psbt.status.clone().into();
+					let tx_res = Self::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt, status);
 					if tx_res.is_err(){
 						return Some(tx_res);
 					}

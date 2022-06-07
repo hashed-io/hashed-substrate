@@ -1,7 +1,7 @@
 //use super::*;
 use sp_core::crypto::KeyTypeId;
 use frame_support::pallet_prelude::*;
-use sp_runtime::{sp_std::vec::Vec, traits::Bounded};
+use sp_runtime::{sp_std::vec::Vec};
 use frame_system::offchain::{SigningTypes, SignedPayload};
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 /*--- Constants section ---*/
@@ -119,6 +119,7 @@ pub struct ProposalsPayload<Public> {
 pub struct SingleProposalPayload{
 	pub proposal_id: [u8;32],
 	pub psbt: Vec<u8>,
+	pub status: OffchainStatus,
 }
 
 impl<S: SigningTypes > SignedPayload<S> for ProposalsPayload<S::Public> {

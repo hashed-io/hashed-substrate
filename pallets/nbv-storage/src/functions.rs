@@ -119,11 +119,17 @@ impl<T: Config> Pallet<T> {
     pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>) ->  Vec<SingleProposalPayload>{
         let mut generated_proposals = Vec::<SingleProposalPayload>::new();
         pending_proposals.iter().for_each(|proposal_to_complete|{
-            let psbt = Self::bdk_gen_proposal(proposal_to_complete.clone()).expect("Error while generating proposal");
-            generated_proposals.push(SingleProposalPayload{
+            let mut proposal_payload = SingleProposalPayload{
                 proposal_id:proposal_to_complete.clone(),
-                psbt,
-            })
+                psbt : Vec::default(),
+                status: OffchainStatus::Valid,
+            };
+            let psbt_result = Self::bdk_gen_proposal(proposal_to_complete.clone());
+            match psbt_result{
+                Ok(psbt) => {proposal_payload.psbt.clone_from(&psbt)},
+                Err(status) => {proposal_payload.status.clone_from(&status)},
+            };
+            generated_proposals.push(proposal_payload);
         });
         generated_proposals
     }
@@ -168,19 +174,12 @@ impl<T: Config> Pallet<T> {
         let response =
             pending.try_wait(deadline).map_err(|_| Self::build_offchain_err(true, "Request to bdk timed out"))?.
             map_err(|_|Self::build_offchain_err(false, "Unknown error on server's side"))?;
-        // Let's check the status code before we proceed to reading the response.
-        // if response.code != 200 {
-        //     log::warn!("Unexpected status code: {}", response.code);
-            
-        //     return Err(Self::build_offchain_err(recoverable, msj));
-        // }
         match response.code{
             200..=299 => return Ok(response.body().collect::<Vec<u8>>()),
             400..=599 => {
                 let code_encoded = response.code.to_ne_bytes();
                 let code_str = str::from_utf8(&code_encoded).unwrap_or_default();
                 log::warn!("Codigo? {} vs {:?}",response.code,code_encoded);
-                //let form = [b"Error contacting bdk-services, error:"., code_str].join(" ");
                 return Err(Self::build_offchain_err(response.code>=500, code_str ))
             },
             _ =>return Err(Self::build_offchain_err(false, "Unknown error"))
@@ -240,7 +239,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<Vec<u8>, OffchainStatus >{
 
-        let raw_json = Self::gen_proposal_json_body(proposal_id);
+        let raw_json = Self::gen_proposal_json_body(proposal_id)?;
         let request_body =
             str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request body is not UTF-8") )?;
 
@@ -254,10 +253,12 @@ impl<T: Config> Pallet<T> {
         Ok(response_body)
     }
 
-    pub fn gen_proposal_json_body(proposal_id: [u8;32])-> Vec<u8>{
+    pub fn gen_proposal_json_body(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus>{
         let mut body = Vec::new();
-        let proposal = <Proposals<T>>::get(proposal_id).expect("Proposal not found");
-        let vault = <Vaults<T>>::get(proposal.vault_id.clone()).expect("Vault not found with id");
+        let proposal = <Proposals<T>>::get(proposal_id).ok_or(
+            Self::build_offchain_err(false,"Proposal not found"))?;
+        let vault = <Vaults<T>>::get(proposal.vault_id.clone()).ok_or(
+            Self::build_offchain_err(false,"Vault not found"))?;
         let amount = NumberValue {
             integer: proposal.amount.clone() as i64,
             fraction: 0,
@@ -273,10 +274,10 @@ impl<T: Config> Pallet<T> {
         let to_address = str::from_utf8(proposal.to_address.as_slice()).expect("Error converting recipient address").chars().collect();
         let output_descriptor: Vec<char> = str::from_utf8(
             vault.descriptors.output_descriptor.as_slice())
-            .expect("Error converting descriptor").chars().collect();
+            .map_err(|_| Self::build_offchain_err(false,"Output descriptor is not utf-8"))?.chars().collect();
         let change_descriptor: Vec<char> = str::from_utf8(
-            vault.descriptors.change_descriptor.expect("Change descriptor not found").as_slice())
-            .expect("Error converting descriptor").chars().collect();
+            vault.descriptors.change_descriptor.unwrap_or_default().as_slice() )
+            .map_err(|_| Self::build_offchain_err(false,"Change descriptor is not utf-8"))?.chars().collect();
         let descriptors_body = [
             ("descriptor".chars().collect::<Vec<char>>(), JsonValue::String(output_descriptor)),
             ("change_descriptor".chars().collect::<Vec<char>>(), JsonValue::String(change_descriptor)),
@@ -288,7 +289,7 @@ impl<T: Config> Pallet<T> {
         let json_object = JsonValue::Object(body);
 
         // // Parse the JSON and print the resulting lite-json structure.
-        jsonSerialize::format(&json_object, 4)
+        Ok(jsonSerialize::format(&json_object, 4) )
     }
 
     pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
@@ -348,11 +349,12 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_insert_psbt(proposal_id: [u8;32], psbt: BoundedVec<u8, T::PSBTMaxLen>) ->DispatchResult{
+    pub fn do_insert_psbt(proposal_id: [u8;32], psbt: BoundedVec<u8, T::PSBTMaxLen>, status: BDKStatus<T::VaultDescriptionMaxLen>) ->DispatchResult{
         <Proposals<T>>::try_mutate(proposal_id,|p|{
             match p {
                 Some(proposal) =>{
                     proposal.psbt.clone_from(&psbt);
+                    proposal.offchain_status.clone_from(&status);
                     Ok(())
                 },
                 None=> Err(Error::<T>::ProposalNotFound),
@@ -365,7 +367,10 @@ impl<T: Config> Pallet<T> {
     pub fn get_pending_proposals() -> Vec<[u8; 32]>{
         <Proposals<T>>::iter()
             .filter_map(|(id, proposal)|{
-                if proposal.psbt.is_empty() {
+                if proposal.psbt.is_empty() && 
+                (proposal.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) || 
+                proposal.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::RecoverableError(
+                    BoundedVec::<u8,T::VaultDescriptionMaxLen>::default() )) ){
                     Some(id)
                 } else {
                     None
