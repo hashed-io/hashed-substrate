@@ -2138,6 +2138,7 @@ dependencies = [
  "pallet-bounties",
  "pallet-collective",
  "pallet-fruniques",
+ "pallet-gated-marketplace",
  "pallet-grandpa",
  "pallet-identity",
  "pallet-indices",
@@ -4016,6 +4017,22 @@ dependencies = [
  "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
+name = "pallet-gated-marketplace"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",

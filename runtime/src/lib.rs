@@ -543,6 +543,14 @@ impl pallet_fruniques::Config for Runtime {
 }
 
 parameter_types! {
+	pub const LabelMaxLen:u32 = 32;
+}
+impl pallet_gated_marketplace::Config for Runtime {
+	type Event = Event;
+	type LabelMaxLen= LabelMaxLen;
+}
+
+parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
 	pub const MaxVaultsPerUser: u32 = 10;
@@ -657,6 +665,7 @@ construct_runtime!(
 		Bounties: pallet_bounties,
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
+		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
 	}
