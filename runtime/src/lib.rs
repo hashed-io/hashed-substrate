@@ -544,10 +544,20 @@ impl pallet_fruniques::Config for Runtime {
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
+	pub const MaxMarketsPerAuth:u32 = 5;
+	pub const MaxApplicants: u32 = 10;
+	pub const NotesMaxLen: u32 = 256;
+	pub const NameMaxLen: u32 = 100;
+	pub const MaxFiles: u32 = 10;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type LabelMaxLen= LabelMaxLen;
+	type MaxMarketsPerAuth = MaxMarketsPerAuth;
+	type MaxApplicants = MaxApplicants;
+	type LabelMaxLen = LabelMaxLen;
+	type NotesMaxLen = NotesMaxLen;
+	type NameMaxLen= NameMaxLen;
+	type MaxFiles= MaxFiles;
 }
 
 parameter_types! {
