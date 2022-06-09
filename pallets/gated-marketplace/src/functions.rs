@@ -3,23 +3,24 @@ use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use crate::types::*;
+
 impl<T: Config> Pallet<T> {
 
-    pub fn do_create_marketplace(marketplace: Marketplace<T>)->DispatchResult{
+    pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace<T>)->DispatchResult{
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
         //Insert on marketplaces and marketplaces by auth
         <Marketplaces<T>>::insert(marketplace_id.clone(), marketplace.clone() );
-        Self::insert_in_auth_market_lists(marketplace.owner, MarketplaceAuthority::Owner, marketplace_id.clone())?;
-        Self::insert_in_auth_market_lists(marketplace.admin, MarketplaceAuthority::Admin, marketplace_id.clone())?;
+        Self::insert_in_auth_market_lists(owner, MarketplaceAuthority::Owner, marketplace_id.clone())?;
+        Self::insert_in_auth_market_lists(admin, MarketplaceAuthority::Admin, marketplace_id.clone())?;
         Ok(())
     }
 
-    pub fn do_apply(application : Application<T>)->DispatchResult{
+    pub fn do_apply(applicant: T::AccountId, marketplace_id: [u8;32], application : Application<T>)->DispatchResult{
         let app_id = application.using_encoded(blake2_256);
         <Applications<T>>::insert(app_id.clone(), application.clone());
-        <ApplicationsByAccount<T>>::insert(application.applicant.clone(), application.marketplace_id.clone(), app_id);
-        Self::insert_in_applicants_lists(application.applicant,ApplicationStatus::default(), application.marketplace_id)?;
+        <ApplicationsByAccount<T>>::insert(applicant.clone(), marketplace_id.clone(), app_id);
+        Self::insert_in_applicants_lists(applicant,ApplicationStatus::default(), marketplace_id)?;
         Ok(())
     }
 
@@ -31,7 +32,14 @@ impl<T: Config> Pallet<T> {
         let applicant = match account_or_application{
             AccountOrApplication::Account(acc)=> acc,
             AccountOrApplication::Application(application_id) => {
-                <Applications<T>>::get(application_id).ok_or(Error::<T>::ApplicationNotFound)?.applicant
+                <ApplicationsByAccount<T>>::iter().find_map(|(acc,m_id,app_id)|{
+                    if  m_id == marketplace_id && app_id == application_id{
+                        return Some(acc)
+                    }
+                    None
+                }).ok_or(Error::<T>::ApplicationNotFound)?
+
+                //<Applications<T>>::get(application_id).ok_or(Error::<T>::ApplicationNotFound)?.applicant
             },
         };
         
@@ -42,8 +50,8 @@ impl<T: Config> Pallet<T> {
     /*---- Helper functions ----*/
 
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceAuthority, marketplace_id: [u8;32])->DispatchResult{
-        <MarketplacesByAuthority<T>>::try_mutate(authority.clone(), role.clone(), |auth_markets|{
-            auth_markets.try_push(marketplace_id.clone())
+        <MarketplacesByAuthority<T>>::try_mutate(authority.clone(), marketplace_id.clone(), |account_auths|{
+            account_auths.try_push(role.clone())
         }).map_err(|_| Error::<T>::ExceedMaxMarketsPerAuth)?;
 
         <AuthoritiesByMarketplace<T>>::try_mutate(marketplace_id, role, | accounts|{

@@ -104,7 +104,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 108,
+	spec_version: 109,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -552,6 +552,10 @@ parameter_types! {
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
+	type RemoveOrigin = EnsureOneOf<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	type MaxMarketsPerAuth = MaxMarketsPerAuth;
 	type MaxApplicants = MaxApplicants;
 	type LabelMaxLen = LabelMaxLen;

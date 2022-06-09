@@ -7,9 +7,6 @@ use frame_system::pallet_prelude::*;
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Marketplace<T: Config>{
-    pub owner: T::AccountId,
-    pub admin: T::AccountId,
-    pub appraiser: Option<T::AccountId>,
     pub label: BoundedVec<u8,T::LabelMaxLen>,
 }
 
@@ -38,8 +35,6 @@ impl Default for MarketplaceAuthority{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct  Application< T: Config >{
-    pub applicant : T::AccountId,
-    pub marketplace_id: [u8;32],
     pub status : ApplicationStatus,
     pub notes : BoundedVec<u8, T::NotesMaxLen>,
     pub files: BoundedVec<ApplicationFile<T::NameMaxLen>, T::MaxFiles>

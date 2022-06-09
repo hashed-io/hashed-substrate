@@ -16,13 +16,16 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::{*, OptionQuery}};
+	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
 	use crate::types::*;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;
+		
 		#[pallet::constant]
 		type MaxMarketsPerAuth: Get<u32>;
 		#[pallet::constant]
@@ -60,8 +63,8 @@ pub mod pallet {
 		Blake2_128Concat, 
 		T::AccountId, 
 		Blake2_128Concat, 
-		MarketplaceAuthority, 
-		BoundedVec<[u8;32],T::MaxMarketsPerAuth>, 
+		[u8;32], //marketplace_id 
+		BoundedVec<MarketplaceAuthority, T::MaxMarketsPerAuth>, 
 		ValueQuery
 	>;
 
@@ -70,7 +73,7 @@ pub mod pallet {
 	pub(super) type AuthoritiesByMarketplace<T: Config> = StorageDoubleMap<
 		_, 
 		Identity, 
-		[u8;32], 
+		[u8;32], // marketplace_id 
 		Blake2_128Concat, 
 		MarketplaceAuthority, 
 		BoundedVec<T::AccountId,T::MaxMarketsPerAuth>, 
@@ -142,14 +145,11 @@ pub mod pallet {
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
-			let who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?; // origin will be market owner
 			let m = Marketplace{
-				owner: who,
-				admin,
 				label,
-				appraiser: None,
 			};
-			Self::do_create_marketplace(m)
+			Self::do_create_marketplace(who, admin, m)
 		}
 		
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -161,13 +161,11 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			let application = Application::<T>{
-				applicant: who,
-				marketplace_id, 
 				status: ApplicationStatus::default(),
 				notes,
 				files,
 			};
-			Self::do_apply(application)
+			Self::do_apply(who, marketplace_id, application)
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -177,6 +175,22 @@ pub mod pallet {
 			// ensure that the market exists
 			Self::do_enroll(marketplace_id, account_or_application, approved)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			<Marketplaces<T>>::remove_all(None);
+			<MarketplacesByAuthority<T>>::remove_all(None);
+			<AuthoritiesByMarketplace<T>>::remove_all(None);
+			<Applications<T>>::remove_all(None);
+			<ApplicationsByAccount<T>>::remove_all(None);
+			<ApplicantsByMarketplace<T>>::remove_all(None);
+			Ok(())
+		}
+
 
 	}
 }
