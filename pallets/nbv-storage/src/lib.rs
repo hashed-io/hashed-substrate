@@ -621,7 +621,18 @@ pub mod pallet {
 			Ok(())
 		}
 
-
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
+			<Vaults<T>>::remove_all(None);
+			<VaultsBySigner<T>>::remove_all(None);
+			<Proposals<T>>::remove_all(None);
+			<ProposalsByVault<T>>::remove_all(None);
+			Ok(())
+		}
 
 		#[transactional]
 		#[pallet::weight(0)]
