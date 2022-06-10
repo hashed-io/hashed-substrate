@@ -120,9 +120,13 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, T::AccountId),
+		/// Marketplaces stored. [owner, admin, market_id]
+		MarketplaceStored(T::AccountId, T::AccountId, [u8;32]),
+		/// Application stored on the specified marketplace. [application_id, market_id]
+		ApplicationStored([u8;32], [u8;32]),
+		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
+		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
+		
 	}
 
 	// Errors inform users that something went wrong.
@@ -136,8 +140,18 @@ pub mod pallet {
 		ExceedMaxMarketsPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
+		/// Applicaion doesnt exist
 		ApplicationNotFound,
+		/// The user has not applicated to that market before
 		ApplicantNotFound,
+		/// A marketplace with the same data exists already
+		MarketplaceAlreadyExists,
+		/// The user has already applied to the marketplace
+		AlreadyApplied,
+		/// The specified marketplace does not exist
+		MarketplaceNotFound,
+		/// You need to be an owner or an admin of the marketplace
+		CannotEnroll,
 
 	}
 	#[pallet::call]
@@ -170,10 +184,9 @@ pub mod pallet {
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-			//TODO: ensure the enroller is owner or admin
-			// ensure that the market exists
-			Self::do_enroll(marketplace_id, account_or_application, approved)
+			let who = ensure_signed(origin)?;
+
+			Self::do_enroll(who, marketplace_id, account_or_application, approved)
 		}
 
 		#[transactional]
