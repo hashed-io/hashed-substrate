@@ -1,6 +1,6 @@
 use crate::{mock::*, Error, types::*};
 use codec::Encode;
-use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32}, assert_noop, assert_err};
+use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32}, assert_noop};
 use sp_io::hashing::blake2_256;
 
 fn create_label( label : &str ) -> BoundedVec<u8, LabelMaxLen> {
