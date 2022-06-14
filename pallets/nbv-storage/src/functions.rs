@@ -26,26 +26,16 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
         // This removes the vault while retrieving its values
-        let vault_members = Self::get_vault_members(vault_id);
+        let vault_members = Self::get_vault_members(vault_id)?;
         let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
         // Removes the vault from user->vault vector
-        vault_members.iter().for_each(|signer|{
-            <VaultsBySigner<T>>::mutate_exists(signer, | vault_list |{
-                match vault_list{
-                    Some(list) => {
-                        let vault_index = list.iter().position(|v| *v==vault_id);
-                        match vault_index{
-                            Some(index) => {
-                                list.remove(index);
-                                if list.len()<1 { *vault_list = None;}
-                            },
-                            _ => log::warn!("Vault not found in members"),
-                        }
-                    },
-                    _ =>log::warn!("Vault list not found for the user"),
-                }
-            });
-        });
+        vault_members.iter().try_for_each(|signer|{
+            <VaultsBySigner<T>>::try_mutate::<_,(),DispatchError,_>(signer, |vault_list|{
+                let vault_index = vault_list.iter().position(|v| *v==vault_id).ok_or(Error::<T>::VaultNotFound)?;
+                vault_list.remove(vault_index);
+                Ok(())
+            })
+        })?;
         // Removes all vault proposals
         let vault_proposals = <ProposalsByVault<T>>::get(vault_id);
         vault_proposals.iter().try_for_each(|proposal_id|{
@@ -63,6 +53,26 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
         Self::deposit_event(Event::ProposalRemoved(proposal_id, proposal.proposer));
+        Ok(())
+    }
+
+    pub fn do_save_psbt(signer: T::AccountId, proposal_id: [u8;32], signature_payload: BoundedVec<u8, T::PSBTMaxLen>) -> DispatchResult{
+        // validations: proposal exists, signer is member of vault, proposal is pending, 
+        let vault_id = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?.vault_id;
+        ensure!(Self::is_vault_member(&signer, vault_id)?, Error::<T>::SignerPermissionsNeeded);
+        let signature = ProposalSignatures{
+            signer: signer.clone(),
+            signature: signature_payload,
+        };
+        <Proposals<T>>::try_mutate::<_,(),DispatchError,_>(proposal_id, |proposal| {
+            proposal.as_ref().ok_or(Error::<T>::ProposalNotFound)?;
+            if let Some(p) = proposal {
+                let signed_already = p.signed_psbts.iter().find(|&signature|{ signature.signer ==signer }).is_some();
+                ensure!(!signed_already, Error::<T>::AlreadySigned);
+                p.signed_psbts.try_push(signature).map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
+            }
+            Ok(())
+        })?;
         Ok(())
     }
     // Check for xpubs duplicates (requires owner to be on the vault_signers Vec)
@@ -379,6 +389,10 @@ impl<T: Config> Pallet<T> {
         .collect()
     }
 
+    pub fn is_vault_member(account: &T::AccountId, vault_id : [u8;32]) -> Result<bool, DispatchError>{
+       Ok(Self::get_vault_members(vault_id)?.contains(account))
+    }
+
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
         <Vaults<T>>::iter()
             .filter_map(|(entry, vault)| {
@@ -410,12 +424,12 @@ impl<T: Config> Pallet<T> {
         xpub_vec
     }
 
-    pub fn get_vault_members(vault_id : [u8;32])-> Vec<T::AccountId> {
-        let vault =  <Vaults<T>>::get(vault_id).expect("Vault not found");
+    pub fn get_vault_members(vault_id : [u8;32])-> Result<Vec<T::AccountId>, DispatchError> {
+        let vault =  <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
         let mut members = [vault.cosigners.as_slice(),&[vault.owner.clone()],].concat();
         members.sort();
         members.dedup();
-        members
+        Ok(members)
     }
     
     fn build_offchain_err(recoverable: bool, msj: &str )-> OffchainStatus{

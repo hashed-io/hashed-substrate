@@ -24,7 +24,6 @@ pub mod pallet {
 		pallet_prelude::{BoundedVec},
 		traits::Get,
 	};
-	use frame_support::pallet_prelude::MaxEncodedLen;
 	use frame_support::{sp_io::hashing::blake2_256, transactional};
 	use frame_system::{
 		offchain::{
@@ -38,94 +37,10 @@ pub mod pallet {
 	use sp_runtime::{
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
-		RuntimeDebug,
 	};
-	use scale_info::TypeInfo;
 
-	/*--- Structs Section ---*/
-	// Struct for holding Vaults information.
-	#[derive(
-		Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
-	)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct Vault<T : Config> {
-		pub owner: T::AccountId,
-		pub threshold: u32,
-		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
-		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
-		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
-	}
+	/*--- Genesis Structs Section ---*/
 
-	impl<T: Config> PartialEq for Vault<T>{
-		fn eq(&self, other: &Self) -> bool{
-			self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
-		}
-	}
-
-	impl<T: Config> Clone for Vault<T> {
-		fn clone(&self) -> Self {
-			Vault {
-				owner: self.owner.clone(),
-				threshold: self.threshold.clone(),
-				cosigners: self.cosigners.clone(),
-				description: self.description.clone(),
-				descriptors: self.descriptors.clone(),
-				offchain_status: self.offchain_status.clone(),
-			}
-		}
-	}
-
-	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct ProposalSignatures<T: Config> {
-		pub signer: T::AccountId,
-		pub signature: BoundedVec<u8, T::PSBTMaxLen>,
-	}
-
-	impl<T: Config> Clone for ProposalSignatures<T>{
-		fn clone(&self) -> Self {
-			Self{
-				signer: self.signer.clone(),
-				signature: self.signature.clone(),
-			}
-		}
-	}
-	// Struct for holding Proposal information.
-	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct Proposal<T: Config> {
-		pub proposer: T::AccountId,
-		pub vault_id: [u8; 32],
-		pub status: ProposalStatus,
-		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
-		pub to_address: BoundedVec<u8, T::XPubLen>,
-		pub amount: u64,
-		pub fee_sat_per_vb: u32,
-		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-		pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
-		pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
-	}
-
-	impl<T: Config> Clone for Proposal<T>{
-		fn clone(&self) -> Self {
-			Self{
-				proposer: self.proposer.clone(),
-				vault_id: self.vault_id.clone(),
-				status: self.status.clone(),
-				offchain_status: self.offchain_status.clone(),
-				to_address: self.to_address.clone(),
-				amount: self.amount.clone(),
-				fee_sat_per_vb: self.fee_sat_per_vb.clone(),
-				description: self.description.clone(),
-				psbt: self.psbt.clone(),
-				signed_psbts: self.signed_psbts.clone(),
-			}
-		}
-	}
 	#[pallet::genesis_config]
 	pub struct GenesisConfig{
 		pub bdk_services_url: Vec<u8>,
@@ -234,7 +149,7 @@ pub mod pallet {
 		VaultOwnerPermissionsNeeded,
 		/// Vault members cannot be duplicate
 		DuplicateVaultMembers,
-		/// The account must participate in the vault to make a proposal
+		/// The account must participate in the vault to make a proposal or sign
 		SignerPermissionsNeeded,
 		/// The vault has too many proposals 
 		ExceedMaxProposalsPerVault,
@@ -242,6 +157,8 @@ pub mod pallet {
 		ProposalNotFound,
 		/// The account must be the proposer to remove it
 		ProposerPermissionsNeeded,
+		/// The proposal was already signed by the user
+		AlreadySigned,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -579,7 +496,7 @@ pub mod pallet {
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
+			ensure!(Self::is_vault_member(&who, vault_id.clone())?,Error::<T>::SignerPermissionsNeeded);
 			// ensure user is in the vault
 			let proposal = Proposal::<T>{
 				proposer: who.clone(),
@@ -590,6 +507,7 @@ pub mod pallet {
 				amount: amount_in_sats,
 				fee_sat_per_vb: 1,
 				description,
+				tx_id: None,
 				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
 					b"".encode()
 				).expect("Error on encoding the descriptor to BoundedVec"),
@@ -606,6 +524,7 @@ pub mod pallet {
 		) -> DispatchResult{
 			let who = ensure_signed(origin.clone())?;
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+			// TODO: only vault owner can remove?
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
@@ -618,6 +537,38 @@ pub mod pallet {
 		) -> DispatchResult{
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
 			<BDKServicesURL<T>>::put(new_url);
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn save_psbt(
+			origin: OriginFor<T>,
+			proposal_id: [u8; 32],
+			signature_payload: BoundedVec<u8, T::PSBTMaxLen>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_save_psbt(who, proposal_id, signature_payload)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn finalize_psbt(
+			origin: OriginFor<T>,
+			_proposal_id: [u8; 32],
+			_broadcast: bool,
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn broadcast_psbt(
+			origin: OriginFor<T>,
+			_proposal_id: [u8; 32],
+		) -> DispatchResult {
+			let _who = ensure_signed(origin.clone())?;
 			Ok(())
 		}
 
