@@ -56,9 +56,10 @@ impl system::Config for Test {
 
 
 parameter_types! {
-	pub const LabelMaxLen:u32 = 32;
-	pub const MaxMarketsPerAuth:u32 = 5;
-	pub const MaxApplicants: u32 = 10;
+	pub const LabelMaxLen: u32 = 32;
+	pub const MaxAuthsPerMarket: u32 = 1;
+	pub const MaxRolesPerAuth : u32 = 1;
+	pub const MaxApplicants: u32 = 2;
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
@@ -67,7 +68,8 @@ parameter_types! {
 impl pallet_gated_marketplace::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
-	type MaxMarketsPerAuth = MaxMarketsPerAuth;
+	type MaxAuthsPerMarket = MaxAuthsPerMarket;
+	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;

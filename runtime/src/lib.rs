@@ -544,7 +544,8 @@ impl pallet_fruniques::Config for Runtime {
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
-	pub const MaxMarketsPerAuth:u32 = 5;
+	pub const MaxAuthsPerMarket:u32 = 1; // 1 of each role (1 owner, 1 admin, etc.)
+	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
@@ -556,7 +557,8 @@ impl pallet_gated_marketplace::Config for Runtime {
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
-	type MaxMarketsPerAuth = MaxMarketsPerAuth;
+	type MaxAuthsPerMarket = MaxAuthsPerMarket;
+	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;

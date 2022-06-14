@@ -12,9 +12,9 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists );
         //Insert on marketplaces and marketplaces by auth
-        <Marketplaces<T>>::insert(marketplace_id.clone(), marketplace.clone() );
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id.clone())?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id.clone())?;
+        <Marketplaces<T>>::insert(marketplace_id.clone(), marketplace.clone() );
 
         Self::deposit_event(Event::MarketplaceStored(owner, admin, marketplace_id));
         Ok(())
@@ -27,9 +27,9 @@ impl<T: Config> Pallet<T> {
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id.clone() ), Error::<T>::AlreadyApplied);
 
         let app_id = application.using_encoded(blake2_256);
-        <Applications<T>>::insert(app_id.clone(), application.clone());
-        <ApplicationsByAccount<T>>::insert(applicant.clone(), marketplace_id.clone(), app_id);
         Self::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)?;
+        <ApplicationsByAccount<T>>::insert(applicant.clone(), marketplace_id.clone(), app_id);
+        <Applications<T>>::insert(app_id.clone(), application.clone());
 
         Self::deposit_event(Event::ApplicationStored(app_id, marketplace_id));
         Ok(())
@@ -64,7 +64,7 @@ impl<T: Config> Pallet<T> {
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceAuthority, marketplace_id: [u8;32])->DispatchResult{
         <MarketplacesByAuthority<T>>::try_mutate(authority.clone(), marketplace_id.clone(), |account_auths|{
             account_auths.try_push(role.clone())
-        }).map_err(|_| Error::<T>::ExceedMaxMarketsPerAuth)?;
+        }).map_err(|_| Error::<T>::ExceedMaxRolesPerAuth)?;
 
         <AuthoritiesByMarketplace<T>>::try_mutate(marketplace_id, role, | accounts|{
             accounts.try_push(authority)

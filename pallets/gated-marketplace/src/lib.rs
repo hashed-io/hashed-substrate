@@ -27,7 +27,9 @@ pub mod pallet {
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 		
 		#[pallet::constant]
-		type MaxMarketsPerAuth: Get<u32>;
+		type MaxAuthsPerMarket: Get<u32>;
+		#[pallet::constant]
+		type MaxRolesPerAuth: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicants: Get<u32>;
 		#[pallet::constant]
@@ -64,7 +66,7 @@ pub mod pallet {
 		T::AccountId, 
 		Blake2_128Concat, 
 		[u8;32], //marketplace_id 
-		BoundedVec<MarketplaceAuthority, T::MaxMarketsPerAuth>, 
+		BoundedVec<MarketplaceAuthority, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
 		ValueQuery
 	>;
 
@@ -76,7 +78,7 @@ pub mod pallet {
 		[u8;32], // marketplace_id 
 		Blake2_128Concat, 
 		MarketplaceAuthority, 
-		BoundedVec<T::AccountId,T::MaxMarketsPerAuth>, 
+		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
 		ValueQuery
 	>;
 
@@ -138,6 +140,8 @@ pub mod pallet {
 		NoneValue,
 		/// The account supervises too many marketplaces
 		ExceedMaxMarketsPerAuth,
+		/// The account has too many roles in that marketplace 
+		ExceedMaxRolesPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
 		/// Applicaion doesnt exist
@@ -146,7 +150,7 @@ pub mod pallet {
 		ApplicantNotFound,
 		/// A marketplace with the same data exists already
 		MarketplaceAlreadyExists,
-		/// The user has already applied to the marketplace
+		/// The user has already applied to the marketplace (or an identical application exist)
 		AlreadyApplied,
 		/// The specified marketplace does not exist
 		MarketplaceNotFound,
@@ -154,9 +158,11 @@ pub mod pallet {
 		CannotEnroll,
 
 	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
@@ -166,6 +172,7 @@ pub mod pallet {
 			Self::do_create_marketplace(who, admin, m)
 		}
 		
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>, 
@@ -182,6 +189,7 @@ pub mod pallet {
 			Self::do_apply(who, marketplace_id, application)
 		}
 
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
 			let who = ensure_signed(origin)?;
