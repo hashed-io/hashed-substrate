@@ -1,4 +1,4 @@
-use crate as pallet_template;
+use crate as pallet_gated_marketplace;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -9,7 +9,7 @@ use sp_runtime::{
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
-
+use frame_system::EnsureRoot;
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -18,7 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -54,11 +54,30 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_template::Config for Test {
+
+parameter_types! {
+	pub const LabelMaxLen: u32 = 32;
+	pub const MaxAuthsPerMarket: u32 = 1;
+	pub const MaxRolesPerAuth : u32 = 1;
+	pub const MaxApplicants: u32 = 2;
+	pub const NotesMaxLen: u32 = 256;
+	pub const NameMaxLen: u32 = 100;
+	pub const MaxFiles: u32 = 10;
+}
+
+impl pallet_gated_marketplace::Config for Test {
 	type Event = Event;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
+	type MaxAuthsPerMarket = MaxAuthsPerMarket;
+	type MaxRolesPerAuth = MaxRolesPerAuth;
+	type MaxApplicants = MaxApplicants;
+	type LabelMaxLen = LabelMaxLen;
+	type NotesMaxLen = NotesMaxLen;
+	type NameMaxLen= NameMaxLen;
+	type MaxFiles= MaxFiles;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }

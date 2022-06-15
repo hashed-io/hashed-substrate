@@ -1,6 +1,7 @@
-//use super::*;
+use super::*;
 use sp_core::crypto::KeyTypeId;
 use frame_support::pallet_prelude::*;
+use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::{sp_std::vec::Vec};
 use frame_system::offchain::{SigningTypes, SignedPayload};
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
@@ -39,6 +40,93 @@ pub mod crypto {
 		type RuntimeAppPublic = Public;
 		type GenericSignature = sp_core::sr25519::Signature;
 		type GenericPublic = sp_core::sr25519::Public;
+	}
+}
+
+
+// Struct for holding Vaults information.
+#[derive(
+	Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct Vault<T : Config> {
+	pub owner: T::AccountId,
+	pub threshold: u32,
+	pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
+	pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
+	pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
+	pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
+}
+
+impl<T: Config> PartialEq for Vault<T>{
+	fn eq(&self, other: &Self) -> bool{
+		self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
+	}
+}
+
+impl<T: Config> Clone for Vault<T> {
+	fn clone(&self) -> Self {
+		Vault {
+			owner: self.owner.clone(),
+			threshold: self.threshold.clone(),
+			cosigners: self.cosigners.clone(),
+			description: self.description.clone(),
+			descriptors: self.descriptors.clone(),
+			offchain_status: self.offchain_status.clone(),
+		}
+	}
+}
+
+#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ProposalSignatures<T: Config> {
+	pub signer: T::AccountId,
+	pub signature: BoundedVec<u8, T::PSBTMaxLen>,
+}
+
+impl<T: Config> Clone for ProposalSignatures<T>{
+	fn clone(&self) -> Self {
+		Self{
+			signer: self.signer.clone(),
+			signature: self.signature.clone(),
+		}
+	}
+}
+// Struct for holding Proposal information.
+#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct Proposal<T: Config> {
+	pub proposer: T::AccountId,
+	pub vault_id: [u8; 32],
+	pub status: ProposalStatus,
+	pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
+	pub to_address: BoundedVec<u8, T::XPubLen>,
+	pub amount: u64,
+	pub fee_sat_per_vb: u32,
+	pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
+	pub tx_id: Option< BoundedVec<u8, T::VaultDescriptionMaxLen> >,
+	pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
+	pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
+}
+
+impl<T: Config> Clone for Proposal<T>{
+	fn clone(&self) -> Self {
+		Self{
+			proposer: self.proposer.clone(),
+			vault_id: self.vault_id.clone(),
+			status: self.status.clone(),
+			offchain_status: self.offchain_status.clone(),
+			to_address: self.to_address.clone(),
+			amount: self.amount.clone(),
+			fee_sat_per_vb: self.fee_sat_per_vb.clone(),
+			description: self.description.clone(),
+			tx_id: self.tx_id.clone(),
+			psbt: self.psbt.clone(),
+			signed_psbts: self.signed_psbts.clone(),
+		}
 	}
 }
 
@@ -137,6 +225,7 @@ pub enum XpubStatus {
 #[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum ProposalStatus {
 	Pending,
+	Finalized,
 	Broadcasted,
 }
 

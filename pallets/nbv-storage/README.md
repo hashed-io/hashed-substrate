@@ -6,7 +6,7 @@ A storage module for Native Bitcoin Vaults on substrate.
     - [Terminology](#terminology)
   - [Interface](#interface)
     - [Dispachable functions](#dispachable-functions)
-      - [Offchain worker dispatchable functions](#offchain-worker-dispatchable-functions)
+    - [Offchain worker dispatchable functions](#offchain-worker-dispatchable-functions)
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
@@ -66,7 +66,7 @@ This module provides functionality for data management regarding the Native Bitc
 - `remove_proposal` removes the specified proposal by taking `proposal_id`. You need to be the user who proposed it.
 - `generate_new_address`
 
-#### Offchain worker dispatchable functions
+### Offchain worker dispatchable functions
 
 - `ocw_insert_descriptors` is only an extrinsic that is meant to be called by the pallet's offchain worker, as it makes the output descriptors insertion.
 - `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it makes the psbt proposal insertion.

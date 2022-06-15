@@ -1,6 +1,7 @@
+
 use super::*;
 use frame_support::pallet_prelude::*;
-use frame_system::pallet_prelude::*;
+//use frame_system::pallet_prelude::*;
 
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
@@ -53,7 +54,7 @@ impl Default for ApplicationStatus{
     }
 }
 
-#[derive(CloneNoBound, Encode ,Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
+#[derive(CloneNoBound, Encode ,Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(M))]
 #[codec(mel_bound())]
 pub struct ApplicationFile< M : Get<u32> >{

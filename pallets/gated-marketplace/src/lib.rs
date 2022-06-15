@@ -27,7 +27,9 @@ pub mod pallet {
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 		
 		#[pallet::constant]
-		type MaxMarketsPerAuth: Get<u32>;
+		type MaxAuthsPerMarket: Get<u32>;
+		#[pallet::constant]
+		type MaxRolesPerAuth: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicants: Get<u32>;
 		#[pallet::constant]
@@ -64,7 +66,7 @@ pub mod pallet {
 		T::AccountId, 
 		Blake2_128Concat, 
 		[u8;32], //marketplace_id 
-		BoundedVec<MarketplaceAuthority, T::MaxMarketsPerAuth>, 
+		BoundedVec<MarketplaceAuthority, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
 		ValueQuery
 	>;
 
@@ -76,7 +78,7 @@ pub mod pallet {
 		[u8;32], // marketplace_id 
 		Blake2_128Concat, 
 		MarketplaceAuthority, 
-		BoundedVec<T::AccountId,T::MaxMarketsPerAuth>, 
+		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
 		ValueQuery
 	>;
 
@@ -120,9 +122,13 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, T::AccountId),
+		/// Marketplaces stored. [owner, admin, market_id]
+		MarketplaceStored(T::AccountId, T::AccountId, [u8;32]),
+		/// Application stored on the specified marketplace. [application_id, market_id]
+		ApplicationStored([u8;32], [u8;32]),
+		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
+		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
+		
 	}
 
 	// Errors inform users that something went wrong.
@@ -134,15 +140,29 @@ pub mod pallet {
 		NoneValue,
 		/// The account supervises too many marketplaces
 		ExceedMaxMarketsPerAuth,
+		/// The account has too many roles in that marketplace 
+		ExceedMaxRolesPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
+		/// Applicaion doesnt exist
 		ApplicationNotFound,
+		/// The user has not applicated to that market before
 		ApplicantNotFound,
+		/// A marketplace with the same data exists already
+		MarketplaceAlreadyExists,
+		/// The user has already applied to the marketplace (or an identical application exist)
+		AlreadyApplied,
+		/// The specified marketplace does not exist
+		MarketplaceNotFound,
+		/// You need to be an owner or an admin of the marketplace
+		CannotEnroll,
 
 	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
@@ -152,6 +172,7 @@ pub mod pallet {
 			Self::do_create_marketplace(who, admin, m)
 		}
 		
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>, 
@@ -168,12 +189,12 @@ pub mod pallet {
 			Self::do_apply(who, marketplace_id, application)
 		}
 
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-			//TODO: ensure the enroller is owner or admin
-			// ensure that the market exists
-			Self::do_enroll(marketplace_id, account_or_application, approved)
+			let who = ensure_signed(origin)?;
+
+			Self::do_enroll(who, marketplace_id, account_or_application, approved)
 		}
 
 		#[transactional]
