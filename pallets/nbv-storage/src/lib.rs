@@ -157,6 +157,8 @@ pub mod pallet {
 		ProposalNotFound,
 		/// The account must be the proposer to remove it
 		ProposerPermissionsNeeded,
+		/// An identical proposal exists in storage 
+		AlreadyProposed,
 		/// The proposal was already signed by the user
 		AlreadySigned,
 	}
@@ -410,7 +412,7 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 			if include_owner_as_cosigner {
 				cosigners.try_push(who.clone())
-				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault ).unwrap();
+				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault )?;
 			}
 			//  Cosigners are already bounded, only is necessary to check if its not empty
 			ensure!( cosigners.len()>1 , Error::<T>::NotEnoughCosigners);
@@ -508,9 +510,7 @@ pub mod pallet {
 				fee_sat_per_vb: 1,
 				description,
 				tx_id: None,
-				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
-					b"".encode()
-				).expect("Error on encoding the descriptor to BoundedVec"),
+				psbt: BoundedVec::<u8, T::PSBTMaxLen>::default(),
 				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
 			};
 			Self::do_propose(proposal)

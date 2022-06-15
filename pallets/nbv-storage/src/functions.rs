@@ -350,6 +350,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_propose(proposal: Proposal<T>)->DispatchResult{
         let proposal_id = proposal.using_encoded(blake2_256);
+        ensure!(!<Proposals<T>>::contains_key(&proposal_id), Error::<T>::AlreadyProposed);
         <Proposals<T>>::insert(proposal_id, proposal.clone());
         <ProposalsByVault<T>>::try_mutate(proposal.vault_id,|proposals|{
             proposals.try_push(proposal_id)

@@ -48,7 +48,7 @@ parameter_types! {
 	pub const MaxCosignersPerVault: u32 =3;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault : u32 = 5;
+	pub const MaxProposalsPerVault : u32 = 2;
 }
 
 impl pallet_nbv_storage::Config for Test {
