@@ -161,6 +161,12 @@ pub mod pallet {
 		AlreadyProposed,
 		/// The proposal was already signed by the user
 		AlreadySigned,
+		/// The proposal is already finalized or broadcasted
+		PendingProposalRequired,
+		/// The proposal signatures need to surpass the vault's threshold 
+		NotEnoughSignatures,
+		/// The proposal has structural failures
+		InvalidProposal
 	}
 
 	/*--- Onchain storage section ---*/
@@ -262,23 +268,7 @@ pub mod pallet {
 				// This validation needs to be done after the lock: 
 				if !pending_vaults.is_empty() {
 					let generated_vaults = Self::gen_vaults_payload_by_bulk(pending_vaults);
-
-					if let Some((_, res)) = signer.send_unsigned_transaction(
-						// this line is to prepare and return payload
-						|acct| VaultsPayload {
-							vaults_payload: generated_vaults.clone(),
-							public: acct.public.clone(),
-						},
-						|payload, signature| Call::ocw_insert_descriptors { payload, signature },
-					) {
-						match res {
-							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-						};
-					} else {
-						// The case of `None`: no account is available for sending
-						log::error!("No local account available");
-					}
+					Self::send_ocw_insert_descriptors(generated_vaults, &signer);
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
@@ -498,7 +488,6 @@ pub mod pallet {
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::is_vault_member(&who, vault_id.clone())?,Error::<T>::SignerPermissionsNeeded);
 			// ensure user is in the vault
 			let proposal = Proposal::<T>{
 				proposer: who.clone(),
@@ -555,11 +544,11 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn finalize_psbt(
 			origin: OriginFor<T>,
-			_proposal_id: [u8; 32],
-			_broadcast: bool,
+			proposal_id: [u8; 32],
+			broadcast: bool,
 		) -> DispatchResult {
-			let _who = ensure_signed(origin.clone())?;
-			Ok(())
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_psbt(who, proposal_id, broadcast)
 		}
 
 		#[transactional]

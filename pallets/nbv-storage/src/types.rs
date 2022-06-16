@@ -59,6 +59,27 @@ pub struct Vault<T : Config> {
 	pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
 }
 
+impl<T: Config> Vault<T>{
+
+	pub fn is_vault_member(&self, account: &T::AccountId)->bool{
+		Self::get_vault_members(self).contains(account)
+	}
+
+	pub fn get_vault_members(&self) -> Vec<T::AccountId>{
+		let mut members = [self.cosigners.clone().as_slice(),&[self.owner.clone()],].concat();
+		members.sort();
+        members.dedup();
+		members
+	}
+
+	pub fn signers_are_unique(&self)-> bool {
+		let mut filtered_signers = self.cosigners.clone().to_vec();
+		filtered_signers.sort();
+		filtered_signers.dedup();
+		self.cosigners.len() == filtered_signers.len()
+	}
+}
+
 impl<T: Config> PartialEq for Vault<T>{
 	fn eq(&self, other: &Self) -> bool{
 		self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
@@ -110,6 +131,16 @@ pub struct Proposal<T: Config> {
 	pub tx_id: Option< BoundedVec<u8, T::VaultDescriptionMaxLen> >,
 	pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
 	pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
+}
+
+impl<T: Config> Proposal<T>{
+	pub fn can_be_finalized(&self) -> bool {
+		self.status.is_ready_to_finalize() && self.offchain_status.eq(&BDKStatus::Valid)
+	}
+
+	pub fn can_be_broadcasted(&self) -> bool {
+		self.status.eq(&ProposalStatus::ReadyToBroadcast) && self.offchain_status.eq(&BDKStatus::Valid)
+	}
 }
 
 impl<T: Config> Clone for Proposal<T>{
@@ -225,8 +256,19 @@ pub enum XpubStatus {
 #[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum ProposalStatus {
 	Pending,
+	ReadyToFinalize(bool), //bool is the flag to broadcast automatically once finalized
 	Finalized,
+	ReadyToBroadcast,
 	Broadcasted,
+}
+
+impl ProposalStatus{
+	pub fn is_ready_to_finalize(&self) ->bool{
+		match *self{
+			ProposalStatus::ReadyToFinalize(_) => true,
+			_ => false,
+		}
+	} 
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
