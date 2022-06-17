@@ -92,6 +92,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_propose(proposal: Proposal<T>)->DispatchResult{
         let vault =  <Vaults<T>>::get(proposal.vault_id).ok_or(Error::<T>::VaultNotFound)?;
         ensure!(vault.is_vault_member(&proposal.proposer),Error::<T>::SignerPermissionsNeeded);
+        ensure!(vault.is_valid(), Error::<T>::InvalidVault);
         let proposal_id = proposal.using_encoded(blake2_256);
         ensure!(!<Proposals<T>>::contains_key(&proposal_id), Error::<T>::AlreadyProposed);
         <Proposals<T>>::insert(proposal_id, proposal.clone());
@@ -131,7 +132,8 @@ impl<T: Config> Pallet<T> {
         // can be called by any vault signer
         ensure!(vault.is_vault_member(&signer), Error::<T>::SignerPermissionsNeeded);
         // if its finalized then fire error "already finalized" or "already broadcasted"
-        ensure!(proposal.status.eq(&ProposalStatus::Pending), Error::<T>::PendingProposalRequired );
+        ensure!(proposal.status.eq(&ProposalStatus::Pending) || proposal.status.eq(&ProposalStatus::Finalized), 
+            Error::<T>::PendingProposalRequired );
         // signs must be greater or equal than threshold 
         ensure!(proposal.signed_psbts.len() as u32 >= vault.threshold, Error::<T>::NotEnoughSignatures);
         // set status to: ready to be finalized
@@ -448,12 +450,14 @@ impl<T: Config> Pallet<T> {
         Ok(jsonSerialize::format(&json_object, 4) )
     }
 
-    pub fn bdk_gen_proposal(proposal_id: [u8;32])->Result<Vec<u8>, OffchainStatus >{
-        let raw_json = Self::gen_proposal_json_body(proposal_id)?;
+    pub fn bdk_gen_proposal(proposal_id: [u8;32], api_endpoint: Vec<u8>,
+        json_builder: &dyn Fn([u8;32])-> Result<Vec<u8>,OffchainStatus>
+    )->Result<Vec<u8>, OffchainStatus >{
+        let raw_json = json_builder(proposal_id)?;
         let request_body =
             str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request body is not UTF-8") )?;
 
-        let url = [<BDKServicesURL<T>>::get().to_vec(), b"/gen_psbt".encode()].concat();
+        let url = [<BDKServicesURL<T>>::get().to_vec(), api_endpoint].concat();
 
         let response_body = Self::http_post(
             str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not UTF-8") )?,
@@ -463,7 +467,9 @@ impl<T: Config> Pallet<T> {
         Ok(response_body)
     }
 
-    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>) ->  Vec<SingleProposalPayload>{
+    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>, api_endpoint: Vec<u8>, 
+        json_builder: &dyn Fn([u8;32])-> Result<Vec<u8>,OffchainStatus>
+    ) ->  Vec<SingleProposalPayload>{
         let mut generated_proposals = Vec::<SingleProposalPayload>::new();
         pending_proposals.iter().for_each(|proposal_to_complete|{
             let mut proposal_payload = SingleProposalPayload{
@@ -471,7 +477,8 @@ impl<T: Config> Pallet<T> {
                 psbt : Vec::default(),
                 status: OffchainStatus::Valid,
             };
-            let psbt_result = Self::bdk_gen_proposal(proposal_to_complete.clone());
+            let psbt_result = Self::bdk_gen_proposal(proposal_to_complete.clone(), api_endpoint.clone(),
+                json_builder);
             match psbt_result{
                 Ok(psbt) => {proposal_payload.psbt.clone_from(&psbt)},
                 Err(status) => {proposal_payload.status.clone_from(&status)},
@@ -480,6 +487,58 @@ impl<T: Config> Pallet<T> {
         });
         generated_proposals
     }
+
+    pub fn gen_finalize_json_body(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus>{
+        let mut body = Vec::new();
+        let proposal = <Proposals<T>>::get(proposal_id).ok_or(
+            Self::build_offchain_err(false,"Proposal not found"))?;
+        let vault = <Vaults<T>>::get(proposal.vault_id.clone()).ok_or(
+            Self::build_offchain_err(false,"Vault not found"))?;
+        let output_descriptor: Vec<char> = str::from_utf8(
+            vault.descriptors.output_descriptor.as_slice())
+            .map_err(|_| Self::build_offchain_err(false,"Output descriptor is not utf-8"))?.chars().collect();
+        let change_descriptor: Vec<char> = str::from_utf8(
+            vault.descriptors.change_descriptor.unwrap_or_default().as_slice() )
+            .map_err(|_| Self::build_offchain_err(false,"Change descriptor is not utf-8"))?.chars().collect();
+        let descriptors_body = [
+            ("descriptor".chars().collect::<Vec<char>>(), JsonValue::String(output_descriptor)),
+            ("change_descriptor".chars().collect::<Vec<char>>(), JsonValue::String(change_descriptor)),].to_vec();
+        let mapped_signatures: Vec<JsonValue> = proposal.signed_psbts.iter().map(|psbt|{
+            JsonValue::String(str::from_utf8(&psbt.signature).unwrap_or_default().chars().collect())
+        }).collect();
+        
+        let broadcast= match proposal.status{
+            ProposalStatus::ReadyToFinalize(flag) => flag,
+            _ => false,
+        };
+        body.push(("psbts".chars().collect::<Vec<char>>(), JsonValue::Array(mapped_signatures)));
+        body.push(("descriptors".chars().collect::<Vec<char>>(), JsonValue::Object(descriptors_body) ));
+        body.push(("broadcast".chars().collect::<Vec<char>>(), JsonValue::Boolean(broadcast) ));
+        let json_object = JsonValue::Object(body);
+
+        // // Parse the JSON and print the resulting lite-json structure.
+        Ok(jsonSerialize::format(&json_object, 4) )
+    }
+    
+    // pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus >{
+    //     let raw_json = Self::gen_finalize_json_body(proposal_id)?;
+    //     let request_body =
+    //         str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request body is not UTF-8") )?;
+
+    //     let url = [<BDKServicesURL<T>>::get().to_vec(), b"/finalize_trx".encode()].concat();
+
+    //     let response_body = Self::http_post(
+    //         str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not UTF-8") )?,
+    //         request_body
+    //     )?;
+    //     // The psbt is not a json object, its a byte blob
+    //     Ok(response_body)
+    // }
+
+    // pub fn gen_finalized_proposals_by_bulk(proposals_to_finalize : Vec<[u8;32]>) -> Vec<u8>{
+    //     let mut finalized_proposals = Vec::<SingleProposalPayload>::new();
+    //     finalized_proposals
+    // }
     
     fn build_offchain_err(recoverable: bool, msj: &str )-> OffchainStatus{
         let bounded_msj = msj.encode();
@@ -499,12 +558,48 @@ impl<T: Config> Pallet<T> {
             |payload, signature| Call::ocw_insert_descriptors { payload, signature },
         ) {
             match res {
-                Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-                Err(()) => log::error!("sending unsigned tx with signed payload failed."),
+                Ok(()) => log::info!("Insert Descriptors: unsigned tx with signed vault payload successfully sent."),
+                Err(()) => log::error!("Insert Descriptors: sending unsigned tx with signed vault payload failed."),
             };
         }
     }
-    
+    pub fn send_ocw_insert_psbts( generated_proposals : Vec<SingleProposalPayload>, signer: &Signer<T, T::AuthorityId>){
+        if let Some((_, res)) = signer.send_unsigned_transaction(
+            // this line is to prepare and return payload
+            |acct| ProposalsPayload {
+                proposals_payload: generated_proposals.clone(),
+                public: acct.public.clone(),
+            },
+            |payload, signature| Call::ocw_insert_psbts { payload, signature },
+        ) {
+            match res {
+                Ok(()) => log::info!("Insert PSBTS: unsigned tx with signed payload successfully sent."),
+                Err(()) => log::error!("Insert PSBTS: sending unsigned tx with signed payload failed."),
+            };
+        } else {
+            // The case of `None`: no account is available for sending
+            log::error!("No local account available");
+        }
+    }
+
+    pub fn send_ocw_finalize_psbts( generated_proposals : Vec<SingleProposalPayload>, signer: &Signer<T, T::AuthorityId>){
+        if let Some((_, res)) = signer.send_unsigned_transaction(
+            // this line is to prepare and return payload
+            |acct| ProposalsPayload {
+                proposals_payload: generated_proposals.clone(),
+                public: acct.public.clone(),
+            },
+            |payload, signature| Call::ocw_finalize_psbts { payload, signature },
+        ) {
+            match res {
+                Ok(()) => log::info!("Finalize PSBTS: unsigned tx with signed payload successfully sent."),
+                Err(()) => log::error!("Finalize PSBTS: sending unsigned tx with signed payload failed."),
+            };
+        } else {
+            // The case of `None`: no account is available for sending
+            log::error!("No local account available");
+        }
+    }
 
     pub fn chars_to_bytes(v: Vec<char>) -> Vec<u8> {
         v.iter().map(|c| *c as u8).collect::<Vec<u8>>()

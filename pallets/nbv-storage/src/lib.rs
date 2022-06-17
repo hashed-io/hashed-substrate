@@ -166,7 +166,9 @@ pub mod pallet {
 		/// The proposal signatures need to surpass the vault's threshold 
 		NotEnoughSignatures,
 		/// The proposal has structural failures
-		InvalidProposal
+		InvalidProposal,
+		/// This vault cant take proposals due to structural failures
+		InvalidVault,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -264,6 +266,8 @@ pub mod pallet {
 				// check for pending vaults to insert
 				let pending_vaults = Self::get_pending_vaults();
 				let pending_proposals = Self::get_pending_proposals();
+				let proposals_to_finalize = Self::get_proposals_to_finalize();
+				//let proposals_to_broadcast = Self::get_proposals_to_finalize();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
 				// This validation needs to be done after the lock: 
 				if !pending_vaults.is_empty() {
@@ -272,23 +276,19 @@ pub mod pallet {
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals);
-					if let Some((_, res)) = signer.send_unsigned_transaction(
-						// this line is to prepare and return payload
-						|acct| ProposalsPayload {
-							proposals_payload: generated_proposals_payload.clone(),
-							public: acct.public.clone(),
-						},
-						|payload, signature| Call::ocw_insert_psbts { payload, signature },
-					) {
-						match res {
-							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-						};
-					} else {
-						// The case of `None`: no account is available for sending
-						log::error!("No local account available");
-					}
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals, b"/gen_psbt".to_vec(),
+					&Self::gen_proposal_json_body);
+					Self::send_ocw_insert_psbts(generated_proposals_payload, &signer);
+				}
+				if !proposals_to_finalize.is_empty(){
+					// generate proposal payloads:
+					let finalized_proposals = Self::get_proposals_to_finalize();
+					//Send unsigned tx:
+					let generated_finalized_tx = Self::gen_proposals_payload_by_bulk(finalized_proposals, b"/finalize_trx".to_vec(),
+					&Self::gen_finalize_json_body);
+
+					Self::send_ocw_finalize_psbts(generated_finalized_tx, &signer);
+
 				}
 			}else {
 				log::error!("This OCW couln't get the lock");
@@ -555,10 +555,10 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(
 			origin: OriginFor<T>,
-			_proposal_id: [u8; 32],
+			proposal_id: [u8; 32],
 		) -> DispatchResult {
-			let _who = ensure_signed(origin.clone())?;
-			Ok(())
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_psbt(who, proposal_id, true)
 		}
 
 		#[transactional]
@@ -627,6 +627,19 @@ pub mod pallet {
 			).unwrap_or(Ok(()))?;
 			Ok(())
 		}
+
+		#[transactional]
+		#[pallet::weight(0)]
+		pub fn ocw_finalize_psbts(
+			origin: OriginFor<T>,
+			payload: ProposalsPayload<T::Public>,
+			_signature: T::Signature,// we don't need to verify the signature here because it has been verified in
+			//   `validate_unsigned` function when sending out the unsigned tx.
+		) -> DispatchResult {
+			ensure_none(origin.clone())?;
+			log::info!("Extrinsic rebibio payload de: {:?}",payload);
+			Ok(())
+		}
 	}
 
 	#[pallet::validate_unsigned]
@@ -650,8 +663,14 @@ pub mod pallet {
 						return InvalidTransaction::BadProof.into();
 					}
 					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
-				},
+				}, // compiler complains if they aren't on different match arms
 				Call::ocw_insert_psbts { ref payload, ref signature } => {
+					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
+						return InvalidTransaction::BadProof.into();
+					}
+					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
+				},
+				Call::ocw_finalize_psbts { ref payload, ref signature } => {
 					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
 						return InvalidTransaction::BadProof.into();
 					}

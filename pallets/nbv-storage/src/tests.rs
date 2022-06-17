@@ -443,6 +443,7 @@ fn saving_twice_psbt_shouldnt_work(){
 	});
 }
 
+// TODO: Set offchainStatus proposal from pending to Valid
 #[test]
 fn finalize_psbt_should_work(){
 	new_test_ext().execute_with(|| {

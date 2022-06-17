@@ -78,6 +78,11 @@ impl<T: Config> Vault<T>{
 		filtered_signers.dedup();
 		self.cosigners.len() == filtered_signers.len()
 	}
+
+	/// A vault must have valid descriptors in order to produce psbt's 
+	pub fn is_valid(&self) -> bool{
+		self.offchain_status.eq(&BDKStatus::Valid) && self.descriptors.are_not_empty()
+	}
 }
 
 impl<T: Config> PartialEq for Vault<T>{
@@ -179,7 +184,11 @@ pub struct Descriptors<MaxLen: Get<u32>> {
 	pub change_descriptor: Option<BoundedVec<u8, MaxLen>>,
 }
 
-
+impl <MaxLen: Get<u32>> Descriptors<MaxLen>{
+	pub fn are_not_empty(&self)->bool{
+		!self.output_descriptor.is_empty() && self.change_descriptor.is_some()
+	}
+}
 	
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
