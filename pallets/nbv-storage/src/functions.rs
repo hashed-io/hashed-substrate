@@ -293,13 +293,17 @@ impl<T: Config> Pallet<T> {
             map_err(|_|Self::build_offchain_err(false, "Unknown error on server's side"))?;
         match response.code{
             200..=299 => return Ok(response.body().collect::<Vec<u8>>()),
-            400..=599 => {
-                let code_encoded = response.code.to_ne_bytes();
-                let code_str = str::from_utf8(&code_encoded).unwrap_or_default();
-                log::warn!("Codigo? {} vs {:?}",response.code,code_encoded);
-                return Err(Self::build_offchain_err(response.code>=500, code_str ))
+            400..=499 => {
+                let vec_body = response.body().collect::<Vec<u8>>();
+                let msj_str = str::from_utf8(vec_body.as_slice()).unwrap_or("Error 400: Bad request");
+                return Err(Self::build_offchain_err(false, msj_str ))
             },
-            _ =>return Err(Self::build_offchain_err(false, "Unknown error"))
+            500..=599 => {
+                let vec_body = response.body().collect::<Vec<u8>>();
+                let msj_str = str::from_utf8(vec_body.as_slice()).unwrap_or("Error 500: Server error");
+                return Err(Self::build_offchain_err(false, msj_str ))
+            }
+            _ =>return Err(Self::build_offchain_err(true, "Unknown error"))
         }
     }
 
@@ -541,7 +545,7 @@ impl<T: Config> Pallet<T> {
     // }
     
     fn build_offchain_err(recoverable: bool, msj: &str )-> OffchainStatus{
-        let bounded_msj = msj.encode();
+        let bounded_msj = msj.as_bytes().to_vec();
         match recoverable{
             true => OffchainStatus::RecoverableError(bounded_msj),
             false => OffchainStatus::IrrecoverableError(bounded_msj),

@@ -276,7 +276,8 @@ pub mod pallet {
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals, b"/gen_psbt".to_vec(),
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals, 
+						b"/gen_psbt".to_vec(),
 					&Self::gen_proposal_json_body);
 					Self::send_ocw_insert_psbts(generated_proposals_payload, &signer);
 				}
@@ -284,7 +285,8 @@ pub mod pallet {
 					// generate proposal payloads:
 					let finalized_proposals = Self::get_proposals_to_finalize();
 					//Send unsigned tx:
-					let generated_finalized_tx = Self::gen_proposals_payload_by_bulk(finalized_proposals, b"/finalize_trx".to_vec(),
+					let generated_finalized_tx = Self::gen_proposals_payload_by_bulk(
+						finalized_proposals, b"/finalize_trx".to_vec(),
 					&Self::gen_finalize_json_body);
 
 					Self::send_ocw_finalize_psbts(generated_finalized_tx, &signer);
@@ -637,7 +639,7 @@ pub mod pallet {
 			//   `validate_unsigned` function when sending out the unsigned tx.
 		) -> DispatchResult {
 			ensure_none(origin.clone())?;
-			log::info!("Extrinsic rebibio payload de: {:?}",payload);
+			log::info!("Extrinsic recibido payload de: {:?}",payload);
 			Ok(())
 		}
 	}
