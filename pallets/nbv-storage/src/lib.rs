@@ -114,6 +114,8 @@ pub mod pallet {
 		ProposalStored([u8;32],T::AccountId),
 		/// A proposal has been removed.
 		ProposalRemoved([u8;32],T::AccountId),
+		/// A proposal tx has been inserted by an OCW
+		ProposalTxIdStored([u8;32])
 	}
 
 	// Errors inform users that something went wrong.
@@ -626,7 +628,8 @@ pub mod pallet {
 					}
 					None
 				}
-			).unwrap_or(Ok(()))?;
+			)
+			.unwrap_or(Ok(()))?;
 			Ok(())
 		}
 
@@ -634,12 +637,17 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn ocw_finalize_psbts(
 			origin: OriginFor<T>,
-			payload: ProposalsPayload<T::Public>,
+			payload: ProposalsPayload<T::Public>, // here the payload
 			_signature: T::Signature,// we don't need to verify the signature here because it has been verified in
 			//   `validate_unsigned` function when sending out the unsigned tx.
 		) -> DispatchResult {
 			ensure_none(origin.clone())?;
 			log::info!("Extrinsic recibido payload de: {:?}",payload);
+			payload.proposals_payload.iter().try_for_each(|proposal_tx|{
+				let bounded_tx_id = BoundedVec::<u8, T::VaultDescriptionMaxLen>::try_from(proposal_tx.psbt.clone() );
+				let status: BDKStatus<T::VaultDescriptionMaxLen> = proposal_tx.status.clone().into();
+				Self::do_insert_tx_id(proposal_tx.proposal_id, bounded_tx_id.ok(), status)
+			})?;
 			Ok(())
 		}
 	}

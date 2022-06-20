@@ -199,6 +199,21 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_insert_tx_id(proposal_id: [u8;32], tx_id: Option<BoundedVec<u8, T::VaultDescriptionMaxLen>>, status: BDKStatus<T::VaultDescriptionMaxLen>) -> DispatchResult {
+        <Proposals<T>>::try_mutate(proposal_id,|p|{
+            match p {
+                Some(proposal) =>{
+                    proposal.tx_id.clone_from(&tx_id);
+                    proposal.offchain_status.clone_from(&status);
+                    proposal.status.clone_from(&proposal.status.next_status() );
+                    Ok(())
+                },
+                None=> Err(Error::<T>::ProposalNotFound),
+            }
+        })?;
+        Self::deposit_event(Event::ProposalTxIdStored(proposal_id));
+        Ok(())
+    }
     /*---- Offchain utilities ----*/
 
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
@@ -259,17 +274,17 @@ impl<T: Config> Pallet<T> {
         .collect()
     }
 
-    pub fn get_proposals_to_broadcast()->  Vec<[u8;32]>{
-        // offchain status == valid and proposal status ready to ReadyToBroadcast
-        <Proposals<T>>::iter().filter_map(| (id,p) |{
-            if p.can_be_broadcasted() {
-                return Some(id)
-            }
-            None
-        })
-        .collect()
+    // pub fn get_proposals_to_broadcast()->  Vec<[u8;32]>{
+    //     // offchain status == valid and proposal status ready to ReadyToBroadcast
+    //     <Proposals<T>>::iter().filter_map(| (id,p) |{
+    //         if p.can_be_broadcasted() {
+    //             return Some(id)
+    //         }
+    //         None
+    //     })
+    //     .collect()
 
-    }
+    // }
 
     fn http_post(url: &str, request_body: &str)->Result<Vec<u8>, OffchainStatus >{
         let deadline = sp_io::offchain::timestamp().add(Duration::from_millis(6_000));

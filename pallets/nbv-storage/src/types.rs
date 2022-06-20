@@ -143,9 +143,9 @@ impl<T: Config> Proposal<T>{
 		self.status.is_ready_to_finalize() && self.offchain_status.eq(&BDKStatus::Valid)
 	}
 
-	pub fn can_be_broadcasted(&self) -> bool {
-		self.status.eq(&ProposalStatus::ReadyToBroadcast) && self.offchain_status.eq(&BDKStatus::Valid)
-	}
+	// pub fn can_be_broadcasted(&self) -> bool {
+	// 	self.status.eq(&ProposalStatus::ReadyToBroadcast) && self.offchain_status.eq(&BDKStatus::Valid)
+	// }
 }
 
 impl<T: Config> Clone for Proposal<T>{
@@ -267,7 +267,7 @@ pub enum ProposalStatus {
 	Pending,
 	ReadyToFinalize(bool), //bool is the flag to broadcast automatically once finalized
 	Finalized,
-	ReadyToBroadcast,
+	//ReadyToBroadcast,
 	Broadcasted,
 }
 
@@ -277,7 +277,19 @@ impl ProposalStatus{
 			ProposalStatus::ReadyToFinalize(_) => true,
 			_ => false,
 		}
-	} 
+	}
+	
+	pub fn next_status(&self) -> Self {
+		use ProposalStatus::*;
+        match *self {
+            Pending => ReadyToFinalize(false),
+			ReadyToFinalize(false) => Finalized, // it will be finalized but the broadcast is still pending
+			ReadyToFinalize(true) => Broadcasted, // the "true" flag value will finalize and broadcast it 
+			Finalized => ReadyToFinalize(true),  // this will broadcast the tx
+			//ReadyToBroadcast => Broadcasted, // not used, but not discarded 
+			Broadcasted => Broadcasted
+        }
+    }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
