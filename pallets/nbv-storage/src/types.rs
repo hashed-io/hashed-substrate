@@ -59,6 +59,32 @@ pub struct Vault<T : Config> {
 	pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
 }
 
+impl<T: Config> Vault<T>{
+
+	pub fn is_vault_member(&self, account: &T::AccountId)->bool{
+		Self::get_vault_members(self).contains(account)
+	}
+
+	pub fn get_vault_members(&self) -> Vec<T::AccountId>{
+		let mut members = [self.cosigners.clone().as_slice(),&[self.owner.clone()],].concat();
+		members.sort();
+        members.dedup();
+		members
+	}
+
+	pub fn signers_are_unique(&self)-> bool {
+		let mut filtered_signers = self.cosigners.clone().to_vec();
+		filtered_signers.sort();
+		filtered_signers.dedup();
+		self.cosigners.len() == filtered_signers.len()
+	}
+
+	/// A vault must have valid descriptors in order to produce psbt's 
+	pub fn is_valid(&self) -> bool{
+		self.offchain_status.eq(&BDKStatus::Valid) && self.descriptors.are_not_empty()
+	}
+}
+
 impl<T: Config> PartialEq for Vault<T>{
 	fn eq(&self, other: &Self) -> bool{
 		self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
@@ -112,6 +138,16 @@ pub struct Proposal<T: Config> {
 	pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
 }
 
+impl<T: Config> Proposal<T>{
+	pub fn can_be_finalized(&self) -> bool {
+		self.status.is_ready_to_finalize() && self.offchain_status.eq(&BDKStatus::Valid)
+	}
+
+	// pub fn can_be_broadcasted(&self) -> bool {
+	// 	self.status.eq(&ProposalStatus::ReadyToBroadcast) && self.offchain_status.eq(&BDKStatus::Valid)
+	// }
+}
+
 impl<T: Config> Clone for Proposal<T>{
 	fn clone(&self) -> Self {
 		Self{
@@ -148,7 +184,11 @@ pub struct Descriptors<MaxLen: Get<u32>> {
 	pub change_descriptor: Option<BoundedVec<u8, MaxLen>>,
 }
 
-
+impl <MaxLen: Get<u32>> Descriptors<MaxLen>{
+	pub fn are_not_empty(&self)->bool{
+		!self.output_descriptor.is_empty() && self.change_descriptor.is_some()
+	}
+}
 	
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
@@ -225,8 +265,31 @@ pub enum XpubStatus {
 #[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum ProposalStatus {
 	Pending,
+	ReadyToFinalize(bool), //bool is the flag to broadcast automatically once finalized
 	Finalized,
+	//ReadyToBroadcast,
 	Broadcasted,
+}
+
+impl ProposalStatus{
+	pub fn is_ready_to_finalize(&self) ->bool{
+		match *self{
+			ProposalStatus::ReadyToFinalize(_) => true,
+			_ => false,
+		}
+	}
+	
+	pub fn next_status(&self) -> Self {
+		use ProposalStatus::*;
+        match *self {
+            Pending => ReadyToFinalize(false),
+			ReadyToFinalize(false) => Finalized, // it will be finalized but the broadcast is still pending
+			ReadyToFinalize(true) => Broadcasted, // the "true" flag value will finalize and broadcast it 
+			Finalized => ReadyToFinalize(true),  // this will broadcast the tx
+			//ReadyToBroadcast => Broadcasted, // not used, but not discarded 
+			Broadcasted => Broadcasted
+        }
+    }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
