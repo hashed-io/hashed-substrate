@@ -1,5 +1,5 @@
 
-use crate::{mock::*, Error};
+use crate::{mock::*, Error, types::ProposalStatus};
 use codec::{Encode};
 use frame_support::{
 	assert_noop, assert_ok,
@@ -437,8 +437,71 @@ fn saving_twice_psbt_shouldnt_work(){
 		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
-		// user 3 is not on 
+		// user 3 is not on the vaults cosigners
 		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
 		assert_noop!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()), Error::<Test>::AlreadySigned);
+	});
+}
+
+// TODO: Set offchainStatus proposal from pending to Valid
+#[test]
+fn finalize_psbt_should_work(){
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		// obtaining proposal id and saving a psbt with a user that is not in the vault
+		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+
+		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
+		assert_ok!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
+		assert!(NBVStorage::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
+	});
+}
+
+#[test]
+fn finalize_psbt_twice_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		// obtaining proposal id and saving a psbt with a user that is not in the vault
+		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+
+		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
+		assert_ok!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
+		assert!(NBVStorage::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
+		assert_noop!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::PendingProposalRequired);
+	});
+}
+
+#[test]
+fn finalize_psbt_without_signatures_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		// obtaining proposal id and saving a psbt with a user that is not in the vault
+		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+
+		assert_noop!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::NotEnoughSignatures);
 	});
 }
