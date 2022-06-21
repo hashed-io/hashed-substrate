@@ -64,19 +64,24 @@ This module provides functionality for data management regarding the Native Bitc
 - `remove_vault` receives `vault_id` - remove vault and any proposals or PSBTs from storage.
 - `propose` Propose an expense in a specified vault, takes a `vault_id`, `recipient_address` to which the `amount_in_sats` will be sent, and a `description`. You need to participate on the vault.
 - `remove_proposal` removes the specified proposal by taking `proposal_id`. You need to be the user who proposed it.
-- `generate_new_address`
+- `save_psbt` takes a `proposal_id` and collects a signature payload in pure bytes for it, these types of signatures are necessary to fullfill the vault's `threshold`.
+- `finalize_psbt` generates a `tx_id` by taking a `proposal_id`, a `broadcast` boolean flag must be specified to determine if the transaction will be automatically transmited to the blockchain or not. 
+- `broadcast` publishes the transaction if it wasn't on the previous step.
 
 #### Offchain worker dispatchable functions
 
 - `ocw_insert_descriptors` is only an extrinsic that is meant to be called by the pallet's offchain worker, as it makes the output descriptors insertion.
-- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it makes the psbt proposal insertion.
+- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it performs the psbt proposal insertion.
+- `ocw_finalize_psbts` inserts the generated `tx_id` for the transaction, which can be inspected with a block explorer.
 
 ### Getters
 - `xpubs`
 - `xpubs_by_owner`
 - `vaults`
 - `vaults_by_signer`
-- `psbts`
+- `proposals`
+- `proposals_by_vault`
+- `DefaultURL` (for bdk services)
 
 ## Usage
 
