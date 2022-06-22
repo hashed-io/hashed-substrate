@@ -57,9 +57,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_remove_vault(vault_id: [u8;32]) -> DispatchResult{
+    pub fn do_remove_vault(owner: T::AccountId, vault_id: [u8;32]) -> DispatchResult{
         // This removes the vault while retrieving its values
         let vault =  <Vaults<T>>::take(vault_id).ok_or(Error::<T>::VaultNotFound)?;
+        ensure!(vault.owner.eq(&owner), Error::<T>::VaultOwnerPermissionsNeeded);
         let vault_members = vault.get_vault_members();
         // Removes the vault from user->vault vector
         vault_members.iter().try_for_each(|signer|{
