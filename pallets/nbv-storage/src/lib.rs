@@ -27,7 +27,7 @@ pub mod pallet {
 	use frame_support::{sp_io::hashing::blake2_256, transactional};
 	use frame_system::{
 		offchain::{
-			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
+			AppCrypto, CreateSignedTransaction,
 			SignedPayload, Signer,
 		},
 		pallet_prelude::*,
@@ -357,7 +357,9 @@ pub mod pallet {
 		///
 		/// Removes the linked xpub from the account which signs the transaction.
 		/// The xpub will be removed from both the pallet storage and identity registration.
-		///
+		/// 
+		/// This tx does not takes any parameters.
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
@@ -368,10 +370,7 @@ pub mod pallet {
 			let vaults: Vec<[u8;32]>= <VaultsBySigner<T>>::get(who.clone()).iter().filter(|id|{
 				match <Vaults<T>>::get(id){
 					Some(vault) =>{
-						let vault_members = [
-							vault.cosigners.as_slice(),
-							&[vault.owner.clone()],
-						].concat();
+						let vault_members = vault.get_vault_members();
 						vault_members.contains(&who.clone())
 					},
 					None => false,
@@ -394,6 +393,7 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_vault(
@@ -419,7 +419,7 @@ pub mod pallet {
 				cosigners,
 				descriptors: Descriptors::<T::OutputDescriptorMaxLen> {
 					output_descriptor: BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
-						b"".encode(),
+						b"".to_vec(),
 					)
 					.expect("Error on encoding the descriptor to BoundedVec"),
 					change_descriptor: None,
@@ -430,9 +430,16 @@ pub mod pallet {
 			Self::do_insert_vault(vault)
 		}
 
-		// Vault removal
-		// Tries to remove vault
-		// TODO: Add PSBT validation when they get implemented
+		/// Vault removal
+		/// 
+		/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault to be removed with all its proposals
+		/// 
+		/// ### Considerations:
+		/// - Only the vault owner can perform this extrinsic
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_vault(
@@ -440,33 +447,8 @@ pub mod pallet {
 			vault_id: [u8; 32],
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			// Ensure vault exists and get it
-			let vault = <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
-			ensure!(vault.owner.eq(&who), Error::<T>::VaultOwnerPermissionsNeeded);
 
-			Self::do_remove_vault(vault_id)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn clean_vault_list(
-			origin: OriginFor<T>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			<VaultsBySigner<T>>::mutate_exists(who, | vault_list |{
-                match vault_list{
-                    Some(list) => {
-						let new_list: Vec<[u8;32]> = list.iter().filter(|vault_id|{
-							<Vaults<T>>::contains_key(vault_id)
-						}).copied().collect();
-						let bounded_list = BoundedVec::<[u8; 32], T::MaxVaultsPerUser>::try_from(new_list).unwrap();
-						list.clone_from(&bounded_list );
-						if list.len()<1 { *vault_list = None;}
-                    },
-                    _ =>log::warn!("Vault list not found for the user"),
-                }
-            });
-			Ok(())
+			Self::do_remove_vault(who, vault_id)
 		}
 
 		/// Vault transaction proposal
@@ -480,7 +462,6 @@ pub mod pallet {
 		/// - `description`: The reason for the proposal, why do you are proposing this?.
 		///
 		/// ### Considerations
-		/// - Do not include the vault owner on the `cosigners` list.
 		/// - Please ensure the recipient address is a valid mainnet address.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -509,6 +490,14 @@ pub mod pallet {
 			Self::do_propose(proposal)
 		}
 
+
+		/// Proposal removal
+		/// 
+		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
@@ -517,11 +506,22 @@ pub mod pallet {
 		) -> DispatchResult{
 			let who = ensure_signed(origin.clone())?;
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
-			// TODO: only vault owner can remove?
+			// Only vault proposer can remove
+			// validation before do_remove_proposal because the user is not needed anymore
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
 
+		/// BDK URL insertion
+		/// 
+		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
+		/// 
+		/// ### Parameters:
+		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  
+		///
+		/// ### Considerations
+		/// - Ensure the new url is valid.
+		/// - The url has a maximum length of 32 bytes
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
@@ -533,6 +533,18 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// PSBT signature insertion
+		/// 
+		/// Stores the signature for a PSBT proposal 
+		/// 
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - A user can only sign a proposal once 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn save_psbt(
@@ -544,6 +556,18 @@ pub mod pallet {
 			Self::do_save_psbt(who, proposal_id, signature_payload)
 		}
 
+		/// Finalize PSBT
+		/// 
+		/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `broadcast`: A boolean flag 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must have a valid PSBT
+		/// - Any vault member can perform this extrinsic
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn finalize_psbt(
@@ -555,6 +579,18 @@ pub mod pallet {
 			Self::do_finalize_psbt(who, proposal_id, broadcast)
 		}
 
+
+		/// Broadcast PSBT
+		/// 
+		/// Queries a proposal to be broadcasted in case it wasn't on the finalization step.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the vault identifier in which the proposal will be inserted
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must be finalized already
+		/// - Any vault member can perform this extrinsic
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(
@@ -565,6 +601,11 @@ pub mod pallet {
 			Self::do_finalize_psbt(who, proposal_id, true)
 		}
 
+		/// Kill almost all storage
+		/// 
+		/// Use with caution!
+		/// 
+		/// Can only be called by root and removes All vaults and proposals
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
@@ -578,6 +619,10 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Extrinsic to insert a valid vault descriptor
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
 		#[transactional]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
@@ -609,6 +654,10 @@ pub mod pallet {
 			).unwrap_or(Ok(()))
 		}
 
+		/// Extrinsic to insert a valid proposal PSBT
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
 		#[transactional]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_psbts(
@@ -633,6 +682,10 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Extrinsic to insert a valid proposal TX_ID
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
 		#[transactional]
 		#[pallet::weight(0)]
 		pub fn ocw_finalize_psbts(
