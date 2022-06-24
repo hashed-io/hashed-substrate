@@ -11,6 +11,9 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+// pub mod types;
+mod functions;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -257,9 +260,9 @@ pub mod pallet {
 			s
 		}
 		/// Helper function for printing purposes
-		pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
-			u32::from_ne_bytes(input.try_into().unwrap())
-		}
+		// pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
+		// 	u32::from_ne_bytes(input.try_into().unwrap())
+		// }
 
 		//get uniques attribute?
 		pub fn get_nft_attribute(
