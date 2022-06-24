@@ -24,11 +24,10 @@ pub mod pallet {
 		pallet_prelude::{BoundedVec},
 		traits::Get,
 	};
-	use frame_support::pallet_prelude::MaxEncodedLen;
 	use frame_support::{sp_io::hashing::blake2_256, transactional};
 	use frame_system::{
 		offchain::{
-			AppCrypto, CreateSignedTransaction, SendUnsignedTransaction,
+			AppCrypto, CreateSignedTransaction,
 			SignedPayload, Signer,
 		},
 		pallet_prelude::*,
@@ -38,94 +37,10 @@ pub mod pallet {
 	use sp_runtime::{
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
-		RuntimeDebug,
 	};
-	use scale_info::TypeInfo;
 
-	/*--- Structs Section ---*/
-	// Struct for holding Vaults information.
-	#[derive(
-		Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
-	)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct Vault<T : Config> {
-		pub owner: T::AccountId,
-		pub threshold: u32,
-		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-		pub cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
-		pub descriptors: Descriptors<T::OutputDescriptorMaxLen>,
-		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
-	}
+	/*--- Genesis Structs Section ---*/
 
-	impl<T: Config> PartialEq for Vault<T>{
-		fn eq(&self, other: &Self) -> bool{
-			self.using_encoded(blake2_256) == other.using_encoded(blake2_256)
-		}
-	}
-
-	impl<T: Config> Clone for Vault<T> {
-		fn clone(&self) -> Self {
-			Vault {
-				owner: self.owner.clone(),
-				threshold: self.threshold.clone(),
-				cosigners: self.cosigners.clone(),
-				description: self.description.clone(),
-				descriptors: self.descriptors.clone(),
-				offchain_status: self.offchain_status.clone(),
-			}
-		}
-	}
-
-	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct ProposalSignatures<T: Config> {
-		pub signer: T::AccountId,
-		pub signature: BoundedVec<u8, T::PSBTMaxLen>,
-	}
-
-	impl<T: Config> Clone for ProposalSignatures<T>{
-		fn clone(&self) -> Self {
-			Self{
-				signer: self.signer.clone(),
-				signature: self.signature.clone(),
-			}
-		}
-	}
-	// Struct for holding Proposal information.
-	#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	#[scale_info(skip_type_params(T))]
-	#[codec(mel_bound())]
-	pub struct Proposal<T: Config> {
-		pub proposer: T::AccountId,
-		pub vault_id: [u8; 32],
-		pub status: ProposalStatus,
-		pub offchain_status: BDKStatus<T::VaultDescriptionMaxLen>,
-		pub to_address: BoundedVec<u8, T::XPubLen>,
-		pub amount: u64,
-		pub fee_sat_per_vb: u32,
-		pub description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-		pub psbt: BoundedVec<u8, T::PSBTMaxLen>,
-		pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
-	}
-
-	impl<T: Config> Clone for Proposal<T>{
-		fn clone(&self) -> Self {
-			Self{
-				proposer: self.proposer.clone(),
-				vault_id: self.vault_id.clone(),
-				status: self.status.clone(),
-				offchain_status: self.offchain_status.clone(),
-				to_address: self.to_address.clone(),
-				amount: self.amount.clone(),
-				fee_sat_per_vb: self.fee_sat_per_vb.clone(),
-				description: self.description.clone(),
-				psbt: self.psbt.clone(),
-				signed_psbts: self.signed_psbts.clone(),
-			}
-		}
-	}
 	#[pallet::genesis_config]
 	pub struct GenesisConfig{
 		pub bdk_services_url: Vec<u8>,
@@ -199,6 +114,8 @@ pub mod pallet {
 		ProposalStored([u8;32],T::AccountId),
 		/// A proposal has been removed.
 		ProposalRemoved([u8;32],T::AccountId),
+		/// A proposal tx has been inserted by an OCW
+		ProposalTxIdStored([u8;32])
 	}
 
 	// Errors inform users that something went wrong.
@@ -234,7 +151,7 @@ pub mod pallet {
 		VaultOwnerPermissionsNeeded,
 		/// Vault members cannot be duplicate
 		DuplicateVaultMembers,
-		/// The account must participate in the vault to make a proposal
+		/// The account must participate in the vault to make a proposal or sign
 		SignerPermissionsNeeded,
 		/// The vault has too many proposals 
 		ExceedMaxProposalsPerVault,
@@ -242,6 +159,18 @@ pub mod pallet {
 		ProposalNotFound,
 		/// The account must be the proposer to remove it
 		ProposerPermissionsNeeded,
+		/// An identical proposal exists in storage 
+		AlreadyProposed,
+		/// The proposal was already signed by the user
+		AlreadySigned,
+		/// The proposal is already finalized or broadcasted
+		PendingProposalRequired,
+		/// The proposal signatures need to surpass the vault's threshold 
+		NotEnoughSignatures,
+		/// The proposal has structural failures
+		InvalidProposal,
+		/// This vault cant take proposals due to structural failures
+		InvalidVault,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -339,47 +268,31 @@ pub mod pallet {
 				// check for pending vaults to insert
 				let pending_vaults = Self::get_pending_vaults();
 				let pending_proposals = Self::get_pending_proposals();
+				let proposals_to_finalize = Self::get_proposals_to_finalize();
+				//let proposals_to_broadcast = Self::get_proposals_to_finalize();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
 				// This validation needs to be done after the lock: 
 				if !pending_vaults.is_empty() {
 					let generated_vaults = Self::gen_vaults_payload_by_bulk(pending_vaults);
-
-					if let Some((_, res)) = signer.send_unsigned_transaction(
-						// this line is to prepare and return payload
-						|acct| VaultsPayload {
-							vaults_payload: generated_vaults.clone(),
-							public: acct.public.clone(),
-						},
-						|payload, signature| Call::ocw_insert_descriptors { payload, signature },
-					) {
-						match res {
-							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-						};
-					} else {
-						// The case of `None`: no account is available for sending
-						log::error!("No local account available");
-					}
+					Self::send_ocw_insert_descriptors(generated_vaults, &signer);
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals);
-					if let Some((_, res)) = signer.send_unsigned_transaction(
-						// this line is to prepare and return payload
-						|acct| ProposalsPayload {
-							proposals_payload: generated_proposals_payload.clone(),
-							public: acct.public.clone(),
-						},
-						|payload, signature| Call::ocw_insert_psbts { payload, signature },
-					) {
-						match res {
-							Ok(()) => log::info!("unsigned tx with signed payload successfully sent."),
-							Err(()) => log::error!("sending unsigned tx with signed payload failed."),
-						};
-					} else {
-						// The case of `None`: no account is available for sending
-						log::error!("No local account available");
-					}
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals, 
+						b"/gen_psbt".to_vec(),
+					&Self::gen_proposal_json_body);
+					Self::send_ocw_insert_psbts(generated_proposals_payload, &signer);
+				}
+				if !proposals_to_finalize.is_empty(){
+					// generate proposal payloads:
+					let finalized_proposals = Self::get_proposals_to_finalize();
+					//Send unsigned tx:
+					let generated_finalized_tx = Self::gen_proposals_payload_by_bulk(
+						finalized_proposals, b"/finalize_trx".to_vec(),
+					&Self::gen_finalize_json_body);
+
+					Self::send_ocw_finalize_psbts(generated_finalized_tx, &signer);
+
 				}
 			}else {
 				log::error!("This OCW couln't get the lock");
@@ -444,7 +357,9 @@ pub mod pallet {
 		///
 		/// Removes the linked xpub from the account which signs the transaction.
 		/// The xpub will be removed from both the pallet storage and identity registration.
-		///
+		/// 
+		/// This tx does not takes any parameters.
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
@@ -455,10 +370,7 @@ pub mod pallet {
 			let vaults: Vec<[u8;32]>= <VaultsBySigner<T>>::get(who.clone()).iter().filter(|id|{
 				match <Vaults<T>>::get(id){
 					Some(vault) =>{
-						let vault_members = [
-							vault.cosigners.as_slice(),
-							&[vault.owner.clone()],
-						].concat();
+						let vault_members = vault.get_vault_members();
 						vault_members.contains(&who.clone())
 					},
 					None => false,
@@ -481,6 +393,7 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_vault(
@@ -493,7 +406,7 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 			if include_owner_as_cosigner {
 				cosigners.try_push(who.clone())
-				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault ).unwrap();
+				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault )?;
 			}
 			//  Cosigners are already bounded, only is necessary to check if its not empty
 			ensure!( cosigners.len()>1 , Error::<T>::NotEnoughCosigners);
@@ -506,7 +419,7 @@ pub mod pallet {
 				cosigners,
 				descriptors: Descriptors::<T::OutputDescriptorMaxLen> {
 					output_descriptor: BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
-						b"".encode(),
+						b"".to_vec(),
 					)
 					.expect("Error on encoding the descriptor to BoundedVec"),
 					change_descriptor: None,
@@ -517,9 +430,16 @@ pub mod pallet {
 			Self::do_insert_vault(vault)
 		}
 
-		// Vault removal
-		// Tries to remove vault
-		// TODO: Add PSBT validation when they get implemented
+		/// Vault removal
+		/// 
+		/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault to be removed with all its proposals
+		/// 
+		/// ### Considerations:
+		/// - Only the vault owner can perform this extrinsic
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_vault(
@@ -527,33 +447,8 @@ pub mod pallet {
 			vault_id: [u8; 32],
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			// Ensure vault exists and get it
-			let vault = <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
-			ensure!(vault.owner.eq(&who), Error::<T>::VaultOwnerPermissionsNeeded);
 
-			Self::do_remove_vault(vault_id)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn clean_vault_list(
-			origin: OriginFor<T>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			<VaultsBySigner<T>>::mutate_exists(who, | vault_list |{
-                match vault_list{
-                    Some(list) => {
-						let new_list: Vec<[u8;32]> = list.iter().filter(|vault_id|{
-							<Vaults<T>>::contains_key(vault_id)
-						}).copied().collect();
-						let bounded_list = BoundedVec::<[u8; 32], T::MaxVaultsPerUser>::try_from(new_list).unwrap();
-						list.clone_from(&bounded_list );
-						if list.len()<1 { *vault_list = None;}
-                    },
-                    _ =>log::warn!("Vault list not found for the user"),
-                }
-            });
-			Ok(())
+			Self::do_remove_vault(who, vault_id)
 		}
 
 		/// Vault transaction proposal
@@ -567,7 +462,6 @@ pub mod pallet {
 		/// - `description`: The reason for the proposal, why do you are proposing this?.
 		///
 		/// ### Considerations
-		/// - Do not include the vault owner on the `cosigners` list.
 		/// - Please ensure the recipient address is a valid mainnet address.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -579,7 +473,6 @@ pub mod pallet {
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::get_vault_members(vault_id.clone()).contains(&who),Error::<T>::SignerPermissionsNeeded);
 			// ensure user is in the vault
 			let proposal = Proposal::<T>{
 				proposer: who.clone(),
@@ -590,14 +483,21 @@ pub mod pallet {
 				amount: amount_in_sats,
 				fee_sat_per_vb: 1,
 				description,
-				psbt: BoundedVec::<u8, T::PSBTMaxLen>::try_from(
-					b"".encode()
-				).expect("Error on encoding the descriptor to BoundedVec"),
+				tx_id: None,
+				psbt: BoundedVec::<u8, T::PSBTMaxLen>::default(),
 				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
 			};
 			Self::do_propose(proposal)
 		}
 
+
+		/// Proposal removal
+		/// 
+		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
@@ -606,10 +506,22 @@ pub mod pallet {
 		) -> DispatchResult{
 			let who = ensure_signed(origin.clone())?;
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+			// Only vault proposer can remove
+			// validation before do_remove_proposal because the user is not needed anymore
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
 
+		/// BDK URL insertion
+		/// 
+		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
+		/// 
+		/// ### Parameters:
+		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  
+		///
+		/// ### Considerations
+		/// - Ensure the new url is valid.
+		/// - The url has a maximum length of 32 bytes
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
@@ -621,8 +533,96 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// PSBT signature insertion
+		/// 
+		/// Stores the signature for a PSBT proposal 
+		/// 
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - A user can only sign a proposal once 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn save_psbt(
+			origin: OriginFor<T>,
+			proposal_id: [u8; 32],
+			signature_payload: BoundedVec<u8, T::PSBTMaxLen>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_save_psbt(who, proposal_id, signature_payload)
+		}
+
+		/// Finalize PSBT
+		/// 
+		/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `broadcast`: A boolean flag 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must have a valid PSBT
+		/// - Any vault member can perform this extrinsic
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn finalize_psbt(
+			origin: OriginFor<T>,
+			proposal_id: [u8; 32],
+			broadcast: bool,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_psbt(who, proposal_id, broadcast)
+		}
 
 
+		/// Broadcast PSBT
+		/// 
+		/// Queries a proposal to be broadcasted in case it wasn't on the finalization step.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the vault identifier in which the proposal will be inserted
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must be finalized already
+		/// - Any vault member can perform this extrinsic
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn broadcast_psbt(
+			origin: OriginFor<T>,
+			proposal_id: [u8; 32],
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_psbt(who, proposal_id, true)
+		}
+
+		/// Kill almost all storage
+		/// 
+		/// Use with caution!
+		/// 
+		/// Can only be called by root and removes All vaults and proposals
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
+			<Vaults<T>>::remove_all(None);
+			<VaultsBySigner<T>>::remove_all(None);
+			<Proposals<T>>::remove_all(None);
+			<ProposalsByVault<T>>::remove_all(None);
+			Ok(())
+		}
+
+		/// Extrinsic to insert a valid vault descriptor
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
 		#[transactional]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
@@ -654,6 +654,10 @@ pub mod pallet {
 			).unwrap_or(Ok(()))
 		}
 
+		/// Extrinsic to insert a valid proposal PSBT
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
 		#[transactional]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_psbts(
@@ -673,7 +677,30 @@ pub mod pallet {
 					}
 					None
 				}
-			).unwrap_or(Ok(()))?;
+			)
+			.unwrap_or(Ok(()))?;
+			Ok(())
+		}
+
+		/// Extrinsic to insert a valid proposal TX_ID
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
+		#[transactional]
+		#[pallet::weight(0)]
+		pub fn ocw_finalize_psbts(
+			origin: OriginFor<T>,
+			payload: ProposalsPayload<T::Public>, // here the payload
+			_signature: T::Signature,// we don't need to verify the signature here because it has been verified in
+			//   `validate_unsigned` function when sending out the unsigned tx.
+		) -> DispatchResult {
+			ensure_none(origin.clone())?;
+			log::info!("Extrinsic recibido payload de: {:?}",payload);
+			payload.proposals_payload.iter().try_for_each(|proposal_tx|{
+				let bounded_tx_id = BoundedVec::<u8, T::VaultDescriptionMaxLen>::try_from(proposal_tx.psbt.clone() );
+				let status: BDKStatus<T::VaultDescriptionMaxLen> = proposal_tx.status.clone().into();
+				Self::do_insert_tx_id(proposal_tx.proposal_id, bounded_tx_id.ok(), status)
+			})?;
 			Ok(())
 		}
 	}
@@ -699,8 +726,14 @@ pub mod pallet {
 						return InvalidTransaction::BadProof.into();
 					}
 					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
-				},
+				}, // compiler complains if they aren't on different match arms
 				Call::ocw_insert_psbts { ref payload, ref signature } => {
+					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
+						return InvalidTransaction::BadProof.into();
+					}
+					valid_tx(b"unsigned_extrinsic_with_signed_payload".to_vec())
+				},
+				Call::ocw_finalize_psbts { ref payload, ref signature } => {
 					if !SignedPayload::<T>::verify::<T::AuthorityId>(payload, signature.clone()) {
 						return InvalidTransaction::BadProof.into();
 					}

@@ -6,7 +6,7 @@ A storage module for Native Bitcoin Vaults on substrate.
     - [Terminology](#terminology)
   - [Interface](#interface)
     - [Dispachable functions](#dispachable-functions)
-      - [Offchain worker dispatchable functions](#offchain-worker-dispatchable-functions)
+    - [Offchain worker dispatchable functions](#offchain-worker-dispatchable-functions)
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
@@ -22,6 +22,9 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Query vault's proposals](#query-vaults-proposals)
       - [Query proposals details](#query-proposals-details)
       - [Remove a proposal](#remove-a-proposal)
+      - [Sign a proposal](#sign-a-proposal)
+      - [Finalize (and posibly broadcast) a PSBT](#finalize-and-posibly-broadcast-a-psbt)
+      - [Broadcast a PSBT](#broadcast-a-psbt)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
       - [Insert an xpub](#insert-an-xpub-1)
       - [Query stored xpubs](#query-stored-xpubs)
@@ -35,6 +38,9 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Query vault's proposals](#query-vaults-proposals-1)
       - [Query proposals details](#query-proposals-details-1)
       - [Remove a proposal](#remove-a-proposal-1)
+      - [Sign a proposal](#sign-a-proposal-1)
+      - [Finalize (and posibly broadcast) a PSBT](#finalize-and-posibly-broadcast-a-psbt-1)
+      - [Broadcast a PSBT](#broadcast-a-psbt-1)
   - [Events](#events)
   - [Errors](#errors)
   - [Assumptions](#assumptions)
@@ -64,19 +70,24 @@ This module provides functionality for data management regarding the Native Bitc
 - `remove_vault` receives `vault_id` - remove vault and any proposals or PSBTs from storage.
 - `propose` Propose an expense in a specified vault, takes a `vault_id`, `recipient_address` to which the `amount_in_sats` will be sent, and a `description`. You need to participate on the vault.
 - `remove_proposal` removes the specified proposal by taking `proposal_id`. You need to be the user who proposed it.
-- `generate_new_address`
+- `save_psbt` takes a `proposal_id` and collects a signature payload in pure bytes for it, these types of signatures are necessary to fullfill the vault's `threshold`. If successful, this process cannot be undone.
+- `finalize_psbt` generates a `tx_id` by taking a `proposal_id`, a `broadcast` boolean flag must be specified to determine if the transaction will be automatically transmited to the blockchain or not. 
+- `broadcast` publishes the transaction if it wasn't on the previous step.
 
-#### Offchain worker dispatchable functions
+### Offchain worker dispatchable functions
 
 - `ocw_insert_descriptors` is only an extrinsic that is meant to be called by the pallet's offchain worker, as it makes the output descriptors insertion.
-- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it makes the psbt proposal insertion.
+- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it performs the psbt proposal insertion.
+- `ocw_finalize_psbts` inserts the generated `tx_id` for the transaction, which can be inspected with a block explorer.
 
 ### Getters
 - `xpubs`
 - `xpubs_by_owner`
 - `vaults`
 - `vaults_by_signer`
-- `psbts`
+- `proposals`
+- `proposals_by_vault`
+- `DefaultURL` (for bdk services)
 
 ## Usage
 
@@ -169,6 +180,24 @@ polkadot-js-api query.nbvStorage.proposals 0x8426160f6705e480825a5bdccb2e465ad09
 #### Remove a proposal
 ```bash
 polkadot-js-api tx.nbvStorage.removeProposal 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
+```
+
+#### Sign a proposal
+```bash
+polkadot-js-api tx.nbvStorage.savePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 "<generated_psbt>" --seed "//Alice"
+```
+
+#### Finalize (and posibly broadcast) a PSBT
+The second parameter is a boolean flag, if set to true, the transaction will be automatically broadcasted.
+```bash
+polkadot-js-api tx.nbvStorage.finalizePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 <true/false> --seed "//Alice"
+```
+
+#### Broadcast a PSBT
+This extrinsic is needed in case the PSBT is finalized but not broadcasted. 
+
+```bash
+polkadot-js-api tx.nbvStorage.broadcastPsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
 ```
 
 ### Polkadot-js api (javascript library)
@@ -284,21 +313,48 @@ const removeProposal = await api.tx.nbvStorage.removeProposal("0x8426160f6705e48
 console.log(removeProposal.toHuman());
 ```
 
+#### Sign a proposal
+
+```js
+const savePSBT = await api.tx.nbvStorage.savePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+console.log(savePSBT.toHuman());
+```
+
+#### Finalize (and posibly broadcast) a PSBT
+```js
+const finalizePsbt = await api.tx.nbvStorage.finalizePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+console.log(finalizePsbt.toHuman());
+```
+
+#### Broadcast a PSBT 
+```js
+const broadcastPsbt = await api.tx.nbvStorage.broadcastPsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+console.log(broadcastPsbt.toHuman());
+```
+
 ## Events
+
 ```rust
 /// Xpub and hash stored
 XPubStored([u8; 32], T::AccountId),
 /// Removed Xpub previously linked to the account
 XPubRemoved(T::AccountId),
-/// The PBST was succesfully inserted and linked to the account
-PSBTStored(T::AccountId),
+/// The PBST was succesfully inserted by an OCW
+PSBTStored([u8;32]),
 /// The vault was succesfully inserted and linked to the account as owner
 VaultStored([u8; 32], T::AccountId),
 /// The vault was succesfully removed by its owner
 VaultRemoved([u8; 32],T::AccountId),
 /// An offchain worker inserted a vault's descriptor 
 DescriptorsStored([u8;32]),
+/// A proposal has been inserted. 
+ProposalStored([u8;32],T::AccountId),
+/// A proposal has been removed.
+ProposalRemoved([u8;32],T::AccountId),
+/// A proposal tx has been inserted by an OCW
+ProposalTxIdStored([u8;32])
 ```
+
 ## Errors
 ```rust
 /// Work in progress!
@@ -331,7 +387,7 @@ NotEnoughCosigners,
 VaultOwnerPermissionsNeeded,
 /// Vault members cannot be duplicate
 DuplicateVaultMembers,
-/// The account must participate in the vault to make a proposal
+/// The account must participate in the vault to make a proposal or sign
 SignerPermissionsNeeded,
 /// The vault has too many proposals 
 ExceedMaxProposalsPerVault,
@@ -339,6 +395,18 @@ ExceedMaxProposalsPerVault,
 ProposalNotFound,
 /// The account must be the proposer to remove it
 ProposerPermissionsNeeded,
+/// An identical proposal exists in storage 
+AlreadyProposed,
+/// The proposal was already signed by the user
+AlreadySigned,
+/// The proposal is already finalized or broadcasted
+PendingProposalRequired,
+/// The proposal signatures need to surpass the vault's threshold 
+NotEnoughSignatures,
+/// The proposal has structural failures
+InvalidProposal,
+/// This vault cant take proposals due to structural failures
+InvalidVault,
 ```
 
 ## Assumptions
