@@ -114,6 +114,10 @@ pub mod pallet {
 		ProposalStored([u8;32],T::AccountId),
 		/// A proposal has been removed.
 		ProposalRemoved([u8;32],T::AccountId),
+		/// The user has uploaded its own PSBT
+		ProposalSigned([u8;32],T::AccountId),
+		/// A proposal has been set to be finalized
+		ProposalFinalized([u8;32],T::AccountId),
 		/// A proposal tx has been inserted by an OCW
 		ProposalTxIdStored([u8;32])
 	}
