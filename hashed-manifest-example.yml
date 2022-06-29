@@ -1,0 +1,67 @@
+# You can copy this file into hashed-manifest.yml so the changes are not tracked by git
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: md5-network
+spec:
+  selector:
+    matchLabels:
+      app: md5-network
+  template:
+    metadata:
+      labels:
+        app: md5-network
+    spec:
+      containers:
+      - name: md5-network
+        imagePullPolicy: IfNotPresent
+        image: abhashed/md5net:latest
+        command: ["sh"]
+        args: ["scripts/start_md5.sh"]
+        env:
+          - name: MNEMO
+            valueFrom:
+              secretKeyRef:
+                name: hashedsecrets
+                key: N4MNEMO
+                optional: false
+          - name: NODEKEY
+            valueFrom:
+              secretKeyRef:
+                name: hashedsecrets
+                key: N4NODEKEY
+                optional: false
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 9944
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  md5-network
+spec:
+  selector:
+    app:  md5-network
+  type:  NodePort
+  ports:
+  - name:  p2p-port
+    port:  30334
+    targetPort:  30333
+  - name:  ws-port
+    port:  9945
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9934
+    targetPort:  9933
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hashedsecrets
+type: Opaque
+data:
+  N4MNEMO: aG9sYQ== # here goes the mnemonic and node key enconded on base 64
+  N4NODEKEY: aG9sYQ==

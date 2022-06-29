@@ -27,6 +27,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
+        //TODO vault_id exist?
         // generate vault id
         ensure!(vault.signers_are_unique(), Error::<T>::DuplicateVaultMembers);
         let vault_id = vault.using_encoded(blake2_256);
@@ -123,6 +124,8 @@ impl<T: Config> Pallet<T> {
             }
             Ok(())
         })?;
+
+        Self::deposit_event(Event::ProposalSigned(proposal_id, signer));
         Ok(())
     }
 
@@ -145,6 +148,8 @@ impl<T: Config> Pallet<T> {
             }
             Ok(())
         })?;
+
+        Self::deposit_event(Event::ProposalFinalized(proposal_id, signer));
         Ok(())
     }
 
