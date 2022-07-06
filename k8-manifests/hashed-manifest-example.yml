@@ -1,0 +1,114 @@
+# You can copy this file into hashed-manifest.yml so the changes are not tracked by git
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: hashed-network
+  labels:
+    name: hashed-network
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: md5-network
+  namespace: hashed-network
+spec:
+  selector:
+    matchLabels:
+      app: md5-network
+  template:
+    metadata:
+      labels:
+        app: md5-network
+    spec:
+      containers:
+      - name: md5-network
+        imagePullPolicy: IfNotPresent
+        image: abhashed/hashednet:latest
+        command: ["bash"]
+        args: ["scripts/start_node.sh"]
+        volumeMounts:
+          - name: md5-db
+            mountPath:  /var/www/hashed/hashed-chaos-data
+        env:
+          - name: MNEMO
+            valueFrom:
+              secretKeyRef:
+                name: hashedsecrets
+                key: N4MNEMO
+                optional: false
+          - name: NODEKEY
+            valueFrom:
+              secretKeyRef:
+                name: hashedsecrets
+                key: N4NODEKEY
+                optional: false
+        resources:
+          limits:
+            memory: "4G"
+            cpu: "2.0"
+        ports:
+        - containerPort: 9934
+        - containerPort: 9944
+        - containerPort: 30333
+      volumes:
+        - name: md5-db
+          persistentVolumeClaim:
+            claimName: md5persistentvolumeclaim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: md5persistentvolumeclaim
+    namespace: hashed-network
+spec:
+  volumeMode: Filesystem
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  md5-network
+  namespace: hashed-network
+spec:
+  selector:
+    app:  md5-network
+  type:  NodePort
+  ports:
+  - name:  p2p-port
+    port:  30334
+    targetPort:  30333
+  - name:  ws-port
+    port:  9945
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9934
+    targetPort:  9933
+---
+# Uncomment if a persistent volume needs to be created manually
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: md5-persistent-volume
+#   namespace: hashed-network
+# spec:
+#   capacity:
+#     storage: 20Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /var/www/hashed/
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: minikube.k8s.io/hostname
+#               operator: In
+#               values:
+#               - minikube

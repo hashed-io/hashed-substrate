@@ -24,3 +24,5 @@ hasher*.txt
 docker-compose.override.yml
 
 hashed-manifest.yml
+md5-manifest.yml
+hashed-secrets-manifest.yml
