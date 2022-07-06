@@ -128,7 +128,10 @@ pub mod pallet {
 		ApplicationStored([u8;32], [u8;32]),
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
 		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
-		
+		/// Add a new authority to the selected marketplace
+		AuthorityAdded(T::AccountId, MarketplaceAuthority),
+		/// Remove the selected authority from the selected marketplace
+		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
 	}
 
 	// Errors inform users that something went wrong.
@@ -156,7 +159,20 @@ pub mod pallet {
 		MarketplaceNotFound,
 		/// You need to be an owner or an admin of the marketplace
 		CannotEnroll,
-
+		/// There cannot be more than one owner per marketplace
+		OnlyOneOwner, 
+		/// There is no owner
+		NoOwnerAssigned,
+		/// Cannot remove the owner
+		ThereAlwaysExistOneOwner,
+		/// Admin can not remove itself
+		NegateRemoveAdminItself,
+		/// User has already been assigned with that role
+		CannotAddAuthority,
+		/// User not found
+		UserNotFound,
+		// Rol not found for the selected user
+		RolNotFoundForUser,
 	}
 
 	#[pallet::call]
@@ -195,6 +211,25 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_enroll(who, marketplace_id, account_or_application, approved)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn add_authority(origin: OriginFor<T>, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_authorise(who, author, authority_type, marketplace_id)
+		}
+
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_authority(origin: OriginFor<T>, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should 
+			// check what role we want to remove instead of removing the user completely from
+			// selected marketplace. 
+			Self::remove_authorise(who, author, authority_type, marketplace_id)
 		}
 
 		#[transactional]
