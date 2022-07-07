@@ -63,9 +63,9 @@ pub mod pallet {
 	pub(super) type MarketplacesByAuthority<T: Config> = StorageDoubleMap<
 		_, 
 		Blake2_128Concat, 
-		T::AccountId, 
+		T::AccountId, // K1: Authority 
 		Blake2_128Concat, 
-		[u8;32], //marketplace_id 
+		[u8;32], // K2: marketplace_id 
 		BoundedVec<MarketplaceAuthority, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
 		ValueQuery
 	>;
@@ -75,9 +75,9 @@ pub mod pallet {
 	pub(super) type AuthoritiesByMarketplace<T: Config> = StorageDoubleMap<
 		_, 
 		Identity, 
-		[u8;32], // marketplace_id 
+		[u8;32], //K1: marketplace_id 
 		Blake2_128Concat, 
-		MarketplaceAuthority, 
+		MarketplaceAuthority, //k2: authority
 		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
 		ValueQuery
 	>;
@@ -160,11 +160,9 @@ pub mod pallet {
 		/// You need to be an owner or an admin of the marketplace
 		CannotEnroll,
 		/// There cannot be more than one owner per marketplace
-		OnlyOneOwner, 
-		/// There is no owner
-		NoOwnerAssigned,
-		/// Cannot remove the owner
-		ThereAlwaysExistOneOwner,
+		OnlyOneOwnerIsAllowed,
+		/// Cannot remove the owner of the marketplace
+		CantRemoveOwner,
 		/// Admin can not remove itself
 		NegateRemoveAdminItself,
 		/// User has already been assigned with that role
@@ -173,6 +171,10 @@ pub mod pallet {
 		UserNotFound,
 		// Rol not found for the selected user
 		RolNotFoundForUser,
+		/// User is not admin	
+		UserIsNotAdmin,
+		/// User is not found for the query
+		UserNotFoundForThisQuery
 	}
 
 	#[pallet::call]
