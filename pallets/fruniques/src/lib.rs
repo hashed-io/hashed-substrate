@@ -145,6 +145,37 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// ## Set multiple attributes to a frunique.
+		/// `origin` must be signed by the owner of the frunique.
+		/// - `attributes` must be a list of pairs of `key` and `value`.
+		/// `key` must be a valid key for the asset class.
+		/// `value` must be a valid value for the asset class.
+		/// `attributes` must not be empty.
+		/// - `instance_id` must be a valid instance of the asset class.
+		/// - `class_id` must be a valid class of the asset class.
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn setAttributes(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			instance_id: T::ItemId,
+			attributes: Vec<(Vec<u8>, Vec<u8>)>,
+		) -> DispatchResult {
+			let owner = ensure_signed(origin.clone())?;
+			let admin = Self::get_admin(class_id, instance_id)?;
+			ensure!(owner == admin, <Error<T>>::NoPermission);
+			for (key, value) in attributes {
+				pallet_uniques::Pallet::<T>::set_attribute(
+					origin.clone(),
+					class_id,
+					Some(instance_id),
+					key,
+					value,
+				)?;
+			}
+			Ok(())
+		}
+
 		/// ## NFT Division
 		///
 		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
