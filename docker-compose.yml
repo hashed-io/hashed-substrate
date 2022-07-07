@@ -1,17 +1,17 @@
-version: "3.2"
+version: "3.8"
 
 services:
-  dev:
-    container_name: hashed
-    image: paritytech/ci-linux:974ba3ac-20201006
-    working_dir: /var/www/hashed
+  md5:
+    container_name: md5_container
+    image: abhashed/md5net
     ports:
+      - "30333:30333"
+      - "9933:9933"
       - "9944:9944"
-    environment:
-      - CARGO_HOME=/var/www/hashed/.cargo
+    # Declare environment variables in docker-compose.override.yml for safety purposes
     volumes:
       - .:/var/www/hashed
       - type: bind
         source: ./.local
         target: /root/.local
-    command: bash -c "cargo build --release && ./target/release/hashed --dev --ws-external"
+    command: sh "scripts/start_md5.sh"

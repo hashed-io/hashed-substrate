@@ -20,3 +20,7 @@ data*
 hasher*.txt
 
 /hashed-chaos-data
+
+docker-compose.override.yml
+
+hashed-manifest.yml

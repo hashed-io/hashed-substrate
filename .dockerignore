@@ -1,0 +1,7 @@
+.cargo
+.devcontainer
+local
+.vscode
+docs
+hashed-chaos-data
+target
