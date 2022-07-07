@@ -18,7 +18,6 @@
 data*
 
 hasher*.txt
-
 /hashed-chaos-data
 
 docker-compose.override.yml
@@ -26,3 +25,5 @@ docker-compose.override.yml
 hashed-manifest.yml
 md5-manifest.yml
 hashed-secrets-manifest.yml
+gcloud-hashed-ingress.yml
+gcloud-md5-ingress.yml
