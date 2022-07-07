@@ -243,38 +243,4 @@ pub mod pallet {
 
 	}
 
-	impl<T: Config> Pallet<T> 
-	where
-	T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
-	{
-		pub fn u32_to_instance_id(input: u32) -> T::ItemId where <T as pallet_uniques::Config>::ItemId: From<u32> {
-		 	T::ItemId::from(input)
-		}
-
-		pub fn bytes_to_string(input: Vec<u8>) -> String {
-			let mut s = String::default();
-			for x in input {
-				//let c: char = x.into();
-				s.push(x as char);
-			}
-			s
-		}
-		/// Helper function for printing purposes
-		// pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
-		// 	u32::from_ne_bytes(input.try_into().unwrap())
-		// }
-
-		//get uniques attribute?
-		pub fn get_nft_attribute(
-			class_id: &T::CollectionId,
-			instance_id: &T::ItemId,
-			key: &Vec<u8>,
-		) -> BoundedVec<u8, T::ValueLimit> {
-			if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
-				return BoundedVec::<u8, T::ValueLimit>::try_from(a)
-					.expect("Error on converting the attribute to BoundedVec");
-			}
-			BoundedVec::<u8, T::ValueLimit>::default()
-		}
-	}
 }
