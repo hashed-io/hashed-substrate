@@ -50,6 +50,7 @@ pub mod pallet {
 	pub enum Error<T> {
 		NoneValue,
 		NoPermission,
+		NotAdmin,
 		StorageOverflow,
 		NotYetImplemented,
 		// Too many fruniques were minted
@@ -164,6 +165,15 @@ pub mod pallet {
 			attributes: Vec<(BoundedVec::<u8, T::KeyLimit>, BoundedVec::<u8, T::ValueLimit>)>,
 		) -> DispatchResult {
 
+			// ! Ensure the admin is the one who can add attributes to the frunique.
+			let admin = Self::admin_of(&class_id, &instance_id);
+			ensure!(admin == core::prelude::v1::Some(ensure_signed(origin.clone())?), <Error<T>>::NotAdmin);
+
+			ensure!(
+				!attributes.is_empty(),
+				Error::<T>::AttributesEmpty
+			);
+			
 			for attribute in &attributes {
 				ensure!(
 					attribute.0.len() <= T::KeyLimit::get().try_into().unwrap(),
@@ -181,10 +191,6 @@ pub mod pallet {
 				)?;
 
 			}
-			ensure!(
-				!attributes.is_empty(),
-				Error::<T>::AttributesEmpty
-			);
 
 
 			Ok(())

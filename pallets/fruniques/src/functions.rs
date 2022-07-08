@@ -38,4 +38,18 @@ impl<T: Config> Pallet<T> {
 		}
 		BoundedVec::<u8, T::ValueLimit>::default()
 	}
+
+	pub fn admin_of(
+		class_id: &T::CollectionId,
+		instance_id: &T::ItemId,
+	) -> Option<T::AccountId> {
+		// let mut collection_details =
+		// 		Collection::<T, I>::get(&collection).ok_or(Error::<T, I>::UnknownCollection)?;
+
+		if let Some(a) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
+			return Some(a);
+		}
+		None
+	}
+	
 }
