@@ -165,6 +165,8 @@ pub mod pallet {
 			attributes: Vec<(BoundedVec::<u8, T::KeyLimit>, BoundedVec::<u8, T::ValueLimit>)>,
 		) -> DispatchResult {
 
+			// let origin = ensure_signed(origin)?;
+
 			// ! Ensure the admin is the one who can add attributes to the frunique.
 			let admin = Self::admin_of(&class_id, &instance_id);
 			ensure!(admin == core::prelude::v1::Some(ensure_signed(origin.clone())?), <Error<T>>::NotAdmin);
