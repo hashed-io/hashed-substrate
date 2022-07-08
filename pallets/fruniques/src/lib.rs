@@ -23,7 +23,6 @@ pub mod pallet {
 		BoundedVec,
 	};
 	use frame_system::pallet_prelude::*;
-	use scale_info::prelude::string::String;
 	use scale_info::prelude::vec::Vec;
 	use sp_runtime::{traits::StaticLookup, Permill};
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -57,6 +56,9 @@ pub mod pallet {
 		FruniqueCntOverflow,
 		// The asset_id is not linked to a frunique or it doesn't exists
 		NotAFrunique,
+		KeyTooLong,
+		ValueTooLong,
+		AttributesEmpty,
 	}
 
 	#[pallet::storage]
@@ -155,24 +157,36 @@ pub mod pallet {
 		/// - `class_id` must be a valid class of the asset class.
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn setAttributes(
+		pub fn set_attributes(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
 			instance_id: T::ItemId,
-			attributes: Vec<(Vec<u8>, Vec<u8>)>,
+			attributes: Vec<(BoundedVec::<u8, T::KeyLimit>, BoundedVec::<u8, T::ValueLimit>)>,
 		) -> DispatchResult {
-			let owner = ensure_signed(origin.clone())?;
-			let admin = Self::get_admin(class_id, instance_id)?;
-			ensure!(owner == admin, <Error<T>>::NoPermission);
-			for (key, value) in attributes {
+
+			for attribute in &attributes {
+				ensure!(
+					attribute.0.len() <= T::KeyLimit::get().try_into().unwrap(),
+					Error::<T>::KeyTooLong
+				);
+				ensure!(
+					attribute.1.len() <= T::ValueLimit::get().try_into().unwrap(),
+					Error::<T>::ValueTooLong
+				);
+
 				pallet_uniques::Pallet::<T>::set_attribute(
-					origin.clone(),
-					class_id,
-					Some(instance_id),
-					key,
-					value,
+					origin.clone(), class_id,
+					Some(Self::u32_to_instance_id(instance_id)),
+					attribute.0.clone(), attribute.1.clone()
 				)?;
+
 			}
+			ensure!(
+				!attributes.is_empty(),
+				Error::<T>::AttributesEmpty
+			);
+
+
 			Ok(())
 		}
 
