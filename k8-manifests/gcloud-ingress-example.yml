@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: md5-network
+  namespace: hashed-network
+  annotations:
+    kubernetes.io/ingress.class: "nginx"    
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - md5.hashed.systems
+    secretName: md5-network
+  rules:
+  - host: md5.hashed.systems
+    http:
+      paths:
+      - pathType: Prefix
+        path: /p2p/
+        backend:
+          service:
+            name: md5-network
+            port:
+              number: 30334
+      - pathType: Prefix
+        path: /ws/
+        backend:
+          service:
+            name: md5-network
+            port:
+              number: 9945
+      - pathType: Prefix
+        path: /rpc/
+        backend:
+          service:
+            name: md5-network
+            port:
+              number: 9934
+  
