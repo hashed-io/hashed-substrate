@@ -512,6 +512,8 @@ pub mod pallet {
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
 			// Only vault proposer can remove
 			// validation before do_remove_proposal because the user is not needed anymore
+			//TODO: proposal cannot be erased if readyToBroadcast() finalized or broadcasted
+        	// -> erase only pending
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
