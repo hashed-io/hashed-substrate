@@ -63,6 +63,7 @@ parameter_types! {
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
+	pub const  MaxApplicationsPerCustodian: u32 = 2;
 }
 
 impl pallet_gated_marketplace::Config for Test {
@@ -75,6 +76,7 @@ impl pallet_gated_marketplace::Config for Test {
 	type NotesMaxLen = NotesMaxLen;
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles= MaxFiles;
+	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 }
 
 // Build genesis storage according to the mock runtime.

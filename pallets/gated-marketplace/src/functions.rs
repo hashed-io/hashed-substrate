@@ -2,6 +2,7 @@ use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
+use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
 
 impl<T: Config> Pallet<T> {
@@ -20,7 +21,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_apply(applicant: T::AccountId, marketplace_id: [u8;32], application : Application<T>)->DispatchResult{
+    pub fn do_apply(applicant: T::AccountId, custodian: Option<T::AccountId>, marketplace_id: [u8;32], application : Application<T>)->DispatchResult{
         // marketplace exists?
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         // The user only can apply once by marketplace
@@ -31,6 +32,9 @@ impl<T: Config> Pallet<T> {
         <ApplicationsByAccount<T>>::insert(applicant, marketplace_id, app_id);
         <Applications<T>>::insert(app_id, application);
 
+        if let Some(c) = custodian{
+            Self::insert_custodian(c, marketplace_id, app_id)?;
+        }
         Self::deposit_event(Event::ApplicationStored(app_id, marketplace_id));
         Ok(())
     }
@@ -127,6 +131,28 @@ impl<T: Config> Pallet<T> {
 
     /*---- Helper functions ----*/
 
+    pub fn set_up_application(
+        fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+        custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+    )-> (Option<T::AccountId>, BoundedVec<ApplicationField, T::MaxFiles> ){
+        let mut f: Vec<ApplicationField>= fields.iter().map(|tuple|{
+            ApplicationField{
+                display_name: tuple.0.clone(), cid: tuple.1.clone(), custodian_cid: None,
+            }
+        }).collect();
+        let custodian = match custodian_fields{
+            Some(c_fields)=>{
+                for i in 0..f.len(){
+                    f[i].custodian_cid = Some(c_fields.1[i].clone());
+                }
+
+                Some(c_fields.0)
+            },
+            _ => None,
+        };
+        (custodian, BoundedVec::<ApplicationField, T::MaxFiles>::try_from(f).unwrap_or_default() )
+    }
+
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceAuthority, marketplace_id: [u8;32])->DispatchResult{
 
         <MarketplacesByAuthority<T>>::try_mutate(authority.clone(), marketplace_id, |account_auths|{
@@ -142,6 +168,13 @@ impl<T: Config> Pallet<T> {
     fn insert_in_applicants_lists(applicant: T::AccountId, status: ApplicationStatus , marketplace_id : [u8;32])->DispatchResult{
         <ApplicantsByMarketplace<T>>::try_mutate(marketplace_id, status,|applicants|{
             applicants.try_push(applicant)
+        }).map_err(|_| Error::<T>::ExceedMaxApplicants)?;
+        Ok(())
+    }
+
+    fn insert_custodian(custodian: T::AccountId, marketplace_id : [u8;32], application_id: [u8;32])-> DispatchResult{
+        <Custodians<T>>::try_mutate(custodian, marketplace_id, | applications |{
+            applications.try_push(application_id)
         }).map_err(|_| Error::<T>::ExceedMaxApplicants)?;
         Ok(())
     }

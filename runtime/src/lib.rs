@@ -550,6 +550,7 @@ parameter_types! {
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
+	pub const MaxApplicationsPerCustodian: u32 = 10;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
@@ -563,7 +564,8 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type NameMaxLen= NameMaxLen;
-	type MaxFiles= MaxFiles;
+	type MaxFiles = MaxFiles;
+	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 }
 
 parameter_types! {
