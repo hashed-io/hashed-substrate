@@ -18,6 +18,7 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 
 	#[pallet::config]
@@ -40,6 +41,8 @@ pub mod pallet {
 		type NameMaxLen: Get<u32>;
 		#[pallet::constant]
 		type MaxFiles: Get<u32>;
+		#[pallet::constant]
+		type MaxApplicationsPerCustodian: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -117,6 +120,19 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn custodians)]
+	pub(super) type Custodians<T: Config> = StorageDoubleMap<
+		_, 
+		Blake2_128Concat, 
+		T::AccountId, //custodians
+		Blake2_128Concat, 
+		[u8;32], //marketplace_id 
+		BoundedVec<[u8;32],T::MaxApplicationsPerCustodian>, //application_id 
+		ValueQuery
+	>;
+
+
 
 
 	#[pallet::event]
@@ -147,6 +163,8 @@ pub mod pallet {
 		ExceedMaxRolesPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
+		/// This custodian has too many applications for this market, try with another one
+		ExceedMMaxApplicationsPerCustodian,
 		/// Applicaion doesnt exist
 		ApplicationNotFound,
 		/// The user has not applicated to that market before
@@ -194,17 +212,18 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>, 
-			marketplace_id: [u8;32], 
-			notes: BoundedVec<u8,T::NotesMaxLen>, 
-			files : BoundedVec<ApplicationFile<T::NameMaxLen>, T::MaxFiles>, 
+			marketplace_id: [u8;32],
+			// Getting encoding errors from polkadotjs if an object vector have optional fields
+			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			let (custodian, fields) = Self::set_up_application(fields,custodian_fields);
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
-				notes,
-				files,
+				fields ,
 			};
-			Self::do_apply(who, marketplace_id, application)
+			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 
 		#[transactional]
@@ -246,6 +265,7 @@ pub mod pallet {
 			<Applications<T>>::remove_all(None);
 			<ApplicationsByAccount<T>>::remove_all(None);
 			<ApplicantsByMarketplace<T>>::remove_all(None);
+			<Custodians<T>>::remove_all(None);
 			Ok(())
 		}
 

@@ -13,24 +13,27 @@ fn dummy_notes() -> BoundedVec<u8, NotesMaxLen> {
 	s.try_into().unwrap_or_default()
 }
 
-fn create_file(name: &str, cid: &str) -> ApplicationFile<NameMaxLen> {
+fn create_file(name: &str, cid: &str, create_custodian_file: bool) -> ApplicationField {
 	let display_name_vec: Vec<u8> = name.as_bytes().into();
-	let display_name: BoundedVec<u8, NameMaxLen> = display_name_vec.try_into().unwrap_or_default();
-	let cid :BoundedVec<u8, ConstU32<100>> = cid.as_bytes().to_vec().try_into().unwrap_or_default(); 
-	ApplicationFile{
+	let display_name: BoundedVec<u8, ConstU32<100>> = display_name_vec.try_into().unwrap_or_default();
+	let cid :BoundedVec<u8, ConstU32<100>> = cid.as_bytes().to_vec().try_into().unwrap_or_default();
+	let custodian_cid = match create_custodian_file{ true => Some(cid.clone()), false=> None};
+	ApplicationField{
 		display_name,
-		cid
+		cid,
+		custodian_cid,
 	}
 }
 
-fn create_application_files( n_files: u32) -> BoundedVec<ApplicationFile<NameMaxLen>,MaxFiles> {
-	let mut files = Vec::<ApplicationFile<NameMaxLen>>::default();
+fn create_application_fields( n_files: u32, create_custodian_files: bool) -> 
+		BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles> {
+	let mut files = Vec::<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> )>::default();
 	for i in 0..n_files{
 		let file_name = format!("file{}",i.to_string());
 		let cid = format!("cid{}",i.to_string());
-		files.push(create_file(file_name.as_str(), cid.as_str()));
+		files.push( (file_name.encode().try_into().unwrap_or_default(), cid.encode().try_into().unwrap_or_default()) );
 	}
-	BoundedVec::<ApplicationFile<NameMaxLen>,MaxFiles>::try_from( files).unwrap_or_default()
+	BoundedVec::<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles>::try_from( files).unwrap_or_default()
 }
 
 
@@ -69,7 +72,7 @@ fn apply_to_marketplace_works() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2,false), None ));
 
 		assert!( GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending).len() ==1);
 	});
@@ -82,7 +85,7 @@ fn apply_to_nonexistent_marketplace_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		// No such marletplace exists:
 		let m_id = create_label("false marketplace").using_encoded(blake2_256);
-		assert_noop!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ), Error::<Test>::MarketplaceNotFound);
+		assert_noop!(GatedMarketplace::apply(Origin::signed(3),m_id,create_application_fields(2,false), None ), Error::<Test>::MarketplaceNotFound);
 	});
 }
 
@@ -92,8 +95,8 @@ fn apply_twice_shouldnt_work() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
-		assert_noop!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ), Error::<Test>::AlreadyApplied );
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3), m_id, create_application_fields(2,false), None ));
+		assert_noop!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2,false), None ), Error::<Test>::AlreadyApplied );
 	});
 }
 
@@ -103,9 +106,9 @@ fn exceeding_max_applicants_shouldnt_work() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
-		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, dummy_notes(),create_application_files(3) ));
-		assert_noop!(GatedMarketplace::apply(Origin::signed(5),m_id, dummy_notes(),create_application_files(1) ), Error::<Test>::ExceedMaxApplicants );
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2,false), None ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(3,false), None ));
+		assert_noop!(GatedMarketplace::apply(Origin::signed(5),m_id, create_application_fields(1,false), None ), Error::<Test>::ExceedMaxApplicants );
 	});
 }
 
@@ -115,13 +118,9 @@ fn enroll_works() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
-		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, dummy_notes(),create_application_files(1) ));
-		let app_id = Application::<Test>{
-			status : ApplicationStatus::Pending ,
-			notes : dummy_notes(),
-			files: create_application_files(1),
-		}.using_encoded(blake2_256);
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id,create_application_fields(2,false,), None ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id,create_application_fields(1,false), None));
+		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
 		// enroll with account
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true));
 		// enroll with application
@@ -135,13 +134,9 @@ fn enroll_reject_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
-		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, dummy_notes(),create_application_files(1) ));
-		let app_id = Application::<Test>{
-			status : ApplicationStatus::Pending ,
-			notes : dummy_notes(),
-			files: create_application_files(1),
-		}.using_encoded(blake2_256);
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2,false), None ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(1,false), None ));
+		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
 		// reject with account
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), false));
 		// reject with application
@@ -155,12 +150,8 @@ fn change_enroll_status_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, dummy_notes(),create_application_files(1) ));
-		let app_id = Application::<Test>{
-			status : ApplicationStatus::Pending ,
-			notes : dummy_notes(),
-			files: create_application_files(1),
-		}.using_encoded(blake2_256);
+		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(1,false), None ));
+		let app_id = GatedMarketplace::applications_by_account(4,m_id).unwrap();
 		// reject an account
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(4), false));
 		// and then change it to "accepted"
@@ -174,7 +165,7 @@ fn non_authorized_user_enroll_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, dummy_notes(),create_application_files(2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2,false), None ));
 
 		// external user tries to enroll someone
 		assert_noop!(GatedMarketplace::enroll(Origin::signed(4), m_id , AccountOrApplication::Account(3), true), Error::<Test>::CannotEnroll);

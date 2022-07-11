@@ -550,6 +550,7 @@ parameter_types! {
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
+	pub const MaxApplicationsPerCustodian: u32 = 10;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
@@ -563,7 +564,8 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type NameMaxLen= NameMaxLen;
-	type MaxFiles= MaxFiles;
+	type MaxFiles = MaxFiles;
+	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 }
 
 parameter_types! {
@@ -573,7 +575,7 @@ parameter_types! {
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault: u32 = 1000;
+	pub const MaxProposalsPerVault: u32 = 5;
 }
 
 impl pallet_nbv_storage::Config for Runtime {

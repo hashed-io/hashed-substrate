@@ -37,8 +37,7 @@ impl Default for MarketplaceAuthority{
 #[codec(mel_bound())]
 pub struct  Application< T: Config >{
     pub status : ApplicationStatus,
-    pub notes : BoundedVec<u8, T::NotesMaxLen>,
-    pub files: BoundedVec<ApplicationFile<T::NameMaxLen>, T::MaxFiles>
+    pub fields: BoundedVec<ApplicationField, T::MaxFiles>
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo)]
@@ -55,14 +54,13 @@ impl Default for ApplicationStatus{
 }
 
 #[derive(CloneNoBound, Encode ,Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-#[scale_info(skip_type_params(M))]
-#[codec(mel_bound())]
-pub struct ApplicationFile< M : Get<u32> >{
-    pub display_name: BoundedVec<u8,M >,
-    pub cid: BoundedVec<u8, ConstU32<100> >
+pub struct ApplicationField{
+    pub display_name: BoundedVec<u8,ConstU32<100> >,
+    pub cid: BoundedVec<u8, ConstU32<100> >,
+    pub custodian_cid: Option<BoundedVec<u8, ConstU32<100> > >,
 }
 // Eq macro didnt work (binary operation `==` cannot be applied to type...)
-impl<M : Get<u32>> PartialEq for ApplicationFile<M>{
+impl PartialEq for ApplicationField{
     fn eq(&self, other: &Self) -> bool{
         self.cid == other.cid && self.display_name == other.display_name
     }
