@@ -3,7 +3,7 @@ version: "3.8"
 services:
   md5:
     container_name: md5_container
-    image: abhashed/md5net
+    image: abhashed/hashednet
     ports:
       - "30333:30333"
       - "9933:9933"
@@ -14,4 +14,4 @@ services:
       - type: bind
         source: ./.local
         target: /root/.local
-    command: sh "scripts/start_md5.sh"
+    command:  bash "scripts/start_node.sh"
