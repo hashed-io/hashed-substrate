@@ -19,7 +19,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{
 		pallet_prelude::*,
-		traits::tokens::nonfungibles::{Inspect, InspectEnumerable},
+		traits::tokens::nonfungibles::{Inspect},
 		BoundedVec,
 	};
 	use frame_system::pallet_prelude::*;
