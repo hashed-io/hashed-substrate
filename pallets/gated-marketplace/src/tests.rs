@@ -252,9 +252,11 @@ fn remove_authority_owner_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 3,MarketplaceAuthority::Owner, m_id), Error::<Test>::CantRemoveOwner);
+		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 1 ,MarketplaceAuthority::Owner, m_id), Error::<Test>::CantRemoveOwner);
 	});
 }
+
+
 
 #[test]
 fn remove_authority_admin_by_admin_shouldnt_work(){
@@ -272,7 +274,7 @@ fn remove_authority_user_tries_to_remove_non_existent_role_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3,MarketplaceAuthority::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 3,MarketplaceAuthority::Admin, m_id), Error::<Test>::UserNotFound);
+		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 3,MarketplaceAuthority::Admin, m_id), Error::<Test>::AuthorityNotFoundForUser);
 	});
 }
 
