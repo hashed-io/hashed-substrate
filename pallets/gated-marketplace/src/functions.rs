@@ -26,15 +26,17 @@ impl<T: Config> Pallet<T> {
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         // The user only can apply once by marketplace
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id), Error::<T>::AlreadyApplied);
-
+        // Generate application Id
         let app_id = application.using_encoded(blake2_256);
+        if let Some(c) = custodian{
+            // Ensure applicant and custodian arent the same
+            ensure!(applicant.ne(&c),Error::<T>::ApplicantCannotBeCustodian);
+            Self::insert_custodian(c, marketplace_id, app_id)?;
+        }
         Self::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)?;
         <ApplicationsByAccount<T>>::insert(applicant, marketplace_id, app_id);
         <Applications<T>>::insert(app_id, application);
 
-        if let Some(c) = custodian{
-            Self::insert_custodian(c, marketplace_id, app_id)?;
-        }
         Self::deposit_event(Event::ApplicationStored(app_id, marketplace_id));
         Ok(())
     }
@@ -175,7 +177,7 @@ impl<T: Config> Pallet<T> {
     fn insert_custodian(custodian: T::AccountId, marketplace_id : [u8;32], application_id: [u8;32])-> DispatchResult{
         <Custodians<T>>::try_mutate(custodian, marketplace_id, | applications |{
             applications.try_push(application_id)
-        }).map_err(|_| Error::<T>::ExceedMaxApplicants)?;
+        }).map_err(|_| Error::<T>::ExceedMaxApplicationsPerCustodian)?;
         Ok(())
     }
 
