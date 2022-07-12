@@ -34,6 +34,26 @@ fn create_frunique_works() {
 	});
 }
 
+// this test is failing for some reason...
+/*---- tests::spawn_extrinsic_works stdout ----
+thread 'tests::spawn_extrinsic_works' panicked at 'Expected Ok(_). Got Err(
+    Module(
+        ModuleError {
+            index: 1,
+            error: [
+                1,
+                0,
+                0,
+                0,
+            ],
+            message: Some(
+                "UnknownCollection",
+            ),
+        },
+    ),
+)', pallets/fruniques/src/tests.rs:41:9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+*/
 #[test]
 fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
