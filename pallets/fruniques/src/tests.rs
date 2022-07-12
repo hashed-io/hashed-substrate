@@ -1,5 +1,6 @@
-use crate::mock::*;
-use frame_support::assert_ok;
+use crate::{Error, mock::*};
+
+use frame_support::{assert_ok, assert_err, assert_noop};
 use sp_runtime::Permill;
 
 pub struct ExtBuilder;
@@ -41,5 +42,13 @@ fn spawn_extrinsic_works() {
 		//Fruniques::spawn(Origin::signed(1),1,255,true,Permill::from_float(20.525),1 );
 		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true,Permill::from_float(20.525),1));
 		assert_ok!(Fruniques::instance_exists(Origin::signed(1), 1, 1));
+	});
+}
+
+#[test]
+fn set_attributes() {
+	ExtBuilder::default().build().execute_with(|| {
+		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0,Some(Permill::from_percent(50)) ,1));
+		assert_noop!(Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![]), Error::<Test>::AttributesEmpty);
 	});
 }
