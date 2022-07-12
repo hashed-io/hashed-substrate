@@ -19,7 +19,7 @@ pub enum AccountOrApplication<T: Config>{
     Application([u8;32]),
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum MarketplaceAuthority{
     Owner,
     Admin,
@@ -40,6 +40,8 @@ pub struct  Application< T: Config >{
     pub fields: BoundedVec<ApplicationField, T::MaxFiles>
 }
 
+
+//TODO: try to implement copy trait for ApplicationStatus to reduce clone calls
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo)]
 pub enum ApplicationStatus{
     Pending,
