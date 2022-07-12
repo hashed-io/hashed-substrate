@@ -17,13 +17,27 @@ Create marketplaces that require previous authorization before placing sell and 
       - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian)
       - [Get an application](#get-an-application)
       - [Get the users application id on a marketplace](#get-the-users-application-id-on-a-marketplace)
-      - [Get marketplace applications by status](#get-marketplace-applications-by-status)
+      - [Get marketplace applicants by status](#get-marketplace-applicants-by-status)
       - [Get which applications the user guards as a custodian](#get-which-applications-the-user-guards-as-a-custodian)
       - [Enroll an applicant (by its account)](#enroll-an-applicant-by-its-account)
       - [Enroll an applicant (by its application id)](#enroll-an-applicant-by-its-application-id)
       - [Add authority user to marketplace](#add-authority-user-to-marketplace)
       - [Remove authority user to marketplace](#remove-authority-user-to-marketplace)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
+      - [Create a marketplace](#create-a-marketplace-1)
+      - [Get a marketplace](#get-a-marketplace-1)
+      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace-1)
+      - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace-1)
+      - [Apply to a marketplace (without custodian)](#apply-to-a-marketplace-without-custodian-1)
+      - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian-1)
+      - [Get an application](#get-an-application-1)
+      - [Get the users application id on a marketplace](#get-the-users-application-id-on-a-marketplace-1)
+      - [Get marketplace applicants by status](#get-marketplace-applicants-by-status-1)
+      - [Get which applications the user guards as a custodian](#get-which-applications-the-user-guards-as-a-custodian-1)
+      - [Enroll an applicant (by its account)](#enroll-an-applicant-by-its-account-1)
+      - [Enroll an applicant (by its application id)](#enroll-an-applicant-by-its-application-id-1)
+      - [Add authority user to marketplace](#add-authority-user-to-marketplace-1)
+      - [Remove authority user to marketplace](#remove-authority-user-to-marketplace-1)
   - [Events](#events)
   - [Errors](#errors)
 
@@ -185,7 +199,7 @@ polkadot-js-api query.gatedMarketplace.applicationsByAccount "5FLSigC9HGRKVhB9Fi
 }
 ```
 
-#### Get marketplace applications by status 
+#### Get marketplace applicants by status 
 ```bash
 # marketplace_id, applicationStatus (it can be "Pending", "Approved" or "Rejected")
 polkadot-js-api query.gatedMarketplace.applicantsByMarketplace "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" "Pending"
@@ -242,6 +256,285 @@ polkadot-js-api tx.gatedMarketplace.removeAuthority "5DAAnrj7VHTznn2AWBemMuyBwZW
 ```
 
 ### Polkadot-js api (javascript library)
+While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries. The API setup will be ommited.
+
+#### Create a marketplace
+```js
+# Administrator account and marketplace label
+const createMarketplace = await api.tx.gatedMarketplace.createMarketplace(bob.address, "my marketplace").signAndSend(alice);
+```
+#### Get a marketplace
+```js
+// marketplace_id
+const markets = await api.query.gatedMarketplace.marketplaces("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95");
+  console.log(markets.toHuman());
+```
+```bash
+# Output should look like this: 
+{ label: 'my marketplace' }
+```
+```js
+// get all marketplaces
+const marketplaces = await api.query.gatedMarketplace.marketplaces.entries();
+  marketplaces.forEach(([key, exposure]) => {
+    console.log('key marketplace_id:', key.args.map((k) => k.toHuman()));
+    console.log('     marketplace:', exposure.toHuman(),"\n");
+  });
+```
+```bash
+# Output:
+key marketplace_id: [
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
+]
+     marketplace: { label: 'my marketplace' }
+```
+
+#### Get what permissions does an account have on a marketplace
+```js
+const marketplacesByAuth = await api.query.gatedMarketplace.marketplacesByAuthority("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY","0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95");
+  console.log(marketplacesByAuth.toHuman() );
+```
+```bash
+# Output should look like this:
+[ 'Owner' ]
+```
+
+```js
+// get all users permissions on all marketplaces
+const allMarketplacesByAuth = await api.query.gatedMarketplace.marketplacesByAuthority.entries();
+allMarketplacesByAuth.forEach(([key, exposure]) => {
+  console.log('Authority account and marketplace_id:', key.args.map((k) => k.toHuman()));
+  console.log('     type of authority:', exposure.toHuman(),"\n");
+});
+```
+
+```bash
+Authority account and marketplace_id: [
+  '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
+]
+     type of authority: [ 'Admin' ]
+
+Authority account and marketplace_id: [
+  '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
+]
+     type of authority: [ 'Owner' ]
+```
+
+#### Get all the accounts that have a certain permission on a marketplace 
+```js
+//marketplace_id, type of authoriry (it can be "Owner", "Admin" or "Appraiser")
+const authoritiesByMarketplace = await api.query.gatedMarketplace.authoritiesByMarketplace("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95","Admin");
+  console.log(authoritiesByMarketplace.toHuman());
+```
+```bash
+# Output should look like this:
+[ '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty' ]
+```
+
+```js
+// get  all the accounts in a marketplace
+const authoritiesByMarketplace = await api.query.gatedMarketplace.authoritiesByMarketplace.entries();
+authoritiesByMarketplace.forEach(([key, exposure]) => {
+    console.log('marketplace_id and type of authority:', key.args.map((k) => k.toHuman()));
+    console.log('     accounts that have the role within the marketplace:', exposure.toHuman(),"\n");
+  });
+```
+```bash
+# Expected output:
+marketplace_id and type of authority: [
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95',
+  'Admin'
+]
+     accounts that have the role within the marketplace: [ '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty' ]
+
+marketplace_id and type of authority: [
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95',
+  'Owner'
+]
+     accounts that have the role within the marketplace: [ '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' ]
+```
+
+#### Apply to a marketplace (without custodian)
+```js
+// marketplace_id, relevant information [names,cids], and optionally, [custodian, [custodian cids]]
+const apply = await api.tx.gatedMarketplace.apply("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95",[["file1","cid1"]], null).signAndSend(charlie);
+```
+
+#### Apply to a marketplace (with custodian)
+```js
+// marketplace_id, relevant information [names,cids], and optionally, [custodian, [custodian cids]]
+# marketplace_id, relevant information [names,cids], and optionally, [custodian, [custodian cids]]
+const apply = await api.tx.gatedMarketplace.apply("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95",[["file1","cid1"]], [dave.address,["cid_custodian1"]]).signAndSend(charlie);
+```
+
+#### Get an application
+```js
+// application_id
+const application = await api.query.gatedMarketplace.applications("0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483");
+console.log(application.toHuman());
+```
+```bash
+# Expected output:
+{
+  status: 'Pending',
+  fields: [
+    {
+      displayName: 'file1',
+      cid: 'cid1',
+      custodianCid: 'cid_custodian1'
+    }
+  ]
+}
+```
+
+```js
+// get all applications
+const applications = await api.query.gatedMarketplace.applications.entries();
+applications.forEach(([key, exposure]) => {
+  console.log('application_id:', key.args.map((k) => k.toHuman()));
+  console.log('     application details:', exposure.toHuman());
+});
+```
+
+```bash
+# Output:
+application_id: [
+  '0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483'
+]
+     application details: {
+  status: 'Pending',
+  fields: [
+    {
+      displayName: 'file1',
+      cid: 'cid1',
+      custodianCid: 'cid_custodian1'
+    }
+  ]
+}
+```
+
+#### Get the users application id on a marketplace 
+```js
+# account_id, marketplace_id
+const applicationsByAccount = await api.query.gatedMarketplace.applicationsByAccount(charlie.address, "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95");
+console.log(applicationsByAccount.toHuman());
+
+```
+```bash
+# Expected output:
+0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483
+```
+
+```js
+// get all applications of all users
+const applicationsByAccount = await api.query.gatedMarketplace.applicationsByAccount.entries();
+applicationsByAccount.forEach(([key, exposure]) => {
+  console.log(' account_id and marketplace_id:', key.args.map((k) => k.toHuman()));
+  console.log('     application_id:', exposure.toHuman());
+});
+```
+
+```bash
+# Output:
+ account_id and marketplace_id: [
+  '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
+]
+     application_id: 0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483
+```
+
+#### Get marketplace applicants by status 
+```js
+# marketplace_id, applicationStatus (it can be "Pending", "Approved" or "Rejected")
+const applicantsByMarketplace = await api.query.gatedMarketplace.applicantsByMarketplace("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95","Pending");
+  console.log(applicantsByMarketplace.toHuman());
+```
+```bash
+# Expected output:
+[ '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y' ]
+```
+
+```js
+// get all applicants for all marketplaces, grouped by status
+const applicantsByMarketplace = await api.query.gatedMarketplace.applicantsByMarketplace.entries();
+applicantsByMarketplace.forEach(([key, exposure]) => {
+  console.log(' marketplace_id and status:', key.args.map((k) => k.toHuman()));
+  console.log('     applicants:', exposure.toHuman());
+});
+```
+```bash
+ marketplace_id and status: [
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95',
+  'Pending'
+]
+     applicants: [ '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y' ]
+```
+
+#### Get which applications the user guards as a custodian 
+```js
+// account_id (custodian), marketplace_id
+const custodians = await api.query.gatedMarketplace.custodians(dave.address, "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95");
+console.log(custodians.toHuman());
+```
+```bash
+# Expected output
+[
+  '0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483'
+]
+```
+
+```js
+// get all applications by custodian grouped by marketplace
+const custodians = await api.query.gatedMarketplace.custodians.entries();
+  custodians.forEach(([key, exposure]) => {
+    console.log(' custodian and marketplace_id:', key.args.map((k) => k.toHuman()));
+    console.log('     application_ids:', exposure.toHuman());
+  });
+```
+```bash
+# Expected output
+ custodian and marketplace_id: [
+  '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
+  '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
+]
+     application_ids: [
+  '0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483'
+]
+```
+
+#### Enroll an applicant (by its account)
+```bash
+# It can only be called by the marketplace owner (Alice) or administrator (Bob)
+# market_id, accountOrApplicationEnumerator, approve boolean
+const enroll = await api.tx.gatedMarketplace.enroll("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95", {"Account":charlie.address}, true).signAndSend(alice);
+
+```
+
+#### Enroll an applicant (by its application id)
+```bash
+# It can be called by the marketplace owner (Alice) or administrator (Bob)
+# market_id, accountOrApplicationEnumerator, approve boolean
+const enroll = await api.tx.gatedMarketplace.enroll("0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95", {"Application":"0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"}, true).signAndSend(alice);
+
+```
+
+#### Add authority user to marketplace
+```js
+// It can only be called by the marketplace owner (Alice) or administrator (Bob)
+// account_id, MarketplaceAuthority (it can be "Owner", "Admin" or "Appraiser")
+const addAuthority = await api.tx.gatedMarketplace.addAuthority(dave.address, "Appraiser", "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" ).signAndSend(alice);
+
+```
+
+#### Remove authority user to marketplace
+```js
+// It can only be called by the marketplace owner (Alice) or administrator (Bob)
+// account_id, MarketplaceAuthority (it can be "Owner", "Admin" or "Appraiser")
+const removeAuthority = await api.tx.gatedMarketplace.removeAuthority(dave.address, "Appraiser", "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" ).signAndSend(alice);
+
+```
 
 ## Events
 
