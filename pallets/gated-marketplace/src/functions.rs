@@ -64,35 +64,34 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn do_authorise(authority: T::AccountId, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32], ) -> DispatchResult {
+    pub fn do_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32], ) -> DispatchResult {
         //ensure the origin is owner or admin
         Self::can_enroll(authority, marketplace_id)?;
-        //ensure used in case we only accept one role per user per marketplace
-        //ensure!(!<MarketplacesByAuthority<T>>::contains_key(author.clone(), marketplace_id,), Error::<T>::AlreadyApplied);
-        //outer match prevents users to try to add an owner
+
         match authority_type{
             MarketplaceAuthority::Owner => {
                 Self::owner_exist(marketplace_id)?;
-                Self::insert_in_auth_market_lists(author.clone(), authority_type.clone(), marketplace_id)?;
+                Self::insert_in_auth_market_lists(account.clone(), authority_type.clone(), marketplace_id)?;
             },
             _ =>{
                 //Inner match checks if the user has been added
-                match Self::get_author(author.clone(), marketplace_id, authority_type.clone()){
+                match Self::does_exist_authority(account.clone(), marketplace_id, authority_type.clone()){
                     Ok(_) => Err(Error::<T>::AlreadyApplied)?,
                     Err(_) => {
-                        Self::insert_in_auth_market_lists(author.clone(), authority_type.clone(), marketplace_id)?;
+                        Self::insert_in_auth_market_lists(account.clone(), authority_type.clone(), marketplace_id)?;
                     }
                 }
             }
         }
-        Self::deposit_event(Event::AuthorityAdded(author, authority_type));
+        Self::deposit_event(Event::AuthorityAdded(account, authority_type));
         Ok(())
     }
 
 
-    pub fn remove_authorise(authority: T::AccountId, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32], ) -> DispatchResult {
+    pub fn do_remove_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32], ) -> DispatchResult {
         //ensure the origin is owner or admin
         Self::can_enroll(authority.clone(), marketplace_id)?;
+        //TODO: try to move the both deposit_event calls to the end of the function
         match authority_type{
             MarketplaceAuthority::Owner => {
                 Err(Error::<T>::CantRemoveOwner)?
@@ -103,10 +102,10 @@ impl<T: Config> Pallet<T> {
                         Err(Error::<T>::NegateRemoveAdminItself)?
                     }
                     Err(_) => {
-                        match Self::get_author(author.clone(), marketplace_id, authority_type.clone()){
+                        match Self::does_exist_authority(account.clone(), marketplace_id, authority_type.clone()){
                             Ok(_) => {
-                                Self::remove_rol(author.clone(), authority_type.clone(), marketplace_id)?;
-                                Self::deposit_event(Event::AuthorityRemoved(author, authority_type));
+                                Self::remove_from_market_lists(account.clone(), authority_type.clone(), marketplace_id)?;
+                                Self::deposit_event(Event::AuthorityRemoved(account, authority_type));
                             } 
                             Err(_) => Err(Error::<T>::UserNotFound)?,
                         }
@@ -115,15 +114,16 @@ impl<T: Config> Pallet<T> {
             },
             _ =>{
                 //Inner match checks if the user has been added
-                match Self::get_author(author.clone(), marketplace_id, authority_type.clone()){
+                match Self::does_exist_authority(account.clone(), marketplace_id, authority_type.clone()){
                     Ok(_) => {
-                        Self::remove_rol(author.clone(), authority_type.clone(), marketplace_id)?;
-                        Self::deposit_event(Event::AuthorityRemoved(author, authority_type));
+                        Self::remove_from_market_lists(account.clone(), authority_type.clone(), marketplace_id)?;
+                        Self::deposit_event(Event::AuthorityRemoved(account, authority_type));
                     }
                     Err(_) => Err(Error::<T>::UserNotFound)?,
                 }
             }
         }
+
         Ok(())
     }
 
@@ -189,20 +189,20 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn remove_rol(author: T::AccountId, author_type: MarketplaceAuthority , marketplace_id : [u8;32])->DispatchResult{
-        <MarketplacesByAuthority<T>>::try_mutate(author.clone(), marketplace_id, |account_auths|{
+    fn remove_from_market_lists(account: T::AccountId, author_type: MarketplaceAuthority , marketplace_id : [u8;32])->DispatchResult{
+        <MarketplacesByAuthority<T>>::try_mutate(account.clone(), marketplace_id, |account_auths|{
             let author_index = account_auths.iter().position(|a| *a==author_type.clone())
-            .ok_or(Error::<T>::RolNotFoundForUser)?;
+            .ok_or(Error::<T>::AuthorityNotFoundForUser)?;
             account_auths.remove(author_index);
             Ok(())
         }).map_err(|_:Error::<T>| Error::<T>::UserNotFound)?;
 
         <AuthoritiesByMarketplace<T>>::try_mutate( marketplace_id, author_type, |account_auths|{
-            let author_index = account_auths.iter().position(|a| *a==author.clone())
+            let author_index = account_auths.iter().position(|a| *a==account.clone())
             .ok_or(Error::<T>::UserNotFound)?;
             account_auths.remove(author_index);
             Ok(())
-        }).map_err(|_:Error::<T>| Error::<T>::RolNotFoundForUser)?;
+        }).map_err(|_:Error::<T>| Error::<T>::AuthorityNotFoundForUser)?;
 
         Ok(())
 
@@ -240,45 +240,75 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    /// Lets us know if the user exists in the selected marketplace
-    fn _try_get_author(author: T::AccountId, marketplace_id: [u8;32], author_type: MarketplaceAuthority) -> DispatchResult{
-        <MarketplacesByAuthority<T>>::try_mutate::<_,_,_,DispatchError,_>(author, marketplace_id, |authorities_types|{
-            let _derp = authorities_types.iter().position(|a| *a==author_type)
-                .ok_or(Error::<T>::RolNotFoundForUser)?;
-            Ok(())
-        })
-    }
-
 
     ///Lets us know if the selected user is an admin 
-    fn is_admin(author: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
-        let roles = <MarketplacesByAuthority<T>>::try_get(author, marketplace_id)
+    fn is_admin(account: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
+        let roles = <MarketplacesByAuthority<T>>::try_get(account, marketplace_id)
             .map_err(|_| Error::<T>::UserNotFound)?;
 
-        roles.iter().find(|&role|{
-             role.eq(&MarketplaceAuthority::Admin)
+        roles.iter().find(|&authority_type| {authority_type.eq(&MarketplaceAuthority::Admin)
         }).ok_or(Error::<T>::UserIsNotAdmin)?;
         Ok(())
     }
 
 
-    fn get_author(author: T::AccountId, marketplace_id: [u8;32], author_type: MarketplaceAuthority) -> DispatchResult{
-        let roles = <MarketplacesByAuthority<T>>::try_get(author, marketplace_id)
+    fn _is_admin_v2(account: T::AccountId, marketplace_id: [u8;32]) -> bool{
+        let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
+            Ok(roles) => roles,
+            Err(_) => return false,
+        };
+
+        roles.iter().find(|&authority_type| {authority_type.eq(&MarketplaceAuthority::Admin)
+        }).is_some()
+
+    }
+
+    /// Let us know if the selected account has the selected authority type
+    fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceAuthority) -> DispatchResult{
+        let roles = <MarketplacesByAuthority<T>>::try_get(account, marketplace_id)
             .map_err(|_| Error::<T>::UserNotFoundForThisQuery)?;
 
-        roles.iter().find(|&vector| vector ==&author_type).ok_or(Error::<T>::RolNotFoundForUser)?;
+        roles.iter().find(|&authority| authority == &authority_type).ok_or(Error::<T>::AuthorityNotFoundForUser)?;
 
         Ok(())
     }
 
-    fn owner_exist(marketplace_id: [u8;32]) -> DispatchResult{
-        let roles = <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner)
-            .map_err(|_| Error::<T>::UserNotFoundForThisQuery)?;
+    fn  _does_exist_authority_v2(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceAuthority) -> bool{
+        let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
+            Ok(roles) => roles,
+            Err(_) => return false,
+        };
 
-        if roles.len() > 0{
+        roles.iter().find(|&authority| authority == &authority_type).is_some()
+    }
+
+    fn owner_exist(marketplace_id: [u8;32]) -> DispatchResult{
+        let owners = <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner)
+            .map_err(|_| Error::<T>::OwnerNotFound)?;
+
+        //TODO: try to change to -> owners.len() == 1 because we only have one owner
+        if owners.len() > 0{
+            //it means there's an owner
             Err(Error::<T>::OnlyOneOwnerIsAllowed)? 
         }else{
+            //it means there's no owner
             Ok(())   
+        }
+    }
+
+    fn _owner_exist_v2(marketplace_id: [u8;32]) -> bool {
+        let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner){
+            Ok(owners) => owners,
+            Err(_) => return false,
+        };
+
+        //TODO: try to change to -> owners.len() == 1 because we only have one owner
+        if owners.len() > 0{
+            //it means there's an owner
+            true
+        }else{
+            //it means there's no owner
+            false 
         }
     }
 
