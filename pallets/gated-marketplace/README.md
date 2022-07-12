@@ -222,7 +222,7 @@ polkadot-js-api query.gatedMarketplace.custodians "5DAAnrj7VHTznn2AWBemMuyBwZWs6
 # Expected output
 {
   "custodians": [
-    "0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"
+    "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"
   ]
 }
 ```
@@ -480,18 +480,16 @@ console.log(custodians.toHuman());
 ```
 ```bash
 # Expected output
-[
-  '0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483'
-]
+[ '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y' ]
 ```
 
 ```js
 // get all applications by custodian grouped by marketplace
 const custodians = await api.query.gatedMarketplace.custodians.entries();
-  custodians.forEach(([key, exposure]) => {
-    console.log(' custodian and marketplace_id:', key.args.map((k) => k.toHuman()));
-    console.log('     application_ids:', exposure.toHuman());
-  });
+custodians.forEach(([key, exposure]) => {
+  console.log(' custodian and marketplace_id:', key.args.map((k) => k.toHuman()));
+  console.log('     marketplace applicants:', exposure.toHuman());
+});
 ```
 ```bash
 # Expected output
@@ -499,9 +497,7 @@ const custodians = await api.query.gatedMarketplace.custodians.entries();
   '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
   '0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95'
 ]
-     application_ids: [
-  '0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483'
-]
+    marketplace applicants: [ '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y' ]
 ```
 
 #### Enroll an applicant (by its account)
