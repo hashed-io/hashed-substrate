@@ -105,7 +105,7 @@ impl<T: Config> Pallet<T> {
                 ensure!(authority != account, Error::<T>::NegateRemoveAdminItself);
 
                 // Admis cannot be deleted between them, only the owner can
-                ensure!(!Self::is_admin(authority.clone(), marketplace_id), Error::<T>::CannotDeleteAdmin);
+                ensure!(!Self::is_admin(authority, marketplace_id), Error::<T>::CannotDeleteAdmin);
         
                 Self::remove_from_market_lists(account.clone(), authority_type, marketplace_id)?;
             },
