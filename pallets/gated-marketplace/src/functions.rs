@@ -31,7 +31,7 @@ impl<T: Config> Pallet<T> {
         if let Some(c) = custodian{
             // Ensure applicant and custodian arent the same
             ensure!(applicant.ne(&c),Error::<T>::ApplicantCannotBeCustodian);
-            Self::insert_custodian(c, marketplace_id, app_id)?;
+            Self::insert_custodian(c, marketplace_id, applicant.clone())?;
         }
         Self::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)?;
         <ApplicationsByAccount<T>>::insert(applicant, marketplace_id, app_id);
@@ -174,9 +174,9 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn insert_custodian(custodian: T::AccountId, marketplace_id : [u8;32], application_id: [u8;32])-> DispatchResult{
+    fn insert_custodian(custodian: T::AccountId, marketplace_id : [u8;32], applicant: T::AccountId)-> DispatchResult{
         <Custodians<T>>::try_mutate(custodian, marketplace_id, | applications |{
-            applications.try_push(application_id)
+            applications.try_push(applicant)
         }).map_err(|_| Error::<T>::ExceedMaxApplicationsPerCustodian)?;
         Ok(())
     }

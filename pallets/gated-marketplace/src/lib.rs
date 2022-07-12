@@ -128,7 +128,7 @@ pub mod pallet {
 		T::AccountId, //custodians
 		Blake2_128Concat, 
 		[u8;32], //marketplace_id 
-		BoundedVec<[u8;32],T::MaxApplicationsPerCustodian>, //application_id 
+		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants 
 		ValueQuery
 	>;
 
