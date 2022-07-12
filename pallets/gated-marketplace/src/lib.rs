@@ -194,7 +194,9 @@ pub mod pallet {
 		/// User is not admin	
 		UserIsNotAdmin,
 		/// User is not found for the query
-		UserNotFoundForThisQuery
+		UserNotFoundForThisQuery,
+		/// Admis cannot be deleted between them, only the owner can
+		CannotDeleteAdmin,
 	}
 
 	#[pallet::call]
