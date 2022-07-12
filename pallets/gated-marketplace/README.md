@@ -11,8 +11,18 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Polkadot-js CLI](#polkadot-js-cli)
       - [Create a marketplace](#create-a-marketplace)
       - [Get a marketplace](#get-a-marketplace)
-      - [Apply to a marketplace](#apply-to-a-marketplace)
-      - [Enroll () an applicant](#enroll--an-applicant)
+      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace)
+      - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace)
+      - [Apply to a marketplace (without custodian)](#apply-to-a-marketplace-without-custodian)
+      - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian)
+      - [Get an application](#get-an-application)
+      - [Get the users application id on a marketplace](#get-the-users-application-id-on-a-marketplace)
+      - [Get marketplace applications by status](#get-marketplace-applications-by-status)
+      - [Get which applications the user guards as a custodian](#get-which-applications-the-user-guards-as-a-custodian)
+      - [Enroll an applicant (by its account)](#enroll-an-applicant-by-its-account)
+      - [Enroll an applicant (by its application id)](#enroll-an-applicant-by-its-application-id)
+      - [Add authority user to marketplace](#add-authority-user-to-marketplace)
+      - [Remove authority user to marketplace](#remove-authority-user-to-marketplace)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
   - [Events](#events)
   - [Errors](#errors)
@@ -57,7 +67,7 @@ This module allows to:
 
 ## Usage
 
-The following examples will be using these credentials and testing data:
+The following examples will be using these prefunded accounts and testing data:
 
 ```bash
 # Alice's mnemonic seed
@@ -74,6 +84,11 @@ The following examples will be using these credentials and testing data:
 "//Charlie"
 # Charlie's public address
 "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"
+
+# Dave's mnemonic seed
+"//Dave"
+# Dave's public address
+"5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy"
 ```
 
 ### Polkadot-js CLI
@@ -84,11 +99,147 @@ The following examples will be using these credentials and testing data:
 polkadot-js-api tx.gatedMarketplace.createMarketplace "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty" "my marketplace" --seed "//Alice"
 ```
 #### Get a marketplace
+```bash
+# marketplace_id
+polkadot-js-api query.gatedMarketplace.marketplaces "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95"
+```
+```bash
+# Output should look like this: 
+{
+  "marketplaces": {
+    "label": "my marketplace"
+  }
+}
+```
 
-#### Apply to a marketplace
+#### Get what permissions does an account have on a marketplace
+```bash
+# account_id, marketplace_id
+polkadot-js-api query.gatedMarketplace.marketplacesByAuthority "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95"
+```
+```bash
+# Output should look like this:
+{
+  "marketplacesByAuthority": [
+    "Owner"
+  ]
+}
+```
 
-#### Enroll () an applicant
+#### Get all the accounts that have a certain permission on a marketplace 
+```bash
+# marketplace_id, type of authoriry (it can be "Owner", "Admin" or "Appraiser")
+polkadot-js-api query.gatedMarketplace.authoritiesByMarketplace "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" "Admin"
+```
+```bash
+# Output should look like this:
+{
+  "authoritiesByMarketplace": [
+    "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
+  ]
+}
+```
 
+#### Apply to a marketplace (without custodian)
+```bash
+# marketplace_id, relevant information [names,cids], and optionally, [custodian, [custodian cids]]
+polkadot-js-api tx.gatedMarketplace.apply "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" '[["file1","cid1"]]' null --seed "//Charlie"
+```
+
+#### Apply to a marketplace (with custodian)
+```bash
+# marketplace_id, relevant information [names,cids], and optionally, [custodian, [custodian cids]]
+polkadot-js-api tx.gatedMarketplace.apply "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" '[["file1","cid1"]]' '["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",["cid_custodian1"]]' --seed "//Charlie"
+```
+
+#### Get an application
+```bash
+# application_id
+polkadot-js-api query.gatedMarketplace.applications "0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"
+```
+```bash
+# Expected output:
+{
+  "applications": {
+    "status": "Pending",
+    "fields": [
+      {
+        "displayName": "file1",
+        "cid": "cid1",
+        "custodianCid": "cid_custodian1"
+      }
+    ]
+  }
+}
+```
+
+#### Get the users application id on a marketplace 
+```bash
+# account_id, marketplace_id
+polkadot-js-api query.gatedMarketplace.applicationsByAccount "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95"
+```
+```bash
+# Expected output:
+{
+  "applicationsByAccount": "0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"
+}
+```
+
+#### Get marketplace applications by status 
+```bash
+# marketplace_id, applicationStatus (it can be "Pending", "Approved" or "Rejected")
+polkadot-js-api query.gatedMarketplace.applicantsByMarketplace "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" "Pending"
+```
+```bash
+# Expected output:
+{
+  "applicantsByMarketplace": [
+    "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"
+  ]
+}
+```
+
+#### Get which applications the user guards as a custodian 
+```bash
+# account_id (custodian), marketplace_id
+polkadot-js-api query.gatedMarketplace.custodians "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95"
+```
+```bash
+# Expected output
+{
+  "custodians": [
+    "0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"
+  ]
+}
+```
+
+#### Enroll an applicant (by its account)
+```bash
+# It can only be called by the marketplace owner (Alice) or administrator (Bob)
+# market_id, accountOrApplicationEnumerator, approve boolean
+polkadot-js-api tx.gatedMarketplace.enroll "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" '{"Account":"5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"}' true --seed "//Bob"
+```
+
+#### Enroll an applicant (by its application id)
+```bash
+# It can be called by the marketplace owner (Alice) or administrator (Bob)
+# market_id, accountOrApplicationEnumerator, approve boolean
+polkadot-js-api tx.gatedMarketplace.enroll "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" '{"Application":"0x9ab75a44b507c0030296dd3660bd77d606807cf3415c3409b88c2cad36fd5483"}' true --seed "//Bob"
+```
+
+#### Add authority user to marketplace
+```bash
+# It can only be called by the marketplace owner (Alice) or administrator (Bob)
+# account_id, MarketplaceAuthority (it can be "Owner", "Admin" or "Appraiser")
+polkadot-js-api tx.gatedMarketplace.addAuthority "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy" "Appraiser" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" --seed "//Alice"
+```
+
+#### Remove authority user to marketplace
+```bash
+# It can only be called by the marketplace owner (Alice) or administrator (Bob)
+# account_id, MarketplaceAuthority (it can be "Owner", "Admin" or "Appraiser")
+polkadot-js-api tx.gatedMarketplace.removeAuthority "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy" "Appraiser" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" --seed "//Alice"
+```
 
 ### Polkadot-js api (javascript library)
 
