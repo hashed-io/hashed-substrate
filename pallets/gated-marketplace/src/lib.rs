@@ -128,7 +128,7 @@ pub mod pallet {
 		T::AccountId, //custodians
 		Blake2_128Concat, 
 		[u8;32], //marketplace_id 
-		BoundedVec<[u8;32],T::MaxApplicationsPerCustodian>, //application_id 
+		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants 
 		ValueQuery
 	>;
 
@@ -164,11 +164,13 @@ pub mod pallet {
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
 		/// This custodian has too many applications for this market, try with another one
-		ExceedMMaxApplicationsPerCustodian,
+		ExceedMaxApplicationsPerCustodian,
 		/// Applicaion doesnt exist
 		ApplicationNotFound,
 		/// The user has not applicated to that market before
 		ApplicantNotFound,
+		/// The user cannot be custodian of its own application
+		ApplicantCannotBeCustodian,
 		/// A marketplace with the same data exists already
 		MarketplaceAlreadyExists,
 		/// The user has already applied to the marketplace (or an identical application exist)
@@ -218,7 +220,8 @@ pub mod pallet {
 			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let (custodian, fields) = Self::set_up_application(fields,custodian_fields);
+			let (custodian, fields) = 
+				Self::set_up_application(fields,custodian_fields);
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
 				fields ,
