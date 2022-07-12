@@ -73,20 +73,13 @@ fn spawn_extrinsic_works() {
 }
 
 #[test]
-fn set_attributes_fail_case() {
+fn set_attributes_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0, Some(Permill::from_percent(50)), 1));
 		assert_noop!(
 			Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![]),
 			Error::<Test>::AttributesEmpty
 		);
-	});
-}
-
-#[test]
-fn set_attributes() {
-	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0, Some(Permill::from_percent(50)), 1));
 		assert_ok!(Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![(bvec![0], bvec![0])]));
 	});
 }
