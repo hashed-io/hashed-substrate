@@ -18,6 +18,7 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 
 	#[pallet::config]
@@ -40,6 +41,8 @@ pub mod pallet {
 		type NameMaxLen: Get<u32>;
 		#[pallet::constant]
 		type MaxFiles: Get<u32>;
+		#[pallet::constant]
+		type MaxApplicationsPerCustodian: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -63,9 +66,9 @@ pub mod pallet {
 	pub(super) type MarketplacesByAuthority<T: Config> = StorageDoubleMap<
 		_, 
 		Blake2_128Concat, 
-		T::AccountId, 
+		T::AccountId, // K1: Authority 
 		Blake2_128Concat, 
-		[u8;32], //marketplace_id 
+		[u8;32], // K2: marketplace_id 
 		BoundedVec<MarketplaceAuthority, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
 		ValueQuery
 	>;
@@ -75,9 +78,9 @@ pub mod pallet {
 	pub(super) type AuthoritiesByMarketplace<T: Config> = StorageDoubleMap<
 		_, 
 		Identity, 
-		[u8;32], // marketplace_id 
+		[u8;32], //K1: marketplace_id 
 		Blake2_128Concat, 
-		MarketplaceAuthority, 
+		MarketplaceAuthority, //k2: authority
 		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
 		ValueQuery
 	>;
@@ -117,6 +120,19 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn custodians)]
+	pub(super) type Custodians<T: Config> = StorageDoubleMap<
+		_, 
+		Blake2_128Concat, 
+		T::AccountId, //custodians
+		Blake2_128Concat, 
+		[u8;32], //marketplace_id 
+		BoundedVec<[u8;32],T::MaxApplicationsPerCustodian>, //application_id 
+		ValueQuery
+	>;
+
+
 
 
 	#[pallet::event]
@@ -128,7 +144,10 @@ pub mod pallet {
 		ApplicationStored([u8;32], [u8;32]),
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
 		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
-		
+		/// Add a new authority to the selected marketplace
+		AuthorityAdded(T::AccountId, MarketplaceAuthority),
+		/// Remove the selected authority from the selected marketplace
+		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
 	}
 
 	// Errors inform users that something went wrong.
@@ -144,6 +163,8 @@ pub mod pallet {
 		ExceedMaxRolesPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
+		/// This custodian has too many applications for this market, try with another one
+		ExceedMMaxApplicationsPerCustodian,
 		/// Applicaion doesnt exist
 		ApplicationNotFound,
 		/// The user has not applicated to that market before
@@ -156,7 +177,22 @@ pub mod pallet {
 		MarketplaceNotFound,
 		/// You need to be an owner or an admin of the marketplace
 		CannotEnroll,
-
+		/// There cannot be more than one owner per marketplace
+		OnlyOneOwnerIsAllowed,
+		/// Cannot remove the owner of the marketplace
+		CantRemoveOwner,
+		/// Admin can not remove itself
+		NegateRemoveAdminItself,
+		/// User has already been assigned with that role
+		CannotAddAuthority,
+		/// User not found
+		UserNotFound,
+		// Rol not found for the selected user
+		RolNotFoundForUser,
+		/// User is not admin	
+		UserIsNotAdmin,
+		/// User is not found for the query
+		UserNotFoundForThisQuery
 	}
 
 	#[pallet::call]
@@ -176,17 +212,18 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>, 
-			marketplace_id: [u8;32], 
-			notes: BoundedVec<u8,T::NotesMaxLen>, 
-			files : BoundedVec<ApplicationFile<T::NameMaxLen>, T::MaxFiles>, 
+			marketplace_id: [u8;32],
+			// Getting encoding errors from polkadotjs if an object vector have optional fields
+			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			let (custodian, fields) = Self::set_up_application(fields,custodian_fields);
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
-				notes,
-				files,
+				fields ,
 			};
-			Self::do_apply(who, marketplace_id, application)
+			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 
 		#[transactional]
@@ -195,6 +232,25 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_enroll(who, marketplace_id, account_or_application, approved)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn add_authority(origin: OriginFor<T>, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_authorise(who, author, authority_type, marketplace_id)
+		}
+
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_authority(origin: OriginFor<T>, author: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should 
+			// check what role we want to remove instead of removing the user completely from
+			// selected marketplace. 
+			Self::remove_authorise(who, author, authority_type, marketplace_id)
 		}
 
 		#[transactional]
@@ -209,6 +265,7 @@ pub mod pallet {
 			<Applications<T>>::remove_all(None);
 			<ApplicationsByAccount<T>>::remove_all(None);
 			<ApplicantsByMarketplace<T>>::remove_all(None);
+			<Custodians<T>>::remove_all(None);
 			Ok(())
 		}
 

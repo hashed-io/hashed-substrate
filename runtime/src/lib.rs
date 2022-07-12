@@ -104,7 +104,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 111,
+	spec_version: 112,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -544,12 +544,13 @@ impl pallet_fruniques::Config for Runtime {
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
-	pub const MaxAuthsPerMarket:u32 = 1; // 1 of each role (1 owner, 1 admin, etc.)
+	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
 	pub const NotesMaxLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
+	pub const MaxApplicationsPerCustodian: u32 = 10;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
@@ -563,7 +564,8 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type NameMaxLen= NameMaxLen;
-	type MaxFiles= MaxFiles;
+	type MaxFiles = MaxFiles;
+	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 }
 
 parameter_types! {
@@ -573,7 +575,7 @@ parameter_types! {
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault: u32 = 1000;
+	pub const MaxProposalsPerVault: u32 = 5;
 }
 
 impl pallet_nbv_storage::Config for Runtime {
