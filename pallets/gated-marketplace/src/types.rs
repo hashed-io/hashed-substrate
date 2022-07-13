@@ -42,7 +42,6 @@ pub struct  Application< T: Config >{
 }
 
 
-//TODO: try to implement copy trait for ApplicationStatus to reduce clone calls
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ApplicationStatus{
     Pending,
