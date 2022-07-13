@@ -24,6 +24,7 @@ pub enum MarketplaceAuthority{
     Owner,
     Admin,
     Appraiser,
+    RedemptionSpecialist,
 }
 
 impl Default for MarketplaceAuthority{
