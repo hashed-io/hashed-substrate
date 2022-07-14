@@ -202,6 +202,14 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		/// Create a new marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin` - The owner of the marketplace.
+		/// - `admin` - The admin of the marketplace.
+		/// - `label` - The name of the marketplace.
+		/// 
+
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
@@ -212,6 +220,11 @@ pub mod pallet {
 			Self::do_create_marketplace(who, admin, m)
 		}
 		
+
+		/// Apply to a marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin` - The applicant.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
