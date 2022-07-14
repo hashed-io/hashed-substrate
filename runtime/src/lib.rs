@@ -544,7 +544,7 @@ impl pallet_fruniques::Config for Runtime {
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
-	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
+	pub const MaxAuthsPerMarket:u32 = 1; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
 	pub const NotesMaxLen: u32 = 256;

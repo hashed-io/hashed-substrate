@@ -54,7 +54,6 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-
 parameter_types! {
 	pub const LabelMaxLen: u32 = 32;
 	pub const MaxAuthsPerMarket: u32 = 3;
@@ -74,8 +73,8 @@ impl pallet_gated_marketplace::Config for Test {
 	type MaxApplicants = MaxApplicants;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
-	type NameMaxLen= NameMaxLen;
-	type MaxFiles= MaxFiles;
+	type NameMaxLen = NameMaxLen;
+	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 }
 
