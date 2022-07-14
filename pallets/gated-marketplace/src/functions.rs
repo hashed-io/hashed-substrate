@@ -265,8 +265,7 @@ impl<T: Config> Pallet<T> {
             Ok(owners) => owners,
             Err(_) => return false,
         };
-
-        //TODO: try to change to -> owners.len() == 1 because we only have one owner
+        
         owners.len() == 1
     }
 
