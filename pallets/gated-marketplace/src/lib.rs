@@ -312,6 +312,8 @@ pub mod pallet {
 		/// - `marketplace_id`: The id of the marketplace where we want to remove the account.
 		/// 
 		/// ### Considerations:
+		/// - This action don't remove the account from the marketplace,
+		/// it only removes the selected authority type.
 		/// If the user doesn't have the selected authority type, it will trow an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -323,15 +325,16 @@ pub mod pallet {
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
 
-		/// Kill all stored data.
+		/// Kill all the stored data.
 		/// 
-		/// This function is used to kill all stored data.
+		/// This function is used to kill ALL the stored data.
+		/// Use with caution!
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action. 
 		/// 
 		/// ### Considerations:
-		/// - This function is only available to the admin with sudo access.
+		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
