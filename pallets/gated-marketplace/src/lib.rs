@@ -280,9 +280,10 @@ pub mod pallet {
 			Self::do_enroll(who, marketplace_id, account_or_application, approved)
 		}
 
-		/// Add an account 
+		/// Add an Authority type 
 		/// 
-		/// Adds an new account as the selected authority type for the selected marketplace.
+		/// This extrinsic adds an authority type for the selected account 
+		/// from the selected marketplace.
 		/// 
 		/// ### Parameters:	
 		/// - `origin`: The user who performs the action.
@@ -292,7 +293,7 @@ pub mod pallet {
 		/// 
 		/// ### Considerations:
 		/// If the user has already applied to the marketplace for that particular 
-		/// authority type, it will trow an error.
+		/// authority type, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn add_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
@@ -301,9 +302,9 @@ pub mod pallet {
 			Self::do_authority(who, account, authority_type, marketplace_id)
 		}
 
-		/// Remove an account
+		/// Remove an Authority type
 		/// 
-		/// Removes an authority type for the selected account from the selected marketplace.
+		/// This extrinsic removes an authority type for the selected account from the selected marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
@@ -312,9 +313,9 @@ pub mod pallet {
 		/// - `marketplace_id`: The id of the marketplace where we want to remove the account.
 		/// 
 		/// ### Considerations:
-		/// - This action don't remove the account from the marketplace,
-		/// it only removes the selected authority type.
-		/// If the user doesn't have the selected authority type, it will trow an error.
+		/// - This extrinsic doesn't remove the account from the marketplace,
+		/// it only removes the selected authority type for that account.
+		/// If the user doesn't have the selected authority type, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
