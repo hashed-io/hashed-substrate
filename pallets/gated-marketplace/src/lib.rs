@@ -303,7 +303,7 @@ pub mod pallet {
 
 		/// Remove an account
 		/// 
-		/// Removes an account from the selected marketplace.
+		/// Removes an authority type for the selected account from the selected marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
