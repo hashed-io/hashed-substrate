@@ -204,12 +204,12 @@ pub mod pallet {
 
 		/// Create a new marketplace.
 		/// 
+		/// Creates a new marketplace with the given label
+		/// .
 		/// ### Parameters:
 		/// - `origin` - The owner of the marketplace.
 		/// - `admin` - The admin of the marketplace.
 		/// - `label` - The name of the marketplace.
-		/// 
-
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
@@ -219,12 +219,22 @@ pub mod pallet {
 			};
 			Self::do_create_marketplace(who, admin, m)
 		}
-		
 
 		/// Apply to a marketplace.
 		/// 
+		/// Applies to the selected marketplace. 
+		/// 
 		/// ### Parameters:
 		/// - `origin` - The applicant.
+		/// - `marketplace_id` - The id of the marketplace where we want to apply.
+		/// - `fields` - Confidential user documents, any files necessary for the application
+		/// - `custodian_fields` - The custodian account and their documents.
+		/// 
+		/// ### Considerations:
+		/// - You can add many documents, up to the maximum allowed (10).
+		/// - The custodian account is optional. You can apply to a marketplace without a 
+		/// custodian account.
+		/// - All custodian fields are optional. 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
@@ -243,6 +253,25 @@ pub mod pallet {
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 
+		/// Accept or reject an application.
+		/// 
+		/// If the application is accepted, 
+		/// the user will be added to the list of applicants. 
+		/// If the application is rejected,
+		/// the user will be moved to the list of rejected applicants.
+		/// 
+		/// ### Parameters:
+		/// - `origin` - The owner/admin of the marketplace.
+		/// - `marketplace_id` - The id of the marketplace where we want to enroll users.
+		/// - `account_or_application` - The account or application id to accept or reject.
+		/// - `approved` - Whether to accept or reject the account/application.
+		/// 
+		/// ### Considerations:
+		/// - You can only accept or reject applications where you are the owner/admin of the marketplace.
+		/// - Ensure that your extrinsic has selected the right option account/application
+		/// because some fields changes. 
+		/// - If you select `Account` you need to enter the account to be accepted. 
+		/// - If you select `Application` you need to enter the `application_id` to be accepted. 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
@@ -251,6 +280,19 @@ pub mod pallet {
 			Self::do_enroll(who, marketplace_id, account_or_application, approved)
 		}
 
+		/// Add an account 
+		/// 
+		/// Adds an new account as the selected authority type for the selected marketplace.
+		/// 
+		/// ### Parameters:	
+		/// - `origin` - The user who performs the action.
+		/// - `account` - The account to be removed.
+		/// - `authority_type` - The type of authority to be added.
+		/// - `marketplace_id` - The id of the marketplace where we want to add the account.
+		/// 
+		/// ### Considerations:
+		/// If the user has already applied to the marketplace for that particular 
+		/// authority type, it will trow an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn add_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
@@ -259,7 +301,18 @@ pub mod pallet {
 			Self::do_authority(who, account, authority_type, marketplace_id)
 		}
 
-
+		/// Remove an account
+		/// 
+		/// Removes an account from the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin` - The user who performs the action.
+		/// - `account` - The account to be removed.
+		/// - `authority_type` - The type of authority to be removed.
+		/// - `marketplace_id` - The id of the marketplace where we want to remove the account.
+		/// 
+		/// ### Considerations:
+		/// If the user doesn't have the selected authority type, it will trow an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
@@ -270,6 +323,15 @@ pub mod pallet {
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
 
+		/// Kill all stored data.
+		/// 
+		/// This function is used to kill all stored data.
+		/// 
+		/// ### Parameters:
+		/// - `origin` - The user who performs the action. 
+		/// 
+		/// ### Considerations:
+		/// - This function is only available to the admin with sudo access.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
