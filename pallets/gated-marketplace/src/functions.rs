@@ -59,7 +59,7 @@ impl<T: Config> Pallet<T> {
                 }).ok_or(Error::<T>::ApplicationNotFound)?
             },
         };
-        Self::change_applicant_status(applicant, marketplace_id, next_status.clone())?;
+        Self::change_applicant_status(applicant, marketplace_id, next_status)?;
         // TODO: if rejected remove application and files? 
         Self::deposit_event(Event::ApplicationProcessed(account_or_application, marketplace_id, next_status));
         Ok(())
