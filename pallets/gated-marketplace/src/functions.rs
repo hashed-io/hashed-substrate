@@ -123,6 +123,18 @@ impl<T: Config> Pallet<T> {
     }
 
 
+    pub fn do_update_marketplace(authority: T::AccountId, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        //ensure the origin is owner or admin
+        Self::can_enroll(authority, marketplace_id)?;
+        //update marketplace
+        Self::update_label_marketplace(marketplace_id, new_label);
+        Self::deposit_event(Event::MarketplaceUpdated(marketplace_id));
+        Ok(())
+    }
+
+
 
 
     /*---- Helper functions ----*/
@@ -270,5 +282,20 @@ impl<T: Config> Pallet<T> {
         
         owners.len() == 1
     }
+
+    /// Let us update the marketplace's label.
+    /// It returns ok if the update was successful, error otherwise.
+    fn  update_label_marketplace(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
+        <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
+            //marketplace.as_mut().map(|m| m.label.clone_from(&new_label));
+            //as we never used again the label, we can consume the value here.
+            marketplace.as_mut().map(|m| m.label = new_label);
+            Ok(())
+        }).map_err(|_:Error::<T>| Error::<T>::AttributeNotFound)?;
+        Ok(())
+    }
+
+
+
 
 }
