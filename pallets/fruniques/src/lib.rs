@@ -53,8 +53,11 @@ pub mod pallet {
 		FruniqueCntOverflow,
 		// The asset_id is not linked to a frunique or it doesn't exists
 		NotAFrunique,
+		// The key of an attribute it's too long
 		KeyTooLong,
+		// The value of an attribute it's too long
 		ValueTooLong,
+		// Calling set on a non-existing attributes
 		AttributesEmpty,
 	}
 
@@ -167,14 +170,7 @@ pub mod pallet {
 
 			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
 			for attribute in &attributes {
-				ensure!(
-					attribute.0.len() <= T::KeyLimit::get().try_into().unwrap(),
-					Error::<T>::KeyTooLong
-				);
-				ensure!(
-					attribute.1.len() <= T::ValueLimit::get().try_into().unwrap(),
-					Error::<T>::ValueTooLong
-				);
+
 
 				pallet_uniques::Pallet::<T>::set_attribute(
 					origin.clone(),
