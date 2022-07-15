@@ -1,6 +1,7 @@
 use super::*;
 
 use frame_support::traits::tokens::nonfungibles::Inspect;
+use frame_system::pallet_prelude::*;
 use scale_info::prelude::string::String;
 // use crate::types::*;
 use frame_support::pallet_prelude::*;
@@ -13,7 +14,7 @@ impl<T: Config> Pallet<T> {
 	{
 		T::ItemId::from(input)
 	}
-	
+
 	pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
 		u32::from_ne_bytes(input.try_into().unwrap())
 	}
@@ -39,17 +40,24 @@ impl<T: Config> Pallet<T> {
 		BoundedVec::<u8, T::ValueLimit>::default()
 	}
 
-	pub fn admin_of(
-		class_id: &T::CollectionId,
-		instance_id: &T::ItemId,
-	) -> Option<T::AccountId> {
-		// let mut collection_details =
-		// 		Collection::<T, I>::get(&collection).ok_or(Error::<T, I>::UnknownCollection)?;
-
-		if let Some(a) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
-			return Some(a);
-		}
-		None
+	pub fn admin_of(class_id: &T::CollectionId, instance_id: &T::ItemId) -> Option<T::AccountId> {
+		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
 	}
-	
+
+	pub fn set_attribute(
+		origin: OriginFor<T>,
+		class_id: &T::CollectionId,
+		instance_id: T::ItemId,
+		key: BoundedVec<u8, T::KeyLimit>,
+		value: BoundedVec<u8, T::ValueLimit>,
+	) -> DispatchResult {
+		pallet_uniques::Pallet::<T>::set_attribute(
+			origin,
+			*class_id,
+			Some(instance_id),
+			key,
+			value,
+		)?;
+		Ok(())
+	}
 }
