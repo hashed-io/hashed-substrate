@@ -18,7 +18,7 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::sp_std::vec::Vec;
+	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 
 	#[pallet::config]
