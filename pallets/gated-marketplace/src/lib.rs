@@ -56,8 +56,8 @@ pub mod pallet {
 	pub(super) type Marketplaces<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8; 32], 
-		Marketplace<T>,
+		[u8; 32], // Key
+		Marketplace<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -148,6 +148,8 @@ pub mod pallet {
 		AuthorityAdded(T::AccountId, MarketplaceAuthority),
 		/// Remove the selected authority from the selected marketplace
 		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
+		/// The selected marketplaces was updated. [market_id]
+		MarketplaceUpdated([u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -199,6 +201,8 @@ pub mod pallet {
 		UserNotFoundForThisQuery,
 		/// Admis cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
+		/// Atrtibute not found
+		AttributeNotFound,
 	}
 
 	#[pallet::call]
@@ -328,6 +332,15 @@ pub mod pallet {
 			// selected marketplace. 
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn update_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_update_marketplace(who, marketplace_id, new_label)
+		}
+
 
 		/// Kill all the stored data.
 		/// 
