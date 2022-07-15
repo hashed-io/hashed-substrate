@@ -129,8 +129,20 @@ impl<T: Config> Pallet<T> {
         //ensure the origin is owner or admin
         Self::can_enroll(authority, marketplace_id)?;
         //update marketplace
-        Self::update_label_marketplace(marketplace_id, new_label);
-        Self::deposit_event(Event::MarketplaceUpdated(marketplace_id));
+        Self::update_label_marketplace(marketplace_id, new_label)?;
+        Self::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
+        Ok(())
+    }
+
+
+    pub fn do_remove_marketplace(authority: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult {
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        //ensure the origin is owner or admin
+        Self::can_enroll(authority, marketplace_id)?;
+        //remove marketplace
+        Self::remove_selected_marketplace(marketplace_id)?;
+        Self::deposit_event(Event::MarketplaceRemoved(marketplace_id));
         Ok(())
     }
 
@@ -287,11 +299,39 @@ impl<T: Config> Pallet<T> {
     /// It returns ok if the update was successful, error otherwise.
     fn  update_label_marketplace(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
         <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
-            //marketplace.as_mut().map(|m| m.label.clone_from(&new_label));
+        //first version -> :
+        //marketplace.as_mut().map(|m| m.label.clone_from(&new_label));
+        marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
+        if let Some(m) = marketplace{
+            //TOREVIEW
             //as we never used again the label, we can consume the value here.
-            marketplace.as_mut().map(|m| m.label = new_label);
-            Ok(())
-        }).map_err(|_:Error::<T>| Error::<T>::AttributeNotFound)?;
+            //m.label = new_label;
+            m.label.clone_from(&new_label);
+        }
+        Ok(())
+        })
+
+        //TOREVIEW
+        // Should I add an extra error handling here? I think I've covered all possible errors.
+        //.map_err(|_:Error::<T>| Error::<T>::MarketplaceLabelNotFound)?;
+        //Ok(())
+        // From the beggining, with contains_key, we've ensured that the key exists.
+        // I refactored the code multiple times 'cause I forgot to add 
+        // the question mark when calling the function in do_update_marketplace
+        // but i think this final result is the best.
+
+    }
+
+    /// Let us delete the selected marketplace 
+    /// and remove all of its associated authorities from all the storage sources.
+    /// If returns ok if the deletion was successful, error otherwise.
+    fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
+        //remove from marketplaces list
+        <Marketplaces<T>>::remove(marketplace_id);
+        // //remove from marketplaces by authority list
+        // //remove from authorities by marketplace list
+        // //remove from applications by account list
+        // //remove from applications list
         Ok(())
     }
 
