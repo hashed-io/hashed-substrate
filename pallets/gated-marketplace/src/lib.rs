@@ -149,7 +149,9 @@ pub mod pallet {
 		/// Remove the selected authority from the selected marketplace
 		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
 		/// The selected marketplaces was updated. [market_id]
-		MarketplaceUpdated([u8;32]),
+		MarketplaceLabelUpdated([u8;32]),
+		/// The selected marketplaces was removed. [market_id]
+		MarketplaceRemoved([u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -202,7 +204,7 @@ pub mod pallet {
 		/// Admis cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
 		/// Atrtibute not found
-		AttributeNotFound,
+		MarketplaceLabelNotFound,
 	}
 
 	#[pallet::call]
@@ -333,12 +335,46 @@ pub mod pallet {
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
 
+		/// Update marketplace's label.
+		/// 
+		/// This extrinsic updates the label of the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to update the label.
+		/// - `label`: The new label of the marketplace.
+		/// 
+		/// ### Considerations:
+		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
+		/// - The label must be less than or equal to `T::LabelMaxLen
+		/// - If the selected marketplace doesn't exist, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn update_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_update_marketplace(who, marketplace_id, new_label)
+		}
+
+		/// Remove a marketplace.
+		/// 
+		/// This extrinsic removes the selected marketplace.
+		/// It also removes all the applications related with the marketplace.
+		/// It also removes all the authorities from the lists of the marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace to be removed.
+		/// 
+		/// ### Considerations:
+		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
+		/// - If the selected marketplace doesn't exist, it will throw an error.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_remove_marketplace(who, marketplace_id)
 		}
 
 
