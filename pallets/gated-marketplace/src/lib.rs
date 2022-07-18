@@ -90,7 +90,7 @@ pub mod pallet {
 	pub(super) type Applications<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8;32], 
+		[u8;32], //K1: marketplace_id
 		Application<T>, 
 		OptionQuery
 	>;
@@ -100,9 +100,9 @@ pub mod pallet {
 	pub(super) type ApplicationsByAccount<T: Config> = StorageDoubleMap<
 		_, 
 		Blake2_128Concat, 
-		T::AccountId, 
+		T::AccountId, // K1: account_id
 		Blake2_128Concat, 
-		[u8;32], //marketplace_id 
+		[u8;32], // k2: marketplace_id 
 		[u8;32], //application_id
 		OptionQuery
 	>;
@@ -113,9 +113,9 @@ pub mod pallet {
 	pub(super) type ApplicantsByMarketplace<T: Config> = StorageDoubleMap<
 		_, 
 		Identity, 
-		[u8;32], 
+		[u8;32], //K1: marketplace_id
 		Blake2_128Concat, 
-		ApplicationStatus, 
+		ApplicationStatus, //K2: application_status
 		BoundedVec<T::AccountId,T::MaxApplicants>, 
 		ValueQuery
 	>;
@@ -356,7 +356,7 @@ pub mod pallet {
 			Self::do_update_marketplace(who, marketplace_id, new_label)
 		}
 
-		/// Remove a marketplace.
+		/// Remove a particular marketplace.
 		/// 
 		/// This extrinsic removes the selected marketplace.
 		/// It also removes all the applications related with the marketplace.
