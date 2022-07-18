@@ -90,7 +90,7 @@ pub mod pallet {
 	pub(super) type Applications<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8;32], //K1: marketplace_id
+		[u8;32], //K1: application_id
 		Application<T>, 
 		OptionQuery
 	>;
