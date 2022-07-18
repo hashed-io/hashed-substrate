@@ -301,13 +301,18 @@ impl<T: Config> Pallet<T> {
         <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
         //first version -> :
         //marketplace.as_mut().map(|m| m.label.clone_from(&new_label));
-        marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
-        if let Some(m) = marketplace{
-            //TOREVIEW
-            //as we never used again the label, we can consume the value here.
-            //m.label = new_label;
-            m.label.clone_from(&new_label);
-        }
+        // let derp = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
+        // if let Some(m) = marketplace{
+        //     //TOREVIEW
+        //     //as we never used again the label, we can consume the value here.
+        //     //m.label = new_label;
+        //     m.label.clone_from(&new_label);
+        // }
+        // Ok(())
+        // })
+
+        let market = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
+        market.label = new_label;
         Ok(())
         })
 
@@ -326,16 +331,62 @@ impl<T: Config> Pallet<T> {
     /// and remove all of its associated authorities from all the storage sources.
     /// If returns ok if the deletion was successful, error otherwise.
     fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
-        //remove from marketplaces list
+        //Before to remove the marketplace, we need to remove all its associated authorities 
+        // as well as the applicants/applications.
+        //First we need to get the list of all the authorities for the marketplace.
+
+        //Enumerate all elements in the map with first key k1 in no particular order.
+        let _users = <AuthoritiesByMarketplace<T>>::iter_prefix(marketplace_id)
+        .map(|(_authority, users)| users)
+        .collect::<Vec<_>>();
+        
+        //1. remove from marketplaces by authority list
+
+        _users.iter().for_each(|user|
+            user.iter().for_each(|authority|{
+                <MarketplacesByAuthority<T>>::remove(authority, marketplace_id);
+        }));
+
+        //2. remove from authorities by marketplace list
+        //Here there's two options, I think version 1 is the best. 
+        // We avoid to iterate over the map to remove the elements and we save code lines.
+        // 2.1 Version 1:
+        <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
+
+        // 2.2 Version 2:
+        // let authority_types = [
+        // MarketplaceAuthority::Owner, 
+        // MarketplaceAuthority::Admin, 
+        // MarketplaceAuthority::Appraiser,
+        // MarketplaceAuthority::RedemptionSpecialist,];
+
+        // authority_types.iter().for_each(|authority_type|{
+        //     <AuthoritiesByMarketplace<T>>::remove(marketplace_id, *authority_type);
+        // });
+
+        //3. remove from Applications lists
+        <Applications<T>>::remove(marketplace_id);
+
+        //4. remove from ApplicationsByAccount lists
+        _users.iter().for_each(|user|
+            user.iter().for_each(|authority|{
+                <ApplicationsByAccount<T>>::remove_prefix(authority, None);        
+        }));
+
+        //5. remove from ApplicantsByMarketplace lists
+        <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
+
+        //6. remove from Custodians lists
+        _users.iter().for_each(|user|
+            user.iter().for_each(|authority|{
+                <Custodians<T>>::remove_prefix(authority, None);        
+            }));
+
+        //7. remove from Marketplaces lists
         <Marketplaces<T>>::remove(marketplace_id);
-        // //remove from marketplaces by authority list
-        // //remove from authorities by marketplace list
-        // //remove from applications by account list
-        // //remove from applications list
+
         Ok(())
     }
-
-
 
 
 }
