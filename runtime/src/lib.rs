@@ -594,6 +594,10 @@ impl pallet_nbv_storage::Config for Runtime {
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
 
+impl pallet_confidential_docs::Config for Runtime {
+	type Event = Event;
+}
+
 
 parameter_types! {
 	pub const MaxRecursions: u32 = 10;
@@ -686,6 +690,7 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
+		ConfidentialDocs: pallet_confidential_docs,
 	}
 );
 
