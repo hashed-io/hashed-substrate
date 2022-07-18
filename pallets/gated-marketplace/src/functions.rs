@@ -299,32 +299,10 @@ impl<T: Config> Pallet<T> {
     /// It returns ok if the update was successful, error otherwise.
     fn  update_label_marketplace(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
         <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
-        //first version -> :
-        //marketplace.as_mut().map(|m| m.label.clone_from(&new_label));
-        // let derp = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
-        // if let Some(m) = marketplace{
-        //     //TOREVIEW
-        //     //as we never used again the label, we can consume the value here.
-        //     //m.label = new_label;
-        //     m.label.clone_from(&new_label);
-        // }
-        // Ok(())
-        // })
-
         let market = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
         market.label = new_label;
         Ok(())
         })
-
-        //TOREVIEW
-        // Should I add an extra error handling here? I think I've covered all possible errors.
-        //.map_err(|_:Error::<T>| Error::<T>::MarketplaceLabelNotFound)?;
-        //Ok(())
-        // From the beggining, with contains_key, we've ensured that the key exists.
-        // I refactored the code multiple times 'cause I forgot to add 
-        // the question mark when calling the function in do_update_marketplace
-        // but i think this final result is the best.
-
     }
 
     /// Let us delete the selected marketplace 
@@ -333,56 +311,59 @@ impl<T: Config> Pallet<T> {
     fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
         //Before to remove the marketplace, we need to remove all its associated authorities 
         // as well as the applicants/applications.
+
         //First we need to get the list of all the authorities for the marketplace.
-
-        //Enumerate all elements in the map with first key k1 in no particular order.
         let _users = <AuthoritiesByMarketplace<T>>::iter_prefix(marketplace_id)
-        .map(|(_authority, users)| users)
-        .collect::<Vec<_>>();
-        
-        //1. remove from marketplaces by authority list
+        .map(|(_authority, users)| users).flatten().collect::<Vec<_>>();
 
-        _users.iter().for_each(|user|
-            user.iter().for_each(|authority|{
-                <MarketplacesByAuthority<T>>::remove(authority, marketplace_id);
-        }));
+        //1. remove from MarketplacesByAuthority
+        _users.iter().for_each(|user|{
+            <MarketplacesByAuthority<T>>::remove(user, marketplace_id);
+        });
 
         //2. remove from authorities by marketplace list
-        //Here there's two options, I think version 1 is the best. 
-        // We avoid to iterate over the map to remove the elements and we save code lines.
-        // 2.1 Version 1:
         <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
-        // 2.2 Version 2:
-        // let authority_types = [
-        // MarketplaceAuthority::Owner, 
-        // MarketplaceAuthority::Admin, 
-        // MarketplaceAuthority::Appraiser,
-        // MarketplaceAuthority::RedemptionSpecialist,];
-
-        // authority_types.iter().for_each(|authority_type|{
-        //     <AuthoritiesByMarketplace<T>>::remove(marketplace_id, *authority_type);
-        // });
-
         //3. remove from Applications lists
-        <Applications<T>>::remove(marketplace_id);
+        // Since Applications first key it's an application_id,
+        // we need to retrieve the list of applications for the selected marketplace in order
+        // to delete only the applications for the selected marketplace.
+        // We obtain the list of applications by iterating over the 
+        // ApplicationsByMarketplace storage.
+        let mut applications = vec![];
 
-        //4. remove from ApplicationsByAccount lists
-        _users.iter().for_each(|user|
-            user.iter().for_each(|authority|{
-                <ApplicationsByAccount<T>>::remove_prefix(authority, None);        
-        }));
+        for ele in <ApplicationsByAccount<T>>::iter() {
+            if ele.1 == marketplace_id {
+                applications.push(ele.2);
+            } else {
+                continue;
+            }
+        };
 
-        //5. remove from ApplicantsByMarketplace lists
+        for application in applications {
+            <Applications<T>>::remove(application);
+        }
+
+        //4. remove from ApplicationsByAccount list
+        //Since ApplicationsByAccount first key is an account, we can't use the iter_prefix method.
+        //We need to iterate over the storage and remove the applications for the selected marketplace.
+        <ApplicationsByAccount<T>>::iter().for_each(|(_k1, _k2, _k3)|{
+            <ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
+        });  
+
+        //5. remove from ApplicantsByMarketplace list
+        // Since ApplicantsByMarketplace first key is the marketplace_id,
+        // we can use the iter_prefix method.
         <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
         //6. remove from Custodians lists
-        _users.iter().for_each(|user|
-            user.iter().for_each(|authority|{
-                <Custodians<T>>::remove_prefix(authority, None);        
-            }));
+        // Since ApplicationsByAccount first key is an account, we can't use the iter_prefix method.
+        //We need to iterate over the storage and remove the custodians for the selected marketplace.
+        <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
+                <Custodians<T>>::remove(_k1, marketplace_id);
+        });
 
-        //7. remove from Marketplaces lists
+        //7. remove from Marketplaces list
         <Marketplaces<T>>::remove(marketplace_id);
 
         Ok(())
