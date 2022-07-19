@@ -356,7 +356,7 @@ impl<T: Config> Pallet<T> {
         // we can use the iter_prefix method.
         <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
-        //6. remove from Custodians lists
+        //6. remove from Custodians list
         // Since ApplicationsByAccount first key is an account, we can't use the iter_prefix method.
         //We need to iterate over the storage and remove the custodians for the selected marketplace.
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
