@@ -8,12 +8,12 @@ fn create_label( label : &str ) -> BoundedVec<u8, LabelMaxLen> {
 	s.try_into().unwrap_or_default()
 }
 
-fn dummy_notes() -> BoundedVec<u8, NotesMaxLen> {
+fn _dummy_notes() -> BoundedVec<u8, NotesMaxLen> {
 	let s: Vec<u8> = "Notes".as_bytes().into();
 	s.try_into().unwrap_or_default()
 }
 
-fn create_file(name: &str, cid: &str, create_custodian_file: bool) -> ApplicationField {
+fn _create_file(name: &str, cid: &str, create_custodian_file: bool) -> ApplicationField {
 	let display_name_vec: Vec<u8> = name.as_bytes().into();
 	let display_name: BoundedVec<u8, ConstU32<100>> = display_name_vec.try_into().unwrap_or_default();
 	let cid :BoundedVec<u8, ConstU32<100>> = cid.as_bytes().to_vec().try_into().unwrap_or_default();
@@ -405,7 +405,7 @@ fn remove_marketplace_marketplace_not_found_shouldnt_work(){
 		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);
 		assert_noop!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id_2), Error::<Test>::MarketplaceNotFound);
 	});
-	
+	 
 }
 
 
