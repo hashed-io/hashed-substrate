@@ -314,6 +314,7 @@ impl<T: Config> Pallet<T> {
     /// Let us delete the selected marketplace 
     /// and remove all of its associated authorities from all the storage sources.
     /// If returns ok if the deletion was successful, error otherwise.
+    /// Errors only could happen if the storage sources are corrupted.
     fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
         //Before to remove the marketplace, we need to remove all its associated authorities 
         // as well as the applicants/applications.
