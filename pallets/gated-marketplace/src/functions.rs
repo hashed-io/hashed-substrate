@@ -11,7 +11,7 @@ impl<T: Config> Pallet<T> {
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
         // ensure the generated id is unique
-        ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists );
+        ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
@@ -27,12 +27,14 @@ impl<T: Config> Pallet<T> {
         // The user only can apply once by marketplace
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id), Error::<T>::AlreadyApplied);
         // Generate application Id
+        //TODO: Ensure the generated id is unique
         let app_id = application.using_encoded(blake2_256);
         if let Some(c) = custodian{
             // Ensure applicant and custodian arent the same
             ensure!(applicant.ne(&c),Error::<T>::ApplicantCannotBeCustodian);
             Self::insert_custodian(c, marketplace_id, applicant.clone())?;
         }
+
         Self::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)?;
         <ApplicationsByAccount<T>>::insert(applicant, marketplace_id, app_id);
         <Applications<T>>::insert(app_id, application);
@@ -139,6 +141,8 @@ impl<T: Config> Pallet<T> {
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         //ensure the origin is owner or admin
+        //add validation to ensure only admin or owner from  
+        // this marketplace can remove the marketplace
         Self::can_enroll(authority, marketplace_id)?;
         //remove marketplace
         Self::remove_selected_marketplace(marketplace_id)?;
@@ -325,18 +329,11 @@ impl<T: Config> Pallet<T> {
         <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
         //3. remove from Applications lists
-        // Since Applications first key it's an application_id,
-        // we need to retrieve the list of applications for the selected marketplace in order
-        // to delete only the applications for the selected marketplace.
-        // We obtain the list of applications by iterating over the 
-        // ApplicationsByMarketplace storage.
         let mut applications =  Vec::new();
 
         for ele in <ApplicationsByAccount<T>>::iter() {
             if ele.1 == marketplace_id {
                 applications.push(ele.2);
-            } else {
-                continue;
             }
         };
 
@@ -345,20 +342,14 @@ impl<T: Config> Pallet<T> {
         }
 
         //4. remove from ApplicationsByAccount list
-        //Since ApplicationsByAccount first key is an account, we can't use the iter_prefix method.
-        //We need to iterate over the storage and remove the applications for the selected marketplace.
         <ApplicationsByAccount<T>>::iter().for_each(|(_k1, _k2, _k3)|{
             <ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
         });  
 
         //5. remove from ApplicantsByMarketplace list
-        // Since ApplicantsByMarketplace first key is the marketplace_id,
-        // we can use the iter_prefix method.
         <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
         //6. remove from Custodians list
-        // Since ApplicationsByAccount first key is an account, we can't use the iter_prefix method.
-        //We need to iterate over the storage and remove the custodians for the selected marketplace.
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
                 <Custodians<T>>::remove(_k1, marketplace_id);
         });
@@ -368,6 +359,7 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
 
 
 }
