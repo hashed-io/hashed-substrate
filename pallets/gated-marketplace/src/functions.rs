@@ -330,7 +330,7 @@ impl<T: Config> Pallet<T> {
         // to delete only the applications for the selected marketplace.
         // We obtain the list of applications by iterating over the 
         // ApplicationsByMarketplace storage.
-        let mut applications = vec![];
+        let mut applications =  Vec::new();
 
         for ele in <ApplicationsByAccount<T>>::iter() {
             if ele.1 == marketplace_id {
