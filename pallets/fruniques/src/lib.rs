@@ -11,16 +11,14 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+// pub mod types;
+mod functions;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{
-		pallet_prelude::*,
-		traits::tokens::nonfungibles::{Inspect, InspectEnumerable},
-		BoundedVec,
-	};
+	use frame_support::{pallet_prelude::*, traits::tokens::nonfungibles::Inspect, BoundedVec};
 	use frame_system::pallet_prelude::*;
-	use scale_info::prelude::string::String;
 	use scale_info::prelude::vec::Vec;
 	use sp_runtime::{traits::StaticLookup, Permill};
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -48,12 +46,19 @@ pub mod pallet {
 	pub enum Error<T> {
 		NoneValue,
 		NoPermission,
+		NotAdmin,
 		StorageOverflow,
 		NotYetImplemented,
 		// Too many fruniques were minted
 		FruniqueCntOverflow,
 		// The asset_id is not linked to a frunique or it doesn't exists
 		NotAFrunique,
+		// The key of an attribute it's too long
+		KeyTooLong,
+		// The value of an attribute it's too long
+		ValueTooLong,
+		// Calling set on a non-existing attributes
+		AttributesEmpty,
 	}
 
 	#[pallet::storage]
@@ -62,8 +67,8 @@ pub mod pallet {
 	pub(super) type FruniqueCnt<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
-	where 
+	impl<T: Config> Pallet<T>
+	where
 		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
 		/// Issue a new frunique from a public origin.
@@ -142,9 +147,44 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// ## Set multiple attributes to a frunique.
+		/// `origin` must be signed by the owner of the frunique.
+		/// - `attributes` must be a list of pairs of `key` and `value`.
+		/// `key` must be a valid key for the asset class.
+		/// `value` must be a valid value for the asset class.
+		/// `attributes` must not be empty.
+		/// - `instance_id` must be a valid instance of the asset class.
+		/// - `class_id` must be a valid class of the asset class.
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_attributes(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			instance_id: T::ItemId,
+			attributes: Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>,
+		) -> DispatchResult {
+			// ! Ensure the admin is the one who can add attributes to the frunique.
+			let admin = Self::admin_of(&class_id, &instance_id);
+			let signer = core::prelude::v1::Some(ensure_signed(origin.clone())?);
+
+			ensure!(signer == admin, <Error<T>>::NotAdmin);
+
+			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
+			for attribute in &attributes {
+				Self::set_attribute(
+					origin.clone(),
+					&class_id.clone(),
+					Self::u32_to_instance_id(instance_id.clone()),
+					attribute.0.clone(),
+					attribute.1.clone(),
+				)?;
+			}
+			Ok(())
+		}
+
 		/// ## NFT Division
 		///
-		/// PD: the Key/value length limits are ihnerited from the uniques pallet,
+		/// PD: the Key/value length limits are inherited from the uniques pallet,
 		/// so they're not explicitly declared on this pallet
 		///
 		///
@@ -166,12 +206,15 @@ pub mod pallet {
 			inherit_attrs: bool,
 			_p: Permill,
 			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-		) -> DispatchResult where <T as pallet_uniques::Config>::ItemId: From<u32>{
+		) -> DispatchResult
+		where
+			<T as pallet_uniques::Config>::ItemId: From<u32>,
+		{
 			// Boilerplate (setup, conversions, ensure_signed)
 			let owner = ensure_signed(origin.clone())?;
-			let enconded_id = instance_id.encode();
-			let new_cnt = Self::frunique_cnt().checked_add(1)
-				.ok_or(<Error<T>>::FruniqueCntOverflow)?;
+			let encoded_id = instance_id.encode();
+			let new_cnt =
+				Self::frunique_cnt().checked_add(1).ok_or(<Error<T>>::FruniqueCntOverflow)?;
 			// TODO: Check if the instance_id exists?
 			let parent_id_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"parent_id"#.encode())
 				.expect("Error on encoding the parent_id key to BoundedVec");
@@ -179,7 +222,12 @@ pub mod pallet {
 			// Instance n number of nfts (with the respective parentId)
 			let new_instance_id = Self::frunique_cnt().try_into().unwrap();
 			// Mint a unique
-			pallet_uniques::Pallet::<T>::mint(origin.clone(), class_id, new_instance_id, admin.clone())?;
+			pallet_uniques::Pallet::<T>::mint(
+				origin.clone(),
+				class_id,
+				new_instance_id,
+				admin.clone(),
+			)?;
 			// Set the respective attributtes
 			if inherit_attrs {
 				// TODO: Check all the parent's instance attributes
@@ -195,7 +243,7 @@ pub mod pallet {
 				if parent_id.len() > 0 {
 					parent_id_val = parent_id;
 				} else {
-					parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(enconded_id.clone())
+					parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(encoded_id.clone())
 						.expect("Error on converting the parent_id to BoundedVec");
 				}
 				let num_value =
@@ -206,27 +254,38 @@ pub mod pallet {
 							.expect("Error on encoding the num_value key to BoundedVec");
 					// TODO: Call bytes_to_u32 & divide the numeric value before setting it
 					pallet_uniques::Pallet::<T>::set_attribute(
-						origin.clone(), class_id,
+						origin.clone(),
+						class_id,
 						Some(Self::u32_to_instance_id(new_instance_id)),
-						num_value_key ,num_value
+						num_value_key,
+						num_value,
 					)?;
 				}
-			if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(&class_id, &instance_id,&"parent_id".encode() ){
-				//println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
-				parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(parent_attr)
-					.expect("Error on converting the parent_id to BoundedVec");
-			}else{
-				//println!("The parent doesn't have a parent_id");
-				parent_id_val= BoundedVec::<u8,T::ValueLimit>::try_from(enconded_id)
-				.expect("Error on converting the parent_id to BoundedVec");
-			}
+				if let Some(parent_attr) = pallet_uniques::Pallet::<T>::attribute(
+					&class_id,
+					&instance_id,
+					&"parent_id".encode(),
+				) {
+					//println!(" Instance number {:?} parent_id (parent's parent): {:#?}", instance_id, Self::bytes_to_u32( parent_attr.clone() ));
+					parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(parent_attr)
+						.expect("Error on converting the parent_id to BoundedVec");
+				} else {
+					//println!("The parent doesn't have a parent_id");
+					parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(encoded_id)
+						.expect("Error on converting the parent_id to BoundedVec");
+				}
 			} else {
-				parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(enconded_id)
+				parent_id_val = BoundedVec::<u8, T::ValueLimit>::try_from(encoded_id)
 					.expect("Error on converting the parent_id to BoundedVec");
 			}
 			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
-			pallet_uniques::Pallet::<T>::set_attribute(origin.clone(), class_id, Some(Self::u32_to_instance_id(new_instance_id)),
-			parent_id_key ,parent_id_val)?;
+			pallet_uniques::Pallet::<T>::set_attribute(
+				origin.clone(),
+				class_id,
+				Some(Self::u32_to_instance_id(new_instance_id)),
+				parent_id_key,
+				parent_id_val,
+			)?;
 			let _e = Self::instance_exists(origin, class_id, instance_id);
 			//let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
 			//println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) );
@@ -236,42 +295,6 @@ pub mod pallet {
 			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
 			// Freeze the nft to prevent trading it? Burn it? Not clear, so nothing at the moment
 			Ok(())
-		}
-
-	}
-
-	impl<T: Config> Pallet<T> 
-	where
-	T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
-	{
-		pub fn u32_to_instance_id(input: u32) -> T::ItemId where <T as pallet_uniques::Config>::ItemId: From<u32> {
-		 	T::ItemId::from(input)
-		}
-
-		pub fn bytes_to_string(input: Vec<u8>) -> String {
-			let mut s = String::default();
-			for x in input {
-				//let c: char = x.into();
-				s.push(x as char);
-			}
-			s
-		}
-		/// Helper function for printing purposes
-		pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
-			u32::from_ne_bytes(input.try_into().unwrap())
-		}
-
-		//get uniques attribute?
-		pub fn get_nft_attribute(
-			class_id: &T::CollectionId,
-			instance_id: &T::ItemId,
-			key: &Vec<u8>,
-		) -> BoundedVec<u8, T::ValueLimit> {
-			if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
-				return BoundedVec::<u8, T::ValueLimit>::try_from(a)
-					.expect("Error on converting the attribute to BoundedVec");
-			}
-			BoundedVec::<u8, T::ValueLimit>::default()
 		}
 	}
 }

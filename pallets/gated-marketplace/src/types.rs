@@ -19,11 +19,12 @@ pub enum AccountOrApplication<T: Config>{
     Application([u8;32]),
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum MarketplaceAuthority{
     Owner,
     Admin,
     Appraiser,
+    RedemptionSpecialist,
 }
 
 impl Default for MarketplaceAuthority{
@@ -40,7 +41,8 @@ pub struct  Application< T: Config >{
     pub fields: BoundedVec<ApplicationField, T::MaxFiles>
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo)]
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ApplicationStatus{
     Pending,
     Approved,
