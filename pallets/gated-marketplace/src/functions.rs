@@ -27,7 +27,10 @@ impl<T: Config> Pallet<T> {
         // The user only can apply once by marketplace
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id), Error::<T>::AlreadyApplied);
         // Generate application Id
-        let app_id = application.using_encoded(blake2_256);
+        let app_id = (marketplace_id.clone(), applicant.clone(), application.clone()).using_encoded(blake2_256);
+        // Ensure another identical application doesnt exists
+        ensure!(!<Applications<T>>::contains_key(app_id), Error::<T>::AlreadyApplied);
+
         if let Some(c) = custodian{
             // Ensure applicant and custodian arent the same
             ensure!(applicant.ne(&c),Error::<T>::ApplicantCannotBeCustodian);
