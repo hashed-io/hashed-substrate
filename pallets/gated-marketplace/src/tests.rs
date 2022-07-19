@@ -1,4 +1,5 @@
 use crate::{mock::*, Error, types::*, Custodians};
+use sp_runtime::sp_std::vec::Vec;
 use codec::Encode;
 use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32}, assert_noop};
 use sp_io::hashing::blake2_256;
@@ -251,6 +252,7 @@ fn add_authority_appraiser_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![MarketplaceAuthority::Appraiser]);
 	});
 }
 
@@ -260,6 +262,17 @@ fn add_authority_admin_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Admin, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![MarketplaceAuthority::Admin]);
+	});
+}
+
+#[test]
+fn add_authority_redenmption_specialist_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::RedemptionSpecialist, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![MarketplaceAuthority::RedemptionSpecialist]);
 	});
 }
 
@@ -292,6 +305,7 @@ fn remove_authority_appraiser_work() {
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
 		assert_ok!(GatedMarketplace::remove_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![]);
 	});
 }
 
@@ -302,6 +316,18 @@ fn remove_authority_admin_work() {
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Admin, m_id));
 		assert_ok!(GatedMarketplace::remove_authority(Origin::signed(1), 3, MarketplaceAuthority::Admin, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![]);
+	});
+}
+
+#[test]
+fn remove_authority_redemption_specialist_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::RedemptionSpecialist, m_id));
+		assert_ok!(GatedMarketplace::remove_authority(Origin::signed(1), 3, MarketplaceAuthority::RedemptionSpecialist, m_id));
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![]);
 	});
 }
 
@@ -394,7 +420,7 @@ fn update_label_marketplace_works(){
 }
 
 
-//Delete selected marketplace
+//Delete the selected marketplace
 
 #[test]
 fn remove_marketplace_marketplace_not_found_shouldnt_work(){
@@ -412,11 +438,201 @@ fn remove_marketplace_marketplace_not_found_shouldnt_work(){
 #[test]
 fn remove_marketplace_user_without_permission_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		//user should be an admin or owner
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
 		assert_noop!(GatedMarketplace::remove_marketplace(Origin::signed(3), m_id), Error::<Test>::CannotEnroll);
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_marketplaces_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_marketplaces_by_authority_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 4, MarketplaceAuthority::RedemptionSpecialist, m_id));
+		
+		assert!(GatedMarketplace::marketplaces_by_authority(1, m_id) == vec![MarketplaceAuthority::Owner]);
+		assert!(GatedMarketplace::marketplaces_by_authority(2, m_id) == vec![MarketplaceAuthority::Admin]);
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![MarketplaceAuthority::Appraiser]);
+		assert!(GatedMarketplace::marketplaces_by_authority(4, m_id) == vec![MarketplaceAuthority::RedemptionSpecialist]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::marketplaces_by_authority(1, m_id) == vec![]);
+		assert!(GatedMarketplace::marketplaces_by_authority(2, m_id) == vec![]);
+		assert!(GatedMarketplace::marketplaces_by_authority(3, m_id) == vec![]);
+		assert!(GatedMarketplace::marketplaces_by_authority(4, m_id) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_authorities_by_marketplace_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 4, MarketplaceAuthority::RedemptionSpecialist, m_id));
+
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Owner) == vec![1]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Admin) == vec![2]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Appraiser) == vec![3]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::RedemptionSpecialist) == vec![4]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Owner) == vec![]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Admin) == vec![]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::Appraiser) == vec![]);
+		assert!(GatedMarketplace::authorities_by_marketplace(m_id, MarketplaceAuthority::RedemptionSpecialist) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_custodians_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custiodian_fields(4,2) ));
+		assert!(GatedMarketplace::custodians(4, m_id) == vec![3]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::custodians(4, m_id) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+
+	});
+}
+
+
+#[test]
+fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_pending_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![3]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_approved_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true));
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![3]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_rejected_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), false));
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![3]);
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Approved) == vec![]);
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Rejected) == vec![]);
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+	});
+}
+
+#[test]
+fn remove_marketplace_deletes_storage_from_applicantions_by_account_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
+		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![3]);
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true));
+		assert!(GatedMarketplace::applications_by_account(3, m_id).is_some());
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+		assert!(GatedMarketplace::applications_by_account(3, m_id).is_none());
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+
+	});
+}
+
+
+#[test]
+fn remove_marketplace_deletes_storage_from_applications_works(){
+	new_test_ext().execute_with(|| {
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
+
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
+		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
+
+		assert!(GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending) == vec![3]);
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true));
+		assert!(GatedMarketplace::applications(app_id).is_some());
+
+		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
+		assert!(GatedMarketplace::applications(app_id).is_none());
+		assert!(GatedMarketplace::marketplaces(m_id).is_none());
+
 	});
 }
 
