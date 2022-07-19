@@ -342,7 +342,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `marketplace_id`: The id of the marketplace where we want to update the label.
-		/// - `label`: The new label of the marketplace.
+		/// - `label`: The new label for the selected marketplace.
 		/// 
 		/// ### Considerations:
 		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
@@ -359,8 +359,8 @@ pub mod pallet {
 		/// Remove a particular marketplace.
 		/// 
 		/// This extrinsic removes the selected marketplace.
-		/// It also removes all the applications related with the marketplace.
-		/// It also removes all the authorities from the lists of the marketplace.
+		/// It removes all the applications related with the marketplace.
+		/// It removes all the authorities from the lists of the marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
