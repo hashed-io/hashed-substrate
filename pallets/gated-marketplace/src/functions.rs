@@ -11,7 +11,7 @@ impl<T: Config> Pallet<T> {
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
         // ensure the generated id is unique
-        ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists );
+        ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
@@ -27,12 +27,16 @@ impl<T: Config> Pallet<T> {
         // The user only can apply once by marketplace
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id), Error::<T>::AlreadyApplied);
         // Generate application Id
-        let app_id = application.using_encoded(blake2_256);
+        let app_id = (marketplace_id.clone(), applicant.clone(), application.clone()).using_encoded(blake2_256);
+        // Ensure another identical application doesnt exists
+        ensure!(!<Applications<T>>::contains_key(app_id), Error::<T>::AlreadyApplied);
+
         if let Some(c) = custodian{
             // Ensure applicant and custodian arent the same
             ensure!(applicant.ne(&c),Error::<T>::ApplicantCannotBeCustodian);
             Self::insert_custodian(c, marketplace_id, applicant.clone())?;
         }
+
         Self::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)?;
         <ApplicationsByAccount<T>>::insert(applicant, marketplace_id, app_id);
         <Applications<T>>::insert(app_id, application);
@@ -59,7 +63,7 @@ impl<T: Config> Pallet<T> {
                 }).ok_or(Error::<T>::ApplicationNotFound)?
             },
         };
-        Self::change_applicant_status(applicant, marketplace_id, next_status.clone())?;
+        Self::change_applicant_status(applicant, marketplace_id, next_status)?;
         // TODO: if rejected remove application and files? 
         Self::deposit_event(Event::ApplicationProcessed(account_or_application, marketplace_id, next_status));
         Ok(())
@@ -119,6 +123,32 @@ impl<T: Config> Pallet<T> {
         }
         
         Self::deposit_event(Event::AuthorityRemoved(account, authority_type));
+        Ok(())
+    }
+
+
+    pub fn do_update_marketplace(authority: T::AccountId, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        //ensure the origin is owner or admin
+        //add validation to ensure only admin or owner from  
+        // this marketplace can remove the marketplace
+        Self::can_enroll(authority, marketplace_id)?;
+        //update marketplace
+        Self::update_label_marketplace(marketplace_id, new_label)?;
+        Self::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
+        Ok(())
+    }
+
+
+    pub fn do_remove_marketplace(authority: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult {
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        //ensure the origin is owner or admin
+        Self::can_enroll(authority, marketplace_id)?;
+        //remove marketplace
+        Self::remove_selected_marketplace(marketplace_id)?;
+        Self::deposit_event(Event::MarketplaceRemoved(marketplace_id));
         Ok(())
     }
 
@@ -270,5 +300,68 @@ impl<T: Config> Pallet<T> {
         
         owners.len() == 1
     }
+
+    /// Let us update the marketplace's label.
+    /// It returns ok if the update was successful, error otherwise.
+    fn  update_label_marketplace(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
+        <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
+        let market = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
+        market.label = new_label;
+        Ok(())
+        })
+    }
+
+    /// Let us delete the selected marketplace 
+    /// and remove all of its associated authorities from all the storage sources.
+    /// If returns ok if the deletion was successful, error otherwise.
+    /// Errors only could happen if the storage sources are corrupted.
+    fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
+        //Before to remove the marketplace, we need to remove all its associated authorities 
+        // as well as the applicants/applications.
+
+        //First we need to get the list of all the authorities for the marketplace.
+        let _users = <AuthoritiesByMarketplace<T>>::iter_prefix(marketplace_id)
+        .map(|(_authority, users)| users).flatten().collect::<Vec<_>>();
+
+        //1. remove from MarketplacesByAuthority
+        _users.iter().for_each(|user|{
+            <MarketplacesByAuthority<T>>::remove(user, marketplace_id);
+        });
+
+        //2. remove from authorities by marketplace list
+        <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
+
+        //3. remove from Applications lists
+        let mut applications =  Vec::new();
+
+        for ele in <ApplicationsByAccount<T>>::iter() {
+            if ele.1 == marketplace_id {
+                applications.push(ele.2);
+            }
+        };
+
+        for application in applications {
+            <Applications<T>>::remove(application);
+        }
+
+        //4. remove from ApplicationsByAccount list
+        <ApplicationsByAccount<T>>::iter().for_each(|(_k1, _k2, _k3)|{
+            <ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
+        });  
+
+        //5. remove from ApplicantsByMarketplace list
+        <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
+
+        //6. remove from Custodians list
+        <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
+                <Custodians<T>>::remove(_k1, marketplace_id);
+        });
+
+        //7. remove from Marketplaces list
+        <Marketplaces<T>>::remove(marketplace_id);
+
+        Ok(())
+    }
+
 
 }

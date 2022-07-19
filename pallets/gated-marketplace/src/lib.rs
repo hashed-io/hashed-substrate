@@ -18,7 +18,7 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::sp_std::vec::Vec;
+	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 
 	#[pallet::config]
@@ -56,8 +56,8 @@ pub mod pallet {
 	pub(super) type Marketplaces<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8; 32], 
-		Marketplace<T>,
+		[u8; 32], // Key
+		Marketplace<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -90,7 +90,7 @@ pub mod pallet {
 	pub(super) type Applications<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8;32], 
+		[u8;32], //K1: application_id
 		Application<T>, 
 		OptionQuery
 	>;
@@ -100,9 +100,9 @@ pub mod pallet {
 	pub(super) type ApplicationsByAccount<T: Config> = StorageDoubleMap<
 		_, 
 		Blake2_128Concat, 
-		T::AccountId, 
+		T::AccountId, // K1: account_id
 		Blake2_128Concat, 
-		[u8;32], //marketplace_id 
+		[u8;32], // k2: marketplace_id 
 		[u8;32], //application_id
 		OptionQuery
 	>;
@@ -113,9 +113,9 @@ pub mod pallet {
 	pub(super) type ApplicantsByMarketplace<T: Config> = StorageDoubleMap<
 		_, 
 		Identity, 
-		[u8;32], 
+		[u8;32], //K1: marketplace_id
 		Blake2_128Concat, 
-		ApplicationStatus, 
+		ApplicationStatus, //K2: application_status
 		BoundedVec<T::AccountId,T::MaxApplicants>, 
 		ValueQuery
 	>;
@@ -148,6 +148,10 @@ pub mod pallet {
 		AuthorityAdded(T::AccountId, MarketplaceAuthority),
 		/// Remove the selected authority from the selected marketplace
 		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
+		/// The selected marketplaces was updated. [market_id]
+		MarketplaceLabelUpdated([u8;32]),
+		/// The selected marketplaces was removed. [market_id]
+		MarketplaceRemoved([u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -199,6 +203,8 @@ pub mod pallet {
 		UserNotFoundForThisQuery,
 		/// Admis cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
+		/// Atrtibute not found
+		MarketplaceLabelNotFound,
 	}
 
 	#[pallet::call]
@@ -328,6 +334,49 @@ pub mod pallet {
 			// selected marketplace. 
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
+
+		/// Update marketplace's label.
+		/// 
+		/// This extrinsic updates the label of the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to update the label.
+		/// - `label`: The new label for the selected marketplace.
+		/// 
+		/// ### Considerations:
+		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
+		/// - The label must be less than or equal to `T::LabelMaxLen
+		/// - If the selected marketplace doesn't exist, it will throw an error.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn update_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_update_marketplace(who, marketplace_id, new_label)
+		}
+
+		/// Remove a particular marketplace.
+		/// 
+		/// This extrinsic removes the selected marketplace.
+		/// It removes all the applications related with the marketplace.
+		/// It removes all the authorities from the lists of the marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace to be removed.
+		/// 
+		/// ### Considerations:
+		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
+		/// - If the selected marketplace doesn't exist, it will throw an error.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32]) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_remove_marketplace(who, marketplace_id)
+		}
+
 
 		/// Kill all the stored data.
 		/// 
