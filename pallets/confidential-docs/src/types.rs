@@ -19,18 +19,20 @@ pub struct Vault<T: Config>{
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct Document<T: Config>{
+pub struct OwnedDoc<T: Config>{
+    pub cid: CID,
     pub name: DocName<T>,
     pub description: DocDesc<T>,
+    pub owner: T::AccountId,
 }
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct SharedDocument<T: Config>{
+pub struct SharedDoc<T: Config>{
+    pub cid: CID,
     pub name: DocName<T>,
     pub description: DocDesc<T>,
     pub from: T::AccountId,
     pub to: T::AccountId,
-    pub original_cid: CID
 }

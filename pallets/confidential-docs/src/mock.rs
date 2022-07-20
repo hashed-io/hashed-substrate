@@ -1,6 +1,7 @@
 use crate as pallet_confidential_docs;
 use frame_support::parameter_types;
 use frame_system as system;
+use frame_system::EnsureRoot;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -56,7 +57,9 @@ impl system::Config for Test {
 }
 
 parameter_types! {
-	pub const DocNameMinLen: u32 = 3;
+	pub const MaxOwnedDocs: u32 = 100;
+	pub const MaxSharedToDocs: u32 = 100;
+	pub const DocNameMinLen: u32 = 4;
 	pub const DocNameMaxLen: u32 = 30;
 	pub const DocDescMinLen: u32 = 5;
 	pub const DocDescMaxLen: u32 = 100;
@@ -65,6 +68,9 @@ parameter_types! {
 
 impl pallet_confidential_docs::Config for Test {
 	type Event = Event;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
+	type MaxOwnedDocs = MaxOwnedDocs;
+	type MaxSharedToDocs = MaxSharedToDocs;
 	type DocNameMinLen = DocNameMinLen;
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;

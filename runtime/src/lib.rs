@@ -117,7 +117,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 /// up by `pallet_aura` to implement `fn slot_duration()`.
 ///
 /// Change this to adjust the block time.
-pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const MILLISECS_PER_BLOCK: u64 = 3000;
 
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 //       Attempting to do so will brick block production.
@@ -594,8 +594,27 @@ impl pallet_nbv_storage::Config for Runtime {
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
 
+parameter_types! {
+	pub const MaxOwnedDocs: u32 = 100;
+	pub const MaxSharedToDocs: u32 = 100;
+	pub const DocNameMinLen: u32 = 3;
+	pub const DocNameMaxLen: u32 = 50;
+	pub const DocDescMinLen: u32 = 5;
+	pub const DocDescMaxLen: u32 = 100;
+}
+
 impl pallet_confidential_docs::Config for Runtime {
 	type Event = Event;
+	type RemoveOrigin = EnsureOneOf<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type MaxOwnedDocs = MaxOwnedDocs;
+	type MaxSharedToDocs = MaxSharedToDocs;
+	type DocNameMinLen = DocNameMinLen;
+	type DocNameMaxLen = DocNameMaxLen;
+	type DocDescMinLen = DocDescMinLen;
+	type DocDescMaxLen = DocDescMaxLen;
 }
 
 

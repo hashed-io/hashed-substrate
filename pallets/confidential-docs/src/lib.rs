@@ -29,6 +29,12 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;
+
+		#[pallet::constant]
+		type MaxOwnedDocs: Get<u32>;
+		#[pallet::constant]
+		type MaxSharedToDocs: Get<u32>;
 		#[pallet::constant]
 		type DocNameMinLen: Get<u32>;
 		#[pallet::constant]
@@ -66,35 +72,43 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn documents)]
-	pub(super) type Documents<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat,
-		T::AccountId,
-		Blake2_128Concat,
+	#[pallet::getter(fn owned_docs)]
+	pub(super) type OwnedDocs<T: Config> = StorageMap<
+		_, 
+		Blake2_256,
 		CID,
-		Document<T>,
+		OwnedDoc<T>,
 		OptionQuery
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn shared_documents)]
-	pub(super) type SharedDocuments<T: Config> = StorageMap<
+	#[pallet::getter(fn owned_docs_by_owner)]
+	pub(super) type OwnedDocsByOwner<T: Config> = StorageMap<
+		_,
+		Blake2_256,
+		T::AccountId,
+		BoundedVec<CID, T::MaxOwnedDocs>,
+		ValueQuery
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn shared_docs)]
+	pub(super) type SharedDocs<T: Config> = StorageMap<
 		_, 
 		Blake2_256,
 		CID,
-		SharedDocument<T>,
+		SharedDoc<T>,
 		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn shared_documents_by_to)]
-	pub(super) type SharedDocumentsByTo<T: Config> = StorageMap<
+	#[pallet::getter(fn shared_docs_by_to)]
+	pub(super) type SharedDocsByTo<T: Config> = StorageMap<
 		_,
 		Blake2_256,
 		T::AccountId,
-		CID,
-		OptionQuery
+		BoundedVec<CID, T::MaxSharedToDocs>,
+		ValueQuery
 	>;
 
 	// Pallets use events to inform users when important changes are made.
@@ -105,8 +119,8 @@ pub mod pallet {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
 		VaultStored(UserId, PublicKey, Vault<T>),
-		DocStored(T::AccountId, CID, Document<T>),
-		SharedDocStored(T::AccountId, CID, SharedDocument<T>),
+		OwnedDocStored(OwnedDoc<T>),
+		SharedDocStored(SharedDoc<T>),
 	}
 
 	// Errors inform users that something went wrong.
@@ -124,10 +138,18 @@ pub mod pallet {
 		UserAlreadyHasVault,
 		/// The user already has a public key
 		AccountAlreadyHasPublicKey,
-		/// The document has already been share with user
-		DocumentAlreadySharedWithUser,
+		/// User is not document owner
+		NotDocOwner,
+		/// The document has already been shared
+		DocAlreadyShared,
 		/// Shared with self
-		DocumentSharedWithSelf,
+		DocSharedWithSelf,
+		/// Account has no public key
+		AccountHasNoPublicKey,
+		/// Max owned documents has been exceeded
+		ExceedMaxOwnedDocs,
+		/// Max documents shared with the "to" account has been exceeded
+		ExceedMaxSharedToDocs,
 		
 	}
 
@@ -143,16 +165,41 @@ pub mod pallet {
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn set_document(origin: OriginFor<T>, cid: CID, doc_name: DocName<T>, doc_desc: DocDesc<T>) -> DispatchResult {
+		pub fn set_owned_document(origin: OriginFor<T>, owned_doc: OwnedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_set_document(who, cid, doc_name, doc_desc)
+			Self::do_set_owned_document(who, owned_doc)
 		}
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn share_document(origin: OriginFor<T>, cid: CID, shared_doc: SharedDocument<T>) -> DispatchResult {
+		pub fn share_document(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_share_document(who, cid, shared_doc)
+			Self::do_share_document(who, shared_doc)
+		}
+
+		/// Kill all the stored data.
+		/// 
+		/// This function is used to kill ALL the stored data.
+		/// Use with caution!
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action. 
+		/// 
+		/// ### Considerations:
+		/// - This function is only available to the `admin` with sudo access.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			<Vaults<T>>::remove_all(None);
+			<PublicKeys<T>>::remove_all(None);
+			<OwnedDocs<T>>::remove_all(None);
+			<OwnedDocsByOwner<T>>::remove_all(None);
+			<SharedDocs<T>>::remove_all(None);
+			<SharedDocsByTo<T>>::remove_all(None);
+			Ok(())
 		}
 	}
 }
