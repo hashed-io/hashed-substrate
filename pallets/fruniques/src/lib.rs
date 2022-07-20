@@ -100,31 +100,9 @@ pub mod pallet {
 		) -> DispatchResult {
 			let owner = ensure_signed(origin.clone())?;
 
-			let new_cnt =
-				Self::frunique_cnt().checked_add(1).ok_or(<Error<T>>::FruniqueCntOverflow)?;
 			// create an NFT in the uniques pallet
-			pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
-			pallet_uniques::Pallet::<T>::mint(
-				origin.clone(),
-				class_id.clone(),
-				instance_id.clone(),
-				admin.clone(),
-			)?;
-			<FruniqueCnt<T>>::put(new_cnt);
-			if let Some(n) = numeric_value {
-				let num_value_key =
-					BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
-						.expect("Error on encoding the numeric value key to BoundedVec");
-				let num_value = BoundedVec::<u8, T::ValueLimit>::try_from(n.encode())
-					.expect("Error on encoding the numeric value to BoundedVec");
-				pallet_uniques::Pallet::<T>::set_attribute(
-					origin.clone(),
-					class_id,
-					Some(instance_id),
-					num_value_key,
-					num_value,
-				)?;
-			}
+			Self::do_create(origin.clone(), class_id, instance_id, numeric_value, admin.clone())?;
+
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
 

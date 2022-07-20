@@ -5,7 +5,7 @@ use frame_system::pallet_prelude::*;
 use scale_info::prelude::string::String;
 // use crate::types::*;
 use frame_support::pallet_prelude::*;
-use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
 	pub fn u32_to_instance_id(input: u32) -> T::ItemId
@@ -42,6 +42,43 @@ impl<T: Config> Pallet<T> {
 
 	pub fn admin_of(class_id: &T::CollectionId, instance_id: &T::ItemId) -> Option<T::AccountId> {
 		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
+	}
+
+	pub fn do_create(
+		origin: OriginFor<T>,
+		class_id: T::CollectionId,
+		instance_id: T::ItemId,
+		numeric_value: Option<Permill>,
+		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+	) -> DispatchResult {
+		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
+
+		pallet_uniques::Pallet::<T>::mint(
+			origin.clone(),
+			class_id.clone(),
+			instance_id.clone(),
+			admin.clone(),
+		)?;
+
+		if let Some(n) = numeric_value {
+			let num_value_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
+				.expect("Error on encoding the numeric value key to BoundedVec");
+			let num_value = BoundedVec::<u8, T::ValueLimit>::try_from(n.encode())
+				.expect("Error on encoding the numeric value to BoundedVec");
+			pallet_uniques::Pallet::<T>::set_attribute(
+				origin.clone(),
+				class_id,
+				Some(instance_id),
+				num_value_key,
+				num_value,
+			)?;
+		}
+
+		Ok(())
+	}
+
+	pub fn do_spawn() -> DispatchResult {
+		Ok(())
 	}
 
 	pub fn set_attribute(
