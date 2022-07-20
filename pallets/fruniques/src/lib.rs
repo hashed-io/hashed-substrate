@@ -160,6 +160,49 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// ## Create a frunique with given attributes.
+		/// `origin` must be signed by the owner of the frunique.
+		/// - `attributes` must be a list of pairs of `key` and `value`.
+		/// `key` must be a valid key for the asset class.
+		/// `value` must be a valid value for the asset class.
+		/// `attributes` must not be empty.
+		/// - `instance_id` must be a valid instance of the asset class.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `numeric_value` must be a valid value for the asset class.
+		/// - `admin` must be a valid admin of the asset class.
+		/// - `instance_id` must not be already in use.
+		/// - `class_id` must not be already in use.
+		/// - `numeric_value` must not be already in use.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn create_with_attributes(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			instance_id: T::ItemId,
+			numeric_value: Option<Permill>,
+			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+			attributes: Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>,
+		) -> DispatchResult {
+			// ! Ensure the admin is the one who can add attributes to the frunique.
+			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
+
+			let owner = ensure_signed(origin.clone())?;
+			// create an NFT in the uniques pallet
+			Self::do_create(origin.clone(), class_id, instance_id, numeric_value, admin.clone())?;
+			for attribute in &attributes {
+				Self::set_attribute(
+					origin.clone(),
+					&class_id.clone(),
+					Self::u32_to_instance_id(instance_id.clone()),
+					attribute.0.clone(),
+					attribute.1.clone(),
+				)?;
+			}
+
+			let admin = T::Lookup::lookup(admin)?;
+			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
+			Ok(())
+		}
+
 		/// ## NFT Division
 		///
 		/// PD: the Key/value length limits are inherited from the uniques pallet,
@@ -191,8 +234,6 @@ pub mod pallet {
 			// Boilerplate (setup, conversions, ensure_signed)
 			let owner = ensure_signed(origin.clone())?;
 			let encoded_id = instance_id.encode();
-			let new_cnt =
-				Self::frunique_cnt().checked_add(1).ok_or(<Error<T>>::FruniqueCntOverflow)?;
 			// TODO: Check if the instance_id exists?
 			let parent_id_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"parent_id"#.encode())
 				.expect("Error on encoding the parent_id key to BoundedVec");
@@ -200,12 +241,7 @@ pub mod pallet {
 			// Instance n number of nfts (with the respective parentId)
 			let new_instance_id = Self::frunique_cnt().try_into().unwrap();
 			// Mint a unique
-			pallet_uniques::Pallet::<T>::mint(
-				origin.clone(),
-				class_id,
-				new_instance_id,
-				admin.clone(),
-			)?;
+			Self::mint(origin.clone(), &class_id, new_instance_id, admin.clone())?;
 			// Set the respective attributtes
 			if inherit_attrs {
 				// TODO: Check all the parent's instance attributes
@@ -267,11 +303,21 @@ pub mod pallet {
 			let _e = Self::instance_exists(origin, class_id, instance_id);
 			//let final_test = pallet_uniques::Pallet::<T>::attribute(&class_id, &Self::u16_to_instance_id(new_instance_id ), &r#"parent_id"#.encode() );
 			//println!("The parent_id of {} is now {:?}",new_instance_id, Self::bytes_to_u32(final_test.unwrap()) );
-			<FruniqueCnt<T>>::put(new_cnt);
 			// TODO: set the divided value attribute. Numbers, divisions and floating points are giving a lot of problems
 			let admin = T::Lookup::lookup(admin)?;
 			Self::deposit_event(Event::FruniqueDivided(owner, admin, class_id, instance_id));
 			// Freeze the nft to prevent trading it? Burn it? Not clear, so nothing at the moment
+			// Freeze parent
+
+			// unique -> n parts of parent
+			// unique is freezed
+			// 1, 2, 3, 4, ..., n
+			// alice 1 & bob 1 & carol 1 & ... & n
+			// (n - 5) -> m parts of parent
+			// m parts of the new frunique
+			// n
+
+
 			Ok(())
 		}
 	}
