@@ -257,10 +257,10 @@ pub mod pallet {
 					.expect("Error on converting the parent_id to BoundedVec");
 			}
 			// (for encoding reasons the parentId is stored on hex format as a secondary side-effect, I hope it's not too much of a problem).
-			pallet_uniques::Pallet::<T>::set_attribute(
+			Self::set_attribute(
 				origin.clone(),
-				class_id,
-				Some(Self::u32_to_instance_id(new_instance_id)),
+				&class_id,
+				Self::u32_to_instance_id(new_instance_id),
 				parent_id_key,
 				parent_id_val,
 			)?;
