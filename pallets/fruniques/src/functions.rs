@@ -53,12 +53,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
 
-		pallet_uniques::Pallet::<T>::mint(
-			origin.clone(),
-			class_id.clone(),
-			instance_id.clone(),
-			admin.clone(),
-		)?;
+		Self::mint(origin.clone(), &class_id, instance_id.clone(), admin.clone())?;
 
 		if let Some(n) = numeric_value {
 			let num_value_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
@@ -95,6 +90,16 @@ impl<T: Config> Pallet<T> {
 			key,
 			value,
 		)?;
+		Ok(())
+	}
+
+	pub fn mint(
+		origin: OriginFor<T>,
+		class_id: &T::CollectionId,
+		instance_id: T::ItemId,
+		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+	) -> DispatchResult {
+		pallet_uniques::Pallet::<T>::mint(origin, *class_id, instance_id, owner)?;
 		Ok(())
 	}
 }

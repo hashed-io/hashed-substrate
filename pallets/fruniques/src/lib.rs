@@ -231,10 +231,10 @@ pub mod pallet {
 						BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
 							.expect("Error on encoding the num_value key to BoundedVec");
 					// TODO: Call bytes_to_u32 & divide the numeric value before setting it
-					pallet_uniques::Pallet::<T>::set_attribute(
+					Self::set_attribute(
 						origin.clone(),
-						class_id,
-						Some(Self::u32_to_instance_id(new_instance_id)),
+						&class_id,
+						Self::u32_to_instance_id(new_instance_id),
 						num_value_key,
 						num_value,
 					)?;
