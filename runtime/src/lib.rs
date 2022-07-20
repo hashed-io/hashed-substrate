@@ -594,6 +594,11 @@ impl pallet_nbv_storage::Config for Runtime {
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
 
+impl substrate_rbac::Config for Runtime {
+    type Event = Event;
+    type RbacAdminOrigin = EnsureRoot<AccountId>;
+}
+
 
 parameter_types! {
 	pub const MaxRecursions: u32 = 10;
@@ -630,6 +635,7 @@ where
             frame_system::CheckNonce::<Runtime>::from(index),
             frame_system::CheckWeight::<Runtime>::new(),
             pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+			substrate_rbac::Authorize<Runtime>,
         );
 
         let raw_payload = SignedPayload::new(call, extra)
@@ -686,6 +692,7 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
+		RBAC: substrate_rbac::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
