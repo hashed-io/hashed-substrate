@@ -1,6 +1,6 @@
 use hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
-	SudoConfig, SystemConfig, NodeAuthorizationConfig, NBVStorageConfig, RBACConfig ,WASM_BINARY,
+	SudoConfig, SystemConfig, NodeAuthorizationConfig, NBVStorageConfig, WASM_BINARY,
 };
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
@@ -280,8 +280,5 @@ fn testnet_genesis(
 		nbv_storage : NBVStorageConfig{
 			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
 		},
-		rbac: Some(RBACConfig {
-			super_admins: vec![get_account_id_from_seed::<sr25519::Public>("Alice")]
-		})
 	}
 }
