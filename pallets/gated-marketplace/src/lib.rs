@@ -36,6 +36,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type LabelMaxLen: Get<u32>;
 		#[pallet::constant]
+		type MaxFeedbackLen: Get<u32>;
+		#[pallet::constant]
 		type NotesMaxLen: Get<u32>;
 		#[pallet::constant]
 		type NameMaxLen: Get<u32>;
@@ -261,6 +263,29 @@ pub mod pallet {
 			};
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
+
+
+		// /// Accept or reject a reapplyment.
+		// /// 
+		// /// 
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn reapply(
+		// 	origin: OriginFor<T>, 
+		// 	marketplace_id: [u8;32],
+		// 	// Getting encoding errors from polkadotjs if an object vector have optional fields
+		// 	fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+		// 	custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?;
+		// 	let (custodian, fields) = 
+		// 		Self::set_up_application(fields,custodian_fields);
+		// 	let application = Application::<T>{
+		// 		status: ApplicationStatus::default(),
+		// 		fields ,
+		// 	};
+		// 	Self::do_reapply(who, custodian, marketplace_id, application)
+		// }
 
 		/// Accept or reject an application.
 		/// 
