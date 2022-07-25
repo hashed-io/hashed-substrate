@@ -596,6 +596,20 @@ impl pallet_nbv_storage::Config for Runtime {
 
 
 parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 1000;
+	pub const MaxRolesPerPallet: u32 = 20;
+	pub const PermissionMaxLen: u32 = 35;
+	pub const MaxPermissionsPerRole: u32 = 10;
+}
+impl pallet_rbac::Config for Runtime {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+}
+
+parameter_types! {
 	pub const MaxRecursions: u32 = 10;
 	pub const ResourceSymbolLimit: u32 = 10;
 	pub const PartsLimit: u32 = 3;
@@ -686,6 +700,7 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
+		RBAC: pallet_rbac,
 	}
 );
 

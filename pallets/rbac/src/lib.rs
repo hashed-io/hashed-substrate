@@ -14,37 +14,85 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+
+mod functions;
+mod types;
+
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+	use frame_support::pallet_prelude::{*, ValueQuery};
+	use frame_support::traits::{PalletInfoAccess};
+use frame_support::{PalletId, transactional};
 	use frame_system::pallet_prelude::*;
+	use crate::types::*;
 
-	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		type MaxScopesPerPallet: Get<u32>;
+
+		type MaxRolesPerPallet: Get<u32>;
+
+		type PermissionMaxLen: Get<u32>;
+
+		type MaxPermissionsPerRole: Get<u32>;
 	}
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	// The pallet's runtime storage items.
-	// https://docs.substrate.io/v3/runtime/storage
-	#[pallet::storage]
-	#[pallet::getter(fn something)]
-	// Learn more about declaring storage items:
-	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
-	pub type Something<T> = StorageValue<_, u32>;
+	/*--- Onchain storage section ---*/
 
-	// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/v3/runtime/events-and-errors
+	#[pallet::storage]
+	#[pallet::getter(fn scopes)]
+	pub(super) type Scopes<T: Config> = StorageMap<
+		_, 
+		Blake2_128Concat, 
+		u32, // pallet_id
+		BoundedVec<[u8;32], T::MaxScopesPerPallet>,  // scopes_id
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn roles)]
+	pub(super) type Roles<T: Config> = StorageMap<
+		_,
+		Identity, 
+		[u8;32], // role_id
+		BoundedVec<u8, ConstU32<100> >,  // role
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn pallet_roles)]
+	pub(super) type PalletRoles<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat, 
+		u32, // pallet_id
+		BoundedVec<[u8;32], T::MaxRolesPerPallet >, // role_id
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn permissions)]
+	pub(super) type Permissions<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, u32>,		// pallet_id
+			NMapKey<Blake2_128Concat, [u8;32]>,	// scope_id
+			NMapKey<Twox64Concat, [u8;32]>,		// role_id
+		),
+		BoundedVec<BoundedVec<u8, T::PermissionMaxLen >, T::MaxPermissionsPerRole >,	// permissions
+		ValueQuery,
+	>;
+
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
 		SomethingStored(u32, T::AccountId),
 	}
 
@@ -53,50 +101,36 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
+		/// The pallet doesnt have scopes associated
+		PalletNotFound,
+		/// The specified scope doesnt exists
+		ScopeNotFound,
+		/// The specified role doesnt exists
+		RoleNotFound,
+		/// The role is already linked in the pallet
+		DuplicateRole,
+		DuplicatePermission,
+		/// The pallet has too many scopes
+		ExceedMaxScopesPerPallet,
+		ExceedMaxRolesPerPallet,
+		ExceedMaxPermissionsPerRole,
 	}
 
-	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	// These functions materialize as "extrinsics", which are often compared to transactions.
-	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+
+		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
-			// Check that the extrinsic was signed and get the signer.
-			// This function will return an error if the extrinsic is not signed.
-			// https://docs.substrate.io/v3/runtime/origins
-			let who = ensure_signed(origin)?;
+		pub fn get_pallet_id(
+			origin: OriginFor<T>, 
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			let a = Self::index();
+			log::info!("henlo {:?}", a);
+			log::warn!("Name: {:?}  Module Name: {:?}",Self::name(), Self::module_name());
+			Self::deposit_event(Event::SomethingStored(a.try_into().unwrap(), who));
 
-			// Update storage.
-			<Something<T>>::put(something);
-
-			// Emit an event.
-			Self::deposit_event(Event::SomethingStored(something, who));
-			// Return a successful DispatchResultWithPostInfo
 			Ok(())
-		}
-
-		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
-		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Read a value from storage.
-			match <Something<T>>::get() {
-				// Return an error if the value has not been set.
-				None => Err(Error::<T>::NoneValue)?,
-				Some(old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					<Something<T>>::put(new);
-					Ok(())
-				},
-			}
 		}
 	}
 }
