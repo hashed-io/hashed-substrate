@@ -27,7 +27,7 @@ impl<T: Config> Pallet<T> {
         // The user only can apply once by marketplace
         ensure!(!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id), Error::<T>::AlreadyApplied);
         // Generate application Id
-        let app_id = (marketplace_id.clone(), applicant.clone(), application.clone()).using_encoded(blake2_256);
+        let app_id = (marketplace_id, applicant.clone(), application.clone()).using_encoded(blake2_256);
         // Ensure another identical application doesnt exists
         ensure!(!<Applications<T>>::contains_key(app_id), Error::<T>::AlreadyApplied);
 
@@ -45,7 +45,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enroll(authority: T::AccountId,marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool)->DispatchResult{
+    pub fn do_enroll(authority: T::AccountId,marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
         Self::can_enroll(authority, marketplace_id)?;
         let next_status = match approved{
@@ -63,7 +63,7 @@ impl<T: Config> Pallet<T> {
                 }).ok_or(Error::<T>::ApplicationNotFound)?
             },
         };
-        Self::change_applicant_status(applicant, marketplace_id, next_status)?;
+        Self::change_applicant_status(applicant, marketplace_id, next_status, feedback)?;
         // TODO: if rejected remove application and files? 
         Self::deposit_event(Event::ApplicationProcessed(account_or_application, marketplace_id, next_status));
         Ok(())
@@ -235,7 +235,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn change_applicant_status(applicant: T::AccountId , marketplace_id : [u8;32], next_status: ApplicationStatus)->DispatchResult{
+    fn change_applicant_status(applicant: T::AccountId , marketplace_id : [u8;32], next_status: ApplicationStatus, feedback: BoundedVec::<u8, T::MaxFeedbackLen>, )->DispatchResult{
         let mut prev_status = ApplicationStatus::default();
         let app_id = <ApplicationsByAccount<T>>::get(applicant.clone(), marketplace_id)
             .ok_or(Error::<T>::ApplicationNotFound)?;
@@ -243,6 +243,7 @@ impl<T: Config> Pallet<T> {
             application.as_ref().ok_or( Error::<T>::ApplicationNotFound)?;
             if let Some(a) = application{
                 prev_status.clone_from(&a.status);
+                a.feedback = feedback;
                 a.status.clone_from(&next_status)
             }
             Ok(())
@@ -251,7 +252,7 @@ impl<T: Config> Pallet<T> {
         Self::remove_from_applicants_lists(applicant.clone(),prev_status, marketplace_id)?;
 
         //insert in current state list
-        Self::insert_in_applicants_lists(applicant, next_status,marketplace_id )?;
+        Self::insert_in_applicants_lists(applicant, next_status,marketplace_id)?;
         Ok(())
     }
 
@@ -363,5 +364,29 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+
+    /// Let us know the curent status of the selected application.
+    /// If the status is rejected, we can safely remove it from the storage sources
+    /// so the user can apply again. 
+    /// It doesn't affect any other storage source/workflow.
+    pub fn get_application_status(account: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
+        let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
+            .map_err(|_| Error::<T>::ApplicationIdNotFound)?;
+        
+        let application = <Applications<T>>::try_get(application_id)
+            .map_err(|_| Error::<T>::ApplicationNotFound)?;
+
+        match application.status {
+            ApplicationStatus::Pending => Err(Error::<T>::ApplicationPending)?,
+            ApplicationStatus::Approved => Err(Error::<T>::ApplicationApproved)?,
+            ApplicationStatus::Rejected => {
+                //If status is Rejected, we need to delete the previous application from all the storage sources.
+                <Applications<T>>::remove(application_id);
+                <ApplicationsByAccount<T>>::remove(account, marketplace_id);
+                <ApplicantsByMarketplace<T>>::remove(marketplace_id, ApplicationStatus::Rejected);
+            }
+        }
+        Ok(())
+    }
 
 }
