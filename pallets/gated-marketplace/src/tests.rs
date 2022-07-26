@@ -442,7 +442,7 @@ fn update_marketplace_marketplace_not_found_shouldnt_work(){
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);	
-		assert_noop!(GatedMarketplace::update_marketplace(Origin::signed(1), m_id_2, create_label("my marketplace 2")), Error::<Test>::MarketplaceNotFound);
+		assert_noop!(GatedMarketplace::update_label_marketplace(Origin::signed(1), m_id_2, create_label("my marketplace 2")), Error::<Test>::MarketplaceNotFound);
 	});
 	
 }
@@ -454,7 +454,7 @@ fn update_marketplace_user_without_permission_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceAuthority::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::update_marketplace(Origin::signed(3), m_id, create_label("my marketplace2")), Error::<Test>::CannotEnroll);
+		assert_noop!(GatedMarketplace::update_label_marketplace(Origin::signed(3), m_id, create_label("my marketplace2")), Error::<Test>::CannotEnroll);
 	});
 }
 
@@ -464,7 +464,7 @@ fn update_label_marketplace_works(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());		
-		assert_ok!(GatedMarketplace::update_marketplace(Origin::signed(1), m_id, create_label("my marketplace 2")));
+		assert_ok!(GatedMarketplace::update_label_marketplace(Origin::signed(1), m_id, create_label("my marketplace 2")));
 		assert!(GatedMarketplace::marketplaces(m_id).is_some() );	
 	});
 }
