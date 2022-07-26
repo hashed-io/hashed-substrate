@@ -562,50 +562,50 @@ MarketplaceRemoved([u8;32])
 ## Errors
 
 ```rust
-		/// Work In Progress
-		NotYetImplemented,
-		/// Error names should be descriptive.
-		NoneValue,
-		/// The account supervises too many marketplaces
-		ExceedMaxMarketsPerAuth,
-		/// The account has too many roles in that marketplace 
-		ExceedMaxRolesPerAuth,
-		/// Too many applicants for this market! try again later
-		ExceedMaxApplicants,
-		/// This custodian has too many applications for this market, try with another one
-		ExceedMaxApplicationsPerCustodian,
-		/// Applicaion doesnt exist
-		ApplicationNotFound,
-		/// The user has not applicated to that market before
-		ApplicantNotFound,
-		/// The user cannot be custodian of its own application
-		ApplicantCannotBeCustodian,
-		/// A marketplace with the same data exists already
-		MarketplaceAlreadyExists,
-		/// The user has already applied to the marketplace (or an identical application exist)
-		AlreadyApplied,
-		/// The specified marketplace does not exist
-		MarketplaceNotFound,
-		/// You need to be an owner or an admin of the marketplace
-		CannotEnroll,
-		/// There cannot be more than one owner per marketplace
-		OnlyOneOwnerIsAllowed,
-		/// Cannot remove the owner of the marketplace
-		CantRemoveOwner,
-		/// Admin can not remove itself from the marketplace
-		AdminCannotRemoveItself,
-		/// User not found
-		UserNotFound,
-		/// Owner not found
-		OwnerNotFound,
-		// Rol not found for the selected user
-		AuthorityNotFoundForUser,
-		/// Admis cannot be deleted between them, only the owner can
-		CannotDeleteAdmin,
-		/// Application ID not found
-		ApplicationIdNotFound,
-		/// Application status is still pending, user cannot apply/reapply
-		ApplicationStatusStillPending,
-		/// The application has already been approved, application status is approved
-		ApplicationHasAlreadyBeenApproved,
+/// Work In Progress
+NotYetImplemented,
+/// Error names should be descriptive.
+NoneValue,
+/// The account supervises too many marketplaces
+ExceedMaxMarketsPerAuth,
+/// The account has too many roles in that marketplace 
+ExceedMaxRolesPerAuth,
+/// Too many applicants for this market! try again later
+ExceedMaxApplicants,
+/// This custodian has too many applications for this market, try with another one
+ExceedMaxApplicationsPerCustodian,
+/// Applicaion doesnt exist
+ApplicationNotFound,
+/// The user has not applicated to that market before
+ApplicantNotFound,
+/// The user cannot be custodian of its own application
+ApplicantCannotBeCustodian,
+/// A marketplace with the same data exists already
+MarketplaceAlreadyExists,
+/// The user has already applied to the marketplace (or an identical application exist)
+AlreadyApplied,
+/// The specified marketplace does not exist
+MarketplaceNotFound,
+/// You need to be an owner or an admin of the marketplace
+CannotEnroll,
+/// There cannot be more than one owner per marketplace
+OnlyOneOwnerIsAllowed,
+/// Cannot remove the owner of the marketplace
+CantRemoveOwner,
+/// Admin can not remove itself from the marketplace
+AdminCannotRemoveItself,
+/// User not found
+UserNotFound,
+/// Owner not found
+OwnerNotFound,
+// Rol not found for the selected user
+AuthorityNotFoundForUser,
+/// Admis cannot be deleted between them, only the owner can
+CannotDeleteAdmin,
+/// Application ID not found
+ApplicationIdNotFound,
+/// Application status is still pending, user cannot apply/reapply
+ApplicationStatusStillPending,
+/// The application has already been approved, application status is approved
+ApplicationHasAlreadyBeenApproved,
 ```
