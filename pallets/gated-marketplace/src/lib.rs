@@ -146,13 +146,13 @@ pub mod pallet {
 		ApplicationStored([u8;32], [u8;32]),
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
 		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
-		/// Add a new authority to the selected marketplace
+		/// Add a new authority to the selected marketplace [account, authority]
 		AuthorityAdded(T::AccountId, MarketplaceAuthority),
-		/// Remove the selected authority from the selected marketplace
+		/// Remove the selected authority from the selected marketplace [account, authority]
 		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
-		/// The selected marketplaces was updated. [market_id]
+		/// The label of the selected marketplace has been updated. [market_id]
 		MarketplaceLabelUpdated([u8;32]),
-		/// The selected marketplaces was removed. [market_id]
+		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8;32]),
 	}
 
