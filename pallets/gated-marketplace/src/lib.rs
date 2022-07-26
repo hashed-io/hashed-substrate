@@ -406,10 +406,10 @@ pub mod pallet {
 		/// - If the selected marketplace doesn't exist, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn update_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+		pub fn update_label_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_update_marketplace(who, marketplace_id, new_label)
+			Self::do_update_label_marketplace(who, marketplace_id, new_label)
 		}
 
 		/// Remove a particular marketplace.
