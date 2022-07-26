@@ -133,7 +133,7 @@ impl<T: Config> Pallet<T> {
         //ensure the origin is owner or admin
         Self::can_enroll(authority, marketplace_id)?;
         //update marketplace
-        Self::update_label_marketplace(marketplace_id, new_label)?;
+        Self::update_label(marketplace_id, new_label)?;
         Self::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
         Ok(())
     }
@@ -302,7 +302,7 @@ impl<T: Config> Pallet<T> {
 
     /// Let us update the marketplace's label.
     /// It returns ok if the update was successful, error otherwise.
-    fn  update_label_marketplace(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
+    fn  update_label(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
         <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
         let market = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
         market.label = new_label;
