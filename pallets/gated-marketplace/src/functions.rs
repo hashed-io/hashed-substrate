@@ -108,7 +108,7 @@ impl<T: Config> Pallet<T> {
             },
             MarketplaceAuthority::Admin => {
                 // Admins can not delete themselves
-                ensure!(authority != account, Error::<T>::NegateRemoveAdminItself);
+                ensure!(authority != account, Error::<T>::AdminCannotRemoveItself);
 
                 // Admis cannot be deleted between them, only the owner can
                 ensure!(!Self::is_admin(authority, marketplace_id), Error::<T>::CannotDeleteAdmin);
