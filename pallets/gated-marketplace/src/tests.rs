@@ -718,7 +718,7 @@ fn reapply_status_application_is_still_pendding_shouldnt_work() {
 		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
 		assert_eq!(GatedMarketplace::applications(app_id).unwrap().status, ApplicationStatus::Pending);
 
-		assert_noop!(GatedMarketplace::reapply(Origin::signed(3), m_id, create_application_fields(2), None), Error::<Test>::ApplicationPending);
+		assert_noop!(GatedMarketplace::reapply(Origin::signed(3), m_id, create_application_fields(2), None), Error::<Test>::ApplicationStatusStillPending);
 	});
 }
 
@@ -735,7 +735,7 @@ fn reapply_status_application_is_already_approved_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true, default_feedback()));
 		assert_eq!(GatedMarketplace::applications(app_id).unwrap().status, ApplicationStatus::Approved);
-		assert_noop!(GatedMarketplace::reapply(Origin::signed(3), m_id, create_application_fields(2), None), Error::<Test>::ApplicationApproved);
+		assert_noop!(GatedMarketplace::reapply(Origin::signed(3), m_id, create_application_fields(2), None), Error::<Test>::ApplicationHasAlreadyBeenApproved);
 	});
 }
 

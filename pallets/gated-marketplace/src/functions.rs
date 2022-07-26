@@ -365,11 +365,11 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    /// Let us know the curent status of the selected application.
-    /// If the status is rejected, we can safely remove it from the storage sources
+    /// Let us check the curent status of the selected application.
+    /// If the status is rejected, we can safely remove its data from the storage sources
     /// so the user can apply again. 
     /// It doesn't affect any other storage source/workflow.
-    pub fn get_application_status(account: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
+    pub fn is_application_in_rejected_status(account: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
         let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
             .map_err(|_| Error::<T>::ApplicationIdNotFound)?;
         
@@ -377,8 +377,8 @@ impl<T: Config> Pallet<T> {
             .map_err(|_| Error::<T>::ApplicationNotFound)?;
 
         match application.status {
-            ApplicationStatus::Pending => Err(Error::<T>::ApplicationPending)?,
-            ApplicationStatus::Approved => Err(Error::<T>::ApplicationApproved)?,
+            ApplicationStatus::Pending => Err(Error::<T>::ApplicationStatusStillPending)?, 
+            ApplicationStatus::Approved => Err(Error::<T>::ApplicationHasAlreadyBeenApproved)?,
             ApplicationStatus::Rejected => {
                 //If status is Rejected, we need to delete the previous application from all the storage sources.
                 <Applications<T>>::remove(application_id);

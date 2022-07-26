@@ -209,12 +209,10 @@ pub mod pallet {
 		MarketplaceLabelNotFound,
 		/// Application ID not found
 		ApplicationIdNotFound,
-		/// Application status is pending
-		ApplicationPending,
-		/// Application status is approved
-		ApplicationApproved,
-		/// Application status not found
-		ApplicationStatusNotFound,
+		/// Application status is still pending, user cannot apply/reapply
+		ApplicationStatusStillPending,
+		/// The application has already been approved, application status is approved
+		ApplicationHasAlreadyBeenApproved,
 	}
 
 	#[pallet::call]
@@ -311,7 +309,7 @@ pub mod pallet {
 				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
 			};
 
-			Self::get_application_status(who.clone(), marketplace_id)?;
+			Self::is_application_in_rejected_status(who.clone(), marketplace_id)?;
 
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
