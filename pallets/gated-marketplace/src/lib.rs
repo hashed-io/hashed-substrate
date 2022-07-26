@@ -189,24 +189,16 @@ pub mod pallet {
 		OnlyOneOwnerIsAllowed,
 		/// Cannot remove the owner of the marketplace
 		CantRemoveOwner,
-		/// Admin can not remove itself
-		NegateRemoveAdminItself,
-		/// User has already been assigned with that role
-		CannotAddAuthority,
+		/// Admin can not remove itself from the marketplace
+		AdminCannotRemoveItself,
 		/// User not found
 		UserNotFound,
 		/// Owner not found
 		OwnerNotFound,
 		// Rol not found for the selected user
 		AuthorityNotFoundForUser,
-		/// User is not admin	
-		UserIsNotAdmin,
-		/// User is not found for the query
-		UserNotFoundForThisQuery,
 		/// Admis cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
-		/// Atrtibute not found
-		MarketplaceLabelNotFound,
 		/// Application ID not found
 		ApplicationIdNotFound,
 		/// Application status is still pending, user cannot apply/reapply
