@@ -207,6 +207,14 @@ pub mod pallet {
 		CannotDeleteAdmin,
 		/// Atrtibute not found
 		MarketplaceLabelNotFound,
+		/// Application ID not found
+		ApplicationIdNotFound,
+		/// Application status is pending
+		ApplicationPending,
+		/// Application status is approved
+		ApplicationApproved,
+		/// Application status not found
+		ApplicationStatusNotFound,
 	}
 
 	#[pallet::call]
@@ -255,37 +263,62 @@ pub mod pallet {
 			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
 			let (custodian, fields) = 
 				Self::set_up_application(fields,custodian_fields);
+			
+
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
-				fields ,
+				fields,
+				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
 			};
+
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 
+		/// Accept or reject a reapplyment.
+		/// 
+		/// Allows the applicant for a second chance to apply to the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The reapplicant.
+		/// - `marketplace_id`: The id of the marketplace where we want to reapply.
+		/// - `fields`: Confidential user documents, any files necessary for the reapplication
+		/// - `custodian_fields`: The custodian account and their documents.
+		/// 	
+		/// ### Considerations:
+		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
+		/// - The custodian account is optional. You can replace the previous custodian.
+		/// - Since we know the application exists, we can check the current status of the application.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reapply(
+			origin: OriginFor<T>, 
+			marketplace_id: [u8;32],
+			// Getting encoding errors from polkadotjs if an object vector have optional fields
+			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
-		// /// Accept or reject a reapplyment.
-		// /// 
-		// /// 
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn reapply(
-		// 	origin: OriginFor<T>, 
-		// 	marketplace_id: [u8;32],
-		// 	// Getting encoding errors from polkadotjs if an object vector have optional fields
-		// 	fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
-		// 	custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
-		// ) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?;
-		// 	let (custodian, fields) = 
-		// 		Self::set_up_application(fields,custodian_fields);
-		// 	let application = Application::<T>{
-		// 		status: ApplicationStatus::default(),
-		// 		fields ,
-		// 	};
-		// 	Self::do_reapply(who, custodian, marketplace_id, application)
-		// }
+			let (custodian, fields) = 
+				Self::set_up_application(fields,custodian_fields);
+			
+			let application = Application::<T>{
+				status: ApplicationStatus::default(),
+				fields,
+				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
+			};
+
+			Self::get_application_status(who.clone(), marketplace_id)?;
+
+			Self::do_apply(who, custodian, marketplace_id, application)
+		}
+		
+		
+
+
 
 		/// Accept or reject an application.
 		/// 
@@ -308,10 +341,10 @@ pub mod pallet {
 		/// - If you select `Application` you need to enter the `application_id` to be accepted. 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
+		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>, ) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_enroll(who, marketplace_id, account_or_application, approved)
+			Self::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
 		}
 
 		/// Add an Authority type 
