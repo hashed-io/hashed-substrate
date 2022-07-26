@@ -600,6 +600,8 @@ parameter_types! {
 	pub const MaxRolesPerPallet: u32 = 20;
 	pub const PermissionMaxLen: u32 = 35;
 	pub const MaxPermissionsPerRole: u32 = 10;
+	pub const MaxRolesPerUser: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 10;
 }
 impl pallet_rbac::Config for Runtime {
 	type Event = Event;
@@ -607,6 +609,8 @@ impl pallet_rbac::Config for Runtime {
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type PermissionMaxLen = PermissionMaxLen;
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
 }
 
 parameter_types! {

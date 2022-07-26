@@ -1,8 +1,8 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 
-
-pub struct Permission {
-    name: BoundedVec<u8, ConstU32<50>>,
-    value: bool,
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+pub enum IdOrRole{
+    Id([u8;32]),
+    Role(BoundedVec<u8, ConstU32<100> >)
 }

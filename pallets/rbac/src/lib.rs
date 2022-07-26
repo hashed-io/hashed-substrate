@@ -22,7 +22,7 @@ mod types;
 pub mod pallet {
 	use frame_support::pallet_prelude::{*, ValueQuery};
 	use frame_support::traits::{PalletInfoAccess};
-use frame_support::{PalletId, transactional};
+	use frame_support::{transactional};
 	use frame_system::pallet_prelude::*;
 	use crate::types::*;
 
@@ -37,6 +37,10 @@ use frame_support::{PalletId, transactional};
 		type PermissionMaxLen: Get<u32>;
 
 		type MaxPermissionsPerRole: Get<u32>;
+
+		type MaxRolesPerUser: Get<u32>;
+
+		type MaxUsersPerRole: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -88,6 +92,34 @@ use frame_support::{PalletId, transactional};
 		ValueQuery,
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn users)]
+	pub(super) type Users<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, T::AccountId>,// user
+			NMapKey<Blake2_128Concat, u32>,			// pallet_id
+			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
+		),
+		BoundedVec<[u8;32], T::MaxRolesPerUser>,	// roles (ids)
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn users_by_scope)]
+	pub(super) type UsersByScope<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, u32>,		// pallet_id
+			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
+			NMapKey<Blake2_128Concat, [u8;32]>,	// role_id
+		),
+		BoundedVec<T::AccountId, T::MaxUsersPerRole>,	// users
+		ValueQuery,
+	>;
+
+
+
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -101,19 +133,32 @@ use frame_support::{PalletId, transactional};
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// The pallet doesnt have scopes associated
+		/// The pallet doesn't have scopes associated
 		PalletNotFound,
-		/// The specified scope doesnt exists
+		/// The specified scope doesn't exists
 		ScopeNotFound,
-		/// The specified role doesnt exists
+		/// The specified role doesn't exists
 		RoleNotFound,
 		/// The role is already linked in the pallet
 		DuplicateRole,
+		/// The permission is already linked to that role in that scope
 		DuplicatePermission,
+		/// The user has that role asigned in that scope
+		UserAlreadyHasRole,
+		/// The role exists but it hasn't been linked to the pallet
+		RoleNotLinkedToPallet,
 		/// The pallet has too many scopes
 		ExceedMaxScopesPerPallet,
+		/// The pallet cannot have more roles
 		ExceedMaxRolesPerPallet,
+		/// The specified role cannot have more permission in this scope
 		ExceedMaxPermissionsPerRole,
+		/// The user cannot have more roles in this scope
+		ExceedMaxRolesPerUser,
+		/// This role cannot have assigned to more users in this scope
+		ExceedMaxUsersPerRole,
+		/// The user does not have the specified role 
+		NotAuthorized,
 	}
 
 	#[pallet::call]
