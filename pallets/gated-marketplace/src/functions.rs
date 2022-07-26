@@ -131,8 +131,6 @@ impl<T: Config> Pallet<T> {
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         //ensure the origin is owner or admin
-        //add validation to ensure only admin or owner from  
-        // this marketplace can remove the marketplace
         Self::can_enroll(authority, marketplace_id)?;
         //update marketplace
         Self::update_label_marketplace(marketplace_id, new_label)?;
