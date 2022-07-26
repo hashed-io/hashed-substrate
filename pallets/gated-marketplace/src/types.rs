@@ -39,7 +39,7 @@ impl Default for MarketplaceAuthority{
 pub struct  Application< T: Config >{
     pub status : ApplicationStatus,
     pub fields: BoundedVec<ApplicationField, T::MaxFiles>,
-    pub feedback: BoundedVec<String, T::MaxFeedbackLen>,
+    pub feedback: BoundedVec<u8, T::MaxFeedbackLen>,
 }
 
 
@@ -48,7 +48,6 @@ pub enum ApplicationStatus{
     Pending,
     Approved,
     Rejected,
-    Reapplying,
 }
 
 impl Default for ApplicationStatus{
