@@ -55,6 +55,7 @@ This module allows to:
 - **Owner**: The authority that created the marketplace, it has the capacity of adding and removing new authorities and enroll or reject applicants. The owner cannot be removed from the marketplace.
 - **Administrator**: Like the owner role, it can add or remove new authorities and enroll applicants, with the only difference being that an administrator can be removed from the marketplace.
 - **Appraiser**: An authority that can place a rating to the enlisted assets.
+- **Redemption Specialist**: This authority is responsible for transforming the on-chain asset into the IRL asset.
 - **Application**: The process which a user can submit to a marketplace in order to get enrolled (or rejected). The user needs to upload the necesary documentation, while the marketplace administrator will review it and render a verdict about the users application. The documents will be encrypted and only accesible to the user, the marketplace administrator, and an optional custodian account.
 - **Enroll**: When enrolled, the user's application becomes approved, gaining the ability to sell and buy assets.
 - **Reject**: If the user gets rejected, its application becomes rejected and won't have access to the marketplace.
@@ -65,9 +66,13 @@ This module allows to:
 ### Dispachable functions
 - `create_marketplace` creates an on-chain marketplace record, it takes a `label` and an account that will fulfill the role of `administrator`, the extrinsic origin will be set up automatically as the marketplace owner.
 - `apply` starts the process to enter the specidied `marketplace`.
-- `enroll` is only callable by the marketplace owner or administrator, as it finishes the application process. It takes a `marketplace` identification, and `account` or `application` identification to enroll or reject, and an `approved` boolean flag which approves the application if set to `true`.
+- `reapply` allows the applicant to apply again for the selected marketplace.
+- `enroll` is only callable by the marketplace owner or administrator, as it finishes the application process. It takes a `marketplace` identification, and `account` or `application` identification to enroll or reject, and an `approved` boolean flag which approves the application if set to `true`. Owner/admin can add a feedback regarding the user's application.
 - `add_authority` is only callable by the marketplace owner or administrator. As it name implies, adds a new user that will have special permission within the marketplace. It takes the `account` which will have the permissions, the type of `authority` it will have, and the `marketplace` identification in which the permissions will be enforced.
 - `remove_authority` is only callable by the marketplace owner or administrator. Removes the authority enforcer from the marketplace. The marketplace owner cannot be removed and the administrator cannot remove itself.
+- `update_label_marketplace`  is only callable by the marketplace owner or administrator. Changes the marketplace label. If the new label already exists, the old name won't be changed.
+- `remove_marketplace`  is only callable by the marketplace owner or administrator. This action allows the user to remove a marketplace as well as all the information related to this marketplace.
+
 
 ### Getters
 - `marketplaces`
@@ -182,7 +187,8 @@ polkadot-js-api query.gatedMarketplace.applications "0x9ab75a44b507c0030296dd366
         "cid": "cid1",
         "custodianCid": "cid_custodian1"
       }
-    ]
+    ],
+    "feedback:"[]
   }
 }
 ```
@@ -385,7 +391,8 @@ console.log(application.toHuman());
       cid: 'cid1',
       custodianCid: 'cid_custodian1'
     }
-  ]
+  ],
+  feedback:[]
 }
 ```
 
@@ -411,7 +418,8 @@ application_id: [
       cid: 'cid1',
       custodianCid: 'cid_custodian1'
     }
-  ]
+  ],
+  feedback:[]
 }
 ```
 
@@ -545,51 +553,59 @@ ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
 AuthorityAdded(T::AccountId, MarketplaceAuthority),
 /// Remove the selected authority from the selected marketplace
 AuthorityRemoved(T::AccountId, MarketplaceAuthority),
+/// The label of the selected marketplace has been updated. [market_id]
+MarketplaceLabelUpdated([u8;32]),
+/// The selected marketplace has been removed. [market_id]
+MarketplaceRemoved([u8;32])
 ```
 
 ## Errors
 
 ```rust
-/// Work In Progress
-NotYetImplemented,
-/// Error names should be descriptive.
-NoneValue,
-/// The account supervises too many marketplaces
-ExceedMaxMarketsPerAuth,
-/// The account has too many roles in that marketplace 
-ExceedMaxRolesPerAuth,
-/// Too many applicants for this market! try again later
-ExceedMaxApplicants,
-/// This custodian has too many applications for this market, try with another one
-ExceedMaxApplicationsPerCustodian,
-/// Applicaion doesnt exist
-ApplicationNotFound,
-/// The user has not applicated to that market before
-ApplicantNotFound,
-/// The user cannot be custodian of its own application
-ApplicantCannotBeCustodian,
-/// A marketplace with the same data exists already
-MarketplaceAlreadyExists,
-/// The user has already applied to the marketplace (or an identical application exist)
-AlreadyApplied,
-/// The specified marketplace does not exist
-MarketplaceNotFound,
-/// You need to be an owner or an admin of the marketplace
-CannotEnroll,
-/// There cannot be more than one owner per marketplace
-OnlyOneOwnerIsAllowed,
-/// Cannot remove the owner of the marketplace
-CantRemoveOwner,
-/// Admin can not remove itself
-NegateRemoveAdminItself,
-/// User has already been assigned with that role
-CannotAddAuthority,
-/// User not found
-UserNotFound,
-// Rol not found for the selected user
-RolNotFoundForUser,
-/// User is not admin	
-UserIsNotAdmin,
-/// User is not found for the query
-UserNotFoundForThisQuery
+		/// Work In Progress
+		NotYetImplemented,
+		/// Error names should be descriptive.
+		NoneValue,
+		/// The account supervises too many marketplaces
+		ExceedMaxMarketsPerAuth,
+		/// The account has too many roles in that marketplace 
+		ExceedMaxRolesPerAuth,
+		/// Too many applicants for this market! try again later
+		ExceedMaxApplicants,
+		/// This custodian has too many applications for this market, try with another one
+		ExceedMaxApplicationsPerCustodian,
+		/// Applicaion doesnt exist
+		ApplicationNotFound,
+		/// The user has not applicated to that market before
+		ApplicantNotFound,
+		/// The user cannot be custodian of its own application
+		ApplicantCannotBeCustodian,
+		/// A marketplace with the same data exists already
+		MarketplaceAlreadyExists,
+		/// The user has already applied to the marketplace (or an identical application exist)
+		AlreadyApplied,
+		/// The specified marketplace does not exist
+		MarketplaceNotFound,
+		/// You need to be an owner or an admin of the marketplace
+		CannotEnroll,
+		/// There cannot be more than one owner per marketplace
+		OnlyOneOwnerIsAllowed,
+		/// Cannot remove the owner of the marketplace
+		CantRemoveOwner,
+		/// Admin can not remove itself from the marketplace
+		AdminCannotRemoveItself,
+		/// User not found
+		UserNotFound,
+		/// Owner not found
+		OwnerNotFound,
+		// Rol not found for the selected user
+		AuthorityNotFoundForUser,
+		/// Admis cannot be deleted between them, only the owner can
+		CannotDeleteAdmin,
+		/// Application ID not found
+		ApplicationIdNotFound,
+		/// Application status is still pending, user cannot apply/reapply
+		ApplicationStatusStillPending,
+		/// The application has already been approved, application status is approved
+		ApplicationHasAlreadyBeenApproved,
 ```
