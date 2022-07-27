@@ -81,14 +81,25 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn permissions)]
-	pub(super) type Permissions<T: Config> = StorageNMap<
+	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
-		(
-			NMapKey<Blake2_128Concat, u32>,		// pallet_id
-			NMapKey<Blake2_128Concat, [u8;32]>,	// scope_id
-			NMapKey<Twox64Concat, [u8;32]>,		// role_id
-		),
+		Blake2_128Concat, 
+		u32, // pallet_id
+		Blake2_128Concat, 
+		[u8;32],		// permission_id
 		BoundedVec<BoundedVec<u8, T::PermissionMaxLen >, T::MaxPermissionsPerRole >,	// permissions
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn permissions_by_role)]
+	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat, 
+		u32, 			// pallet_id
+		Blake2_128Concat, 
+		[u8;32],		// role_id
+		BoundedVec<[u8;32], T::MaxPermissionsPerRole >,	// permission_ids
 		ValueQuery,
 	>;
 

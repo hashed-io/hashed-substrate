@@ -53,10 +53,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn create_permission(pallet_id: u32, scope_id:[u8;32] ,id_or_role: IdOrRole, permission: BoundedVec<u8, T::PermissionMaxLen>) -> DispatchResult{
+    pub fn create_permission(pallet_id: u32 ,id_or_role: IdOrRole, permission: BoundedVec<u8, T::PermissionMaxLen>) -> DispatchResult{
         let role_id = Self::get_role(id_or_role)?;
-        Self::is_role_in_scope(&pallet_id, &scope_id, &role_id)?;
-        <Permissions<T>>::try_mutate((pallet_id, scope_id,role_id), |ps|{
+        Self::is_role_linked_to_pallet(&pallet_id, &role_id)?;
+        <Permissions<T>>::try_mutate(pallet_id,role_id, |ps|{
             ensure!(!ps.contains(&permission), Error::<T>::DuplicatePermission);
             ps.try_push(permission).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)
         })?;
@@ -64,7 +64,8 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn assign_role_to_user(user: T::AccountId, pallet_id: u32, scope_id: [u8;32], role_id: [u8;32]) -> DispatchResult{
-        Self::is_role_in_scope(&pallet_id, &scope_id, &role_id)?;
+        Self::scope_exists(&pallet_id, &scope_id)?;
+        Self::is_role_linked_to_pallet(&pallet_id, &role_id)?;
         <Users<T>>::try_mutate((&user, pallet_id, scope_id), | roles |{
             ensure!(!roles.contains(&role_id), Error::<T>::DuplicateRole);
             roles.try_push(role_id).map_err(|_| Error::<T>::ExceedMaxRolesPerUser)
@@ -83,7 +84,8 @@ impl<T: Config> Pallet<T> {
     pub fn is_user_authorized(user: T::AccountId, pallet_id: u32, scope_id: [u8;32], role: IdOrRole ) -> DispatchResult{
         // get id, whether is given directly or by its string in boundedvec format
         let role_id = Self::get_role(role)?;
-        Self::is_role_in_scope(&pallet_id, &scope_id, &role_id)?;
+        Self::scope_exists(&pallet_id, &scope_id)?;
+        Self::is_role_linked_to_pallet(&pallet_id, &role_id)?;
         // Perform confirmation on both maps
         // TODO: test if a role that doesnt exists cause any errors
         let users = <UsersByScope<T>>::get( (pallet_id, scope_id, role_id) );
@@ -100,9 +102,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn is_role_in_scope(pallet_id: &u32, scope_id:&[u8;32], role_id: &[u8;32])-> DispatchResult{
-        Self::scope_exists(pallet_id, scope_id)?;
-        //ensure!(<Roles<T>>::contains_key(role_id), Error::<T>::RoleNotFound);
+    fn is_role_linked_to_pallet(pallet_id: &u32, role_id: &[u8;32])-> DispatchResult{
         // The role exists, now  check if the role is assigned to that pallet
         <PalletRoles<T>>::get(pallet_id).iter().find(|pallet_role| *pallet_role==role_id )
             .ok_or(Error::<T>::RoleNotLinkedToPallet)?;
