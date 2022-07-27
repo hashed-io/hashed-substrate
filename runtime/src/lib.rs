@@ -568,6 +568,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
+	type Rbac = RBAC;
 }
 
 parameter_types! {

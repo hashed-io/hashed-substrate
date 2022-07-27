@@ -16,7 +16,7 @@ mod benchmarking;
 
 
 mod functions;
-mod types;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -56,7 +56,7 @@ pub mod pallet {
 		Blake2_128Concat, 
 		u32, // pallet_id
 		BoundedVec<[u8;32], T::MaxScopesPerPallet>,  // scopes_id
-		OptionQuery,
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -84,10 +84,10 @@ pub mod pallet {
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat, 
-		u32, // pallet_id
+		u32, 			// pallet_id
 		Blake2_128Concat, 
 		[u8;32],		// permission_id
-		BoundedVec<BoundedVec<u8, T::PermissionMaxLen >, T::MaxPermissionsPerRole >,	// permissions
+		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
 		ValueQuery,
 	>;
 
@@ -148,8 +148,12 @@ pub mod pallet {
 		PalletNotFound,
 		/// The specified scope doesn't exists
 		ScopeNotFound,
+		/// The scope is already linked with the pallet
+		ScopeAlreadyExists,
 		/// The specified role doesn't exists
 		RoleNotFound,
+		/// The permission doesn't exists in the pallet
+		PermissionNotFound,
 		/// The role is already linked in the pallet
 		DuplicateRole,
 		/// The permission is already linked to that role in that scope

@@ -4,12 +4,15 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
+use pallet_rbac::types::RoleBasedAccessControl;
+
 
 impl<T: Config> Pallet<T> {
 
     pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace<T>)->DispatchResult{
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
+        T::Rbac::create_scope(Self::index().try_into().unwrap(),marketplace_id.clone())?;
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth

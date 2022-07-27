@@ -20,7 +20,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
-
+	use pallet_rbac::types::RoleBasedAccessControl;
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
@@ -45,6 +45,8 @@ pub mod pallet {
 		type MaxFiles: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicationsPerCustodian: Get<u32>;
+
+		type Rbac : RoleBasedAccessControl;
 	}
 
 	#[pallet::pallet]

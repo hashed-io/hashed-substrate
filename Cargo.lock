@@ -4031,6 +4031,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
+ "pallet-rbac",
  "parity-scale-codec",
  "scale-info",
  "serde",
