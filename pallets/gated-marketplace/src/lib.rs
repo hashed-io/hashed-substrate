@@ -36,6 +36,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type LabelMaxLen: Get<u32>;
 		#[pallet::constant]
+		type MaxFeedbackLen: Get<u32>;
+		#[pallet::constant]
 		type NotesMaxLen: Get<u32>;
 		#[pallet::constant]
 		type NameMaxLen: Get<u32>;
@@ -144,13 +146,13 @@ pub mod pallet {
 		ApplicationStored([u8;32], [u8;32]),
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
 		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
-		/// Add a new authority to the selected marketplace
+		/// Add a new authority to the selected marketplace [account, authority]
 		AuthorityAdded(T::AccountId, MarketplaceAuthority),
-		/// Remove the selected authority from the selected marketplace
+		/// Remove the selected authority from the selected marketplace [account, authority]
 		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
-		/// The selected marketplaces was updated. [market_id]
+		/// The label of the selected marketplace has been updated. [market_id]
 		MarketplaceLabelUpdated([u8;32]),
-		/// The selected marketplaces was removed. [market_id]
+		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8;32]),
 	}
 
@@ -187,24 +189,22 @@ pub mod pallet {
 		OnlyOneOwnerIsAllowed,
 		/// Cannot remove the owner of the marketplace
 		CantRemoveOwner,
-		/// Admin can not remove itself
-		NegateRemoveAdminItself,
-		/// User has already been assigned with that role
-		CannotAddAuthority,
+		/// Admin can not remove itself from the marketplace
+		AdminCannotRemoveItself,
 		/// User not found
 		UserNotFound,
 		/// Owner not found
 		OwnerNotFound,
 		// Rol not found for the selected user
 		AuthorityNotFoundForUser,
-		/// User is not admin	
-		UserIsNotAdmin,
-		/// User is not found for the query
-		UserNotFoundForThisQuery,
 		/// Admis cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
-		/// Atrtibute not found
-		MarketplaceLabelNotFound,
+		/// Application ID not found
+		ApplicationIdNotFound,
+		/// Application status is still pending, user cannot apply/reapply
+		ApplicationStatusStillPending,
+		/// The application has already been approved, application status is approved
+		ApplicationHasAlreadyBeenApproved,
 	}
 
 	#[pallet::call]
@@ -253,14 +253,62 @@ pub mod pallet {
 			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
 			let (custodian, fields) = 
 				Self::set_up_application(fields,custodian_fields);
+			
+
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
-				fields ,
+				fields,
+				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
 			};
+
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
+
+		/// Accept or reject a reapplyment.
+		/// 
+		/// Allows the applicant for a second chance to apply to the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The reapplicant.
+		/// - `marketplace_id`: The id of the marketplace where we want to reapply.
+		/// - `fields`: Confidential user documents, any files necessary for the reapplication
+		/// - `custodian_fields`: The custodian account and their documents.
+		/// 	
+		/// ### Considerations:
+		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
+		/// - The custodian account is optional. You can replace the previous custodian.
+		/// - Since we know the application exists, we can check the current status of the application.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reapply(
+			origin: OriginFor<T>, 
+			marketplace_id: [u8;32],
+			// Getting encoding errors from polkadotjs if an object vector have optional fields
+			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let (custodian, fields) = 
+				Self::set_up_application(fields,custodian_fields);
+			
+			let application = Application::<T>{
+				status: ApplicationStatus::default(),
+				fields,
+				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
+			};
+
+			Self::is_application_in_rejected_status(who.clone(), marketplace_id)?;
+
+			Self::do_apply(who, custodian, marketplace_id, application)
+		}
+		
+		
+
+
 
 		/// Accept or reject an application.
 		/// 
@@ -283,10 +331,10 @@ pub mod pallet {
 		/// - If you select `Application` you need to enter the `application_id` to be accepted. 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool ) -> DispatchResult {
+		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>, ) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_enroll(who, marketplace_id, account_or_application, approved)
+			Self::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
 		}
 
 		/// Add an Authority type 
@@ -350,10 +398,10 @@ pub mod pallet {
 		/// - If the selected marketplace doesn't exist, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn update_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+		pub fn update_label_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_update_marketplace(who, marketplace_id, new_label)
+			Self::do_update_label_marketplace(who, marketplace_id, new_label)
 		}
 
 		/// Remove a particular marketplace.
