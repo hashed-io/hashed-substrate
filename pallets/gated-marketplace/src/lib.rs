@@ -16,7 +16,9 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
+	use core::default;
+
+use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
@@ -223,7 +225,9 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn set_up_permissions(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-
+			//T::Rbac::create_and_set_roles()
+			//let mut roles = BoundedVec::<BoundedVec<u8,ConstU32<100> >, MaxRolesPerPallet<T> >::default();
+			//roles.try_push(Self::str_to_bvec_uncheked("Owner"))?;
 			Ok(())
 		}
 

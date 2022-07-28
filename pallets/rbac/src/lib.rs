@@ -54,7 +54,7 @@ pub mod pallet {
 	pub(super) type Scopes<T: Config> = StorageMap<
 		_, 
 		Blake2_128Concat, 
-		u32, // pallet_id
+		u64, // pallet_id
 		BoundedVec<[u8;32], T::MaxScopesPerPallet>,  // scopes_id
 		ValueQuery,
 	>;
@@ -74,7 +74,7 @@ pub mod pallet {
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat, 
-		u32, // pallet_id
+		u64, // pallet_id
 		BoundedVec<[u8;32], T::MaxRolesPerPallet >, // role_id
 		ValueQuery,
 	>;
@@ -84,7 +84,7 @@ pub mod pallet {
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat, 
-		u32, 			// pallet_id
+		u64, 			// pallet_id
 		Blake2_128Concat, 
 		[u8;32],		// permission_id
 		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
@@ -96,7 +96,7 @@ pub mod pallet {
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat, 
-		u32, 			// pallet_id
+		u64, 			// pallet_id
 		Blake2_128Concat, 
 		[u8;32],		// role_id
 		BoundedVec<[u8;32], T::MaxPermissionsPerRole >,	// permission_ids
@@ -109,7 +109,8 @@ pub mod pallet {
 		_,
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
-			NMapKey<Blake2_128Concat, u32>,			// pallet_id
+			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
+			NMapKey<Blake2_128Concat, u64>,			// pallet_id
 			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
 		),
 		BoundedVec<[u8;32], T::MaxRolesPerUser>,	// roles (ids)
@@ -121,7 +122,9 @@ pub mod pallet {
 	pub(super) type UsersByScope<T: Config> = StorageNMap<
 		_,
 		(
-			NMapKey<Blake2_128Concat, u32>,		// pallet_id
+			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
+			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
+			NMapKey<Blake2_128Concat, u64>,		// pallet_id
 			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
 			NMapKey<Blake2_128Concat, [u8;32]>,	// role_id
 		),

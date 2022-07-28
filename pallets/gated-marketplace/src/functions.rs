@@ -1,3 +1,5 @@
+use core::default;
+
 use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
@@ -14,7 +16,7 @@ impl<T: Config> Pallet<T> {
         let marketplace_id = marketplace.using_encoded(blake2_256);
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
-        T::Rbac::create_scope(Self::index().try_into().unwrap(),marketplace_id.clone())?;
+        T::Rbac::create_scope(Self::get_pallet_id(),marketplace_id.clone())?;
         //Insert on marketplaces and marketplaces by auth
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
@@ -388,6 +390,14 @@ impl<T: Config> Pallet<T> {
             }
         }
         Ok(())
+    }
+
+    fn get_pallet_id()->u64{
+        Self::index().try_into().unwrap()
+    }
+
+    pub fn str_to_bvec_uncheked<Len: Get<u32>>(str: &str)->BoundedVec<u8, Len>{
+        BoundedVec::<u8,Len>::try_from(str.as_bytes().to_vec()).expect("Conversion error")
     }
 
 }
