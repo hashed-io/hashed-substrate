@@ -21,6 +21,13 @@ pub mod pallet {
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
+	// RBAC pallet aliases
+	type MaxRolesPerPallet<T> = <<T as Config>::Rbac as RoleBasedAccessControl<<T as frame_system::Config>::AccountId,>>::MaxRolesPerPallet;
+	type PermissionMaxLen<T> = <<T as Config>::Rbac as RoleBasedAccessControl<<T as frame_system::Config>::AccountId,>>::PermissionMaxLen;
+	// <<T as Config>::Currency as Currency<
+	//<T as frame_system::Config>::AccountId,
+	//>>::NegativeImbalance;
+	
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
@@ -46,7 +53,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxApplicationsPerCustodian: Get<u32>;
 
-		type Rbac : RoleBasedAccessControl;
+		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -211,6 +218,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		pub fn set_up_permissions(origin: OriginFor<T>) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+
+			Ok(())
+		}
 
 		/// Create a new marketplace.
 		/// 

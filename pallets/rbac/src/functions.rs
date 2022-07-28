@@ -7,7 +7,7 @@ use sp_runtime::sp_std::vec::Vec;
 
 use crate::types::*;
 
-impl<T: Config> RoleBasedAccessControl<T> for Pallet<T>{
+impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Basic Insertion of individual storage maps ---*/
     fn create_scope(pallet_id: u32, scope_id: [u8;32])-> DispatchResult{
         <Scopes<T>>::try_mutate(pallet_id, |scopes|{
@@ -91,7 +91,7 @@ impl<T: Config> RoleBasedAccessControl<T> for Pallet<T>{
     /*---- Helper functions ----*/
 
     /// Authorize by role, not permissions
-    pub fn is_user_authorized(user: T::AccountId, pallet_id: u32, scope_id: [u8;32], role: IdOrString<ConstU32<100>> ) -> DispatchResult{
+    fn is_user_authorized(user: T::AccountId, pallet_id: u32, scope_id: [u8;32], role: IdOrString<ConstU32<100>> ) -> DispatchResult{
         // get id, whether is given directly or by its string in boundedvec format
         let role_id = Self::get_role_id(role)?;
         Self::scope_exists(&pallet_id, &scope_id)?;
@@ -107,8 +107,7 @@ impl<T: Config> RoleBasedAccessControl<T> for Pallet<T>{
     }
     /// Also checks if pallet is stored
     fn scope_exists(pallet_id: &u32, scope_id:&[u8;32]) -> DispatchResult{
-        let p = <Scopes<T>>::get(pallet_id).ok_or(Error::<T>::PalletNotFound)?;
-        ensure!(p.contains(&scope_id), Error::<T>::ScopeNotFound);
+        ensure!(<Scopes<T>>::get(pallet_id).contains(&scope_id), Error::<T>::ScopeNotFound);
         Ok(())
     }
 
@@ -143,5 +142,9 @@ impl<T: Config> RoleBasedAccessControl<T> for Pallet<T>{
         filtered_vec.dedup();
         vec.len() == filtered_vec.len()
     }
+
+    type MaxRolesPerPallet = T::MaxRolesPerPallet;
+
+    type PermissionMaxLen = T::PermissionMaxLen;
 
 }

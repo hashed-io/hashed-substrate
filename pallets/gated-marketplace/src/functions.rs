@@ -12,9 +12,9 @@ impl<T: Config> Pallet<T> {
     pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace<T>)->DispatchResult{
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
-        T::Rbac::create_scope(Self::index().try_into().unwrap(),marketplace_id.clone())?;
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
+        T::Rbac::create_scope(Self::index().try_into().unwrap(),marketplace_id.clone())?;
         //Insert on marketplaces and marketplaces by auth
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
