@@ -22,7 +22,7 @@ pub mod pallet {
 	use crate::types::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_fruniques::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
