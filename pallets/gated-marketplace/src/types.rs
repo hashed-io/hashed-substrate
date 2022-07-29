@@ -68,3 +68,22 @@ impl PartialEq for ApplicationField{
         self.cid == other.cid && self.display_name == other.display_name
     }
 }
+
+
+//offers
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum OfferStatus{
+    Open,
+    Freezed,
+    Closed,
+}
+
+pub struct OfferData{
+    pub status: OfferStatus,
+    pub price: u64,
+    pub cid: [u8;32],
+    pub label: BoundedVec<u8,ConstU32<100> >,
+    pub notes: BoundedVec<u8,ConstU32<256> >,
+    pub feedback: BoundedVec<u8,ConstU32<256> >,
+    
+}

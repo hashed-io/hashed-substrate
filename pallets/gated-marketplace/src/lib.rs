@@ -120,7 +120,7 @@ pub mod pallet {
 		ApplicationStatus, //K2: application_status
 		BoundedVec<T::AccountId,T::MaxApplicants>, 
 		ValueQuery
-	>;
+	>; 
 
 	#[pallet::storage]
 	#[pallet::getter(fn custodians)]
@@ -208,7 +208,10 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T> 
+	where 
+		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
+	{
 
 		/// Create a new marketplace.
 		/// 
@@ -424,6 +427,15 @@ pub mod pallet {
 
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
+
+		
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn enlist_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: OfferType, item_id: Vec<u8>, price:) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?;
+
+		// 	Self::do_enlist_offer(who, marketplace_id, offer_id, offer_type, offer_data)
+		// }
 
 
 		/// Kill all the stored data.
