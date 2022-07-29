@@ -20,7 +20,7 @@ pub mod pallet {
 
 use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
-	//use sp_runtime::sp_std::vec::Vec;
+	use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 	// RBAC pallet aliases
@@ -228,6 +228,10 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 			//T::Rbac::create_and_set_roles()
 			//let mut roles = BoundedVec::<BoundedVec<u8,ConstU32<100> >, MaxRolesPerPallet<T> >::default();
 			//roles.try_push(Self::str_to_bvec_uncheked("Owner"))?;
+			let mut roles = Vec::<Vec<u8>>::new();
+			roles.push("Owner".as_bytes().to_vec());
+			roles.push("Admin".as_bytes().to_vec());
+			T::Rbac::create_and_set_roles(Self::get_pallet_id(), roles)?;
 			Ok(())
 		}
 

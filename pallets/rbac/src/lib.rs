@@ -34,6 +34,8 @@ pub mod pallet {
 
 		type MaxRolesPerPallet: Get<u32>;
 
+		type RoleMaxLen: Get<u32>;
+		
 		type PermissionMaxLen: Get<u32>;
 
 		type MaxPermissionsPerRole: Get<u32>;
@@ -65,7 +67,7 @@ pub mod pallet {
 		_,
 		Identity, 
 		[u8;32], // role_id
-		BoundedVec<u8, ConstU32<100> >,  // role
+		BoundedVec<u8, T::RoleMaxLen >,  // role
 		OptionQuery,
 	>;
 
@@ -175,6 +177,8 @@ pub mod pallet {
 		ExceedMaxRolesPerUser,
 		/// This role cannot have assigned to more users in this scope
 		ExceedMaxUsersPerRole,
+		/// The role string is too long
+		ExceedRoleMaxLen,
 		/// The permission string is too long
 		ExceedPermissionMaxLen,
 		/// The user does not have the specified role 

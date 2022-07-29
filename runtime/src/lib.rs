@@ -601,7 +601,8 @@ impl pallet_nbv_storage::Config for Runtime {
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
 	pub const MaxRolesPerPallet: u32 = 20;
-	pub const PermissionMaxLen: u32 = 35;
+	pub const RoleMaxLen: u32 = 30;
+	pub const PermissionMaxLen: u32 = 30;
 	pub const MaxPermissionsPerRole: u32 = 10;
 	pub const MaxRolesPerUser: u32 = 10;
 	pub const MaxUsersPerRole: u32 = 10;
@@ -610,6 +611,7 @@ impl pallet_rbac::Config for Runtime {
 	type Event = Event;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
 	type PermissionMaxLen = PermissionMaxLen;
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
 	type MaxRolesPerUser = MaxRolesPerUser;

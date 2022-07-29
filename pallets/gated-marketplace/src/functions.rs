@@ -392,7 +392,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn get_pallet_id()->u64{
+    pub fn get_pallet_id()->u64{
         Self::index().try_into().unwrap()
     }
 

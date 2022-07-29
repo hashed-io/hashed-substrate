@@ -35,7 +35,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         // no "get_or_insert" method found
         // insert is infalible in this case
         // TODO: Parametrize role length and declare error
-        let b_role = Self::bound::<_,ConstU32<100>>(role, Error::<T>::ExceedMaxRolesPerUser)?;
+        let b_role = Self::bound::<_,T::RoleMaxLen>(role, Error::<T>::ExceedMaxRolesPerUser)?;
         ensure!(role_id == b_role.using_encoded(blake2_256), Error::<T>::NoneValue);
         if !<Roles<T>>::contains_key(role_id) {<Roles<T>>::insert(role_id, b_role)};
         Ok(role_id)
@@ -64,6 +64,18 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    fn create_and_set_permissions(pallet_id: u64, role_id: [u8;32], permissions: Vec<Vec<u8>>)->
+        Result<BoundedVec<[u8;32], Self::MaxPermissionsPerRole>, DispatchError> {
+        // TODO: Test this functionality
+        let mut permission_ids = Vec::<[u8;32]>::new();
+        for permision in permissions{
+            permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
+        }
+        Self::set_multiple_permisions_to_role(pallet_id, role_id, permission_ids.clone())?;
+        let b_permissions =  Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
+        Ok(b_permissions)
+    }
+
     fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<[u8;32], DispatchError>{
         let permission_id = permission.using_encoded(blake2_256);
         //let b_permission= BoundedVec::<u8, Self::PermissionMaxLen>::try_from(permission);
@@ -90,6 +102,19 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    fn set_multiple_permisions_to_role(  pallet_id: u64, role_id: [u8;32], permissions: Vec<[u8;32]> )-> DispatchResult{
+        // checks for duplicates:
+        let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
+        for id in permissions.clone(){
+            ensure!(!role_permissions.contains(&id), Error::<T>::DuplicateRole );
+        }
+        <PermissionsByRole<T>>::try_mutate(pallet_id, role_id,  |role_permissions|{
+            role_permissions.try_extend(permissions.into_iter())
+        }).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)?;
+
+        Ok(())
+    }
+
     fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: [u8;32], role_id: [u8;32]) -> DispatchResult{
         Self::scope_exists(pallet_id, &scope_id)?;
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
@@ -109,7 +134,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Helper functions ----*/
 
     /// Authorize by role, not permissions
-    fn is_user_authorized(user: T::AccountId, pallet_id: u64, scope_id: [u8;32], role: IdOrString<ConstU32<100>> ) -> DispatchResult{
+    fn is_user_authorized(user: T::AccountId, pallet_id: u64, scope_id: [u8;32], role: IdOrString<Self::RoleMaxLen> ) -> DispatchResult{
         // get id, whether is given directly or by its string in boundedvec format
         let role_id = Self::get_role_id(role)?;
         Self::scope_exists(pallet_id, &scope_id)?;
@@ -137,7 +162,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn get_role_id(id_or_role: IdOrString<ConstU32<100>>)->Result<[u8;32], DispatchError>{
+    fn get_role_id(id_or_role: IdOrString<Self::RoleMaxLen>)->Result<[u8;32], DispatchError>{
         let role_id = match id_or_role{
             IdOrString::Id(id)=>id,
             IdOrString::String(role_str)=> role_str.using_encoded(blake2_256),
@@ -165,7 +190,11 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
     type MaxRolesPerPallet = T::MaxRolesPerPallet;
 
+    type MaxPermissionsPerRole = T::MaxPermissionsPerRole;
+
     type PermissionMaxLen = T::PermissionMaxLen;
+
+    type RoleMaxLen =  T::RoleMaxLen;
 
 }
 
