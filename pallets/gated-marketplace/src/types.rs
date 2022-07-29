@@ -38,7 +38,8 @@ impl Default for MarketplaceAuthority{
 #[codec(mel_bound())]
 pub struct  Application< T: Config >{
     pub status : ApplicationStatus,
-    pub fields: BoundedVec<ApplicationField, T::MaxFiles>
+    pub fields: BoundedVec<ApplicationField, T::MaxFiles>,
+    pub feedback: BoundedVec<u8, T::MaxFeedbackLen>,
 }
 
 
