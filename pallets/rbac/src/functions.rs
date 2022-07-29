@@ -19,22 +19,26 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     }
 
     /// Inserts roles and links them to the pallet
-    fn create_and_set_roles(pallet_id: u64, roles: BoundedVec<BoundedVec<u8,ConstU32<100> >, T::MaxRolesPerPallet>) -> 
+    fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], T::MaxRolesPerPallet>, DispatchError>{
-        let role_ids: Vec<[u8;32]> = roles.iter().map(|r|{
-            Self::create_role(r.to_owned())
-        }).collect();
-        let bounded_ids = BoundedVec::try_from(role_ids).map_err(|_| Error::<T>::ExceedMaxRolesPerPallet)?;
-        Self::set_multiple_pallet_roles(pallet_id, bounded_ids.clone())?;
+        let mut role_ids= Vec::<[u8;32]>::new();
+        for role in roles{
+            role_ids.push( Self::create_role(role.to_owned())? );
+        }
+        Self::set_multiple_pallet_roles(pallet_id, role_ids.clone())?;
+        let bounded_ids = Self::bound(role_ids, Error::<T>::ExceedMaxRolesPerPallet)?;
         Ok(bounded_ids)
     }
 
-    fn create_role(role: BoundedVec<u8, ConstU32<100>>)-> [u8;32]{
+    fn create_role(role: Vec<u8>)-> Result<[u8;32], DispatchError>{
         let role_id = role.using_encoded(blake2_256);
         // no "get_or_insert" method found
         // insert is infalible in this case
-        if !<Roles<T>>::contains_key(role_id) {<Roles<T>>::insert(role_id, role)};
-        role_id
+        // TODO: Parametrize role length and declare error
+        let b_role = Self::bound::<_,ConstU32<100>>(role, Error::<T>::ExceedMaxRolesPerUser)?;
+        ensure!(role_id == b_role.using_encoded(blake2_256), Error::<T>::NoneValue);
+        if !<Roles<T>>::contains_key(role_id) {<Roles<T>>::insert(role_id, b_role)};
+        Ok(role_id)
     }
 
     fn set_role_to_pallet(pallet_id: u64, role_id: [u8;32] )-> DispatchResult{
@@ -47,7 +51,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn set_multiple_pallet_roles(pallet_id: u64, roles: BoundedVec<[u8;32], T::MaxRolesPerPallet>)->DispatchResult{
+    fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<[u8;32]>)->DispatchResult{
         // checks for duplicates:
         let pallet_roles = <PalletRoles<T>>::get(&pallet_id);
         for id in roles.clone(){
@@ -60,12 +64,19 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn create_permission(pallet_id: u64, permission: BoundedVec<u8, T::PermissionMaxLen>) -> [u8;32]{;
+    fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<[u8;32], DispatchError>{
         let permission_id = permission.using_encoded(blake2_256);
+        //let b_permission= BoundedVec::<u8, Self::PermissionMaxLen>::try_from(permission);
+        let b_permission = Self::bound::
+            <_,T::PermissionMaxLen>(permission, Error::<T>::ExceedPermissionMaxLen)?;
+        // Testing: a boundedvec id should be equal to a vec id because they have the same data
+        ensure!(permission_id == b_permission.using_encoded(blake2_256), Error::<T>::NoneValue);
+
+        log::info!("Is permission_id equal: {}",permission_id == b_permission.using_encoded(blake2_256));
         if !<Permissions<T>>::contains_key(pallet_id, permission_id){
-            <Permissions<T>>::insert(pallet_id, permission_id, permission);
+            <Permissions<T>>::insert(pallet_id, permission_id, b_permission);
         }
-        permission_id
+        Ok(permission_id)
     }
 
     fn set_permission_to_role( pallet_id: u64, role_id: [u8;32], permission_id: [u8;32] ) -> DispatchResult{
@@ -151,8 +162,16 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         vec.len() == filtered_vec.len()
     }
 
+
     type MaxRolesPerPallet = T::MaxRolesPerPallet;
 
     type PermissionMaxLen = T::PermissionMaxLen;
 
+}
+
+impl<T: Config> Pallet<T>{
+    fn bound<E,Len: Get<u32>>(vec: Vec<E>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
+        let err = Error::<T>::DuplicatePermission;
+        BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
+    }
 }

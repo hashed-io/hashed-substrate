@@ -23,14 +23,14 @@ pub trait RoleBasedAccessControl<AccountId>{
     // scopes
     fn create_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult;
     // roles
-    fn create_and_set_roles(pallet_id: u64, roles: BoundedVec<BoundedVec<u8,ConstU32<100> >, Self::MaxRolesPerPallet>) -> 
+    fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], Self::MaxRolesPerPallet>, DispatchError>;
-    fn create_role(role: BoundedVec<u8, ConstU32<100>>)-> [u8;32];
+    fn create_role(role: Vec<u8>)-> Result<[u8;32], DispatchError>;
     fn set_role_to_pallet(pallet_id: u64, role_id: [u8;32] )-> DispatchResult;
-    fn set_multiple_pallet_roles(pallet_id: u64, roles: BoundedVec<[u8;32], Self::MaxRolesPerPallet>)->DispatchResult;
+    fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<[u8;32]>)->DispatchResult;
     fn assign_role_to_user(user: AccountId, pallet_id: u64, scope_id: [u8;32], role_id: [u8;32]) -> DispatchResult;
     // permissions
-    fn create_permission(pallet_id: u64, permission: BoundedVec<u8, Self::PermissionMaxLen>) -> [u8;32];
+    fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<[u8;32], DispatchError>;
     fn set_permission_to_role( pallet_id: u64, role: [u8;32], permission: [u8;32] ) -> DispatchResult;
     // helpers
     fn is_user_authorized(user: AccountId, pallet_id: u64, scope_id: [u8;32], role: IdOrString<ConstU32<100>> ) -> DispatchResult;
@@ -39,6 +39,5 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn get_role_id(id_or_role: IdOrString<ConstU32<100>>)->Result<[u8;32], DispatchError>;
     fn get_permission(pallet_id: u64 ,id_or_permission: IdOrString< Self::PermissionMaxLen>)->Result<[u8;32], DispatchError>;
     fn has_unique_elements(vec: Vec<u8>) -> bool;
-
 
 }

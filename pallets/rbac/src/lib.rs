@@ -175,6 +175,8 @@ pub mod pallet {
 		ExceedMaxRolesPerUser,
 		/// This role cannot have assigned to more users in this scope
 		ExceedMaxUsersPerRole,
+		/// The permission string is too long
+		ExceedPermissionMaxLen,
 		/// The user does not have the specified role 
 		NotAuthorized,
 	}
