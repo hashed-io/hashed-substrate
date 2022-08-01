@@ -113,10 +113,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: [u8;32], role_id: [u8;32]) -> DispatchResult{
-        Self::scope_exists(pallet_id, &scope_id)?;
+    fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult{
+        Self::scope_exists(pallet_id, scope_id)?;
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
-        let pallet_id: u64 = pallet_id.try_into().unwrap();
+
         <Users<T>>::try_mutate((&user, pallet_id, scope_id), | roles |{
             ensure!(!roles.contains(&role_id), Error::<T>::DuplicateRole);
             roles.try_push(role_id).map_err(|_| Error::<T>::ExceedMaxRolesPerUser)

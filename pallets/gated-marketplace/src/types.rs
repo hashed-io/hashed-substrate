@@ -2,7 +2,7 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
-
+use sp_runtime::sp_std::vec::Vec;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -30,6 +30,17 @@ pub enum MarketplaceAuthority{
 impl Default for MarketplaceAuthority{
     fn default() -> Self {
         MarketplaceAuthority::Appraiser
+    }
+}
+
+impl MarketplaceAuthority{
+    pub fn to_vec(&self) -> Vec<u8>{
+        match self{
+            MarketplaceAuthority::Owner => "Owner".as_bytes().to_vec(),
+            MarketplaceAuthority::Admin => "Admin".as_bytes().to_vec(),
+            MarketplaceAuthority::Appraiser => "Appraiser".as_bytes().to_vec(),
+            MarketplaceAuthority::RedemptionSpecialist => "Redemption_specialist".as_bytes().to_vec(),
+        }
     }
 }
 

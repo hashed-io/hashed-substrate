@@ -16,8 +16,8 @@ impl<T: Config> Pallet<T> {
         let pallet_id = Self::get_pallet_id();
         let mut super_roles = Vec::<Vec<u8>>::new();
         let mut super_permissions = Vec::<Vec<u8>>::new();
-        super_roles.push("Owner".as_bytes().to_vec());
-        super_roles.push("Admin".as_bytes().to_vec());
+        super_roles.push(MarketplaceAuthority::Owner.to_vec());
+        super_roles.push(MarketplaceAuthority::Admin.to_vec());
         super_permissions.push("enroll".as_bytes().to_vec());
         super_permissions.push("add_authority".as_bytes().to_vec());
         super_permissions.push("remove_authority".as_bytes().to_vec());
@@ -34,12 +34,16 @@ impl<T: Config> Pallet<T> {
         let marketplace_id = marketplace.using_encoded(blake2_256);
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
-        T::Rbac::create_scope(Self::get_pallet_id(),marketplace_id.clone())?;
         //Insert on marketplaces and marketplaces by auth
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
 
+        T::Rbac::create_scope(Self::get_pallet_id(),marketplace_id.clone())?;
+        T::Rbac::assign_role_to_user(owner.clone(), Self::get_pallet_id(),
+             &marketplace_id, MarketplaceAuthority::Owner.to_vec().using_encoded(blake2_256))?;
+        T::Rbac::assign_role_to_user(admin.clone(), Self::get_pallet_id(), 
+            &marketplace_id, MarketplaceAuthority::Admin.to_vec().using_encoded(blake2_256))?;
         Self::deposit_event(Event::MarketplaceStored(owner, admin, marketplace_id));
         Ok(())
     }
@@ -107,10 +111,14 @@ impl<T: Config> Pallet<T> {
             MarketplaceAuthority::Owner => {
                 ensure!(!Self::owner_exist(marketplace_id), Error::<T>::OnlyOneOwnerIsAllowed);
                 Self::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)?;
+                T::Rbac::assign_role_to_user(account.clone(), Self::get_pallet_id(), 
+                    &marketplace_id, authority_type.to_vec().using_encoded(blake2_256))?;
+
             },
             _ =>{
-
-            Self::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)?;
+                Self::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)?;
+                T::Rbac::assign_role_to_user(account.clone(), Self::get_pallet_id(), 
+                    &marketplace_id, authority_type.to_vec().using_encoded(blake2_256))?;
             }
         }
 
