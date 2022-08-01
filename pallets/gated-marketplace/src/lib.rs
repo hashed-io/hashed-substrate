@@ -135,6 +135,31 @@ pub mod pallet {
 	>;
 
 
+	#[pallet::storage]
+	#[pallet::getter(fn prices)]
+	pub(super) type Prices<T: Config> = StorageDoubleMap<
+	_, 
+	Blake2_128Concat, 
+	T::CollectionId, //collection_id
+	Blake2_128Concat, 
+	T::ItemId, //item_id
+	u128, // price 
+	ValueQuery
+>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn offers)]
+	pub(super) type Offers<T: Config> = StorageDoubleMap<
+	_, 
+	Blake2_128Concat, 
+	T::CollectionId, //collection_id
+	Blake2_128Concat, 
+	T::ItemId, //item_id
+	OfferData<T>, //offer data
+	OptionQuery
+	>;
+
+
 
 
 	#[pallet::event]
