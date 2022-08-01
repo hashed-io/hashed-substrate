@@ -8,15 +8,6 @@ pub enum IdOrString<MaxLen: Get<u32> >{
     String(BoundedVec<u8, MaxLen >)
 }
 
-
-pub struct RoleConfiguration<T:Config>{
-    pub role_name: BoundedVec<u8, T::RoleMaxLen>,
-    pub permissions: BoundedVec<
-        BoundedVec<u8 ,T::PermissionMaxLen>,
-        T::MaxPermissionsPerRole
-    >
-}
-
 pub trait RoleBasedAccessControl<AccountId>{
     type MaxRolesPerPallet:  Get<u32>;
     type MaxPermissionsPerRole: Get<u32>;

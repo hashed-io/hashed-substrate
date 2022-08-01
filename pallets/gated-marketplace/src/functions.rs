@@ -1,4 +1,5 @@
 use core::default;
+use core::ops::Bound;
 
 use super::*;
 use frame_support::pallet_prelude::*;
@@ -6,10 +7,27 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
-use pallet_rbac::types::RoleBasedAccessControl;
+use pallet_rbac::types::*;
 
 
 impl<T: Config> Pallet<T> {
+
+    pub fn do_initial_setup()->DispatchResult{
+        let pallet_id = Self::get_pallet_id();
+        let mut super_roles = Vec::<Vec<u8>>::new();
+        let mut super_permissions = Vec::<Vec<u8>>::new();
+        super_roles.push("Owner".as_bytes().to_vec());
+        super_roles.push("Admin".as_bytes().to_vec());
+        super_permissions.push("enroll".as_bytes().to_vec());
+        super_permissions.push("add_authority".as_bytes().to_vec());
+        super_permissions.push("remove_authority".as_bytes().to_vec());
+        super_permissions.push("update_label_marketplace".as_bytes().to_vec());
+        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id, super_roles)?;
+        for super_role in super_role_ids{
+            T::Rbac::create_and_set_permissions(pallet_id, super_role, super_permissions.clone())?;
+        }
+        Ok(())
+    }
 
     pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace<T>)->DispatchResult{
         // Gen market id
@@ -52,6 +70,8 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_enroll(authority: T::AccountId,marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
+        // T::Rbac::is_user_authorized(authority,Self::get_pallet_id(), marketplace_id, 
+        //     IdOrString::String(BoundedVec::try_from("henlo".as_bytes().to_vec()).expect("erfge")) )?;
         Self::can_enroll(authority, marketplace_id)?;
         let next_status = match approved{
             true => ApplicationStatus::Approved,
@@ -69,7 +89,7 @@ impl<T: Config> Pallet<T> {
             },
         };
         Self::change_applicant_status(applicant, marketplace_id, next_status, feedback)?;
-        // TODO: if rejected remove application and files? 
+
         Self::deposit_event(Event::ApplicationProcessed(account_or_application, marketplace_id, next_status));
         Ok(())
     }

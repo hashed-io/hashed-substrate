@@ -223,15 +223,9 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
-		pub fn set_up_permissions(origin: OriginFor<T>) -> DispatchResult {
+		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			//T::Rbac::create_and_set_roles()
-			//let mut roles = BoundedVec::<BoundedVec<u8,ConstU32<100> >, MaxRolesPerPallet<T> >::default();
-			//roles.try_push(Self::str_to_bvec_uncheked("Owner"))?;
-			let mut roles = Vec::<Vec<u8>>::new();
-			roles.push("Owner".as_bytes().to_vec());
-			roles.push("Admin".as_bytes().to_vec());
-			T::Rbac::create_and_set_roles(Self::get_pallet_id(), roles)?;
+			Self::do_initial_setup()?;
 			Ok(())
 		}
 
