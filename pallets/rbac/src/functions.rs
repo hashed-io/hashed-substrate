@@ -132,19 +132,29 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Helper functions ----*/
 
     /// Authorize by role, not permissions
-    fn is_user_authorized(user: T::AccountId, pallet_id: u64, scope_id: [u8;32], role: IdOrString<Self::RoleMaxLen> ) -> DispatchResult{
+    fn is_user_authorized(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id : &[u8;32] ) -> DispatchResult{
         // get id, whether is given directly or by its string in boundedvec format
-        let role_id = Self::get_role_id(role)?;
-        Self::scope_exists(pallet_id, &scope_id)?;
-        Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
+        //let role_id = Self::get_role_id(role)?;
+        Self::scope_exists(pallet_id, scope_id)?;
+        Self::is_role_linked_to_pallet(pallet_id, role_id)?;
         // Perform confirmation on both maps
-        let pallet_id: u64 = pallet_id.try_into().unwrap();
         // TODO: test if a role that doesnt exists cause any errors
         let users = <UsersByScope<T>>::get( (pallet_id, scope_id, role_id) );
         ensure!(users.contains(&user), Error::<T>::NotAuthorized);
         let roles = <Users<T>>::get((user, pallet_id, scope_id));
         // Not likely to happen but just in case:
         ensure!(roles.contains(&role_id), Error::<T>::NotAuthorized );
+        Ok(())
+    }
+
+    fn has_role(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_ids: Vec<[u8;32]>)->DispatchResult {
+        Self::scope_exists(pallet_id, scope_id)?;
+
+        let user_roles = <Users<T>>::get((user, pallet_id, scope_id));
+        ensure!(
+            user_roles.iter().any(|r| role_ids.contains(r) ),
+            Error::<T>::NotAuthorized
+        );
         Ok(())
     }
     /// Also checks if pallet is stored. Need this function to expose the check to other pallets
@@ -198,7 +208,6 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
 impl<T: Config> Pallet<T>{
     fn bound<E,Len: Get<u32>>(vec: Vec<E>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
-        let err = Error::<T>::DuplicatePermission;
         BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
     }
 }

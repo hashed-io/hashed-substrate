@@ -72,11 +72,12 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enroll(authority: T::AccountId,marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
+    pub fn do_enroll(authority: T::AccountId, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
         // T::Rbac::is_user_authorized(authority,Self::get_pallet_id(), marketplace_id, 
         //     IdOrString::String(BoundedVec::try_from("henlo".as_bytes().to_vec()).expect("erfge")) )?;
         Self::can_enroll(authority, marketplace_id)?;
+        //T::Rbac::is_user_authorized(authority, Self::get_pallet_id(), &marketplace_id, MarketplaceAuthority::Owner. );
         let next_status = match approved{
             true => ApplicationStatus::Approved,
             false => ApplicationStatus::Rejected,
@@ -289,13 +290,18 @@ impl<T: Config> Pallet<T> {
 
     fn can_enroll( authority: T::AccountId, marketplace_id: [u8;32] ) -> DispatchResult{
         // to enroll, the account needs to be an owner or an admin
-        let roles = <MarketplacesByAuthority<T>>::try_get(authority, marketplace_id)
-            .map_err(|_| Error::<T>::CannotEnroll)?;
-        // iter().any could be called too but this maps directly to desired error
-        roles.iter().find(|&role|{
-            role.eq(&MarketplaceAuthority::Owner) || role.eq(&MarketplaceAuthority::Admin)
-        }).ok_or(Error::<T>::CannotEnroll)?;
-        Ok(())
+        // let roles = <MarketplacesByAuthority<T>>::try_get(authority, marketplace_id)
+        //     .map_err(|_| Error::<T>::CannotEnroll)?;
+        // // iter().any could be called too but this maps directly to desired error
+        // roles.iter().find(|&role|{
+        //     role.eq(&MarketplaceAuthority::Owner) || role.eq(&MarketplaceAuthority::Admin)
+        // }).ok_or(Error::<T>::CannotEnroll)?;
+        let auths = [
+            MarketplaceAuthority::Owner.to_vec().using_encoded(blake2_256), 
+            MarketplaceAuthority::Admin.to_vec().using_encoded(blake2_256)  
+        ].to_vec();
+        //TODO: Test if the auth mechanism works
+        T::Rbac::has_role(authority.clone(),Self::get_pallet_id(), &marketplace_id,auths)
     }
 
 
