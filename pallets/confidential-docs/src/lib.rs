@@ -1,8 +1,8 @@
+//! The confidential docs pallet provides the backend services and metadata
+//! storage for the confidential docs solution
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
 
 #[cfg(test)]
@@ -19,28 +19,34 @@ mod functions;
 
 #[frame_support::pallet]
 pub mod pallet {
+	//! Provides the backend services and metadata storage for the confidential docs solution
 	use frame_support::{pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
 	use crate::types::*;
 
-	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// Because this pallet emits events, it depends on the runtime's definition of an event.
+		
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 
+		/// Maximum number of confidential documents that a user can own
 		#[pallet::constant]
 		type MaxOwnedDocs: Get<u32>;
+		/// Maximum number of confidential documents that can be shared to a user
 		#[pallet::constant]
 		type MaxSharedToDocs: Get<u32>;
+		/// Minimum length for a document name
 		#[pallet::constant]
 		type DocNameMinLen: Get<u32>;
+		/// Maximum length for a document name
 		#[pallet::constant]
 		type DocNameMaxLen: Get<u32>;
+		/// Minimum length for a document description
 		#[pallet::constant]
 		type DocDescMinLen: Get<u32>;
+		/// Maximum length for a document description
 		#[pallet::constant]
 		type DocDescMaxLen: Get<u32>;
 	}
@@ -49,8 +55,7 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	// The pallet's runtime storage items.
-	// https://docs.substrate.io/v3/runtime/storage
+	
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
 	pub(super) type Vaults<T: Config> = StorageMap<
@@ -111,19 +116,18 @@ pub mod pallet {
 		ValueQuery
 	>;
 
-	// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/v3/runtime/events-and-errors
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
+		/// Vault stored 
 		VaultStored(UserId, PublicKey, Vault<T>),
+		/// Owned confidential document stored
 		OwnedDocStored(OwnedDoc<T>),
+		/// Shared confidential document stored
 		SharedDocStored(SharedDoc<T>),
 	}
 
-	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Empty CID
@@ -156,6 +160,16 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		
+		/// Create a vault
+		/// 
+		/// Creates the calling user's vault and sets their public key
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is configuring their vault
+		/// - `user_id`: User identifier generated from their login method, their address if using 
+		/// native login or user id if using SSO
+		/// - `public key`: The users cipher public key
+		/// - `cid`: The IPFS CID that contains the vaults data
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_vault(origin: OriginFor<T>, user_id: UserId, public_key: PublicKey, cid: CID) -> DispatchResult {
@@ -163,6 +177,13 @@ pub mod pallet {
 			Self::do_set_vault(who, user_id, public_key, cid)
 		}
 
+		/// Create/Update an owned document
+		/// 
+		/// Creates a new owned document or updates an existing owned document's metadata
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating/updating an owned document
+		/// - `owned_doc`: Metadata related to the owned document
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_owned_document(origin: OriginFor<T>, owned_doc: OwnedDoc<T>) -> DispatchResult {
@@ -170,6 +191,13 @@ pub mod pallet {
 			Self::do_set_owned_document(who, owned_doc)
 		}
 
+		/// Share a document
+		/// 
+		/// Creates a shared document
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating the shared document
+		/// - `shared_doc`: Metadata related to the shared document
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn share_document(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
