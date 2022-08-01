@@ -78,12 +78,28 @@ pub enum OfferStatus{
     Closed,
 }
 
-pub struct OfferData{
+impl Default for OfferStatus{
+    fn default() -> Self {
+        OfferStatus::Open
+    }
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum OfferType{
+    Sale,
+    Buy,
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct OfferData<T: Config>{
+    pub offer_id: [u8;32],
+    pub marketplace_id: [u8;32],
+    pub creator: T::AccountId,
+    //pub price: u128,
     pub status: OfferStatus,
-    pub price: u64,
-    pub cid: [u8;32],
-    pub label: BoundedVec<u8,ConstU32<100> >,
-    pub notes: BoundedVec<u8,ConstU32<256> >,
-    pub feedback: BoundedVec<u8,ConstU32<256> >,
-    
+    //pub creation_date: u128,
+    //pub expiration_date: u128,
+    //pub offer_type: OfferType,
 }
