@@ -68,7 +68,8 @@ parameter_types! {
 	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
-	pub const  MaxApplicationsPerCustodian: u32 = 2;
+	pub const MaxApplicationsPerCustodian: u32 = 2;
+	pub const MaxMarketsPerOfferor: u32 = 10;
 }
 
 impl pallet_gated_marketplace::Config for Test {
@@ -83,13 +84,12 @@ impl pallet_gated_marketplace::Config for Test {
 	type NameMaxLen = NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
+	type MaxMarketsPerOffer = MaxMarketsPerOfferor;
 }
 
 impl pallet_fruniques::Config for Test {
 	type Event = Event;
 }
-
-
 
 parameter_types! {
 	pub const ClassDeposit: u64 = 2;
@@ -144,4 +144,11 @@ impl pallet_balances::Config for Test {
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+}
+
+impl pallet_timestamp::Config for Test {
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = ();
+	type WeightInfo = ();
 }
