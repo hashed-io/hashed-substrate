@@ -146,26 +146,26 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn offers_id)]
 	pub(super) type OffersId<T: Config> = StorageDoubleMap<
-	_, 
-	Blake2_128Concat, 
-	T::CollectionId, //collection_id
-	Blake2_128Concat, 
-	T::ItemId, // item_id
-	[u8;32], // offer_id
-	OptionQuery
+		_, 
+		Blake2_128Concat, 
+		T::CollectionId, //collection_id
+		Blake2_128Concat, 
+		T::ItemId, // item_id
+		[u8;32], // offer_id
+		OptionQuery
 	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn offers_data)]
 	pub(super) type OffersData<T: Config> = StorageDoubleMap<
-	_, 
-	Blake2_128Concat, 
-	[u8;32], //offer_id
-	Blake2_128Concat, 
-	[u8;32], //marketplace_id
-	//BoundedVec<[u8;32], T::MaxMarketsPerOffer>, //marketplace_id
-	OfferData<T>, //offer data
-	OptionQuery
+		_, 
+		Blake2_128Concat, 
+		[u8;32], //offer_id
+		Blake2_128Concat, 
+		[u8;32], //marketplace_id
+		//BoundedVec<[u8;32], T::MaxMarketsPerOffer>, //marketplace_id
+		OfferData<T>, //offer data
+		OptionQuery
 	>;
 
 
@@ -250,8 +250,12 @@ pub mod pallet {
 		NotOwner,
 		/// Offer already exists
 		OfferAlreadyExists,
-		/// Price already exists
-		PriceAlreadyExists
+		/// Offer not found
+		OfferNotFound,
+		/// Offer status is freezed, user cannot take the current offer
+		OfferIsFreezed,
+
+
 	}
 
 	#[pallet::call]
@@ -486,6 +490,14 @@ pub mod pallet {
 
 
 		//TODO: Add extrinsic to take an offer.
+		
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn take_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			let who = ensure_signed(origin)?; 
+
+			Self::do_take_offer(who, offer_id, marketplace_id, collection_id, item_id)
+		}
 
 
 		//TODO: Add CRUD operations for the offers
