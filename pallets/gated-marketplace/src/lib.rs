@@ -25,8 +25,7 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		//type TimeProvider: UnixTime;
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;
-		
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 		#[pallet::constant]
 		type MaxAuthsPerMarket: Get<u32>;
 		#[pallet::constant]
@@ -147,7 +146,7 @@ pub mod pallet {
 	T::ItemId, // item_id
 	[u8;32], // offer_id
 	OptionQuery
->;
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn offers_data)]
@@ -162,15 +161,6 @@ pub mod pallet {
 	OptionQuery
 	>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn offers_info)]
-	pub(super) type OffersInfo<T: Config> = StorageMap<
-	_,
-	Identity, 
-	[u8;32], //offer_id
-	OfferData<T>, //offer info
-	OptionQuery
-	>;
 
 
 
