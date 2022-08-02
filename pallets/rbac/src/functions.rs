@@ -35,7 +35,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
             |(_role, users)|users).flatten().collect::<Vec<_>>();
         // remove duplicate users
         scope_users.sort();     scope_users.dedup();
-        // remove scope users
+        // TODO: remove scope users
         
         Ok(())
     }

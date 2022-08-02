@@ -21,7 +21,7 @@ pub enum AccountOrApplication<T: Config>{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum MarketplaceAuthority{
+pub enum MarketplaceRole{
     Owner,
     Admin,
     Appraiser,
@@ -30,13 +30,13 @@ pub enum MarketplaceAuthority{
     Participant,
 }
 
-impl Default for MarketplaceAuthority{
+impl Default for MarketplaceRole{
     fn default() -> Self {
-        MarketplaceAuthority::Applicant
+        MarketplaceRole::Applicant
     }
 }
 
-impl MarketplaceAuthority{
+impl MarketplaceRole{
     pub fn to_vec(&self) -> Vec<u8>{
         match self{
             Self::Owner => "Owner".as_bytes().to_vec(),
@@ -53,7 +53,7 @@ impl MarketplaceAuthority{
     }
 
     pub fn enum_to_vec() -> Vec<Vec<u8>>{
-        use crate::types::MarketplaceAuthority::*;
+        use crate::types::MarketplaceRole::*;
         [Owner.to_vec(), Admin.to_vec(), Appraiser.to_vec(), RedemptionSpecialist.to_vec(),
         Applicant.to_vec(), Participant.to_vec()].to_vec()
     }

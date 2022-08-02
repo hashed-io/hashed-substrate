@@ -82,7 +82,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		T::AccountId, // K1: Authority 
 		Blake2_128Concat, 
 		[u8;32], // K2: marketplace_id 
-		BoundedVec<MarketplaceAuthority, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
+		BoundedVec<MarketplaceRole, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
 		ValueQuery
 	>;
 
@@ -93,7 +93,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		Identity, 
 		[u8;32], //K1: marketplace_id 
 		Blake2_128Concat, 
-		MarketplaceAuthority, //k2: authority
+		MarketplaceRole, //k2: authority
 		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
 		ValueQuery
 	>;
@@ -158,9 +158,9 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
 		ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
 		/// Add a new authority to the selected marketplace [account, authority]
-		AuthorityAdded(T::AccountId, MarketplaceAuthority),
+		AuthorityAdded(T::AccountId, MarketplaceRole),
 		/// Remove the selected authority from the selected marketplace [account, authority]
-		AuthorityRemoved(T::AccountId, MarketplaceAuthority),
+		AuthorityRemoved(T::AccountId, MarketplaceRole),
 		/// The label of the selected marketplace has been updated. [market_id]
 		MarketplaceLabelUpdated([u8;32]),
 		/// The selected marketplace has been removed. [market_id]
@@ -372,7 +372,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		/// authority type, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn add_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+		pub fn add_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_authority(who, account, authority_type, marketplace_id)
@@ -394,7 +394,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		/// If the user doesn't have the selected authority type, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceAuthority, marketplace_id: [u8;32]) -> DispatchResult {
+		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should 
 			// check what role we want to remove instead of removing the user completely from
