@@ -4032,6 +4032,7 @@ dependencies = [
  "log",
  "pallet-balances",
  "pallet-fruniques",
+ "pallet-timestamp",
  "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
