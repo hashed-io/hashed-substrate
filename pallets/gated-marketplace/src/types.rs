@@ -94,7 +94,6 @@ pub enum OfferType{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct OfferData<T: Config>{
-    pub offer_id: [u8;32],
     pub marketplace_id: [u8;32],
     pub creator: T::AccountId,
     pub price: u128,
