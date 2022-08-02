@@ -201,6 +201,36 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_take_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+        //ensure the origin is owner or admin
+        Self::can_enroll(authority.clone(), marketplace_id)?;
+        //ensure the collection exists
+        if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
+            ensure!(a == authority, Error::<T>::NotOwner);
+        } else {
+            Err(Error::<T>::CollectionNotFound)?;
+        }
+        //ensure the selected item has an offer id
+        ensure!(<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
+        //TODO: add validation to check if the offer isn't freezed Error::<T>::OfferIsFreezed
+        //TODO: change the offer status to freezed use unique's function freeze
+
+        //ensure the offer is open
+        ensure!(<OffersData<T>>::get(offer_iid, marketplace_id).status == OfferStatus::Open, Error::<T>::OfferNotOpen);
+        //get offer_data
+        let offer_data = <OffersData<T>>::get(offer_iid, marketplace_id);
+        //ensure the offer is not expired
+        ensure!(offer_data.expiration_date > Self::convert_u64_to_moment(Self::convert_moment_to_u64_in_milliseconds(<pallet_timestamp::Pallet<T>>::get()).unwrap_or(0)).unwrap_or(0), Error::<T>::OfferExpired);
+        //ensure the offer is not already taken
+        ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferAlreadyTaken);
+        //update offer status
+        <OffersData<T>>::mutate(offer_iid, marketplace_id, |offer_data| {
+            offer_data.status = OfferStatus::Taken;
+        });
+        Self::deposit_event(Event::OfferTaken(collection_id, item_id));
+        Ok(())
+    }
+
 
 
     /*---- Helper functions ----*/
@@ -446,5 +476,18 @@ impl<T: Config> Pallet<T> {
         }
         return Ok(date_as_u64_millis);
     }
+
+    fn get_offer_status(offer_id: [u8;32], marketplace_id : [u8;32]) -> OfferStatus{
+        //we already know that the offer exists, so we don't need to check it.
+        //we have added a NotFound status in case the storage source is corrupted.
+        if let Some(offer) = <OffersData<T>>::get(offer_id, marketplace_id) {
+            return offer.status;
+        } else {
+            return OfferStatus::NotFound;
+        }
+    }
+
+
+
 
 }
