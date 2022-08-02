@@ -90,16 +90,17 @@ pub enum OfferType{
     Buy,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct OfferData<T: Config>{
     pub offer_id: [u8;32],
     pub marketplace_id: [u8;32],
     pub creator: T::AccountId,
-    //pub price: u128,
+    pub price: u128,
     pub status: OfferStatus,
-    //pub creation_date: u128,
-    //pub expiration_date: u128,
-    //pub offer_type: OfferType,
+    pub creation_date: u64,
+    pub expiration_date: u64,
+    pub offer_type: OfferType,
 }
+
