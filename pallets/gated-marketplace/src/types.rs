@@ -88,8 +88,8 @@ impl Default for OfferStatus{
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum OfferType{
-    Sale,
-    Buy,
+    SellOrder,
+    BuyOrder,
 }
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
