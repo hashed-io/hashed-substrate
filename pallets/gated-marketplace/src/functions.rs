@@ -4,8 +4,6 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
-use frame_support::traits::UnixTime;
-//use frame_support::traits::tokens::nonfungibles::Inspect;
 
 impl<T: Config> Pallet<T> {
 
@@ -161,33 +159,45 @@ impl<T: Config> Pallet<T> {
         } else {
             Err(Error::<T>::CollectionNotFound)?;
         }
-        //create offer_id
-        let offer_iid = (marketplace_id, authority.clone(), collection_id).using_encoded(blake2_256);
-        
+
 
         // create a timestamp
-        let time: u64 = T::TimeProvider::now().as_secs();
+        //let time: u64 = T::TimeProvider::now().as_secs();
+        let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
+        let timestamp2 = Self::convert_moment_to_u64_in_milliseconds(timestamp).unwrap_or(0);
+        // add 7 days to the timestamp
+        let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
+
+        //create offer_id
+        let offer_iid = (marketplace_id, authority.clone(), collection_id, timestamp2, timestamp3).using_encoded(blake2_256);
+        
+
         //create offer strcuture
-        let offer_data = OfferData::<T> {
+        let _offer_data = OfferData::<T> {
             offer_id: offer_iid,
             marketplace_id: marketplace_id,
             creator: authority.clone(),
             price: price,
-            creation_date: time,
-            expiration_date: 94635434,
+            creation_date: timestamp2,
+            expiration_date: timestamp3,
             status: OfferStatus::Open,
             offer_type: offer_type,
         };
-        
-        //insert offer in offer list
-        //validate offer already exists
-        ensure!(!<Offers<T>>::contains_key(collection_id, item_id), Error::<T>::OfferAlreadyExists);
-        <Offers<T>>::insert(collection_id, item_id, offer_data);
 
-        //insert price item 
-        //validate price already exists
-        ensure!(!<Prices<T>>::contains_key(collection_id, item_id), Error::<T>::PriceAlreadyExists);
-        <Prices<T>>::insert(collection_id, item_id, price);
+        //insert offer in offer_id
+        //validate offer already exists
+        ensure!(!<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferAlreadyExists);
+        <OffersId<T>>::insert(collection_id, item_id, offer_iid);
+
+        //insert offer in offer_data
+        //validate offer_info already exists
+        ensure!(!<OffersData<T>>::contains_key(offer_iid, marketplace_id), Error::<T>::OfferAlreadyExists);
+        <OffersData<T>>::insert(offer_iid, marketplace_id, _offer_data.clone());
+
+        //insert offer in offer_info
+        //validate offer_info already exists
+        ensure!(!<OffersInfo<T>>::contains_key(offer_iid), Error::<T>::OfferAlreadyExists);
+        <OffersInfo<T>>::insert(offer_iid, _offer_data);
         
         
         Ok(())
@@ -428,6 +438,16 @@ impl<T: Config> Pallet<T> {
             }
         }
         Ok(())
+    }
+
+    fn convert_moment_to_u64_in_milliseconds(date: T::Moment) -> Result<u64, DispatchError> {
+        let date_as_u64_millis;
+        if let Some(_date_as_u64) = TryInto::<u64>::try_into(date).ok() {
+            date_as_u64_millis = _date_as_u64;
+        } else {
+            return Err(DispatchError::Other("Unable to convert Moment to i64 for date"));
+        }
+        return Ok(date_as_u64_millis);
     }
 
 }
