@@ -20,11 +20,12 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
+	use frame_support::traits::UnixTime;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_fruniques::Config {
+	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
+		type TimeProvider: UnixTime;
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 		
 		#[pallet::constant]
@@ -144,7 +145,7 @@ pub mod pallet {
 	Blake2_128Concat, 
 	T::ItemId, //item_id
 	u128, // price 
-	ValueQuery
+	OptionQuery
 >;
 
 	#[pallet::storage]
@@ -179,6 +180,8 @@ pub mod pallet {
 		MarketplaceLabelUpdated([u8;32]),
 		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8;32]),
+		/// Offer stored. [collection_id, item_id]
+		OfferStored([u8;32], [u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -230,6 +233,14 @@ pub mod pallet {
 		ApplicationStatusStillPending,
 		/// The application has already been approved, application status is approved
 		ApplicationHasAlreadyBeenApproved,
+		/// Collection not found
+		CollectionNotFound,
+		/// User who calls the function is not the owner of the collection
+		NotOwner,
+		/// Offer already exists
+		OfferAlreadyExists,
+		/// Price already exists
+		PriceAlreadyExists
 	}
 
 	#[pallet::call]
@@ -454,13 +465,13 @@ pub mod pallet {
 		}
 
 		
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn enlist_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: OfferType, item_id: Vec<u8>, price:) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?;
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn enlist_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: u128,) -> DispatchResult {
+			let who = ensure_signed(origin)?; 
 
-		// 	Self::do_enlist_offer(who, marketplace_id, offer_id, offer_type, offer_data)
-		// }
+			Self::do_enlist_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
+		}
 
 
 		/// Kill all the stored data.
