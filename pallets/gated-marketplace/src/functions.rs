@@ -160,7 +160,7 @@ impl<T: Config> Pallet<T> {
             Err(Error::<T>::CollectionNotFound)?;
         }
 
-
+        //TODO: use a helper function to handle timestamping
         // create a timestamp
         //let time: u64 = T::TimeProvider::now().as_secs();
         let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
@@ -172,9 +172,9 @@ impl<T: Config> Pallet<T> {
         let offer_iid = (marketplace_id, authority.clone(), collection_id, timestamp2, timestamp3).using_encoded(blake2_256);
         
 
-        //create offer strcuture
+        //create offer structure 
         let _offer_data = OfferData::<T> {
-            offer_id: offer_iid,
+            //offer_id: offer_iid,
             marketplace_id: marketplace_id,
             creator: authority.clone(),
             price: price,
@@ -194,11 +194,6 @@ impl<T: Config> Pallet<T> {
         ensure!(!<OffersData<T>>::contains_key(offer_iid, marketplace_id), Error::<T>::OfferAlreadyExists);
         <OffersData<T>>::insert(offer_iid, marketplace_id, _offer_data.clone());
 
-        //insert offer in offer_info
-        //validate offer_info already exists
-        ensure!(!<OffersInfo<T>>::contains_key(offer_iid), Error::<T>::OfferAlreadyExists);
-        <OffersInfo<T>>::insert(offer_iid, _offer_data);
-        
         
         Ok(())
     }
