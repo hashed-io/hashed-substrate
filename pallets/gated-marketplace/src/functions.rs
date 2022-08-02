@@ -4,6 +4,8 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
+use frame_support::traits::UnixTime;
+//use frame_support::traits::tokens::nonfungibles::Inspect;
 
 impl<T: Config> Pallet<T> {
 
@@ -147,6 +149,47 @@ impl<T: Config> Pallet<T> {
         //remove marketplace
         Self::remove_selected_marketplace(marketplace_id)?;
         Self::deposit_event(Event::MarketplaceRemoved(marketplace_id));
+        Ok(())
+    }
+
+    pub fn do_enlist_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: u128,) -> DispatchResult {
+        //ensure the origin is owner or admin
+        Self::can_enroll(authority.clone(), marketplace_id)?;
+        //ensure the collection exists
+        if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
+            ensure!(a == authority, Error::<T>::NotOwner);
+        } else {
+            Err(Error::<T>::CollectionNotFound)?;
+        }
+        //create offer_id
+        let offer_iid = (marketplace_id, authority.clone(), collection_id).using_encoded(blake2_256);
+        
+
+        // create a timestamp
+        let time: u64 = T::TimeProvider::now().as_secs();
+        //create offer strcuture
+        let offer_data = OfferData::<T> {
+            offer_id: offer_iid,
+            marketplace_id: marketplace_id,
+            creator: authority.clone(),
+            price: price,
+            creation_date: time,
+            expiration_date: 94635434,
+            status: OfferStatus::Open,
+            offer_type: offer_type,
+        };
+        
+        //insert offer in offer list
+        //validate offer already exists
+        ensure!(!<Offers<T>>::contains_key(collection_id, item_id), Error::<T>::OfferAlreadyExists);
+        <Offers<T>>::insert(collection_id, item_id, offer_data);
+
+        //insert price item 
+        //validate price already exists
+        ensure!(!<Prices<T>>::contains_key(collection_id, item_id), Error::<T>::PriceAlreadyExists);
+        <Prices<T>>::insert(collection_id, item_id, price);
+        
+        
         Ok(())
     }
 
