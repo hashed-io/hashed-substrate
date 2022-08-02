@@ -78,6 +78,7 @@ pub enum OfferStatus{
     Open,
     Freezed,
     Closed,
+    NotFound,
 }
 
 impl Default for OfferStatus{
