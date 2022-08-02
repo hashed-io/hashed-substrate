@@ -155,6 +155,9 @@ impl<T: Config> Pallet<T> {
         //ensure the origin is owner or admin
         Self::can_enroll(authority.clone(), marketplace_id)?;
 
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+
         //ensure the collection exists
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a == authority, Error::<T>::NotOwner);
