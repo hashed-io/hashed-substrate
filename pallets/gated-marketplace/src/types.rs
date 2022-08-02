@@ -3,6 +3,7 @@ use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
 use sp_runtime::sp_std::vec::Vec;
+use frame_support::sp_io::hashing::blake2_256;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -25,22 +26,36 @@ pub enum MarketplaceAuthority{
     Admin,
     Appraiser,
     RedemptionSpecialist,
+    Applicant,
+    Participant,
 }
 
 impl Default for MarketplaceAuthority{
     fn default() -> Self {
-        MarketplaceAuthority::Appraiser
+        MarketplaceAuthority::Applicant
     }
 }
 
 impl MarketplaceAuthority{
     pub fn to_vec(&self) -> Vec<u8>{
         match self{
-            MarketplaceAuthority::Owner => "Owner".as_bytes().to_vec(),
-            MarketplaceAuthority::Admin => "Admin".as_bytes().to_vec(),
-            MarketplaceAuthority::Appraiser => "Appraiser".as_bytes().to_vec(),
-            MarketplaceAuthority::RedemptionSpecialist => "Redemption_specialist".as_bytes().to_vec(),
+            Self::Owner => "Owner".as_bytes().to_vec(),
+            Self::Admin => "Admin".as_bytes().to_vec(),
+            Self::Appraiser => "Appraiser".as_bytes().to_vec(),
+            Self::RedemptionSpecialist => "Redemption_specialist".as_bytes().to_vec(),
+            Self::Applicant => "Applicant".as_bytes().to_vec(),
+            Self::Participant => "Participant".as_bytes().to_vec(),
         }
+    }
+
+    pub fn get_id(&self) -> [u8;32]{
+        self.to_vec().using_encoded(blake2_256)
+    }
+
+    pub fn enum_to_vec() -> Vec<Vec<u8>>{
+        use crate::types::MarketplaceAuthority::*;
+        [Owner.to_vec(), Admin.to_vec(), Appraiser.to_vec(), RedemptionSpecialist.to_vec(),
+        Applicant.to_vec(), Participant.to_vec()].to_vec()
     }
 }
 

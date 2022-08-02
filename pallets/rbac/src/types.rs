@@ -37,6 +37,7 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn has_role(user: AccountId, pallet_id: u64, scope_id: &[u8;32], role_ids: Vec<[u8;32]>)->DispatchResult;
     fn scope_exists(pallet_id: u64, scope_id:&[u8;32]) -> DispatchResult;
     fn is_role_linked_to_pallet(pallet_id: u64, role_id: &[u8;32])-> DispatchResult;
+    fn get_role_users_len(pallet_id: u64, scope_id:&[u8;32], role_id: &[u8;32]) -> usize;
     fn get_role_id(id_or_role: IdOrString<Self::RoleMaxLen>)->Result<[u8;32], DispatchError>;
     fn get_permission(pallet_id: u64 ,id_or_permission: IdOrString< Self::PermissionMaxLen>)->Result<[u8;32], DispatchError>;
     fn has_unique_elements(vec: Vec<u8>) -> bool;

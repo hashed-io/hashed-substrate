@@ -6,7 +6,7 @@ use frame_support::sp_std::borrow::ToOwned;
 use sp_runtime::sp_std::vec::Vec;
 
 use crate::types::*;
-// TODO: make vec to manage pallet errors here
+
 impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Basic Insertion of individual storage maps ---*/
     fn create_scope(pallet_id: u64, scope_id: [u8;32])-> DispatchResult{
@@ -85,7 +85,6 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
     fn create_and_set_permissions(pallet_id: u64, role_id: [u8;32], permissions: Vec<Vec<u8>>)->
         Result<BoundedVec<[u8;32], Self::MaxPermissionsPerRole>, DispatchError> {
-        // TODO: Test this functionality
         let mut permission_ids = Vec::<[u8;32]>::new();
         for permision in permissions{
             permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
@@ -138,7 +137,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Self::scope_exists(pallet_id, scope_id)?;
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
 
-        <Users<T>>::try_mutate((&user, pallet_id, scope_id), | roles |{
+        <RolesByUser<T>>::try_mutate((&user, pallet_id, scope_id), | roles |{
             ensure!(!roles.contains(&role_id), Error::<T>::DuplicateRole);
             roles.try_push(role_id).map_err(|_| Error::<T>::ExceedMaxRolesPerUser)
         })?;
@@ -151,7 +150,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     }
 
     fn remove_role_from_user(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult{
-        <Users<T>>::try_mutate_exists::<_,(),DispatchError,_>((user.clone(), pallet_id, scope_id), |user_roles_option|{
+        <RolesByUser<T>>::try_mutate_exists::<_,(),DispatchError,_>((user.clone(), pallet_id, scope_id), |user_roles_option|{
             let user_roles = user_roles_option.as_mut().ok_or(Error::<T>::UserHasNoRoles)?;
             let r_pos = user_roles.iter().position(|&r| r==role_id).ok_or(Error::<T>::RoleNotFound)?;
             user_roles.remove(r_pos);
@@ -184,7 +183,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         // TODO: test if a role that doesnt exists cause any errors
         let users = <UsersByScope<T>>::get( (pallet_id, scope_id, role_id) );
         ensure!(users.contains(&user), Error::<T>::NotAuthorized);
-        let roles = <Users<T>>::get((user, pallet_id, scope_id));
+        let roles = <RolesByUser<T>>::get((user, pallet_id, scope_id));
         // Not likely to happen but just in case:
         ensure!(roles.contains(&role_id), Error::<T>::NotAuthorized );
         Ok(())
@@ -193,7 +192,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     fn has_role(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_ids: Vec<[u8;32]>)->DispatchResult {
         Self::scope_exists(pallet_id, scope_id)?;
 
-        let user_roles = <Users<T>>::get((user, pallet_id, scope_id));
+        let user_roles = <RolesByUser<T>>::get((user, pallet_id, scope_id));
         ensure!(
             user_roles.iter().any(|r| role_ids.contains(r) ),
             Error::<T>::NotAuthorized
@@ -211,6 +210,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         <PalletRoles<T>>::get(pallet_id).iter().find(|pallet_role| *pallet_role==role_id )
             .ok_or(Error::<T>::RoleNotLinkedToPallet)?;
         Ok(())
+    }
+
+    fn get_role_users_len(pallet_id: u64, scope_id:&[u8;32], role_id: &[u8;32]) -> usize{
+        <UsersByScope<T>>::get((pallet_id, scope_id, role_id)).len()
     }
 
     fn get_role_id(id_or_role: IdOrString<Self::RoleMaxLen>)->Result<[u8;32], DispatchError>{

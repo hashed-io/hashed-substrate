@@ -38,12 +38,9 @@ impl<T: Config> Pallet<T> {
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceAuthority::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceAuthority::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
-
+        
         T::Rbac::create_scope(Self::get_pallet_id(),marketplace_id.clone())?;
-        T::Rbac::assign_role_to_user(owner.clone(), Self::get_pallet_id(),
-             &marketplace_id, MarketplaceAuthority::Owner.to_vec().using_encoded(blake2_256))?;
-        T::Rbac::assign_role_to_user(admin.clone(), Self::get_pallet_id(), 
-            &marketplace_id, MarketplaceAuthority::Admin.to_vec().using_encoded(blake2_256))?;
+
         Self::deposit_event(Event::MarketplaceStored(owner, admin, marketplace_id));
         Ok(())
     }
@@ -106,20 +103,16 @@ impl<T: Config> Pallet<T> {
         Self::can_enroll(authority, marketplace_id)?;
 
         //ensure the account is not already an authority
-        ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
-
+        // handled by T::Rbac::assign_role_to_user
+        //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
         match authority_type{
             MarketplaceAuthority::Owner => {
                 ensure!(!Self::owner_exist(marketplace_id), Error::<T>::OnlyOneOwnerIsAllowed);
                 Self::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)?;
-                T::Rbac::assign_role_to_user(account.clone(), Self::get_pallet_id(), 
-                    &marketplace_id, authority_type.to_vec().using_encoded(blake2_256))?;
 
             },
             _ =>{
                 Self::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)?;
-                T::Rbac::assign_role_to_user(account.clone(), Self::get_pallet_id(), 
-                    &marketplace_id, authority_type.to_vec().using_encoded(blake2_256))?;
             }
         }
 
@@ -133,7 +126,8 @@ impl<T: Config> Pallet<T> {
         Self::can_enroll(authority.clone(), marketplace_id)?;
 
         //ensure the account has the selected authority before to try to remove
-        ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AuthorityNotFoundForUser);
+        // T::Rbac handles the if role doesnt hasnt been asigned to the user
+        //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AuthorityNotFoundForUser);
 
         match authority_type{
             MarketplaceAuthority::Owner => {
@@ -218,8 +212,12 @@ impl<T: Config> Pallet<T> {
         }).map_err(|_| Error::<T>::ExceedMaxRolesPerAuth)?;
 
         <AuthoritiesByMarketplace<T>>::try_mutate(marketplace_id, role, | accounts|{
-            accounts.try_push(authority)
+            accounts.try_push(authority.clone())
         }).map_err(|_| Error::<T>::ExceedMaxMarketsPerAuth)?;
+
+        T::Rbac::assign_role_to_user(authority.clone(), Self::get_pallet_id(),
+             &marketplace_id, role.get_id())?;
+        
         Ok(())
     }
 
@@ -227,6 +225,7 @@ impl<T: Config> Pallet<T> {
         <ApplicantsByMarketplace<T>>::try_mutate(marketplace_id, status,|applicants|{
             applicants.try_push(applicant)
         }).map_err(|_| Error::<T>::ExceedMaxApplicants)?;
+        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
         Ok(())
     }
 
@@ -234,6 +233,7 @@ impl<T: Config> Pallet<T> {
         <Custodians<T>>::try_mutate(custodian, marketplace_id, | applications |{
             applications.try_push(applicant)
         }).map_err(|_| Error::<T>::ExceedMaxApplicationsPerCustodian)?;
+        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
         Ok(())
     }
 
@@ -242,6 +242,7 @@ impl<T: Config> Pallet<T> {
             let applicant_index = applicants.iter().position(|a| *a==applicant.clone())
                 .ok_or(Error::<T>::ApplicantNotFound)?;
             applicants.remove(applicant_index);
+        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
             Ok(())
         })
     }
@@ -262,7 +263,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         }).map_err(|_:Error::<T>| Error::<T>::UserNotFound)?;
         T::Rbac::remove_role_from_user(account, Self::get_pallet_id(), 
-            &marketplace_id, author_type.to_vec().using_encoded(blake2_256))?;
+            &marketplace_id, author_type.get_id())?;
         Ok(())
 
     }
@@ -298,8 +299,8 @@ impl<T: Config> Pallet<T> {
         //     role.eq(&MarketplaceAuthority::Owner) || role.eq(&MarketplaceAuthority::Admin)
         // }).ok_or(Error::<T>::CannotEnroll)?;
         let auths = [
-            MarketplaceAuthority::Owner.to_vec().using_encoded(blake2_256), 
-            MarketplaceAuthority::Admin.to_vec().using_encoded(blake2_256)  
+            MarketplaceAuthority::Owner.get_id(), 
+            MarketplaceAuthority::Admin.get_id()  
         ].to_vec();
         //TODO: Test if the auth mechanism works
         T::Rbac::has_role(authority.clone(),Self::get_pallet_id(), &marketplace_id,auths)
@@ -309,12 +310,14 @@ impl<T: Config> Pallet<T> {
     ///Lets us know if the selected user is an admin.
     /// It returns true if the user is an admin, false otherwise.
     fn is_admin(account: T::AccountId, marketplace_id: [u8;32]) -> bool{
-        let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
-            Ok(roles) => roles,
-            Err(_) => return false,
-        };
+        // let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
+        //     Ok(roles) => roles,
+        //     Err(_) => return false,
+        // };
 
-        roles.iter().any(|&authority_type| authority_type == MarketplaceAuthority::Admin)
+        // roles.iter().any(|&authority_type| authority_type == MarketplaceAuthority::Admin)
+        T::Rbac::has_role(account, Self::get_pallet_id(), 
+            &marketplace_id, [MarketplaceAuthority::Admin.get_id()].to_vec()).is_ok()
     }
 
 
@@ -332,12 +335,14 @@ impl<T: Config> Pallet<T> {
     /// Let us know if there's an owner for the selected marketplace. 
     /// It returns true if there's an owner, false otherwise
     fn owner_exist(marketplace_id: [u8;32]) -> bool {
-        let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner){
-            Ok(owners) => owners,
-            Err(_) => return false,
-        };
+        // let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner){
+        //     Ok(owners) => owners,
+        //     Err(_) => return false,
+        // };
         
-        owners.len() == 1
+        //owners.len() == 1 
+        T::Rbac::get_role_users_len(Self::get_pallet_id(), 
+            &marketplace_id, &MarketplaceAuthority::Owner.get_id()) == 1
     }
 
     /// Let us update the marketplace's label.

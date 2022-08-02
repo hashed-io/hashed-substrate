@@ -106,8 +106,8 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn users)]
-	pub(super) type Users<T: Config> = StorageNMap<
+	#[pallet::getter(fn roles_by_user)]
+	pub(super) type RolesByUser<T: Config> = StorageNMap<
 		_,
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
