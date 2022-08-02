@@ -254,7 +254,8 @@ pub mod pallet {
 		OfferNotFound,
 		/// Offer status is freezed, user cannot take the current offer
 		OfferIsFreezed,
-
+		/// Offer is not available at the moment
+		OfferIsNotAvailable,
 
 	}
 
