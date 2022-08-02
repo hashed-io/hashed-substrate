@@ -20,12 +20,11 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
-	use frame_support::traits::UnixTime;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config{
+	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type TimeProvider: UnixTime;
+		//type TimeProvider: UnixTime;
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 		
 		#[pallet::constant]
@@ -46,6 +45,8 @@ pub mod pallet {
 		type MaxFiles: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicationsPerCustodian: Get<u32>;
+		#[pallet::constant]	
+		type MaxMarketsPerOffer: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -137,28 +138,41 @@ pub mod pallet {
 
 
 	#[pallet::storage]
-	#[pallet::getter(fn prices)]
-	pub(super) type Prices<T: Config> = StorageDoubleMap<
+	#[pallet::getter(fn offers_id)]
+	pub(super) type OffersId<T: Config> = StorageDoubleMap<
 	_, 
 	Blake2_128Concat, 
 	T::CollectionId, //collection_id
 	Blake2_128Concat, 
-	T::ItemId, //item_id
-	u128, // price 
+	T::ItemId, // item_id
+	[u8;32], // offer_id
 	OptionQuery
 >;
 
 	#[pallet::storage]
-	#[pallet::getter(fn offers)]
-	pub(super) type Offers<T: Config> = StorageDoubleMap<
+	#[pallet::getter(fn offers_data)]
+	pub(super) type OffersData<T: Config> = StorageDoubleMap<
 	_, 
 	Blake2_128Concat, 
-	T::CollectionId, //collection_id
+	[u8;32], //offer_id
 	Blake2_128Concat, 
-	T::ItemId, //item_id
+	[u8;32], //marketplace_id
+	//BoundedVec<[u8;32], T::MaxMarketsPerOffer>, //marketplace_id
 	OfferData<T>, //offer data
 	OptionQuery
 	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn offers_info)]
+	pub(super) type OffersInfo<T: Config> = StorageMap<
+	_,
+	Identity, 
+	[u8;32], //offer_id
+	OfferData<T>, //offer info
+	OptionQuery
+	>;
+
+
 
 
 
