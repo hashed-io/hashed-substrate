@@ -85,6 +85,7 @@ impl pallet_gated_marketplace::Config for Test {
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxMarketsPerOffer = MaxMarketsPerOfferor;
+	type LocalCurrency = Balances;
 }
 
 impl pallet_fruniques::Config for Test {

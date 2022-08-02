@@ -4,6 +4,7 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
+use frame_support::traits::Currency;
 
 impl<T: Config> Pallet<T> {
 
@@ -150,9 +151,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: u128,) -> DispatchResult {
+    pub fn do_enlist_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
         //ensure the origin is owner or admin
         Self::can_enroll(authority.clone(), marketplace_id)?;
+
         //ensure the collection exists
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a == authority, Error::<T>::NotOwner);
@@ -171,6 +173,7 @@ impl<T: Config> Pallet<T> {
         //create offer_id
         let offer_iid = (marketplace_id, authority.clone(), collection_id, timestamp2, timestamp3).using_encoded(blake2_256);
         
+        let _total = T::LocalCurrency::total_balance(&authority);
 
         //create offer structure 
         let _offer_data = OfferData::<T> {
@@ -194,10 +197,9 @@ impl<T: Config> Pallet<T> {
         ensure!(!<OffersData<T>>::contains_key(offer_iid, marketplace_id), Error::<T>::OfferAlreadyExists);
         <OffersData<T>>::insert(offer_iid, marketplace_id, _offer_data.clone());
 
-        
+        Self::deposit_event(Event::OfferStored(collection_id, item_id));
         Ok(())
     }
-
 
 
 

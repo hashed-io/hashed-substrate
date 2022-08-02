@@ -14,17 +14,24 @@ mod benchmarking;
 mod functions;
 mod types;
 
+
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
+	use frame_support::traits::Currency;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
+	//use frame_support::traits::tokens::Balance;
+	//use std::fmt::Debug;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		//type TimeProvider: UnixTime;
+		type LocalCurrency: Currency<Self::AccountId>;
+		//type Balance: Balance + MaybeSerializeDeserialize + Debug + MaxEncodedLen;
+
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 		#[pallet::constant]
 		type MaxAuthsPerMarket: Get<u32>;
@@ -185,7 +192,7 @@ pub mod pallet {
 		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8;32]),
 		/// Offer stored. [collection_id, item_id]
-		OfferStored([u8;32], [u8;32]),
+		OfferStored(T::CollectionId, T::ItemId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -471,12 +478,18 @@ pub mod pallet {
 		
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enlist_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: u128,) -> DispatchResult {
+		pub fn enlist_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
 			let who = ensure_signed(origin)?; 
 
 			Self::do_enlist_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
 		}
 
+
+		//TODO: Add extrinsic to take an offer.
+
+
+		//TODO: Add CRUD operations for the offers
+		//TODO: Add extrinsic to duplicate offers in other marketplace.
 
 		/// Kill all the stored data.
 		/// 

@@ -2,7 +2,9 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
+use frame_support::traits::Currency;
 
+pub type BalanceOf<T> = <<T as Config>::LocalCurrency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -96,10 +98,9 @@ pub enum OfferType{
 pub struct OfferData<T: Config>{
     pub marketplace_id: [u8;32],
     pub creator: T::AccountId,
-    pub price: u128,
+    pub price:  BalanceOf<T>,
     pub status: OfferStatus,
     pub creation_date: u64,
     pub expiration_date: u64,
     pub offer_type: OfferType,
 }
-
