@@ -214,9 +214,10 @@ impl<T: Config> Pallet<T> {
         ensure!(<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         //TODO: add validation to check if the offer isn't freezed Error::<T>::OfferIsFreezed
         //TODO: change the offer status to freezed use unique's function freeze
+        //we need to change the status in all the markets where the offer is stored
 
         //ensure the offer is open
-        ensure!(<OffersData<T>>::get(offer_iid, marketplace_id).status == OfferStatus::Open, Error::<T>::OfferNotOpen);
+        ensure!(Self::get_offer_status(offer_id, marketplace_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
         //get offer_data
         let offer_data = <OffersData<T>>::get(offer_iid, marketplace_id);
         //ensure the offer is not expired
@@ -478,7 +479,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn get_offer_status(offer_id: [u8;32], marketplace_id : [u8;32]) -> OfferStatus{
-        //we already know that the offer exists, so we don't need to check it.
+        //we already know that the offer exists, so we don't need to check it here.
         //we have added a NotFound status in case the storage source is corrupted.
         if let Some(offer) = <OffersData<T>>::get(offer_id, marketplace_id) {
             return offer.status;
