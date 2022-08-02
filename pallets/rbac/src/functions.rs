@@ -18,6 +18,27 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         })
     }
 
+    fn remove_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult{
+        // WIP
+        // remove on scopes
+        <Scopes<T>>::try_mutate_exists::<_,(),DispatchError,_>(pallet_id, |scopes_option|{
+            let scopes = scopes_option.as_mut().ok_or(Error::<T>::ScopeNotFound)?;
+            let s_pos = scopes.iter().position(|&s| s==scope_id).ok_or(Error::<T>::ScopeNotFound)?;
+            scopes.remove(s_pos);
+            if scopes.is_empty(){
+                scopes_option.clone_from(&None);
+            }
+            Ok(())
+        })?;
+        // remove on users by scope
+        let mut scope_users = <UsersByScope<T>>::iter_prefix((pallet_id, scope_id)).map(
+            |(_role, users)|users).flatten().collect::<Vec<_>>();
+        // remove duplicate users
+        scope_users.sort();     scope_users.dedup();
+        // remove scope users
+        
+        Ok(())
+    }
     /// Inserts roles and links them to the pallet
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], T::MaxRolesPerPallet>, DispatchError>{
@@ -125,6 +146,28 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         <UsersByScope<T>>::try_mutate((pallet_id, scope_id, role_id), | users|{
             ensure!(!users.contains(&user), Error::<T>::UserAlreadyHasRole);
             users.try_push(user).map_err(|_| Error::<T>::ExceedMaxUsersPerRole)
+        })?;
+        Ok(())
+    }
+
+    fn remove_role_from_user(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult{
+        <Users<T>>::try_mutate_exists::<_,(),DispatchError,_>((user.clone(), pallet_id, scope_id), |user_roles_option|{
+            let user_roles = user_roles_option.as_mut().ok_or(Error::<T>::UserHasNoRoles)?;
+            let r_pos = user_roles.iter().position(|&r| r==role_id).ok_or(Error::<T>::RoleNotFound)?;
+            user_roles.remove(r_pos);
+            if user_roles.is_empty(){
+                user_roles_option.clone_from(&None)
+            }
+            Ok(())
+        })?;
+        <UsersByScope<T>>::try_mutate_exists::<_,(),DispatchError,_>((pallet_id, scope_id, role_id), |auth_users_option|{
+            let auth_users = auth_users_option.as_mut().ok_or(Error::<T>::RoleHasNoUsers)?;
+            let u_pos = auth_users.iter().position(|u| *u==user).ok_or(Error::<T>::UserNotFound)?;
+            auth_users.remove(u_pos);
+            if auth_users.is_empty(){
+                auth_users_option.clone_from(&None);
+            }
+            Ok(())
         })?;
         Ok(())
     }

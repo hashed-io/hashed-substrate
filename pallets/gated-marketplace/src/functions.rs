@@ -261,7 +261,8 @@ impl<T: Config> Pallet<T> {
             accounts.remove(author_index);
             Ok(())
         }).map_err(|_:Error::<T>| Error::<T>::UserNotFound)?;
-
+        T::Rbac::remove_role_from_user(account, Self::get_pallet_id(), 
+            &marketplace_id, author_type.to_vec().using_encoded(blake2_256))?;
         Ok(())
 
     }

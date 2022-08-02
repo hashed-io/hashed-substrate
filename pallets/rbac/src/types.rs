@@ -15,6 +15,8 @@ pub trait RoleBasedAccessControl<AccountId>{
     type PermissionMaxLen: Get<u32>;
     // scopes
     fn create_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult;
+    // scope removal
+    fn remove_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult;
     // roles creation and setting
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], Self::MaxRolesPerPallet>, DispatchError>;
@@ -22,7 +24,8 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn set_role_to_pallet(pallet_id: u64, role_id: [u8;32] )-> DispatchResult;
     fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<[u8;32]>)->DispatchResult;
     fn assign_role_to_user(user: AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult;
-    // TODO: role removal
+    // role removal
+    fn remove_role_from_user(user: AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult;
     // permissions
     fn create_and_set_permissions(pallet_id: u64, role: [u8;32], permissions: Vec<Vec<u8>>)->
         Result<BoundedVec<[u8;32], Self::MaxPermissionsPerRole>, DispatchError>;
