@@ -4,7 +4,8 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
-use frame_support::traits::Currency;
+use frame_support::traits::{Currency, Contains};
+use frame_system::pallet_prelude::OriginFor;
 
 impl<T: Config> Pallet<T> {
 
@@ -204,7 +205,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_take_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+    pub fn do_take_offer(origin: OriginFor<T>, authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
         //ensure the origin is owner or admin
         Self::can_enroll(authority.clone(), marketplace_id)?;
         //ensure the collection exists
@@ -213,25 +214,35 @@ impl<T: Config> Pallet<T> {
         } else {
             Err(Error::<T>::CollectionNotFound)?;
         }
+        //freeze the item from uniques pallet
+        //error mismatch types
+        // user who calls take_offer extrinsic must be the freezer of the item
+        // in order to call freeze extrinsic from uniques pallet or maybe pass the freezer in the signature
+        pallet_uniques::Pallet::<T>::freeze(origin.clone(), collection_id, item_id)?;
         //ensure the selected item has an offer id
         ensure!(<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         //TODO: add validation to check if the offer isn't freezed Error::<T>::OfferIsFreezed
         //TODO: change the offer status to freezed use unique's function freeze
         //we need to change the status in all the markets where the offer is stored
+        //idk if I should separte this part in another extrinsic before we complete the transfer:
+        // 1. is the offer open?
+        // 2. change the status in the offer_data -> status: OfferStatus::Freezed
 
-        //ensure the offer is open
+        //ensure the offer is open and available
         ensure!(Self::get_offer_status(offer_id, marketplace_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
+        
         //get offer_data
-        let offer_data = <OffersData<T>>::get(offer_iid, marketplace_id);
-        //ensure the offer is not expired
-        ensure!(offer_data.expiration_date > Self::convert_u64_to_moment(Self::convert_moment_to_u64_in_milliseconds(<pallet_timestamp::Pallet<T>>::get()).unwrap_or(0)).unwrap_or(0), Error::<T>::OfferExpired);
-        //ensure the offer is not already taken
-        ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferAlreadyTaken);
+        //let offer_data = Self::get_offer_data(offer_id, marketplace_id);
+        //TODO: ensure the offer is not expired
         //update offer status
-        <OffersData<T>>::mutate(offer_iid, marketplace_id, |offer_data| {
-            offer_data.status = OfferStatus::Taken;
-        });
-        Self::deposit_event(Event::OfferTaken(collection_id, item_id));
+        // Self::deposit_event(Event::OfferTaken(collection_id, item_id));
+        
+        //TODO: create a new storage map offerid-boundedvec(marketplace_id)
+        // to facilitate the search of the marketplaces where the offer is stored
+
+        // user who calls take_offer extrinsic must be the admin of the item
+        // in order to call thaw extrinsic from uniques pallet or maybe pass the admin in the signature
+        pallet_uniques::Pallet::<T>::thaw(origin, collection_id, item_id)?;
         Ok(())
     }
 
@@ -489,6 +500,13 @@ impl<T: Config> Pallet<T> {
         } else {
             return OfferStatus::NotFound;
         }
+    }
+
+    //get offer_data
+    fn get_offer_data(offer_id: [u8;32], marketplace_id : [u8;32]) -> OfferData<T> {
+        //we already know that the offer exists, so we don't need to check it here.
+        //we have added a NotFound status in case the storage source is corrupted.
+        <OffersData<T>>::get(offer_id, marketplace_id).unwrap()
     }
 
 

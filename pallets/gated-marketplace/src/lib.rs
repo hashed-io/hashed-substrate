@@ -495,9 +495,9 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
-			let who = ensure_signed(origin)?; 
+			let who = ensure_signed(origin.clone())?; 
 
-			Self::do_take_offer(who, offer_id, marketplace_id, collection_id, item_id)
+			Self::do_take_offer(origin.clone(), who, offer_id, marketplace_id, collection_id, item_id)
 		}
 
 
