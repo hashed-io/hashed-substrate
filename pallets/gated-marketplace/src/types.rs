@@ -92,6 +92,7 @@ impl Default for OfferStatus{
 pub enum OfferType{
     SellOrder,
     BuyOrder,
+    NotFound,
 }
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
