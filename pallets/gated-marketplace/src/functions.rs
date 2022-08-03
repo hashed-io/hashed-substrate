@@ -218,8 +218,9 @@ impl<T: Config> Pallet<T> {
         //error mismatch types
         // user who calls take_offer extrinsic must be the freezer of the item
         // in order to call freeze extrinsic from uniques pallet or maybe pass the freezer in the signature
-        pallet_uniques::Pallet::<T>::freeze(origin.clone(), collection_id, item_id)?;
-        //ensure the selected item has an offer id
+        //pallet_uniques::Pallet::<T>::freeze(origin.clone(), collection_id, item_id)?;
+
+        //ensure the selected item has an offer_id
         ensure!(<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         //TODO: add validation to check if the offer isn't freezed Error::<T>::OfferIsFreezed
         //TODO: change the offer status to freezed use unique's function freeze
@@ -242,7 +243,7 @@ impl<T: Config> Pallet<T> {
 
         // user who calls take_offer extrinsic must be the admin of the item
         // in order to call thaw extrinsic from uniques pallet or maybe pass the admin in the signature
-        pallet_uniques::Pallet::<T>::thaw(origin, collection_id, item_id)?;
+        //pallet_uniques::Pallet::<T>::thaw(origin, collection_id, item_id)?;
         Ok(())
     }
 
