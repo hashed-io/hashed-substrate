@@ -23,12 +23,6 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
-	// RBAC pallet aliases
-	type MaxRolesPerPallet<T> = <<T as Config>::Rbac as RoleBasedAccessControl<<T as frame_system::Config>::AccountId,>>::MaxRolesPerPallet;
-	type PermissionMaxLen<T> = <<T as Config>::Rbac as RoleBasedAccessControl<<T as frame_system::Config>::AccountId,>>::PermissionMaxLen;
-	// <<T as Config>::Currency as Currency<
-	//<T as frame_system::Config>::AccountId,
-	//>>::NegativeImbalance;
 	
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -72,30 +66,6 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		[u8; 32], // Key
 		Marketplace<T>,  // Value
 		OptionQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn marketplaces_by_authority)]
-	pub(super) type MarketplacesByAuthority<T: Config> = StorageDoubleMap<
-		_, 
-		Blake2_128Concat, 
-		T::AccountId, // K1: Authority 
-		Blake2_128Concat, 
-		[u8;32], // K2: marketplace_id 
-		BoundedVec<MarketplaceRole, T::MaxRolesPerAuth >, // scales with MarketplaceAuthority cardinality
-		ValueQuery
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn authorities_by_marketplace)]
-	pub(super) type AuthoritiesByMarketplace<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], //K1: marketplace_id 
-		Blake2_128Concat, 
-		MarketplaceRole, //k2: authority
-		BoundedVec<T::AccountId,T::MaxAuthsPerMarket>, 
-		ValueQuery
 	>;
 
 	#[pallet::storage]
@@ -144,8 +114,6 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants 
 		ValueQuery
 	>;
-
-
 
 
 	#[pallet::event]
@@ -462,12 +430,11 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		) -> DispatchResult{
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			<Marketplaces<T>>::remove_all(None);
-			<MarketplacesByAuthority<T>>::remove_all(None);
-			<AuthoritiesByMarketplace<T>>::remove_all(None);
 			<Applications<T>>::remove_all(None);
 			<ApplicationsByAccount<T>>::remove_all(None);
 			<ApplicantsByMarketplace<T>>::remove_all(None);
 			<Custodians<T>>::remove_all(None);
+			// TODO: call T::Rbac::remove_pallet_storage
 			Ok(())
 		}
 

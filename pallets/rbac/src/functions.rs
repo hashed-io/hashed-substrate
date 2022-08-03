@@ -30,15 +30,20 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
             }
             Ok(())
         })?;
-        // remove on users by scope
         let mut scope_users = <UsersByScope<T>>::iter_prefix((pallet_id, scope_id)).map(
             |(_role, users)|users).flatten().collect::<Vec<_>>();
-        // remove duplicate users
+        // exclude duplicate users
         scope_users.sort();     scope_users.dedup();
-        // TODO: remove scope users
+        // remove on RolesByUser
+        scope_users.iter().for_each(|user|{
+            <RolesByUser<T>>::remove((user, pallet_id, scope_id));
+        });
+        // remove on users by scope
+        <UsersByScope<T>>::remove_prefix((pallet_id, scope_id), None);
         
         Ok(())
     }
+
     /// Inserts roles and links them to the pallet
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], T::MaxRolesPerPallet>, DispatchError>{
