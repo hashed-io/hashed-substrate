@@ -57,7 +57,7 @@ pub mod pallet {
 		_, 
 		Blake2_128Concat, 
 		u64, // pallet_id
-		BoundedVec<[u8;32], T::MaxScopesPerPallet>,  // scopes_id
+		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
 		ValueQuery,
 	>;
 
@@ -66,7 +66,7 @@ pub mod pallet {
 	pub(super) type Roles<T: Config> = StorageMap<
 		_,
 		Identity, 
-		[u8;32], // role_id
+		RoleId, // role_id
 		BoundedVec<u8, T::RoleMaxLen >,  // role
 		OptionQuery,
 	>;
@@ -77,7 +77,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat, 
 		u64, // pallet_id
-		BoundedVec<[u8;32], T::MaxRolesPerPallet >, // role_id
+		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
 		ValueQuery,
 	>;
 
@@ -88,7 +88,7 @@ pub mod pallet {
 		Blake2_128Concat, 
 		u64, 			// pallet_id
 		Blake2_128Concat, 
-		[u8;32],		// permission_id
+		PermissionId,		// permission_id
 		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
 		ValueQuery,
 	>;
@@ -100,8 +100,8 @@ pub mod pallet {
 		Blake2_128Concat, 
 		u64, 			// pallet_id
 		Blake2_128Concat, 
-		[u8;32],		// role_id
-		BoundedVec<[u8;32], T::MaxPermissionsPerRole >,	// permission_ids
+		RoleId,		// role_id
+		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
 		ValueQuery,
 	>;
 
@@ -113,9 +113,9 @@ pub mod pallet {
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			NMapKey<Blake2_128Concat, u64>,			// pallet_id
-			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
+			NMapKey<Twox64Concat, ScopeId>,		// scope_id
 		),
-		BoundedVec<[u8;32], T::MaxRolesPerUser>,	// roles (ids)
+		BoundedVec<RoleId, T::MaxRolesPerUser>,	// roles (ids)
 		ValueQuery,
 	>;
 
@@ -127,8 +127,8 @@ pub mod pallet {
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
 			NMapKey<Blake2_128Concat, u64>,		// pallet_id
-			NMapKey<Twox64Concat, [u8;32]>,		// scope_id
-			NMapKey<Blake2_128Concat, [u8;32]>,	// role_id
+			NMapKey<Twox64Concat, ScopeId>,		// scope_id
+			NMapKey<Blake2_128Concat, RoleId>,	// role_id
 		),
 		BoundedVec<T::AccountId, T::MaxUsersPerRole>,	// users
 		ValueQuery,

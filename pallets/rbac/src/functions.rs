@@ -9,7 +9,7 @@ use crate::types::*;
 
 impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Basic Insertion of individual storage maps ---*/
-    fn create_scope(pallet_id: u64, scope_id: [u8;32])-> DispatchResult{
+    fn create_scope(pallet_id: u64, scope_id: ScopeId)-> DispatchResult{
         let pallet_id: u64 = pallet_id.try_into().unwrap();
         <Scopes<T>>::try_mutate(pallet_id, |scopes|{
             ensure!(!scopes.contains(&scope_id), Error::<T>::ScopeAlreadyExists);
@@ -18,7 +18,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         })
     }
 
-    fn remove_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult{
+    fn remove_scope(pallet_id: u64, scope_id: ScopeId) -> DispatchResult{
         // remove on scopes
         <Scopes<T>>::try_mutate_exists::<_,(),DispatchError,_>(pallet_id, |scopes_option|{
             let scopes = scopes_option.as_mut().ok_or(Error::<T>::ScopeNotFound)?;
@@ -44,7 +44,6 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     }
 
     fn remove_pallet_storage(pallet_id: u64) -> DispatchResult{
-
         //remove all scopes
         let scopes = <Scopes<T>>::get(pallet_id);
         for scope in scopes{
@@ -65,9 +64,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         <Permissions<T>>::remove_prefix(pallet_id, None);
         Ok(())
     }
+
     /// Inserts roles and links them to the pallet
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
-        Result<BoundedVec<[u8;32], T::MaxRolesPerPallet>, DispatchError>{
+        Result<BoundedVec<RoleId, T::MaxRolesPerPallet>, DispatchError>{
         let mut role_ids= Vec::<[u8;32]>::new();
         for role in roles{
             role_ids.push( Self::create_role(role.to_owned())? );
@@ -77,7 +77,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(bounded_ids)
     }
 
-    fn create_role(role: Vec<u8>)-> Result<[u8;32], DispatchError>{
+    fn create_role(role: Vec<u8>)-> Result<RoleId, DispatchError>{
         let role_id = role.using_encoded(blake2_256);
         // no "get_or_insert" method found
         let b_role = Self::bound::<_,T::RoleMaxLen>(role, Error::<T>::ExceedMaxRolesPerUser)?;
@@ -86,7 +86,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(role_id)
     }
 
-    fn set_role_to_pallet(pallet_id: u64, role_id: [u8;32] )-> DispatchResult{
+    fn set_role_to_pallet(pallet_id: u64, role_id: RoleId )-> DispatchResult{
         ensure!(<Roles<T>>::contains_key(role_id), Error::<T>::RoleNotFound);
 
         <PalletRoles<T>>::try_mutate(pallet_id, |roles|{
@@ -96,7 +96,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<[u8;32]>)->DispatchResult{
+    fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<RoleId>)->DispatchResult{
         // checks for duplicates:
         let pallet_roles = <PalletRoles<T>>::get(&pallet_id);
         for id in roles.clone(){
@@ -109,58 +109,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn create_and_set_permissions(pallet_id: u64, role_id: [u8;32], permissions: Vec<Vec<u8>>)->
-        Result<BoundedVec<[u8;32], Self::MaxPermissionsPerRole>, DispatchError> {
-        let mut permission_ids = Vec::<[u8;32]>::new();
-        for permision in permissions{
-            permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
-        }
-        Self::set_multiple_permisions_to_role(pallet_id, role_id, permission_ids.clone())?;
-        let b_permissions =  Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
-        Ok(b_permissions)
-    }
-
-    fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<[u8;32], DispatchError>{
-        let permission_id = permission.using_encoded(blake2_256);
-
-        let b_permission = Self::bound::
-            <_,T::PermissionMaxLen>(permission, Error::<T>::ExceedPermissionMaxLen)?;
-
-        // Testing: a boundedvec id should be equal to a vec id because they have the same data
-        ensure!(permission_id == b_permission.using_encoded(blake2_256), Error::<T>::NoneValue);
-
-        log::info!("Is permission_id equal: {}",permission_id == b_permission.using_encoded(blake2_256));
-        if !<Permissions<T>>::contains_key(pallet_id, permission_id){
-            <Permissions<T>>::insert(pallet_id, permission_id, b_permission);
-        }
-        Ok(permission_id)
-    }
-
-    fn set_permission_to_role( pallet_id: u64, role_id: [u8;32], permission_id: [u8;32] ) -> DispatchResult{
-        ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
-        Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
-
-        <PermissionsByRole<T>>::try_mutate(pallet_id, role_id, | role_permissions|{
-            ensure!(role_permissions.contains(&permission_id), Error::<T>::DuplicatePermission);
-            role_permissions.try_push(permission_id).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)
-        })?;
-        Ok(())
-    }
-
-    fn set_multiple_permisions_to_role(  pallet_id: u64, role_id: [u8;32], permissions: Vec<[u8;32]> )-> DispatchResult{
-        // checks for duplicates:
-        let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
-        for id in permissions.clone(){
-            ensure!(!role_permissions.contains(&id), Error::<T>::DuplicateRole );
-        }
-        <PermissionsByRole<T>>::try_mutate(pallet_id, role_id,  |role_permissions|{
-            role_permissions.try_extend(permissions.into_iter())
-        }).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)?;
-
-        Ok(())
-    }
-
-    fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult{
+    fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_id: RoleId) -> DispatchResult{
         Self::scope_exists(pallet_id, scope_id)?;
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
 
@@ -176,7 +125,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn remove_role_from_user(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id: [u8;32]) -> DispatchResult{
+    fn remove_role_from_user(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_id: RoleId) -> DispatchResult{
         <RolesByUser<T>>::try_mutate_exists::<_,(),DispatchError,_>((user.clone(), pallet_id, scope_id), |user_roles_option|{
             let user_roles = user_roles_option.as_mut().ok_or(Error::<T>::UserHasNoRoles)?;
             let r_pos = user_roles.iter().position(|&r| r==role_id).ok_or(Error::<T>::RoleNotFound)?;
@@ -198,9 +147,56 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    fn create_and_set_permissions(pallet_id: u64, role_id: RoleId, permissions: Vec<Vec<u8>>)->
+        Result<BoundedVec<PermissionId, Self::MaxPermissionsPerRole>, DispatchError> {
+        let mut permission_ids = Vec::<[u8;32]>::new();
+        for permision in permissions{
+            permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
+        }
+        Self::set_multiple_permisions_to_role(pallet_id, role_id, permission_ids.clone())?;
+        let b_permissions =  Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
+        Ok(b_permissions)
+    }
+
+    fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<PermissionId, DispatchError>{
+        let permission_id = permission.using_encoded(blake2_256);
+
+        let b_permission = Self::bound::
+            <_,T::PermissionMaxLen>(permission, Error::<T>::ExceedPermissionMaxLen)?;
+
+        if !<Permissions<T>>::contains_key(pallet_id, permission_id){
+            <Permissions<T>>::insert(pallet_id, permission_id, b_permission);
+        }
+        Ok(permission_id)
+    }
+
+    fn set_permission_to_role( pallet_id: u64, role_id: RoleId, permission_id: PermissionId ) -> DispatchResult{
+        ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
+        Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
+
+        <PermissionsByRole<T>>::try_mutate(pallet_id, role_id, | role_permissions|{
+            ensure!(role_permissions.contains(&permission_id), Error::<T>::DuplicatePermission);
+            role_permissions.try_push(permission_id).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)
+        })?;
+        Ok(())
+    }
+
+    fn set_multiple_permisions_to_role(  pallet_id: u64, role_id: RoleId, permissions: Vec<PermissionId> )-> DispatchResult{
+        // checks for duplicates:
+        let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
+        for id in permissions.clone(){
+            ensure!(!role_permissions.contains(&id), Error::<T>::DuplicateRole );
+        }
+        <PermissionsByRole<T>>::try_mutate(pallet_id, role_id,  |role_permissions|{
+            role_permissions.try_extend(permissions.into_iter())
+        }).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)?;
+
+        Ok(())
+    }
+
     /*---- Helper functions ----*/
 
-    fn is_authorized(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], permission_id: &[u8;32]) -> DispatchResult{
+    fn is_authorized(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, permission_id: &PermissionId) -> DispatchResult{
         Self::scope_exists(pallet_id, scope_id)?;
         Self::permission_exists(pallet_id, permission_id)?;
 
@@ -212,7 +208,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn has_role(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_ids: Vec<[u8;32]>)->DispatchResult {
+    fn has_role(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_ids: Vec<RoleId>)->DispatchResult {
         Self::scope_exists(pallet_id, scope_id)?;
 
         let user_roles = <RolesByUser<T>>::get((user, pallet_id, scope_id));
@@ -223,49 +219,31 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
     /// Also checks if pallet is stored. Need this function to expose the check to other pallets
-    fn scope_exists(pallet_id: u64, scope_id:&[u8;32]) -> DispatchResult{
+    fn scope_exists(pallet_id: u64, scope_id:&ScopeId) -> DispatchResult{
         ensure!(<Scopes<T>>::get(pallet_id).contains(&scope_id), Error::<T>::ScopeNotFound);
         Ok(())
     }
 
-    fn permission_exists(pallet_id: u64, permission_id: &[u8;32])->DispatchResult{
+    fn permission_exists(pallet_id: u64, permission_id: &PermissionId)->DispatchResult{
         ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
         Ok(()) 
     }
 
-    fn is_role_linked_to_pallet(pallet_id: u64, role_id: &[u8;32])-> DispatchResult{
+    fn is_role_linked_to_pallet(pallet_id: u64, role_id: &RoleId)-> DispatchResult{
         // The role exists, now  check if the role is assigned to that pallet
         <PalletRoles<T>>::get(pallet_id).iter().find(|pallet_role| *pallet_role==role_id )
             .ok_or(Error::<T>::RoleNotLinkedToPallet)?;
         Ok(())
     }
 
-    fn is_permission_linked_to_role(pallet_id: u64, role_id: &[u8;32], permission_id: &[u8;32])-> DispatchResult{
+    fn is_permission_linked_to_role(pallet_id: u64, role_id: &RoleId, permission_id: &PermissionId)-> DispatchResult{
         let role_permissions = <PermissionsByRole<T>>::get(pallet_id, role_id);
         ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole );
         Ok(())
     }
 
-    fn get_role_users_len(pallet_id: u64, scope_id:&[u8;32], role_id: &[u8;32]) -> usize{
+    fn get_role_users_len(pallet_id: u64, scope_id:&ScopeId, role_id: &RoleId) -> usize{
         <UsersByScope<T>>::get((pallet_id, scope_id, role_id)).len()
-    }
-
-    fn get_role_id(id_or_role: IdOrString<Self::RoleMaxLen>)->Result<[u8;32], DispatchError>{
-        let role_id = match id_or_role{
-            IdOrString::Id(id)=>id,
-            IdOrString::String(role_str)=> role_str.using_encoded(blake2_256),
-        };
-        ensure!(<Roles<T>>::contains_key(role_id), Error::<T>::RoleNotFound);
-        Ok(role_id)
-    }
-
-    fn get_permission(pallet_id: u64 ,id_or_permission: IdOrString<T::PermissionMaxLen>)->Result<[u8;32], DispatchError>{
-        let permission_id = match id_or_permission{
-            IdOrString::Id(id)=>id,
-            IdOrString::String(permission_str)=> permission_str.using_encoded(blake2_256),
-        };
-        ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
-        Ok(permission_id)
     }
 
     fn has_unique_elements(vec: Vec<u8>) -> bool{
