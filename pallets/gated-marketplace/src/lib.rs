@@ -256,7 +256,8 @@ pub mod pallet {
 		OfferIsFreezed,
 		/// Offer is not available at the moment
 		OfferIsNotAvailable,
-
+		/// Owner cannnot buy its own offer
+		CannotTakeOffer,
 	}
 
 	#[pallet::call]
