@@ -1,5 +1,5 @@
 use super::*;
-use frame_support::pallet_prelude::*;
+use frame_support::{pallet_prelude::*, traits::LockableCurrency};
 //use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
@@ -219,7 +219,7 @@ impl<T: Config> Pallet<T> {
         ensure!(Self::get_offer_status(offer_id, marketplace_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
        
         //TODO: Add transfer from currency trait
-
+        T::LocalCurrency::transfer(&authority, &owner_item, Self::get_offer_price(offer_id, marketplace_id), AllowDeath::No)?;
         //TODO: add transfer from uniques
         pallet_uniques::Pallet::<T>::do_transfer(collection_id, item_id, authority.clone(), |_, _|{
             Ok(())
@@ -231,6 +231,7 @@ impl<T: Config> Pallet<T> {
         Self::update_offer_status(offer_id)?;
 
         //TODO: remove the offer from all marketplace
+        Self::delete_offer(collection_id, item_id, offer_id)?;
 
         
         //TODO: create a new storage map offerid-boundedvec(marketplace_id)
@@ -531,8 +532,26 @@ impl<T: Config> Pallet<T> {
         //         Ok(())
         //     })?;
         // }
+        Ok(())
+    }
+
+    pub fn delete_offer(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult{
+        //remove from OffersData list
+        <OffersData<T>>::remove_prefix(offer_id, None);
+        //remove from OffersId list
+        <OffersId<T>>::remove(collection_id, item_id);
 
         Ok(())
+    }
+
+    pub fn get_offer_price(offer_id: [u8;32], marketplace_id : [u8;32]) -> Result<u128, DispatchError> {
+        //we already know that the offer exists, so we don't need to check it here.
+        //we have added a NotFound status in case the storage source is corrupted.
+        if let Some(offer) = <OffersData<T>>::get(offer_id, marketplace_id) {
+            return Ok(offer.price);
+        } else {
+            return Err(Error::<T>::OfferNotFound)?;
+        }
     }
 
 
