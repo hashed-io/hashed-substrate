@@ -152,8 +152,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_enlist_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
-        //ensure the origin is owner or admin
-        Self::can_enroll(authority.clone(), marketplace_id)?;
+        //TODO: ensure the user is a Marketparticipant
 
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -208,26 +207,30 @@ impl<T: Config> Pallet<T> {
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
         
+        //TODO: ensure the offer type
+
         //ensure owner is not the same as the buyer
         ensure!(owner_item != authority.clone(), Error::<T>::CannotTakeOffer);
 
-
         //ensure the selected item has an offer_id
         ensure!(<OffersId<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
-
 
         //ensure the offer is open and available
         ensure!(Self::get_offer_status(offer_id, marketplace_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
        
         //TODO: Add transfer from currency trait
 
-        //TODO: add transfer from uniques, admin needs to sign the transfer
+        //TODO: add transfer from uniques
         pallet_uniques::Pallet::<T>::do_transfer(collection_id, item_id, authority.clone(), |_, _|{
             Ok(())
         })?;
 
         //TODO: ensure the offer is not expired
-        //TODO: update offer status
+
+        //TODO: update offer status from all marketplaces
+        Self::update_offer_status(offer_id)?;
+
+        //TODO: remove the offer from all marketplace
 
         
         //TODO: create a new storage map offerid-boundedvec(marketplace_id)
@@ -401,6 +404,7 @@ impl<T: Config> Pallet<T> {
     /// If returns ok if the deletion was successful, error otherwise.
     /// Errors only could happen if the storage sources are corrupted.
     fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
+        //TODO: evaluate use iter_key_prefix ->instead iter()
         //Before to remove the marketplace, we need to remove all its associated authorities 
         // as well as the applicants/applications.
 
@@ -501,6 +505,34 @@ impl<T: Config> Pallet<T> {
         } else {
             return OfferType::NotFound;
         }
+    }
+
+    pub fn update_offer_status(offer_id: [u8;32]) -> DispatchResult{
+
+        let marketplaces_list = <OffersData<T>>::iter_prefix(offer_id).map(|(k1, _k2)|{
+            k1
+        });
+
+        for ele in marketplaces_list {
+            <OffersData<T>>::try_mutate::<_,_,_,DispatchError,_>(offer_id, ele, |offer|{
+                let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
+                offer.status = OfferStatus::Closed;
+                Ok(())
+            })?;
+        }
+
+        //Try this optimization next time.
+        // for ele in <OffersData<T>>::iter_prefix(offer_id).map(|(k1, _k2)|{
+        //     k1
+        // }){
+        //     <OffersData<T>>::try_mutate::<_,_,_,DispatchError,_>(offer_id, ele, |offer|{
+        //         let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
+        //         offer.status = OfferStatus::Closed;
+        //         Ok(())
+        //     })?;
+        // }
+
+        Ok(())
     }
 
 
