@@ -205,7 +205,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_take_offer(origin: OriginFor<T>, authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+    pub fn do_take_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
         
