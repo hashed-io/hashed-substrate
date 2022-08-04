@@ -26,13 +26,12 @@ pub enum MarketplaceRole{
     Admin,
     Appraiser,
     RedemptionSpecialist,
-    Applicant,
     Participant,
 }
 
 impl Default for MarketplaceRole{
     fn default() -> Self {
-        MarketplaceRole::Applicant
+        MarketplaceRole::Participant
     }
 }
 
@@ -43,19 +42,52 @@ impl MarketplaceRole{
             Self::Admin => "Admin".as_bytes().to_vec(),
             Self::Appraiser => "Appraiser".as_bytes().to_vec(),
             Self::RedemptionSpecialist => "Redemption_specialist".as_bytes().to_vec(),
-            Self::Applicant => "Applicant".as_bytes().to_vec(),
             Self::Participant => "Participant".as_bytes().to_vec(),
         }
     }
 
-    pub fn get_id(&self) -> [u8;32]{
+    pub fn id(&self) -> [u8;32]{
         self.to_vec().using_encoded(blake2_256)
     }
 
     pub fn enum_to_vec() -> Vec<Vec<u8>>{
         use crate::types::MarketplaceRole::*;
-        [Owner.to_vec(), Admin.to_vec(), Appraiser.to_vec(), RedemptionSpecialist.to_vec(),
-        Applicant.to_vec(), Participant.to_vec()].to_vec()
+        [Owner.to_vec(), Admin.to_vec(), Appraiser.to_vec(), RedemptionSpecialist.to_vec(), Participant.to_vec()].to_vec()
+    }
+}
+
+/// Extrinsics which require previous authorization to call them
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum Permission{
+    Enroll,
+    AddAuth,
+    RemoveAuth,
+    UpdateLabel,
+    RemoveMarketplace,
+}
+
+impl Permission{
+    pub fn to_vec(&self) -> Vec<u8>{
+        match self{
+            Self::Enroll => "Enroll".as_bytes().to_vec(),
+            Self::AddAuth => "AddAuth".as_bytes().to_vec(),
+            Self::RemoveAuth => "RemoveAuth".as_bytes().to_vec(),
+            Self::UpdateLabel => "UpdateLabel".as_bytes().to_vec(),
+            Self::RemoveMarketplace => "RemoveMarketplace".as_bytes().to_vec(),
+        }
+    }
+
+    pub fn id(&self) -> [u8;32]{
+        self.to_vec().using_encoded(blake2_256)
+    }
+
+    pub fn admin_permissions()-> Vec<Vec<u8>>{
+        use crate::types::Permission::*;
+        [Enroll.to_vec(),
+        AddAuth.to_vec(),
+        RemoveAuth.to_vec(),
+        UpdateLabel.to_vec(),
+        RemoveMarketplace.to_vec()].to_vec()
     }
 }
 

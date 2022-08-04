@@ -12,19 +12,18 @@ use pallet_rbac::types::*;
 impl<T: Config> Pallet<T> {
 
     pub fn do_initial_setup()->DispatchResult{
-        let pallet_id = Self::get_pallet_id();
+        let pallet_id = Self::pallet_id();
         let mut super_roles = Vec::<Vec<u8>>::new();
-        let mut super_permissions = Vec::<Vec<u8>>::new();
         super_roles.push(MarketplaceRole::Owner.to_vec());
         super_roles.push(MarketplaceRole::Admin.to_vec());
-        super_permissions.push("enroll".as_bytes().to_vec());
-        super_permissions.push("add_authority".as_bytes().to_vec());
-        super_permissions.push("remove_authority".as_bytes().to_vec());
-        super_permissions.push("update_label_marketplace".as_bytes().to_vec());
         let super_role_ids = T::Rbac::create_and_set_roles(pallet_id, super_roles)?;
         for super_role in super_role_ids{
-            T::Rbac::create_and_set_permissions(pallet_id, super_role, super_permissions.clone())?;
+            T::Rbac::create_and_set_permissions(pallet_id, super_role, Permission::admin_permissions())?;
         }
+        // participant role and permissions
+        let participant_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::Participant.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id, participant_role_id[0],["buy".as_bytes().to_vec(),"sell".as_bytes().to_vec()].to_vec() )?;
+
         Ok(())
     }
 
@@ -34,7 +33,7 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
-        T::Rbac::create_scope(Self::get_pallet_id(),marketplace_id.clone())?;
+        T::Rbac::create_scope(Self::pallet_id(),marketplace_id.clone())?;
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
@@ -70,10 +69,8 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_enroll(authority: T::AccountId, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
-        // T::Rbac::is_user_authorized(authority,Self::get_pallet_id(), marketplace_id, 
-        //     IdOrString::String(BoundedVec::try_from("henlo".as_bytes().to_vec()).expect("erfge")) )?;
-        Self::can_enroll(authority, marketplace_id)?;
-        //T::Rbac::is_user_authorized(authority, Self::get_pallet_id(), &marketplace_id, MarketplaceAuthority::Owner. );
+        //Self::can_enroll(authority, marketplace_id)?;
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::Enroll)?;
         let next_status = match approved{
             true => ApplicationStatus::Approved,
             false => ApplicationStatus::Rejected,
@@ -99,8 +96,8 @@ impl<T: Config> Pallet<T> {
     pub fn do_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32], ) -> DispatchResult {
         //ensure the origin is owner or admin
         //TODO: implement copy trait for MarketplaceAuthority & T::AccountId
-        Self::can_enroll(authority, marketplace_id)?;
-
+        //Self::can_enroll(authority, marketplace_id)?;
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::AddAuth)?;
         //ensure the account is not already an authority
         // handled by T::Rbac::assign_role_to_user
         //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
@@ -122,8 +119,8 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_remove_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32], ) -> DispatchResult {
         //ensure the origin is owner or admin
-        Self::can_enroll(authority.clone(), marketplace_id)?;
-
+        //Self::can_enroll(authority.clone(), marketplace_id)?;
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::RemoveAuth)?;
         //ensure the account has the selected authority before to try to remove
         // T::Rbac handles the if role doesnt hasnt been asigned to the user
         //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AuthorityNotFoundForUser);
@@ -158,7 +155,8 @@ impl<T: Config> Pallet<T> {
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         //ensure the origin is owner or admin
-        Self::can_enroll(authority, marketplace_id)?;
+        //Self::can_enroll(authority, marketplace_id)?;
+        Self::is_authorized(authority, &marketplace_id, Permission::UpdateLabel)?;
         //update marketplace
         Self::update_label(marketplace_id, new_label)?;
         Self::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
@@ -170,7 +168,8 @@ impl<T: Config> Pallet<T> {
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
         //ensure the origin is owner or admin
-        Self::can_enroll(authority, marketplace_id)?;
+        //Self::can_enroll(authority, marketplace_id)?;
+        Self::is_authorized(authority, &marketplace_id, Permission::RemoveMarketplace)?;
         //remove marketplace
         Self::remove_selected_marketplace(marketplace_id)?;
         Self::deposit_event(Event::MarketplaceRemoved(marketplace_id));
@@ -206,8 +205,8 @@ impl<T: Config> Pallet<T> {
 
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceRole, marketplace_id: [u8;32])->DispatchResult{
 
-        T::Rbac::assign_role_to_user(authority.clone(), Self::get_pallet_id(),
-             &marketplace_id, role.get_id())?;
+        T::Rbac::assign_role_to_user(authority.clone(), Self::pallet_id(),
+             &marketplace_id, role.id())?;
         
         Ok(())
     }
@@ -216,7 +215,7 @@ impl<T: Config> Pallet<T> {
         <ApplicantsByMarketplace<T>>::try_mutate(marketplace_id, status,|applicants|{
             applicants.try_push(applicant)
         }).map_err(|_| Error::<T>::ExceedMaxApplicants)?;
-        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
+
         Ok(())
     }
 
@@ -224,7 +223,7 @@ impl<T: Config> Pallet<T> {
         <Custodians<T>>::try_mutate(custodian, marketplace_id, | applications |{
             applications.try_push(applicant)
         }).map_err(|_| Error::<T>::ExceedMaxApplicationsPerCustodian)?;
-        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
+
         Ok(())
     }
 
@@ -233,7 +232,7 @@ impl<T: Config> Pallet<T> {
             let applicant_index = applicants.iter().position(|a| *a==applicant.clone())
                 .ok_or(Error::<T>::ApplicantNotFound)?;
             applicants.remove(applicant_index);
-        // TODO: implement rbac for applicants ApplicantsByMarketplace is necessary and ?
+
             Ok(())
         })
     }
@@ -241,8 +240,8 @@ impl<T: Config> Pallet<T> {
 
     fn remove_from_market_lists(account: T::AccountId, author_type: MarketplaceRole , marketplace_id : [u8;32])->DispatchResult{
 
-        T::Rbac::remove_role_from_user(account, Self::get_pallet_id(), 
-            &marketplace_id, author_type.get_id())?;
+        T::Rbac::remove_role_from_user(account, Self::pallet_id(), 
+            &marketplace_id, author_type.id())?;
         Ok(())
 
     }
@@ -261,42 +260,38 @@ impl<T: Config> Pallet<T> {
             }
             Ok(())
         })?;
+        ensure!(prev_status != next_status, Error::<T>::AlreadyEnrolled);
         //remove from previous state list
         Self::remove_from_applicants_lists(applicant.clone(),prev_status, marketplace_id)?;
 
         //insert in current state list
-        Self::insert_in_applicants_lists(applicant, next_status,marketplace_id)?;
+        Self::insert_in_applicants_lists(applicant.clone(), next_status,marketplace_id)?;
+
+        if prev_status == ApplicationStatus::Approved{
+            T::Rbac::remove_role_from_user(applicant.clone(), Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?;
+        }
+        if next_status == ApplicationStatus::Approved{
+            T::Rbac::assign_role_to_user(applicant, Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?
+        }
+
         Ok(())
     }
 
-    fn can_enroll( authority: T::AccountId, marketplace_id: [u8;32] ) -> DispatchResult{
-        // to enroll, the account needs to be an owner or an admin
-        // let roles = <MarketplacesByAuthority<T>>::try_get(authority, marketplace_id)
-        //     .map_err(|_| Error::<T>::CannotEnroll)?;
-        // // iter().any could be called too but this maps directly to desired error
-        // roles.iter().find(|&role|{
-        //     role.eq(&MarketplaceAuthority::Owner) || role.eq(&MarketplaceAuthority::Admin)
-        // }).ok_or(Error::<T>::CannotEnroll)?;
-        let auths = [
-            MarketplaceRole::Owner.get_id(), 
-            MarketplaceRole::Admin.get_id()  
-        ].to_vec();
-        //TODO: Test if the auth mechanism works
-        T::Rbac::has_role(authority.clone(),Self::get_pallet_id(), &marketplace_id,auths)
+    fn is_authorized( authority: T::AccountId, marketplace_id: &[u8;32], permission: Permission ) -> DispatchResult{
+        T::Rbac::is_authorized(
+            authority,
+            Self::pallet_id(), 
+            &marketplace_id,
+            &permission.id(),
+        )
     }
 
 
     ///Lets us know if the selected user is an admin.
     /// It returns true if the user is an admin, false otherwise.
     fn is_admin(account: T::AccountId, marketplace_id: [u8;32]) -> bool{
-        // let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
-        //     Ok(roles) => roles,
-        //     Err(_) => return false,
-        // };
-
-        // roles.iter().any(|&authority_type| authority_type == MarketplaceAuthority::Admin)
-        T::Rbac::has_role(account, Self::get_pallet_id(), 
-            &marketplace_id, [MarketplaceRole::Admin.get_id()].to_vec()).is_ok()
+        T::Rbac::has_role(account, Self::pallet_id(), 
+            &marketplace_id, [MarketplaceRole::Admin.id()].to_vec()).is_ok()
     }
 
 
@@ -320,8 +315,8 @@ impl<T: Config> Pallet<T> {
         // };
         
         //owners.len() == 1 
-        T::Rbac::get_role_users_len(Self::get_pallet_id(), 
-            &marketplace_id, &MarketplaceRole::Owner.get_id()) == 1
+        T::Rbac::get_role_users_len(Self::pallet_id(), 
+            &marketplace_id, &MarketplaceRole::Owner.id()) == 1
     }
 
     /// Let us update the marketplace's label.
@@ -343,20 +338,9 @@ impl<T: Config> Pallet<T> {
         // as well as the applicants/applications.
 
         //First we need to get the list of all the authorities for the marketplace.
-        // let _users = <AuthoritiesByMarketplace<T>>::iter_prefix(marketplace_id)
-        // .map(|(_authority, users)| users).flatten().collect::<Vec<_>>();
-
-        // //1. remove from MarketplacesByAuthority
-        // _users.iter().for_each(|user|{
-        //     <MarketplacesByAuthority<T>>::remove(user, marketplace_id);
-        // });
-
-        // //2. remove from authorities by marketplace list
-        // <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
-
-        //3. remove from Applications lists
         let mut applications =  Vec::new();
-
+        
+        // remove from Applications lists
         for ele in <ApplicationsByAccount<T>>::iter() {
             if ele.1 == marketplace_id {
                 applications.push(ele.2);
@@ -367,23 +351,24 @@ impl<T: Config> Pallet<T> {
             <Applications<T>>::remove(application);
         }
 
-        //4. remove from ApplicationsByAccount list
+        // remove from ApplicationsByAccount list
         <ApplicationsByAccount<T>>::iter().for_each(|(_k1, _k2, _k3)|{
             <ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
         });  
 
-        //5. remove from ApplicantsByMarketplace list
+        // remove from ApplicantsByMarketplace list
         <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
 
-        //6. remove from Custodians list
+        // remove from Custodians list
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
                 <Custodians<T>>::remove(_k1, marketplace_id);
         });
 
-        //7. remove from Marketplaces list
+        // remove from Marketplaces list
         <Marketplaces<T>>::remove(marketplace_id);
 
-        T::Rbac::remove_scope(Self::get_pallet_id(), marketplace_id)?;
+        T::Rbac::remove_scope(Self::pallet_id(), marketplace_id)?;
+
         Ok(())
     }
 
@@ -412,12 +397,8 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn get_pallet_id()->u64{
+    pub fn pallet_id()->u64{
         Self::index().try_into().unwrap()
-    }
-
-    pub fn str_to_bvec_uncheked<Len: Get<u32>>(str: &str)->BoundedVec<u8, Len>{
-        BoundedVec::<u8,Len>::try_from(str.as_bytes().to_vec()).expect("Conversion error")
     }
 
 }

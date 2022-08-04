@@ -164,6 +164,8 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		MarketplaceNotFound,
 		/// You need to be an owner or an admin of the marketplace
 		CannotEnroll,
+		/// There was no change regarding the application status
+		AlreadyEnrolled,
 		/// There cannot be more than one owner per marketplace
 		OnlyOneOwnerIsAllowed,
 		/// Cannot remove the owner of the marketplace

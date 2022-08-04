@@ -101,9 +101,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
     fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<[u8;32], DispatchError>{
         let permission_id = permission.using_encoded(blake2_256);
-        //let b_permission= BoundedVec::<u8, Self::PermissionMaxLen>::try_from(permission);
+
         let b_permission = Self::bound::
             <_,T::PermissionMaxLen>(permission, Error::<T>::ExceedPermissionMaxLen)?;
+
         // Testing: a boundedvec id should be equal to a vec id because they have the same data
         ensure!(permission_id == b_permission.using_encoded(blake2_256), Error::<T>::NoneValue);
 
@@ -178,19 +179,15 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
     /*---- Helper functions ----*/
 
-    /// Authorize by role, not permissions
-    fn is_user_authorized(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], role_id : &[u8;32] ) -> DispatchResult{
-        // get id, whether is given directly or by its string in boundedvec format
-        //let role_id = Self::get_role_id(role)?;
+    fn is_authorized(user: T::AccountId, pallet_id: u64, scope_id: &[u8;32], permission_id: &[u8;32]) -> DispatchResult{
         Self::scope_exists(pallet_id, scope_id)?;
-        Self::is_role_linked_to_pallet(pallet_id, role_id)?;
-        // Perform confirmation on both maps
-        // TODO: test if a role that doesnt exists cause any errors
-        let users = <UsersByScope<T>>::get( (pallet_id, scope_id, role_id) );
-        ensure!(users.contains(&user), Error::<T>::NotAuthorized);
-        let roles = <RolesByUser<T>>::get((user, pallet_id, scope_id));
-        // Not likely to happen but just in case:
-        ensure!(roles.contains(&role_id), Error::<T>::NotAuthorized );
+        Self::permission_exists(pallet_id, permission_id)?;
+
+        // get roles the user has in this scope
+        let user_roles = <RolesByUser<T>>::get((user, pallet_id, scope_id));
+        // determine if one of the roles has the requested permission
+        let has_permission = user_roles.iter().any(|r_id| <PermissionsByRole<T>>::get(pallet_id, r_id).contains(permission_id));
+        ensure!(has_permission, Error::<T>::NotAuthorized);
         Ok(())
     }
 
@@ -210,10 +207,21 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    fn permission_exists(pallet_id: u64, permission_id: &[u8;32])->DispatchResult{
+        ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
+        Ok(()) 
+    }
+
     fn is_role_linked_to_pallet(pallet_id: u64, role_id: &[u8;32])-> DispatchResult{
         // The role exists, now  check if the role is assigned to that pallet
         <PalletRoles<T>>::get(pallet_id).iter().find(|pallet_role| *pallet_role==role_id )
             .ok_or(Error::<T>::RoleNotLinkedToPallet)?;
+        Ok(())
+    }
+
+    fn is_permission_linked_to_role(pallet_id: u64, role_id: &[u8;32], permission_id: &[u8;32])-> DispatchResult{
+        let role_permissions = <PermissionsByRole<T>>::get(pallet_id, role_id);
+        ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole );
         Ok(())
     }
 

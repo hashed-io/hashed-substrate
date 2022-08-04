@@ -169,6 +169,8 @@ pub mod pallet {
 		UserAlreadyHasRole,
 		/// The role exists but it hasn't been linked to the pallet
 		RoleNotLinkedToPallet,
+		/// The permission wasn't found in the roles capabilities
+		PermissionNotLinkedToRole,
 		/// The user doesn't have any roles in this pallet
 		UserHasNoRoles,
 		/// The role doesn't have any users assigned to it
