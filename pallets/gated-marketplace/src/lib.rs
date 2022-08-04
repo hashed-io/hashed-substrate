@@ -436,7 +436,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 			<ApplicationsByAccount<T>>::remove_all(None);
 			<ApplicantsByMarketplace<T>>::remove_all(None);
 			<Custodians<T>>::remove_all(None);
-			// TODO: call T::Rbac::remove_pallet_storage
+			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
 

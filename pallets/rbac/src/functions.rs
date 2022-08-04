@@ -19,7 +19,6 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     }
 
     fn remove_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult{
-        // WIP
         // remove on scopes
         <Scopes<T>>::try_mutate_exists::<_,(),DispatchError,_>(pallet_id, |scopes_option|{
             let scopes = scopes_option.as_mut().ok_or(Error::<T>::ScopeNotFound)?;
@@ -44,6 +43,28 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    fn remove_pallet_storage(pallet_id: u64) -> DispatchResult{
+
+        //remove all scopes
+        let scopes = <Scopes<T>>::get(pallet_id);
+        for scope in scopes{
+            Self::remove_scope(pallet_id, scope)?;
+        }
+        // remove all roles
+        let pallet_roles = <PalletRoles<T>>::take(pallet_id);
+        //check if there's other pallet that uses the roles, if not, remove them
+        let all_pallet_roles = <PalletRoles<T>>::iter().map(| p| p.1.to_vec())
+            .collect::<Vec<Vec<[u8; 32]>>>();
+        let flatten_all_pallet_roles = all_pallet_roles.iter().flatten().collect::<Vec<&[u8;32]>>();
+        let filtered_roles = pallet_roles.iter().filter(|pallet_role| !flatten_all_pallet_roles.contains(pallet_role));
+        filtered_roles.for_each(|role|{
+            <Roles<T>>::remove(role);
+        });
+        //remove all permissions
+        <PermissionsByRole<T>>::remove_prefix(pallet_id, None);
+        <Permissions<T>>::remove_prefix(pallet_id, None);
+        Ok(())
+    }
     /// Inserts roles and links them to the pallet
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], T::MaxRolesPerPallet>, DispatchError>{

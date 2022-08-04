@@ -17,6 +17,8 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn create_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult;
     // scope removal
     fn remove_scope(pallet_id: u64, scope_id: [u8;32]) -> DispatchResult;
+    // removes all from one pallet/application
+    fn remove_pallet_storage(pallet_id: u64) -> DispatchResult;
     // roles creation and setting
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<[u8;32], Self::MaxRolesPerPallet>, DispatchError>;
