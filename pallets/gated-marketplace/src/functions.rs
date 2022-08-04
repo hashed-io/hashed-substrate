@@ -5,7 +5,6 @@ use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
 use frame_support::traits::{Currency, Contains};
-use frame_system::pallet_prelude::OriginFor;
 
 impl<T: Config> Pallet<T> {
 
