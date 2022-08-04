@@ -193,6 +193,8 @@ pub mod pallet {
 		MarketplaceRemoved([u8;32]),
 		/// Offer stored. [collection_id, item_id]
 		OfferStored(T::CollectionId, T::ItemId),
+		/// Offer was transferred to the specified account. [offer_id, account]
+		OfferTransferred([u8;32], T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
