@@ -39,14 +39,32 @@ impl<T: Config> Pallet<T> {
     Ok(())
   }
 
+  pub fn do_remove_owned_document(owner: T::AccountId, cid: CID) -> DispatchResult {
+    let doc = <OwnedDocs<T>>::try_get(&cid).map_err(|_| <Error<T>>::DocNotFound)?;
+    ensure!(doc.owner == owner, <Error<T>>::NotDocOwner); 
+    <OwnedDocsByOwner<T>>::try_mutate(&owner, |owned_vec| {
+      let cid_index = owned_vec.iter().position(|c| *c==cid).ok_or(<Error<T>>::CIDNotFound)?;
+      owned_vec.remove(cid_index);
+      Ok(())
+    }).map_err(|_:Error::<T>| <Error<T>>::CIDNotFound)?;
+    <OwnedDocs<T>>::remove(cid.clone());
+    Self::deposit_event(Event::OwnedDocRemoved(doc));
+    Ok(())
+  }
+
   pub fn do_share_document(owner: T::AccountId, mut shared_doc: SharedDoc<T>) -> DispatchResult {
     shared_doc.from = owner;
     Self::validate_shared_doc(&shared_doc)?;
     let SharedDoc {
       cid,
       to,
+      from,
       ..
     } = shared_doc.clone();
+
+    <SharedDocsByFrom<T>>::try_mutate(&from, |shared_vec| {
+      shared_vec.try_push(cid.clone())
+    }).map_err(|_| <Error<T>>::ExceedMaxSharedFromDocs)?;
     
     <SharedDocsByTo<T>>::try_mutate(&to, |shared_vec| {
       shared_vec.try_push(cid.clone())
@@ -54,6 +72,34 @@ impl<T: Config> Pallet<T> {
 
     <SharedDocs<T>>::insert(cid.clone(), shared_doc.clone());
     Self::deposit_event(Event::SharedDocStored(shared_doc));
+    Ok(())
+  }
+
+  pub fn do_update_shared_document_metadata(to: T::AccountId, mut shared_doc: SharedDoc<T>) -> DispatchResult {
+    let doc = <SharedDocs<T>>::try_get(&shared_doc.cid).map_err(|_| <Error<T>>::DocNotFound)?;
+    ensure!(doc.to == to, <Error<T>>::NotDocSharee);
+    shared_doc.from = doc.from;
+    shared_doc.to = to;
+    <SharedDocs<T>>::insert(doc.cid.clone(), shared_doc.clone());
+    Self::deposit_event(Event::SharedDocUpdated(shared_doc));
+    Ok(())
+  }
+
+  pub fn do_remove_shared_document(to: T::AccountId, cid: CID) -> DispatchResult {
+    let doc = <SharedDocs<T>>::try_get(&cid).map_err(|_| <Error<T>>::DocNotFound)?;
+    ensure!(doc.to == to, <Error<T>>::NotDocSharee); 
+    <SharedDocsByTo<T>>::try_mutate(&to, |shared_vec| {
+      let cid_index = shared_vec.iter().position(|c| *c==cid).ok_or(<Error<T>>::CIDNotFound)?;
+      shared_vec.remove(cid_index);
+      Ok(())
+    }).map_err(|_:Error::<T>| <Error<T>>::CIDNotFound)?;
+    <SharedDocsByFrom<T>>::try_mutate(&doc.from, |shared_vec| {
+      let cid_index = shared_vec.iter().position(|c| *c==cid).ok_or(<Error<T>>::CIDNotFound)?;
+      shared_vec.remove(cid_index);
+      Ok(())
+    }).map_err(|_:Error::<T>| <Error<T>>::CIDNotFound)?;
+    <SharedDocs<T>>::remove(cid.clone());
+    Self::deposit_event(Event::SharedDocRemoved(doc));
     Ok(())
   }
 

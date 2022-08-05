@@ -34,6 +34,9 @@ pub mod pallet {
 		/// Maximum number of confidential documents that a user can own
 		#[pallet::constant]
 		type MaxOwnedDocs: Get<u32>;
+		/// Maximum number of confidential documents that a user can share
+		#[pallet::constant]
+		type MaxSharedFromDocs: Get<u32>;
 		/// Maximum number of confidential documents that can be shared to a user
 		#[pallet::constant]
 		type MaxSharedToDocs: Get<u32>;
@@ -116,6 +119,16 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn shared_docs_by_from)]
+	pub(super) type SharedDocsByFrom<T: Config> = StorageMap<
+		_,
+		Blake2_256,
+		T::AccountId,
+		BoundedVec<CID, T::MaxSharedFromDocs>,
+		ValueQuery
+	>;
+
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -124,8 +137,14 @@ pub mod pallet {
 		VaultStored(UserId, PublicKey, Vault<T>),
 		/// Owned confidential document stored
 		OwnedDocStored(OwnedDoc<T>),
+		/// Owned confidential document removed
+		OwnedDocRemoved(OwnedDoc<T>),
 		/// Shared confidential document stored
 		SharedDocStored(SharedDoc<T>),
+		/// Shared confidential document metadata updated
+		SharedDocUpdated(SharedDoc<T>),
+		/// Shared confidential document removed
+		SharedDocRemoved(SharedDoc<T>),
 	}
 
 	#[pallet::error]
@@ -144,6 +163,12 @@ pub mod pallet {
 		AccountAlreadyHasPublicKey,
 		/// User is not document owner
 		NotDocOwner,
+		/// User is not document whom with the document was shared
+		NotDocSharee,
+		/// CID not found
+		CIDNotFound,
+		/// Document not found
+		DocNotFound,
 		/// The document has already been shared
 		DocAlreadyShared,
 		/// Shared with self
@@ -154,6 +179,8 @@ pub mod pallet {
 		ExceedMaxOwnedDocs,
 		/// Max documents shared with the "to" account has been exceeded
 		ExceedMaxSharedToDocs,
+		/// Max documents shared with the "from" account has been exceeded
+		ExceedMaxSharedFromDocs,
 		
 	}
 
@@ -162,7 +189,7 @@ pub mod pallet {
 		
 		/// Create a vault
 		/// 
-		/// Creates the calling user's vault and sets their public key
+		/// Creates the calling user's vault and sets their public cipher key
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is configuring their vault
@@ -191,6 +218,20 @@ pub mod pallet {
 			Self::do_set_owned_document(who, owned_doc)
 		}
 
+		/// Remove an owned document
+		/// 
+		/// Removes an owned document
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The owner of the document
+		/// - `cid`: of the document to be removed
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_owned_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_remove_owned_document(who, cid)
+		}
+
 		/// Share a document
 		/// 
 		/// Creates a shared document
@@ -204,6 +245,38 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			Self::do_share_document(who, shared_doc)
 		}
+
+		/// Update share document metadata
+		/// 
+		/// Updates share document metadata, only the user with which the document
+		/// was shared can update it
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The "to" user of the shared document
+		/// - `shared_doc`: Metadata related to the shared document
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn update_shared_document_metadata(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_update_shared_document_metadata(who, shared_doc)
+		}
+
+
+		/// Remove a shared document
+		/// 
+		/// Removes a shared document, only the user with whom the document was
+		/// is able to remove it
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The "to" user of the shared document
+		/// - `cid`: of the document to be removed
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_shared_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_remove_shared_document(who, cid)
+		}
+
 
 		/// Kill all the stored data.
 		/// 
@@ -227,6 +300,7 @@ pub mod pallet {
 			<OwnedDocsByOwner<T>>::remove_all(None);
 			<SharedDocs<T>>::remove_all(None);
 			<SharedDocsByTo<T>>::remove_all(None);
+			<SharedDocsByFrom<T>>::remove_all(None);
 			Ok(())
 		}
 	}

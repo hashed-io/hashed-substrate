@@ -59,6 +59,7 @@ impl system::Config for Test {
 parameter_types! {
 	pub const MaxOwnedDocs: u32 = 100;
 	pub const MaxSharedToDocs: u32 = 100;
+	pub const MaxSharedFromDocs: u32 = 100;
 	pub const DocNameMinLen: u32 = 4;
 	pub const DocNameMaxLen: u32 = 30;
 	pub const DocDescMinLen: u32 = 5;
@@ -71,6 +72,7 @@ impl pallet_confidential_docs::Config for Test {
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type MaxOwnedDocs = MaxOwnedDocs;
 	type MaxSharedToDocs = MaxSharedToDocs;
+	type MaxSharedFromDocs = MaxSharedFromDocs;
 	type DocNameMinLen = DocNameMinLen;
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
