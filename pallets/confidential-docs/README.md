@@ -13,8 +13,11 @@ Provides the backend services and metadata storage for the confidential docs sol
       - [Get a public key](#get-a-public-key)
       - [Create an owned confidential document](#create-an-owned-confidential-document)
       - [Get an owned confidential document by CID](#get-an-owned-confidential-document-by-cid)
+      - [Remove an owned confidential document](#remove-an-owned-confidential-document)
       - [Share a confidential document](#share-a-confidential-document)
       - [Get a shared confidential document by CID](#get-a-shared-confidential-document-by-cid)
+      - [Update a shared confidential document's metadata](#update-a-shared-confidential-documents-metadata)
+      - [Remove a shared confidential document](#remove-a-shared-confidential-document)
 ## Overview
 
 This module allows a user to: 
@@ -28,7 +31,10 @@ This module allows a user to:
 ### Dispachable functions
 - `set_vault` Creates the calling user's vault and sets their public cipher key
 - `set_owned_document` Creates a new owned document or updates an existing owned document's metadata
--  `share_document` Creates a shared document
+- `remove_owned_document` Removes an owned document
+- `share_document` Creates a shared document
+- `update_shared_document_metadata` Updates share document metadata
+- `remove_shared_document` Removes a shared document
 
 ### Getters
 - `vaults`
@@ -37,6 +43,7 @@ This module allows a user to:
 - `owned_docs_by_owner`
 - `shared_docs`
 - `shared_docs_by_to`
+- `shared_docs_by_from`
 
 ## Usage
 
@@ -109,6 +116,11 @@ const ownedDoc = await api.query.confidentialDocs.ownedDocs(cid);
 }
 ```
 
+#### Remove an owned confidential document
+```js
+const response = await api.tx.confidentialDocs.removeOwnedDocument("QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr").signAndSend(alice);
+```
+
 #### Share a confidential document
 ```js
 const response = await api.tx.confidentialDocs.shareDocument({
@@ -134,4 +146,18 @@ const sharedDoc = await api.query.confidentialDocs.sharedDocs(cid);
      "to": "5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua",
      "from": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG"
 }
+```
+
+#### Update a shared confidential document's metadata
+```js
+const response = await api.tx.confidentialDocs.updateSharedDocumentMetadata({
+     "cid": "QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr",
+     "name": "name",
+     "description": "desc"
+    }).signAndSend(alice);
+```
+
+#### Remove a shared confidential document
+```js
+const response = await api.tx.confidentialDocs.removeSharedDocument("QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr").signAndSend(alice);
 ```
