@@ -81,10 +81,7 @@ pub mod pallet {
 		/// `AssetDeposit` funds of sender are reserved.
 		///
 		/// Parameters:
-		/// - `asset_id`: The identifier of the new asset. This must not be currently in use to identify
-		/// an existing asset.
-		/// - `class`: The identifier of the new asset class. This must not be currently in use.
-		/// - `admin`: The admin of this class of assets. The admin is the initial address of each
+		/// - `class_id`: The identifier of the new asset class. This must not be currently in use.
 		/// member of the asset class's admin team.
 		///
 		/// Emits `FruniqueCreated` event when successful.
@@ -94,17 +91,20 @@ pub mod pallet {
 		pub fn create(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
-			instance_id: T::ItemId,
 			numeric_value: Option<Permill>,
-			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		) -> DispatchResult {
 			let owner = ensure_signed(origin.clone())?;
 
 			// create an NFT in the uniques pallet
-			Self::do_create(origin.clone(), class_id, instance_id, numeric_value, admin.clone())?;
+			Self::do_create(
+				origin.clone(),
+				class_id,
+				Self::u32_to_instance_id(0),
+				1,
+				numeric_value,
+				Self::account_id_to_lookup_source(&owner))?;
 
-			let admin = T::Lookup::lookup(admin)?;
-			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
+			Self::deposit_event(Event::FruniqueCreated(owner.clone(), owner, class_id, 0));
 
 			Ok(())
 		}
@@ -127,12 +127,12 @@ pub mod pallet {
 
 		/// ## Set multiple attributes to a frunique.
 		/// `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
 		/// `key` must be a valid key for the asset class.
 		/// `value` must be a valid value for the asset class.
 		/// `attributes` must not be empty.
-		/// - `instance_id` must be a valid instance of the asset class.
-		/// - `class_id` must be a valid class of the asset class.
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_attributes(
@@ -161,45 +161,45 @@ pub mod pallet {
 		}
 
 		/// ## Create a frunique with given attributes.
-		/// `origin` must be signed by the owner of the frunique.
+		/// `origin` the signer would become the owner and the admin of the asset class.
+		/// - `class_id` the collection id of the asset class.
+		/// - `amount` the amount of tokens to mint.
+		/// - `numeric_value` must be a valid value for the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
 		/// `key` must be a valid key for the asset class.
 		/// `value` must be a valid value for the asset class.
 		/// `attributes` must not be empty.
-		/// - `instance_id` must be a valid instance of the asset class.
-		/// - `class_id` must be a valid class of the asset class.
-		/// - `numeric_value` must be a valid value for the asset class.
-		/// - `admin` must be a valid admin of the asset class.
-		/// - `instance_id` must not be already in use.
-		/// - `class_id` must not be already in use.
-		/// - `numeric_value` must not be already in use.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_with_attributes(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
-			instance_id: T::ItemId,
+			amount: u32,
 			numeric_value: Option<Permill>,
-			admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 			attributes: Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>,
 		) -> DispatchResult {
-			// ! Ensure the admin is the one who can add attributes to the frunique.
-			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
 
+			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
 			let owner = ensure_signed(origin.clone())?;
 			// create an NFT in the uniques pallet
-			Self::do_create(origin.clone(), class_id, instance_id, numeric_value, admin.clone())?;
+			Self::do_create(
+				origin.clone(),
+				class_id,
+				Self::u32_to_instance_id(0),
+				amount,
+				numeric_value,
+				Self::account_id_to_lookup_source(&owner))?;
+
 			for attribute in &attributes {
 				Self::set_attribute(
 					origin.clone(),
 					&class_id.clone(),
-					Self::u32_to_instance_id(instance_id.clone()),
+					Self::u32_to_instance_id(0),
 					attribute.0.clone(),
 					attribute.1.clone(),
 				)?;
 			}
 
-			let admin = T::Lookup::lookup(admin)?;
-			Self::deposit_event(Event::FruniqueCreated(owner, admin, class_id, instance_id));
+			Self::deposit_event(Event::FruniqueCreated(owner.clone(), owner, class_id, 0));
 			Ok(())
 		}
 
@@ -316,7 +316,6 @@ pub mod pallet {
 			// (n - 5) -> m parts of parent
 			// m parts of the new frunique
 			// n
-
 
 			Ok(())
 		}

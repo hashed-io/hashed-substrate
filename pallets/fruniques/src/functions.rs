@@ -47,10 +47,29 @@ impl<T: Config> Pallet<T> {
 		BoundedVec::<u8, T::ValueLimit>::default()
 	}
 
+	/// Helper function to get the admin of a NFT
 	pub fn admin_of(class_id: &T::CollectionId, instance_id: &T::ItemId) -> Option<T::AccountId> {
 		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
 	}
 
+	/// Helper function to get the parent id from an instance
+	/// It returns the value of the `parent_id` key
+	/// - `class_id`: The class of the unique.
+	/// - `instance_id`: The instance_id of the unique.
+	pub fn get_parent(
+		class_id: &T::CollectionId,
+		instance_id: &T::ItemId,
+	) -> BoundedVec<u8, T::ValueLimit> {
+		let parent_id = Self::get_nft_attribute(&class_id, &instance_id, &"parent_id".encode());
+
+		if parent_id.len() > 0 {
+			return parent_id;
+		} else {
+			return BoundedVec::<u8, T::ValueLimit>::default();
+		}
+	}
+
+	/// Helper function to set an attribute to a specific NFT
 	pub fn set_attribute(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -68,6 +87,11 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	/// Helper function to mint a unique
+	/// - `origin`: The origin of the call.
+	/// - `class_id`: The class of the unique.
+	/// - `instance_id`: The instance of the unique.
+	/// - `owner`: The owner of the unique.
 	pub fn mint(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -87,8 +111,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// TODO: add a function to get the owner of an instance
-	// TODO: add a function to burn an instance
 	pub fn burn(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -106,16 +128,19 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// TODO: add a function to transfer an instance
 	pub fn do_create(
 		origin: OriginFor<T>,
 		class_id: T::CollectionId,
 		instance_id: T::ItemId,
+		_amount: u32,
 		numeric_value: Option<Permill>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
 
+		// for _i in 0..amount {
+		// 	Self::mint(origin.clone(), &class_id, instance_id, admin.clone())?;
+		// }
 		Self::mint(origin.clone(), &class_id, instance_id.clone(), admin.clone())?;
 
 		if let Some(n) = numeric_value {
@@ -138,4 +163,10 @@ impl<T: Config> Pallet<T> {
 	pub fn do_spawn() -> DispatchResult {
 		Ok(())
 	}
+
+
+	pub fn do_create_fungible() -> DispatchResult {
+		Ok(())
+	}
+
 }
