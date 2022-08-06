@@ -1,5 +1,6 @@
 use super::*;
 use frame_support::pallet_prelude::*;
+use frame_support::sp_io::hashing::blake2_256;
 //use frame_system::pallet_prelude::*;
 use crate::types::*;
 
@@ -7,14 +8,20 @@ impl<T: Config> Pallet<T> {
 	
   pub fn do_set_vault(owner: T::AccountId, user_id: UserId, public_key: PublicKey, cid: CID) -> DispatchResult {
     Self::validate_cid(&cid)?;
-    ensure!(!<Vaults<T>>::contains_key(&user_id), <Error<T>>::UserAlreadyHasVault);
-    ensure!(!<PublicKeys<T>>::contains_key(&owner), <Error<T>>::AccountAlreadyHasPublicKey);
+    let hashed_account =  owner.using_encoded(blake2_256);
+    if let Some(uid) = <UserIds<T>>::get(&hashed_account){
+      ensure!(uid == user_id, <Error<T>>::NotOwnerOfUserId);
+    } else {
+      ensure!(!<Vaults<T>>::contains_key(&user_id), <Error<T>>::NotOwnerOfVault);
+    }
+    
     let vault = Vault{
       cid: cid.clone(),
       owner: owner.clone()
     };
     <Vaults<T>>::insert(user_id, vault.clone());
-    <PublicKeys<T>>::insert(owner.clone(), public_key.clone());
+    <PublicKeys<T>>::insert(owner.clone(), public_key);
+    <UserIds<T>>::insert(hashed_account.clone(), user_id);
 
     Self::deposit_event(Event::VaultStored(user_id, public_key, vault));
     Ok(())

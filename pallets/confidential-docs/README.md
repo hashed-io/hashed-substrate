@@ -29,7 +29,7 @@ This module allows a user to:
 ## Interface
 
 ### Dispachable functions
-- `set_vault` Creates the calling user's vault and sets their public cipher key
+- `set_vault` Creates/Updates the calling user's vault and sets their public cipher key
 - `set_owned_document` Creates a new owned document or updates an existing owned document's metadata
 - `remove_owned_document` Removes an owned document
 - `share_document` Creates a shared document

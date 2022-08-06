@@ -80,6 +80,16 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn users_ids)]
+	pub(super) type UserIds<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8; 32], 
+		UserId,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn owned_docs)]
 	pub(super) type OwnedDocs<T: Config> = StorageMap<
 		_, 
@@ -157,6 +167,10 @@ pub mod pallet {
 		DocDescTooShort,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		/// Origin is not the owner of the user id
+		NotOwnerOfUserId,
+		/// Origin is not the owner of the vault
+		NotOwnerOfVault,
 		/// The user already has a vault
 		UserAlreadyHasVault,
 		/// The user already has a public key
@@ -181,15 +195,16 @@ pub mod pallet {
 		ExceedMaxSharedToDocs,
 		/// Max documents shared with the "from" account has been exceeded
 		ExceedMaxSharedFromDocs,
+
 		
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		
-		/// Create a vault
+		/// Create/Update a vault
 		/// 
-		/// Creates the calling user's vault and sets their public cipher key
+		/// Creates/Updates the calling user's vault and sets their public cipher key
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is configuring their vault

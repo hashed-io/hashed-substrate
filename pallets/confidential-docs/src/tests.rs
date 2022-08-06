@@ -111,14 +111,23 @@ fn assert_shared_doc_not_exists(doc: &SharedDoc<Test>){
 #[test]
 fn set_vault_works() {
 	new_test_ext().execute_with(|| {
+		let owner = 1;
 		let user_id = generate_user_id("1");
 		let public_key = generate_public_key("1");
 		let cid = generate_cid("1");
-		assert_ok!(ConfidentialDocs::set_vault(Origin::signed(1), user_id, public_key, cid.clone()));
+		assert_ok!(ConfidentialDocs::set_vault(Origin::signed(owner), user_id, public_key, cid.clone()));
 		// Read pallet storage and assert an expected result.
-		let vault = Vault { cid, owner: 1 };
+		let vault = Vault { cid, owner };
 		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault));
-		assert_eq!(ConfidentialDocs::public_keys(1), Some(public_key));
+		assert_eq!(ConfidentialDocs::public_keys(owner), Some(public_key));
+
+		let public_key = generate_public_key("2");
+		let cid = generate_cid("2");
+		assert_ok!(ConfidentialDocs::set_vault(Origin::signed(owner), user_id, public_key, cid.clone()));
+		// Read pallet storage and assert an expected result.
+		let vault = Vault { cid, owner };
+		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault));
+		assert_eq!(ConfidentialDocs::public_keys(owner), Some(public_key));
 		// assert_eq!(last_event(), Event::VaultStored(user_id, public_key, ))
 	});
 }
@@ -137,36 +146,33 @@ fn set_vault_should_fail_for_empty_cid() {
 }
 
 #[test]
-fn set_vault_should_fail_for_user_with_vault() {
+fn set_vault_should_fail_for_origin_not_owner_of_user_id() {
 	new_test_ext().execute_with(|| {
 		let user_id = generate_user_id("1");
 		let public_key = generate_public_key("1");
 		let cid = generate_cid("1");
 		assert_ok!(ConfidentialDocs::set_vault(Origin::signed(1), user_id, public_key, cid.clone()));
 		assert_noop!(
-			ConfidentialDocs::set_vault(Origin::signed(1), user_id, public_key, cid),
-			Error::<Test>::UserAlreadyHasVault
+			ConfidentialDocs::set_vault(Origin::signed(1), generate_user_id("2"), public_key, cid),
+			Error::<Test>::NotOwnerOfUserId
 		);
 	});
 }
 
 #[test]
-fn set_vault_should_fail_for_account_with_public_key() {
+fn set_vault_should_fail_for_origin_not_owner_of_vault() {
 	new_test_ext().execute_with(|| {
+		let user_id = generate_user_id("1");
 		let public_key = generate_public_key("1");
 		let cid = generate_cid("1");
-		assert_ok!(ConfidentialDocs::set_vault(
-			Origin::signed(1),
-			generate_user_id("1"),
-			public_key,
-			cid.clone()
-		));
+		assert_ok!(ConfidentialDocs::set_vault(Origin::signed(1), user_id, public_key, cid.clone()));
 		assert_noop!(
-			ConfidentialDocs::set_vault(Origin::signed(1), generate_user_id("2"), public_key, cid),
-			Error::<Test>::AccountAlreadyHasPublicKey
+			ConfidentialDocs::set_vault(Origin::signed(2), user_id, public_key, cid),
+			Error::<Test>::NotOwnerOfVault
 		);
 	});
 }
+
 
 #[test]
 fn set_owned_document_works() {
