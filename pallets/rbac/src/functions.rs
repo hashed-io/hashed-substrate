@@ -153,7 +153,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         for permision in permissions{
             permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
         }
-        Self::set_multiple_permisions_to_role(pallet_id, role_id, permission_ids.clone())?;
+        Self::set_multiple_permissions_to_role(pallet_id, role_id, permission_ids.clone())?;
         let b_permissions =  Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
         Ok(b_permissions)
     }
@@ -181,7 +181,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    fn set_multiple_permisions_to_role(  pallet_id: u64, role_id: RoleId, permissions: Vec<PermissionId> )-> DispatchResult{
+    fn set_multiple_permissions_to_role(  pallet_id: u64, role_id: RoleId, permissions: Vec<PermissionId> )-> DispatchResult{
         // checks for duplicates:
         let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
         for id in permissions.clone(){

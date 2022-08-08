@@ -38,7 +38,7 @@ pub trait RoleBasedAccessControl<AccountId>{
         Result<BoundedVec<PermissionId, Self::MaxPermissionsPerRole>, DispatchError>;
     fn create_permission(pallet_id: u64, permissions: Vec<u8>) -> Result<PermissionId, DispatchError>;
     fn set_permission_to_role( pallet_id: u64, role: RoleId, permission: PermissionId ) -> DispatchResult;
-    fn set_multiple_permisions_to_role(  pallet_id: u64, role: RoleId, permission: Vec<PermissionId> )-> DispatchResult;
+    fn set_multiple_permissions_to_role(  pallet_id: u64, role: RoleId, permission: Vec<PermissionId> )-> DispatchResult;
     // helpers
     fn is_authorized(user: AccountId, pallet_id: u64, scope_id: &ScopeId, permission_id: &PermissionId ) -> DispatchResult;
     fn has_role(user: AccountId, pallet_id: u64, scope_id: &ScopeId, role_ids: Vec<RoleId>)->DispatchResult;
