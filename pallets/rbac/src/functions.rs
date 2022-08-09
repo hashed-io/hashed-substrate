@@ -1,6 +1,6 @@
 use super::*;
 use frame_support::{pallet_prelude::*};
-use frame_system::pallet_prelude::*;
+//use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use frame_support::sp_std::borrow::ToOwned;
 use sp_runtime::sp_std::vec::Vec;
@@ -245,14 +245,6 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     fn get_role_users_len(pallet_id: u64, scope_id:&ScopeId, role_id: &RoleId) -> usize{
         <UsersByScope<T>>::get((pallet_id, scope_id, role_id)).len()
     }
-
-    fn has_unique_elements(vec: Vec<u8>) -> bool{
-        let mut filtered_vec = vec.clone();
-        filtered_vec.sort();
-        filtered_vec.dedup();
-        vec.len() == filtered_vec.len()
-    }
-
 
     type MaxRolesPerPallet = T::MaxRolesPerPallet;
 

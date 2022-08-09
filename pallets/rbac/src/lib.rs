@@ -29,19 +29,19 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
+		#[pallet::constant]
 		type MaxScopesPerPallet: Get<u32>;
-
+		#[pallet::constant]
 		type MaxRolesPerPallet: Get<u32>;
-
+		#[pallet::constant]
 		type RoleMaxLen: Get<u32>;
-		
+		#[pallet::constant]
 		type PermissionMaxLen: Get<u32>;
-
+		#[pallet::constant]
 		type MaxPermissionsPerRole: Get<u32>;
-
+		#[pallet::constant]
 		type MaxRolesPerUser: Get<u32>;
-
+		#[pallet::constant]
 		type MaxUsersPerRole: Get<u32>;
 	}
 

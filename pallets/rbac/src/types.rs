@@ -1,4 +1,4 @@
-use super::*;
+//use super::*;
 use frame_support::pallet_prelude::*;
 use sp_runtime::sp_std::vec::Vec;
 
@@ -47,6 +47,5 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn is_role_linked_to_pallet(pallet_id: u64, role_id: &RoleId)-> DispatchResult;
     fn is_permission_linked_to_role(pallet_id: u64, role_id: &RoleId, permission_id: &PermissionId)-> DispatchResult;
     fn get_role_users_len(pallet_id: u64, scope_id:&ScopeId, role_id: &RoleId) -> usize;
-    fn has_unique_elements(vec: Vec<u8>) -> bool;
 
 }
