@@ -149,8 +149,6 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// The pallet doesn't have scopes associated
-		PalletNotFound,
 		/// The specified scope doesn't exists
 		ScopeNotFound,
 		/// The scope is already linked with the pallet

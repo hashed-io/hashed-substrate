@@ -80,7 +80,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     fn create_role(role: Vec<u8>)-> Result<RoleId, DispatchError>{
         let role_id = role.using_encoded(blake2_256);
         // no "get_or_insert" method found
-        let b_role = Self::bound::<_,T::RoleMaxLen>(role, Error::<T>::ExceedMaxRolesPerUser)?;
+        let b_role = Self::bound::<_,T::RoleMaxLen>(role, Error::<T>::ExceedRoleMaxLen)?;
         ensure!(role_id == b_role.using_encoded(blake2_256), Error::<T>::NoneValue);
         if !<Roles<T>>::contains_key(role_id) {<Roles<T>>::insert(role_id, b_role)};
         Ok(role_id)
