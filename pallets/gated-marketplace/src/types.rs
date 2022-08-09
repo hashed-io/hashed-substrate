@@ -99,11 +99,13 @@ pub enum OfferType{
 #[codec(mel_bound())]
 pub struct OfferData<T: Config>{
     pub marketplace_id: [u8;32],
+    pub collection_id: T::CollectionId,
+    pub item_id: T::ItemId,
     pub creator: T::AccountId,
     pub price:  BalanceOf<T>,
     pub status: OfferStatus,
     pub creation_date: u64,
     pub expiration_date: u64,
     pub offer_type: OfferType,
-    //pub buyer: Option<T::AccountId>,
+    pub buyer: Option<(T::AccountId, [u8;32])>,
 }

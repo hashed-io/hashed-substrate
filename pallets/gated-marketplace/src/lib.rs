@@ -144,52 +144,26 @@ pub mod pallet {
 		ValueQuery
 	>;
 
-
 	#[pallet::storage]
-	#[pallet::getter(fn offer_sell_id)]
-	pub(super) type TrackSellOffers<T: Config> = StorageDoubleMap<
+	#[pallet::getter(fn offers_by_item)]
+	pub(super) type OffersByItem<T: Config> = StorageDoubleMap<
 		_, 
 		Blake2_128Concat, 
 		T::CollectionId, //collection_id
 		Blake2_128Concat, 
-		T::ItemId, // item_id
-		[u8;32], // offer_sell_id
-		OptionQuery
-	>;
-
-	// #[pallet::storage]
-	// #[pallet::getter(fn offer_by_sell_id)]
-	// pub(super) type OffersBySellId<T: Config> = StorageDoubleMap<
-	// 	_, 
-	// 	Blake2_128Concat, 
-	// 	[u8; 32], // offer_sell_id
-	// 	Blake2_128Concat,
-	// 	[u8;32], // marketplace_id
-	// 	[u8;32], // offer_id
-	// 	OptionQuery,
-	// >;
-
-	#[pallet::storage]
-	#[pallet::getter(fn offer_by_sell_id2)]
-	pub(super) type OffersBySellId2<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8; 32], // offer_sell_id
-		BoundedVec<([u8;32], [u8;32]), T::MaxOffersPerMarket>, // matkerplace_id / offer_id
+		T::ItemId, //item_id 
+		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
 
-	//Try yo convert this one into a StorageNMap 
-
 	#[pallet::storage]
-	#[pallet::getter(fn offer_info)]
-	pub(super) type OfferInfo<T: Config> = StorageMap<
+	#[pallet::getter(fn offers_by_account)]
+	pub(super) type OffersByAccount<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8; 32], // offer_id
-		//StorageDoubleMap -> marketplace_id(?)
-		OfferData<T>,  // offer data
-		OptionQuery,
+		T::AccountId, // account_id
+		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -199,12 +173,21 @@ pub mod pallet {
 		Identity, 
 		[u8; 32], // Marketplace_id
 		BoundedVec<[u8;32], T::MaxOffersPerMarket>,  // offer_id's
-		//StorageDoubleMap -> offer data(?)
 		ValueQuery,
 	>;
 
-	
+	#[pallet::storage]
+	#[pallet::getter(fn offers_info)]
+	pub(super) type OffersInfo<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8; 32], // offer_id
+		//StorageDoubleMap -> marketplace_id(?)
+		OfferData<T>,  // offer data
+		OptionQuery,
+	>;
 
+	
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -296,6 +279,10 @@ pub mod pallet {
 		CannotTakeOffer,
 		/// User cannot remove the offer from the marketplace
 		CannotRemoveOffer,
+		/// Error related to the timestamp
+		TimestampError,
+		/// User does not have enough balance to buy the offer
+		NotEnoughBalance,
 	}
 
 	#[pallet::call]
@@ -526,7 +513,6 @@ pub mod pallet {
 		}
 
 
-		//TODO: Add extrinsic to take an offer.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
@@ -543,10 +529,12 @@ pub mod pallet {
 			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
 		}	
 
-		//TODO: REMOVE OFFER
+
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			//Currently, we can only remove one offer at a time.
+			//TODO: Add support for removing multiple offers at a time.
 			let who = ensure_signed(origin.clone())?; 
 
 			Self::do_remove_offer(who, offer_id, marketplace_id, collection_id, item_id)
