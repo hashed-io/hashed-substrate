@@ -224,7 +224,7 @@ impl<T: Config> Pallet<T> {
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
         //ensure the offer is open and available
-        ensure!(Self::get_offer_status(offer_id, marketplace_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
+        ensure!(Self::get_offer_status(offer_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
        
         //Transfer balance to the seller
         let price_item =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -321,21 +321,21 @@ impl<T: Config> Pallet<T> {
             let offer_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
             offers.remove(offer_index);
             Ok(())
-        }).map_err(|_| Error::<T>::OfferNotFound)?;
+        }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
 
         //remove the offer from OffersByAccount
         <OffersByAccount<T>>::try_mutate(authority.clone(), |offers| {
             let offer_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
             offers.remove(offer_index);
             Ok(())
-        }).map_err(|_| Error::<T>::OfferNotFound)?;
+        }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
 
         //remove the offer from OffersByItem
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             let offer_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
             offers.remove(offer_index);
             Ok(())
-        }).map_err(|_| Error::<T>::OfferNotFound)?;
+        }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
     
     
         Ok(())
@@ -587,7 +587,7 @@ impl<T: Config> Pallet<T> {
         return Ok(date_as_u64_millis);
     }
 
-    fn get_offer_status(offer_id: [u8;32], marketplace_id : [u8;32]) -> OfferStatus{
+    fn get_offer_status(offer_id: [u8;32],) -> OfferStatus{
         //we already know that the offer exists, so we don't need to check it here.
         //we have added a NotFound status in case the storage source is corrupted.
         if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
@@ -695,13 +695,13 @@ impl<T: Config> Pallet<T> {
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         let offers_ids = <OffersByItem<T>>::take(collection_id, item_id);
         //let mut remaining_offer_ids: Vec<[u8;32]> = Vec::new();
-        let mut buy_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket>;
+        let mut buy_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
 
         for offer_id in offers_ids {
             let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
             //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
             if offer_info.offer_type != OfferType::SellOrder {
-                buy_offer_ids.try_push(offer_id);
+                buy_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::LimitExceeded)?;
             }
         }
 

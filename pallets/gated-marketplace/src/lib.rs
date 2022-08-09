@@ -221,6 +221,8 @@ pub mod pallet {
 		NotYetImplemented,
 		/// Error names should be descriptive.
 		NoneValue,
+		///Limit bounded vector exceeded
+		LimitExceeded,
 		/// The account supervises too many marketplaces
 		ExceedMaxMarketsPerAuth,
 		/// The account has too many roles in that marketplace 
@@ -271,8 +273,6 @@ pub mod pallet {
 		OfferAlreadyExists,
 		/// Offer not found
 		OfferNotFound,
-		/// Offer status is freezed, user cannot take the current offer
-		OfferIsFreezed,
 		/// Offer is not available at the moment
 		OfferIsNotAvailable,
 		/// Owner cannnot buy its own offer
