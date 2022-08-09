@@ -79,7 +79,6 @@ pub enum OfferStatus{
     Freezed,
     Closed,
     NotFound,
-    Expired,
 }
 
 impl Default for OfferStatus{
@@ -106,4 +105,5 @@ pub struct OfferData<T: Config>{
     pub creation_date: u64,
     pub expiration_date: u64,
     pub offer_type: OfferType,
+    //pub buyer: Option<T::AccountId>,
 }

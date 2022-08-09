@@ -172,8 +172,8 @@ impl<T: Config> Pallet<T> {
         // add 7 days to the timestamp
         let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
 
-        //create an offer_sale_id
-        let offer_sale_id = (collection_id, item_id).using_encoded(blake2_256);
+        //create an offer_sell_id 
+        let offer_sell_id = (collection_id, item_id).using_encoded(blake2_256);
         let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp2, timestamp3).using_encoded(blake2_256);
 
         let _total = T::LocalCurrency::total_balance(&authority);
@@ -192,10 +192,10 @@ impl<T: Config> Pallet<T> {
         //insert in TrackSellOffers
         //validate offer already exists
         ensure!(!<TrackSellOffers<T>>::contains_key(collection_id, item_id), Error::<T>::OfferAlreadyExists);
-        <TrackSellOffers<T>>::insert(collection_id, item_id, offer_sale_id);
+        <TrackSellOffers<T>>::insert(collection_id, item_id, offer_sell_id);
 
         //insert in OffersBySaleId
-        <OffersBySellId2<T>>::try_mutate(offer_sale_id, |offer| {
+        <OffersBySellId2<T>>::try_mutate(offer_sell_id, |offer| {
             offer.try_push((marketplace_id, offer_id))
         }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
 
@@ -222,7 +222,7 @@ impl<T: Config> Pallet<T> {
         //ensure owner is not the same as the buyer
         ensure!(owner_item != authority.clone(), Error::<T>::CannotTakeOffer);
 
-        //ensure the selected item has an offer_sale_id
+        //ensure the selected item has an offer_sell_id
         ensure!(<TrackSellOffers<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
 
         //ensure the offer is open and available
@@ -241,8 +241,11 @@ impl<T: Config> Pallet<T> {
         //TODO: update offer status from all marketplaces
         Self::update_offer_status(collection_id, item_id)?;
 
-        //TODO: remove the offer from all marketplace
-        Self::delete_offer(collection_id, item_id)?;
+        //TODO: remove the offer from all marketplaces
+        //we don't need to delete the info from all marketplaces, just 
+        // remove from TrackSellOffers & OffersBySellId2
+
+
 
         //TODO: create a new storage map offerid-boundedvec(marketplace_id)
         // to facilitate the search of the marketplaces where the offer is stored
@@ -251,8 +254,79 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_duplicate_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult{
+        //ensure new marketplace_id exits
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+
+        //ensure that the offer_id exists
+        ensure!(<OfferInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
+
+        //ensure that the offer has assigned an offer_sell_id. Get the offer_sell_id
+        let offer_sell_id = <TrackSellOffers<T>>::get(collection_id, item_id).ok_or(Error::<T>::OfferNotFound)?;
+
+        //get the offer data
+        let mut copy_offer_data = <OfferInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
+        // if let Some(a) = <OfferInfo<T>>::try_get(offer_id).ok(){
+        //     let offer = a;
+        //     //modify
+        // }
+
+        //modify the offer data
+        copy_offer_data.price = modified_price;
+
+        //generate a new offer_id
+        let new_offer_id = (marketplace_id, authority.clone(), collection_id, copy_offer_data.creation_date, copy_offer_data.expiration_date).using_encoded(blake2_256);
+
+        //add the new offer to the offers by sell id
+        <OffersBySellId2<T>>::try_mutate(offer_sell_id, |offer| {
+            offer.try_push((marketplace_id, new_offer_id))
+        }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
+
+        //add the new offer to the offers by marketplace
+
+        <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offer| {
+            offer.try_push(new_offer_id)
+        }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
+
+        // insert the new offer to the offer info
+        <OfferInfo<T>>::insert(new_offer_id, copy_offer_data);
+
+        Self::deposit_event(Event::OfferDuplicated(new_offer_id, marketplace_id));
+
+        Ok(())
+    }
+
+    pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, ) -> DispatchResult {
+        //ensure the offer_id exists
+        let copy_offer_data = <OfferInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
+
+        ensure!(copy_offer_data.creator == authority.clone(), Error::<T>::CannotRemoveOffer);
+
+        //remove the offer from OfferInfo
+        <OfferInfo<T>>::remove(offer_id);
+
+        //remove the offer from OffersByMarketplace
+        <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| {
+            let offers_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
+            offers.remove(offers_index);
+            Ok(())
+        }).map_err(|_| Error::<T>::OfferNotFound)?;
+
+        //remove the offer from OffersBySellId
+        //get the offer_sell_id
+        let offer_sell_id = <TrackSellOffers<T>>::get(collection_id, item_id).ok_or(Error::<T>::OfferNotFound)?;
+        <OffersBySellId2<T>>::try_mutate(offer_sell_id, |offers| {
+            let offers_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
+            offers.remove(offers_index);
+            Ok(())
+        }).map_err(|_| Error::<T>::OfferNotFound)?;
+    
+    
+        Ok(())
+    }
 
 
+    
     /*---- Helper functions ----*/
 
     pub fn set_up_application(
@@ -553,13 +627,17 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn delete_offer(collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult{
+    pub fn delete_offer_data(collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult{
         let offer_sell_id = <TrackSellOffers<T>>::get(collection_id, item_id).ok_or(Error::<T>::OfferNotFound)?;
 
         for ele in <OffersBySellId2<T>>::get(offer_sell_id){
-            //delete from OffersByMarketplace -> market_id
+            //delete from OffersByMarketplace -> market_id -> offer_id
             // delete from OfferInfo -> offer_id
-            <OffersByMarketplace<T>>::remove(ele.0);
+            let _vector_offers_id = <OffersByMarketplace<T>>::try_mutate(ele.0, |offers|{
+                let offers_index = offers.iter().position(|x| *x == ele.1).ok_or(Error::<T>::OfferNotFound)?;
+                offers.remove(offers_index);
+                Ok(())
+            }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
             <OfferInfo<T>>::remove(ele.1);
         }
         
@@ -580,6 +658,8 @@ impl<T: Config> Pallet<T> {
             return Err(Error::<T>::OfferNotFound)?;
         }
     }
+
+
 
 
 

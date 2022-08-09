@@ -153,7 +153,7 @@ pub mod pallet {
 		T::CollectionId, //collection_id
 		Blake2_128Concat, 
 		T::ItemId, // item_id
-		[u8;32], // offer_sale_id
+		[u8;32], // offer_sell_id
 		OptionQuery
 	>;
 
@@ -162,7 +162,7 @@ pub mod pallet {
 	// pub(super) type OffersBySellId<T: Config> = StorageDoubleMap<
 	// 	_, 
 	// 	Blake2_128Concat, 
-	// 	[u8; 32], // offer_sale_id
+	// 	[u8; 32], // offer_sell_id
 	// 	Blake2_128Concat,
 	// 	[u8;32], // marketplace_id
 	// 	[u8;32], // offer_id
@@ -174,10 +174,12 @@ pub mod pallet {
 	pub(super) type OffersBySellId2<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8; 32], // offer_sale_id
+		[u8; 32], // offer_sell_id
 		BoundedVec<([u8;32], [u8;32]), T::MaxOffersPerMarket>, // matkerplace_id / offer_id
 		ValueQuery,
 	>;
+
+	//Try yo convert this one into a StorageNMap 
 
 	#[pallet::storage]
 	#[pallet::getter(fn offer_info)]
@@ -201,6 +203,8 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	
+
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -223,6 +227,8 @@ pub mod pallet {
 		OfferStored(T::CollectionId, T::ItemId),
 		/// Offer was transferred to the specified account. [offer_id, account]
 		OfferTransferred([u8;32], T::AccountId),
+		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
+		OfferDuplicated([u8;32], [u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -288,6 +294,8 @@ pub mod pallet {
 		OfferIsNotAvailable,
 		/// Owner cannnot buy its own offer
 		CannotTakeOffer,
+		/// User cannot remove the offer from the marketplace
+		CannotRemoveOffer,
 	}
 
 	#[pallet::call]
@@ -392,9 +400,6 @@ pub mod pallet {
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 		
-		
-
-
 
 		/// Accept or reject an application.
 		/// 
@@ -529,6 +534,31 @@ pub mod pallet {
 
 			Self::do_take_sell_offer(who, offer_id, marketplace_id, collection_id, item_id)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		pub fn duplicate_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
+		}	
+
+		//TODO: REMOVE OFFER
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_remove_offer(who, offer_id, marketplace_id, collection_id, item_id)
+		}
+
+
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		// pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; 
+		// 	Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
+		// }
 
 
 		//TODO: Add CRUD operations for the offers
