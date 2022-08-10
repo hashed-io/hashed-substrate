@@ -243,7 +243,7 @@ impl<T: Config> Pallet<T> {
         //TODO: ensure the offer is not expired
 
         //update offer status from all marketplaces
-        Self::update_offer_status(buyer.clone(), collection_id, item_id, marketplace_id)?;
+        Self::update_sell_offers_status(buyer.clone(), collection_id, item_id, marketplace_id)?;
 
         //remove all SellOrder offer types from OffersByItem so the item it's available to beign sold again
         Self::delete_all_sell_orders_for_this_item(collection_id, item_id )?;
@@ -592,6 +592,13 @@ impl<T: Config> Pallet<T> {
         return Ok(date_as_u64_millis);
     }
 
+    fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
+        let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
+        let timestamp2 = Self::convert_moment_to_u64_in_milliseconds(timestamp).unwrap_or(0);
+        let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
+
+        Some((timestamp2, timestamp3))
+    }
 
     fn ask_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
         //we already know that the offer exists, so we don't need to check it here.
@@ -604,22 +611,6 @@ impl<T: Config> Pallet<T> {
 
     }
 
-
-    fn update_offer_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
-        let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
-        for offer_id in offer_ids {
-            <OffersInfo<T>>::try_mutate::<_,_,DispatchError,_>(offer_id, |offer|{
-                let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
-                offer.status = OfferStatus::Closed;
-                offer.buyer = Some((buyer.clone(), marketplace_id));
-                Ok(())
-            })?;
-
-        }
-        Ok(())
-    }
-
-
     fn get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
         //we already know that the offer exists, so we don't need to check it here.
         //we have added a NotFound status in case the storage source is corrupted.
@@ -630,14 +621,45 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
-        let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
-        let timestamp2 = Self::convert_moment_to_u64_in_milliseconds(timestamp).unwrap_or(0);
-        let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
-
-        Some((timestamp2, timestamp3))
+    fn does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult {
+        let offers =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        //find the offer_id in the vector of offers_ids
+        offers.iter().find(|&x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
+        Ok(())
     }
 
+    //sell orders here...
+
+    fn update_sell_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
+        let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        
+        let mut sell_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
+
+        for offer_id in offer_ids {
+            let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
+            //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
+            if offer_info.offer_type == OfferType::SellOrder {
+                sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
+            }
+            // //version 2
+            // if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
+            //     if offer.offer_type == OfferType::SellOrder {
+            //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
+            //     }
+            // }
+        }
+        
+        for offer_id in sell_offer_ids {
+            <OffersInfo<T>>::try_mutate::<_,_,DispatchError,_>(offer_id, |offer|{
+                let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
+                offer.status = OfferStatus::Closed;
+                offer.buyer = Some((buyer.clone(), marketplace_id));
+                Ok(())
+            })?;
+
+        }
+        Ok(())
+    }
 
     fn is_item_already_for_sale(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
         let offers =  <OffersByItem<T>>::get(collection_id, item_id);
@@ -656,15 +678,8 @@ impl<T: Config> Pallet<T> {
         } 
 
         Ok(())
-
     }
 
-    fn does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult {
-        let offers =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
-        //find the offer_id in the vector of offers_ids
-        offers.iter().find(|&x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
-        Ok(())
-    }
 
     fn delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
         //ensure the item has offers associated with it.
