@@ -1,10 +1,10 @@
 use super::*;
-use frame_support::{pallet_prelude::*, traits::LockableCurrency};
+use frame_support::{pallet_prelude::*};
 //use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
-use frame_support::traits::{Currency, Contains};
+use frame_support::traits::{Currency};
 use frame_support::traits::ExistenceRequirement::KeepAlive;
 
 impl<T: Config> Pallet<T> {
@@ -187,9 +187,11 @@ impl<T: Config> Pallet<T> {
 
         //insert in OffersByItem
         Self::is_item_already_for_sale(collection_id, item_id, marketplace_id)?;
+
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             offers.try_push(offer_id)
         }).map_err(|_| Error::<T>::ExceedMaxRolesPerAuth)?;
+        //TODO: chnage error messagem, it isn't the right one
 
         //insert in OffersByAccount
         <OffersByAccount<T>>::try_mutate(authority.clone(), |offer| {
@@ -587,6 +589,8 @@ impl<T: Config> Pallet<T> {
         return Ok(date_as_u64_millis);
     }
 
+    //TODO: change this function to ask if the offertype consulted is the same as the one in the application
+    //signature: offer_id, offertype that we want to check.
     fn get_offer_status(offer_id: [u8;32],) -> OfferStatus{
         //we already know that the offer exists, so we don't need to check it here.
         //we have added a NotFound status in case the storage source is corrupted.
@@ -611,10 +615,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    //fn delete_offer_data_from_whole_marketplace(collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult{
-
-    //     Ok(())
-    // }
 
     fn get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
         //we already know that the offer exists, so we don't need to check it here.
@@ -636,17 +636,23 @@ impl<T: Config> Pallet<T> {
 
 
     fn is_item_already_for_sale(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
-        let offers =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        let offers =  <OffersByItem<T>>::get(collection_id, item_id);
 
-        for offer in offers {
-            let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
-            //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
-            if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
-                return Err(Error::<T>::OfferAlreadyExists)?;
+        //if len is == 0, it means that there is no offers for this item, maybe it's the first entry
+        if offers.len() == 0 {
+            return Ok(())
+        } else if offers.len() > 0 {
+            for offer in offers {
+                let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
+                //ensure the offer_type is SellOrder, because this vector also contains buy offers.
+                if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
+                    return Err(Error::<T>::OfferAlreadyExists)?;
+                }
             }
-        }
+        } 
 
         Ok(())
+
     }
 
     fn does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult {
