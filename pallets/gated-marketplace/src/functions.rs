@@ -314,6 +314,9 @@ impl<T: Config> Pallet<T> {
         //ensure the offer_id exists in OffersByItem
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
+        //ensure the offer status is Open
+        ensure!(Self::ask_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
+
 
         //remove the offer from OfferInfo
         <OffersInfo<T>>::remove(offer_id);
