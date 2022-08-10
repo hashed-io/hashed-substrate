@@ -283,6 +283,8 @@ pub mod pallet {
 		TimestampError,
 		/// User does not have enough balance to buy the offer
 		NotEnoughBalance,
+		/// User cannot delete the offer because is closed
+		CannotDeleteOffer,
 	}
 
 	#[pallet::call]
