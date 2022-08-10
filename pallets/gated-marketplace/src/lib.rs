@@ -285,6 +285,8 @@ pub mod pallet {
 		NotEnoughBalance,
 		/// User cannot delete the offer because is closed
 		CannotDeleteOffer,
+		/// There was a problem storing the offer
+		OfferStorageError,
 	}
 
 	#[pallet::call]
