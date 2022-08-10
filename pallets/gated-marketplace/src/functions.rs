@@ -164,7 +164,7 @@ impl<T: Config> Pallet<T> {
             Err(Error::<T>::CollectionNotFound)?;
         }
 
-        //Add timestamp to offer
+        //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //create an offer_sell_id 
@@ -190,13 +190,13 @@ impl<T: Config> Pallet<T> {
 
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             offers.try_push(offer_id)
-        }).map_err(|_| Error::<T>::ExceedMaxRolesPerAuth)?;
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
         //TODO: chnage error messagem, it isn't the right one
 
         //insert in OffersByAccount
         <OffersByAccount<T>>::try_mutate(authority.clone(), |offer| {
             offer.try_push(offer_id)
-        }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
 
         //insert in OffersInfo
         // validate offer already exists
@@ -206,7 +206,7 @@ impl<T: Config> Pallet<T> {
         //Insert in OffersByMarketplace
         <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offer| {
             offer.try_push(offer_id)
-        }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
 
         Self::deposit_event(Event::OfferStored(collection_id, item_id));
         Ok(())
@@ -284,17 +284,17 @@ impl<T: Config> Pallet<T> {
         //insert in OffersByMarketplace
         <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offer| {
             offer.try_push(new_offer_id)
-        }).map_err(|_| Error::<T>::OfferAlreadyExists)?; 
+        }).map_err(|_| Error::<T>::OfferStorageError)?; 
         
         //insert in OffersByAccount
         <OffersByAccount<T>>::try_mutate(authority.clone(), |offer| {
             offer.try_push(new_offer_id)
-        }).map_err(|_| Error::<T>::OfferAlreadyExists)?;
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
         
         //add the new offer_id to OffersByItem
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             offers.try_push(new_offer_id)
-        }).map_err(|_| Error::<T>::ExceedMaxRolesPerAuth)?;
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
 
         Self::deposit_event(Event::OfferDuplicated(new_offer_id, marketplace_id));
 
@@ -667,40 +667,6 @@ impl<T: Config> Pallet<T> {
     }
 
     fn delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
-        //This could be easier if we had a separate storage source for offer_id where offer_type = SellOrder.
-        // let offers_ids =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
-        // let mut offers_ids_to_delete: Vec<[u8;32]> = Vec::new();
-
-        // for offer_id in offers_ids {
-        //     let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-        //     //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
-        //     if offer_info.offer_type == OfferType::SellOrder {
-        //         offers_ids_to_delete.push(offer_id);
-        //     }
-        // }
-
-        // for offer_id in offers_ids_to_delete {
-        //     <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers|{
-        //         let offer_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
-        //         offers.remove(offer_index);
-        //         Ok(())
-        //     }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
-        // }
-
-        //I think an alternative it could be the following:
-        // delete the offer_ids where offer_type == SellOrder, in the offers_ids vector.
-        // then insert a new boundedvec with the remaining offer_ids.
-
-        //Im not sure if the cicle should be there or outsider. Because everytime we delete an offer_id, 
-        //the vector is updated (?).
-        // <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers|{
-        //     for offer_id in offers_ids_to_delete {
-        //         let offer_index = offers.iter().position(|x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
-        //         offers.remove(offer_index);
-        //     }
-        //     Ok(())
-        // }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
-        
         //ensure the item has offers associated with it.
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         let offers_ids = <OffersByItem<T>>::take(collection_id, item_id);
