@@ -78,7 +78,6 @@ pub enum OfferStatus{
     Open,
     Freezed,
     Closed,
-    NotFound,
 }
 
 impl Default for OfferStatus{
@@ -91,7 +90,6 @@ impl Default for OfferStatus{
 pub enum OfferType{
     SellOrder,
     BuyOrder,
-    NotFound,
 }
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
