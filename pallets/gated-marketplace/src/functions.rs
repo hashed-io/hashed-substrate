@@ -226,7 +226,7 @@ impl<T: Config> Pallet<T> {
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
         //ensure the offer is open and available
-        ensure!(Self::get_offer_status(offer_id) == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
+        ensure!(Self::ask_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
        
         //Transfer balance to the seller
         let price_item =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -589,17 +589,18 @@ impl<T: Config> Pallet<T> {
         return Ok(date_as_u64_millis);
     }
 
-    //TODO: change this function to ask if the offertype consulted is the same as the one in the application
-    //signature: offer_id, offertype that we want to check.
-    fn get_offer_status(offer_id: [u8;32],) -> OfferStatus{
+
+    fn ask_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
         //we already know that the offer exists, so we don't need to check it here.
         //we have added a NotFound status in case the storage source is corrupted.
         if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-            return offer.status;
+            return offer.status == offer_status;
         } else {
-            return OfferStatus::NotFound;
+            return false;
         }
+
     }
+
 
     fn update_offer_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
         let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;

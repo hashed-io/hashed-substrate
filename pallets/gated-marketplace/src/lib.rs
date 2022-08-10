@@ -512,6 +512,15 @@ pub mod pallet {
 			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
 		}
 
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; 
+
+		// 	Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
+		// }
+
+
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
