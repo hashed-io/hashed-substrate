@@ -73,7 +73,7 @@ This module is intended to be used in conjunction with a pallet which loosely co
 -  `is_authorized` is the suggested authorization mechanism, as it takes the pallet index, scope and the requested permission to be enforced. This function will search the users permissions and will validate if there's a role that has the permission enabled.
  - `has_role` a secondary authorization mechanism that takes the pallet index, scope, and a set of roles that the user tentatively has. This method is specially useful when its unclear which roles the user has and any of the specified roles will suffice the authorization.
  - `scope_exists` a validation function used internally by other methods, ensure the requested scope is registered in the specified pallet.
- - `permission_exists` is a validation function used internally, as it provides, as it confirms if the permission is stored in the specified pallet.
+ - `permission_exists` is a validation function used internally, as it confirms if the permission is stored in the specified pallet.
  - `is_role_linked_to_pallet` validates if a role is registered in the pallet. This method doesn't validates if the role has been previously created and assumes it is.
  - `is_permission_linked_to_role` ensures the specified permission is linked to the role in a pallet context. This method assumes both the role and permission exists.
  - `get_role_users_len` returns the number of users that have the specified role, useful when implementing restrictions on the number of users that can have that role.

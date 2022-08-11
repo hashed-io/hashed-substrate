@@ -9,6 +9,12 @@ use crate::types::*;
 
 impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /*---- Basic Insertion of individual storage maps ---*/
+    /// Scope creation
+    /// 
+    /// Creates a scope within a external pallet using the pallet index.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The newly generated scope identifier.
     fn create_scope(pallet_id: u64, scope_id: ScopeId)-> DispatchResult{
         let pallet_id: u64 = pallet_id.try_into().unwrap();
         <Scopes<T>>::try_mutate(pallet_id, |scopes|{
@@ -18,6 +24,13 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         })
     }
 
+    /// Scope removal
+    /// 
+    /// Removes a scope within a external pallet using the pallet index.
+    /// Executing this function will delete all registered role users.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope identifier to remove.
     fn remove_scope(pallet_id: u64, scope_id: ScopeId) -> DispatchResult{
         // remove on scopes
         <Scopes<T>>::try_mutate_exists::<_,(),DispatchError,_>(pallet_id, |scopes_option|{
@@ -43,6 +56,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+     /// External pallet storage removal
+    /// 
+    /// Removes all storage associated to a external pallet.
+    /// 
+    /// Executing this function will delete all role lists and permissions linked
+    /// to that pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
     fn remove_pallet_storage(pallet_id: u64) -> DispatchResult{
         //remove all scopes
         let scopes = <Scopes<T>>::get(pallet_id);
@@ -65,7 +86,13 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
-    /// Inserts roles and links them to the pallet
+    /// Role creation and coupling with pallet.
+    /// 
+    /// Creates the specified roles if needed and adds them to the pallet.
+    /// Recommended first step to enable RBAC on a external pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `roles`: A list of roles to create, encoded in bytes.
     fn create_and_set_roles(pallet_id: u64, roles: Vec<Vec<u8>>) -> 
         Result<BoundedVec<RoleId, T::MaxRolesPerPallet>, DispatchError>{
         let mut role_ids= Vec::<[u8;32]>::new();
@@ -77,6 +104,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(bounded_ids)
     }
 
+    /// Role creation.
+    /// 
+    /// Creates a role and returns its identifier, if its already created,
+    /// the function will return the preexisting one.
+    /// ### Parameters:
+    /// - `roles`: A role to create, encoded in bytes.
     fn create_role(role: Vec<u8>)-> Result<RoleId, DispatchError>{
         let role_id = role.using_encoded(blake2_256);
         // no "get_or_insert" method found
@@ -86,6 +119,13 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(role_id)
     }
 
+    /// Role coupling with pallet.
+    /// 
+    /// Assigns a previously created role to a pallet.
+    /// 
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The unique role identifier. 
     fn set_role_to_pallet(pallet_id: u64, role_id: RoleId )-> DispatchResult{
         ensure!(<Roles<T>>::contains_key(role_id), Error::<T>::RoleNotFound);
 
@@ -96,6 +136,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Multiple role coupling with pallet.
+    /// 
+    /// Assigns multiple, previously created roles to a pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `roles`: A list of unique role identifiers. 
     fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<RoleId>)->DispatchResult{
         // checks for duplicates:
         let pallet_roles = <PalletRoles<T>>::get(&pallet_id);
@@ -109,6 +155,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Role assignation to a user
+    /// 
+    /// Assigns a role to a user in a scope context.
+    /// ### Parameters:
+    /// - `user`: The account which the role will be granted.
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope in which the role will be granted.
+    /// - `role_id`: The role identifier to grant for the user.
     fn assign_role_to_user(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_id: RoleId) -> DispatchResult{
         Self::scope_exists(pallet_id, scope_id)?;
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
@@ -125,6 +179,15 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Role removal from the user.
+    /// 
+    /// Removes the specified role from a user in a scope context. the user will no longer
+    /// be able to enforce the removed role and its permissions.
+    /// ### Parameters:
+    /// - `user`: The account which the role will be removed.
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope in which the role will be removed.
+    /// - `role_id`: The role identifier to remove from the user.
     fn remove_role_from_user(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_id: RoleId) -> DispatchResult{
         <RolesByUser<T>>::try_mutate_exists::<_,(),DispatchError,_>((user.clone(), pallet_id, scope_id), |user_roles_option|{
             let user_roles = user_roles_option.as_mut().ok_or(Error::<T>::UserHasNoRoles)?;
@@ -147,6 +210,15 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Permission creation and coupling with a role.
+    /// 
+    /// Creates the specified permissions if needed and assigns them to a role.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role identifier to which the permissions will
+    /// be linked to.
+    /// - `permissions`: A list of permissions to create and link, 
+    /// encoded in bytes.
     fn create_and_set_permissions(pallet_id: u64, role_id: RoleId, permissions: Vec<Vec<u8>>)->
         Result<BoundedVec<PermissionId, Self::MaxPermissionsPerRole>, DispatchError> {
         let mut permission_ids = Vec::<[u8;32]>::new();
@@ -158,6 +230,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(b_permissions)
     }
 
+    /// Permission creation
+    /// 
+    /// Creates the specified permission in the specified pallet..
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `permission`: The permission to insert, encoded in bytes.
     fn create_permission(pallet_id: u64, permission: Vec<u8>) -> Result<PermissionId, DispatchError>{
         let permission_id = permission.using_encoded(blake2_256);
 
@@ -170,6 +248,13 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(permission_id)
     }
 
+    /// Permission linking to role.
+    /// 
+    /// Assigns a previously created permission to a role.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role identifier to which the permission will be added.
+    /// - `permission_id`: The permission to assign to the role.
     fn set_permission_to_role( pallet_id: u64, role_id: RoleId, permission_id: PermissionId ) -> DispatchResult{
         ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
@@ -181,6 +266,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Multiple permissions assignation to a role
+    /// 
+    /// Assigns multiple, previously created permissions 
+    /// to a role in a pallet context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role identifier to which the permissions will be added.
+    /// - `permissions`: A list of permission identifiers to assign to the role.
     fn set_multiple_permissions_to_role(  pallet_id: u64, role_id: RoleId, permissions: Vec<PermissionId> )-> DispatchResult{
         // checks for duplicates:
         let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
@@ -196,6 +289,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 
     /*---- Helper functions ----*/
 
+    /// Authorization function
+    /// 
+    /// Checks if the user has a role that includes the specified permission.
+    /// ### Parameters:
+    /// - `user`: The account to validate.
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope context in which the permission will be validated.
+    /// - `permission_id`: The permission the user must have.
     fn is_authorized(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, permission_id: &PermissionId) -> DispatchResult{
         Self::scope_exists(pallet_id, scope_id)?;
         Self::permission_exists(pallet_id, permission_id)?;
@@ -208,6 +309,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// User role validation function
+    /// 
+    /// Checks if the user has at least one of the specified roles.
+    /// ### Parameters:
+    /// - `user`: The account to validate.
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope context in which the permission will be validated.
+    /// - `role_ids`: A list of roles to validate.
     fn has_role(user: T::AccountId, pallet_id: u64, scope_id: &ScopeId, role_ids: Vec<RoleId>)->DispatchResult {
         Self::scope_exists(pallet_id, scope_id)?;
 
@@ -218,17 +327,35 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         );
         Ok(())
     }
-    /// Also checks if pallet is stored. Need this function to expose the check to other pallets
+    
+    /// Scope validation
+    /// 
+    /// Checks if the scope exists in that pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope to validate.
     fn scope_exists(pallet_id: u64, scope_id:&ScopeId) -> DispatchResult{
         ensure!(<Scopes<T>>::get(pallet_id).contains(&scope_id), Error::<T>::ScopeNotFound);
         Ok(())
     }
 
+    /// Permission validation.
+    /// 
+    /// Checks if the permission exists in a pallet context. 
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `permission_id`: The permission to validate.
     fn permission_exists(pallet_id: u64, permission_id: &PermissionId)->DispatchResult{
         ensure!(<Permissions<T>>::contains_key(pallet_id, permission_id), Error::<T>::PermissionNotFound);
         Ok(()) 
     }
 
+    /// Role validation
+    /// 
+    /// Checks if the role is linked to the pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role to validate
     fn is_role_linked_to_pallet(pallet_id: u64, role_id: &RoleId)-> DispatchResult{
         // The role exists, now  check if the role is assigned to that pallet
         <PalletRoles<T>>::get(pallet_id).iter().find(|pallet_role| *pallet_role==role_id )
@@ -236,12 +363,26 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Ok(())
     }
 
+    /// Permission linking validation
+    /// 
+    /// Checks if the permission is linked to the role in the pallet context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role which should have the permission.
+    /// - `permission_id`: The permission which the role should have.
     fn is_permission_linked_to_role(pallet_id: u64, role_id: &RoleId, permission_id: &PermissionId)-> DispatchResult{
         let role_permissions = <PermissionsByRole<T>>::get(pallet_id, role_id);
         ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole );
         Ok(())
     }
 
+    /// Role list length
+    /// 
+    /// Returns the number of user that have the specified role in a scope context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope in which the users will be retrieved.
+    /// - `role_id`: The role in which the number of users will be counted.
     fn get_role_users_len(pallet_id: u64, scope_id:&ScopeId, role_id: &RoleId) -> usize{
         <UsersByScope<T>>::get((pallet_id, scope_id, role_id)).len()
     }

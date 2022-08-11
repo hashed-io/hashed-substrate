@@ -1,4 +1,4 @@
-use crate as pallet_template;
+use crate as pallet_rbac;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -18,7 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -54,10 +54,25 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_template::Config for Test {
-	type Event = Event;
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 2;
+	pub const MaxRolesPerPallet: u32 = 20;
+	pub const RoleMaxLen: u32 = 30;
+	pub const PermissionMaxLen: u32 = 30;
+	pub const MaxPermissionsPerRole: u32 = 10;
+	pub const MaxRolesPerUser: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 10;
 }
-
+impl pallet_rbac::Config for Test {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
+}
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
