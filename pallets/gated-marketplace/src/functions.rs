@@ -164,6 +164,10 @@ impl<T: Config> Pallet<T> {
             Err(Error::<T>::CollectionNotFound)?;
         }
 
+        //ensure the price is valid
+        Self::is_the_price_valid(price)?;
+
+
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -626,6 +630,20 @@ impl<T: Config> Pallet<T> {
         //find the offer_id in the vector of offers_ids
         offers.iter().find(|&x| *x == offer_id).ok_or(Error::<T>::OfferNotFound)?;
         Ok(())
+    }
+
+    pub fn u32_to_balance(input: u32) -> BalanceOf<T> {
+        input.into()
+    }
+
+    fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
+        let minimun_amount: BalanceOf<T> = Self::u32_to_balance(100);
+
+        if price > minimun_amount {
+            return Ok(());
+        } else {
+            return Err(Error::<T>::PriceMustBeGreaterThanZero)?;
+        }
     }
 
     //sell orders here...

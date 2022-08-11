@@ -287,6 +287,8 @@ pub mod pallet {
 		CannotDeleteOffer,
 		/// There was a problem storing the offer
 		OfferStorageError,
+		/// Price must be greater than 0
+		PriceMustBeGreaterThanZero,
 	}
 
 	#[pallet::call]
