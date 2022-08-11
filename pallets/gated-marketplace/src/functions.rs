@@ -230,7 +230,7 @@ impl<T: Config> Pallet<T> {
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
         //ensure the offer is open and available
-        ensure!(Self::ask_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
+        ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
        
         //Transfer balance to the seller
         let price_item =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -319,7 +319,7 @@ impl<T: Config> Pallet<T> {
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
         //ensure the offer status is Open
-        ensure!(Self::ask_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
+        ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
 
 
         //remove the offer from OfferInfo
@@ -604,9 +604,8 @@ impl<T: Config> Pallet<T> {
         Some((timestamp2, timestamp3))
     }
 
-    fn ask_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
+    fn is_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
         //we already know that the offer exists, so we don't need to check it here.
-        //we have added a NotFound status in case the storage source is corrupted.
         if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
             return offer.status == offer_status;
         } else {
@@ -617,7 +616,6 @@ impl<T: Config> Pallet<T> {
 
     fn get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
         //we already know that the offer exists, so we don't need to check it here.
-        //we have added a NotFound status in case the storage source is corrupted.
         if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
             return Ok(offer.price);
         } else {
@@ -632,13 +630,8 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn u32_to_balance(input: u32) -> BalanceOf<T> {
-        input.into()
-    }
-
     fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
-        let minimun_amount: BalanceOf<T> = Self::u32_to_balance(100);
-
+        let minimun_amount: BalanceOf<T> = 1000u32.into();
         if price > minimun_amount {
             return Ok(());
         } else {
