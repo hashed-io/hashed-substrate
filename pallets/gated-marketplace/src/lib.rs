@@ -208,8 +208,8 @@ pub mod pallet {
 		MarketplaceRemoved([u8;32]),
 		/// Offer stored. [collection_id, item_id]
 		OfferStored(T::CollectionId, T::ItemId),
-		/// Offer was transferred to the specified account. [offer_id, account]
-		OfferTransferred([u8;32], T::AccountId),
+		/// Offer was accepted [offer_id, account]
+		OfferWasAccepted([u8;32], T::AccountId),
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
 		OfferDuplicated([u8;32], [u8;32]),
 	}
@@ -287,8 +287,10 @@ pub mod pallet {
 		CannotDeleteOffer,
 		/// There was a problem storing the offer
 		OfferStorageError,
-		/// Price must be greater than 0
+		/// Price must be greater than zero
 		PriceMustBeGreaterThanZero,
+		/// User cannot create buy offers for their own items
+		CannotCreateOffer,
 	}
 
 	#[pallet::call]
@@ -508,25 +510,14 @@ pub mod pallet {
 
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
-
 		
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
+		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
 			let who = ensure_signed(origin)?; 
 
-			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
+			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
 		}
-
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?; 
-
-		// 	Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
-		// }
-
-
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -544,7 +535,6 @@ pub mod pallet {
 			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
 		}	
 
-
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
@@ -556,16 +546,24 @@ pub mod pallet {
 		}
 
 
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
-		// pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?; 
-		// 	Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, offer_type, price)
-		// }
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+			let who = ensure_signed(origin)?; 
+
+			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_take_buy_offer(offer_id, marketplace_id, collection_id, item_id)
+		}
 
 
 		//TODO: Add CRUD operations for the offers
-		//TODO: Add extrinsic to duplicate offers in other marketplace.
 
 		/// Kill all the stored data.
 		/// 

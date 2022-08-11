@@ -151,7 +151,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, offer_type: OfferType, price: BalanceOf<T>,) -> DispatchResult {
+    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
         //TODO: ensure the user is a Marketparticipant
 
         //ensure the marketplace exists
@@ -167,11 +167,10 @@ impl<T: Config> Pallet<T> {
         //ensure the price is valid
         Self::is_the_price_valid(price)?;
 
-
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        //create an offer_sell_id 
+        //create an offer_id
         //TODO: create an offer id generator, used in cases where the offer_id generated is not unique
         let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
 
@@ -185,33 +184,101 @@ impl<T: Config> Pallet<T> {
             creation_date: timestamp,
             expiration_date: timestamp2,
             status: OfferStatus::Open,
-            offer_type: offer_type,
+            offer_type: OfferType::SellOrder,
             buyer: None,
         };
 
-        //insert in OffersByItem
-        Self::is_item_already_for_sale(collection_id, item_id, marketplace_id)?;
 
+        //ensure there is no a previous sell offer for this item
+        Self::is_item_already_for_sale(collection_id, item_id, marketplace_id)?;
+        
+        //insert in OffersByItem
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             offers.try_push(offer_id)
         }).map_err(|_| Error::<T>::OfferStorageError)?;
-        //TODO: chnage error messagem, it isn't the right one
 
         //insert in OffersByAccount
-        <OffersByAccount<T>>::try_mutate(authority.clone(), |offer| {
-            offer.try_push(offer_id)
+        <OffersByAccount<T>>::try_mutate(authority.clone(), |offers| {
+            offers.try_push(offer_id)
         }).map_err(|_| Error::<T>::OfferStorageError)?;
 
         //insert in OffersInfo
-        // validate offer already exists
+        // ensure the offer_id doesn't exist
         ensure!(!<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferAlreadyExists);
         <OffersInfo<T>>::insert(offer_id, offer_data);
 
         //Insert in OffersByMarketplace
-        <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offer| {
-            offer.try_push(offer_id)
+        <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| {
+            offers.try_push(offer_id)
         }).map_err(|_| Error::<T>::OfferStorageError)?;
 
+        Self::deposit_event(Event::OfferStored(collection_id, item_id));
+        Ok(())
+    }
+
+    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+        //TODO: ensure the user is a Marketparticipant
+
+        //ensure the marketplace exists
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+
+        //ensure the collection exists
+        //For this case user doesn't have to be the owner of the collection
+        //but the owner of the item cannot create a buy offer for their own collection
+        if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
+            ensure!(a != authority, Error::<T>::CannotCreateOffer);
+        } else {
+            Err(Error::<T>::CollectionNotFound)?;
+        }
+
+        //ensure user has enough balance to create the offer
+        let total_user_balance = T::LocalCurrency::total_balance(&authority);
+        ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
+
+        //ensure the price is valid
+        Self::is_the_price_valid(price)?;
+
+        //Add timestamp to the offer
+        let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        //create an offer_id
+        let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
+
+        //create offer structure
+        let offer_data = OfferData::<T> {
+            marketplace_id: marketplace_id,
+            collection_id: collection_id,
+            item_id: item_id,
+            creator: authority.clone(),
+            price: price,
+            creation_date: timestamp,
+            expiration_date: timestamp2,
+            status: OfferStatus::Open,
+            offer_type: OfferType::BuyOrder,
+            buyer: None,
+        };
+
+        //insert in OffersByItem
+        //An item can receive multiple buy offers
+        <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
+            offers.try_push(offer_id)
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
+
+        //insert in OffersByAccount
+        <OffersByAccount<T>>::try_mutate(authority.clone(), |offers| {
+            offers.try_push(offer_id)
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
+
+        //insert in OffersInfo
+        // ensure the offer_id doesn't exist
+        ensure!(!<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferAlreadyExists);
+        <OffersInfo<T>>::insert(offer_id, offer_data);
+
+        //Insert in OffersByMarketplace
+        <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| {
+            offers.try_push(offer_id)
+        }).map_err(|_| Error::<T>::OfferStorageError)?;
+    
         Self::deposit_event(Event::OfferStored(collection_id, item_id));
         Ok(())
     }
@@ -229,32 +296,77 @@ impl<T: Config> Pallet<T> {
         //ensure the offer_id exists in OffersByItem
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
+        //TODO: ensure the offer is not expired
+
         //ensure the offer is open and available
         ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
        
-        //Transfer balance to the seller
-        let price_item =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        //Transfer balance to the owner of the item
+        let item_price =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
         let total_user_balance = T::LocalCurrency::total_balance(&buyer);
-        ensure!(total_user_balance >= price_item, Error::<T>::NotEnoughBalance);
+        ensure!(total_user_balance >= item_price, Error::<T>::NotEnoughBalance);
         //Transfer the balance
-        T::LocalCurrency::transfer(&buyer, &owner_item, price_item, KeepAlive)?;
+        T::LocalCurrency::transfer(&buyer, &owner_item, item_price, KeepAlive)?;
 
-        //Use uniques transfer to transfer the item to the buyer
+        //Use uniques transfer function to transfer the item to the buyer
         pallet_uniques::Pallet::<T>::do_transfer(collection_id, item_id, buyer.clone(), |_, _|{
             Ok(())
         })?;
 
-        //TODO: ensure the offer is not expired
-
         //update offer status from all marketplaces
-        Self::update_sell_offers_status(buyer.clone(), collection_id, item_id, marketplace_id)?;
+        Self::update_offers_status(buyer.clone(), collection_id, item_id, marketplace_id)?;
 
-        //remove all SellOrder offer types from OffersByItem so the item it's available to beign sold again
-        Self::delete_all_sell_orders_for_this_item(collection_id, item_id )?;
+        //remove all the offers associated with the item
+        Self::delete_all_offers_for_this_item(collection_id, item_id )?;
         
         //TODO: add the offer_id from this offer to the buyer's history
 
-        Self::deposit_event(Event::OfferTransferred(offer_id, buyer));
+        Self::deposit_event(Event::OfferWasAccepted(offer_id, buyer));
+        Ok(())
+    }
+
+    pub fn do_take_buy_offer(offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+        //ensure the collection & owner exists
+        let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
+
+        // Get the account_id of the offer creator (the buyer)
+        let buy_offer_creator = Self::get_offer_creator(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
+
+        //ensure owner is not the same as the buy_offer_creator
+        ensure!(owner_item != buy_offer_creator.clone(), Error::<T>::CannotTakeOffer);
+
+        //ensure the selected item has a valid offer_id in OffersInfo
+        // This offer_id corresponds to the buy offer
+        ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
+
+        //ensure the offer_id exists in OffersByItem
+        Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
+
+        //TODO: ensure the offer is not expired
+
+        //ensure the offer is open and available
+        ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
+
+        //Get the offered price
+        let offerred_price =  Self::get_offer_price(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        let total_buy_offer_creator = T::LocalCurrency::total_balance(&buy_offer_creator);
+        //ensure the buy_offer_creator has enough balance to buy the item
+        ensure!(total_buy_offer_creator >= offerred_price, Error::<T>::NotEnoughBalance);
+        //Transfer the balance to the owner of the item
+        T::LocalCurrency::transfer(&buy_offer_creator, &owner_item, offerred_price, KeepAlive)?;
+
+        //Use uniques transfer function to transfer the item to the market_participant
+        pallet_uniques::Pallet::<T>::do_transfer(collection_id, item_id, buy_offer_creator.clone(), |_, _|{
+            Ok(())
+        })?;
+
+        //update offer status from all marketplaces
+        Self::update_offers_status(buy_offer_creator.clone(), collection_id, item_id, marketplace_id)?;
+
+        //remove all the offers associated with the item
+        Self::delete_all_offers_for_this_item(collection_id, item_id )?;
+
+        Self::deposit_event(Event::OfferWasAccepted(offer_id, buy_offer_creator));
         Ok(())
     }
 
@@ -611,7 +723,6 @@ impl<T: Config> Pallet<T> {
         } else {
             return false;
         }
-
     }
 
     fn get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
@@ -639,28 +750,41 @@ impl<T: Config> Pallet<T> {
         }
     }
 
+    fn get_offer_creator(offer_id: [u8;32],) -> Result<T::AccountId, DispatchError> {
+        //we already know that the offer exists, so we don't need to check it here.
+        if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
+            return Ok(offer.creator);
+        } else {
+            return Err(Error::<T>::OfferNotFound)?;
+        }
+    }
+
     //sell orders here...
 
-    fn update_sell_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
+    fn update_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
         let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
         
-        let mut sell_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
+        //This logic is no longer needed, when an offer_id is accepted, 
+        // all the other offers for this item are automatically closed. 
+        // It doesn't matter the offertype. 
 
-        for offer_id in offer_ids {
-            let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-            //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
-            if offer_info.offer_type == OfferType::SellOrder {
-                sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
-            }
-            // //version 2
-            // if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-            //     if offer.offer_type == OfferType::SellOrder {
-            //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
-            //     }
-            // }
-        }
+        // let mut sell_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
+
+        // for offer_id in offer_ids {
+        //     let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
+        //     //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
+        //     if offer_info.offer_type == OfferType::SellOrder {
+        //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
+        //     }
+        //     // //version 2
+        //     // if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
+        //     //     if offer.offer_type == OfferType::SellOrder {
+        //     //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
+        //     //     }
+        //     // }
+        // }
         
-        for offer_id in sell_offer_ids {
+        for offer_id in offer_ids {
             <OffersInfo<T>>::try_mutate::<_,_,DispatchError,_>(offer_id, |offer|{
                 let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
                 offer.status = OfferStatus::Closed;
@@ -695,6 +819,7 @@ impl<T: Config> Pallet<T> {
     fn delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
         //ensure the item has offers associated with it.
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
+
         let offers_ids = <OffersByItem<T>>::take(collection_id, item_id);
         //let mut remaining_offer_ids: Vec<[u8;32]> = Vec::new();
         let mut buy_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
@@ -706,11 +831,15 @@ impl<T: Config> Pallet<T> {
                 buy_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::LimitExceeded)?;
             }
         }
-
         //ensure we already took the entry from the storage map, so we can insert it again.
         ensure!(!<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         <OffersByItem<T>>::insert(collection_id, item_id, buy_offer_ids);
 
+        Ok(())
+    }
+
+    fn delete_all_offers_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
+        <OffersByItem<T>>::remove(collection_id, item_id);
         Ok(())
     }
 
