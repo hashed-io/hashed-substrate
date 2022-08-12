@@ -219,6 +219,9 @@ impl<T: Config> Pallet<T> {
     pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
         //TODO: ensure the user is a Marketparticipant
 
+        //ensure the item is for sale, if not, return error
+        ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::ItemNotForSale);
+
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -284,6 +287,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_take_sell_offer(buyer: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+        //This extrisicn is called by the user who wants to buy the item
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
 
@@ -325,9 +329,13 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_take_buy_offer(offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+    pub fn do_take_buy_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+        //This extrinsic is called by the owner of the item who accepts the buy offer from the interested user.
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
+
+        //ensure only owner of the item can call the extrinic
+        ensure!(owner_item == authority.clone(), Error::<T>::NotOwner);
 
         // Get the account_id of the offer creator (the buyer)
         let buy_offer_creator = Self::get_offer_creator(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -697,7 +705,8 @@ impl<T: Config> Pallet<T> {
         }
         Ok(())
     }
-
+    
+    //TODO: merge the timestamp function to convert from moment to milliseconds.
     fn convert_moment_to_u64_in_milliseconds(date: T::Moment) -> Result<u64, DispatchError> {
         let date_as_u64_millis;
         if let Some(_date_as_u64) = TryInto::<u64>::try_into(date).ok() {
@@ -811,12 +820,11 @@ impl<T: Config> Pallet<T> {
                 }
             }
         } 
-
         Ok(())
     }
 
 
-    fn delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
+    fn _delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -> DispatchResult {
         //ensure the item has offers associated with it.
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
 

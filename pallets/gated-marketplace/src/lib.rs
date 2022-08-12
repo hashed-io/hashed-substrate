@@ -291,6 +291,8 @@ pub mod pallet {
 		PriceMustBeGreaterThanZero,
 		/// User cannot create buy offers for their own items
 		CannotCreateOffer,
+		/// This items is not available for sale
+		ItemNotForSale,
 	}
 
 	#[pallet::call]
@@ -559,7 +561,7 @@ pub mod pallet {
 		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?; 
 
-			Self::do_take_buy_offer(offer_id, marketplace_id, collection_id, item_id)
+			Self::do_take_buy_offer(who, offer_id, marketplace_id, collection_id, item_id)
 		}
 
 
