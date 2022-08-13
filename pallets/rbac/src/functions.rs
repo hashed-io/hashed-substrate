@@ -109,7 +109,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /// Creates a role and returns its identifier, if its already created,
     /// the function will return the preexisting one.
     /// ### Parameters:
-    /// - `roles`: A role to create, encoded in bytes.
+    /// - `role`: A role to create, encoded in bytes.
     fn create_role(role: Vec<u8>)-> Result<RoleId, DispatchError>{
         let role_id = role.using_encoded(blake2_256);
         // no "get_or_insert" method found
@@ -130,7 +130,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         ensure!(<Roles<T>>::contains_key(role_id), Error::<T>::RoleNotFound);
 
         <PalletRoles<T>>::try_mutate(pallet_id, |roles|{
-            ensure!(!roles.contains(&role_id), Error::<T>::DuplicateRole );
+            ensure!(!roles.contains(&role_id), Error::<T>::RoleAlreadyLinkedToPallet );
             roles.try_push(role_id).map_err(|_| Error::<T>::ExceedMaxRolesPerPallet)
         })?;
         Ok(())
@@ -144,9 +144,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /// - `roles`: A list of unique role identifiers. 
     fn set_multiple_pallet_roles(pallet_id: u64, roles: Vec<RoleId>)->DispatchResult{
         // checks for duplicates:
+        ensure!(Self::has_unique_elements(roles.clone()), Error::<T>::DuplicateRole);
         let pallet_roles = <PalletRoles<T>>::get(&pallet_id);
         for id in roles.clone(){
-            ensure!(!pallet_roles.contains(&id), Error::<T>::DuplicateRole );
+            ensure!(!pallet_roles.contains(&id), Error::<T>::RoleAlreadyLinkedToPallet );
         }
         <PalletRoles<T>>::try_mutate(pallet_id, |pallet_roles|{
             pallet_roles.try_extend(roles.into_iter())
@@ -222,8 +223,8 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     fn create_and_set_permissions(pallet_id: u64, role_id: RoleId, permissions: Vec<Vec<u8>>)->
         Result<BoundedVec<PermissionId, Self::MaxPermissionsPerRole>, DispatchError> {
         let mut permission_ids = Vec::<[u8;32]>::new();
-        for permision in permissions{
-            permission_ids.push( Self::create_permission(pallet_id, permision.to_owned())? );
+        for permission in permissions{
+            permission_ids.push( Self::create_permission(pallet_id, permission.to_owned())? );
         }
         Self::set_multiple_permissions_to_role(pallet_id, role_id, permission_ids.clone())?;
         let b_permissions =  Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
@@ -400,5 +401,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
 impl<T: Config> Pallet<T>{
     fn bound<E,Len: Get<u32>>(vec: Vec<E>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
         BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
+    }
+
+    fn has_unique_elements<E: Ord + Clone>(vec: Vec<E>) -> bool{
+        let mut filtered_vec = vec.clone();
+        filtered_vec.sort();
+        filtered_vec.dedup();
+        vec.len() == filtered_vec.len()
     }
 }

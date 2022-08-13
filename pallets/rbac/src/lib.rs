@@ -153,18 +153,20 @@ pub mod pallet {
 		ScopeNotFound,
 		/// The scope is already linked with the pallet
 		ScopeAlreadyExists,
-		/// The specified role doesn't exist
+		/// The specified role doesn't exist or it hasn't been set to the user
 		RoleNotFound,
 		/// The permission doesn't exist in the pallet
 		PermissionNotFound,
 		/// The specified user hasn't been asigned to this scope
 		UserNotFound,
-		/// The role is already linked in the pallet
+		/// The provided role list must have unique elements
 		DuplicateRole,
 		/// The permission is already linked to that role in that scope
 		DuplicatePermission,
 		/// The user has that role asigned in that scope
 		UserAlreadyHasRole,
+		/// The role is already linked in the pallet
+		RoleAlreadyLinkedToPallet,
 		/// The role exists but it hasn't been linked to the pallet
 		RoleNotLinkedToPallet,
 		/// The permission wasn't found in the roles capabilities

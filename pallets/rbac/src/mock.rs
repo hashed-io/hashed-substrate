@@ -56,12 +56,12 @@ impl system::Config for Test {
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 2;
-	pub const MaxRolesPerPallet: u32 = 20;
-	pub const RoleMaxLen: u32 = 30;
+	pub const MaxRolesPerPallet: u32 = 3;
+	pub const RoleMaxLen: u32 = 10;
 	pub const PermissionMaxLen: u32 = 30;
 	pub const MaxPermissionsPerRole: u32 = 10;
-	pub const MaxRolesPerUser: u32 = 10;
-	pub const MaxUsersPerRole: u32 = 10;
+	pub const MaxRolesPerUser: u32 = 2;
+	pub const MaxUsersPerRole: u32 = 2;
 }
 impl pallet_rbac::Config for Test {
 	type Event = Event;
