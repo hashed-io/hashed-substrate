@@ -14,9 +14,17 @@ mod benchmarking;
 mod functions;
 mod types;
 
+
+
 #[frame_support::pallet]
 pub mod pallet {
-	use core::default;
+	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
+	use frame_system::pallet_prelude::*;
+	use frame_support::traits::Currency;
+	//use sp_runtime::sp_std::vec::Vec;
+	use crate::types::*;
+	//use frame_support::traits::tokens::Balance;
+	//use std::fmt::Debug;
 
 use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
@@ -25,11 +33,12 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use pallet_rbac::types::RoleBasedAccessControl;
 	
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type LocalCurrency: Currency<Self::AccountId>;
+		//type Balance: Balance + MaybeSerializeDeserialize + Debug + MaxEncodedLen;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;
-		
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 		#[pallet::constant]
 		type MaxAuthsPerMarket: Get<u32>;
 		#[pallet::constant]
@@ -48,7 +57,11 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		type MaxFiles: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicationsPerCustodian: Get<u32>;
-
+		#[pallet::constant]	
+		type MaxMarketsPerItem: Get<u32>;
+		#[pallet::constant]	
+		type MaxOffersPerMarket: Get<u32>;
+		
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
 
@@ -101,7 +114,7 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		ApplicationStatus, //K2: application_status
 		BoundedVec<T::AccountId,T::MaxApplicants>, 
 		ValueQuery
-	>;
+	>; 
 
 	#[pallet::storage]
 	#[pallet::getter(fn custodians)]
@@ -115,6 +128,50 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn offers_by_item)]
+	pub(super) type OffersByItem<T: Config> = StorageDoubleMap<
+		_, 
+		Blake2_128Concat, 
+		T::CollectionId, //collection_id
+		Blake2_128Concat, 
+		T::ItemId, //item_id 
+		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn offers_by_account)]
+	pub(super) type OffersByAccount<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		T::AccountId, // account_id
+		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn offers_by_marketplace)]
+	pub(super) type OffersByMarketplace<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8; 32], // Marketplace_id
+		BoundedVec<[u8;32], T::MaxOffersPerMarket>,  // offer_id's
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn offers_info)]
+	pub(super) type OffersInfo<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8; 32], // offer_id
+		//StorageDoubleMap -> marketplace_id(?)
+		OfferData<T>,  // offer data
+		OptionQuery,
+	>;
+
+	
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -133,6 +190,12 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		MarketplaceLabelUpdated([u8;32]),
 		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8;32]),
+		/// Offer stored. [collection_id, item_id]
+		OfferStored(T::CollectionId, T::ItemId),
+		/// Offer was accepted [offer_id, account]
+		OfferWasAccepted([u8;32], T::AccountId),
+		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
+		OfferDuplicated([u8;32], [u8;32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -142,6 +205,8 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		NotYetImplemented,
 		/// Error names should be descriptive.
 		NoneValue,
+		///Limit bounded vector exceeded
+		LimitExceeded,
 		/// The account supervises too many marketplaces
 		ExceedMaxMarketsPerAuth,
 		/// The account has too many roles in that marketplace 
@@ -186,10 +251,41 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 		ApplicationStatusStillPending,
 		/// The application has already been approved, application status is approved
 		ApplicationHasAlreadyBeenApproved,
+		/// Collection not found
+		CollectionNotFound,
+		/// User who calls the function is not the owner of the collection
+		NotOwner,
+		/// Offer already exists
+		OfferAlreadyExists,
+		/// Offer not found
+		OfferNotFound,
+		/// Offer is not available at the moment
+		OfferIsNotAvailable,
+		/// Owner cannnot buy its own offer
+		CannotTakeOffer,
+		/// User cannot remove the offer from the marketplace
+		CannotRemoveOffer,
+		/// Error related to the timestamp
+		TimestampError,
+		/// User does not have enough balance to buy the offer
+		NotEnoughBalance,
+		/// User cannot delete the offer because is closed
+		CannotDeleteOffer,
+		/// There was a problem storing the offer
+		OfferStorageError,
+		/// Price must be greater than zero
+		PriceMustBeGreaterThanZero,
+		/// User cannot create buy offers for their own items
+		CannotCreateOffer,
+		/// This items is not available for sale
+		ItemNotForSale,
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T> 
+	where 
+		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
+	{
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
@@ -295,9 +391,6 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 		
-		
-
-
 
 		/// Accept or reject an application.
 		/// 
@@ -413,7 +506,60 @@ use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
+		
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+			let who = ensure_signed(origin)?; 
 
+			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_take_sell_offer(who, offer_id, marketplace_id, collection_id, item_id)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		pub fn duplicate_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
+		}	
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			//Currently, we can only remove one offer at a time.
+			//TODO: Add support for removing multiple offers at a time.
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_remove_offer(who, offer_id, marketplace_id, collection_id, item_id)
+		}
+
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+			let who = ensure_signed(origin)?; 
+
+			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?; 
+
+			Self::do_take_buy_offer(who, offer_id, marketplace_id, collection_id, item_id)
+		}
+
+
+		//TODO: Add CRUD operations for the offers
 
 		/// Kill all the stored data.
 		/// 

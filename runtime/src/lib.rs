@@ -255,7 +255,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	/// The type for recording an account's balance.
-	type Balance = Balance;
+	type Balance = u128;
 	/// The ubiquitous event type.
 	type Event = Event;
 	type DustRemoval = ();
@@ -552,6 +552,8 @@ parameter_types! {
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 10;
+	pub const MaxMarketsPerItem: u32 = 10;
+	pub const MaxOffersPerMarket: u32 = 100;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
@@ -567,6 +569,9 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxFeedbackLen = MaxFeedbackLen;
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles = MaxFiles;
+	type MaxMarketsPerItem = MaxMarketsPerItem;
+	type MaxOffersPerMarket = MaxOffersPerMarket;
+	type LocalCurrency = Balances;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type Rbac = RBAC;
 }
