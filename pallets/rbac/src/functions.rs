@@ -222,6 +222,8 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /// encoded in bytes.
     fn create_and_set_permissions(pallet_id: u64, role_id: RoleId, permissions: Vec<Vec<u8>>)->
         Result<BoundedVec<PermissionId, Self::MaxPermissionsPerRole>, DispatchError> {
+        ensure!(Self::has_unique_elements(permissions.clone()), Error::<T>::DuplicatePermission);
+        Self::is_role_linked_to_pallet(pallet_id, &role_id )?;
         let mut permission_ids = Vec::<[u8;32]>::new();
         for permission in permissions{
             permission_ids.push( Self::create_permission(pallet_id, permission.to_owned())? );
@@ -261,7 +263,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
 
         <PermissionsByRole<T>>::try_mutate(pallet_id, role_id, | role_permissions|{
-            ensure!(role_permissions.contains(&permission_id), Error::<T>::DuplicatePermission);
+            ensure!(!role_permissions.contains(&permission_id), Error::<T>::DuplicatePermission);
             role_permissions.try_push(permission_id).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)
         })?;
         Ok(())
@@ -277,14 +279,15 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
     /// - `permissions`: A list of permission identifiers to assign to the role.
     fn set_multiple_permissions_to_role(  pallet_id: u64, role_id: RoleId, permissions: Vec<PermissionId> )-> DispatchResult{
         // checks for duplicates:
+        ensure!(Self::has_unique_elements(permissions.clone()), Error::<T>::DuplicatePermission);
+        Self::is_role_linked_to_pallet(pallet_id, &role_id )?;
         let role_permissions = <PermissionsByRole<T>>::get(&pallet_id, role_id);
         for id in permissions.clone(){
-            ensure!(!role_permissions.contains(&id), Error::<T>::DuplicateRole );
+            ensure!(!role_permissions.contains(&id), Error::<T>::PermissionAlreadyLinkedToRole );
         }
         <PermissionsByRole<T>>::try_mutate(pallet_id, role_id,  |role_permissions|{
             role_permissions.try_extend(permissions.into_iter())
         }).map_err(|_| Error::<T>::ExceedMaxPermissionsPerRole)?;
-
         Ok(())
     }
 

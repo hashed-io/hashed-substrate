@@ -1,9 +1,36 @@
-use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId}, Config};
-use frame_support::{assert_noop, assert_ok, assert_err};
+use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config};
+use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec};
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 const PALLET_ID : u64 = 1;
 
+// DONE:
+/*
+create_scope
+create_role
+set_role_to_pallet
+set_multiple_pallet_roles
+create_and_set_role
+assign_role_to_user
+remove_role_from_user
+create_permission
+set_permission_to_role
+set_multiple_permissions_to_role
+create_and_set_permissions
+*/
+
+// TODO:
+/*
+remove_scope
+remove_pallet_storage
+is_authorized
+has_role
+scope_exists
+permission_exists
+is_role_linked_to_pallet
+is_permission_linked_to_role
+get_role_users_len
+*/
 fn create_scope(n: u8)->ScopeId{
 	let scope_id = [n;32];
 	assert_ok!(RBAC::create_scope(PALLET_ID, scope_id));
@@ -19,10 +46,27 @@ fn gen_roles(n_roles: u32)-> Vec<Vec<u8>>{
 	v
 }
 
+fn gen_permissions(n_permissions: u32)-> Vec<Vec<u8>>{
+	let mut v = Vec::new();
+	for i in 0..n_permissions{
+		v.push(format!("permission{}",i).into_bytes().to_vec());
+	}
+	v
+}
+
 fn create_role(role: Vec<u8>)->RoleId{
 	let r_id = RBAC::create_role(role.clone()).unwrap();
 	assert_eq!(RBAC::roles(r_id).unwrap().to_vec(), role);
 	r_id
+}
+
+fn create_and_set_roles(role_ids: Vec<Vec<u8>>)->BoundedVec<RoleId, <Test as Config>::MaxRolesPerPallet >{
+	let role_ids = RBAC::create_and_set_roles(PALLET_ID, role_ids).unwrap();
+	let inserted_roles_list = RBAC::pallet_roles(PALLET_ID);
+	assert!(
+		role_ids.iter().all(|r_id| inserted_roles_list.contains(r_id))
+	);
+	role_ids
 }
 
 fn set_role_to_pallet(role_id: RoleId){
@@ -60,6 +104,38 @@ fn assign_role_to_user(user: AccountId, scope_id : &ScopeId, role_id: RoleId){
 	assert!(user_roles.contains(&role_id));
 	let role_users = RBAC::users_by_scope((PALLET_ID, scope_id, role_id));
 	assert!(role_users.contains(&user));
+}
+
+fn create_permission(permission: Vec<u8>)-> PermissionId{
+	let permission_id  = RBAC::create_permission(PALLET_ID, permission.clone()).unwrap();
+	assert_eq!(
+		RBAC::permissions(PALLET_ID, permission_id).to_vec(),
+		permission
+	);
+	permission_id
+}
+
+fn set_permission_to_role(role_id: RoleId, permission_id: PermissionId){
+	assert_ok!(RBAC::set_permission_to_role(PALLET_ID, role_id, permission_id));
+	assert!(RBAC::permissions_by_role(PALLET_ID, role_id).contains(&permission_id));
+}
+
+fn set_multiple_permissions_to_role(role_id: RoleId, permissions: Vec<PermissionId>){
+	assert_ok!(
+		RBAC::set_multiple_permissions_to_role(PALLET_ID, role_id, permissions.clone())
+	);
+	let role_permissions = RBAC::permissions_by_role(PALLET_ID, role_id);
+	assert!(
+		permissions.iter().all(|p|{role_permissions.contains(p)}),
+	);
+}
+
+fn create_and_set_permissions(role_id: RoleId, permissions: Vec<Vec<u8>>){
+	let permission_ids = RBAC::create_and_set_permissions(PALLET_ID, role_id,permissions).unwrap();
+	let role_permissions = RBAC::permissions_by_role(PALLET_ID, role_id);
+	assert!(
+		permission_ids.iter().all(|p|{role_permissions.contains(p)}),
+	);
 }
 
 #[test]
@@ -212,6 +288,36 @@ fn set_multiple_pallet_roles_twice_should_fail() {
 }
 
 #[test]
+fn create_and_set_role_should_work() {
+	new_test_ext().execute_with(|| {
+		create_and_set_roles(gen_roles(<Test as Config>::MaxRolesPerPallet::get()));
+	});
+}
+
+#[test]
+fn create_and_set_duplicate_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let mut roles = gen_roles(<Test as Config>::MaxRolesPerPallet::get()-1);
+		roles.push("role0".as_bytes().to_vec());
+		assert_err!(
+			RBAC::create_and_set_roles(PALLET_ID, roles),
+			Error::<Test>::DuplicateRole
+		);
+	});
+}
+
+#[test]
+fn exceeding_max_roles_per_pallet_from_create_and_set_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let exceed = <Test as Config>::MaxRolesPerPallet::get() + 1;
+		assert_err!(
+			RBAC::create_and_set_roles(PALLET_ID, gen_roles(exceed)),
+			Error::<Test>::ExceedMaxRolesPerPallet
+		);
+	});
+}
+
+#[test]
 fn assign_role_to_user_should_work() {
 	new_test_ext().execute_with(|| {
 		let scope_id = create_scope(0);
@@ -309,3 +415,216 @@ fn remove_non_existent_role_from_user_should_fail() {
 	});
 }
 
+#[test]
+fn create_permission_should_work() {
+	new_test_ext().execute_with(|| {
+		create_permission("enroll".as_bytes().to_vec());
+	});
+}
+
+#[test]
+fn exceeding_permission_max_len_should_fail() {
+	new_test_ext().execute_with(|| {
+		assert_noop!(
+			RBAC::create_permission(PALLET_ID, "0123456789ABCDFG".as_bytes().to_vec()),
+			Error::<Test>::ExceedPermissionMaxLen
+		);
+	});
+}
+
+#[test]
+fn set_permission_to_role_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permission_id = create_permission("enroll".as_bytes().to_vec());
+		set_permission_to_role(role_id, permission_id);
+	});
+}
+
+#[test]
+fn set_non_existent_permission_to_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		assert_noop!(
+			RBAC::set_permission_to_role(PALLET_ID, role_id, [0;32]),
+			Error::<Test>::PermissionNotFound
+		);
+	});
+}
+
+
+#[test]
+fn set_permission_to_role_twice_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permission_id = create_permission("enroll".as_bytes().to_vec());
+		set_permission_to_role(role_id, permission_id);
+		assert_noop!(
+			RBAC::set_permission_to_role(PALLET_ID, role_id, permission_id),
+			Error::<Test>::DuplicatePermission
+		);
+	});
+}
+
+#[test]
+fn exceeding_max_permissions_per_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		let max_permissions_per_role =  <Test as Config>::MaxPermissionsPerRole::get();
+		set_role_to_pallet(role_id);
+		gen_permissions(max_permissions_per_role).iter()
+			.for_each(|permission|{ 
+				let permission_id = create_permission(permission.clone());
+				set_permission_to_role(role_id, permission_id);
+			});
+		let last_permission_id = create_permission("enroll".as_bytes().to_vec());
+		assert_noop!(
+			RBAC::set_permission_to_role(PALLET_ID,role_id, last_permission_id),
+			Error::<Test>::ExceedMaxPermissionsPerRole
+		);
+	});
+}
+
+#[test]
+fn set_multiple_permissions_to_role_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		let permission_ids: Vec<PermissionId> = permissions.iter().map(|permission|{
+			create_permission(permission.to_vec())
+		}).collect();
+		set_multiple_permissions_to_role(role_id, permission_ids);
+	});
+}
+
+#[test]
+fn set_multiple_duplicate_permissions_to_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let mut permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get()-1);
+		permissions.push("permission0".as_bytes().to_vec());
+		let permission_ids: Vec<PermissionId> = permissions.iter().map(|permission|{
+			create_permission(permission.to_vec())
+		}).collect();
+		assert_noop!(
+			RBAC::set_multiple_permissions_to_role(PALLET_ID, role_id, permission_ids),
+			Error::<Test>::DuplicatePermission
+		);
+	});
+}
+
+#[test]
+fn set_multiple_permissions_to_unlinked_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		let permission_ids: Vec<PermissionId> = permissions.iter().map(|permission|{
+			create_permission(permission.to_vec())
+		}).collect();
+		assert_noop!(
+			RBAC::set_multiple_permissions_to_role(PALLET_ID, role_id, permission_ids),
+			Error::<Test>::RoleNotLinkedToPallet
+		);
+	});
+}
+
+#[test]
+fn set_multiple_permissions_to_role_twice_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		set_role_to_pallet(role_id);
+		let permission_ids: Vec<PermissionId> = permissions.iter().map(|permission|{
+			create_permission(permission.to_vec())
+		}).collect();
+		set_multiple_permissions_to_role(role_id, permission_ids.clone());
+		assert_noop!(
+			RBAC::set_multiple_permissions_to_role(PALLET_ID, role_id, permission_ids),
+			Error::<Test>::PermissionAlreadyLinkedToRole
+		);
+	});
+}
+
+#[test]
+fn exceeding_max_permissions_per_role_from_set_multiple_permissions_to_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get()+1);
+		set_role_to_pallet(role_id);
+		let permission_ids: Vec<PermissionId> = permissions.iter().map(|permission|{
+			create_permission(permission.to_vec())
+		}).collect();
+		assert_noop!(
+			RBAC::set_multiple_permissions_to_role(PALLET_ID, role_id, permission_ids),
+			Error::<Test>::ExceedMaxPermissionsPerRole
+		);
+	});
+}
+
+#[test]
+fn create_and_set_permissions_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		create_and_set_permissions(role_id, permissions);
+	});
+}
+
+#[test]
+fn create_set_duplicate_permissions_to_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let mut permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get()-1);
+		permissions.push("permission0".as_bytes().to_vec());
+		assert_noop!(
+			RBAC::create_and_set_permissions(PALLET_ID, role_id, permissions),
+			Error::<Test>::DuplicatePermission
+		);
+	});
+}
+
+#[test]
+fn create_and_set_permissions_to_unlinked_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		assert_noop!(
+			RBAC::create_and_set_permissions(PALLET_ID, role_id, permissions),
+			Error::<Test>::RoleNotLinkedToPallet
+		);
+	});
+}
+
+#[test]
+fn create_and_set_multiple_permissions_to_role_twice_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get());
+		set_role_to_pallet(role_id);
+		create_and_set_permissions(role_id, permissions.clone());
+		assert_noop!(
+			RBAC::create_and_set_permissions(PALLET_ID, role_id, permissions),
+			Error::<Test>::PermissionAlreadyLinkedToRole
+		);
+	});
+}
+
+#[test]
+fn exceeding_max_permissions_per_role_from_create_and_set_permissions_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("admin".as_bytes().to_vec());
+		let permissions = gen_permissions(<Test as Config>::MaxPermissionsPerRole::get()+1);
+		set_role_to_pallet(role_id);
+		assert_err!(
+			RBAC::create_and_set_permissions(PALLET_ID, role_id, permissions),
+			Error::<Test>::ExceedMaxPermissionsPerRole
+		);
+	});
+}

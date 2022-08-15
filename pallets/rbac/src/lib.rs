@@ -161,7 +161,7 @@ pub mod pallet {
 		UserNotFound,
 		/// The provided role list must have unique elements
 		DuplicateRole,
-		/// The permission is already linked to that role in that scope
+		/// The provided permission list must have unique elements
 		DuplicatePermission,
 		/// The user has that role asigned in that scope
 		UserAlreadyHasRole,
@@ -169,6 +169,8 @@ pub mod pallet {
 		RoleAlreadyLinkedToPallet,
 		/// The role exists but it hasn't been linked to the pallet
 		RoleNotLinkedToPallet,
+		/// The permission is already linked to that role in that scope
+		PermissionAlreadyLinkedToRole,
 		/// The permission wasn't found in the roles capabilities
 		PermissionNotLinkedToRole,
 		/// The user doesn't have any roles in this pallet
