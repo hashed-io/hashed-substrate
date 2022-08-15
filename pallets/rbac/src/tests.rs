@@ -1,5 +1,5 @@
-use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config};
-use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec};
+use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config, Roles, RolesByUser, UsersByScope, PermissionsByRole, Permissions};
+use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec, pallet_prelude::{StorageNMap, DispatchResult}};
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 const PALLET_ID : u64 = 1;
@@ -17,10 +17,6 @@ create_permission
 set_permission_to_role
 set_multiple_permissions_to_role
 create_and_set_permissions
-*/
-
-// TODO:
-/*
 remove_scope
 remove_pallet_storage
 is_authorized
@@ -29,8 +25,15 @@ scope_exists
 permission_exists
 is_role_linked_to_pallet
 is_permission_linked_to_role
-get_role_users_len
 */
+
+// TODO:
+/*
+get_role_users_len
+
+assign twice role to user
+*/
+
 fn create_scope(n: u8)->ScopeId{
 	let scope_id = [n;32];
 	assert_ok!(RBAC::create_scope(PALLET_ID, scope_id));
@@ -60,8 +63,8 @@ fn create_role(role: Vec<u8>)->RoleId{
 	r_id
 }
 
-fn create_and_set_roles(role_ids: Vec<Vec<u8>>)->BoundedVec<RoleId, <Test as Config>::MaxRolesPerPallet >{
-	let role_ids = RBAC::create_and_set_roles(PALLET_ID, role_ids).unwrap();
+fn create_and_set_roles(roles: Vec<Vec<u8>>)->BoundedVec<RoleId, <Test as Config>::MaxRolesPerPallet >{
+	let role_ids = RBAC::create_and_set_roles(PALLET_ID, roles).unwrap();
 	let inserted_roles_list = RBAC::pallet_roles(PALLET_ID);
 	assert!(
 		role_ids.iter().all(|r_id| inserted_roles_list.contains(r_id))
@@ -79,8 +82,7 @@ fn set_multiple_pallet_roles(roles: Vec<RoleId>){
 
 fn remove_scope(n: u8){
 	assert_ok!(RBAC::remove_scope(PALLET_ID, [n;32]));
-	assert!(!RBAC::scopes(PALLET_ID).contains(&[n;32]));
-	// TODO check that other storage maps were removed too
+	assert!(RBAC::scope_exists(PALLET_ID,&[n;32]).is_err());
 }
 
 fn remove_role_from_user(user: AccountId, scope_id: &ScopeId, role_id: RoleId){
@@ -93,7 +95,10 @@ fn remove_role_from_user(user: AccountId, scope_id: &ScopeId, role_id: RoleId){
 
 fn remove_pallet_storage(){
 	assert_ok!(RBAC::remove_pallet_storage(PALLET_ID));
-	// TODO: Check that other storage maps were removed too
+	assert!(RBAC::scopes(PALLET_ID).is_empty());
+	assert!(RBAC::pallet_roles(PALLET_ID).is_empty());
+	assert_eq!(<Permissions<Test>>::iter_prefix(PALLET_ID).count(), 0);
+	assert_eq!(<PermissionsByRole<Test>>::iter_prefix(PALLET_ID).count(), 0);
 }
 
 fn assign_role_to_user(user: AccountId, scope_id : &ScopeId, role_id: RoleId){
@@ -130,12 +135,41 @@ fn set_multiple_permissions_to_role(role_id: RoleId, permissions: Vec<Permission
 	);
 }
 
-fn create_and_set_permissions(role_id: RoleId, permissions: Vec<Vec<u8>>){
+fn create_and_set_permissions(role_id: RoleId, permissions: Vec<Vec<u8>>)->BoundedVec<PermissionId, <Test as Config>::MaxPermissionsPerRole>{
 	let permission_ids = RBAC::create_and_set_permissions(PALLET_ID, role_id,permissions).unwrap();
 	let role_permissions = RBAC::permissions_by_role(PALLET_ID, role_id);
 	assert!(
 		permission_ids.iter().all(|p|{role_permissions.contains(p)}),
 	);
+	permission_ids
+}
+
+fn is_authorized(user: AccountId, scope_id : &ScopeId, permission_id: &PermissionId) -> DispatchResult{
+	RBAC::is_authorized(user, PALLET_ID, scope_id, permission_id)
+}
+
+fn has_role(user: AccountId, scope_id : &ScopeId, role_ids: Vec<RoleId>) -> DispatchResult{
+	RBAC::has_role(user, PALLET_ID, scope_id, role_ids)
+}
+
+fn scope_exists(scope_id : &ScopeId) -> DispatchResult{
+	RBAC::scope_exists(PALLET_ID, scope_id)
+}
+
+fn permission_exists(permission_id: &PermissionId) -> DispatchResult {
+	RBAC::permission_exists(PALLET_ID, permission_id)
+}
+
+fn is_role_linked_to_pallet(role_id: &RoleId) -> DispatchResult {
+	RBAC::is_role_linked_to_pallet(PALLET_ID, role_id)
+}
+
+fn is_permission_linked_to_role(role_id: &RoleId, permission_id: &PermissionId) -> DispatchResult {
+	RBAC::is_permission_linked_to_role(PALLET_ID, role_id, permission_id)
+}
+
+fn get_role_users_len(scope_id : &ScopeId, role_id: &RoleId)-> usize{
+	RBAC::get_role_users_len(PALLET_ID, scope_id, role_id)
 }
 
 #[test]
@@ -166,9 +200,25 @@ fn exceeding_max_scopes_per_pallet_should_fail() {
 #[test]
 fn remove_scope_works() {
 	new_test_ext().execute_with(|| {
-		create_scope(0);
-		// TODO: add roles to pallet and users to scope
+		let n_roles = <Test as Config>::MaxRolesPerPallet::get();
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(gen_roles(n_roles));
+		role_ids.iter().enumerate().for_each(|(i,role_id)|{
+			assign_role_to_user(i.try_into().unwrap(), &scope_id, *role_id);
+		});
 		remove_scope(0);
+	});
+}
+
+#[test]
+fn remove_non_existent_scope_should_fail() {
+	new_test_ext().execute_with(|| {
+		let n_roles = <Test as Config>::MaxRolesPerPallet::get();
+		create_and_set_roles(gen_roles(n_roles));
+		assert_noop!(
+			RBAC::remove_scope(PALLET_ID, [0;32]),
+			Error::<Test>::ScopeNotFound
+		);
 	});
 }
 
@@ -324,6 +374,20 @@ fn assign_role_to_user_should_work() {
 		let role_id = create_role("owner".as_bytes().to_vec());
 		set_role_to_pallet(role_id);
 		assign_role_to_user(0, &scope_id, role_id);
+	});
+}
+
+#[test]
+fn assign_role_to_user_twice_should_fail() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		assign_role_to_user(0, &scope_id, role_id);
+		assert_noop!(
+			RBAC::assign_role_to_user(0, PALLET_ID, &scope_id, role_id),
+			Error::<Test>::UserAlreadyHasRole
+		);
 	});
 }
 
@@ -626,5 +690,161 @@ fn exceeding_max_permissions_per_role_from_create_and_set_permissions_should_fai
 			RBAC::create_and_set_permissions(PALLET_ID, role_id, permissions),
 			Error::<Test>::ExceedMaxPermissionsPerRole
 		);
+	});
+}
+
+#[test]
+fn is_authorized_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(["admin".as_bytes().to_vec()].to_vec());
+		let mut permission_ids = create_and_set_permissions(*role_ids.get(0).unwrap(), ["enroll".as_bytes().to_vec()].to_vec());
+		assign_role_to_user(0, &scope_id, *role_ids.get(0).unwrap());
+		assert_ok!(
+			is_authorized(0, &scope_id, &permission_ids.pop().unwrap())
+		);
+	});
+}
+
+#[test]
+fn unauthorized_user_should_fail() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(["admin".as_bytes().to_vec()].to_vec());
+		let mut permission_ids = create_and_set_permissions(*role_ids.get(0).unwrap(), ["enroll".as_bytes().to_vec()].to_vec());
+		assert_noop!(
+			is_authorized(0, &scope_id, &permission_ids.pop().unwrap()),
+			Error::<Test>::NotAuthorized
+		);
+	});
+}
+
+#[test]
+fn has_role_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(gen_roles(2));
+		assign_role_to_user(0, &scope_id, *role_ids.get(0).unwrap());
+		assert_ok!(
+			has_role(0, &scope_id, role_ids.to_vec())
+		);
+	});
+}
+
+#[test]
+fn user_that_doesnt_have_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(gen_roles(2));
+		assert_noop!(
+			has_role(0, &scope_id, role_ids.to_vec()),
+			Error::<Test>::NotAuthorized
+		);
+	});
+}
+
+#[test]
+fn scope_exists_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		assert_ok!(
+			scope_exists(&scope_id)
+		);
+	});
+}
+
+#[test]
+fn nonexistent_scope_should_fail() {
+	new_test_ext().execute_with(|| {
+		create_scope(0);
+		assert_noop!(
+			scope_exists(&[1;32]),
+			Error::<Test>::ScopeNotFound
+		);
+	});
+}
+
+#[test]
+fn permission_exists_should_work() {
+	new_test_ext().execute_with(|| {
+		let permission_id = create_permission("enroll".as_bytes().to_vec());
+		assert_ok!(
+			permission_exists(&permission_id)
+		);
+	});
+}
+
+#[test]
+fn nonexistent_permission_should_fail() {
+	new_test_ext().execute_with(|| {
+		create_permission("enroll".as_bytes().to_vec());
+		assert_noop!(
+			permission_exists(&[0;32]),
+			Error::<Test>::PermissionNotFound
+		);
+	});
+}
+
+#[test]
+fn is_role_linked_to_pallet_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		assert_ok!(
+			is_role_linked_to_pallet(&role_id)
+		);
+	});
+}
+
+#[test]
+fn unlinked_role_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		assert_noop!(
+			is_role_linked_to_pallet(&role_id),
+			Error::<Test>::RoleNotLinkedToPallet
+		);
+	});
+}
+
+#[test]
+fn is_permission_linked_to_role_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permission_id = create_permission("enroll".as_bytes().to_vec());
+		set_permission_to_role(role_id, permission_id);
+		assert_ok!(
+			is_permission_linked_to_role(&role_id, &permission_id)
+		);
+	});
+}
+
+#[test]
+fn unlinked_permission_should_fail() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let permission_id = create_permission("enroll".as_bytes().to_vec());
+		assert_noop!(
+			is_permission_linked_to_role(&role_id, &permission_id),
+			Error::<Test>::PermissionNotLinkedToRole
+		);
+	});
+}
+
+#[test]
+fn get_role_users_len_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		
+		assert_eq!(get_role_users_len(&scope_id, &role_id), 0);
+
+		assign_role_to_user(0, &scope_id, role_id);
+		assign_role_to_user(1, &scope_id, role_id);
+
+		assert_eq!(get_role_users_len(&scope_id, &role_id), 2);
 	});
 }

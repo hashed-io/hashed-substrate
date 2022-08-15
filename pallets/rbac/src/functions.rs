@@ -169,7 +169,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         Self::is_role_linked_to_pallet(pallet_id, &role_id)?;
 
         <RolesByUser<T>>::try_mutate((&user, pallet_id, scope_id), | roles |{
-            ensure!(!roles.contains(&role_id), Error::<T>::DuplicateRole);
+            ensure!(!roles.contains(&role_id), Error::<T>::UserAlreadyHasRole);
             roles.try_push(role_id).map_err(|_| Error::<T>::ExceedMaxRolesPerUser)
         })?;
 
