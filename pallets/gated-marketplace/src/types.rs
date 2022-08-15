@@ -76,7 +76,6 @@ impl PartialEq for ApplicationField{
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum OfferStatus{
     Open,
-    Freezed,
     Closed,
 }
 
