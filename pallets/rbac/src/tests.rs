@@ -1,38 +1,8 @@
-use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config, Roles, RolesByUser, UsersByScope, PermissionsByRole, Permissions};
-use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec, pallet_prelude::{StorageNMap, DispatchResult}};
+use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config, PermissionsByRole, Permissions};
+use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec, pallet_prelude::DispatchResult};
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 const PALLET_ID : u64 = 1;
-
-// DONE:
-/*
-create_scope
-create_role
-set_role_to_pallet
-set_multiple_pallet_roles
-create_and_set_role
-assign_role_to_user
-remove_role_from_user
-create_permission
-set_permission_to_role
-set_multiple_permissions_to_role
-create_and_set_permissions
-remove_scope
-remove_pallet_storage
-is_authorized
-has_role
-scope_exists
-permission_exists
-is_role_linked_to_pallet
-is_permission_linked_to_role
-*/
-
-// TODO:
-/*
-get_role_users_len
-
-assign twice role to user
-*/
 
 fn create_scope(n: u8)->ScopeId{
 	let scope_id = [n;32];
