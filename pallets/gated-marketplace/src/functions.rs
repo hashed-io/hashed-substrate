@@ -1,4 +1,3 @@
-use core::default;
 
 use super::*;
 use frame_support::{pallet_prelude::*};

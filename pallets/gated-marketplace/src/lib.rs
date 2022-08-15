@@ -24,12 +24,6 @@ pub mod pallet {
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 	//use frame_support::traits::tokens::Balance;
-	//use std::fmt::Debug;
-
-use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
-	use frame_system::pallet_prelude::*;
-	use sp_runtime::sp_std::vec::Vec;
-	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 	
 	#[pallet::config]
