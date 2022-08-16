@@ -195,10 +195,6 @@ pub mod pallet {
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Work In Progress
-		NotYetImplemented,
-		/// Error names should be descriptive.
-		NoneValue,
 		///Limit bounded vector exceeded
 		LimitExceeded,
 		/// The account supervises too many marketplaces
@@ -222,7 +218,7 @@ pub mod pallet {
 		/// The specified marketplace does not exist
 		MarketplaceNotFound,
 		/// You need to be an owner or an admin of the marketplace
-		CannotEnroll,
+		NotOwnerOrAdmin,
 		/// There was no change regarding the application status
 		AlreadyEnrolled,
 		/// There cannot be more than one owner per marketplace

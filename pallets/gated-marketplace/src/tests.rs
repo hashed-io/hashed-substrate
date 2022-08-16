@@ -1,12 +1,12 @@
-use crate::{mock::*, Error, types::*, Custodians, Config};
+use crate::{mock::*, Error, types::*, Config};
 use std::vec;
 use sp_runtime::sp_std::vec::Vec;
 use codec::Encode;
 use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32}, assert_noop};
-use pallet_rbac::{types::RoleBasedAccessControl};
+use pallet_rbac::types::RoleBasedAccessControl;
 use sp_io::hashing::blake2_256;
 
-type rbac_err = pallet_rbac::Error<Test>;
+type RbacErr = pallet_rbac::Error<Test>;
 
 fn create_label( label : &str ) -> BoundedVec<u8, LabelMaxLen> {
 	let s: Vec<u8> = label.as_bytes().into();
@@ -89,12 +89,16 @@ fn duplicate_marketplaces_shouldnt_work() {
 }
 
 #[test]
-fn exceeding_max_markets_per_auth_shouldnt_work() {
+fn exceeding_max_roles_per_auth_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
-		assert_noop!(GatedMarketplace::create_marketplace(Origin::signed(3),3, create_label("my marketplace 2")), Error::<Test>::ExceedMaxRolesPerAuth );
+		let m_label =  create_label("my marketplace");
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, m_label.clone() ));
+		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 2, MarketplaceRole::Appraiser, m_label.using_encoded(blake2_256)));
+		assert_noop!(
+			GatedMarketplace::add_authority(Origin::signed(1), 2, MarketplaceRole::RedemptionSpecialist, m_label.using_encoded(blake2_256) ), 
+			RbacErr::ExceedMaxRolesPerUser 
+		);
 
-		// TODO: test ExceedMaxMarketsPerAuth when its possible to add new authorities
 	});
 }
 
@@ -200,7 +204,7 @@ fn enroll_works() {
 		// enroll with account
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true, default_feedback()));
 		// enroll with application
-		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true, default_feedback()));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), false, default_feedback()));
 	});
 }
 
@@ -212,7 +216,7 @@ fn enroll_rejected_works() {
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
 		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(1), None ));
-		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
+		let app_id = GatedMarketplace::applications_by_account(4,m_id).unwrap();
 		// reject with account
 		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), false, default_feedback()));
 		// reject with application
@@ -246,13 +250,13 @@ fn enroll_approved_has_feedback_works() {
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
 		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(1), None ));
-		let app_id = GatedMarketplace::applications_by_account(3,m_id).unwrap();
+		let app_id = GatedMarketplace::applications_by_account(4,m_id).unwrap();
 		// reject with account
-		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true, feedback("We've accepted your publication")));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true, feedback("We've rejected your publication")));
 		// reject with application
-		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true, feedback("We've accepted your publication")));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Application(app_id), true, feedback("We've rejected your publication")));
 
-		assert_eq!(boundedvec_to_string(&GatedMarketplace::applications(app_id).unwrap().feedback), String::from("We've accepted your publication"));
+		assert_eq!(boundedvec_to_string(&GatedMarketplace::applications(app_id).unwrap().feedback), String::from("We've rejected your publication"));
 	});
 }
 
@@ -280,7 +284,7 @@ fn non_authorized_user_enroll_shouldnt_work() {
 		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), None ));
 
 		// external user tries to enroll someone
-		assert_noop!(GatedMarketplace::enroll(Origin::signed(4), m_id , AccountOrApplication::Account(3), true, default_feedback()), Error::<Test>::CannotEnroll);
+		assert_noop!(GatedMarketplace::enroll(Origin::signed(4), m_id , AccountOrApplication::Account(3), true, default_feedback()), RbacErr::NotAuthorized);
 	});
 }
 
@@ -349,7 +353,7 @@ fn add_authority_cant_apply_twice_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id), Error::<Test>::AlreadyApplied);
+		assert_noop!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id), RbacErr::UserAlreadyHasRole);
 	});
 }
 
@@ -419,7 +423,7 @@ fn remove_authority_user_tries_to_remove_non_existent_role_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 3, MarketplaceRole::Admin, m_id), Error::<Test>::AuthorityNotFoundForUser);
+		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(1), 3, MarketplaceRole::Admin, m_id), RbacErr::RoleNotFound);
 	});
 }
 
@@ -430,7 +434,7 @@ fn remove_authority_user_is_not_admin_or_owner_shouldnt_work(){
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 4, MarketplaceRole::Admin, m_id));
-		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(3), 4,MarketplaceRole::Appraiser, m_id), Error::<Test>::CannotEnroll);
+		assert_noop!(GatedMarketplace::remove_authority(Origin::signed(3), 4,MarketplaceRole::Appraiser, m_id), RbacErr::NotAuthorized);
 	});
 }
 
@@ -465,7 +469,7 @@ fn update_marketplace_user_without_permission_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::update_label_marketplace(Origin::signed(3), m_id, create_label("my marketplace2")), rbac_err::NotAuthorized);
+		assert_noop!(GatedMarketplace::update_label_marketplace(Origin::signed(3), m_id, create_label("my marketplace2")), RbacErr::NotAuthorized);
 	});
 }
 
@@ -502,7 +506,7 @@ fn remove_marketplace_user_without_permission_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
-		assert_noop!(GatedMarketplace::remove_marketplace(Origin::signed(3), m_id), rbac_err::NotAuthorized);
+		assert_noop!(GatedMarketplace::remove_marketplace(Origin::signed(3), m_id), RbacErr::NotAuthorized);
 	});
 }
 
