@@ -45,6 +45,10 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"frame-benchmarking/std",
+	"pallet-balances/std",
+	"pallet-uniques/std",
+	"pallet-fruniques/std",
+	"pallet-timestamp/std",
 	"pallet-rbac/std"
 ]
 

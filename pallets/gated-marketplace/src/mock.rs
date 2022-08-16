@@ -23,6 +23,7 @@ frame_support::construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 
 	}
 );
@@ -89,6 +90,7 @@ impl pallet_gated_marketplace::Config for Test {
 	type MaxOffersPerMarket = MaxOffersPerMarket;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
 	type LocalCurrency = Balances;
+	type Rbac = RBAC;
 }
 
 impl pallet_fruniques::Config for Test {
@@ -145,9 +147,33 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = [u8; 8];
 }
 
+
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 2;
+	pub const MaxRolesPerPallet: u32 = 6;
+	pub const RoleMaxLen: u32 = 25;
+	pub const PermissionMaxLen: u32 = 25;
+	pub const MaxPermissionsPerRole: u32 = 5;
+	pub const MaxRolesPerUser: u32 = 2;
+	pub const MaxUsersPerRole: u32 = 2;
+}
+impl pallet_rbac::Config for Test {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
+}
+
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	// TODO: get initial conf?
+	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	t.execute_with(|| GatedMarketplace::do_initial_setup().expect("Error on configuring initial setup"));
+	t
 }
 
 impl pallet_timestamp::Config for Test {

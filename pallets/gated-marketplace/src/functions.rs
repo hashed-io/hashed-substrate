@@ -24,6 +24,10 @@ impl<T: Config> Pallet<T> {
         // participant role and permissions
         let participant_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::Participant.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id, participant_role_id[0],["buy".as_bytes().to_vec(),"sell".as_bytes().to_vec()].to_vec() )?;
+        // appraiser role and permissions
+        let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
+        // redemption specialist role and permissions
+        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
 
         Ok(())
     }
