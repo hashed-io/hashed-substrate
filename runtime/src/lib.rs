@@ -104,7 +104,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 113,
+	spec_version: 115,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -602,6 +602,31 @@ impl pallet_nbv_storage::Config for Runtime {
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
 
+parameter_types! {
+	pub const MaxOwnedDocs: u32 = 100;
+	pub const MaxSharedFromDocs: u32 = 100;
+	pub const MaxSharedToDocs: u32 = 100;
+	pub const DocNameMinLen: u32 = 3;
+	pub const DocNameMaxLen: u32 = 50;
+	pub const DocDescMinLen: u32 = 5;
+	pub const DocDescMaxLen: u32 = 100;
+}
+
+impl pallet_confidential_docs::Config for Runtime {
+	type Event = Event;
+	type RemoveOrigin = EnsureOneOf<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type MaxOwnedDocs = MaxOwnedDocs;
+	type MaxSharedFromDocs = MaxSharedFromDocs;
+	type MaxSharedToDocs = MaxSharedToDocs;
+	type DocNameMinLen = DocNameMinLen;
+	type DocNameMaxLen = DocNameMaxLen;
+	type DocDescMinLen = DocDescMinLen;
+	type DocDescMaxLen = DocDescMaxLen;
+}
+
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
@@ -715,6 +740,7 @@ construct_runtime!(
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
 		RBAC: pallet_rbac,
+		ConfidentialDocs: pallet_confidential_docs,
 	}
 );
 

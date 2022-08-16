@@ -66,6 +66,7 @@ pallet-fruniques = { version = "0.1.0-dev", default-features = false, path = "..
 pallet-nbv-storage = { version = "4.0.0-dev", default-features = false, path = "../pallets/nbv-storage" }
 pallet-gated-marketplace = { version = "4.0.0-dev", default-features = false, path = "../pallets/gated-marketplace" }
 pallet-rbac = { version = "4.0.0-dev", default-features = false, path = "../pallets/rbac" }
+pallet-confidential-docs = { version = "4.0.0-dev", default-features = false, path = "../pallets/confidential-docs" }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
@@ -103,6 +104,7 @@ std = [
 	"pallet-nbv-storage/std",
 	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
+	"pallet-confidential-docs/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
