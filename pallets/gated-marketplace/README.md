@@ -11,8 +11,8 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Polkadot-js CLI](#polkadot-js-cli)
       - [Create a marketplace](#create-a-marketplace)
       - [Get a marketplace](#get-a-marketplace)
-      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace)
-      - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace)
+      - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace)
+      - [Get all the accounts that have a certain role on a marketplace](#get-all-the-accounts-that-have-a-certain-role-on-a-marketplace)
       - [Apply to a marketplace (without custodian)](#apply-to-a-marketplace-without-custodian)
       - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian)
       - [Get an application](#get-an-application)
@@ -26,8 +26,8 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
       - [Create a marketplace](#create-a-marketplace-1)
       - [Get a marketplace](#get-a-marketplace-1)
-      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace-1)
-      - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace-1)
+      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace)
+      - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace)
       - [Apply to a marketplace (without custodian)](#apply-to-a-marketplace-without-custodian-1)
       - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian-1)
       - [Get an application](#get-an-application-1)
@@ -76,8 +76,6 @@ This module allows to:
 
 ### Getters
 - `marketplaces`
-- `marketplaces_by_authority` (double storage map)
-- `authorities_by_marketplace` (double storage map)
 - `applications` 
 - `applications_by_account` (double storage map)
 - `applicants_by_marketplace` (double storage map)
@@ -131,7 +129,7 @@ polkadot-js-api query.gatedMarketplace.marketplaces "0xace33a53e2c1a5c7fa2f92033
 }
 ```
 
-#### Get what permissions does an account have on a marketplace
+#### Get what roles does an account have on a marketplace
 ```bash
 # account_id, marketplace_id
 polkadot-js-api query.gatedMarketplace.marketplacesByAuthority "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95"
@@ -145,7 +143,7 @@ polkadot-js-api query.gatedMarketplace.marketplacesByAuthority "5GrwvaEF5zXb26Fz
 }
 ```
 
-#### Get all the accounts that have a certain permission on a marketplace 
+#### Get all the accounts that have a certain role on a marketplace 
 ```bash
 # marketplace_id, type of authoriry (it can be "Owner", "Admin" or "Appraiser")
 polkadot-js-api query.gatedMarketplace.authoritiesByMarketplace "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95" "Admin"
