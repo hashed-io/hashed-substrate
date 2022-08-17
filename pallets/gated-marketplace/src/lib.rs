@@ -497,6 +497,22 @@ pub mod pallet {
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
 		
+		/// Enlist a sell order.
+		/// 
+		/// This extrinsic creates a sell order in the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to create the sell order.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// - `price`: The price of the item.
+		/// 
+		/// ### Considerations:
+		/// - You can only create a sell order in the marketplace if you are the owner of the item.
+		/// - You can create only one sell order for each item per marketplace.
+		/// - If the selected marketplace doesn't exist, it will throw an error.
+		/// - If the selected collection doesn't exist, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
@@ -505,6 +521,20 @@ pub mod pallet {
 			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
 		}
 
+		/// Accepts a sell order.
+		/// 
+		/// This extrinsic accepts a sell order in the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// 
+		/// ### Considerations:
+		/// - You don't need to be the owner of the item to accept the sell order.
+		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
+		/// - If you don't have the enough balance to accept the sell order, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
@@ -513,6 +543,20 @@ pub mod pallet {
 			Self::do_take_sell_offer(who, offer_id, marketplace_id, collection_id, item_id)
 		}
 
+		/// Allows a user to duplicate a sell order.
+		/// 
+		/// This extrinsic allows a user to duplicate a sell order in any marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to duplicate the sell order.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// 
+		/// ### Considerations:
+		/// - You can only duplicate a sell order if you are the owner of the item.
+		/// - The expiration date of the sell order is the same as the original sell order.
+		/// - You can update the price of the sell order.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
 		pub fn duplicate_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult {
@@ -521,6 +565,23 @@ pub mod pallet {
 			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
 		}	
 
+
+		/// Delete an offer.
+		/// 
+		/// This extrinsic deletes an offer in the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to delete the offer.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// 
+		/// ### Considerations:
+		/// - You can delete sell orders or buy orders.
+		/// - You can only delete an offer if you are the creator of the offer.
+		/// - Only open offers can be deleted.
+		/// - If you need to delete multiple offers for the same item, you need to 
+		///  delete them one by one.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
@@ -531,7 +592,21 @@ pub mod pallet {
 			Self::do_remove_offer(who, offer_id, marketplace_id, collection_id, item_id)
 		}
 
-
+		/// Enlist a buy order.
+		/// 
+		/// This extrinsic creates a buy order in the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to create the buy order.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// - `price`: The price of the item.
+		/// 
+		/// ### Considerations:
+		/// - Any user can create a buy order in the marketplace.
+		/// - An item can receive multiple buy orders at a time.
+		/// - You need to have the enough balance to create the buy order.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
 		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
@@ -540,6 +615,23 @@ pub mod pallet {
 			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
 		}
 
+
+		/// Accepts a buy order.
+		/// 	
+		/// This extrinsic accepts a buy order in the selected marketplace.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we accept the buy order.
+		/// - `collection_id`: The id of the collection.
+		/// - `item_id`: The id of the item inside the collection.
+		/// 
+		/// ### Considerations:
+		/// - You need to be the owner of the item to accept a buy order.
+		/// - Owner of the item can accept only one buy order at a time.
+		/// - When an offer is accepted, all the other offers for this item are closed.
+		/// - The buyer needs to have the enough balance to accept the buy order.
+		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {

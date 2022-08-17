@@ -180,8 +180,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-        //TODO: ensure the user is a Marketparticipant
-
+        //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -456,18 +455,20 @@ impl<T: Config> Pallet<T> {
     pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, ) -> DispatchResult {
         //ensure marketplace_id exits
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-        
-        //ensure the offer_id exists & get the offer data 
-        let copy_offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
 
-        // ensure the owner is the same as the authority
-        ensure!(copy_offer_data.creator == authority.clone(), Error::<T>::CannotRemoveOffer);
-
-        //ensure the offer_id exists in OffersByItem
-        Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
+        //ensure the offer_id exists
+        ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
 
         //ensure the offer status is Open
         ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
+
+
+        // ensure the owner is the same as the authority
+        let offer_creator = Self::get_offer_creator(offer_id).map_err(|_| Error::<T>::OfferNotFound)?;
+        ensure!(offer_creator == authority.clone(), Error::<T>::CannotRemoveOffer);
+
+        //ensure the offer_id exists in OffersByItem
+        Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
 
         //remove the offer from OfferInfo
@@ -732,6 +733,7 @@ impl<T: Config> Pallet<T> {
 
     fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
         let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
+        
         let timestamp2 = Self::convert_moment_to_u64_in_milliseconds(timestamp).unwrap_or(0);
         let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
 
@@ -785,26 +787,6 @@ impl<T: Config> Pallet<T> {
 
     fn update_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
         let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
-        
-        //This logic is no longer needed, when an offer_id is accepted, 
-        // all the other offers for this item are automatically closed. 
-        // It doesn't matter the offertype. 
-
-        // let mut sell_offer_ids: BoundedVec<[u8;32], T::MaxOffersPerMarket> = BoundedVec::default();
-
-        // for offer_id in offer_ids {
-        //     let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-        //     //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
-        //     if offer_info.offer_type == OfferType::SellOrder {
-        //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
-        //     }
-        //     // //version 2
-        //     // if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-        //     //     if offer.offer_type == OfferType::SellOrder {
-        //     //         sell_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::OfferStorageError)?;
-        //     //     }
-        //     // }
-        // }
         
         for offer_id in offer_ids {
             <OffersInfo<T>>::try_mutate::<_,_,DispatchError,_>(offer_id, |offer|{

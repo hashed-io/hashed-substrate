@@ -2,7 +2,7 @@ use crate::{mock::*, Error, types::*, Config};
 use std::vec;
 use sp_runtime::sp_std::vec::Vec;
 use codec::Encode;
-use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32}, assert_noop};
+use frame_support::{assert_ok, BoundedVec, traits::{Len, ConstU32, Currency}, assert_noop};
 use pallet_rbac::types::RoleBasedAccessControl;
 use sp_io::hashing::blake2_256;
 
@@ -29,6 +29,10 @@ fn boundedvec_to_string(boundedvec: &BoundedVec<u8, MaxFeedbackLen>) -> String {
 		s.push(*b as char);
 	}
 	s
+}
+
+fn _find_id(vec_tor: BoundedVec<[u8;32], ConstU32<100>>, id:[u8;32]) -> bool {
+	vec_tor.iter().find(|&x| *x == id).ok_or(Error::<Test>::OfferNotFound).is_ok()
 }
 
 fn _create_file(name: &str, cid: &str, create_custodian_file: bool) -> ApplicationField {
@@ -788,3 +792,619 @@ fn reapply_works() {
 	});
 }
 
+//Offers
+#[test]
+fn enlist_sell_offer_works() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().offer_type, OfferType::SellOrder);
+
+	});
+}
+
+
+#[test]
+fn enlist_sell_offer_item_does_not_exist_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+
+		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 1, 10000), Error::<Test>::CollectionNotFound);
+	});
+}
+
+
+#[test]
+fn enlist_sell_offer_item_already_enlisted_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000), Error::<Test>::OfferAlreadyExists);
+	});
+}
+
+#[test]
+fn enlist_sell_offer_not_owner_tries_to_enlist_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(2), m_id, 0, 0, 10000), Error::<Test>::NotOwner);
+	});
+}
+
+#[test]
+fn enlist_sell_offer_price_must_greater_than_zero_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 0), Error::<Test>::PriceMustBeGreaterThanZero);
+	});
+}
+
+#[test]
+fn enlist_sell_offer_price_must_greater_than_minimun_amount_works() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+	
+		let minimum_amount = 1001;	
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, minimum_amount));
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+	});
+}
+
+#[test]
+fn enlist_sell_offer_is_properly_stored_works() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		assert_eq!(GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone(), offer_id);
+		assert_eq!(GatedMarketplace::offers_by_marketplace(m_id).iter().next().unwrap().clone(), offer_id);
+
+	});
+}
+
+
+#[test]
+fn enlist_sell_offer_two_marketplaces(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace2")));
+		let m_id2 = create_label("my marketplace2").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id2, 0, 0, 11000)); 
+
+		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 2);
+		assert_eq!(GatedMarketplace::offers_by_account(1).len(), 2);
+		assert_eq!(GatedMarketplace::offers_by_marketplace(m_id).len(), 1);
+		assert_eq!(GatedMarketplace::offers_by_marketplace(m_id2).len(), 1);
+
+	});
+}
+
+#[test]
+fn enlist_buy_offer_works() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1100));
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id2).is_some());
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+	});
+}
+
+#[test]
+fn enlist_buy_offer_item_is_not_for_sale_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_noop!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 1, 1100), Error::<Test>::ItemNotForSale);
+	});
+}
+
+
+#[test]
+fn enlist_buy_offer_owner_cannnot_create_buy_offers_for_their_own_items_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_noop!(GatedMarketplace::enlist_buy_offer(Origin::signed(1), m_id, 0, 0, 1100), Error::<Test>::CannotCreateOffer);
+	});
+}
+
+#[test] 
+fn enlist_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 100);
+
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_noop!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 10000), Error::<Test>::NotEnoughBalance);
+
+	});
+}
+
+#[test]
+fn enlist_buy_offer_price_must_greater_than_zero_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1100);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_noop!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 0), Error::<Test>::PriceMustBeGreaterThanZero);
+	});
+}
+
+
+
+#[test]
+fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1101);
+		Balances::make_free_balance_be(&3, 1201);
+
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1100));
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id2).is_some());
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(3), m_id, 0, 0, 1200));
+		let offer_id3 = GatedMarketplace::offers_by_account(3).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id3).is_some());
+
+		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 3);
+
+	});
+
+}
+
+#[test]
+fn take_sell_offer_works(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+
+		assert_ok!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id, m_id, 0, 0));
+		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
+		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
+
+	});
+}
+
+#[test]
+fn take_sell_offer_owner_cannnot_be_the_buyer_shouldnt_work() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(1), offer_id, m_id, 0, 0), Error::<Test>::CannotTakeOffer);
+	});
+}
+
+#[test]
+fn take_sell_offer_id_does_not_exist_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+		let offer_id2 = offer_id.using_encoded(blake2_256);
+
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id2, m_id, 0, 0), Error::<Test>::OfferNotFound);
+	});
+}
+
+
+#[test]
+fn take_sell_offer_buyer_does_not_have_enough_balance_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1100);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
+
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id, m_id, 0, 0), Error::<Test>::NotEnoughBalance);
+	});
+}
+
+#[test]
+fn take_buy_offer_works(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+		
+		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id, 0, 0));
+		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
+		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
+	});
+}
+
+#[test]
+fn take_buy_offer_only_owner_can_accept_buy_offers_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(2), offer_id2, m_id, 0, 0), Error::<Test>::NotOwner);
+	});
+}
+
+#[test]
+fn take_buy_offer_id_does_not_exist_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+
+		let offer_id3 = offer_id2.using_encoded(blake2_256);
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id3, m_id, 0, 0), Error::<Test>::OfferNotFound);
+
+	});
+}
+
+#[test]
+fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+		
+		Balances::make_free_balance_be(&2, 0);
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id, 0, 0), Error::<Test>::NotEnoughBalance);
+	});
+}
+
+#[test]
+fn remove_sell_offer_works(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::remove_offer(Origin::signed(1), offer_id, m_id, 0, 0));
+		assert_eq!(GatedMarketplace::offers_by_account(1).len(), 0);
+		assert!(GatedMarketplace::offers_info(offer_id).is_none());
+	});
+}
+
+#[test]
+fn remove_buy_offer_works(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1001)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id2).is_some());
+		
+		assert_ok!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2, m_id, 0, 0));
+		assert_eq!(GatedMarketplace::offers_by_account(2).len(), 0);
+		assert!(GatedMarketplace::offers_info(offer_id2).is_none());
+	});
+}
+
+#[test]
+fn remove_offer_id_does_not_exist_sholdnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		let offer_id2 = offer_id.using_encoded(blake2_256);
+		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2, m_id, 0, 0), Error::<Test>::OfferNotFound);
+	});
+}
+
+#[test]
+fn remove_offer_creator_doesnt_match_sholdnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+		
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id, m_id, 0, 0), Error::<Test>::CannotRemoveOffer);
+	});
+}
+
+#[test]
+fn remove_offer_status_is_closed_shouldnt_work(){
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+	
+		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
+		let m_id = create_label("my marketplace").using_encoded(blake2_256);
+		
+		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
+		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
+		assert!(GatedMarketplace::offers_info(offer_id).is_some());
+		
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
+		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
+		
+		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id, 0, 0));
+		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
+		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
+
+		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2, m_id, 0, 0), Error::<Test>::CannotDeleteOffer);
+	});
+	
+}

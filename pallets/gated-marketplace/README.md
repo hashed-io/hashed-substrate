@@ -49,6 +49,7 @@ This module allows to:
 - Enroll or reject applicants to your marketplace.
 - Add or remove users as supported authorities to your marketplace, like administrators and/or asset appraisers
 - WIP: Assign a rating to assets as an Appraiser.
+- Create sell or buy orders. Users can bid on the item if they don't like the sale price.  
 
 ### Terminology
 - **Authority**: Refers to any user that has special faculties within the marketplace, like enroll new users or grade assets.
@@ -60,6 +61,8 @@ This module allows to:
 - **Enroll**: When enrolled, the user's application becomes approved, gaining the ability to sell and buy assets.
 - **Reject**: If the user gets rejected, its application becomes rejected and won't have access to the marketplace.
 - **Custodian**: When submitting an application, the user can optionally specify a third account that will have access to the confidential documents. A custodian doesn't need to be an authority nor being part of the marketplace.
+- **Sell order**: The owner of the item creates sales offer fot the item.
+- **Buy order**: Users from the marketplace can bid for the item.
 
 ## Interface
 
@@ -72,14 +75,28 @@ This module allows to:
 - `remove_authority` is only callable by the marketplace owner or administrator. Removes the authority enforcer from the marketplace. The marketplace owner cannot be removed and the administrator cannot remove itself.
 - `update_label_marketplace`  is only callable by the marketplace owner or administrator. Changes the marketplace label. If the new label already exists, the old name won't be changed.
 - `remove_marketplace`  is only callable by the marketplace owner or administrator. This action allows the user to remove a marketplace as well as all the information related to this marketplace.
+- `enlist_sell_offer` is only callable by the owner of the item. It allows the user to sell an item in the selected marketplace. 
+- `take_sell_offer` any user interested to buy the item can call this extrinsic. User must have enough balance to buy it. When the transaction is completed, the item ownership is transferred to the buyer. 
+- `duplicate_offer` allows the owner of the item to duplicate an sell order in any marketplace. 
+- `remove_offer` is only callable by the creator of the offer, it deletes any offer type from all the storages.
+- `enlist_buy_offer` is callable by any market participant, the owner of the item can't create buy orders for their own items.  User must have the enough balance to call it. 
+- `take_buy_offer` is only callable by the owner of the item. If the owner accepts the offer, the buyer must have enough balance to finalize the transaction. 
 
 
 ### Getters
-- `marketplaces`
-- `applications` 
-- `applications_by_account` (double storage map)
-- `applicants_by_marketplace` (double storage map)
-- `custodians` (double storage map)
+|Name| Type |
+|--|--|
+|`marketplaces`| storage map|
+|`marketplaces_by_authority`|double storage map|
+|`authorities_by_marketplace`|double storage map|
+|`applications`| storage map|
+|`applications_by_account`|double storage map|
+|`applicants_by_marketplace`|double storage map|
+|`custodians`|double storage map|
+|`offers_info` |storage map|
+|`offers_by_item`|double storage map|
+|`offers_by_account`|storage map|
+|`offers_by_marketplace`|storage map|
 
 
 ## Usage
@@ -542,19 +559,34 @@ const removeAuthority = await api.tx.gatedMarketplace.removeAuthority(dave.addre
 
 ```rust
 /// Marketplaces stored. [owner, admin, market_id]
-MarketplaceStored(T::AccountId, T::AccountId, [u8;32]),
+1. MarketplaceStored(T::AccountId, T::AccountId, [u8;32])
+
 /// Application stored on the specified marketplace. [application_id, market_id]
-ApplicationStored([u8;32], [u8;32]),
+2. ApplicationStored([u8;32], [u8;32])
+
 /// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
-ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus),
+3. ApplicationProcessed(AccountOrApplication<T>,[u8;32], ApplicationStatus)
+
 /// Add a new authority to the selected marketplace
-AuthorityAdded(T::AccountId, MarketplaceAuthority),
+4. AuthorityAdded(T::AccountId, MarketplaceAuthority)
+
 /// Remove the selected authority from the selected marketplace
-AuthorityRemoved(T::AccountId, MarketplaceAuthority),
+5. AuthorityRemoved(T::AccountId, MarketplaceAuthority)
+
 /// The label of the selected marketplace has been updated. [market_id]
-MarketplaceLabelUpdated([u8;32]),
+6. MarketplaceLabelUpdated([u8;32])
+
 /// The selected marketplace has been removed. [market_id]
-MarketplaceRemoved([u8;32])
+7. MarketplaceRemoved([u8;32])
+
+/// Offer stored. [collection_id, item_id]
+8. OfferStored(T::CollectionId, T::ItemId)
+
+/// Offer was accepted [offer_id, account]
+9. OfferWasAccepted([u8;32], T::AccountId)
+
+/// Offer was duplicated. [new_offer_id, new_marketplace_id]
+10. OfferDuplicated([u8;32], [u8;32])
 ```
 
 ## Errors
@@ -606,4 +638,32 @@ ApplicationIdNotFound,
 ApplicationStatusStillPending,
 /// The application has already been approved, application status is approved
 ApplicationHasAlreadyBeenApproved,
+/// Collection not found
+CollectionNotFound,
+/// User who calls the function is not the owner of the collection
+NotOwner,
+/// Offer already exists
+OfferAlreadyExists,
+/// Offer not found
+OfferNotFound,
+/// Offer is not available at the moment
+OfferIsNotAvailable,
+/// Owner cannnot buy its own offer
+CannotTakeOffer,
+/// User cannot remove the offer from the marketplace
+CannotRemoveOffer,
+/// Error related to the timestamp
+TimestampError,
+/// User does not have enough balance to buy the offer
+NotEnoughBalance,
+/// User cannot delete the offer because is closed
+CannotDeleteOffer,
+/// There was a problem storing the offer
+OfferStorageError,
+/// Price must be greater than zero
+PriceMustBeGreaterThanZero,
+/// User cannot create buy offers for their own items
+CannotCreateOffer,
+/// This items is not available for sale
+ItemNotForSale,
 ```
