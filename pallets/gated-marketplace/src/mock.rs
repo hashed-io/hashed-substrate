@@ -23,7 +23,7 @@ frame_support::construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-
+        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 	}
 );
 

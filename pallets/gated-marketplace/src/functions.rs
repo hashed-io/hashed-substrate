@@ -152,8 +152,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-        //TODO: ensure the user is a Marketparticipant
-
+        //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -428,9 +427,12 @@ impl<T: Config> Pallet<T> {
     pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, ) -> DispatchResult {
         //ensure marketplace_id exits
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-        
+
         //ensure the offer_id exists
         ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
+
+        //ensure the offer status is Open
+        ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
 
 
         // ensure the owner is the same as the authority
@@ -439,9 +441,6 @@ impl<T: Config> Pallet<T> {
 
         //ensure the offer_id exists in OffersByItem
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
-
-        //ensure the offer status is Open
-        ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::CannotDeleteOffer);
 
 
         //remove the offer from OfferInfo
