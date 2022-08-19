@@ -67,6 +67,12 @@ pub enum Permission{
     RemoveAuth,
     UpdateLabel,
     RemoveMarketplace,
+    EnlistSellOffer,
+    TakeSellOffer,
+    DuplicateOffer,
+    RemoveOffer,
+    EnlistBuyOffer,
+    TakeBuyOffer,
 }
 
 impl Permission{
@@ -77,6 +83,12 @@ impl Permission{
             Self::RemoveAuth => "RemoveAuth".as_bytes().to_vec(),
             Self::UpdateLabel => "UpdateLabel".as_bytes().to_vec(),
             Self::RemoveMarketplace => "RemoveMarketplace".as_bytes().to_vec(),
+            &Self::EnlistSellOffer=>"EnlistSellOffer".as_bytes().to_vec(),
+            &Self::TakeSellOffer=>"TakeSellOffer".as_bytes().to_vec(),
+            &Self::DuplicateOffer=>"DuplicateOffer".as_bytes().to_vec(),
+            &Self::RemoveOffer=>"RemoveOffer".as_bytes().to_vec(),
+            &Self::EnlistBuyOffer=>"EnlistBuyOffer".as_bytes().to_vec(),
+            &Self::TakeBuyOffer=>"TakeBuyOffer".as_bytes().to_vec(),
         }
     }
 
@@ -91,6 +103,18 @@ impl Permission{
         RemoveAuth.to_vec(),
         UpdateLabel.to_vec(),
         RemoveMarketplace.to_vec()].to_vec()
+    }
+
+    pub fn participant_permissions()->Vec<Vec<u8>>{
+        use crate::types::Permission::*;
+        [
+        EnlistSellOffer.to_vec(),
+        TakeSellOffer.to_vec(),
+        DuplicateOffer.to_vec(),
+        RemoveOffer.to_vec(),
+        EnlistBuyOffer.to_vec(),
+        TakeBuyOffer.to_vec(),
+        ].to_vec()
     }
 }
 
