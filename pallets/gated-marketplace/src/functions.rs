@@ -183,7 +183,7 @@ impl<T: Config> Pallet<T> {
         //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::EnlistSellOffer)?;
         //ensure the collection exists
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a == authority, Error::<T>::NotOwner);
@@ -244,13 +244,14 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-        //TODO: ensure the user is a Marketparticipant
-
+        // ensure the user is a Marketparticipant
+        //ensure!(<ApplicantsByMarketplace<T>>::get(marketplace_id, ApplicationStatus::Approved).contains(&authority), Error::<T>::ApplicantNotFound);
         //ensure the item is for sale, if not, return error
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::ItemNotForSale);
-
+        
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::EnlistBuyOffer)?;
 
         //ensure the collection exists
         //For this case user doesn't have to be the owner of the collection
@@ -314,6 +315,8 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_take_sell_offer(buyer: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        Self::is_authorized(buyer.clone(), &marketplace_id,Permission::TakeSellOffer)?;
         //This extrisicn is called by the user who wants to buy the item
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
@@ -358,6 +361,8 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_take_buy_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
         //This extrinsic is called by the owner of the item who accepts the buy offer from the interested user.
+        ensure!(<Marketplaces<T>>::contains_key(&marketplace_id), Error::<T>::MarketplaceNotFound);
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::TakeBuyOffer)?;
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(collection_id, item_id).ok_or(Error::<T>::OwnerNotFound)?;
 
@@ -408,7 +413,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_duplicate_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult{
         //ensure new marketplace_id exits
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::DuplicateOffer)?;
         //ensure that the offer_id exists
         ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
 
@@ -455,7 +460,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, ) -> DispatchResult {
         //ensure marketplace_id exits
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-
+        Self::is_authorized(authority.clone(), &marketplace_id,Permission::RemoveOffer)?;
         //ensure the offer_id exists
         ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
 

@@ -98,11 +98,13 @@ impl Permission{
 
     pub fn admin_permissions()-> Vec<Vec<u8>>{
         use crate::types::Permission::*;
-        [Enroll.to_vec(),
+        let mut admin_permissions = [Enroll.to_vec(),
         AddAuth.to_vec(),
         RemoveAuth.to_vec(),
         UpdateLabel.to_vec(),
-        RemoveMarketplace.to_vec()].to_vec()
+        RemoveMarketplace.to_vec()].to_vec();
+        admin_permissions.append(&mut Permission::participant_permissions());
+        admin_permissions
     }
 
     pub fn participant_permissions()->Vec<Vec<u8>>{

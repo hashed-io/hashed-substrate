@@ -1085,6 +1085,9 @@ fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers(){
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id2).is_some());
 
+		// User 3 will buy the asset so it'll have to enter the marketplace first
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id,create_application_fields(2), None ));
+		assert_ok!(GatedMarketplace::enroll(Origin::signed(1), m_id , AccountOrApplication::Account(3), true, default_feedback()));
 		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(3), m_id, 0, 0, 1200));
 		let offer_id3 = GatedMarketplace::offers_by_account(3).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id3).is_some());
