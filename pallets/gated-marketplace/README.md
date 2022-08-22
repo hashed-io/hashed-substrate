@@ -36,7 +36,7 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
       - [Create a marketplace](#create-a-marketplace-1)
       - [Get a marketplace](#get-a-marketplace-1)
-      - [Get what permissions does an account have on a marketplace](#get-what-permissions-does-an-account-have-on-a-marketplace)
+      - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace-1)
       - [Get all the accounts that have a certain permission on a marketplace](#get-all-the-accounts-that-have-a-certain-permission-on-a-marketplace)
       - [Apply to a marketplace (without custodian)](#apply-to-a-marketplace-without-custodian-1)
       - [Apply to a marketplace (with custodian)](#apply-to-a-marketplace-with-custodian-1)
@@ -434,7 +434,7 @@ key marketplace_id: [
      marketplace: { label: 'my marketplace' }
 ```
 
-#### Get what permissions does an account have on a marketplace
+#### Get what roles does an account have on a marketplace
 ```js
 // account_id, pallet_id, scope_id
 const rolesByUser = await api.query.rbac.rolesByUser(alice.address,20, "0xace33a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b95");

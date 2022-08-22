@@ -633,7 +633,7 @@ parameter_types! {
 	pub const MaxRolesPerPallet: u32 = 20;
 	pub const RoleMaxLen: u32 = 30;
 	pub const PermissionMaxLen: u32 = 30;
-	pub const MaxPermissionsPerRole: u32 = 10;
+	pub const MaxPermissionsPerRole: u32 = 12;
 	pub const MaxRolesPerUser: u32 = 10;
 	pub const MaxUsersPerRole: u32 = 10;
 }
