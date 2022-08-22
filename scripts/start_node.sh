@@ -9,6 +9,7 @@ node_args=(
     --rpc-cors all 
     --rpc-methods unsafe 
     --validator 
+    --log sub-libp2p=trace
     --node-key ${NODEKEY}
 )
 
