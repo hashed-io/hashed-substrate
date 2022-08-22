@@ -15,7 +15,7 @@ node_args=(
 if [[ ${ISMAINNET} = true ]]; then
     echo "Mainnet deployment detected"
     chain_spec="--chain chaosSpec.json"
-    node_args+=(--bootnodes /ip4/206.221.189.10/tcp/30335/p2p/12D3KooWQxwQyQ3BaCs5tweoTmHNWHbpHePZt6P9SscBps1FWsUc)
+    node_args+=(--bootnodes ${BOOTNODE})
     node_args+=(--public-addr ${PUBLICADDR})
 else
 echo "MD5 deployment detected"
