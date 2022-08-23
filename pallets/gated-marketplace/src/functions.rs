@@ -187,9 +187,9 @@ impl<T: Config> Pallet<T> {
             buyer: None,
         };
 
-
+        //TODO: FIX THIS HELPER FUCNTION
         //ensure there is no a previous sell offer for this item
-        Self::is_item_already_for_sale(collection_id, item_id, marketplace_id)?;
+        //Self::is_item_already_for_sale(collection_id, item_id, marketplace_id)?;
         
         //insert in OffersByItem
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
@@ -216,8 +216,6 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-        //TODO: ensure the user is a Marketparticipant
-
         //ensure the item is for sale, if not, return error
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::ItemNotForSale);
 
@@ -299,8 +297,6 @@ impl<T: Config> Pallet<T> {
         //ensure the offer_id exists in OffersByItem
         Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
 
-        //TODO: ensure the offer is not expired
-
         //ensure the offer is open and available
         ensure!(Self::is_offer_status(offer_id, OfferStatus::Open), Error::<T>::OfferIsNotAvailable);
        
@@ -322,8 +318,6 @@ impl<T: Config> Pallet<T> {
         //remove all the offers associated with the item
         Self::delete_all_offers_for_this_item(collection_id, item_id )?;
         
-        //TODO: add the offer_id from this offer to the buyer's history
-
         Self::deposit_event(Event::OfferWasAccepted(offer_id, buyer));
         Ok(())
     }
@@ -467,6 +461,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
     
+        Self::deposit_event(Event::OfferRemoved(offer_id, marketplace_id));
     
         Ok(())
     }
@@ -787,22 +782,39 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn is_item_already_for_sale(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
-        let offers =  <OffersByItem<T>>::get(collection_id, item_id);
+    // fn is_item_already_for_sale(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
+    //     let offers =  <OffersByItem<T>>::get(collection_id, item_id);
 
-        //if len is == 0, it means that there is no offers for this item, maybe it's the first entry
-        if offers.len() == 0 {
-            return Ok(())
-        } else if offers.len() > 0 {
+    //     //if len is == 0, it means that there is no offers for this item, maybe it's the first entry
+    //     if offers.len() == 0 {
+    //         return Ok(());
+    //     } else if offers.len() > 0 {
+    //         for offer in offers {
+    //             let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
+    //             //ensure the offer_type is SellOrder, because this vector also contains buy offers.
+    //             if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
+    //                 return Err(Error::<T>::OfferAlreadyExists)?;
+    //             }
+    //         }
+    //     } 
+    //     Ok(())
+    // }
+
+    fn _is_item_already_for_sale(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> bool {
+
+        let offers =  match <OffersByItem<T>>::try_get(collection_id, item_id){
+            Ok(offers) => offers,
+            Err(_) => return false};
+
             for offer in offers {
-                let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
+                let offer_info = <OffersInfo<T>>::get(offer);
                 //ensure the offer_type is SellOrder, because this vector also contains buy offers.
                 if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
-                    return Err(Error::<T>::OfferAlreadyExists)?;
+                    return true;
                 }
             }
-        } 
-        Ok(())
+
+        true
     }
 
 

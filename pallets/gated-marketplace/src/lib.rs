@@ -212,6 +212,8 @@ pub mod pallet {
 		OfferWasAccepted([u8;32], T::AccountId),
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
 		OfferDuplicated([u8;32], [u8;32]),
+		/// Offer was removed. [offer_id], [marketplace_id]
+		OfferRemoved([u8;32], [u8;32]), 
 	}
 
 	// Errors inform users that something went wrong.
