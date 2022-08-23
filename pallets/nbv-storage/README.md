@@ -1,7 +1,7 @@
 # NBV Storage
 A storage module for Native Bitcoin Vaults on substrate.
 
-- [NBV Storage](#nbv-storage)
+- [NBV Storage](#bitcoin-vaults)
   - [Overview](#overview)
     - [Terminology](#terminology)
   - [Interface](#interface)
