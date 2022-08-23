@@ -35,7 +35,7 @@ impl Default for MarketplaceAuthority{
     }
 }
 
-#[derive(CloneNoBound,Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
+#[derive(CloneNoBound,Encode, Decode, PartialEq, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct  Application< T: Config >{
