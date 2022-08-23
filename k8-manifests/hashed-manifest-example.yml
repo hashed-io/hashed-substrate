@@ -9,56 +9,62 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: md5-network
+  name: n5-main-network
   namespace: hashed-network
 spec:
   selector:
     matchLabels:
-      app: md5-network
+      app: n5-main-network
   template:
     metadata:
       labels:
-        app: md5-network
+        app: n5-main-network
     spec:
       containers:
-      - name: md5-network
-        imagePullPolicy: IfNotPresent
+      - name: n5-container
+        imagePullPolicy: Always
         image: abhashed/hashednet:latest
         command: ["bash"]
         args: ["scripts/start_node.sh"]
         volumeMounts:
-          - name: md5-db
-            mountPath:  /var/www/hashed/hashed-chaos-data
+          - name: n5-db
+            mountPath:  /var/www/hashed-substrate/hashed-chaos-data
         env:
+          - name: ISMAINNET
+            value: "true"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
                 name: hashedsecrets
-                key: N4MNEMO
+                key: N5MNEMO
                 optional: false
           - name: NODEKEY
             valueFrom:
               secretKeyRef:
                 name: hashedsecrets
-                key: N4NODEKEY
+                key: N5NODEKEY
                 optional: false
+          - name: PUBLICADDR
+            value: "/dns/<service-name-here>.<namespace>.svc.cluster.local/tcp/30333"
+          - name: BOOTNODE
+            value: "/ip4/<bootnode-ip>/tcp/30333/p2p/<bootnode-peer-id>"
         resources:
           limits:
             memory: "3G"
-            cpu: "1.5"
+            cpu: "1.2"
         ports:
         - containerPort: 9933
         - containerPort: 9944
         - containerPort: 30333
       volumes:
-        - name: md5-db
+        - name: n5-db
           persistentVolumeClaim:
-            claimName: md5persistentvolumeclaim
+            claimName: n5persistentvolumeclaim
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: md5persistentvolumeclaim
+    name: n5persistentvolumeclaim
     namespace: hashed-network
 spec:
   volumeMode: Filesystem
@@ -71,11 +77,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name:  md5-network
+  name:  n5-main-network-service
   namespace: hashed-network
 spec:
   selector:
-    app:  md5-network
+    app:  n5-main-network
   type:  NodePort
   ports:
   - name:  p2p-port
@@ -92,7 +98,7 @@ spec:
 # apiVersion: v1
 # kind: PersistentVolume
 # metadata:
-#   name: md5-persistent-volume
+#   name: n5-persistent-volume
 #   namespace: hashed-network
 # spec:
 #   capacity:
@@ -103,7 +109,7 @@ spec:
 #   persistentVolumeReclaimPolicy: Retain
 #   storageClassName: local-storage
 #   local:
-#     path: /var/www/hashed/
+#     path: /var/www/hashed-substrate/hashed-chaos-data
 #   nodeAffinity:
 #     required:
 #       nodeSelectorTerms:
