@@ -328,7 +328,11 @@ impl<T: Config> Pallet<T> {
         });
 
         //2. remove from authorities by marketplace list
-        <AuthoritiesByMarketplace<T>>::remove_prefix(marketplace_id, None);
+        // REVIEW: requires a 'limit' parameter now, is there a constant that can be used?
+        //      or is the length stored in state? Also review return value `MultiRemovalResults`
+        //      See: https://paritytech.github.io/substrate/master/frame_support/storage/types/struct.StorageDoubleMap.html#method.clear_prefix
+        let _ = <AuthoritiesByMarketplace<T>>::clear_prefix(marketplace_id, 1000, None);
+
 
         //3. remove from Applications lists
         let mut applications =  Vec::new();
@@ -349,7 +353,10 @@ impl<T: Config> Pallet<T> {
         });  
 
         //5. remove from ApplicantsByMarketplace list
-        <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
+        // REVIEW: requires a 'limit' parameter now, is there a constant that can be used?
+        //      or is the length stored in state? Also review return value `MultiRemovalResults`
+        //      See: https://paritytech.github.io/substrate/master/frame_support/storage/types/struct.StorageDoubleMap.html#method.clear_prefix
+        let _ = <ApplicantsByMarketplace<T>>::clear_prefix(marketplace_id, 1000, None);
 
         //6. remove from Custodians list
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{

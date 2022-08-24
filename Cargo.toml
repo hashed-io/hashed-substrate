@@ -1,8 +1,9 @@
 [workspace]
 members = [
+    'collator',
     'node',
-    'pallets/template',
-    'pallets/nbv-storage',
+    'pallets/*',
+    'parachain-runtime',
     'runtime',
 ]
 [profile.release]

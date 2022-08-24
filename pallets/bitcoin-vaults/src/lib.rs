@@ -618,10 +618,11 @@ pub mod pallet {
 			origin: OriginFor<T>,
 		) -> DispatchResult{
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
-			<Vaults<T>>::remove_all(None);
-			<VaultsBySigner<T>>::remove_all(None);
-			<Proposals<T>>::remove_all(None);
-			<ProposalsByVault<T>>::remove_all(None);
+			let _ = <Vaults<T>>::clear(1000, None);
+			let _ = <VaultsBySigner<T>>::clear(1000, None);
+			let _ = <Proposals<T>>::clear(1000, None);
+			let _ = <Proposals<T>>::clear(1000, None);
+			let _ = <ProposalsByVault<T>>::clear(1000, None);
 			Ok(())
 		}
 

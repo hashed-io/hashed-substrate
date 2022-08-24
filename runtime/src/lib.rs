@@ -29,7 +29,7 @@ use frame_system::{EnsureRoot, EnsureSigned};
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EnsureOneOf},
+	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight, 
@@ -104,7 +104,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 115,
+	spec_version: 116,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -270,6 +270,7 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Runtime {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
@@ -452,6 +453,7 @@ impl pallet_treasury::Config for Runtime {
 	type ProposalBondMinimum = ProposalBondMinimum;
 	type ProposalBondMaximum = ProposalBondMaximum; //set to () on the substrate repo
 	type SpendPeriod = SpendPeriod;
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
 	type Burn = Burn;
 	type BurnDestination = Treasury;
 	type MaxApprovals = MaxApprovals;
@@ -555,7 +557,7 @@ parameter_types! {
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EnsureOneOf<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -580,10 +582,10 @@ parameter_types! {
 	pub const MaxProposalsPerVault: u32 = 5;
 }
 
-impl pallet_nbv_storage::Config for Runtime {
-	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
+impl pallet_bitcoin_vaults::Config for Runtime {
+	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
 	type Event = Event;
-	type ChangeBDKOrigin = EnsureOneOf<
+	type ChangeBDKOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -608,7 +610,7 @@ parameter_types! {
 
 impl pallet_confidential_docs::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EnsureOneOf<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -712,7 +714,7 @@ construct_runtime!(
 		Fruniques: pallet_fruniques,
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
-		NBVStorage: pallet_nbv_storage,
+		BitcoinVaults: pallet_bitcoin_vaults,
 		ConfidentialDocs: pallet_confidential_docs,
 	}
 );
