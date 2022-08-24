@@ -53,16 +53,16 @@ fn dummy_psbt() -> BoundedVec<u8, PSBTMaxLen>{
 fn set_xpub_identity_works() {
 	new_test_ext().execute_with(|| {
 		// Dispatch a signed extrinsic.
-		assert_ok!(NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub() ));
-		assert_eq!(NBVStorage::xpubs_by_owner(test_pub(1)), Some( dummy_xpub().using_encoded(blake2_256)) );
+		assert_ok!(BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub() ));
+		assert_eq!(BitcoinVaults::xpubs_by_owner(test_pub(1)), Some( dummy_xpub().using_encoded(blake2_256)) );
 	});
 }
 
 #[test]
 fn inserting_same_xpub_should_fail() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_noop!(NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub()),Error::<Test>::XPubAlreadyTaken);
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_noop!(BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub()),Error::<Test>::XPubAlreadyTaken);
 		
 	});
 }
@@ -70,8 +70,8 @@ fn inserting_same_xpub_should_fail() {
 #[test]
 fn inserting_without_removing_xpub_should_fail() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_noop!(NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub_2()),Error::<Test>::UserAlreadyHasXpub);
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_noop!(BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub_2()),Error::<Test>::UserAlreadyHasXpub);
 		
 	});
 }
@@ -79,26 +79,26 @@ fn inserting_without_removing_xpub_should_fail() {
 #[test]
 fn removing_xpub_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))));
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))));
 	});
 }
 
 #[test]
 fn replacing_xpub_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))));
-		assert_ok!(NBVStorage::set_xpub(Origin::signed(test_pub(1)),dummy_xpub_2() )  );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))));
+		assert_ok!(BitcoinVaults::set_xpub(Origin::signed(test_pub(1)),dummy_xpub_2() )  );
 	});
 }
 
 #[test]
 fn removing_twice_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))));
-		assert_noop!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))), Error::<Test>::XPubNotFound);
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))));
+		assert_noop!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))), Error::<Test>::XPubNotFound);
 		
 	});
 }
@@ -106,13 +106,13 @@ fn removing_twice_should_not_work() {
 #[test]
 fn creating_vault_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(),true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(),true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 
 
 	});
@@ -122,11 +122,11 @@ fn creating_vault_should_work() {
 #[test]
 fn vault_without_cosigners_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		default();
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,cosigners), Error::<Test>::NotEnoughCosigners );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,cosigners), Error::<Test>::NotEnoughCosigners );
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 
 	});
 }
@@ -134,55 +134,55 @@ fn vault_without_cosigners_shouldnt_work() {
 #[test]
 fn vault_with_invalid_threshold_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 0, dummy_description(), true, cosigners.clone()), Error::<Test>::InvalidVaultThreshold );
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 3, dummy_description(), true, cosigners), Error::<Test>::InvalidVaultThreshold );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 0, dummy_description(), true, cosigners.clone()), Error::<Test>::InvalidVaultThreshold );
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 3, dummy_description(), true, cosigners), Error::<Test>::InvalidVaultThreshold );
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 	});
 }
 
 #[test]
 fn vault_with_duplicate_members_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(2),test_pub(1),].to_vec()).unwrap();
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,
 			cosigners.clone()), Error::<Test>::DuplicateVaultMembers );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(2)).is_empty());
 	});
 }
 
 #[test]
 fn vault_with_duplicate_incomplete_members() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
 		
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(2),test_pub(1),].to_vec()).unwrap();
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true,
 			cosigners.clone()), Error::<Test>::DuplicateVaultMembers );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(2)).is_empty());
 	});
 }
 
 #[test]
 fn exceeding_max_cosigners_per_vault_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(4)), dummy_xpub_4()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(4)), dummy_xpub_4()) );
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),test_pub(3), test_pub(4)].to_vec()).unwrap();
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(),true, cosigners), Error::<Test>::ExceedMaxCosignersPerVault );
-		assert!(NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(),true, cosigners), Error::<Test>::ExceedMaxCosignersPerVault );
+		assert!(BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 
 
 	});
@@ -192,28 +192,28 @@ fn exceeding_max_cosigners_per_vault_should_work() {
 #[test]
 fn vault_signer_without_xpub_shouldnt_exist() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(2),].to_vec()).unwrap();
 		let cosigners2 = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(1),].to_vec()).unwrap();
 		// Case 1: cosigner with no xpub
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners.clone()), Error::<Test>::XPubNotFound );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners.clone()), Error::<Test>::XPubNotFound );
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(2)).is_empty());
 		// Case 2: owner with no xpub
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(2)) , 1, dummy_description(), true, cosigners2.clone()), Error::<Test>::XPubNotFound );
-		assert!( NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		assert!( NBVStorage::vaults_by_signer(test_pub(2)).is_empty());
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(2)) , 1, dummy_description(), true, cosigners2.clone()), Error::<Test>::XPubNotFound );
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		assert!( BitcoinVaults::vaults_by_signer(test_pub(2)).is_empty());
 	});
 }
 
 #[test]
 fn signer_reached_max_vaults() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
 		let cosigners1 = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(2),].to_vec()).unwrap();
 		let cosigners2 = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
@@ -221,29 +221,29 @@ fn signer_reached_max_vaults() {
 		let cosigners3 = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 			try_from([ test_pub(3)].to_vec()).unwrap();
 
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners1) );
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 3, dummy_description(), true, cosigners2) );
-		assert_noop!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners3), Error::<Test>::SignerVaultLimit );
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners1) );
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 3, dummy_description(), true, cosigners2) );
+		assert_noop!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners3), Error::<Test>::SignerVaultLimit );
 
-		assert_eq!( NBVStorage::vaults_by_signer(test_pub(1)).len(), 2);
+		assert_eq!( BitcoinVaults::vaults_by_signer(test_pub(1)).len(), 2);
 	});
 }
 
 #[test]
 fn removing_vault_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(3)), dummy_xpub_3()) );
 		
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),test_pub(3)].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), false, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), false, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		// Try to remove xpub (vault depends on it)
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::remove_vault(Origin::signed(test_pub(1)),vault_id));
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::remove_vault(Origin::signed(test_pub(1)),vault_id));
 
 	});
 }
@@ -251,17 +251,17 @@ fn removing_vault_should_work() {
 #[test]
 fn removing_vault_which_isnt_yours_shoulnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		// Try to remove xpub (vault depends on it)
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_noop!(NBVStorage::remove_vault(Origin::signed(test_pub(2)),vault_id),  Error::<Test>::VaultOwnerPermissionsNeeded);
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_noop!(BitcoinVaults::remove_vault(Origin::signed(test_pub(2)),vault_id),  Error::<Test>::VaultOwnerPermissionsNeeded);
 
 	});
 }
@@ -269,19 +269,19 @@ fn removing_vault_which_isnt_yours_shoulnt_work() {
 #[test]
 fn removing_vault_and_xpub_in_order_should_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		// TODO: Remove vault
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::remove_vault(Origin::signed(test_pub(1)),vault_id));
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::remove_vault(Origin::signed(test_pub(1)),vault_id));
 		// Try to remove xpub (vault depends on it)
-		assert_ok!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))));
+		assert_ok!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))));
 
 	});
 }
@@ -289,16 +289,16 @@ fn removing_vault_and_xpub_in_order_should_work() {
 #[test]
 fn removing_xpub_before_vault_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		// Try to remove xpub (vault depends on it)
-		assert_noop!(NBVStorage::remove_xpub(Origin::signed(test_pub(1))), Error::<Test>::XpubLinkedToVault);
+		assert_noop!(BitcoinVaults::remove_xpub(Origin::signed(test_pub(1))), Error::<Test>::XpubLinkedToVault);
 
 	});
 }
@@ -306,31 +306,31 @@ fn removing_xpub_before_vault_shouldnt_work() {
 #[test]
 fn proposing_should_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 	});
 }
 
 #[test]
 fn proposing_from_external_user_should_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
 		// user 3 is not on the vault so it should expect an error
-		assert_noop!(NBVStorage::propose(Origin::signed(test_pub(3)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()),
+		assert_noop!(BitcoinVaults::propose(Origin::signed(test_pub(3)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()),
 			Error::<Test>::SignerPermissionsNeeded);
 	});
 }
@@ -338,16 +338,16 @@ fn proposing_from_external_user_should_work(){
 #[test]
 fn proposing_twice_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
-		assert_noop!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()),
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_noop!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()),
 			Error::<Test>::AlreadyProposed);
 	});
 }
@@ -355,17 +355,17 @@ fn proposing_twice_shouldnt_work(){
 #[test]
 fn exceeding_max_proposals_per_vault_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1001,dummy_description()));
-		assert_noop!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1002,dummy_description()),
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1001,dummy_description()));
+		assert_noop!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1002,dummy_description()),
 			Error::<Test>::ExceedMaxProposalsPerVault);
 	});
 }
@@ -373,73 +373,73 @@ fn exceeding_max_proposals_per_vault_shouldnt_work(){
 #[test]
 fn saving_psbt_should_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
-		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()));
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
+		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()));
 	});
 }
 
 #[test]
 fn saving_psbt_to_a_nonexistent_proposal_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		// user 3 is not on the vault so it should expect an error
 		let proposal_id = [0;32];
-		assert_noop!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()), Error::<Test>::ProposalNotFound);
+		assert_noop!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()), Error::<Test>::ProposalNotFound);
 	});
 }
 
 #[test]
 fn saving_psbt_form_external_user_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
 		// user 3 is not on 
-		assert_noop!(NBVStorage::save_psbt(Origin::signed(test_pub(3)), proposal_id, dummy_psbt()), Error::<Test>::SignerPermissionsNeeded);
+		assert_noop!(BitcoinVaults::save_psbt(Origin::signed(test_pub(3)), proposal_id, dummy_psbt()), Error::<Test>::SignerPermissionsNeeded);
 	});
 }
 
 #[test]
 fn saving_twice_psbt_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
 		// user 3 is not on the vaults cosigners
-		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
-		assert_noop!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()), Error::<Test>::AlreadySigned);
+		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
+		assert_noop!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()), Error::<Test>::AlreadySigned);
 	});
 }
 
@@ -447,61 +447,61 @@ fn saving_twice_psbt_shouldnt_work(){
 #[test]
 fn finalize_psbt_should_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
 
-		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
-		assert_ok!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
-		assert!(NBVStorage::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
+		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
+		assert_ok!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
+		assert!(BitcoinVaults::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
 	});
 }
 
 #[test]
 fn finalize_psbt_twice_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
 
-		assert_ok!(NBVStorage::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
-		assert_ok!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
-		assert!(NBVStorage::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
-		assert_noop!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::PendingProposalRequired);
+		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
+		assert_ok!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
+		assert!(BitcoinVaults::proposals(proposal_id).unwrap().status.eq(&ProposalStatus::ReadyToFinalize(false)));
+		assert_noop!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::PendingProposalRequired);
 	});
 }
 
 #[test]
 fn finalize_psbt_without_signatures_shouldnt_work(){
 	new_test_ext().execute_with(|| {
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
-		assert_ok!( NBVStorage::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(1)), dummy_xpub()) );
+		assert_ok!( BitcoinVaults::set_xpub(Origin::signed(test_pub(2)), dummy_xpub_2()) );
 		// Insert a normal vault
 		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
 		try_from([ test_pub(2),].to_vec()).unwrap();
-		assert_ok!(NBVStorage::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
-		assert!(!NBVStorage::vaults_by_signer(test_pub(1)).is_empty());
-		let vault_id = NBVStorage::vaults_by_signer(test_pub(1)).pop().unwrap();
-		assert_ok!(NBVStorage::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
+		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
-		let proposal_id = NBVStorage::proposals_by_vault(vault_id).pop().unwrap();
+		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
 
-		assert_noop!(NBVStorage::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::NotEnoughSignatures);
+		assert_noop!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::NotEnoughSignatures);
 	});
 }

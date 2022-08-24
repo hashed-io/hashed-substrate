@@ -1,4 +1,4 @@
-use crate::{mock::*, Error, types::*, Custodians};
+use crate::{mock::*, Error, types::*};
 use std::vec;
 use sp_runtime::sp_std::vec::Vec;
 use codec::Encode;
