@@ -1,4 +1,3 @@
-# You can copy this file into hashed-manifest.yml so the changes are not tracked by git
 kind: Namespace
 apiVersion: v1
 metadata:
@@ -6,23 +5,33 @@ metadata:
   labels:
     name: hashed-network
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hashedsecrets
+  namespace: hashed-network
+type: Opaque
+data:
+  N4MNEMO: xx== # here goes the mnemonic and node key enconded on base 64
+  N4NODEKEY: xx==
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: md5-network
+  name: md5-collator
   namespace: hashed-network
 spec:
   selector:
     matchLabels:
-      app: md5-network
+      app: md5-collator
   template:
     metadata:
       labels:
-        app: md5-network
+        app: md5-collator
     spec:
       containers:
-      - name: md5-network
-        imagePullPolicy: IfNotPresent
+      - name: md5-collator
+        imagePullPolicy: Always
         image: dappdever/hashed-substrate:latest
         command: ["bash"]
         args: ["scripts/start_collator.sh"]
@@ -44,7 +53,7 @@ spec:
                 optional: false
         resources:
           limits:
-            memory: "3G"
+            memory: "4G"
             cpu: "1.5"
         ports:
         - containerPort: 9933
@@ -55,29 +64,29 @@ spec:
       volumes:
         - name: md5-db
           persistentVolumeClaim:
-            claimName: md5persistentvolumeclaim
+            claimName: md5collator-persistentvolumeclaim
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: md5persistentvolumeclaim
+    name: md5collator-persistentvolumeclaim
     namespace: hashed-network
 spec:
   volumeMode: Filesystem
   accessModes: [ "ReadWriteOnce" ]
   resources:
     requests:
-      storage: 20Gi
+      storage: 50Gi
   storageClassName: standard
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name:  md5-network
+  name:  md5-collator
   namespace: hashed-network
 spec:
   selector:
-    app:  md5-network
+    app:  md5-collator
   type:  NodePort
   ports:
   - name:  collator-p2p-port
