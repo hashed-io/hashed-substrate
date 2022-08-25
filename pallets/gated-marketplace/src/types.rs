@@ -2,7 +2,7 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
-use frame_support::traits::Currency;
+// use frame_support::traits::Currency;
 
 //pub type BalanceOf<T> = <<T as Config>::LocalCurrency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 

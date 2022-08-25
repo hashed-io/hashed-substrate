@@ -572,7 +572,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
 	type MaxOffersPerMarket = MaxOffersPerMarket;
-	type LocalCurrency = Balances;
+	//type LocalCurrency = Balances;
 }
 
 parameter_types! {
