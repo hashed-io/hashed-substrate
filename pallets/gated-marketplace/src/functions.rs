@@ -17,17 +17,17 @@ impl<T: Config> Pallet<T> {
         let mut super_roles = Vec::<Vec<u8>>::new();
         super_roles.push(MarketplaceRole::Owner.to_vec());
         super_roles.push(MarketplaceRole::Admin.to_vec());
-        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id, super_roles)?;
+        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
         for super_role in super_role_ids{
-            T::Rbac::create_and_set_permissions(pallet_id, super_role, Permission::admin_permissions())?;
+            T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, Permission::admin_permissions())?;
         }
         // participant role and permissions
-        let participant_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::Participant.to_vec()].to_vec())?;
-        T::Rbac::create_and_set_permissions(pallet_id, participant_role_id[0], Permission::participant_permissions() )?;
+        let participant_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Participant.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), participant_role_id[0], Permission::participant_permissions() )?;
         // appraiser role and permissions
-        let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
+        let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
         // redemption specialist role and permissions
-        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
+        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
         Ok(())
     }
 
@@ -853,8 +853,8 @@ impl<T: Config> Pallet<T> {
 
 
 
-    pub fn pallet_id()->u64{
-        Self::index().try_into().unwrap()
+    pub fn pallet_id()->Vec<u8>{
+        Self::module_name().as_bytes().to_vec()
     }
 
 }

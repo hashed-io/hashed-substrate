@@ -42,7 +42,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxRolesPerUser: Get<u32>;
 		#[pallet::constant]
-		type MaxUsersPerRole: Get<u32>;
+		type MaxUsersPerRole: Get<u32>;	
 	}
 
 	#[pallet::pallet]
@@ -56,7 +56,7 @@ pub mod pallet {
 	pub(super) type Scopes<T: Config> = StorageMap<
 		_, 
 		Blake2_128Concat, 
-		u64, // pallet_id
+		PalletId, // pallet_id
 		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
 		ValueQuery,
 	>;
@@ -76,7 +76,7 @@ pub mod pallet {
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat, 
-		u64, // pallet_id
+		PalletId, // pallet_id
 		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
 		ValueQuery,
 	>;
@@ -86,7 +86,7 @@ pub mod pallet {
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat, 
-		u64, 			// pallet_id
+		PalletId, 			// pallet_id
 		Blake2_128Concat, 
 		PermissionId,		// permission_id
 		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
@@ -98,7 +98,7 @@ pub mod pallet {
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat, 
-		u64, 			// pallet_id
+		PalletId, 			// pallet_id
 		Blake2_128Concat, 
 		RoleId,		// role_id
 		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
@@ -112,7 +112,7 @@ pub mod pallet {
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
-			NMapKey<Blake2_128Concat, u64>,			// pallet_id
+			NMapKey<Blake2_128Concat, PalletId>,			// pallet_id
 			NMapKey<Twox64Concat, ScopeId>,		// scope_id
 		),
 		BoundedVec<RoleId, T::MaxRolesPerUser>,	// roles (ids)
@@ -126,7 +126,7 @@ pub mod pallet {
 		(
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
-			NMapKey<Blake2_128Concat, u64>,		// pallet_id
+			NMapKey<Blake2_128Concat, PalletId>,		// pallet_id
 			NMapKey<Twox64Concat, ScopeId>,		// scope_id
 			NMapKey<Blake2_128Concat, RoleId>,	// role_id
 		),
@@ -177,6 +177,8 @@ pub mod pallet {
 		UserHasNoRoles,
 		/// The role doesn't have any users assigned to it
 		RoleHasNoUsers,
+		/// The pallet name is too long
+		ExceedPalletNameMaxLen,
 		/// The pallet has too many scopes
 		ExceedMaxScopesPerPallet,
 		/// The pallet cannot have more roles
