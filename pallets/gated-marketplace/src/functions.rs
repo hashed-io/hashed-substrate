@@ -4,8 +4,8 @@ use frame_support::{pallet_prelude::*};
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
-use frame_support::traits::{Currency};
-use frame_support::traits::ExistenceRequirement::KeepAlive;
+//use frame_support::traits::{Currency};
+//use frame_support::traits::ExistenceRequirement::KeepAlive;
 
 impl<T: Config> Pallet<T> {
 
@@ -151,7 +151,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
         //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -164,7 +164,7 @@ impl<T: Config> Pallet<T> {
         }
 
         //ensure the price is valid
-        Self::is_the_price_valid(price)?;
+        // Self::is_the_price_valid(price)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -214,7 +214,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
         //ensure the item is for sale, if not, return error
         Self::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)?;
 
@@ -231,11 +231,11 @@ impl<T: Config> Pallet<T> {
         }
 
         //ensure user has enough balance to create the offer
-        let total_user_balance = T::LocalCurrency::total_balance(&authority);
-        ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
+        // let total_user_balance = T::LocalCurrency::total_balance(&authority);
+        // ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
         //ensure the price is valid
-        Self::is_the_price_valid(price)?;
+        // Self::is_the_price_valid(price)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -310,11 +310,11 @@ impl<T: Config> Pallet<T> {
         
         //TODO: Use free_balance instead of total_balance
         //Get the buyer's balance
-        let total_amount_buyer = T::LocalCurrency::total_balance(&buyer);
+        // let total_amount_buyer = T::LocalCurrency::total_balance(&buyer);
         //ensure the buyer has enough balance to buy the item
-        ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+        // ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
         //Transfer the balance
-        T::LocalCurrency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
+        // T::LocalCurrency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
 
         //Use uniques transfer function to transfer the item to the buyer
         pallet_uniques::Pallet::<T>::do_transfer(offer_data.collection_id, offer_data.item_id, buyer.clone(), |_, _|{
@@ -362,11 +362,11 @@ impl<T: Config> Pallet<T> {
 
         //TODO: Use free_balance instead of total_balance
         //Get the buyer's balance
-        let total_amount_buyer = T::LocalCurrency::total_balance(&offer_data.creator);
+        // let total_amount_buyer = T::LocalCurrency::total_balance(&offer_data.creator);
         //ensure the buy_offer_creator has enough balance to buy the item
-        ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+        // ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
         //Transfer the balance to the owner of the item
-        T::LocalCurrency::transfer(&offer_data.creator, &owner_item, offer_data.price, KeepAlive)?;
+        // T::LocalCurrency::transfer(&offer_data.creator, &owner_item, offer_data.price, KeepAlive)?;
 
         //Use uniques transfer function to transfer the item to the market_participant
         pallet_uniques::Pallet::<T>::do_transfer(offer_data.collection_id, offer_data.item_id, offer_data.creator.clone(), |_, _|{
@@ -743,14 +743,14 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    fn _get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
-        //we already know that the offer exists, so we don't need to check it here.
-        if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-            return Ok(offer.price);
-        } else {
-            return Err(Error::<T>::OfferNotFound)?;
-        }
-    }
+    // fn _get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
+    //     //we already know that the offer exists, so we don't need to check it here.
+    //     if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
+    //         return Ok(offer.price);
+    //     } else {
+    //         return Err(Error::<T>::OfferNotFound)?;
+    //     }
+    // }
 
     fn does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult {
         let offers =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -759,14 +759,14 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
-        let minimun_amount: BalanceOf<T> = 1000u32.into();
-        if price > minimun_amount {
-            return Ok(());
-        } else {
-            return Err(Error::<T>::PriceMustBeGreaterThanZero)?;
-        }
-    }
+    // fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
+    //     let minimun_amount: BalanceOf<T> = 1000u32.into();
+    //     if price > minimun_amount {
+    //         return Ok(());
+    //     } else {
+    //         return Err(Error::<T>::PriceMustBeGreaterThanZero)?;
+    //     }
+    // }
 
     fn _get_offer_creator(offer_id: [u8;32],) -> Result<T::AccountId, DispatchError> {
         //we already know that the offer exists, so we don't need to check it here.

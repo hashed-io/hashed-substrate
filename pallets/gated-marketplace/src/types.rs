@@ -4,7 +4,7 @@ use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
 use frame_support::traits::Currency;
 
-pub type BalanceOf<T> = <<T as Config>::LocalCurrency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+//pub type BalanceOf<T> = <<T as Config>::LocalCurrency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -99,7 +99,7 @@ pub struct OfferData<T: Config>{
     pub collection_id: T::CollectionId,
     pub item_id: T::ItemId,
     pub creator: T::AccountId,
-    pub price:  BalanceOf<T>,
+    pub price:  u128,
     pub status: OfferStatus,
     pub creation_date: u64,
     pub expiration_date: u64,

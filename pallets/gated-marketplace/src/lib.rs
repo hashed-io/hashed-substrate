@@ -20,7 +20,7 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
 	use frame_system::pallet_prelude::*;
-	use frame_support::traits::Currency;
+	//use frame_support::traits::Currency;
 	//use sp_runtime::sp_std::vec::Vec;
 	use crate::types::*;
 	//use frame_support::traits::tokens::Balance;
@@ -29,7 +29,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type LocalCurrency: Currency<Self::AccountId>;
+		//type LocalCurrency: Currency<Self::AccountId>;
 		//type Balance: Balance + MaybeSerializeDeserialize + Debug + MaxEncodedLen;
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
@@ -533,7 +533,7 @@ pub mod pallet {
 		/// - If the selected collection doesn't exist, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
 			let who = ensure_signed(origin)?; 
 
 			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
@@ -626,7 +626,7 @@ pub mod pallet {
 		/// - You need to have the enough balance to create the buy order.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
-		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
 			let who = ensure_signed(origin)?; 
 
 			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
