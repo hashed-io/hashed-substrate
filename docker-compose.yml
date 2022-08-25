@@ -3,15 +3,17 @@ version: "3.8"
 services:
   md5:
     container_name: md5_container
-    image: abhashed/hashednet
+    image: dappdever/hashed-substrate
     ports:
+      - "40333:40333"
       - "30333:30333"
       - "9933:9933"
       - "9944:9944"
+      - "9946:9946"
     # Declare environment variables in docker-compose.override.yml for safety purposes
     volumes:
       - .:/var/www/hashed
       - type: bind
         source: ./.local
         target: /root/.local
-    command:  bash "scripts/start_node.sh"
+    command:  bash "scripts/start_collator.sh"

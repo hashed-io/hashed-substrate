@@ -23,12 +23,12 @@ spec:
       containers:
       - name: md5-network
         imagePullPolicy: IfNotPresent
-        image: abhashed/hashednet:latest
+        image: dappdever/hashed-substrate:latest
         command: ["bash"]
-        args: ["scripts/start_node.sh"]
+        args: ["scripts/start_collator.sh"]
         volumeMounts:
           - name: md5-db
-            mountPath:  /var/www/hashed/hashed-chaos-data
+            mountPath:  /var/www/hashed/md5
         env:
           - name: MNEMO
             valueFrom:
@@ -49,7 +49,9 @@ spec:
         ports:
         - containerPort: 9933
         - containerPort: 9944
+        - containerPort: 9946
         - containerPort: 30333
+        - containerPort: 40333
       volumes:
         - name: md5-db
           persistentVolumeClaim:
@@ -78,14 +80,20 @@ spec:
     app:  md5-network
   type:  NodePort
   ports:
-  - name:  p2p-port
-    port:  30334
+  - name:  collator-p2p-port
+    port:  40333
+    targetPort:  40333
+  - name:  collator-ws-port
+    port:  9946
+    targetPort:  9946
+  - name:  relay-p2p-port
+    port:  30333
     targetPort:  30333
-  - name:  ws-port
+  - name:  relay-ws-port
     port:  9945
     targetPort:  9944
   - name:  rpc-port
-    port:  9934
+    port:  9933
     targetPort:  9933
 ---
 # Uncomment if a persistent volume needs to be created manually
