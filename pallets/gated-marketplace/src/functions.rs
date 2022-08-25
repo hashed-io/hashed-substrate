@@ -4,6 +4,7 @@ use frame_support::{pallet_prelude::*};
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
+use frame_support::traits::Time;
 //use frame_support::traits::{Currency};
 //use frame_support::traits::ExistenceRequirement::KeepAlive;
 
@@ -712,26 +713,13 @@ impl<T: Config> Pallet<T> {
         }
         Ok(())
     }
-    
-    //TODO: merge the timestamp function to convert from moment to milliseconds.
-    fn convert_moment_to_u64_in_milliseconds(date: T::Moment) -> Result<u64, DispatchError> {
-        let date_as_u64_millis;
-        if let Some(_date_as_u64) = TryInto::<u64>::try_into(date).ok() {
-            date_as_u64_millis = _date_as_u64;
-        } else {
-            return Err(Error::<T>::TimestampError)?;
-        }
-        
-        Ok(date_as_u64_millis)
-    }
+
 
     fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
-        let timestamp: <T as pallet_timestamp::Config>::Moment = <pallet_timestamp::Pallet<T>>::get();
-        
-        let timestamp2 = Self::convert_moment_to_u64_in_milliseconds(timestamp).unwrap_or(0);
-        let timestamp3 = timestamp2 + (7 * 24 * 60 * 60 * 1000);
+        let timestamp:u64 = T::Timestamp::now().into();
+        let timestamp2 = timestamp + (7 * 24 * 60 * 60 * 1000);
 
-        Some((timestamp2, timestamp3))
+        Some((timestamp, timestamp2))
     }
 
     fn _is_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
@@ -743,14 +731,6 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    // fn _get_offer_price(offer_id: [u8;32],) -> Result<BalanceOf<T>, DispatchError> {
-    //     //we already know that the offer exists, so we don't need to check it here.
-    //     if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-    //         return Ok(offer.price);
-    //     } else {
-    //         return Err(Error::<T>::OfferNotFound)?;
-    //     }
-    // }
 
     fn does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;32]) -> DispatchResult {
         let offers =  <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
@@ -759,14 +739,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
-    //     let minimun_amount: BalanceOf<T> = 1000u32.into();
-    //     if price > minimun_amount {
-    //         return Ok(());
-    //     } else {
-    //         return Err(Error::<T>::PriceMustBeGreaterThanZero)?;
-    //     }
-    // }
 
     fn _get_offer_creator(offer_id: [u8;32],) -> Result<T::AccountId, DispatchError> {
         //we already know that the offer exists, so we don't need to check it here.

@@ -18,19 +18,32 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
+	use frame_support::pallet_prelude::*;
+	use frame_support::transactional;
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::traits::Scale;
+	use frame_support::traits::Time;
 	//use frame_support::traits::Currency;
-	//use sp_runtime::sp_std::vec::Vec;
+
+
 	use crate::types::*;
-	//use frame_support::traits::tokens::Balance;
-	//use std::fmt::Debug;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
+	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
 		//type LocalCurrency: Currency<Self::AccountId>;
-		//type Balance: Balance + MaybeSerializeDeserialize + Debug + MaxEncodedLen;
+
+		type Moment: Parameter
+			+ Default
+			+ Scale<Self::BlockNumber, Output = Self::Moment>
+			+ Copy
+			+ MaxEncodedLen
+			+ scale_info::StaticTypeInfo
+			+ Into<u64>;
+			
+		type Timestamp: Time<Moment = Self::Moment>;
+
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 		#[pallet::constant]

@@ -70,7 +70,6 @@ parameter_types! {
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 2;
 	pub const MaxMarketsPerItem: u32 = 10;
-
 	pub const MaxOffersPerMarket: u32 = 100;
 }
 
@@ -88,6 +87,8 @@ impl pallet_gated_marketplace::Config for Test {
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxOffersPerMarket = MaxOffersPerMarket;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
+	type Timestamp = Timestamp;
+	type Moment = u64;
 	//type LocalCurrency = Balances;
 }
 
