@@ -1,16 +1,18 @@
-use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId}, Config, PermissionsByRole, Permissions};
+use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId, IdOrVec}, Config, PermissionsByRole, Permissions};
 use codec::Encode;
 use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec, pallet_prelude::DispatchResult};
 use sp_io::hashing::blake2_256;
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 
-fn pallet_name()->Vec<u8>{
-	"pallet_test".as_bytes().to_vec()
+fn pallet_name()->IdOrVec{
+	IdOrVec::Vec(
+		"pallet_test".as_bytes().to_vec()
+	)
 }
 
 fn pallet_id()->[u8;32]{
-	pallet_name().using_encoded(blake2_256)
+	pallet_name().to_id()
 }
 
 fn create_scope(n: u8)->ScopeId{

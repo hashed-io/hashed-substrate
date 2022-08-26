@@ -853,8 +853,10 @@ impl<T: Config> Pallet<T> {
 
 
 
-    pub fn pallet_id()->Vec<u8>{
-        Self::module_name().as_bytes().to_vec()
+    pub fn pallet_id()->IdOrVec{
+        IdOrVec::Vec(
+            Self::module_name().as_bytes().to_vec()
+        )
     }
 
 }
