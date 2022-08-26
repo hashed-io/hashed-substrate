@@ -4,9 +4,11 @@ use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
 use sp_runtime::sp_std::vec::Vec;
 use frame_support::sp_io::hashing::blake2_256;
-use frame_support::traits::Currency;
 
-pub type BalanceOf<T> = <<T as Config>::LocalCurrency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+pub type Fields<T> = BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), <T as Config>::MaxFiles>;
+
+//Todo: fix AccountId import
+//pub type CustodianFields<T> = Option<(RawOrigin<T>, BoundedVec<BoundedVec<u8,ConstU32<100>>, <T as Config>::MaxFiles>)>;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -120,7 +122,7 @@ impl Permission{
     }
 }
 
-#[derive(CloneNoBound,Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
+#[derive(CloneNoBound, Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct  Application< T: Config >{

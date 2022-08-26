@@ -68,6 +68,8 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
+pub type Moment = u64;	
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -569,13 +571,13 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxFeedbackLen = MaxFeedbackLen;
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles = MaxFiles;
+	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
 	type MaxOffersPerMarket = MaxOffersPerMarket;
-	type LocalCurrency = Balances;
-	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
+	type Timestamp = Timestamp;
+	type Moment = Moment; 
 	type Rbac = RBAC;
 }
-
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;

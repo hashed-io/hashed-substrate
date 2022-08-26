@@ -15,19 +15,31 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::{*, OptionQuery}, transactional};
+	use frame_support::pallet_prelude::*;
+	use frame_support::transactional;
 	use frame_system::pallet_prelude::*;
-	use frame_support::traits::Currency;
-	//use sp_runtime::sp_std::vec::Vec;
+	use sp_runtime::traits::Scale;
+	use frame_support::traits::{Currency, Time};
+		
 	use crate::types::*;
-	//use frame_support::traits::tokens::Balance;
 	use pallet_rbac::types::RoleBasedAccessControl;
 	
+	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_uniques::Config + pallet_timestamp::Config{
+	pub trait Config: frame_system::Config + pallet_fruniques::Config{
+
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type LocalCurrency: Currency<Self::AccountId>;
-		//type Balance: Balance + MaybeSerializeDeserialize + Debug + MaxEncodedLen;
+
+		type Moment: Parameter
+			+ Default
+			+ Scale<Self::BlockNumber, Output = Self::Moment>
+			+ Copy
+			+ MaxEncodedLen
+			+ scale_info::StaticTypeInfo
+			+ Into<u64>;
+
+		type Timestamp: Time<Moment = Self::Moment>;
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 		#[pallet::constant]
@@ -88,7 +100,7 @@ pub mod pallet {
 		_, 
 		Blake2_128Concat, 
 		T::AccountId, // K1: account_id
-		Blake2_128Concat, 
+		Identity, 
 		[u8;32], // k2: marketplace_id 
 		[u8;32], //application_id
 		OptionQuery
@@ -113,7 +125,7 @@ pub mod pallet {
 		_, 
 		Blake2_128Concat, 
 		T::AccountId, //custodians
-		Blake2_128Concat, 
+		Identity, 
 		[u8;32], //marketplace_id 
 		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants 
 		ValueQuery
@@ -135,7 +147,7 @@ pub mod pallet {
 	#[pallet::getter(fn offers_by_account)]
 	pub(super) type OffersByAccount<T: Config> = StorageMap<
 		_, 
-		Identity, 
+		Blake2_128Concat, 
 		T::AccountId, // account_id
 		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
@@ -187,6 +199,8 @@ pub mod pallet {
 		OfferWasAccepted([u8;32], T::AccountId),
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
 		OfferDuplicated([u8;32], [u8;32]),
+		/// Offer was removed. [offer_id], [marketplace_id]
+		OfferRemoved([u8;32], [u8;32]), 
 	}
 
 	// Errors inform users that something went wrong.
@@ -321,7 +335,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
-			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			fields : Fields<T>,
 			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -359,7 +373,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
-			fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+			fields : Fields<T>,
 			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -520,13 +534,13 @@ pub mod pallet {
 
 		/// Accepts a sell order.
 		/// 
-		/// This extrinsic accepts a sell order in the selected marketplace.
+		/// This extrisicn is called by the user who wants to buy the item.
+		/// Aaccepts a sell order in the selected marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
+		/// - 'offer_id`: The id of the sell order to be accepted.
 		/// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
 		/// 
 		/// ### Considerations:
 		/// - You don't need to be the owner of the item to accept the sell order.
@@ -534,44 +548,19 @@ pub mod pallet {
 		/// - If you don't have the enough balance to accept the sell order, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?; 
 
-			Self::do_take_sell_offer(who, offer_id, marketplace_id, collection_id, item_id)
+			Self::do_take_sell_offer(who, offer_id)
 		}
-
-		/// Allows a user to duplicate a sell order.
-		/// 
-		/// This extrinsic allows a user to duplicate a sell order in any marketplace.
-		/// 
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to duplicate the sell order.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
-		/// 
-		/// ### Considerations:
-		/// - You can only duplicate a sell order if you are the owner of the item.
-		/// - The expiration date of the sell order is the same as the original sell order.
-		/// - You can update the price of the sell order.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
-		pub fn duplicate_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?; 
-
-			Self::do_duplicate_offer(who, offer_id, marketplace_id, collection_id, item_id, modified_price)
-		}	
-
-
+		
 		/// Delete an offer.
 		/// 
 		/// This extrinsic deletes an offer in the selected marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to delete the offer.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
+		/// - `offer_id`: The id of the offer to be deleted.
 		/// 
 		/// ### Considerations:
 		/// - You can delete sell orders or buy orders.
@@ -581,12 +570,12 @@ pub mod pallet {
 		///  delete them one by one.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
 			let who = ensure_signed(origin.clone())?; 
 
-			Self::do_remove_offer(who, offer_id, marketplace_id, collection_id, item_id)
+			Self::do_remove_offer(who, offer_id)
 		}
 
 		/// Enlist a buy order.
@@ -615,13 +604,13 @@ pub mod pallet {
 
 		/// Accepts a buy order.
 		/// 	
-		/// This extrinsic accepts a buy order in the selected marketplace.
+		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.
+		/// Accepts a buy order in the selected marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
+		/// - `offer_id`: The id of the buy order to be accepted.
 		/// - `marketplace_id`: The id of the marketplace where we accept the buy order.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
 		/// 
 		/// ### Considerations:
 		/// - You need to be the owner of the item to accept a buy order.
@@ -631,10 +620,10 @@ pub mod pallet {
 		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId,) -> DispatchResult {
+		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?; 
 
-			Self::do_take_buy_offer(who, offer_id, marketplace_id, collection_id, item_id)
+			Self::do_take_buy_offer(who, offer_id)
 		}
 
 
