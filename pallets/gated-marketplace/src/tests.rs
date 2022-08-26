@@ -46,7 +46,7 @@ fn _create_file(name: &str, cid: &str, create_custodian_file: bool) -> Applicati
 
 // due to encoding problems with polkadot-js, the custodians_cid generation will be done in another function
 fn create_application_fields( n_files: u32) -> 
-		BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles> {
+	BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles> {
 	let mut files = Vec::<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> )>::default();
 	for i in 0..n_files{
 		let file_name = format!("file{}",i.to_string());
@@ -1080,7 +1080,7 @@ fn take_sell_offer_works(){
 		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
-		assert_ok!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id, m_id));
+		assert_ok!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id));
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
 
@@ -1103,7 +1103,7 @@ fn take_sell_offer_owner_cannnot_be_the_buyer_shouldnt_work() {
 		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
-		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(1), offer_id, m_id), Error::<Test>::CannotTakeOffer);
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(1), offer_id), Error::<Test>::CannotTakeOffer);
 	});
 }
 
@@ -1124,7 +1124,7 @@ fn take_sell_offer_id_does_not_exist_shouldnt_work(){
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		let offer_id2 = offer_id.using_encoded(blake2_256);
 
-		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id2, m_id), Error::<Test>::OfferNotFound);
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id2), Error::<Test>::OfferNotFound);
 	});
 }
 
@@ -1145,7 +1145,7 @@ fn take_sell_offer_buyer_does_not_have_enough_balance_shouldnt_work(){
 		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
-		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id, m_id), Error::<Test>::NotEnoughBalance);
+		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id), Error::<Test>::NotEnoughBalance);
 	});
 }
 
@@ -1170,7 +1170,7 @@ fn take_buy_offer_works(){
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 		
-		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id));
+		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2));
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
 	});
@@ -1198,7 +1198,7 @@ fn take_buy_offer_only_owner_can_accept_buy_offers_shouldnt_work(){
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 
-		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(2), offer_id2, m_id), Error::<Test>::NotOwner);
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(2), offer_id2), Error::<Test>::NotOwner);
 	});
 }
 
@@ -1224,7 +1224,7 @@ fn take_buy_offer_id_does_not_exist_shouldnt_work(){
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 
 		let offer_id3 = offer_id2.using_encoded(blake2_256);
-		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id3, m_id), Error::<Test>::OfferNotFound);
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id3), Error::<Test>::OfferNotFound);
 
 	});
 }
@@ -1251,7 +1251,7 @@ fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work(){
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 		
 		Balances::make_free_balance_be(&2, 0);
-		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id), Error::<Test>::NotEnoughBalance);
+		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2), Error::<Test>::NotEnoughBalance);
 	});
 }
 
@@ -1369,7 +1369,7 @@ fn remove_offer_status_is_closed_shouldnt_work(){
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 		
-		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2, m_id));
+		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2));
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
 

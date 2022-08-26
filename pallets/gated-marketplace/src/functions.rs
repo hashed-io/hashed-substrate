@@ -1,12 +1,11 @@
 use super::*;
 use frame_support::{pallet_prelude::*};
-//use frame_system::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
 use frame_support::traits::Time;
-//use frame_support::traits::{Currency};
-//use frame_support::traits::ExistenceRequirement::KeepAlive;
+use frame_support::traits::{Currency};
+use frame_support::traits::ExistenceRequirement::KeepAlive;
 
 impl<T: Config> Pallet<T> {
 
@@ -47,7 +46,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enroll(authority: T::AccountId,marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
+    pub fn do_enroll(authority: T::AccountId, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
         Self::can_enroll(authority, marketplace_id)?;
         let next_status = match approved{
@@ -152,7 +151,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
+    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
         //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -165,13 +164,12 @@ impl<T: Config> Pallet<T> {
         }
 
         //ensure the price is valid
-        // Self::is_the_price_valid(price)?;
+        Self::is_the_price_valid(price)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //create an offer_id
-        //TODO: create an offer id generator, used in cases where the offer_id generated is not unique
         let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
 
         //create offer structure 
@@ -215,7 +213,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: u128,) -> DispatchResult {
+    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
         //ensure the item is for sale, if not, return error
         Self::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)?;
 
@@ -223,7 +221,7 @@ impl<T: Config> Pallet<T> {
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
         //ensure the collection exists
-        //For this case user doesn't have to be the owner of the collection
+        //For this case user doesn't need to be the owner of the collection
         //but the owner of the item cannot create a buy offer for their own collection
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a != authority, Error::<T>::CannotCreateOffer);
@@ -232,11 +230,11 @@ impl<T: Config> Pallet<T> {
         }
 
         //ensure user has enough balance to create the offer
-        // let total_user_balance = T::LocalCurrency::total_balance(&authority);
-        // ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
+        let total_user_balance = T::Currency::total_balance(&authority);
+        ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
         //ensure the price is valid
-        // Self::is_the_price_valid(price)?;
+        Self::is_the_price_valid(price)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -283,19 +281,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_take_sell_offer(buyer: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32]) -> DispatchResult {
+    pub fn do_take_sell_offer(buyer: T::AccountId, offer_id: [u8;32]) -> DispatchResult {
         //This extrisicn is called by the user who wants to buy the item
-        //ensure offer exists
-        ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
-
-        //ensure the marketplace exists
-        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-
         //get offer data
         let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-
-        //ensure the marketplace_id where the extrinsic is being called is the same as the one in the offer
-        ensure!(offer_data.marketplace_id == marketplace_id, Error::<T>::MarketplaceNotFound);
 
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(offer_data.collection_id, offer_data.item_id).ok_or(Error::<T>::OwnerNotFound)?;
@@ -311,11 +300,11 @@ impl<T: Config> Pallet<T> {
         
         //TODO: Use free_balance instead of total_balance
         //Get the buyer's balance
-        // let total_amount_buyer = T::LocalCurrency::total_balance(&buyer);
+        let total_amount_buyer = T::Currency::total_balance(&buyer);
         //ensure the buyer has enough balance to buy the item
-        // ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+        ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
         //Transfer the balance
-        // T::LocalCurrency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
+        T::Currency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
 
         //Use uniques transfer function to transfer the item to the buyer
         pallet_uniques::Pallet::<T>::do_transfer(offer_data.collection_id, offer_data.item_id, buyer.clone(), |_, _|{
@@ -323,7 +312,7 @@ impl<T: Config> Pallet<T> {
         })?;
 
         //update offer status from all marketplaces
-        Self::update_offers_status(buyer.clone(), offer_data.collection_id, offer_data.item_id, marketplace_id)?;
+        Self::update_offers_status(buyer.clone(), offer_data.collection_id, offer_data.item_id, offer_data.marketplace_id)?;
 
         //remove all the offers associated with the item
         Self::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id)?;
@@ -332,19 +321,11 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_take_buy_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32]) -> DispatchResult {
+    pub fn do_take_buy_offer(authority: T::AccountId, offer_id: [u8;32]) -> DispatchResult {
         //This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant
-        //Ensure offer exists. This offer_id corresponds to the buy order
-        ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
-       
-        //ensure the marketplace exists
-        ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
         //get offer data
         let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-
-        //ensure the marketplace_id where the extrinsic is being called is the same as the one in the offer
-        ensure!(offer_data.marketplace_id == marketplace_id, Error::<T>::MarketplaceNotFound);
 
         //ensure the collection & owner exists
         let owner_item = pallet_uniques::Pallet::<T>::owner(offer_data.collection_id, offer_data.item_id).ok_or(Error::<T>::OwnerNotFound)?;
@@ -363,19 +344,18 @@ impl<T: Config> Pallet<T> {
 
         //TODO: Use free_balance instead of total_balance
         //Get the buyer's balance
-        // let total_amount_buyer = T::LocalCurrency::total_balance(&offer_data.creator);
+        let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
         //ensure the buy_offer_creator has enough balance to buy the item
-        // ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+        ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
         //Transfer the balance to the owner of the item
-        // T::LocalCurrency::transfer(&offer_data.creator, &owner_item, offer_data.price, KeepAlive)?;
-
+        T::Currency::transfer(&offer_data.creator, &owner_item, offer_data.price, KeepAlive)?;
         //Use uniques transfer function to transfer the item to the market_participant
         pallet_uniques::Pallet::<T>::do_transfer(offer_data.collection_id, offer_data.item_id, offer_data.creator.clone(), |_, _|{
             Ok(())
         })?;
 
         //update offer status from all marketplaces
-        Self::update_offers_status(offer_data.creator.clone(), offer_data.collection_id, offer_data.item_id, marketplace_id)?;
+        Self::update_offers_status(offer_data.creator.clone(), offer_data.collection_id, offer_data.item_id, offer_data.marketplace_id)?;
 
         //remove all the offers associated with the item
         Self::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id )?;
@@ -384,53 +364,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    //TODO: Under development
-    // pub fn do_duplicate_offer(authority: T::AccountId, offer_id: [u8;32], marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, modified_price: BalanceOf<T>) -> DispatchResult{
-    //     //ensure new marketplace_id exits
-    //     ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-
-    //     //ensure that the offer_id exists
-    //     ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
-
-    //     //ensure the offer_id exists in OffersByItem
-    //     Self::does_exist_offer_id_for_this_item(collection_id, item_id, offer_id)?;
-
-    //     //get the offer data
-    //     let mut copy_offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-
-    //     //modify the offer data
-    //     //by know we only allow to modify its price by the user
-    //     //we modify its marketplace_id because the offer is duplicated to another marketplace
-    //     copy_offer_data.price = modified_price;
-    //     copy_offer_data.marketplace_id = marketplace_id;
-
-    //     //generate a new offer_id
-    //     let new_offer_id = (marketplace_id, authority.clone(), collection_id, copy_offer_data.creation_date, copy_offer_data.expiration_date).using_encoded(blake2_256);
-
-    //     //insert in OffersInfo
-    //     // validate new offer_id does not exists
-    //     ensure!(!<OffersInfo<T>>::contains_key(new_offer_id), Error::<T>::OfferAlreadyExists);
-    //     <OffersInfo<T>>::insert(new_offer_id, copy_offer_data);
-
-    //     //insert in OffersByMarketplace
-    //     <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offer| {
-    //         offer.try_push(new_offer_id)
-    //     }).map_err(|_| Error::<T>::OfferStorageError)?; 
-        
-    //     //insert in OffersByAccount
-    //     <OffersByAccount<T>>::try_mutate(authority.clone(), |offer| {
-    //         offer.try_push(new_offer_id)
-    //     }).map_err(|_| Error::<T>::OfferStorageError)?;
-        
-    //     //add the new offer_id to OffersByItem
-    //     <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
-    //         offers.try_push(new_offer_id)
-    //     }).map_err(|_| Error::<T>::OfferStorageError)?;
-
-    //     Self::deposit_event(Event::OfferDuplicated(new_offer_id, marketplace_id));
-
-    //     Ok(())
-    // }
 
     pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32]) -> DispatchResult {
 
@@ -483,7 +416,7 @@ impl<T: Config> Pallet<T> {
     /*---- Helper functions ----*/
 
     pub fn set_up_application(
-        fields : BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), T::MaxFiles>,
+        fields : Fields<T>,
         custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
     )-> (Option<T::AccountId>, BoundedVec<ApplicationField, T::MaxFiles> ){
         let mut f: Vec<ApplicationField>= fields.iter().map(|tuple|{
@@ -647,7 +580,8 @@ impl<T: Config> Pallet<T> {
 
         //First we need to get the list of all the authorities for the marketplace.
         let _users = <AuthoritiesByMarketplace<T>>::iter_prefix(marketplace_id)
-        .map(|(_authority, users)| users).flatten().collect::<Vec<_>>();
+        .flat_map(|(_authority, users)| users).collect::<Vec<_>>();
+
 
         //1. remove from MarketplacesByAuthority
         _users.iter().for_each(|user|{
@@ -725,9 +659,9 @@ impl<T: Config> Pallet<T> {
     fn _is_offer_status(offer_id: [u8;32], offer_status: OfferStatus,) -> bool{
         //we already know that the offer exists, so we don't need to check it here.
         if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-            return offer.status == offer_status;
+            offer.status == offer_status
         } else {
-            return false;
+            false
         }
     }
 
@@ -740,14 +674,6 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn _get_offer_creator(offer_id: [u8;32],) -> Result<T::AccountId, DispatchError> {
-        //we already know that the offer exists, so we don't need to check it here.
-        if let Some(offer) = <OffersInfo<T>>::get(offer_id) {
-            return Ok(offer.creator);
-        } else {
-            return Err(Error::<T>::OfferNotFound)?;
-        }
-    }
 
     //sell orders here...
 
@@ -766,6 +692,14 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
+        let minimun_amount: BalanceOf<T> = 1000u32.into();
+        if price > minimun_amount {
+            Ok(())
+        } else {
+            Err(Error::<T>::PriceMustBeGreaterThanZero)?
+        }
+    }
 
     fn can_this_item_receive_sell_orders(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
         let offers =  <OffersByItem<T>>::get(collection_id, item_id);
@@ -798,11 +732,11 @@ impl<T: Config> Pallet<T> {
             let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
             //ensure the offer_type is SellOrder, because this vector also contains buy offers.
             if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
-                return Ok(());      
+                return Ok(())      
             }
         }
 
-        return Err(Error::<T>::ItemNotForSale)?;
+        Err(Error::<T>::ItemNotForSale)?
     }
 
 
