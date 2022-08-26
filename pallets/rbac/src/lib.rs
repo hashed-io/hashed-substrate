@@ -21,9 +21,6 @@ pub mod types;
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::{*, ValueQuery};
-	use frame_support::traits::{PalletInfoAccess};
-	use frame_support::{transactional};
-	use frame_system::pallet_prelude::*;
 	use crate::types::*;
 
 	#[pallet::config]
