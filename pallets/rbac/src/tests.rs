@@ -1,7 +1,5 @@
 use crate::{mock::*, Error, types::{RoleBasedAccessControl, RoleId, ScopeId, PermissionId, IdOrVec}, Config, PermissionsByRole, Permissions};
-use codec::Encode;
 use frame_support::{assert_noop, assert_ok, assert_err, BoundedVec, pallet_prelude::DispatchResult};
-use sp_io::hashing::blake2_256;
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 

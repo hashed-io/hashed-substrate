@@ -9,6 +9,7 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
+      - [Submit initial role setup (needs sudo](#submit-initial-role-setup-needs-sudo)
       - [Create a marketplace](#create-a-marketplace)
       - [Get a marketplace](#get-a-marketplace)
       - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace)
@@ -34,6 +35,7 @@ Create marketplaces that require previous authorization before placing sell and 
       - [Take sell offer - direct purchase](#take-sell-offer---direct-purchase)
       - [Take buy offer](#take-buy-offer)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
+      - [Submit initial role setup (needs sudo)](#submit-initial-role-setup-needs-sudo-1)
       - [Create a marketplace](#create-a-marketplace-1)
       - [Get a marketplace](#get-a-marketplace-1)
       - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace-1)
@@ -87,8 +89,10 @@ This module allows to:
 ## Interface
 
 ### Dispachable functions
+
+- `initial_setup` enables all the permission related functionality using the `RBAC` pallet, it can only be called by the sudo account or a majority of the Council (60%). It is essential to call this extrinsic before using other extrinsics.
 - `create_marketplace` creates an on-chain marketplace record, it takes a `label` and an account that will fulfill the role of `administrator`, the extrinsic origin will be set up automatically as the marketplace owner.
-- `apply` starts the process to enter the specidied `marketplace`.
+- `apply` starts the process to enter the specified `marketplace`.
 - `reapply` allows the applicant to apply again for the selected marketplace.
 - `enroll` is only callable by the marketplace owner or administrator, as it finishes the application process. It takes a `marketplace` identification, and `account` or `application` identification to enroll or reject, and an `approved` boolean flag which approves the application if set to `true`. Owner/admin can add a feedback regarding the user's application.
 - `add_authority` is only callable by the marketplace owner or administrator. As it name implies, adds a new user that will have special permission within the marketplace. It takes the `account` which will have the permissions, the type of `authority` it will have, and the `marketplace` identification in which the permissions will be enforced.
@@ -144,6 +148,11 @@ The following examples will be using these prefunded accounts and testing data:
 ```
 
 ### Polkadot-js CLI
+
+#### Submit initial role setup (needs sudo
+```bash
+polkadot-js-api tx.gatedMarketplace.initialSetup --sudo --seed "//Alice"
+```
 
 #### Create a marketplace
 ```bash
@@ -401,7 +410,13 @@ polkadot-js-api tx.gatedMarketplace.takeBuyOffer "0x66fcfadc174a596d8f8dc1b06703
 ```
 
 ### Polkadot-js api (javascript library)
-While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries. The API setup will be ommited.
+While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries.
+
+
+#### Submit initial role setup (needs sudo)
+```js
+const initial_set_up = await api.tx.sudo.sudo(api.tx.gatedMarketplace.initialSetup()).signAndSend(alice);
+```
 
 #### Create a marketplace
 ```js

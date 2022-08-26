@@ -55,7 +55,7 @@ pub mod pallet {
 	#[pallet::getter(fn scopes)]
 	pub(super) type Scopes<T: Config> = StorageMap<
 		_, 
-		Blake2_128Concat, 
+		Identity, 
 		PalletId, // pallet_id
 		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
 		ValueQuery,
@@ -75,7 +75,7 @@ pub mod pallet {
 	#[pallet::getter(fn pallet_roles)]
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
-		Blake2_128Concat, 
+		Identity, 
 		PalletId, // pallet_id
 		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
 		ValueQuery,
@@ -85,9 +85,9 @@ pub mod pallet {
 	#[pallet::getter(fn permissions)]
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
-		Blake2_128Concat, 
+		Identity, 
 		PalletId, 			// pallet_id
-		Blake2_128Concat, 
+		Identity, 
 		PermissionId,		// permission_id
 		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
 		ValueQuery,
@@ -97,9 +97,9 @@ pub mod pallet {
 	#[pallet::getter(fn permissions_by_role)]
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
-		Blake2_128Concat, 
+		Identity, 
 		PalletId, 			// pallet_id
-		Blake2_128Concat, 
+		Identity, 
 		RoleId,		// role_id
 		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
 		ValueQuery,
@@ -112,8 +112,8 @@ pub mod pallet {
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
-			NMapKey<Blake2_128Concat, PalletId>,			// pallet_id
-			NMapKey<Twox64Concat, ScopeId>,		// scope_id
+			NMapKey<Identity, PalletId>,			// pallet_id
+			NMapKey<Identity, ScopeId>,		// scope_id
 		),
 		BoundedVec<RoleId, T::MaxRolesPerUser>,	// roles (ids)
 		ValueQuery,
@@ -126,9 +126,9 @@ pub mod pallet {
 		(
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
-			NMapKey<Blake2_128Concat, PalletId>,		// pallet_id
-			NMapKey<Twox64Concat, ScopeId>,		// scope_id
-			NMapKey<Blake2_128Concat, RoleId>,	// role_id
+			NMapKey<Identity, PalletId>,		// pallet_id
+			NMapKey<Identity, ScopeId>,		// scope_id
+			NMapKey<Identity, RoleId>,	// role_id
 		),
 		BoundedVec<T::AccountId, T::MaxUsersPerRole>,	// users
 		ValueQuery,
@@ -199,19 +199,5 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn get_pallet_id(
-			origin: OriginFor<T>, 
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			let a = Self::index();
-			log::info!("henlo {:?}", a);
-			log::warn!("Name: {:?}  Module Name: {:?}",Self::name(), Self::module_name());
-			Self::deposit_event(Event::SomethingStored(a.try_into().unwrap(), who));
-
-			Ok(())
-		}
 	}
 }
