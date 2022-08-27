@@ -12,8 +12,8 @@ metadata:
   namespace: hashed-network
 type: Opaque
 data:
-  N4MNEMO: xx== # here goes the mnemonic and node key enconded on base 64
-  N4NODEKEY: xx==
+  N4MNEMO: AAA== # here goes the mnemonic and node key enconded on base 64
+  N4NODEKEY: AAA==
 ---
 apiVersion: apps/v1
 kind: Deployment
