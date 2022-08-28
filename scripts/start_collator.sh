@@ -12,7 +12,6 @@ collator_args=(
     --rpc-external 
     --rpc-cors all 
     --rpc-methods unsafe
-    --node-key ${NODEKEY}
 )
 
 relay_args=(
@@ -25,12 +24,11 @@ relay_args=(
     --rpc-external 
     --rpc-cors all 
     --rpc-methods unsafe 
-    # --node-key ${NODEKEY}
 )
 
 chain_spec="--chain resources/md5-spec-raw.json"
 collator_args+=($chain_spec)
 
-./target/release/hashed key insert --base-path ./collator-data $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
+#./target/release/hashed key insert --base-path ./collator-data $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
 
 ./target/release/hashed-parachain "${collator_args[@]}" -- "${relay_args[@]}"
