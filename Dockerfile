@@ -1,8 +1,6 @@
 FROM paritytech/ci-linux:production
 
-RUN git clone https://github.com/hashed-io/hashed-substrate.git
-RUN cd hashed-substrate 
-RUN git checkout feature/collator
+RUN git clone https://github.com/hashed-io/hashed-substrate.git && cd hashed-substrate && git checkout feature/collator && git pull
 
 RUN cargo build --release
 
