@@ -104,6 +104,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         }
         Self::set_multiple_pallet_roles(pallet.to_id_enum(), role_ids.clone())?;
         let bounded_ids = Self::bound(role_ids, Error::<T>::ExceedMaxRolesPerPallet)?;
+        Self::deposit_event(Event::RolesStored(pallet.to_id()));
         Ok(bounded_ids)
     }
 

@@ -41,7 +41,7 @@ impl Default for MarketplaceRole{
 }
 
 impl MarketplaceRole{
-    pub fn to_vec(&self) -> Vec<u8>{
+    pub fn to_vec(self) -> Vec<u8>{
         match self{
             Self::Owner => "Owner".as_bytes().to_vec(),
             Self::Admin => "Admin".as_bytes().to_vec(),
@@ -78,19 +78,19 @@ pub enum Permission{
 }
 
 impl Permission{
-    pub fn to_vec(&self) -> Vec<u8>{
+    pub fn to_vec(self) -> Vec<u8>{
         match self{
             Self::Enroll => "Enroll".as_bytes().to_vec(),
             Self::AddAuth => "AddAuth".as_bytes().to_vec(),
             Self::RemoveAuth => "RemoveAuth".as_bytes().to_vec(),
             Self::UpdateLabel => "UpdateLabel".as_bytes().to_vec(),
             Self::RemoveMarketplace => "RemoveMarketplace".as_bytes().to_vec(),
-            &Self::EnlistSellOffer=>"EnlistSellOffer".as_bytes().to_vec(),
-            &Self::TakeSellOffer=>"TakeSellOffer".as_bytes().to_vec(),
-            &Self::DuplicateOffer=>"DuplicateOffer".as_bytes().to_vec(),
-            &Self::RemoveOffer=>"RemoveOffer".as_bytes().to_vec(),
-            &Self::EnlistBuyOffer=>"EnlistBuyOffer".as_bytes().to_vec(),
-            &Self::TakeBuyOffer=>"TakeBuyOffer".as_bytes().to_vec(),
+            Self::EnlistSellOffer=>"EnlistSellOffer".as_bytes().to_vec(),
+            Self::TakeSellOffer=>"TakeSellOffer".as_bytes().to_vec(),
+            Self::DuplicateOffer=>"DuplicateOffer".as_bytes().to_vec(),
+            Self::RemoveOffer=>"RemoveOffer".as_bytes().to_vec(),
+            Self::EnlistBuyOffer=>"EnlistBuyOffer".as_bytes().to_vec(),
+            Self::TakeBuyOffer=>"TakeBuyOffer".as_bytes().to_vec(),
         }
     }
 

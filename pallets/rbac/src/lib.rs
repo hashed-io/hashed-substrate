@@ -108,7 +108,6 @@ pub mod pallet {
 		_,
 		(
 			NMapKey<Blake2_128Concat, T::AccountId>,// user
-			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			NMapKey<Identity, PalletId>,			// pallet_id
 			NMapKey<Identity, ScopeId>,		// scope_id
 		),
@@ -137,8 +136,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		SomethingStored(u32, T::AccountId),
+		/// An initial roles config was stored [pallet_id]
+		RolesStored(PalletId),
 	}
 
 	// Errors inform users that something went wrong.

@@ -2,7 +2,8 @@
 use super::*;
 use frame_support::{pallet_prelude::*};
 use frame_support::sp_io::hashing::blake2_256;
-use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::sp_std::vec::Vec; // vec primitive
+use scale_info::prelude::vec; // vec![] macro
 use crate::types::*;
 use pallet_rbac::types::*;
 
@@ -14,9 +15,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_initial_setup()->DispatchResult{
         let pallet_id = Self::pallet_id();
-        let mut super_roles = Vec::<Vec<u8>>::new();
-        super_roles.push(MarketplaceRole::Owner.to_vec());
-        super_roles.push(MarketplaceRole::Admin.to_vec());
+        let super_roles = vec![MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
         let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
         for super_role in super_role_ids{
             T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, Permission::admin_permissions())?;
@@ -27,7 +26,7 @@ impl<T: Config> Pallet<T> {
         // appraiser role and permissions
         let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
         // redemption specialist role and permissions
-        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
+        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
         Ok(())
     }
 
@@ -37,7 +36,7 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
-        T::Rbac::create_scope(Self::pallet_id(),marketplace_id.clone())?;
+        T::Rbac::create_scope(Self::pallet_id(),marketplace_id)?;
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
@@ -72,7 +71,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_enroll(authority: T::AccountId, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
         //Self::can_enroll(authority, marketplace_id)?;
-        Self::is_authorized(authority.clone(), &marketplace_id,Permission::Enroll)?;
+        Self::is_authorized(authority, &marketplace_id,Permission::Enroll)?;
         let next_status = match approved{
             true => ApplicationStatus::Approved,
             false => ApplicationStatus::Rejected,
@@ -99,7 +98,7 @@ impl<T: Config> Pallet<T> {
         //ensure the origin is owner or admin
         //TODO: implement copy trait for MarketplaceAuthority & T::AccountId
         //Self::can_enroll(authority, marketplace_id)?;
-        Self::is_authorized(authority.clone(), &marketplace_id,Permission::AddAuth)?;
+        Self::is_authorized(authority, &marketplace_id,Permission::AddAuth)?;
         //ensure the account is not already an authority
         // handled by T::Rbac::assign_role_to_user
         //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
@@ -130,7 +129,7 @@ impl<T: Config> Pallet<T> {
         match authority_type{
             MarketplaceRole::Owner => {
                 ensure!(Self::owner_exist(marketplace_id), Error::<T>::OwnerNotFound);
-                Err(Error::<T>::CantRemoveOwner)?;
+                return Err(Error::<T>::CantRemoveOwner.into());
             },
             MarketplaceRole::Admin => {
                 // Admins can not delete themselves
@@ -187,7 +186,7 @@ impl<T: Config> Pallet<T> {
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a == authority, Error::<T>::NotOwner);
         } else {
-            Err(Error::<T>::CollectionNotFound)?;
+            return Err(Error::<T>::CollectionNotFound.into());
         }
 
         //ensure the price is valid
@@ -254,7 +253,7 @@ impl<T: Config> Pallet<T> {
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a != authority, Error::<T>::CannotCreateOffer);
         } else {
-            Err(Error::<T>::CollectionNotFound)?;
+            return Err(Error::<T>::CollectionNotFound.into());
         }
 
         //ensure user has enough balance to create the offer
@@ -457,8 +456,8 @@ impl<T: Config> Pallet<T> {
         }).collect();
         let custodian = match custodian_fields{
             Some(c_fields)=>{
-                for i in 0..f.len(){
-                    f[i].custodian_cid = Some(c_fields.1[i].clone());
+                for (i, field) in f.iter_mut().enumerate(){
+                    field.custodian_cid = Some(c_fields.1[i].clone());
                 }
 
                 Some(c_fields.0)
@@ -470,7 +469,7 @@ impl<T: Config> Pallet<T> {
 
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceRole, marketplace_id: [u8;32])->DispatchResult{
 
-        T::Rbac::assign_role_to_user(authority.clone(), Self::pallet_id(),
+        T::Rbac::assign_role_to_user(authority, Self::pallet_id(),
              &marketplace_id, role.id())?;
         
         Ok(())
@@ -546,7 +545,7 @@ impl<T: Config> Pallet<T> {
         T::Rbac::is_authorized(
             authority,
             Self::pallet_id(), 
-            &marketplace_id,
+            marketplace_id,
             &permission.id(),
         )
     }
@@ -651,8 +650,8 @@ impl<T: Config> Pallet<T> {
             .map_err(|_| Error::<T>::ApplicationNotFound)?;
 
         match application.status {
-            ApplicationStatus::Pending => Err(Error::<T>::ApplicationStatusStillPending)?, 
-            ApplicationStatus::Approved => Err(Error::<T>::ApplicationHasAlreadyBeenApproved)?,
+            ApplicationStatus::Pending => return Err(Error::<T>::ApplicationStatusStillPending.into()), 
+            ApplicationStatus::Approved => return Err(Error::<T>::ApplicationHasAlreadyBeenApproved.into()),
             ApplicationStatus::Rejected => {
                 //If status is Rejected, we need to delete the previous application from all the storage sources.
                 <Applications<T>>::remove(application_id);
@@ -709,34 +708,28 @@ impl<T: Config> Pallet<T> {
 
     fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
         let minimun_amount: BalanceOf<T> = 1000u32.into();
-        if price > minimun_amount {
-            Ok(())
-        } else {
-            Err(Error::<T>::PriceMustBeGreaterThanZero)?
-        }
+        ensure!(price > minimun_amount, Error::<T>::PriceMustBeGreaterThanZero);
+        Ok(())
     }
 
     fn can_this_item_receive_sell_orders(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
         let offers =  <OffersByItem<T>>::get(collection_id, item_id);
 
         //if len is == 0, it means that there is no offers for this item, maybe it's the first entry
-        if offers.len() == 0 {
-            return Ok(());
-        } else if offers.len() > 0 {
+        if offers.len() > 0 {
             for offer in offers {
                 let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
                 //ensure the offer_type is SellOrder, because this vector also contains buy offers.
                 if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
-                    return Err(Error::<T>::OfferAlreadyExists)?;
+                    return Err(Error::<T>::OfferAlreadyExists.into());
                 }
             }
-        } 
-        
+        }
+
         Ok(())
     }
 
     fn can_this_item_receive_buy_orders(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult {
-        //TODO: optimize this function, when rust-analyzer pluggin is fixed, it will be possible to use the .iter().find() 
         //First we check if the item has is for sale, if not, return error
         ensure!(<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::ItemNotForSale);
 
@@ -751,7 +744,7 @@ impl<T: Config> Pallet<T> {
             }
         }
 
-        Err(Error::<T>::ItemNotForSale)?
+        Err(Error::<T>::ItemNotForSale.into())
     }
 
 
