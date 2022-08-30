@@ -31,4 +31,4 @@ collator_args+=($chain_spec)
 
 #./target/release/hashed key insert --base-path ./collator-data $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
 
-./target/release/hashed-parachain "${collator_args[@]}" -- "${relay_args[@]}"
+./hashed-parachain "${collator_args[@]}" -- "${relay_args[@]}"
