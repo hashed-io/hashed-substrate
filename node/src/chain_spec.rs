@@ -1,6 +1,6 @@
 use hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
-	SudoConfig, SystemConfig, NodeAuthorizationConfig, BitcoinVaultsConfig ,WASM_BINARY,
+	SudoConfig, SystemConfig, NodeAuthorizationConfig, BitcoinVaultsConfig, WASM_BINARY,
 };
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
@@ -279,6 +279,6 @@ fn testnet_genesis(
 		transaction_payment: Default::default(),
 		bitcoin_vaults : BitcoinVaultsConfig{
 			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
-		}
+		},
 	}
 }
