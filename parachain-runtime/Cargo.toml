@@ -27,6 +27,7 @@ pallet-template = { path = "../pallets/template", default-features = false }
 pallet-bitcoin-vaults = { path = "../pallets/bitcoin-vaults", default-features = false }
 pallet-fruniques = { path = "../pallets/fruniques", default-features = false }
 pallet-gated-marketplace = { path = "../pallets/gated-marketplace", default-features = false }
+pallet-rbac = { version = "4.0.0-dev", default-features = false, path = "../pallets/rbac" }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true, branch = "polkadot-v0.9.27" }
@@ -117,6 +118,7 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-sudo/std",
 	"pallet-uniques/std",
+	"pallet-rbac/std",
 	"parachain-info/std",
 	"polkadot-parachain/std",
 	"polkadot-runtime-common/std",

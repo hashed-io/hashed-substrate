@@ -591,6 +591,8 @@ parameter_types! {
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 10;
+	pub const MaxMarketsPerItem: u32 = 10;
+	pub const MaxOffersPerMarket: u32 = 100;
 }
 
 impl pallet_gated_marketplace::Config for Runtime {
@@ -605,6 +607,31 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
+	type MaxMarketsPerItem = MaxMarketsPerItem;
+	type MaxOffersPerMarket = MaxOffersPerMarket;
+	type Timestamp = Timestamp;
+	type Moment = Moment; 
+	type Rbac = RBAC;
+}
+
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 1000;
+	pub const MaxRolesPerPallet: u32 = 20;
+	pub const RoleMaxLen: u32 = 30;
+	pub const PermissionMaxLen: u32 = 30;
+	pub const MaxPermissionsPerRole: u32 = 12;
+	pub const MaxRolesPerUser: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 10;
+}
+impl pallet_rbac::Config for Runtime {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -645,6 +672,7 @@ construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 42,
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 43,
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 44,
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 45,
 	}
 );
 

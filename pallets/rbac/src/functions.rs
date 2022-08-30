@@ -52,7 +52,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
             <RolesByUser<T>>::remove((user, pallet_id, scope_id));
         });
         // remove on users by scope
-        <UsersByScope<T>>::remove_prefix((pallet_id, scope_id), None);
+        let _ = <UsersByScope<T>>::clear_prefix((pallet_id, scope_id),1000 ,None);
         
         Ok(())
     }
@@ -84,8 +84,8 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
             <Roles<T>>::remove(role);
         });
         //remove all permissions
-        <PermissionsByRole<T>>::remove_prefix(pallet_id, None);
-        <Permissions<T>>::remove_prefix(pallet_id, None);
+        let _ = <PermissionsByRole<T>>::clear_prefix(pallet_id, 1000,None);
+        let _ = <Permissions<T>>::clear_prefix(pallet_id, 1000, None);
         Ok(())
     }
 

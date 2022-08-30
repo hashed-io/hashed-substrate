@@ -622,7 +622,7 @@ impl<T: Config> Pallet<T> {
         });  
 
         // remove from ApplicantsByMarketplace list
-        <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
+        let _ = <ApplicantsByMarketplace<T>>::clear_prefix(marketplace_id,1000, None);
 
         // remove from Custodians list
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{
