@@ -336,7 +336,7 @@ pub mod pallet {
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
 			fields : Fields<T>,
-			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+			custodian_fields: Option<CustodianFields<T>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -374,7 +374,7 @@ pub mod pallet {
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
 			fields : Fields<T>,
-			custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+			custodian_fields: Option<CustodianFields<T>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 

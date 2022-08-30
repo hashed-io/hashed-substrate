@@ -447,7 +447,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn set_up_application(
         fields : Fields<T>,
-        custodian_fields: Option<(T::AccountId, BoundedVec<BoundedVec<u8,ConstU32<100>>, T::MaxFiles> )> 
+        custodian_fields: Option<CustodianFields<T>> 
     )-> (Option<T::AccountId>, BoundedVec<ApplicationField, T::MaxFiles> ){
         let mut f: Vec<ApplicationField>= fields.iter().map(|tuple|{
             ApplicationField{

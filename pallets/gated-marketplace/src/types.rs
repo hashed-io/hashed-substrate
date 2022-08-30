@@ -5,10 +5,12 @@ use frame_support::pallet_prelude::*;
 use sp_runtime::sp_std::vec::Vec;
 use frame_support::sp_io::hashing::blake2_256;
 
-pub type Fields<T> = BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), <T as Config>::MaxFiles>;
-
-//Todo: fix AccountId import
-//pub type CustodianFields<T> = Option<(RawOrigin<T>, BoundedVec<BoundedVec<u8,ConstU32<100>>, <T as Config>::MaxFiles>)>;
+pub type Fields<T> = BoundedVec<(FieldName,Cid), <T as Config>::MaxFiles>;
+type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+pub type FieldName = BoundedVec<u8,ConstU32<100>>;
+pub type Cid = BoundedVec<u8,ConstU32<100>>;
+pub type Cids<Len> = BoundedVec<Cid, Len>;
+pub type CustodianFields<T> = ( AccountIdOf<T>, Cids<<T as Config>::MaxFiles>);
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -148,8 +150,8 @@ impl Default for ApplicationStatus{
 #[derive(CloneNoBound, Encode ,Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ApplicationField{
     pub display_name: BoundedVec<u8,ConstU32<100> >,
-    pub cid: BoundedVec<u8, ConstU32<100> >,
-    pub custodian_cid: Option<BoundedVec<u8, ConstU32<100> > >,
+    pub cid: Cid,
+    pub custodian_cid: Option<Cid>,
 }
 // Eq macro didnt work (binary operation `==` cannot be applied to type...)
 impl PartialEq for ApplicationField{
