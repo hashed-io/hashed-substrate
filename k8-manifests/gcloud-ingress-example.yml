@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - md5.hashed.systems
+    - c1.md5.network
     secretName: md5-network
   rules:
-  - host: md5.hashed.systems
+  - host: c1.md5.network
     http:
       paths:
       - pathType: Prefix
@@ -21,19 +21,33 @@ spec:
           service:
             name: md5-network
             port:
-              number: 30334
+              number: 40333
+      - pathType: Prefix
+        path: /rp2p/
+        backend:
+          service:
+            name: md5-network
+            port:
+              number: 30333
+      - pathType: Prefix
+        path: /rws/
+        backend:
+          service:
+            name: md5-network
+            port:
+              number: 9944
       - pathType: Prefix
         path: /ws/
         backend:
           service:
             name: md5-network
             port:
-              number: 9945
+              number: 9946
       - pathType: Prefix
         path: /rpc/
         backend:
           service:
             name: md5-network
             port:
-              number: 9934
+              number: 9933
   
