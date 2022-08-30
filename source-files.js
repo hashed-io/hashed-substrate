@@ -1,0 +1,10 @@
+var sourcesIndex = {};
+sourcesIndex["hashed"] = {"name":"","files":["chain_spec.rs","lib.rs","rpc.rs","service.rs"]};
+sourcesIndex["hashed_runtime"] = {"name":"","files":["constants.rs","lib.rs"]};
+sourcesIndex["pallet_confidential_docs"] = {"name":"","files":["functions.rs","lib.rs","types.rs"]};
+sourcesIndex["pallet_fruniques"] = {"name":"","files":["functions.rs","lib.rs"]};
+sourcesIndex["pallet_gated_marketplace"] = {"name":"","files":["functions.rs","lib.rs","types.rs"]};
+sourcesIndex["pallet_nbv_storage"] = {"name":"","files":["functions.rs","lib.rs","types.rs"]};
+sourcesIndex["pallet_rbac"] = {"name":"","files":["functions.rs","lib.rs","types.rs"]};
+sourcesIndex["pallet_template"] = {"name":"","files":["lib.rs"]};
+createSourceSidebar();

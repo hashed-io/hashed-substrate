@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["hashed"] = [{"text":"impl NativeExecutionDispatch for <a class=\"struct\" href=\"hashed/service/struct.ExecutorDispatch.html\" title=\"struct hashed::service::ExecutorDispatch\">ExecutorDispatch</a>","synthetic":false,"types":["hashed::service::ExecutorDispatch"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["hashed_runtime"] = [{"text":"impl OriginTrait for <a class=\"struct\" href=\"hashed_runtime/struct.Origin.html\" title=\"struct hashed_runtime::Origin\">Origin</a>","synthetic":false,"types":["hashed_runtime::Origin"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

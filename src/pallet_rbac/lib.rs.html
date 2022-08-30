@@ -1,0 +1,406 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/rbac/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_rbac/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+
+<span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.</span>
+<span class="doccomment">/// Learn more about FRAME and the core library of Substrate FRAME pallets:</span>
+<span class="doccomment">/// &lt;https://docs.substrate.io/v3/runtime/frame&gt;</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">mock</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-benchmarks&quot;</span>)]</span>
+<span class="kw">mod</span> <span class="ident">benchmarking</span>;
+
+
+<span class="kw">mod</span> <span class="ident">functions</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
+
+<span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pallet</span> {
+	<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::{<span class="kw-2">*</span>, <span class="ident">ValueQuery</span>};
+	<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
+	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>: <span class="ident">frame_system::Config</span> {
+		<span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IsType</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::Event</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxScopesPerPallet</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxRolesPerPallet</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">RoleMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">PermissionMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxPermissionsPerRole</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxRolesPerUser</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxUsersPerRole</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;	
+	}
+
+	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::generate_store</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait</span> <span class="ident">Store</span>)]</span>
+	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">_</span>);
+
+	<span class="comment">/*--- Onchain storage section ---*/</span>
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">scopes</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Scopes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>, 
+		<span class="ident">Identity</span>, 
+		<span class="ident">PalletId</span>, <span class="comment">// pallet_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">ScopeId</span>, <span class="ident">T::MaxScopesPerPallet</span><span class="op">&gt;</span>,  <span class="comment">// scopes_id</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">roles</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Roles</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>, 
+		<span class="ident">RoleId</span>, <span class="comment">// role_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::RoleMaxLen</span> <span class="op">&gt;</span>,  <span class="comment">// role</span>
+		<span class="ident">OptionQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">pallet_roles</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PalletRoles</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>, 
+		<span class="ident">PalletId</span>, <span class="comment">// pallet_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">RoleId</span>, <span class="ident">T::MaxRolesPerPallet</span> <span class="op">&gt;</span>, <span class="comment">// role_id</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">permissions</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Permissions</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>, 
+		<span class="ident">PalletId</span>, 			<span class="comment">// pallet_id</span>
+		<span class="ident">Identity</span>, 
+		<span class="ident">PermissionId</span>,		<span class="comment">// permission_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PermissionMaxLen</span> <span class="op">&gt;</span>,	<span class="comment">// permission str</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">permissions_by_role</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PermissionsByRole</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>, 
+		<span class="ident">PalletId</span>, 			<span class="comment">// pallet_id</span>
+		<span class="ident">Identity</span>, 
+		<span class="ident">RoleId</span>,		<span class="comment">// role_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">PermissionId</span>, <span class="ident">T::MaxPermissionsPerRole</span> <span class="op">&gt;</span>,	<span class="comment">// permission_ids</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">roles_by_user</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">RolesByUser</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageNMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		(
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span><span class="op">&gt;</span>,<span class="comment">// user</span>
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">PalletId</span><span class="op">&gt;</span>,			<span class="comment">// pallet_id</span>
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">ScopeId</span><span class="op">&gt;</span>,		<span class="comment">// scope_id</span>
+		),
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">RoleId</span>, <span class="ident">T::MaxRolesPerUser</span><span class="op">&gt;</span>,	<span class="comment">// roles (ids)</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">users_by_scope</span>)]</span>
+	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">UsersByScope</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageNMap</span><span class="op">&lt;</span>
+		<span class="kw">_</span>,
+		(
+			<span class="comment">// getting &quot;the trait bound `usize: scale_info::TypeInfo` is not satisfied&quot; errors</span>
+			<span class="comment">//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.</span>
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">PalletId</span><span class="op">&gt;</span>,		<span class="comment">// pallet_id</span>
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">ScopeId</span><span class="op">&gt;</span>,		<span class="comment">// scope_id</span>
+			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">RoleId</span><span class="op">&gt;</span>,	<span class="comment">// role_id</span>
+		),
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxUsersPerRole</span><span class="op">&gt;</span>,	<span class="comment">// users</span>
+		<span class="ident">ValueQuery</span>,
+	<span class="op">&gt;</span>;
+
+
+
+
+	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
+	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
+	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
+		<span class="doccomment">/// An initial roles config was stored [pallet_id]</span>
+		<span class="ident">RolesStored</span>(<span class="ident">PalletId</span>),
+	}
+
+	<span class="comment">// Errors inform users that something went wrong.</span>
+	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
+	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+		<span class="doccomment">/// Error names should be descriptive.</span>
+		<span class="ident">NoneValue</span>,
+		<span class="doccomment">/// The specified scope doesn&#39;t exists</span>
+		<span class="ident">ScopeNotFound</span>,
+		<span class="doccomment">/// The scope is already linked with the pallet</span>
+		<span class="ident">ScopeAlreadyExists</span>,
+		<span class="doccomment">/// The specified role doesn&#39;t exist or it hasn&#39;t been set to the user</span>
+		<span class="ident">RoleNotFound</span>,
+		<span class="doccomment">/// The permission doesn&#39;t exist in the pallet</span>
+		<span class="ident">PermissionNotFound</span>,
+		<span class="doccomment">/// The specified user hasn&#39;t been asigned to this scope</span>
+		<span class="ident">UserNotFound</span>,
+		<span class="doccomment">/// The provided role list must have unique elements</span>
+		<span class="ident">DuplicateRole</span>,
+		<span class="doccomment">/// The provided permission list must have unique elements</span>
+		<span class="ident">DuplicatePermission</span>,
+		<span class="doccomment">/// The user has that role asigned in that scope</span>
+		<span class="ident">UserAlreadyHasRole</span>,
+		<span class="doccomment">/// The role is already linked in the pallet</span>
+		<span class="ident">RoleAlreadyLinkedToPallet</span>,
+		<span class="doccomment">/// The role exists but it hasn&#39;t been linked to the pallet</span>
+		<span class="ident">RoleNotLinkedToPallet</span>,
+		<span class="doccomment">/// The permission is already linked to that role in that scope</span>
+		<span class="ident">PermissionAlreadyLinkedToRole</span>,
+		<span class="doccomment">/// The permission wasn&#39;t found in the roles capabilities</span>
+		<span class="ident">PermissionNotLinkedToRole</span>,
+		<span class="doccomment">/// The user doesn&#39;t have any roles in this pallet</span>
+		<span class="ident">UserHasNoRoles</span>,
+		<span class="doccomment">/// The role doesn&#39;t have any users assigned to it</span>
+		<span class="ident">RoleHasNoUsers</span>,
+		<span class="doccomment">/// The pallet name is too long</span>
+		<span class="ident">ExceedPalletNameMaxLen</span>,
+		<span class="doccomment">/// The pallet has too many scopes</span>
+		<span class="ident">ExceedMaxScopesPerPallet</span>,
+		<span class="doccomment">/// The pallet cannot have more roles</span>
+		<span class="ident">ExceedMaxRolesPerPallet</span>,
+		<span class="doccomment">/// The specified role cannot have more permission in this scope</span>
+		<span class="ident">ExceedMaxPermissionsPerRole</span>,
+		<span class="doccomment">/// The user cannot have more roles in this scope</span>
+		<span class="ident">ExceedMaxRolesPerUser</span>,
+		<span class="doccomment">/// This role cannot have assigned to more users in this scope</span>
+		<span class="ident">ExceedMaxUsersPerRole</span>,
+		<span class="doccomment">/// The role string is too long</span>
+		<span class="ident">ExceedRoleMaxLen</span>,
+		<span class="doccomment">/// The permission string is too long</span>
+		<span class="ident">ExceedPermissionMaxLen</span>,
+		<span class="doccomment">/// The user does not have the specified role </span>
+		<span class="ident">NotAuthorized</span>,
+	}
+
+	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
+	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	}
+}</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_rbac" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

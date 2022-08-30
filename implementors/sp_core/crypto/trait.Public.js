@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pallet_nbv_storage"] = [{"text":"impl Public for <a class=\"struct\" href=\"pallet_nbv_storage/types/crypto/struct.Public.html\" title=\"struct pallet_nbv_storage::types::crypto::Public\">Public</a>","synthetic":false,"types":["pallet_nbv_storage::types::crypto::Public"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

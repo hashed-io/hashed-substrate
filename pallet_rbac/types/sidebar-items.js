@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["IdOrVec",""]],"trait":[["RoleBasedAccessControl",""]],"type":[["PalletId",""],["PermissionId",""],["RoleId",""],["ScopeId",""]]};

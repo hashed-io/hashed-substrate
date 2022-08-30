@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["hashed_runtime"] = [{"text":"impl <a class=\"trait\" href=\"hashed_runtime/trait.BuildStorage.html\" title=\"trait hashed_runtime::BuildStorage\">BuildStorage</a> for <a class=\"struct\" href=\"hashed_runtime/struct.GenesisConfig.html\" title=\"struct hashed_runtime::GenesisConfig\">GenesisConfig</a>","synthetic":false,"types":["hashed_runtime::GenesisConfig"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

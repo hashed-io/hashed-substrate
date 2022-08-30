@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pallet_nbv_storage"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.63.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a>&lt;<a class=\"struct\" href=\"pallet_nbv_storage/types/crypto/struct.Public.html\" title=\"struct pallet_nbv_storage::types::crypto::Public\">Public</a>&gt; for <a class=\"struct\" href=\"pallet_nbv_storage/types/crypto/struct.Public.html\" title=\"struct pallet_nbv_storage::types::crypto::Public\">Public</a>","synthetic":false,"types":["pallet_nbv_storage::types::crypto::Public"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
