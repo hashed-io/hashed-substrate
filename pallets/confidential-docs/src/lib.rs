@@ -316,6 +316,7 @@ pub mod pallet {
 			<SharedDocs<T>>::remove_all(None);
 			<SharedDocsByTo<T>>::remove_all(None);
 			<SharedDocsByFrom<T>>::remove_all(None);
+			<UserIds<T>>::remove_all(None);
 			Ok(())
 		}
 	}

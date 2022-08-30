@@ -1,13 +1,13 @@
 [package]
-name = "pallet-gated-marketplace"
+name = "pallet-rbac"
 version = "4.0.0-dev"
-description = ""
-authors = ["Hashed <https://github.com/hashed-io"]
-homepage = "https://hashed.io"
+description = "FRAME pallet template for defining custom runtime logic."
+authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
+homepage = "https://substrate.io/"
 edition = "2021"
-license = "MIT"
+license = "Unlicense"
 publish = false
-repository = "https://github.com/hashed-io/hashed-substrate"
+repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -17,39 +17,24 @@ log = "0.4"
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
 	"derive",
 ] }
-serde = { version = "1.0.111", default-features = false, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 frame-support = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23"}
 frame-system = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 frame-benchmarking = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23", optional = true }
 sp-runtime = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 
-
-pallet-balances = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
-pallet-uniques = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
-pallet-timestamp = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
-pallet-fruniques = {path = "../fruniques", default-features = false, version = "0.1.0-dev"}
-pallet-rbac = { default-features = false, version = "4.0.0-dev", path="../rbac/"}
-
 [dev-dependencies]
 sp-core = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 sp-io = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
-sp-runtime = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 
 [features]
 default = ["std"]
 std = [
 	"codec/std",
-    "serde/std",
 	"scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
 	"frame-benchmarking/std",
-	"pallet-balances/std",
-	"pallet-uniques/std",
-	"pallet-fruniques/std",
-	"pallet-timestamp/std",
-	"pallet-rbac/std"
 ]
 
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]

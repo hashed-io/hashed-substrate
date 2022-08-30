@@ -65,6 +65,7 @@ pallet-template = { version = "4.0.0-dev", default-features = false, path = "../
 pallet-fruniques = { version = "0.1.0-dev", default-features = false, path = "../pallets/fruniques" }
 pallet-nbv-storage = { version = "4.0.0-dev", default-features = false, path = "../pallets/nbv-storage" }
 pallet-gated-marketplace = { version = "4.0.0-dev", default-features = false, path = "../pallets/gated-marketplace" }
+pallet-rbac = { version = "4.0.0-dev", default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { version = "4.0.0-dev", default-features = false, path = "../pallets/confidential-docs" }
 
 [build-dependencies]
@@ -102,6 +103,7 @@ std = [
 	"pallet-node-authorization/std",
 	"pallet-nbv-storage/std",
 	"pallet-gated-marketplace/std",
+	"pallet-rbac/std",
 	"pallet-confidential-docs/std",
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -115,6 +117,7 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 ]
+
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
 	"frame-support/runtime-benchmarks",

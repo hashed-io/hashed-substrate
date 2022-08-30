@@ -6,10 +6,11 @@
     "lldb.executable": "/usr/bin/lldb"
   },
   "extensions": [
-    "rust-lang.rust",
-    "bungcip.better-toml",
-    "vadimcn.vscode-lldb"
-  ],
+	"rust-lang.rust",
+	"bungcip.better-toml",
+	"vadimcn.vscode-lldb",
+	"rust-lang.rust-analyzer"
+],
   "forwardPorts": [
     3000,
     9944

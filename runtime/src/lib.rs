@@ -68,6 +68,8 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
+pub type Moment = u64;	
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -104,7 +106,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 115,
+	spec_version: 116,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -255,7 +257,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	/// The type for recording an account's balance.
-	type Balance = Balance;
+	type Balance = u128;
 	/// The ubiquitous event type.
 	type Event = Event;
 	type DustRemoval = ();
@@ -552,6 +554,8 @@ parameter_types! {
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 10;
+	pub const MaxMarketsPerItem: u32 = 10;
+	pub const MaxOffersPerMarket: u32 = 100;
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
@@ -568,8 +572,12 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type NameMaxLen= NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
+	type MaxMarketsPerItem = MaxMarketsPerItem;
+	type MaxOffersPerMarket = MaxOffersPerMarket;
+	type Timestamp = Timestamp;
+	type Moment = Moment; 
+	type Rbac = RBAC;
 }
-
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
@@ -621,6 +629,26 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocDescMaxLen = DocDescMaxLen;
 }
 
+
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 1000;
+	pub const MaxRolesPerPallet: u32 = 20;
+	pub const RoleMaxLen: u32 = 30;
+	pub const PermissionMaxLen: u32 = 30;
+	pub const MaxPermissionsPerRole: u32 = 12;
+	pub const MaxRolesPerUser: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 10;
+}
+impl pallet_rbac::Config for Runtime {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
+}
 
 parameter_types! {
 	pub const MaxRecursions: u32 = 10;
@@ -713,6 +741,7 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
 		NBVStorage: pallet_nbv_storage,
+		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
 	}
 );

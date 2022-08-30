@@ -2147,6 +2147,7 @@ dependencies = [
  "pallet-nbv-storage",
  "pallet-node-authorization",
  "pallet-randomness-collective-flip",
+ "pallet-rbac",
  "pallet-recovery",
  "pallet-society",
  "pallet-sudo",
@@ -4045,6 +4046,11 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
+ "pallet-balances",
+ "pallet-fruniques",
+ "pallet-rbac",
+ "pallet-timestamp",
+ "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4173,6 +4179,21 @@ dependencies = [
  "scale-info",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-rbac"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
 ]
 
 [[package]]
