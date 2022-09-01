@@ -80,7 +80,7 @@ spec:
     port:  30333
     targetPort:  30333
   - name:  relay-ws-port
-    port:  9945
+    port:  9944
     targetPort:  9944
   - name:  rpc-port
     port:  9933

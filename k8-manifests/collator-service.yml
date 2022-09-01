@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  md5-collator
+  namespace: hashed-network
+spec:
+  selector:
+    app:  md5-collator
+  type:  NodePort
+  ports:
+  - name:  collator-p2p-port
+    port:  40333
+    targetPort:  40333
+  - name:  collator-ws-port
+    port:  9946
+    targetPort:  9946
+  - name:  relay-p2p-port
+    port:  30333
+    targetPort:  30333
+  - name:  relay-ws-port
+    port:  9944
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9933
+    targetPort:  9933
