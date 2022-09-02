@@ -1,3 +1,4 @@
 (function() {var implementors = {};
+implementors["hashed_parachain_runtime"] = [{"text":"impl PalletInfo for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.PalletInfo.html\" title=\"struct hashed_parachain_runtime::PalletInfo\">PalletInfo</a>","synthetic":false,"types":["hashed_parachain_runtime::PalletInfo"]}];
 implementors["hashed_runtime"] = [{"text":"impl PalletInfo for <a class=\"struct\" href=\"hashed_runtime/struct.PalletInfo.html\" title=\"struct hashed_runtime::PalletInfo\">PalletInfo</a>","synthetic":false,"types":["hashed_runtime::PalletInfo"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

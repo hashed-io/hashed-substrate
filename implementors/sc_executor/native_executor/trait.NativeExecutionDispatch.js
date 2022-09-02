@@ -1,3 +1,4 @@
 (function() {var implementors = {};
 implementors["hashed"] = [{"text":"impl NativeExecutionDispatch for <a class=\"struct\" href=\"hashed/service/struct.ExecutorDispatch.html\" title=\"struct hashed::service::ExecutorDispatch\">ExecutorDispatch</a>","synthetic":false,"types":["hashed::service::ExecutorDispatch"]}];
+implementors["hashed_parachain"] = [{"text":"impl NativeExecutionDispatch for <a class=\"struct\" href=\"hashed_parachain/service/struct.TemplateRuntimeExecutor.html\" title=\"struct hashed_parachain::service::TemplateRuntimeExecutor\">TemplateRuntimeExecutor</a>","synthetic":false,"types":["hashed_parachain::service::TemplateRuntimeExecutor"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

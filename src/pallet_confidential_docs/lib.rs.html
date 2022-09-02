@@ -326,7 +326,6 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
-<span id="323">323</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The confidential docs pallet provides the backend services and metadata</span>
 <span class="doccomment">//! storage for the confidential docs solution</span>
 
@@ -638,14 +637,13 @@
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span>{
 			<span class="ident">T::RemoveOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">PublicKeys</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">OwnedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">OwnedDocsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">SharedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">SharedDocsByTo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">SharedDocsByFrom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
-			<span class="op">&lt;</span><span class="ident">UserIds</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove_all</span>(<span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">PublicKeys</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OwnedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OwnedDocsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocsByTo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocsByFrom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="prelude-val">Ok</span>(())
 		}
 	}

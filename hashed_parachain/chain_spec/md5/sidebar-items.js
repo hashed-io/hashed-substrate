@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_chain_spec","Gen MD5 chain specification "],["md5_genesis",""]],"type":[["Md5ChainSpec","Specialized `ChainSpec` for MD5 Network."]]};

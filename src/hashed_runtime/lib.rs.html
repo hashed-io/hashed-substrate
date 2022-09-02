@@ -974,6 +974,8 @@
 <span id="968">968</span>
 <span id="969">969</span>
 <span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 <span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.</span>
 <span class="attribute">#![<span class="ident">recursion_limit</span> <span class="op">=</span> <span class="string">&quot;256&quot;</span>]</span>
@@ -1005,7 +1007,7 @@
 <span class="comment">// A few exports that help ease life for downstream crates.</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">frame_support</span>::{
 	<span class="ident">construct_runtime</span>, <span class="ident">parameter_types</span>,
-	<span class="ident">traits</span>::{<span class="ident">KeyOwnerProofSystem</span>, <span class="ident">Randomness</span>, <span class="ident">StorageInfo</span>, <span class="ident">ConstU128</span>, <span class="ident">AsEnsureOriginWithArg</span>, <span class="ident">EnsureOneOf</span>},
+	<span class="ident">traits</span>::{<span class="ident">KeyOwnerProofSystem</span>, <span class="ident">Randomness</span>, <span class="ident">StorageInfo</span>, <span class="ident">ConstU128</span>, <span class="ident">AsEnsureOriginWithArg</span>, <span class="ident">EitherOfDiverse</span>},
 	<span class="ident">weights</span>::{
 		<span class="ident">constants</span>::{<span class="ident">BlockExecutionWeight</span>, <span class="ident">ExtrinsicBaseWeight</span>, <span class="ident">RocksDbWeight</span>, <span class="ident">WEIGHT_PER_SECOND</span>},
 		<span class="ident">ConstantMultiplier</span>, <span class="ident">IdentityFee</span>, <span class="ident">Weight</span>, 
@@ -1248,6 +1250,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">pallet_transaction_payment::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
+	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
 	<span class="kw">type</span> <span class="ident">OnChargeTransaction</span> <span class="op">=</span> <span class="ident">CurrencyAdapter</span><span class="op">&lt;</span><span class="ident">Balances</span>, ()<span class="op">&gt;</span>;
 	<span class="kw">type</span> <span class="ident">OperationalFeeMultiplier</span> <span class="op">=</span> <span class="ident">OperationalFeeMultiplier</span>;
 	<span class="kw">type</span> <span class="ident">WeightToFee</span> <span class="op">=</span> <span class="ident">IdentityFee</span><span class="op">&lt;</span><span class="ident">Balance</span><span class="op">&gt;</span>;
@@ -1430,6 +1433,7 @@
 	<span class="kw">type</span> <span class="ident">ProposalBondMinimum</span> <span class="op">=</span> <span class="ident">ProposalBondMinimum</span>;
 	<span class="kw">type</span> <span class="ident">ProposalBondMaximum</span> <span class="op">=</span> <span class="ident">ProposalBondMaximum</span>; <span class="comment">//set to () on the substrate repo</span>
 	<span class="kw">type</span> <span class="ident">SpendPeriod</span> <span class="op">=</span> <span class="ident">SpendPeriod</span>;
+	<span class="kw">type</span> <span class="ident">SpendOrigin</span> <span class="op">=</span> <span class="ident">frame_support::traits::NeverEnsureOrigin</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span>;
 	<span class="kw">type</span> <span class="ident">Burn</span> <span class="op">=</span> <span class="ident">Burn</span>;
 	<span class="kw">type</span> <span class="ident">BurnDestination</span> <span class="op">=</span> <span class="ident">Treasury</span>;
 	<span class="kw">type</span> <span class="ident">MaxApprovals</span> <span class="op">=</span> <span class="ident">MaxApprovals</span>;
@@ -1535,7 +1539,7 @@
 }
 <span class="kw">impl</span> <span class="ident">pallet_gated_marketplace::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
-	<span class="kw">type</span> <span class="ident">RemoveOrigin</span> <span class="op">=</span> <span class="ident">EnsureOneOf</span><span class="op">&lt;</span>
+	<span class="kw">type</span> <span class="ident">RemoveOrigin</span> <span class="op">=</span> <span class="ident">EitherOfDiverse</span><span class="op">&lt;</span>
 		<span class="ident">EnsureRoot</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span>,
 		<span class="ident">pallet_collective::EnsureProportionAtLeast</span><span class="op">&lt;</span><span class="ident">AccountId</span>, <span class="ident">CouncilCollective</span>, <span class="number">3</span>, <span class="number">5</span><span class="op">&gt;</span>,
 	<span class="op">&gt;</span>;
@@ -1564,10 +1568,10 @@
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxProposalsPerVault</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">pallet_nbv_storage::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
-	<span class="kw">type</span> <span class="ident">AuthorityId</span> <span class="op">=</span> <span class="ident">pallet_nbv_storage::types::crypto::TestAuthId</span>;
+<span class="kw">impl</span> <span class="ident">pallet_bitcoin_vaults::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
+	<span class="kw">type</span> <span class="ident">AuthorityId</span> <span class="op">=</span> <span class="ident">pallet_bitcoin_vaults::types::crypto::TestAuthId</span>;
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
-	<span class="kw">type</span> <span class="ident">ChangeBDKOrigin</span> <span class="op">=</span> <span class="ident">EnsureOneOf</span><span class="op">&lt;</span>
+	<span class="kw">type</span> <span class="ident">ChangeBDKOrigin</span> <span class="op">=</span> <span class="ident">EitherOfDiverse</span><span class="op">&lt;</span>
 		<span class="ident">EnsureRoot</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span>,
 		<span class="ident">pallet_collective::EnsureProportionAtLeast</span><span class="op">&lt;</span><span class="ident">AccountId</span>, <span class="ident">CouncilCollective</span>, <span class="number">3</span>, <span class="number">5</span><span class="op">&gt;</span>,
 	<span class="op">&gt;</span>;
@@ -1592,7 +1596,7 @@
 
 <span class="kw">impl</span> <span class="ident">pallet_confidential_docs::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
-	<span class="kw">type</span> <span class="ident">RemoveOrigin</span> <span class="op">=</span> <span class="ident">EnsureOneOf</span><span class="op">&lt;</span>
+	<span class="kw">type</span> <span class="ident">RemoveOrigin</span> <span class="op">=</span> <span class="ident">EitherOfDiverse</span><span class="op">&lt;</span>
 		<span class="ident">EnsureRoot</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span>,
 		<span class="ident">pallet_collective::EnsureProportionAtLeast</span><span class="op">&lt;</span><span class="ident">AccountId</span>, <span class="ident">CouncilCollective</span>, <span class="number">3</span>, <span class="number">5</span><span class="op">&gt;</span>,
 	<span class="op">&gt;</span>;
@@ -1716,7 +1720,7 @@
 		<span class="ident">Fruniques</span>: <span class="ident">pallet_fruniques</span>,
 		<span class="ident">GatedMarketplace</span>: <span class="ident">pallet_gated_marketplace</span>,
 		<span class="ident">Assets</span>: <span class="ident">pallet_assets</span>,
-		<span class="ident">NBVStorage</span>: <span class="ident">pallet_nbv_storage</span>,
+		<span class="ident">BitcoinVaults</span>: <span class="ident">pallet_bitcoin_vaults</span>,
 		<span class="ident">RBAC</span>: <span class="ident">pallet_rbac</span>,
 		<span class="ident">ConfidentialDocs</span>: <span class="ident">pallet_confidential_docs</span>,
 	}

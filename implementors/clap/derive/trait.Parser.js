@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["hashed_parachain"] = [{"text":"impl Parser for <a class=\"struct\" href=\"hashed_parachain/cli/struct.Cli.html\" title=\"struct hashed_parachain::cli::Cli\">Cli</a>","synthetic":false,"types":["hashed_parachain::cli::Cli"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

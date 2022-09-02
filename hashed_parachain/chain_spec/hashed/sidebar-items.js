@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_chain_spec","Gen HASH chain specification "],["hashed_genesis",""]],"type":[["HashedChainSpec","Specialized `ChainSpec` for Hashed Network"]]};

@@ -290,7 +290,7 @@
 <span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">hashed_runtime</span>::{
 	<span class="ident">AccountId</span>, <span class="ident">AuraConfig</span>, <span class="ident">BalancesConfig</span>, <span class="ident">CouncilConfig</span>, <span class="ident">GenesisConfig</span>, <span class="ident">GrandpaConfig</span>, <span class="ident">Signature</span>,
-	<span class="ident">SudoConfig</span>, <span class="ident">SystemConfig</span>, <span class="ident">NodeAuthorizationConfig</span>, <span class="ident">NBVStorageConfig</span>, <span class="ident">WASM_BINARY</span>,
+	<span class="ident">SudoConfig</span>, <span class="ident">SystemConfig</span>, <span class="ident">NodeAuthorizationConfig</span>, <span class="ident">BitcoinVaultsConfig</span>, <span class="ident">WASM_BINARY</span>,
 };
 <span class="kw">use</span> <span class="ident">sc_chain_spec::Properties</span>;
 <span class="kw">use</span> <span class="ident">sc_service::ChainType</span>;
@@ -567,7 +567,7 @@
 		<span class="comment">// bounties: Default::default(),</span>
 		<span class="ident">sudo</span>: <span class="ident">SudoConfig</span> { <span class="ident">key</span>: <span class="prelude-val">Some</span>(<span class="ident">root_key</span>) },
 		<span class="ident">transaction_payment</span>: <span class="ident">Default::default</span>(),
-		<span class="ident">nbv_storage</span> : <span class="ident">NBVStorageConfig</span>{
+		<span class="ident">bitcoin_vaults</span> : <span class="ident">BitcoinVaultsConfig</span>{
 			<span class="ident">bdk_services_url</span> : <span class="ident">BDK_SERVICES_MAINNET_URL</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
 		},
 	}
