@@ -1,7 +1,7 @@
-# NBV Storage
+# Bitcoin Vaults
 A storage module for Native Bitcoin Vaults on substrate.
 
-- [NBV Storage](#bitcoin-vaults)
+- [Bitcoin Vaults](#bitcoin-vaults)
   - [Overview](#overview)
     - [Terminology](#terminology)
   - [Interface](#interface)
@@ -10,6 +10,7 @@ A storage module for Native Bitcoin Vaults on substrate.
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
+      - [Enabling Offchain Worker](#enabling-offchain-worker)
       - [Insert an xpub](#insert-an-xpub)
       - [Query a specific stored xpub](#query-a-specific-stored-xpub)
       - [Query accounts hash that links to the xpub](#query-accounts-hash-that-links-to-the-xpub)
@@ -26,6 +27,7 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Finalize (and posibly broadcast) a PSBT](#finalize-and-posibly-broadcast-a-psbt)
       - [Broadcast a PSBT](#broadcast-a-psbt)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
+      - [Enabling Offchain Worker](#enabling-offchain-worker-1)
       - [Insert an xpub](#insert-an-xpub-1)
       - [Query stored xpubs](#query-stored-xpubs)
       - [Query accounts hash that links to the xpub](#query-accounts-hash-that-links-to-the-xpub-1)
@@ -109,11 +111,19 @@ The following examples will be using the following credentials and testing data:
 
 ### Polkadot-js CLI
 
+#### Enabling Offchain Worker
+In order to enable vault-related features, an account needs to be linked to the offchain worker. This process needs to be done just once, preferably by one of the chain administrators:  
+
+```bash
+# key type (constant to bdks), suri, public key in hex
+polkadot-js-api rpc.author.insertKey 'bdks' '//Alice' '0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d'
+```
+
 #### Insert an xpub
 Note that the identity data structure is identical to the original setIdentity extrinsic from the identity pallet and additional fields can be specified.
-The xpub to store is sent on the second parameter and the pallet will handle the link between xpub and hash. 
+The xpub to store is sent on the second parameter and the pallet will handle the link between xpub and hash.
 ```bash
-polkadot-js-api tx.nbvStorage.setXpub "Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM" --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.setXpub "Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVmt6C6nB3ntbcEy4pLP3cJGVWsKbYKaAynfCwXnkuVncPGQ9Y4XwWJDWrDMUwTztdxBe7GcM" --seed "//Alice"
 
 ```
 
@@ -121,94 +131,100 @@ polkadot-js-api tx.nbvStorage.setXpub "Zpub74kbYv5LXvBaJRcbSiihEEwuDiBSDztjtpSVm
 If successful, the previous extrinsic returns a `XPubStored` event, which will contain the hash that links the identity and the xpub itself.
 ```bash
 # Note that the "0x9ee..." hash was returned from the previous tx. 
-polkadot-js-api query.nbvStorage.xpubs "0x9ee1b23c479e03288d3d1d791abc580439598f70e7607c1de108c4bb6a9b5b6f"
+polkadot-js-api query.bitcoinVaults.xpubs "0x9ee1b23c479e03288d3d1d791abc580439598f70e7607c1de108c4bb6a9b5b6f"
 ```
 
 #### Query accounts hash that links to the xpub
 The hash can also be retrieved by specifying the owner account.
 ```bash
 # This tx should return the previous hash "0x9ee..."
-polkadot-js-api query.nbvStorage.xpubsByOwner "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+polkadot-js-api query.bitcoinVaults.xpubsByOwner "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
 ```
 
 #### Remove user's xpub
 The account's xpub can be removed by submiting this extrinsic. 
 ```bash
-polkadot-js-api tx.nbvStorage.removeXpub --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.removeXpub --seed "//Alice"
 ```
 
 #### Insert Vault
 In order to create a vault, refer to the following extrinsic structure:
 ```bash
 # All users need to have an xpub
-polkadot-js-api tx.nbvStorage.createVault 1 "description" true '["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]' --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.createVault 1 "description" true '["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]' --seed "//Alice"
 ```
 
 #### Query user's vaults (id)
 
 ```bash
-polkadot-js-api query.nbvStorage.vaultsBySigner 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+polkadot-js-api query.bitcoinVaults.vaultsBySigner 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 ```
 
 #### Query vault details
 
 ```bash
-polkadot-js-api query.nbvStorage.vaults 0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf
+polkadot-js-api query.bitcoinVaults.vaults 0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf
 ```
 
 #### Remove Vault
 Only the vault's owner can remove it, a `vault_id` needs to be provided. This will remove all the vault proposals:
 ```bash
-polkadot-js-api tx.nbvStorage.removeVault "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.removeVault "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" --seed "//Alice"
 ```
 #### Propose
 ```bash
 # Parameters in order: vault_id, recipient address, amount in satoshis, and description:
-polkadot-js-api tx.nbvStorage.propose 0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi 1000 "lorem ipsum" --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.propose 0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi 1000 "lorem ipsum" --seed "//Alice"
 ```
 
 #### Query vault's proposals
 ```bash
-polkadot-js-api query.nbvStorage.proposalsByVault 0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e
+polkadot-js-api query.bitcoinVaults.proposalsByVault 0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e
 ```
 
 #### Query proposals details
 ```bash
-polkadot-js-api query.nbvStorage.proposals 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675
+polkadot-js-api query.bitcoinVaults.proposals 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675
 ```
 
 #### Remove a proposal
 ```bash
-polkadot-js-api tx.nbvStorage.removeProposal 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.removeProposal 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
 ```
 
 #### Sign a proposal
 ```bash
-polkadot-js-api tx.nbvStorage.savePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 "<generated_psbt>" --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.savePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 "<generated_psbt>" --seed "//Alice"
 ```
 
 #### Finalize (and posibly broadcast) a PSBT
 The second parameter is a boolean flag, if set to true, the transaction will be automatically broadcasted.
 ```bash
-polkadot-js-api tx.nbvStorage.finalizePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 <true/false> --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.finalizePsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 <true/false> --seed "//Alice"
 ```
 
 #### Broadcast a PSBT
 This extrinsic is needed in case the PSBT is finalized but not broadcasted. 
 
 ```bash
-polkadot-js-api tx.nbvStorage.broadcastPsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
+polkadot-js-api tx.bitcoinVaults.broadcastPsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
 ```
 
 ### Polkadot-js api (javascript library)
-While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries. The API setup will be ommited.
+While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries. The API setup will be omitted.
 
+#### Enabling Offchain Worker
+In order to enable vault-related features, an account needs to be linked to the offchain worker. This process needs to be done just once, preferably by one of the chain administrators:  
+
+```js
+# key type (constant to bdks), suri, public key in hex (no method was found for parsing an address to hex)
+const setKey = api.rpc.author.insertKey("bdks", "//Alice", "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d")
+```
 
 #### Insert an xpub
 
-
 ```js
-const setXpub = api.tx.nbvStorage.setXpub(
+const setXpub = api.tx.bitcoinVaults.setXpub(
      "Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi");
 const identityResult = await setCompleteIdentity.signAndSend(alice);
 console.log('Extrinsic sent with hash', identityResult.toHex());
@@ -217,13 +233,13 @@ console.log('Extrinsic sent with hash', identityResult.toHex());
 
 Query an xpub with specific hash;
 ```js
-const specificXpub = await api.query.nbvStorage.xpubs("0x9ee1b23c479e03288d3d1d791abc580439598f70e7607c1de108c4bb6a9b5b6f");
+const specificXpub = await api.query.bitcoinVaults.xpubs("0x9ee1b23c479e03288d3d1d791abc580439598f70e7607c1de108c4bb6a9b5b6f");
 console.log(specificXpub.toHuman());
 ```
 
 Query and print all the stored xpubs:
 ```js
-const xpubs = await api.query.nbvStorage.xpubs.entries();
+const xpubs = await api.query.bitcoinVaults.xpubs.entries();
 xpubs.forEach(([key, value]) => {
 console.log(
     "Xpub hash:",
@@ -237,13 +253,13 @@ console.log("     Xpub value:", value.toHuman());
 
 Query an accounts hashed xpub.
 ```js
-const xpubsByOwner = await api.query.nbvStorage.xpubsByOwner(alice.address);
+const xpubsByOwner = await api.query.bitcoinVaults.xpubsByOwner(alice.address);
 console.log(xpubsByOwner.toHuman() );
 ```
 
 Query and print all the xpub hashes, classified by account 
 ```js
-const allXpubsByOwner = await api.query.nbvStorage.xpubsByOwner.entries();
+const allXpubsByOwner = await api.query.bitcoinVaults.xpubsByOwner.entries();
 allXpubsByOwner.forEach(([key, value]) => {
         console.log(
         "Account:",
@@ -256,79 +272,79 @@ allXpubsByOwner.forEach(([key, value]) => {
 #### Remove user's xpub
 
 ```js
-const removeAccountXpub = await api.tx.nbvStorage.removeXpub().signAndSend(alice);
+const removeAccountXpub = await api.tx.bitcoinVaults.removeXpub().signAndSend(alice);
 console.log('Tx sent with hash', removeAccountXpub.toHex());
 ```
 
 #### Insert Vault
 ```js
-const insertVault = await api.tx.nbvStorage.createVault(1, "descripcion", ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]).signAndSend(alice);
+const insertVault = await api.tx.bitcoinVaults.createVault(1, "descripcion", ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]).signAndSend(alice);
 console.log('Tx sent with hash', insertVault.toHuman());
 ```
 
 #### Query vaults ids by signer
 
 ```js
-const vaultsBySigner = await api.query.nbvStorage.vaultsBySigner(alice.address);
+const vaultsBySigner = await api.query.bitcoinVaults.vaultsBySigner(alice.address);
 console.log(vaultsBySigner.toHuman());
 ```
 
 #### Query vaults details by id
 
 ```js
-const vaultDetails = await api.query.nbvStorage.vaults("0x39c7ffa1b10d9d75fe20eb55e07788c23c06238b6e25e719a8e58d0bdf6bcd21");
+const vaultDetails = await api.query.bitcoinVaults.vaults("0x39c7ffa1b10d9d75fe20eb55e07788c23c06238b6e25e719a8e58d0bdf6bcd21");
 console.log(vaultDetails.toHuman());
 ```
 
 #### Remove vault
 
 ```js
-const removeVault = await api.tx.nbvStorage.removeVault("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf").signAndSend(alice);
+const removeVault = await api.tx.bitcoinVaults.removeVault("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf").signAndSend(alice);
 console.log('Tx sent with hash', removeVault.toHex());
 ```
 
 #### Propose
 ```js
 // Parameters in order: vault_id, recipient address, amount in satoshis, and description:
-const propose = await api.tx.nbvStorage
+const propose = await api.tx.bitcoinVaults
     .propose("0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e", "Zpub75bKLk9fCjgfELzLr2XS5TEcCXXGrci4EDwAcppFNBDwpNy53JhJS8cbRjdv39noPDKSfzK7EPC1Ciyfb7jRwY7DmiuYJ6WDr2nEL6yTkHi", 1000, "lorem ipsum").signAndSend(alice);
 console.log('Tx sent with hash', propose.toHuman());
 ```
 
 #### Query vault's proposals
 ```js
-const vaultsProposals = await api.query.nbvStorage.proposalsByVault("0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e");
+const vaultsProposals = await api.query.bitcoinVaults.proposalsByVault("0x739829829f1a2891918f626a79bd830c0e46609f6db013a4f557746c014c374e");
 console.log(vaultsProposals.toHuman() );
 ```
 
 #### Query proposals details
 ```js
-const proposal = await api.query.nbvStorage.proposals("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675");
+const proposal = await api.query.bitcoinVaults.proposals("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675");
 console.log(proposal.toHuman());
 ```
 
 #### Remove a proposal
 ```js
-const removeProposal = await api.tx.nbvStorage.removeProposal("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+const removeProposal = await api.tx.bitcoinVaults.removeProposal("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
 console.log(removeProposal.toHuman());
 ```
 
 #### Sign a proposal
 
 ```js
-const savePSBT = await api.tx.nbvStorage.savePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+const savePSBT = await api.tx.bitcoinVaults.savePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
 console.log(savePSBT.toHuman());
 ```
 
 #### Finalize (and posibly broadcast) a PSBT
 ```js
-const finalizePsbt = await api.tx.nbvStorage.finalizePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+const finalizePsbt = await api.tx.bitcoinVaults.finalizePsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
 console.log(finalizePsbt.toHuman());
 ```
 
 #### Broadcast a PSBT 
 ```js
-const broadcastPsbt = await api.tx.nbvStorage.broadcastPsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
+const broadcastPsbt = await api.tx.bitcoinVaults.broadcastPsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
 console.log(broadcastPsbt.toHuman());
 ```
 
