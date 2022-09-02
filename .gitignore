@@ -27,3 +27,7 @@ md5-manifest.yml
 hashed-secrets-manifest.yml
 gcloud-hashed-ingress.yml
 gcloud-md5-ingress.yml
+
+.secrets
+collator-data
+relay-data

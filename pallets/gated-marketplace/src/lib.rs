@@ -645,11 +645,11 @@ pub mod pallet {
 			origin: OriginFor<T>,
 		) -> DispatchResult{
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			<Marketplaces<T>>::remove_all(None);
-			<Applications<T>>::remove_all(None);
-			<ApplicationsByAccount<T>>::remove_all(None);
-			<ApplicantsByMarketplace<T>>::remove_all(None);
-			<Custodians<T>>::remove_all(None);
+			let _ = <Marketplaces<T>>::clear(1000, None);
+			let _ = <Applications<T>>::clear(1000, None);
+			let _ = <ApplicationsByAccount<T>>::clear(1000, None);
+			let _ = <ApplicantsByMarketplace<T>>::clear(1000, None);
+			let _ = <Custodians<T>>::clear(1000, None);
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}

@@ -309,14 +309,13 @@ pub mod pallet {
 			origin: OriginFor<T>,
 		) -> DispatchResult{
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			<Vaults<T>>::remove_all(None);
-			<PublicKeys<T>>::remove_all(None);
-			<OwnedDocs<T>>::remove_all(None);
-			<OwnedDocsByOwner<T>>::remove_all(None);
-			<SharedDocs<T>>::remove_all(None);
-			<SharedDocsByTo<T>>::remove_all(None);
-			<SharedDocsByFrom<T>>::remove_all(None);
-			<UserIds<T>>::remove_all(None);
+			let _ = <Vaults<T>>::clear(1000, None);
+			let _ = <PublicKeys<T>>::clear(1000, None);
+			let _ = <OwnedDocs<T>>::clear(1000, None);
+			let _ = <OwnedDocsByOwner<T>>::clear(1000, None);
+			let _ = <SharedDocs<T>>::clear(1000, None);
+			let _ = <SharedDocsByTo<T>>::clear(1000, None);
+			let _ = <SharedDocsByFrom<T>>::clear(1000, None);
 			Ok(())
 		}
 	}

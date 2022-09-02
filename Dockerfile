@@ -1,16 +1,15 @@
 FROM paritytech/ci-linux:production
 
-# COPY . /var/www/hashed
-WORKDIR /var/www/
+WORKDIR /var/www
 
-RUN git clone https://github.com/hashed-io/hashed-substrate.git
+RUN git clone https://github.com/hashed-io/hashed-substrate.git && cd hashed-substrate && git checkout feature/collator && cargo build --release 
 
-WORKDIR /var/www/hashed-substrate/
+# COPY ./target/release/hashed-parachain .
+# COPY ./resources/* resources/.
+# COPY ./scripts/start_collator.sh .
 
-RUN git checkout e4beec4fae5d0c7d23d0f1950b6f7f49e1bbf95a
+EXPOSE 30333 40333 9933 9944 9946
 
-COPY ./scripts/start_node.sh /var/www/hashed-substrate/scripts/start_node.sh
+WORKDIR /var/www/hashed-substrate
 
-EXPOSE 30333 9933 9944
-
-CMD [ "bash", "echo $MNEMO"]
+CMD [ "/var/www/hashed-substrate/scripts/start_collator.sh" ]

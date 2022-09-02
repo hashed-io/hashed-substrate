@@ -4,7 +4,9 @@ local
 .vscode
 docs
 target
-/hashed-chaos-data
+hashed-chaos-data
+relay-data
+collator-data
 
 docker-compose.override.yml
 

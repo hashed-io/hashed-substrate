@@ -1,4 +1,4 @@
-use crate as pallet_nbv_storage;
+use crate as pallet_bitcoin_vaults;
 use frame_support::{parameter_types, traits::ConstU32};
 use frame_support::traits::{ConstU64};
 use frame_system::EnsureRoot;
@@ -24,7 +24,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		NBVStorage: pallet_nbv_storage::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
+		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
 		Balances: pallet_balances::{Pallet, Call, Storage, Event<T>},
 	}
 );
@@ -51,8 +51,8 @@ parameter_types! {
 	pub const MaxProposalsPerVault : u32 = 2;
 }
 
-impl pallet_nbv_storage::Config for Test {
-	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
+impl pallet_bitcoin_vaults::Config for Test {
+	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
 	type Event = Event;
 	type ChangeBDKOrigin = EnsureRoot<AccountId>;
 	type XPubLen = XPubLen;
