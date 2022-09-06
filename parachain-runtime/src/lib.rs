@@ -29,7 +29,7 @@ use sp_version::RuntimeVersion;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Everything, AsEnsureOriginWithArg},
+	traits::{Everything, AsEnsureOriginWithArg, ConstU32, ConstU64, ConstU128, EitherOfDiverse},
 	weights::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, DispatchClass, Weight,
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
@@ -41,7 +41,7 @@ use frame_system::{
 	EnsureRoot, EnsureSigned,
 };
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-pub use sp_runtime::{MultiAddress, Perbill, Permill};
+pub use sp_runtime::{MultiAddress, Perbill, Percent, Permill};
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 #[cfg(any(feature = "std", test))]
@@ -56,9 +56,6 @@ use weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight};
 use xcm::latest::prelude::BodyId;
 use xcm_executor::XcmExecutor;
 
-/// Import the template pallet.
-pub use pallet_template;
-
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
 
@@ -68,6 +65,8 @@ pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::Account
 
 /// Balance of an account.
 pub type Balance = u128;
+
+pub type AccountIndex = u32;
 
 /// Index of a transaction in the chain.
 pub type Index = u32;
@@ -365,6 +364,278 @@ impl pallet_transaction_payment::Config for Runtime {
 }
 
 parameter_types! {
+	// Minimum 100 bytes/KSM deposited (1 CENT/byte)
+	pub const BasicDeposit: Balance = 1000 * CENTS;       // 258 bytes on-chain
+	pub const FieldDeposit: Balance = 250 * CENTS;        // 66 bytes on-chain
+	pub const SubAccountDeposit: Balance = 200 * CENTS;   // 53 bytes on-chain
+	pub const MaxSubAccounts: u32 = 100;
+	pub const MaxAdditionalFields: u32 = 100;
+	pub const MaxRegistrars: u32 = 20;
+}
+
+impl pallet_identity::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BasicDeposit = BasicDeposit;
+	type FieldDeposit = FieldDeposit;
+	type SubAccountDeposit = SubAccountDeposit;
+	type MaxSubAccounts = MaxSubAccounts;
+	type MaxAdditionalFields = MaxAdditionalFields;
+	type MaxRegistrars = MaxRegistrars;
+	type Slashed = Treasury;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type RegistrarOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const ConfigDepositBase: Balance = 500 * CENTS;
+	pub const FriendDepositFactor: Balance = 50 * CENTS;
+	pub const MaxFriends: u16 = 9;
+	pub const RecoveryDeposit: Balance = 500 * CENTS;
+}
+
+impl pallet_recovery::Config for Runtime {
+	type Event = Event;
+	type WeightInfo = pallet_recovery::weights::SubstrateWeight<Runtime>;
+	type Call = Call;
+	type Currency = Balances;
+	type ConfigDepositBase = ConfigDepositBase;
+	type FriendDepositFactor = FriendDepositFactor;
+	type MaxFriends = MaxFriends;
+	type RecoveryDeposit = RecoveryDeposit;
+}
+
+parameter_types! {
+	pub const IndexDeposit: Balance = 100 * CENTS;
+}
+
+impl pallet_indices::Config for Runtime {
+	type AccountIndex = AccountIndex;
+	type Currency = Balances;
+	type Deposit = IndexDeposit;
+	type Event = Event;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const MembershipMaxMembers: u32 = 100_000;
+}
+
+impl pallet_membership::Config for Runtime {
+	type Event = Event;
+	type AddOrigin = EnsureRoot<AccountId>;
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type SwapOrigin = EnsureRoot<AccountId>;
+	type ResetOrigin = EnsureRoot<AccountId>;
+	type PrimeOrigin = EnsureRoot<AccountId>;
+	type MembershipInitialized = Council;
+	type MembershipChanged = Council;
+	type MaxMembers = MembershipMaxMembers;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub CouncilMotionDuration: BlockNumber = 3 * DAYS;
+	pub const CouncilMaxProposals: u32 = 100;
+	pub const CouncilMaxMembers: u32 = 100;
+}
+
+type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Config<CouncilCollective>  for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = CouncilMotionDuration;
+	type MaxProposals = CouncilMaxProposals;
+	type MaxMembers = CouncilMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = ();
+}
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
+parameter_types! {
+	pub const CandidateDeposit: Balance = 1000 * CENTS;
+	pub const WrongSideDeduction: Balance = 200 * CENTS;
+	pub const MaxStrikes: u32 = 10;
+	pub const RotationPeriod: BlockNumber = 7 * DAYS;
+	pub const PeriodSpend: Balance = 50000 * CENTS;
+	pub const MaxLockDuration: BlockNumber = 36 * 30 * DAYS;
+	pub const ChallengePeriod: BlockNumber = 7 * DAYS;
+	pub const MaxCandidateIntake: u32 = 1;
+	pub const SocietyPalletId: PalletId = PalletId(*b"py/socie");
+}
+
+impl pallet_society::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
+	type CandidateDeposit = CandidateDeposit;
+	type WrongSideDeduction = WrongSideDeduction;
+	type MaxStrikes = MaxStrikes;
+	type PeriodSpend = PeriodSpend;
+	type MembershipChanged = ();
+	type RotationPeriod = RotationPeriod;
+	type MaxLockDuration = MaxLockDuration;
+	type FounderSetOrigin = EnsureRoot<AccountId>;
+	type SuspensionJudgementOrigin = pallet_society::EnsureFounder<Runtime>;
+	type ChallengePeriod = ChallengePeriod;
+	type MaxCandidateIntake = MaxCandidateIntake;
+	type PalletId = SocietyPalletId;
+}
+
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 2000 * CENTS;
+	pub const ProposalBondMaximum: Balance = 1 * GRAND;
+	pub const SpendPeriod: BlockNumber = 6 * DAYS;
+	pub const Burn: Permill = Permill::from_perthousand(2);
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+	pub const TipCountdown: BlockNumber = 1 * DAYS;
+	pub const TipFindersFee: Percent = Percent::from_percent(20);
+	pub const TipReportDepositBase: Balance = 100 * CENTS;
+	pub const DataDepositPerByte: Balance = 1 * CENTS;
+	pub const MaximumReasonLength: u32 = 16384;
+	pub const MaxApprovals: u32 = 100;
+	pub const MaxKeys: u32 = 10_000;
+	pub const MaxPeerInHeartbeats: u32 = 10_000;
+	pub const MaxPeerDataEncodingSize: u32 = 1_000;
+}
+
+impl pallet_treasury::Config for Runtime {
+	type PalletId = TreasuryPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EnsureRoot<AccountId>;
+	type RejectOrigin = EnsureRoot<AccountId>;
+	type Event = Event;
+	type OnSlash = Treasury;
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type ProposalBondMaximum = ProposalBondMaximum; //set to () on the substrate repo
+	type SpendPeriod = SpendPeriod;
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
+	type Burn = Burn;
+	type BurnDestination = Treasury;
+	type MaxApprovals = MaxApprovals;
+	type WeightInfo = ();
+	type SpendFunds = Bounties;
+}
+
+parameter_types! {
+	pub const BountyCuratorDeposit: Permill = Permill::from_percent(50);
+	pub const BountyValueMinimum: Balance = 200 * CENTS;
+	pub const BountyDepositBase: Balance = 100 * CENTS;
+	pub const CuratorDepositMultiplier: Permill = Permill::from_percent(50);
+	pub const CuratorDepositMin: Balance = 1 * DOLLARS;
+	pub const CuratorDepositMax: Balance = 100 * DOLLARS;
+	pub const BountyDepositPayoutDelay: BlockNumber = 4 * DAYS;
+	pub const BountyUpdatePeriod: BlockNumber = 90 * DAYS;
+}
+
+impl pallet_bounties::Config for Runtime {
+	type Event = Event;
+	type BountyDepositBase = BountyDepositBase;
+	type BountyDepositPayoutDelay = BountyDepositPayoutDelay;
+	type BountyUpdatePeriod = BountyUpdatePeriod;
+	type CuratorDepositMultiplier = CuratorDepositMultiplier;
+	type CuratorDepositMin = CuratorDepositMin;
+	type CuratorDepositMax = CuratorDepositMax;
+	type BountyValueMinimum = BountyValueMinimum;
+	type DataDepositPerByte = DataDepositPerByte;
+	type MaximumReasonLength = MaximumReasonLength;
+	type WeightInfo = pallet_bounties::weights::SubstrateWeight<Runtime>;
+	type ChildBountyManager = ChildBounties;
+}
+
+parameter_types! {
+	pub const ChildBountyValueMinimum: Balance = 1 * DOLLARS;
+}
+
+impl pallet_child_bounties::Config for Runtime {
+	type Event = Event;
+	type MaxActiveChildBountyCount = ConstU32<200>;
+	type ChildBountyValueMinimum = ChildBountyValueMinimum;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const AssetDeposit: Balance = 100 * DOLLARS;
+	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
+	pub const StringLimit: u32 = 50;
+	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
+	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+}
+
+impl pallet_assets::Config for Runtime {
+	type Event = Event;
+	type Balance = u128;
+	type AssetId = u32;
+	type Currency = Balances;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const XPubLen: u32 = XPUB_LEN;
+	pub const PSBTMaxLen: u32  = 2048;
+	pub const MaxVaultsPerUser: u32 = 10;
+	pub const MaxCosignersPerVault: u32 = 7;
+	pub const VaultDescriptionMaxLen: u32 = 200;
+	pub const OutputDescriptorMaxLen: u32 = 2048;
+	pub const MaxProposalsPerVault: u32 = 5;
+}
+
+impl pallet_bitcoin_vaults::Config for Runtime {
+	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
+	type Event = Event;
+	type ChangeBDKOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type XPubLen = XPubLen;
+	type PSBTMaxLen = PSBTMaxLen;
+	type MaxVaultsPerUser = MaxVaultsPerUser;
+	type MaxCosignersPerVault = MaxCosignersPerVault;
+	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
+	type MaxProposalsPerVault = MaxProposalsPerVault;
+}
+
+parameter_types! {
+	pub const MaxOwnedDocs: u32 = 100;
+	pub const MaxSharedFromDocs: u32 = 100;
+	pub const MaxSharedToDocs: u32 = 100;
+	pub const DocNameMinLen: u32 = 3;
+	pub const DocNameMaxLen: u32 = 50;
+	pub const DocDescMinLen: u32 = 5;
+	pub const DocDescMaxLen: u32 = 100;
+}
+
+impl pallet_confidential_docs::Config for Runtime {
+	type Event = Event;
+	type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type MaxOwnedDocs = MaxOwnedDocs;
+	type MaxSharedFromDocs = MaxSharedFromDocs;
+	type MaxSharedToDocs = MaxSharedToDocs;
+	type DocNameMinLen = DocNameMinLen;
+	type DocNameMaxLen = DocNameMaxLen;
+	type DocDescMinLen = DocDescMinLen;
+	type DocDescMaxLen = DocDescMaxLen;
+}
+
+parameter_types! {
 	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT / 4;
 	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT / 4;
 }
@@ -456,33 +727,7 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = ();
 }
 
-/// Configure the pallet template in pallets/template.
-impl pallet_template::Config for Runtime {
-	type Event = Event;
-}
 
-parameter_types! {
-	pub const XPubLen: u32 = 166;
-	pub const PSBTMaxLen: u32  = 2048;
-	pub const MaxVaultsPerUser: u32 = 10;
-	pub const MaxCosignersPerVault: u32 = 7;
-	pub const VaultDescriptionMaxLen: u32 = 200;
-	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault: u32 = 5;
-}
-
-impl pallet_bitcoin_vaults::Config for Runtime {
-	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
-	type Event = Event;
-	type ChangeBDKOrigin = EnsureRoot<AccountId>;
-	type XPubLen = XPubLen;
-	type PSBTMaxLen = PSBTMaxLen;
-	type MaxVaultsPerUser = MaxVaultsPerUser;
-	type MaxCosignersPerVault = MaxCosignersPerVault;
-	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
-	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
-	type MaxProposalsPerVault = MaxProposalsPerVault;
-}
 
 /// The payload being signed in transactions.
 pub type SignedPayload = sp_runtime::generic::SignedPayload<Call, SignedExtra>;
@@ -540,15 +785,6 @@ impl frame_system::offchain::SigningTypes for Runtime {
     type Public = <Signature as sp_runtime::traits::Verify>::Signer;
     type Signature = Signature;
 }
-
-parameter_types! {
-	pub const AssetDeposit: Balance = 100 * DOLLARS;
-	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
-	pub const StringLimit: u32 = 50;
-	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
-	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
-}
-
 parameter_types! {
 	pub const CollectionDeposit: Balance = 100 * DOLLARS;
 	pub const ItemDeposit: Balance = 1 * DOLLARS;
@@ -597,7 +833,10 @@ parameter_types! {
 
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EnsureRoot<AccountId>;
+	type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
@@ -652,6 +891,10 @@ construct_runtime!(
 		// Monetary stuff.
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
+		Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>} = 12,
+		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 13,
+		ChildBounties: pallet_child_bounties::{Pallet, Call, Storage, Event<T>} = 14,
+		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 15,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
@@ -666,13 +909,22 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 
-		// Template
-		TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
-		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 41,
-		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 42,
-		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 43,
-		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 44,
-		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 45,
+		// Governance Related
+		Council: pallet_collective::<Instance1> = 41,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage}  = 42,
+		Society: pallet_society::{Pallet, Call, Storage, Event<T>}  = 43,
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>}  = 44,
+		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>}  = 45,
+		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>}  = 46,
+		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 47,
+
+		// Custom Pallets
+		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 51,
+		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 52,
+		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 53,
+		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 54,
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 55,
+		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 56,
 	}
 );
 

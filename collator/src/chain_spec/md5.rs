@@ -7,7 +7,7 @@ use super::{
 };
 
 use cumulus_primitives_core::ParaId;
-use hashed_parachain_runtime::{AccountId, AuraId, EXISTENTIAL_DEPOSIT};
+use hashed_parachain_runtime::{AccountId, AuraId, CouncilConfig, EXISTENTIAL_DEPOSIT};
 
 /// Specialized `ChainSpec` for MD5 Network.
 pub type Md5ChainSpec =
@@ -86,6 +86,16 @@ fn md5_genesis(
 		},
 		balances: hashed_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
+		},
+		// indices: Default::default(),
+		// membership: Default::default(),
+		treasury: Default::default(),
+		council: CouncilConfig {
+			members: vec![
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<sr25519::Public>("Bob"),
+			],
+			phantom: Default::default(),
 		},
 		parachain_info: hashed_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: hashed_parachain_runtime::CollatorSelectionConfig {

@@ -73,6 +73,7 @@ pallet-lottery = { git = "https://github.com/paritytech/substrate.git", branch =
 pallet-membership = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
 pallet-multisig = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
 pallet-proxy = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
+pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
 pallet-recovery = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
 pallet-referenda = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
 pallet-remark = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27", default-features = false }
@@ -167,6 +168,7 @@ std = [
 	"pallet-membership/std",
 	"pallet-multisig/std",
 	"pallet-proxy/std",
+	"pallet-randomness-collective-flip/std",
 	"pallet-recovery/std",
 	"pallet-referenda/std",
 	"pallet-remark/std",
