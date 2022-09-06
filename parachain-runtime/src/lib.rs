@@ -6,9 +6,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+pub mod constants;
 mod weights;
 pub mod xcm_config;
-pub mod constants;
 use constants::*;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
@@ -29,7 +29,10 @@ use sp_version::RuntimeVersion;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Everything, AsEnsureOriginWithArg, ConstU32, ConstU64, ConstU128, EitherOfDiverse},
+	traits::{
+		AsEnsureOriginWithArg, ConstU128, ConstU16, ConstU32, EitherOfDiverse,
+		Everything
+	},
 	weights::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, DispatchClass, Weight,
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
@@ -117,6 +120,11 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+>;
+
+pub type RootOrThreeFifthsOfCouncil = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 >;
 
 /// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
@@ -389,6 +397,105 @@ impl pallet_identity::Config for Runtime {
 }
 
 parameter_types! {
+	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
+	pub const DepositBase: Balance = deposit(1, 88);
+	// Additional storage item size of 32 bytes.
+	pub const DepositFactor: Balance = deposit(0, 32);
+}
+
+impl pallet_multisig::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type DepositBase = DepositBase;
+	type DepositFactor = DepositFactor;
+	type MaxSignatories = ConstU16<100>;
+	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+}
+
+// parameter_types! {
+// 	// One storage item; key size 32, value size 8; .
+// 	pub const ProxyDepositBase: Balance = deposit(1, 8);
+// 	// Additional storage item size of 33 bytes.
+// 	pub const ProxyDepositFactor: Balance = deposit(0, 33);
+// 	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
+// 	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
+// }
+
+// /// The type used to represent the kinds of proxying allowed.
+// #[derive(
+// 	Copy,
+// 	Clone,
+// 	Eq,
+// 	PartialEq,
+// 	Ord,
+// 	PartialOrd,
+// 	Encode,
+// 	Decode,
+// 	RuntimeDebug,
+// 	MaxEncodedLen,
+// 	scale_info::TypeInfo,
+// )]
+// pub enum ProxyType {
+// 	Any,
+// 	NonTransfer,
+// 	Governance,
+// 	Staking,
+// }
+// impl Default for ProxyType {
+// 	fn default() -> Self {
+// 		Self::Any
+// 	}
+// }
+// impl InstanceFilter<Call> for ProxyType {
+// 	fn filter(&self, c: &Call) -> bool {
+// 		match self {
+// 			ProxyType::Any => true,
+// 			ProxyType::NonTransfer => !matches!(
+// 				c,
+// 				Call::Balances(..)
+// 					| Call::Assets(..) | Call::Uniques(..)
+// 					| Call::Vesting(pallet_vesting::Call::vested_transfer { .. })
+// 					| Call::Indices(pallet_indices::Call::transfer { .. })
+// 			),
+// 			ProxyType::Governance => matches!(
+// 				c,
+// 				Call::Democracy(..)
+// 					| Call::Council(..) | Call::Society(..)
+// 					| Call::TechnicalCommittee(..)
+// 					| Call::Elections(..)
+// 					| Call::Treasury(..)
+// 			),
+// 			ProxyType::Staking => matches!(c, Call::Staking(..)),
+// 		}
+// 	}
+// 	fn is_superset(&self, o: &Self) -> bool {
+// 		match (self, o) {
+// 			(x, y) if x == y => true,
+// 			(ProxyType::Any, _) => true,
+// 			(_, ProxyType::Any) => false,
+// 			(ProxyType::NonTransfer, _) => true,
+// 			_ => false,
+// 		}
+// 	}
+// }
+
+// impl pallet_proxy::Config for Runtime {
+// 	type Event = Event;
+// 	type Call = Call;
+// 	type Currency = Balances;
+// 	type ProxyType = ProxyType;
+// 	type ProxyDepositBase = ProxyDepositBase;
+// 	type ProxyDepositFactor = ProxyDepositFactor;
+// 	type MaxProxies = ConstU32<32>;
+// 	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+// 	type MaxPending = ConstU32<32>;
+// 	type CallHasher = BlakeTwo256;
+// 	type AnnouncementDepositBase = AnnouncementDepositBase;
+// 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+// }
+
+parameter_types! {
 	pub const ConfigDepositBase: Balance = 500 * CENTS;
 	pub const FriendDepositFactor: Balance = 50 * CENTS;
 	pub const MaxFriends: u16 = 9;
@@ -442,7 +549,7 @@ parameter_types! {
 }
 
 type CouncilCollective = pallet_collective::Instance1;
-impl pallet_collective::Config<CouncilCollective>  for Runtime {
+impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type Origin = Origin;
 	type Proposal = Call;
 	type Event = Event;
@@ -597,15 +704,12 @@ parameter_types! {
 impl pallet_bitcoin_vaults::Config for Runtime {
 	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
 	type Event = Event;
-	type ChangeBDKOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
-	>;
+	type ChangeBDKOrigin = RootOrThreeFifthsOfCouncil;
 	type XPubLen = XPubLen;
 	type PSBTMaxLen = PSBTMaxLen;
 	type MaxVaultsPerUser = MaxVaultsPerUser;
 	type MaxCosignersPerVault = MaxCosignersPerVault;
-	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	type VaultDescriptionMaxLen = VaultDescriptionMaxLen;
 	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
@@ -622,10 +726,7 @@ parameter_types! {
 
 impl pallet_confidential_docs::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
-	>;
+	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	type MaxOwnedDocs = MaxOwnedDocs;
 	type MaxSharedFromDocs = MaxSharedFromDocs;
 	type MaxSharedToDocs = MaxSharedToDocs;
@@ -727,13 +828,11 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = ();
 }
 
-
-
 /// The payload being signed in transactions.
 pub type SignedPayload = sp_runtime::generic::SignedPayload<Call, SignedExtra>;
 
-use sp_runtime::SaturatedConversion;
 use codec::Encode;
+use sp_runtime::SaturatedConversion;
 
 impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Runtime
 where
@@ -745,45 +844,43 @@ where
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
 where
-    Call: From<LocalCall>,
+	Call: From<LocalCall>,
 {
-    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
-        call: Call,
-        public: <Signature as sp_runtime::traits::Verify>::Signer,
-        account: AccountId,
-        index: Index,
-    ) -> Option<(Call, <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload)> {
-        let period = BlockHashCount::get() as u64;
-        let current_block = System::block_number()
-            .saturated_into::<u64>()
-            .saturating_sub(1);
-        let tip = 0;
-        let extra: SignedExtra = (
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: Call,
+		public: <Signature as sp_runtime::traits::Verify>::Signer,
+		account: AccountId,
+		index: Index,
+	) -> Option<(Call, <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload)> {
+		let period = BlockHashCount::get() as u64;
+		let current_block = System::block_number().saturated_into::<u64>().saturating_sub(1);
+		let tip = 0;
+		let extra: SignedExtra = (
 			frame_system::CheckNonZeroSender::<Runtime>::new(),
-            frame_system::CheckSpecVersion::<Runtime>::new(),
-            frame_system::CheckTxVersion::<Runtime>::new(),
-            frame_system::CheckGenesis::<Runtime>::new(),
-            frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
-            frame_system::CheckNonce::<Runtime>::from(index),
-            frame_system::CheckWeight::<Runtime>::new(),
-            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
-        );
+			frame_system::CheckSpecVersion::<Runtime>::new(),
+			frame_system::CheckTxVersion::<Runtime>::new(),
+			frame_system::CheckGenesis::<Runtime>::new(),
+			frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::<Runtime>::from(index),
+			frame_system::CheckWeight::<Runtime>::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+		);
 
-        let raw_payload = SignedPayload::new(call, extra)
-            .map_err(|e| {
-                log::warn!("Unable to create signed payload: {:?}", e);
-            })
-            .ok()?;
-        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
-        let address = account;
-        let (call, extra, _) = raw_payload.deconstruct();
-        Some((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
-    }
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				log::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+		let address = account;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
+	}
 }
 
 impl frame_system::offchain::SigningTypes for Runtime {
-    type Public = <Signature as sp_runtime::traits::Verify>::Signer;
-    type Signature = Signature;
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
 }
 parameter_types! {
 	pub const CollectionDeposit: Balance = 100 * DOLLARS;
@@ -823,7 +920,7 @@ parameter_types! {
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
 	pub const NotesMaxLen: u32 = 256;
-	pub const MaxFeedbackLen: u32 = 256; 
+	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 10;
@@ -833,23 +930,20 @@ parameter_types! {
 
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
-	>;
+	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type MaxFeedbackLen = MaxFeedbackLen;
-	type NameMaxLen= NameMaxLen;
+	type NameMaxLen = NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
 	type MaxOffersPerMarket = MaxOffersPerMarket;
 	type Timestamp = Timestamp;
-	type Moment = Moment; 
+	type Moment = Moment;
 	type Rbac = RBAC;
 }
 
@@ -895,6 +989,7 @@ construct_runtime!(
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 13,
 		ChildBounties: pallet_child_bounties::{Pallet, Call, Storage, Event<T>} = 14,
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 15,
+		// AssetTxPayment: pallet_asset_tx_payment::{Pallet, Call, Storage, Event<T>} = 16,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
@@ -917,6 +1012,16 @@ construct_runtime!(
 		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>}  = 45,
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>}  = 46,
 		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 47,
+		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>}  = 48,
+		// Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>}  = 49,
+		// Democracy: pallet_democracy::{Pallet, Call, Storage, Event<T>}  = 50,
+		// Gilt: pallet_gilt::{Pallet, Call, Storage, Event<T>}  = 51,
+		// ConvictionVoting: pallet_conviction_voting::{Pallet, Call, Storage, Event<T>}  = 51,
+		// Whitelist: pallet_whitelist::{Pallet, Call, Storage, Event<T>}  = 51,
+		// Gilt: pallet_gilt::{Pallet, Call, Storage, Event<T>}  = 51,
+		// TechnicalCommittee: pallet_collective::<Instance2>,
+		// Elections: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>}  = 51,
+		// TechnicalMembership: pallet_membership::<Instance1>,
 
 		// Custom Pallets
 		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 51,
