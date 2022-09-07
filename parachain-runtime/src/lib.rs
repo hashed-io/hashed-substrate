@@ -181,7 +181,7 @@ impl_opaque_keys! {
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("hashed"),
 	impl_name: create_runtime_str!("hashed"),
-	authoring_version: 1,
+	authoring_version: 2,
 	spec_version: 1,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
@@ -737,8 +737,8 @@ impl pallet_confidential_docs::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT / 4;
-	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT / 4;
+	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
+	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 }
 
 impl cumulus_pallet_parachain_system::Config for Runtime {
@@ -910,9 +910,9 @@ impl pallet_uniques::Config for Runtime {
 	type Locker = ();
 }
 
-impl pallet_fruniques::Config for Runtime {
-	type Event = Event;
-}
+// impl pallet_fruniques::Config for Runtime {
+// 	type Event = Event;
+// }
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
@@ -974,6 +974,7 @@ construct_runtime!(
 		NodeBlock = opaque::Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
+		// Start of - Provided by Cumulus Template
 		// System support stuff.
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
 		ParachainSystem: cumulus_pallet_parachain_system::{
@@ -985,11 +986,6 @@ construct_runtime!(
 		// Monetary stuff.
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
-		Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>} = 12,
-		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 13,
-		ChildBounties: pallet_child_bounties::{Pallet, Call, Storage, Event<T>} = 14,
-		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 15,
-		// AssetTxPayment: pallet_asset_tx_payment::{Pallet, Call, Storage, Event<T>} = 16,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
@@ -1003,16 +999,24 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config} = 31,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
+		// End of - Provided by Cumulus Template
+
+		// Additional pallets
+		Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>} = 61,
+		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 62,
+		ChildBounties: pallet_child_bounties::{Pallet, Call, Storage, Event<T>} = 63,
+		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 64,
+		// AssetTxPayment: pallet_asset_tx_payment::{Pallet, Call, Storage, Event<T>} = 16,
 
 		// Governance Related
-		Council: pallet_collective::<Instance1> = 41,
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage}  = 42,
-		Society: pallet_society::{Pallet, Call, Storage, Event<T>}  = 43,
-		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>}  = 44,
-		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>}  = 45,
-		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>}  = 46,
-		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 47,
-		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>}  = 48,
+		Council: pallet_collective::<Instance1> = 81,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage}  = 82,
+		Society: pallet_society::{Pallet, Call, Storage, Event<T>}  = 83,
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>}  = 84,
+		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>}  = 85,
+		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>}  = 86,
+		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 87,
+		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>}  = 88,
 		// Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>}  = 49,
 		// Democracy: pallet_democracy::{Pallet, Call, Storage, Event<T>}  = 50,
 		// Gilt: pallet_gilt::{Pallet, Call, Storage, Event<T>}  = 51,
@@ -1024,12 +1028,12 @@ construct_runtime!(
 		// TechnicalMembership: pallet_membership::<Instance1>,
 
 		// Custom Pallets
-		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 51,
-		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 52,
-		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 53,
-		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 54,
-		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 55,
-		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 56,
+		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 151,
+		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 152,
+		// Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 153,
+		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 154,
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 155,
+		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
 	}
 );
 
