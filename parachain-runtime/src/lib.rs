@@ -910,9 +910,9 @@ impl pallet_uniques::Config for Runtime {
 	type Locker = ();
 }
 
-// impl pallet_fruniques::Config for Runtime {
-// 	type Event = Event;
-// }
+impl pallet_fruniques::Config for Runtime {
+	type Event = Event;
+}
 
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
@@ -1030,7 +1030,7 @@ construct_runtime!(
 		// Custom Pallets
 		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 151,
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 152,
-		// Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 153,
+		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 153,
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 154,
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 155,
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
