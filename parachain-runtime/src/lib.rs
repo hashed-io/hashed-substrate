@@ -1076,7 +1076,7 @@ construct_runtime!(
 		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 87,
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>}  = 88,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>}  = 89,
-		Sudo: pallet_sudo::{Pallet, Call, Storage, Event<T>}  = 90,
+		Sudo: pallet_sudo::{Pallet, Call, Storage, Event<T>, Config<T>}  = 90,
 		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>}  = 91,
 		Remark: pallet_remark::{Pallet, Call, Storage, Event<T>}  = 52,
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>}  = 100,

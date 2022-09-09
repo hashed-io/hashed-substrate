@@ -7,7 +7,7 @@ use super::{
 };
 
 use cumulus_primitives_core::ParaId;
-use hashed_parachain_runtime::{AccountId, AuraId, CouncilConfig, EXISTENTIAL_DEPOSIT};
+use hashed_parachain_runtime::{AccountId, AuraId, Balance, CouncilConfig, SudoConfig, EXISTENTIAL_DEPOSIT, constants::DOLLARS};
 
 /// Specialized `ChainSpec` for MD5 Network.
 pub type Md5ChainSpec =
@@ -58,6 +58,8 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
 				4088.into(),
 			)
 		},
@@ -76,8 +78,15 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 fn md5_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	root_key: AccountId,
 	id: ParaId,
 ) -> hashed_parachain_runtime::GenesisConfig {
+
+	let num_endowed_accounts = endowed_accounts.len();
+
+	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
+	const STASH: Balance = ENDOWMENT / 1000;
+
 	hashed_parachain_runtime::GenesisConfig {
 		system: hashed_parachain_runtime::SystemConfig {
 			code: hashed_parachain_runtime::WASM_BINARY
@@ -87,8 +96,7 @@ fn md5_genesis(
 		balances: hashed_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
-		// indices: Default::default(),
-		// membership: Default::default(),
+		sudo: SudoConfig { key: Some(root_key) },
 		treasury: Default::default(),
 		council: CouncilConfig {
 			members: vec![
