@@ -3031,6 +3031,7 @@ dependencies = [
  "pallet-lottery",
  "pallet-membership",
  "pallet-multisig",
+ "pallet-preimage",
  "pallet-proxy",
  "pallet-randomness-collective-flip",
  "pallet-rbac",

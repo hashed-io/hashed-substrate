@@ -17,7 +17,7 @@ use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, IdentifyAccount, Verify},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
 };
@@ -31,13 +31,13 @@ use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
 		AsEnsureOriginWithArg, ConstU128, ConstU16, ConstU32, EitherOfDiverse,
-		Everything
+		Everything, InstanceFilter,
 	},
 	weights::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, DispatchClass, Weight,
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
-	PalletId,
+	PalletId, RuntimeDebug,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -46,6 +46,8 @@ use frame_system::{
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 pub use sp_runtime::{MultiAddress, Perbill, Percent, Permill};
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
+
+pub use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
 
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
@@ -413,87 +415,98 @@ impl pallet_multisig::Config for Runtime {
 	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
 }
 
-// parameter_types! {
-// 	// One storage item; key size 32, value size 8; .
-// 	pub const ProxyDepositBase: Balance = deposit(1, 8);
-// 	// Additional storage item size of 33 bytes.
-// 	pub const ProxyDepositFactor: Balance = deposit(0, 33);
-// 	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
-// 	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
-// }
+impl pallet_sudo::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+}
 
-// /// The type used to represent the kinds of proxying allowed.
-// #[derive(
-// 	Copy,
-// 	Clone,
-// 	Eq,
-// 	PartialEq,
-// 	Ord,
-// 	PartialOrd,
-// 	Encode,
-// 	Decode,
-// 	RuntimeDebug,
-// 	MaxEncodedLen,
-// 	scale_info::TypeInfo,
-// )]
-// pub enum ProxyType {
-// 	Any,
-// 	NonTransfer,
-// 	Governance,
-// 	Staking,
-// }
-// impl Default for ProxyType {
-// 	fn default() -> Self {
-// 		Self::Any
-// 	}
-// }
-// impl InstanceFilter<Call> for ProxyType {
-// 	fn filter(&self, c: &Call) -> bool {
-// 		match self {
-// 			ProxyType::Any => true,
-// 			ProxyType::NonTransfer => !matches!(
-// 				c,
-// 				Call::Balances(..)
-// 					| Call::Assets(..) | Call::Uniques(..)
-// 					| Call::Vesting(pallet_vesting::Call::vested_transfer { .. })
-// 					| Call::Indices(pallet_indices::Call::transfer { .. })
-// 			),
-// 			ProxyType::Governance => matches!(
-// 				c,
-// 				Call::Democracy(..)
-// 					| Call::Council(..) | Call::Society(..)
-// 					| Call::TechnicalCommittee(..)
-// 					| Call::Elections(..)
-// 					| Call::Treasury(..)
-// 			),
-// 			ProxyType::Staking => matches!(c, Call::Staking(..)),
-// 		}
-// 	}
-// 	fn is_superset(&self, o: &Self) -> bool {
-// 		match (self, o) {
-// 			(x, y) if x == y => true,
-// 			(ProxyType::Any, _) => true,
-// 			(_, ProxyType::Any) => false,
-// 			(ProxyType::NonTransfer, _) => true,
-// 			_ => false,
-// 		}
-// 	}
-// }
+parameter_types! {
+	// One storage item; key size 32, value size 8; .
+	pub const ProxyDepositBase: Balance = deposit(1, 8);
+	// Additional storage item size of 33 bytes.
+	pub const ProxyDepositFactor: Balance = deposit(0, 33);
+	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
+}
 
-// impl pallet_proxy::Config for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-// 	type Currency = Balances;
-// 	type ProxyType = ProxyType;
-// 	type ProxyDepositBase = ProxyDepositBase;
-// 	type ProxyDepositFactor = ProxyDepositFactor;
-// 	type MaxProxies = ConstU32<32>;
-// 	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
-// 	type MaxPending = ConstU32<32>;
-// 	type CallHasher = BlakeTwo256;
-// 	type AnnouncementDepositBase = AnnouncementDepositBase;
-// 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
-// }
+/// The type used to represent the kinds of proxying allowed.
+#[derive(
+	Copy,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+)]
+pub enum ProxyType {
+	Any,
+	NonTransfer,
+	Governance,
+	Marketplaces,
+}
+impl Default for ProxyType {
+	fn default() -> Self {
+		Self::Any
+	}
+}
+impl InstanceFilter<Call> for ProxyType {
+	fn filter(&self, c: &Call) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => !matches!(
+				c,
+				Call::Balances(..)
+					| Call::Assets(..) 
+					| Call::Uniques(..)
+					| Call::Vesting(pallet_vesting::Call::vested_transfer { .. })
+					| Call::Indices(pallet_indices::Call::transfer { .. })
+			),
+			ProxyType::Governance => matches!(
+				c,
+				Call::Bounties(..)
+					| Call::ChildBounties(..)
+					| Call::Council(..) 
+					| Call::Society(..)
+					// | Call::TechnicalCommittee(..)
+					// | Call::Elections(..)
+					| Call::Treasury(..)
+			),
+			ProxyType::Marketplaces => matches!(
+				c, 
+				Call::GatedMarketplace(..)
+			),
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			(ProxyType::NonTransfer, _) => true,
+			_ => false,
+		}
+	}
+}
+
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = ConstU32<32>;
+	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+	type MaxPending = ConstU32<32>;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
 
 parameter_types! {
 	pub const ConfigDepositBase: Balance = 500 * CENTS;
@@ -590,6 +603,21 @@ impl pallet_society::Config for Runtime {
 	type ChallengePeriod = ChallengePeriod;
 	type MaxCandidateIntake = MaxCandidateIntake;
 	type PalletId = SocietyPalletId;
+}
+
+parameter_types! {
+	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
+}
+
+impl pallet_vesting::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BlockNumberToBalance = ConvertInto;
+	type MinVestedTransfer = MinVestedTransfer;
+	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
+	// highest number of schedules that encodes less than 2^10.
+	const MAX_VESTING_SCHEDULES: u32 = 28;
 }
 
 parameter_types! {
@@ -692,6 +720,31 @@ impl pallet_assets::Config for Runtime {
 }
 
 parameter_types! {
+	pub const PreimageMaxSize: u32 = 4096 * 1024;
+	pub const PreimageBaseDeposit: Balance = 1 * DOLLARS;
+	pub const PreimageByteDeposit: Balance = 1 * CENTS;
+}
+
+impl pallet_preimage::Config for Runtime {
+	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
+	type Event = Event;
+	type Currency = Balances;
+	type ManagerOrigin = EnsureRoot<AccountId>;
+	type MaxSize = PreimageMaxSize;
+	type BaseDeposit = PreimageBaseDeposit;
+	type ByteDeposit = PreimageByteDeposit;
+}
+
+impl pallet_whitelist::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type WhitelistOrigin = EnsureRoot<AccountId>;
+	type DispatchWhitelistedOrigin = EnsureRoot<AccountId>;
+	type PreimageProvider = Preimage;
+	type WeightInfo = pallet_whitelist::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
 	pub const MaxVaultsPerUser: u32 = 10;
@@ -734,6 +787,11 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
+}
+
+impl pallet_remark::Config for Runtime {
+	type WeightInfo = pallet_remark::weights::SubstrateWeight<Self>;
+	type Event = Event;
 }
 
 parameter_types! {
@@ -831,7 +889,7 @@ impl pallet_collator_selection::Config for Runtime {
 /// The payload being signed in transactions.
 pub type SignedPayload = sp_runtime::generic::SignedPayload<Call, SignedExtra>;
 
-use codec::Encode;
+use codec::{Decode, Encode, MaxEncodedLen};
 use sp_runtime::SaturatedConversion;
 
 impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Runtime
@@ -1017,16 +1075,13 @@ construct_runtime!(
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>}  = 86,
 		Membership: pallet_membership::{Pallet, Call, Storage, Event<T>}  = 87,
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>}  = 88,
-		// Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>}  = 49,
-		// Democracy: pallet_democracy::{Pallet, Call, Storage, Event<T>}  = 50,
-		// Gilt: pallet_gilt::{Pallet, Call, Storage, Event<T>}  = 51,
-		// ConvictionVoting: pallet_conviction_voting::{Pallet, Call, Storage, Event<T>}  = 51,
-		// Whitelist: pallet_whitelist::{Pallet, Call, Storage, Event<T>}  = 51,
-		// Gilt: pallet_gilt::{Pallet, Call, Storage, Event<T>}  = 51,
-		// TechnicalCommittee: pallet_collective::<Instance2>,
-		// Elections: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>}  = 51,
-		// TechnicalMembership: pallet_membership::<Instance1>,
-
+		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>}  = 89,
+		Sudo: pallet_sudo::{Pallet, Call, Storage, Event<T>}  = 90,
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>}  = 91,
+		Remark: pallet_remark::{Pallet, Call, Storage, Event<T>}  = 52,
+		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>}  = 100,
+		Whitelist: pallet_whitelist::{Pallet, Call, Storage, Event<T>}  = 101,
+	
 		// Custom Pallets
 		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 151,
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 152,
