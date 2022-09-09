@@ -60,7 +60,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 				],
 				// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
 				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
-				4088.into(),
+				2089.into(),
 			)
 		},
 		Vec::new(),
@@ -70,7 +70,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 		Some(properties),
 		Extensions {
 			relay_chain: "rococo".into(), // You MUST set this to the correct network!
-			para_id: 4088,
+			para_id: 2089,
 		},
 	)
 }

@@ -27,7 +27,7 @@ pub mod pallet {
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_uniques::Config{
+	pub trait Config: frame_system::Config + pallet_fruniques::Config{
 
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 

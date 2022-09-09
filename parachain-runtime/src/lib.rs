@@ -751,7 +751,7 @@ parameter_types! {
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
 	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault: u32 = 5;
+	pub const MaxProposalsPerVault: u32 = 100;
 }
 
 impl pallet_bitcoin_vaults::Config for Runtime {
