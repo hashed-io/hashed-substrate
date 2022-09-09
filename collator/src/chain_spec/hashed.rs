@@ -1,12 +1,13 @@
 use sc_service::ChainType;
 use sp_core::sr25519;
+use hex_literal::hex;
 
 use super::{
 	get_account_id_from_seed, get_collator_keys_from_seed, session_keys, SAFE_XCM_VERSION, Extensions,
 };
 
 use cumulus_primitives_core::ParaId;
-use hashed_parachain_runtime::{AccountId, AuraId, EXISTENTIAL_DEPOSIT};
+use hashed_parachain_runtime::{AccountId, AuraId, SudoConfig, EXISTENTIAL_DEPOSIT};
 
 /// Specialized `ChainSpec` for Hashed Network
 pub type HashedChainSpec =
@@ -53,6 +54,7 @@ pub fn get_chain_spec() -> HashedChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
 				1000.into(),
 			)
 		},
@@ -71,6 +73,7 @@ pub fn get_chain_spec() -> HashedChainSpec {
 fn hashed_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	root_key: AccountId,
 	id: ParaId,
 ) -> hashed_parachain_runtime::GenesisConfig {
 	hashed_parachain_runtime::GenesisConfig {
@@ -82,6 +85,7 @@ fn hashed_genesis(
 		balances: hashed_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
+		sudo: SudoConfig { key: Some(root_key) },
 		council: Default::default(),
 		treasury: Default::default(),
 		parachain_info: hashed_parachain_runtime::ParachainInfoConfig { parachain_id: id },

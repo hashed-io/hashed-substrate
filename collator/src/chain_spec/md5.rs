@@ -7,7 +7,7 @@ use super::{
 };
 
 use cumulus_primitives_core::ParaId;
-use hashed_parachain_runtime::{AccountId, AuraId, Balance, CouncilConfig, SudoConfig, EXISTENTIAL_DEPOSIT, constants::DOLLARS};
+use hashed_parachain_runtime::{AccountId, AuraId, CouncilConfig, SudoConfig, EXISTENTIAL_DEPOSIT};
 
 /// Specialized `ChainSpec` for MD5 Network.
 pub type Md5ChainSpec =
@@ -82,11 +82,6 @@ fn md5_genesis(
 	id: ParaId,
 ) -> hashed_parachain_runtime::GenesisConfig {
 
-	let num_endowed_accounts = endowed_accounts.len();
-
-	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
-	const STASH: Balance = ENDOWMENT / 1000;
-
 	hashed_parachain_runtime::GenesisConfig {
 		system: hashed_parachain_runtime::SystemConfig {
 			code: hashed_parachain_runtime::WASM_BINARY
@@ -100,8 +95,8 @@ fn md5_genesis(
 		treasury: Default::default(),
 		council: CouncilConfig {
 			members: vec![
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
-				get_account_id_from_seed::<sr25519::Public>("Bob"),
+				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),
+				hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),
 			],
 			phantom: Default::default(),
 		},
