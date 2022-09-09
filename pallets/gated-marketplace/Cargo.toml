@@ -28,7 +28,7 @@ pallet-uniques = { git = "https://github.com/paritytech/substrate", branch = "po
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
 
-# pallet-fruniques = {path = "../fruniques", default-features = false, version = "0.1.0-dev"}
+pallet-fruniques = {path = "../fruniques", default-features = false, version = "0.1.0-dev"}
 pallet-rbac = { path="../rbac/", default-features = false, version = "4.0.0-dev"}
 
 [dev-dependencies]
@@ -47,7 +47,7 @@ std = [
 	"frame-benchmarking/std",
 	"pallet-balances/std",
 	"pallet-uniques/std",
-	# "pallet-fruniques/std",
+	"pallet-fruniques/std",
 	"pallet-timestamp/std",
 	"pallet-rbac/std"
 ]

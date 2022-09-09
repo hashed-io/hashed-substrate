@@ -45,7 +45,7 @@ frame-try-runtime = { git = "https://github.com/paritytech/substrate", default-f
 
 # Local Pallets
 pallet-bitcoin-vaults = { path = "../pallets/bitcoin-vaults", default-features = false }
-# pallet-fruniques = { path = "../pallets/fruniques", default-features = false }
+pallet-fruniques = { path = "../pallets/fruniques", default-features = false }
 pallet-gated-marketplace = { path = "../pallets/gated-marketplace", default-features = false }
 pallet-rbac = { path = "../pallets/rbac", default-features = false }
 pallet-confidential-docs = { path = "../pallets/confidential-docs", default-features = false }
@@ -141,7 +141,7 @@ std = [
 	# Local Pallets
 	"pallet-bitcoin-vaults/std",
 	"pallet-confidential-docs/std",
-	# "pallet-fruniques/std",
+	"pallet-fruniques/std",
 	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
 

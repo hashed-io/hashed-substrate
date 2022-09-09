@@ -21,7 +21,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>},
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
-		// Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
+		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
         Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
