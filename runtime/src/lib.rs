@@ -547,6 +547,27 @@ impl pallet_fruniques::Config for Runtime {
 }
 
 parameter_types! {
+	pub const ProjectNameMaxLen:u32 = 32;
+	pub const ProjectDescMaxLen:u32 = 256;
+	pub const MaxChildrens:u32 = 20;
+	pub const MaxDocuments:u32 = 5;
+	pub const MaxAccountsPerTransaction:u32 = 5;
+	pub const MaxProjectsPerUser:u32 = 10;
+}
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type ProjectNameMaxLen = ProjectNameMaxLen;
+	type ProjectDescMaxLen = ProjectDescMaxLen;
+	type MaxDocuments = MaxDocuments;
+	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
+	type MaxProjectsPerUser = MaxProjectsPerUser;
+	type MaxChildrens = MaxChildrens;
+
+}
+
+
+
+parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
 	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
@@ -745,6 +766,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
+		Proxy: pallet_proxy,
 	}
 );
 
