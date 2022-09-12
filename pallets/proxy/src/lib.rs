@@ -16,7 +16,7 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+	use frame_support::{pallet_prelude::*, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use frame_support::transactional;
 use sp_runtime::traits::AccountIdConversion;
@@ -44,10 +44,12 @@ use sp_runtime::traits::AccountIdConversion;
 		#[pallet::constant]
 		type MaxProjectsPerUser: Get<u32>;
 
-		
+		#[pallet::constant]
+		type CIDMaxLen: Get<u32>;
 
 		
 
+	
 		
 	}
 
@@ -64,6 +66,16 @@ use sp_runtime::traits::AccountIdConversion;
 		Identity, 
 		T::AccountId, // Key
 		BoundedVec<u8, ConstU32<100>>,  // Value
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn projects)]
+	pub(super) type Projects<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		Project<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -86,6 +98,30 @@ use sp_runtime::traits::AccountIdConversion;
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+
+		// A C C O U N T S
+		// --------------------------------------------------------------------------------------------
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn accounts_add_user(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+		// 	// let who = ensure_signed(origin)?; // origin will be market owner
+		// 	// let m = Marketplace{
+		// 	// 	label,
+		// 	// };
+		// 	// Self::do_create_marketplace(who, admin, m)
+		// }
+
+		
+		// P R O J E C T S
+		// --------------------------------------------------------------------------------------------
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectNameMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
+		 ) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin will be admin
+			
+			Self::do_create_project(who, tittle, description, image, developer, builder, issuer, regional_center)
+		}
 
 	}
 }
