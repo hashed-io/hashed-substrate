@@ -61,6 +61,7 @@ parameter_types! {
 	pub const MaxDocuments:u32 = 5;
 	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
+	pub const CIDMaxLen:u32 = 64;	
 }
 
 impl pallet_proxy::Config for Test {
@@ -71,6 +72,7 @@ impl pallet_proxy::Config for Test {
 	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
 	type MaxChildrens = MaxChildrens;
+	type CIDMaxLen = CIDMaxLen;
 }
 
 
