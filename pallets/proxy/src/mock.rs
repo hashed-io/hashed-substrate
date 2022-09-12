@@ -54,9 +54,25 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+parameter_types! {
+	pub const ProjectNameMaxLen:u32 = 32;
+	pub const ProjectDescMaxLen:u32 = 256;
+	pub const MaxChildrens:u32 = 20;
+	pub const MaxDocuments:u32 = 5;
+	pub const MaxAccountsPerTransaction:u32 = 5;
+	pub const MaxProjectsPerUser:u32 = 10;
+}
+
 impl pallet_proxy::Config for Test {
 	type Event = Event;
+	type ProjectNameMaxLen = ProjectNameMaxLen;
+	type ProjectDescMaxLen = ProjectDescMaxLen;
+	type MaxDocuments = MaxDocuments;
+	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
+	type MaxProjectsPerUser = MaxProjectsPerUser;
+	type MaxChildrens = MaxChildrens;
 }
+
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
