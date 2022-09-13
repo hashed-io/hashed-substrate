@@ -557,6 +557,9 @@ parameter_types! {
 }
 impl pallet_proxy::Config for Runtime {
 	type Event = Event;
+	type Timestamp = Timestamp;
+	type Moment = Moment; 
+	
 	type ProjectNameMaxLen = ProjectNameMaxLen;
 	type ProjectDescMaxLen = ProjectDescMaxLen;
 	type MaxDocuments = MaxDocuments;
