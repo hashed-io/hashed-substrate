@@ -183,8 +183,8 @@ impl_opaque_keys! {
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("hashed"),
 	impl_name: create_runtime_str!("hashed"),
-	authoring_version: 2,
-	spec_version: 1,
+	authoring_version: 3,
+	spec_version: 3,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
