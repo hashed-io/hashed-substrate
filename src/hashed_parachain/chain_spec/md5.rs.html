@@ -122,16 +122,67 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">sc_service::ChainType</span>;
-<span class="kw">use</span> <span class="ident">sp_core</span>::{<span class="ident">crypto::UncheckedInto</span>, <span class="ident">sr25519</span>};
+<span class="kw">use</span> <span class="ident">sp_core</span>::{<span class="ident">crypto::UncheckedInto</span>};
 <span class="kw">use</span> <span class="ident">hex_literal::hex</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{
-	<span class="ident">get_account_id_from_seed</span>, <span class="ident">session_keys</span>, <span class="ident">SAFE_XCM_VERSION</span>, <span class="ident">Extensions</span>,
+	<span class="ident">session_keys</span>, <span class="ident">SAFE_XCM_VERSION</span>, <span class="ident">Extensions</span>,
 };
 
 <span class="kw">use</span> <span class="ident">cumulus_primitives_core::ParaId</span>;
-<span class="kw">use</span> <span class="ident">hashed_parachain_runtime</span>::{<span class="ident">AccountId</span>, <span class="ident">AuraId</span>, <span class="ident">EXISTENTIAL_DEPOSIT</span>};
+<span class="kw">use</span> <span class="ident">hashed_parachain_runtime</span>::{<span class="ident">AccountId</span>, <span class="ident">AuraId</span>, <span class="ident">CouncilConfig</span>, <span class="ident">SudoConfig</span>, <span class="ident">EXISTENTIAL_DEPOSIT</span>};
 
 <span class="doccomment">/// Specialized `ChainSpec` for MD5 Network.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Md5ChainSpec</span> <span class="op">=</span>
@@ -163,26 +214,65 @@
                         <span class="macro">hex!</span>[<span class="string">&quot;4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e&quot;</span>].<span class="ident">into</span>(),                    						
                         <span class="macro">hex!</span>[<span class="string">&quot;4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e&quot;</span>].<span class="ident">unchecked_into</span>(),
 					),
+					(
+						<span class="comment">// 5Dw5KkHeoh6umBurwqh4CHoXYBY6rpxtQampp8bFkuLgFz4L</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5GwwAKFomhgd4AHXZLUBVK3B792DvgQUnoHTtQNkwmt5h17k</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5DU84E1JYAhftyimxYd1MUaQ82GBKxNVFhDJSUSGU1ULpg1C</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5HBZ2CSDcRAjE6AKMKzuJ1w5c5iB6XaSn9h5eeAcGwcykKnz</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5Ft1pwMVeLRdRFiZNTtfxvnn1W8vPp71u215uoU4eDWixCok</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
+					(
+						<span class="comment">// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX</span>
+						<span class="macro">hex!</span>[<span class="string">&quot;1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b&quot;</span>].<span class="ident">into</span>(),                    						
+						<span class="macro">hex!</span>[<span class="string">&quot;1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b&quot;</span>].<span class="ident">unchecked_into</span>(),
+					),
 				],
 				<span class="macro">vec!</span>[
                     <span class="comment">// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3</span>
                     <span class="macro">hex!</span>[<span class="string">&quot;f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f&quot;</span>].<span class="ident">into</span>(),   
                     <span class="comment">// 5DkJvQp2gqHraWZU1BNCDxEKTQHezn2Qy7z5hLPksUdjtEG9                 </span>
                     <span class="macro">hex!</span>[<span class="string">&quot;4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e&quot;</span>].<span class="ident">into</span>(),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Alice&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Bob&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Charlie&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Dave&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Eve&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Ferdie&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Alice//stash&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Bob//stash&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Charlie//stash&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Dave//stash&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Eve//stash&quot;</span>),
-					<span class="ident">get_account_id_from_seed</span>::<span class="op">&lt;</span><span class="ident">sr25519::Public</span><span class="op">&gt;</span>(<span class="string">&quot;Ferdie//stash&quot;</span>),
+					<span class="comment">// 5Dw5KkHeoh6umBurwqh4CHoXYBY6rpxtQampp8bFkuLgFz4L        </span>
+                    <span class="macro">hex!</span>[<span class="string">&quot;52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5GwwAKFomhgd4AHXZLUBVK3B792DvgQUnoHTtQNkwmt5h17k                </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5DU84E1JYAhftyimxYd1MUaQ82GBKxNVFhDJSUSGU1ULpg1C               </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5HBZ2CSDcRAjE6AKMKzuJ1w5c5iB6XaSn9h5eeAcGwcykKnz                  </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5Ft1pwMVeLRdRFiZNTtfxvnn1W8vPp71u215uoU4eDWixCok                </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1                   </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e&quot;</span>].<span class="ident">into</span>(),
+					<span class="comment">// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX                </span>
+					<span class="macro">hex!</span>[<span class="string">&quot;1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b&quot;</span>].<span class="ident">into</span>(),
 				],
-				<span class="number">4088</span>.<span class="ident">into</span>(),
+				<span class="comment">// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3</span>
+				<span class="macro">hex!</span>[<span class="string">&quot;f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f&quot;</span>].<span class="ident">into</span>(), 
+				<span class="number">2089</span>.<span class="ident">into</span>(),
 			)
 		},
 		<span class="ident">Vec::new</span>(),
@@ -192,7 +282,7 @@
 		<span class="prelude-val">Some</span>(<span class="ident">properties</span>),
 		<span class="ident">Extensions</span> {
 			<span class="ident">relay_chain</span>: <span class="string">&quot;rococo&quot;</span>.<span class="ident">into</span>(), <span class="comment">// You MUST set this to the correct network!</span>
-			<span class="ident">para_id</span>: <span class="number">4088</span>,
+			<span class="ident">para_id</span>: <span class="number">2089</span>,
 		},
 	)
 }
@@ -200,8 +290,10 @@
 <span class="kw">fn</span> <span class="ident">md5_genesis</span>(
 	<span class="ident">invulnerables</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">AccountId</span>, <span class="ident">AuraId</span>)<span class="op">&gt;</span>,
 	<span class="ident">endowed_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span>,
+	<span class="ident">root_key</span>: <span class="ident">AccountId</span>,
 	<span class="ident">id</span>: <span class="ident">ParaId</span>,
 ) -&gt; <span class="ident">hashed_parachain_runtime::GenesisConfig</span> {
+
 	<span class="ident">hashed_parachain_runtime::GenesisConfig</span> {
 		<span class="ident">system</span>: <span class="ident">hashed_parachain_runtime::SystemConfig</span> {
 			<span class="ident">code</span>: <span class="ident">hashed_parachain_runtime::WASM_BINARY</span>
@@ -210,6 +302,16 @@
 		},
 		<span class="ident">balances</span>: <span class="ident">hashed_parachain_runtime::BalancesConfig</span> {
 			<span class="ident">balances</span>: <span class="ident">endowed_accounts</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">k</span><span class="op">|</span> (<span class="ident">k</span>, <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">60</span>)).<span class="ident">collect</span>(),
+		},
+		<span class="ident">sudo</span>: <span class="ident">SudoConfig</span> { <span class="ident">key</span>: <span class="prelude-val">Some</span>(<span class="ident">root_key</span>) },
+		<span class="ident">treasury</span>: <span class="ident">Default::default</span>(),
+		<span class="ident">council</span>: <span class="ident">CouncilConfig</span> {
+			<span class="ident">members</span>: <span class="ident">endowed_accounts</span>,
+			<span class="comment">// vec![</span>
+			<span class="comment">// 	hex![&quot;f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f&quot;].into(),</span>
+			<span class="comment">// 	hex![&quot;4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e&quot;].into(),</span>
+			<span class="comment">// ],</span>
+			<span class="ident">phantom</span>: <span class="ident">Default::default</span>(),
 		},
 		<span class="ident">parachain_info</span>: <span class="ident">hashed_parachain_runtime::ParachainInfoConfig</span> { <span class="ident">parachain_id</span>: <span class="ident">id</span> },
 		<span class="ident">collator_selection</span>: <span class="ident">hashed_parachain_runtime::CollatorSelectionConfig</span> {

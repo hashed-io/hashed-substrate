@@ -485,7 +485,7 @@
 	<span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">id</span> {
 		<span class="string">&quot;dev&quot;</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::development_config</span>()),
 		<span class="string">&quot;hashed&quot;</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::hashed::get_chain_spec</span>()),
-		<span class="string">&quot;luhn&quot;</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::luhn::get_chain_spec</span>()),
+		<span class="comment">// &quot;luhn&quot; =&gt; Box::new(chain_spec::luhn::get_chain_spec()),</span>
 		<span class="string">&quot;md5&quot;</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::md5::get_chain_spec</span>()),
 		<span class="string">&quot;&quot;</span> <span class="op">|</span> <span class="string">&quot;local&quot;</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::local_testnet_config</span>()),
 		<span class="ident">path</span> =&gt; <span class="ident">Box::new</span>(<span class="ident">chain_spec::ChainSpec::from_json_file</span>(<span class="ident">std::path::PathBuf::from</span>(<span class="ident">path</span>))<span class="question-mark">?</span>),
