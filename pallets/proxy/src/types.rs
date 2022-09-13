@@ -2,19 +2,19 @@ use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Project<T: Config>{
-    pub developer: T::AccountId,
-    pub admin: T::AccountId,
-    pub builder: T::AccountId,
-    pub issuer: T::AccountId,
-    pub regional_center: T::AccountId,
-    pub project_name: BoundedVec<u8, T::ProjectNameMaxLen>,
+    pub developer: Option<T::AccountId>,
+    pub builder: Option<T::AccountId>,
+    pub issuer: Option<T::AccountId>,
+    pub regional_center: Option<T::AccountId>,
+    pub tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
     pub description: BoundedVec<u8, T::ProjectDescMaxLen>,
-    pub image: BoundedVec<u8, ConstU32<100>>,
-    pub created_date: u64,
+    pub image: BoundedVec<u8, T::CIDMaxLen>,
+    pub creation_date: u64,
+    pub completition_date: u64,
     pub updated_date: u64,
 }
 
