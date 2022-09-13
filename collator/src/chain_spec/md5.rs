@@ -1,9 +1,9 @@
 use sc_service::ChainType;
-use sp_core::{crypto::UncheckedInto, sr25519};
+use sp_core::{crypto::UncheckedInto};
 use hex_literal::hex;
 
 use super::{
-	get_account_id_from_seed, session_keys, SAFE_XCM_VERSION, Extensions,
+	session_keys, SAFE_XCM_VERSION, Extensions,
 };
 
 use cumulus_primitives_core::ParaId;
@@ -64,6 +64,16 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 						hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].into(),                    						
 						hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].unchecked_into(),
 					),
+					(
+						// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1
+						hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].into(),                    						
+						hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].unchecked_into(),
+					),
+					(
+						// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX
+						hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].into(),                    						
+						hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].unchecked_into(),
+					),
 				],
 				vec![
                     // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
@@ -80,6 +90,10 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 					hex!["e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f"].into(),
 					// 5Ft1pwMVeLRdRFiZNTtfxvnn1W8vPp71u215uoU4eDWixCok                
 					hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].into(),
+					// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1                   
+					hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].into(),
+					// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX                
+					hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].into(),
 				],
 				// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
 				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
