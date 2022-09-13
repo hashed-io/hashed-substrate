@@ -1,13 +1,13 @@
 use sc_service::ChainType;
-use sp_core::{crypto::UncheckedInto, sr25519};
+use sp_core::{crypto::UncheckedInto};
 use hex_literal::hex;
 
 use super::{
-	get_account_id_from_seed, session_keys, SAFE_XCM_VERSION, Extensions,
+	session_keys, SAFE_XCM_VERSION, Extensions,
 };
 
 use cumulus_primitives_core::ParaId;
-use hashed_parachain_runtime::{AccountId, AuraId, EXISTENTIAL_DEPOSIT};
+use hashed_parachain_runtime::{AccountId, AuraId, CouncilConfig, SudoConfig, EXISTENTIAL_DEPOSIT};
 
 /// Specialized `ChainSpec` for MD5 Network.
 pub type Md5ChainSpec =
@@ -39,26 +39,65 @@ pub fn get_chain_spec() -> Md5ChainSpec {
                         hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),                    						
                         hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].unchecked_into(),
 					),
+					(
+						// 5Dw5KkHeoh6umBurwqh4CHoXYBY6rpxtQampp8bFkuLgFz4L
+						hex!["52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517"].into(),                    						
+						hex!["52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517"].unchecked_into(),
+					),
+					(
+						// 5GwwAKFomhgd4AHXZLUBVK3B792DvgQUnoHTtQNkwmt5h17k
+						hex!["d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46"].into(),                    						
+						hex!["d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46"].unchecked_into(),
+					),
+					(
+						// 5DU84E1JYAhftyimxYd1MUaQ82GBKxNVFhDJSUSGU1ULpg1C
+						hex!["3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022"].into(),                    						
+						hex!["3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022"].unchecked_into(),
+					),
+					(
+						// 5HBZ2CSDcRAjE6AKMKzuJ1w5c5iB6XaSn9h5eeAcGwcykKnz
+						hex!["e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f"].into(),                    						
+						hex!["e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f"].unchecked_into(),
+					),
+					(
+						// 5Ft1pwMVeLRdRFiZNTtfxvnn1W8vPp71u215uoU4eDWixCok
+						hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].into(),                    						
+						hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].unchecked_into(),
+					),
+					(
+						// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1
+						hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].into(),                    						
+						hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].unchecked_into(),
+					),
+					(
+						// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX
+						hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].into(),                    						
+						hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].unchecked_into(),
+					),
 				],
 				vec![
                     // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
                     hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),   
                     // 5DkJvQp2gqHraWZU1BNCDxEKTQHezn2Qy7z5hLPksUdjtEG9                 
                     hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					// 5Dw5KkHeoh6umBurwqh4CHoXYBY6rpxtQampp8bFkuLgFz4L        
+                    hex!["52a6c480ff5cff0a2b889016e71de5fd8c3ab6d7d7220e543e8d0f8d60142517"].into(),
+					// 5GwwAKFomhgd4AHXZLUBVK3B792DvgQUnoHTtQNkwmt5h17k                
+					hex!["d8033c4d04a502901d24a789da32940085c62eba881c4701a73411288445cc46"].into(),
+					// 5DU84E1JYAhftyimxYd1MUaQ82GBKxNVFhDJSUSGU1ULpg1C               
+					hex!["3e1856f529530d07ec86f8ba00d9ef6a05520e9317d8025c8380b94670f90022"].into(),
+					// 5HBZ2CSDcRAjE6AKMKzuJ1w5c5iB6XaSn9h5eeAcGwcykKnz                  
+					hex!["e266243731bf69fff27133f3cbb8def28c6fd26d688d14fee34ab6950351aa0f"].into(),
+					// 5Ft1pwMVeLRdRFiZNTtfxvnn1W8vPp71u215uoU4eDWixCok                
+					hex!["a8c9ba30f906cb94594c4d884e708064d5e173f5ee84eca771166542cb74f06c"].into(),
+					// 5HGzzBkFVArUvCgRp7KAhHa71xBnRqdYxXaGi61EVutvvaS1                   
+					hex!["e68dc6889d7541a5b5bcd6925b8e4a89ebb9ae27b0b1266ec4205a902538883e"].into(),
+					// 5CmFmVadzNQFaeiyXXNugRXT1MuaoocUyogtYHEQeWjGp7pX                
+					hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].into(),
 				],
-				4088.into(),
+				// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
+				2089.into(),
 			)
 		},
 		Vec::new(),
@@ -68,7 +107,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 		Some(properties),
 		Extensions {
 			relay_chain: "rococo".into(), // You MUST set this to the correct network!
-			para_id: 4088,
+			para_id: 2089,
 		},
 	)
 }
@@ -76,8 +115,10 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 fn md5_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	root_key: AccountId,
 	id: ParaId,
 ) -> hashed_parachain_runtime::GenesisConfig {
+
 	hashed_parachain_runtime::GenesisConfig {
 		system: hashed_parachain_runtime::SystemConfig {
 			code: hashed_parachain_runtime::WASM_BINARY
@@ -86,6 +127,16 @@ fn md5_genesis(
 		},
 		balances: hashed_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
+		},
+		sudo: SudoConfig { key: Some(root_key) },
+		treasury: Default::default(),
+		council: CouncilConfig {
+			members: endowed_accounts,
+			// vec![
+			// 	hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),
+			// 	hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),
+			// ],
+			phantom: Default::default(),
 		},
 		parachain_info: hashed_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: hashed_parachain_runtime::CollatorSelectionConfig {
