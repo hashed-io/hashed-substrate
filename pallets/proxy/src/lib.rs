@@ -93,11 +93,11 @@ pub mod pallet {
 	>;
 
 
-
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// Project was created
+		ProjectCreated(T::AccountId, [u8;32]),
 
 	}
 
@@ -106,6 +106,12 @@ pub mod pallet {
 		/// Error names should be descriptive.
 		/// TODO: map each constant type used by bounded vecs to a descriptive error
 		NoneValue,
+		/// Project ID is already in use
+		ProjectIdAlreadyInUse,
+		/// Timestamp error
+		TimestampError,
+		/// Completition date must be later than creation date
+		CompletitionDateMustBeLater,
 	}
 
 	#[pallet::call]
@@ -129,11 +135,11 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectNameMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
+		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectDescMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, completition_date: u64, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
 		 ) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be admin
 
-			Self::do_create_project(who, tittle, description, image, developer, builder, issuer, regional_center)
+			Self::do_create_project(who, tittle, description, image, completition_date, developer, builder, issuer, regional_center)
 		}
 
 	}
