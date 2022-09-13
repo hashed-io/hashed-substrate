@@ -19,12 +19,25 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use frame_support::transactional;
-use sp_runtime::traits::AccountIdConversion;
+	use sp_runtime::traits::Scale;
+	use frame_support::traits::{Time};
+
 	use crate::types::*;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		
+		type Moment: Parameter
+		+ Default
+		+ Scale<Self::BlockNumber, Output = Self::Moment>
+		+ Copy
+		+ MaxEncodedLen
+		+ scale_info::StaticTypeInfo
+		+ Into<u64>;
+
+		type Timestamp: Time<Moment = Self::Moment>;
+
 
 		#[pallet::constant]
 		type ProjectNameMaxLen: Get<u32>;
@@ -119,7 +132,7 @@ use sp_runtime::traits::AccountIdConversion;
 		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectNameMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
 		 ) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be admin
-			
+
 			Self::do_create_project(who, tittle, description, image, developer, builder, issuer, regional_center)
 		}
 
