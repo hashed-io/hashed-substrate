@@ -1,14 +1,15 @@
 FROM paritytech/ci-linux:production
 
-WORKDIR /var/www
-# TODO: have this dockerfile pull the hashed-substrate repo
-COPY . ./hashed-substrate
-
-WORKDIR /var/www/hashed-substrate
 # this dir doesnt exists but zombienet script tries to create a file within
 RUN mkdir /cfg
 
-RUN cargo build --release
+WORKDIR /var/www
+
+RUN git clone https://github.com/hashed-io/hashed-substrate.git
+
+WORKDIR /var/www/hashed-substrate
+# change to main or develop
+RUN git checkout develop && cargo build --release
 
 EXPOSE 30333 40333 9933 9944 9946
 
@@ -17,5 +18,5 @@ RUN mv /var/www/hashed-substrate/target/release/hashed-parachain /usr/local/bin
 
 # check if executable works in this container
 RUN /usr/local/bin/hashed-parachain --version
-
+# ENTRYPOINT allows to add parameters/flags via k8 manifests
 ENTRYPOINT [ "hashed-parachain" ]
