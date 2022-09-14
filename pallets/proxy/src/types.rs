@@ -6,6 +6,7 @@ use sp_runtime::sp_std::vec::Vec;
 
 //use frame_system::pallet_prelude::*;
 
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -73,10 +74,10 @@ pub struct Budgets<T: Config>{
 }
 
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct UserInfo<T: Config>{
+pub struct UserData<T: Config>{
     pub user: T::AccountId,
     pub role: ProxyRole,
     pub related_project: BoundedVec<[u8;32], T::MaxProjectsPerUser>,
@@ -156,6 +157,7 @@ impl ProxyRole{
         self.to_vec().using_encoded(blake2_256)
     }
 
+
     pub fn enum_to_vec() -> Vec<Vec<u8>>{
         use crate::types::ProxyRole::*;
         [Administrator.to_vec(), Developer.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
@@ -209,3 +211,4 @@ pub enum AccountSubType{
 pub enum Symbol {
     USD,
 }   
+
