@@ -6,6 +6,8 @@ use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
+use frame_system::EnsureRoot;
+
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -20,7 +22,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
-
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -68,6 +70,7 @@ parameter_types! {
 
 impl pallet_proxy::Config for Test {
 	type Event = Event;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ProjectNameMaxLen = ProjectNameMaxLen;
 	type ProjectDescMaxLen = ProjectDescMaxLen;
 	type MaxDocuments = MaxDocuments;
@@ -78,6 +81,7 @@ impl pallet_proxy::Config for Test {
 
 	type Timestamp = Timestamp;
 	type Moment = u64;
+	type Rbac = RBAC;
 }
 
 
@@ -86,6 +90,26 @@ impl pallet_timestamp::Config for Test {
 	type OnTimestampSet = ();
 	type MinimumPeriod = ();
 	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 2;
+	pub const MaxRolesPerPallet: u32 = 6;
+	pub const RoleMaxLen: u32 = 25;
+	pub const PermissionMaxLen: u32 = 25;
+	pub const MaxPermissionsPerRole: u32 = 11;
+	pub const MaxRolesPerUser: u32 = 2;
+	pub const MaxUsersPerRole: u32 = 2;
+}
+impl pallet_rbac::Config for Test {
+	type Event = Event;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
 }
 
 // Build genesis storage according to the mock runtime.

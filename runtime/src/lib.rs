@@ -559,6 +559,11 @@ impl pallet_proxy::Config for Runtime {
 	type Event = Event;
 	type Timestamp = Timestamp;
 	type Moment = Moment; 
+	type Rbac = RBAC;
+		type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	
 	type ProjectNameMaxLen = ProjectNameMaxLen;
 	type ProjectDescMaxLen = ProjectDescMaxLen;

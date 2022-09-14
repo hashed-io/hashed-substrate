@@ -23,6 +23,8 @@ pub mod pallet {
 	use frame_support::traits::{Time};
 
 	use crate::types::*;
+	use pallet_rbac::types::RoleBasedAccessControl;
+
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -38,6 +40,9 @@ pub mod pallet {
 
 		type Timestamp: Time<Moment = Self::Moment>;
 
+		type Rbac : RoleBasedAccessControl<Self::AccountId>;
+
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 
 		#[pallet::constant]
 		type ProjectNameMaxLen: Get<u32>;
@@ -78,7 +83,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		T::AccountId, // Key
-		BoundedVec<u8, ConstU32<100>>,  // Value
+		UserInfo<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -98,6 +103,8 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Project was created
 		ProjectCreated(T::AccountId, [u8;32]),
+		/// Proxy setup completed
+		ProxySetupCompleted,
 
 	}
 
@@ -116,7 +123,15 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
+		// I N I T I A L  
+		// --------------------------------------------------------------------------------------------
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_initial_setup()?;
+			Ok(())
+		}
 
 		// A C C O U N T S
 		// --------------------------------------------------------------------------------------------
@@ -140,6 +155,15 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin will be admin
 
 			Self::do_create_project(who, tittle, description, image, completition_date, developer, builder, issuer, regional_center)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_add_user(origin: OriginFor<T>, ) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin will be admin
+
+			Self::do_add_user(who)
+
 		}
 
 	}

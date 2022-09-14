@@ -3,14 +3,28 @@ use frame_support::{pallet_prelude::*};
 use frame_support::traits::Time;
 use frame_support::sp_io::hashing::blake2_256;
 
-//use frame_system::pallet_prelude::*;
-
-
-
+use pallet_rbac::types::*;
 use crate::types::*;
 
 impl<T: Config> Pallet<T> {
+    // M A I N  F U N C T I O N S
+    // --------------------------------------------------------------------------------------------
+    
+    pub fn do_initial_setup() -> DispatchResult{
+        let pallet_id = Self::pallet_id();
+        let super_roles = vec![ProxyRole::Administrator.to_vec()];
+        //Admin rol & permissions
+        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
+        for super_role in super_role_ids{
+            T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, ProxyPermission::administrator_permissions())?;
+        }
+        //
+        Self::deposit_event(Event::ProxySetupCompleted);
 
+        Ok(())
+    }
+    
+    
     pub fn do_create_project(
         admin: T::AccountId, 
         tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
@@ -23,6 +37,8 @@ impl<T: Config> Pallet<T> {
         regional_center: Option<T::AccountId>,
      ) -> DispatchResult {
         //TODO: admin only 
+        //Self::is_authorized()?;
+
 
         //Add timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -53,19 +69,42 @@ impl<T: Config> Pallet<T> {
         ensure!(!Projects::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         Projects::<T>::insert(project_id, project_data);
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
 
         Ok(())
     }
 
+    pub fn do_add_user(admin: T::AccountId) -> DispatchResult {
+        //TODO: admin only
+        Ok(())
+    }
+
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
-    fn get_timestamp_in_milliseconds() -> Option<(u64)> {
+    /// Get the current timestamp in milliseconds
+    fn get_timestamp_in_milliseconds() -> Option<u64> {
         let timestamp:u64 = T::Timestamp::now().into();
 
         Some(timestamp)
     }
+
+    /// Get the pallet_id
+    pub fn pallet_id()->IdOrVec{
+        IdOrVec::Vec(
+            Self::module_name().as_bytes().to_vec()
+        )
+    }
+
+    fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
+    T::Rbac::is_authorized(
+        authority,
+        Self::pallet_id(), 
+        project_id,
+        &permission.id(),
+    )
+}
+
 
 
 
