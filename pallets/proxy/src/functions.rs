@@ -2,6 +2,8 @@ use super::*;
 use frame_support::{pallet_prelude::*};
 use frame_support::traits::Time;
 use frame_support::sp_io::hashing::blake2_256;
+use sp_runtime::sp_std::vec::Vec; // vec primitive
+use scale_info::prelude::vec; // vec![] macro
 
 use pallet_rbac::types::*;
 use crate::types::*;
@@ -20,6 +22,8 @@ impl<T: Config> Pallet<T> {
         }
         //
         Self::deposit_event(Event::ProxySetupCompleted);
+        let global_scope = pallet_id.using_encoded(blake2_256);
+        <GlobalScope<T>>::put(global_scope);
 
         Ok(())
     }
@@ -37,7 +41,8 @@ impl<T: Config> Pallet<T> {
         regional_center: Option<T::AccountId>,
      ) -> DispatchResult {
         //TODO: admin only 
-        //Self::is_authorized()?;
+        let global_scope = <GlobalScope<T>>::get(); //try_get
+        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
 
         //Add timestamp 
@@ -97,13 +102,22 @@ impl<T: Config> Pallet<T> {
     }
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
-    T::Rbac::is_authorized(
-        authority,
-        Self::pallet_id(), 
-        project_id,
-        &permission.id(),
-    )
-}
+        T::Rbac::is_authorized(
+            authority,
+            Self::pallet_id(), 
+            project_id,
+            &permission.id(),
+        )
+    }
+
+    fn is_superuser( authority: T::AccountId, scope_global: &[u8;32], rol_id: RoleId ) -> DispatchResult{
+        T::Rbac::has_role(
+            authority,
+            Self::pallet_id(), 
+            scope_global,
+            vec![rol_id],
+        )
+    }
 
 
 

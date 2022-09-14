@@ -78,12 +78,12 @@ pub mod pallet {
 	/*--- Onchain storage section ---*/
 
 	#[pallet::storage]
-	#[pallet::getter(fn users)]
-	pub(super) type Users<T: Config> = StorageMap<
+	#[pallet::getter(fn users_info)]
+	pub(super) type UsersInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
 		T::AccountId, // Key
-		UserInfo<T>,  // Value
+		UserData<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -96,6 +96,10 @@ pub mod pallet {
 		Project<T>,  // Value
 		OptionQuery,
 	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn global_scope)]
+	pub(super) type GlobalScope<T> = StorageValue<_, [u8;32], ValueQuery>;
 
 
 	#[pallet::event]
