@@ -1,12 +1,13 @@
 
-use crate::{mock::*, Error, types::ProposalStatus};
+use crate::{mock::*, Error, types::{ProposalStatus, BDKStatus, Descriptors}, Vaults, Proposals};
+use core::convert::TryFrom;
 use codec::{Encode};
 use frame_support::{
 	assert_noop, assert_ok,
-	//traits::{ConstU32,},
 	BoundedVec,
 };
 use sp_io::hashing::blake2_256;
+
 fn dummy_xpub() -> BoundedVec<u8,XPubLen >{
 	BoundedVec::<u8,XPubLen >::try_from(
 		b"[adc450e3/84'/1'/0'/0]tpubDEMkzn5sBo8Nct35y2BEFhJTqhsa72yeUf5S6ymb85G6LW2okSh1fDkrMhgCtYsrsCAuspm4yVjC63VUA6qrcQ54tVm5TKwhWFBLyyCjabX/*"
@@ -47,6 +48,29 @@ fn dummy_testnet_recipient_address() ->BoundedVec<u8,XPubLen> {
 fn dummy_psbt() -> BoundedVec<u8, PSBTMaxLen>{
 	BoundedVec::<u8, PSBTMaxLen>::try_from(b"cHNidP8BAK4BAAAAAa5F8SDWH2Hlqgky89rGlhG/4DnKqcbRlL+jQ6F0FBP5AQAAAAD9////AhAnAAAAAAAAR1IhApLkOyyLZWwh3QTadFlmp7x3xt+dPgyL/tQ47r+exVRiIQO7Ut/DRj54BKrR0Kf7c42enyfrbV4TDSpsMiqhfrnQm1KuokkAAAAAAAAiACD0hQx+A3+kUAR7iBY5VjkG2DViANmiP0xOBPixU1x36AAAAAAAAQDqAgAAAAABAecL0e2g6vO11ZpVRcHuBDFZNdXUqcDOmYsg7lK86S3cAAAAAAD+////AlpmwwIAAAAAFgAU370BMJPnoYItIaum9dnKt8LCLI8wdQAAAAAAACIAIILP1EkLWcvTQ15pBdk3paMwDIvglbUG6FQBBon3sRAMAkcwRAIgOYjunqLCM9LhnLS9lVoPSVR6z5Phk9BxodHar/ncgGgCIALhH3N/Q1yD7FxE7SSA9sogkcW3WXH1kxy3BLuMcU1zASECoJ99bEErPxgEAT+Nt7GhfwlgQ24fC//v/3LCUQnpzzBkgSEAAQErMHUAAAAAAAAiACCCz9RJC1nL00NeaQXZN6WjMAyL4JW1BuhUAQaJ97EQDAEFR1IhAip4P8CC/dZji38IFOD6ZjW50Pv3RazsvZExGHoy+MupIQPjlUrnEv00n6ytsa4sIMXdSjKHlXn94P4PBuOifenW51KuIgYCKng/wIL91mOLfwgU4PpmNbnQ+/dFrOy9kTEYejL4y6kMsCkMNwAAAAAAAAAAIgYD45VK5xL9NJ+srbGuLCDF3Uoyh5V5/eD+Dwbjon3p1ucMyqFhVgAAAAAAAAAAAAAiAgMacPy3H41FU/Xw+P81xScxWS/jO5Ny1gGnON1fo+4zbQzKoWFWAQAAAAAAAAAiAgOZ2MtgB/5WFgVoNU56XwjdHdTDuO2TYeQNe8TSV2tq7QywKQw3AQAAAAAAAAAA"
 		.encode()).unwrap_or_default()
+}
+
+fn dummy_descriptor()->BoundedVec<u8, OutputDescriptorMaxLen>{
+	let d_size: usize = OutputDescriptorMaxLen::get().try_into().unwrap();
+	BoundedVec::<u8, OutputDescriptorMaxLen>::try_from(vec![0; d_size]).unwrap()
+}
+fn make_vault_valid(vault_id: [u8;32]){
+
+	Vaults::<Test>::mutate(vault_id, |v_option|{
+		let v= v_option.as_mut().unwrap();
+		v.offchain_status.clone_from(&BDKStatus::Valid);
+		v.descriptors.clone_from(&Descriptors{
+			output_descriptor: dummy_descriptor(),
+			change_descriptor: Some(dummy_descriptor()),
+		});
+	});
+}
+
+fn make_proposal_valid(proposal_id: [u8;32]){
+	Proposals::<Test>::mutate(proposal_id, |p_option|{
+		let p = p_option.as_mut().unwrap();
+		p.offchain_status.clone_from(&BDKStatus::Valid);
+	});
 }
 
 #[test]
@@ -314,6 +338,7 @@ fn proposing_should_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 	});
 }
@@ -346,6 +371,7 @@ fn proposing_twice_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		assert_noop!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()),
 			Error::<Test>::AlreadyProposed);
@@ -363,6 +389,7 @@ fn exceeding_max_proposals_per_vault_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1001,dummy_description()));
 		assert_noop!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1002,dummy_description()),
@@ -381,6 +408,7 @@ fn saving_psbt_should_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
@@ -415,6 +443,7 @@ fn saving_psbt_form_external_user_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
@@ -434,6 +463,7 @@ fn saving_twice_psbt_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 2, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
@@ -455,9 +485,11 @@ fn finalize_psbt_should_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
+		make_proposal_valid(proposal_id);
 
 		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
 		assert_ok!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
@@ -476,9 +508,11 @@ fn finalize_psbt_twice_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
+		make_proposal_valid(proposal_id);
 
 		assert_ok!(BitcoinVaults::save_psbt(Origin::signed(test_pub(1)), proposal_id, dummy_psbt()) );
 		assert_ok!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false));
@@ -498,9 +532,11 @@ fn finalize_psbt_without_signatures_shouldnt_work(){
 		assert_ok!(BitcoinVaults::create_vault( Origin::signed(test_pub(1)) , 1, dummy_description(), true, cosigners) );
 		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
 		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
 		assert_ok!(BitcoinVaults::propose(Origin::signed(test_pub(1)),vault_id,dummy_testnet_recipient_address(),1000,dummy_description()));
 		// obtaining proposal id and saving a psbt with a user that is not in the vault
 		let proposal_id = BitcoinVaults::proposals_by_vault(vault_id).pop().unwrap();
+		make_proposal_valid(proposal_id);
 
 		assert_noop!(BitcoinVaults::finalize_psbt(Origin::signed(test_pub(1)), proposal_id,false), Error::<Test>::NotEnoughSignatures);
 	});
