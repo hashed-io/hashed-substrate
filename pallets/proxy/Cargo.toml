@@ -24,6 +24,7 @@ frame-benchmarking = { default-features = false, git = "https://github.com/parit
 sp-runtime = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27" }
 
 pallet-timestamp = { default-features = false, version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27" }
+pallet-rbac = { default-features = false, version = "4.0.0-dev", path="../rbac/"}
 
 [dev-dependencies]
 sp-core = { default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27" }
@@ -38,7 +39,7 @@ std = [
 	"frame-system/std",
 	"frame-benchmarking/std",
 	"pallet-timestamp/std",
-
+	"pallet-rbac/std"
 ]
 
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
