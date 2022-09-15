@@ -54,7 +54,7 @@ impl<T: Config> Pallet<T> {
         ensure!(completition_date > timestamp, Error::<T>::CompletitionDateMustBeLater);
         
         //Create project data
-        let project_data = Project{
+        let project_data = ProjectData::<T> {
             developer,
             investor,
             issuer,
@@ -70,8 +70,8 @@ impl<T: Config> Pallet<T> {
 
         //Insert project data
         // ensure that the project_id is not already in use
-        ensure!(!Projects::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
-        Projects::<T>::insert(project_id, project_data);
+        ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
+        ProjectsInfo::<T>::insert(project_id, project_data);
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -87,12 +87,12 @@ impl<T: Config> Pallet<T> {
         image:  Option<BoundedVec<u8, T::CIDMaxLen>>, 
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
-        ) -> DispatchResult {
+    ) -> DispatchResult {
 
         //TODO: admin only - check if validation is working
         
         //Ensure project exists & get project data
-        let project_data = Projects::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
         // Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
@@ -101,7 +101,7 @@ impl<T: Config> Pallet<T> {
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Mutate project data
-        <Projects<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+        <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
             
             if let Some(tittle) = tittle {
@@ -130,7 +130,33 @@ impl<T: Config> Pallet<T> {
         // Event
         Self::deposit_event(Event::ProjectEdited(project_id));
         Ok(())
-        } 
+    } 
+
+    pub fn do_delete_project(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+    ) -> DispatchResult {
+        // TODO: admin only - check if validation is working
+
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        //Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotDeleteCompletedProject);
+
+
+        //TODO - Delete project scope from rbac & delete project data
+        
+        // Delete from ProjectsInfo storagemap
+        ProjectsInfo::<T>::remove(project_id);
+
+        // Delete from UsersByProject storagemap
+        UsersByProject::<T>::remove(project_id);
+
+        //Event 
+        Self::deposit_event(Event::ProjectDeleted(project_id));
+        Ok(())
+    }
 
 
     pub fn do_add_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
@@ -169,10 +195,10 @@ impl<T: Config> Pallet<T> {
 
     pub fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
         //ensure project exists
-        ensure!(Projects::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         //Mutate project data
-        <Projects<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+        <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
             project.status = status;
             Ok(())    

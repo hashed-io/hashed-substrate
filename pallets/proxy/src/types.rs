@@ -10,7 +10,7 @@ use sp_runtime::sp_std::vec::Vec;
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct Project<T: Config>{
+pub struct ProjectData<T: Config>{
     pub developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>,
     pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
     pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,

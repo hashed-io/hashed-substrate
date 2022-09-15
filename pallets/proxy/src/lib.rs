@@ -106,11 +106,11 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn projects)]
-	pub(super) type Projects<T: Config> = StorageMap<
+	pub(super) type ProjectsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
 		[u8;32], // Key project_id
-		Project<T>,  // Value
+		ProjectData<T>,  // Value
 		OptionQuery,
 	>;
 
@@ -140,6 +140,8 @@ pub mod pallet {
 		UserAdded(T::AccountId),
 		/// Project was edited
 		ProjectEdited([u8;32]),
+		/// Project was deletedº
+		ProjectDeleted([u8;32]),
 	}
 
 	#[pallet::error]
@@ -163,6 +165,8 @@ pub mod pallet {
 		CannotEditCompletedProject,
 		/// Creation date must be in the past
 		CreationDateMustBeInThePast,
+		/// Can not delete a completed project
+		CannotDeleteCompletedProject,
 
 	}
 
@@ -229,11 +233,30 @@ pub mod pallet {
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_add_user(origin: OriginFor<T>, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>> ) -> DispatchResult {
+		pub fn projects_delete_project(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],  
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_delete_project(who, project_id)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_add_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId, 
+			role: ProxyRole, 
+			related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, 
+			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_add_user(who, user, role, related_projects, documents)
 		}
+
+
 
 	}
 }
