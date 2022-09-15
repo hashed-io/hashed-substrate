@@ -34,11 +34,11 @@ impl<T: Config> Pallet<T> {
         description: BoundedVec<u8, T::ProjectDescMaxLen>,
         image: BoundedVec<u8, T::CIDMaxLen>,
         completition_date: u64,
-        developer: Option<T::AccountId>,
-        builder: Option<T::AccountId>,
-        issuer: Option<T::AccountId>,
-        regional_center: Option<T::AccountId>,
-     ) -> DispatchResult {
+		developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>, 
+		investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>, 
+		issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
+		regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
+        ) -> DispatchResult {
         //TOREVIEW: admin only - check if validation is working
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
@@ -59,7 +59,7 @@ impl<T: Config> Pallet<T> {
             description,
             image,
             developer,
-            builder,
+            investor,
             issuer,
             regional_center,
             creation_date: timestamp,
@@ -77,6 +77,50 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
+    pub fn do_edit_project(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
+        description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
+        image:  Option<BoundedVec<u8, T::CIDMaxLen>>, 
+        creation_date: Option<u64>, 
+        completition_date: Option<u64>,  
+        ) -> DispatchResult {
+
+        //TODO: admin only - check if validation is working
+        
+        //Ensure project exists
+        ensure!(Projects::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        //Mutate project data
+        <Projects<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+            let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            
+            if let Some(tittle) = tittle {
+                project.tittle = tittle;
+            }
+            if let Some(description) = description {
+                project.description = description;
+            }
+            if let Some(image) = image {
+                project.image = image;
+            }
+            if let Some(creation_date) = creation_date {
+                project.creation_date = creation_date;
+            }
+            if let Some(completition_date) = completition_date {
+                project.completition_date = completition_date;
+            }
+
+            Ok(())    
+        })?;
+
+        // Event
+        Self::deposit_event(Event::ProjectEdited(project_id));
+        Ok(())
+        } 
+
 
     pub fn do_add_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
         //TODO: admin only
