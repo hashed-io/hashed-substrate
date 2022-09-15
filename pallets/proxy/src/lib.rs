@@ -68,6 +68,20 @@ pub mod pallet {
 		#[pallet::constant]
 		type CIDMaxLen: Get<u32>;
 
+		#[pallet::constant]
+		type MaxDevelopersPerProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxInvestorsPerProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxIssuersPerProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxRegionalCenterPerProject: Get<u32>;
+
+
+
 		
 
 	
@@ -124,6 +138,8 @@ pub mod pallet {
 		ProxySetupCompleted,
 		/// User registered successfully
 		UserAdded(T::AccountId),
+		/// Project was edited
+		ProjectEdited([u8;32]),
 
 	}
 
@@ -140,6 +156,9 @@ pub mod pallet {
 		CompletitionDateMustBeLater,
 		/// User is already registered
 		UserAlreadyRegistered,
+		/// Project is not found
+		ProjectNotFound,
+
 	}
 
 	#[pallet::call]
@@ -171,11 +190,36 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectDescMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, completition_date: u64, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
-		 ) -> DispatchResult {
+		pub fn projects_create_project(
+			origin: OriginFor<T>, 
+			tittle: BoundedVec<u8, T::ProjectNameMaxLen>, 
+			description: BoundedVec<u8, T::ProjectDescMaxLen>, 
+			image:  BoundedVec<u8, T::CIDMaxLen>, 
+			completition_date: u64, 
+			developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>, 
+			investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>, 
+			issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
+			regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, tittle, description, image, completition_date, developer, builder, issuer, regional_center)
+			Self::do_create_project(who, tittle, description, image, completition_date, developer, investor, issuer, regional_center)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_edit_project(
+			origin: OriginFor<T>, 
+			project_id: [u8;32], 
+			tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
+			description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
+			image:  Option<BoundedVec<u8, T::CIDMaxLen>>, 
+			creation_date: Option<u64>, 
+			completition_date: Option<u64>,  
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_edit_project(who, project_id, tittle, description, image, creation_date, completition_date)
 		}
 
 		#[transactional]
@@ -184,7 +228,6 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_add_user(who, user, role, related_projects, documents)
-
 		}
 
 	}

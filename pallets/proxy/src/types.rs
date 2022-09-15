@@ -11,10 +11,10 @@ use sp_runtime::sp_std::vec::Vec;
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Project<T: Config>{
-    pub developer: Option<T::AccountId>,
-    pub builder: Option<T::AccountId>,
-    pub issuer: Option<T::AccountId>,
-    pub regional_center: Option<T::AccountId>,
+    pub developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>,
+    pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
+    pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,
+    pub regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>,
     pub tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
     pub description: BoundedVec<u8, T::ProjectDescMaxLen>,
     pub image: BoundedVec<u8, T::CIDMaxLen>,
