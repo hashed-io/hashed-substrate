@@ -63,6 +63,9 @@ pub mod pallet {
 		type MaxProjectsPerUser: Get<u32>;
 
 		#[pallet::constant]
+		type MaxUserPerProject: Get<u32>;
+
+		#[pallet::constant]
 		type CIDMaxLen: Get<u32>;
 
 		
@@ -98,6 +101,16 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn users_by_project)]
+	pub(super) type UsersByProject<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn global_scope)]
 	pub(super) type GlobalScope<T> = StorageValue<_, [u8;32], ValueQuery>;
 
@@ -109,6 +122,8 @@ pub mod pallet {
 		ProjectCreated(T::AccountId, [u8;32]),
 		/// Proxy setup completed
 		ProxySetupCompleted,
+		/// User registered successfully
+		UserAdded(T::AccountId),
 
 	}
 
@@ -123,6 +138,8 @@ pub mod pallet {
 		TimestampError,
 		/// Completition date must be later than creation date
 		CompletitionDateMustBeLater,
+		/// User is already registered
+		UserAlreadyRegistered,
 	}
 
 	#[pallet::call]
@@ -156,17 +173,17 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(origin: OriginFor<T>, tittle: BoundedVec<u8, T::ProjectNameMaxLen>, description: BoundedVec<u8, T::ProjectDescMaxLen>, image:  BoundedVec<u8, T::CIDMaxLen>, completition_date: u64, developer: Option<T::AccountId>, builder: Option<T::AccountId>, issuer: Option<T::AccountId>, regional_center: Option<T::AccountId>, 
 		 ) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin will be admin
+			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_create_project(who, tittle, description, image, completition_date, developer, builder, issuer, regional_center)
 		}
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_add_user(origin: OriginFor<T>, ) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin will be admin
+		pub fn projects_add_user(origin: OriginFor<T>, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>> ) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_add_user(who)
+			Self::do_add_user(who, user, role, related_projects, documents)
 
 		}
 
