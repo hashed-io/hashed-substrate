@@ -28,7 +28,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
     
-    
     pub fn do_create_project(
         admin: T::AccountId, 
         tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
@@ -40,10 +39,9 @@ impl<T: Config> Pallet<T> {
         issuer: Option<T::AccountId>,
         regional_center: Option<T::AccountId>,
      ) -> DispatchResult {
-        //TODO: admin only 
-        let global_scope = <GlobalScope<T>>::get(); //try_get
+        //TOREVIEW: admin only - check if validation is working
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
-
 
         //Add timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -80,8 +78,21 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_add_user(admin: T::AccountId) -> DispatchResult {
+    pub fn do_add_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
         //TODO: admin only
+
+        // ensure if user is already registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
+
+        let user_data = UserData::<T> {
+            role,
+            related_projects,
+            documents,
+        };
+
+        //Insert user data
+        <UsersInfo<T>>::insert(user.clone(), user_data);
+        Self::deposit_event(Event::UserAdded(user));
         Ok(())
     }
 
