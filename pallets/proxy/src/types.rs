@@ -78,10 +78,9 @@ pub struct Budgets<T: Config>{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct UserData<T: Config>{
-    pub user: T::AccountId,
     pub role: ProxyRole,
-    pub related_project: BoundedVec<[u8;32], T::MaxProjectsPerUser>,
-    pub documents: BoundedVec<u8, T::MaxDocuments>,
+    pub related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>,
+    pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
