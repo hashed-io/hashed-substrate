@@ -554,6 +554,7 @@ parameter_types! {
 	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
 	pub const CIDMaxLen:u32 = 64;
+	pub const MaxUserPerProject:u32 = 10;
 }
 impl pallet_proxy::Config for Runtime {
 	type Event = Event;
@@ -572,6 +573,7 @@ impl pallet_proxy::Config for Runtime {
 	type MaxProjectsPerUser = MaxProjectsPerUser;
 	type MaxChildrens = MaxChildrens;
 	type CIDMaxLen = CIDMaxLen;
+	type MaxUserPerProject = MaxUserPerProject;
 
 }
 
