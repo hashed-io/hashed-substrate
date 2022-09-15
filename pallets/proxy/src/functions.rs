@@ -91,8 +91,14 @@ impl<T: Config> Pallet<T> {
 
         //TODO: admin only - check if validation is working
         
-        //Ensure project exists
-        ensure!(Projects::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        //Ensure project exists & get project data
+        let project_data = Projects::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Mutate project data
         <Projects<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
@@ -108,9 +114,13 @@ impl<T: Config> Pallet<T> {
                 project.image = image;
             }
             if let Some(creation_date) = creation_date {
+                //ensure new creation date is in the past
+                ensure!(creation_date < current_timestamp, Error::<T>::CreationDateMustBeInThePast);
                 project.creation_date = creation_date;
             }
             if let Some(completition_date) = completition_date {
+                //ensure new completition date is in the future
+                ensure!(completition_date > current_timestamp, Error::<T>::CompletitionDateMustBeLater);
                 project.completition_date = completition_date;
             }
 

@@ -157,6 +157,12 @@ pub mod pallet {
 		UserAlreadyRegistered,
 		/// Project is not found
 		ProjectNotFound,
+		///Date can not be in the past
+		DateCanNotBeInThePast,
+		/// Can not modify project
+		CannotEditCompletedProject,
+		/// Creation date must be in the past
+		CreationDateMustBeInThePast,
 
 	}
 
