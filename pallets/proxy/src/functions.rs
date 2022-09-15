@@ -55,13 +55,14 @@ impl<T: Config> Pallet<T> {
         
         //Create project data
         let project_data = Project{
-            tittle,
-            description,
-            image,
             developer,
             investor,
             issuer,
             regional_center,
+            tittle,
+            description,
+            image,
+            status: ProjectStatus::default(), 
             creation_date: timestamp,
             completition_date,
             updated_date: timestamp,
@@ -155,6 +156,21 @@ impl<T: Config> Pallet<T> {
             Self::module_name().as_bytes().to_vec()
         )
     }
+
+    pub fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
+        //ensure project exists
+        ensure!(Projects::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        //Mutate project data
+        <Projects<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+            let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            project.status = status;
+            Ok(())    
+        })?;
+
+        Ok(())
+    }
+
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(

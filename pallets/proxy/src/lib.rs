@@ -140,7 +140,6 @@ pub mod pallet {
 		UserAdded(T::AccountId),
 		/// Project was edited
 		ProjectEdited([u8;32]),
-
 	}
 
 	#[pallet::error]

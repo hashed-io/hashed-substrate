@@ -18,6 +18,7 @@ pub struct Project<T: Config>{
     pub tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
     pub description: BoundedVec<u8, T::ProjectDescMaxLen>,
     pub image: BoundedVec<u8, T::CIDMaxLen>,
+    pub status: ProjectStatus,
     pub creation_date: u64,
     pub completition_date: u64,
     pub updated_date: u64,
@@ -138,6 +139,19 @@ pub enum ProxyRole{
     Issuer,
     RegionalCenter,
 }
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProjectStatus{
+    Started,
+    Completed,
+}
+impl Default for ProjectStatus{
+    fn default() -> Self {
+        ProjectStatus::Started
+    }
+}
+
+
 
 impl ProxyRole{
     pub fn to_vec(self) -> Vec<u8>{
