@@ -142,6 +142,10 @@ pub mod pallet {
 		ProjectEdited([u8;32]),
 		/// Project was deletedº
 		ProjectDeleted([u8;32]),
+		// administator added
+		AdministratorAssigned(T::AccountId),
+		// administator removed
+		AdministratorRemoved(T::AccountId),
 	}
 
 	#[pallet::error]
@@ -167,12 +171,14 @@ pub mod pallet {
 		CreationDateMustBeInThePast,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
+		/// Global scope is not set
+		GlobalScopeNotSet,
 
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// I N I T I A L  
+		// I N I T I A L 
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
@@ -181,6 +187,27 @@ pub mod pallet {
 			Self::do_initial_setup()?;
 			Ok(())
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		pub fn sudo_add_administrator(origin: OriginFor<T>, admin: T::AccountId) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_sudo_add_administrator(admin)?;
+			Ok(())
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		pub fn sudo_remove_administrator(origin: OriginFor<T>, admin: T::AccountId) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_sudo_remove_administrator(admin)?;
+			Ok(())
+		}
+
+
+
+
+
 
 		// A C C O U N T S
 		// --------------------------------------------------------------------------------------------

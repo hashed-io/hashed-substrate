@@ -20,16 +20,42 @@ impl<T: Config> Pallet<T> {
         //Admin rol & permissions
         let administrator_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Administrator.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id.clone(), administrator_role_id[0], ProxyPermission::administrator_permissions())?;
-
-        //Admin rol & permissions
-        //let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
-        // for super_role in super_role_ids{
-        //     T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, ProxyPermission::administrator_permissions())?;
-        // }
-
-        //
+        // Create a global scope for the administrator role
+        T::Rbac::create_scope(Self::pallet_id(), global_scope)?;
 
         Self::deposit_event(Event::ProxySetupCompleted);
+        Ok(())
+    }
+
+    pub fn do_sudo_add_administrator(
+        admin: T::AccountId, 
+    ) -> DispatchResult{
+        let pallet_id = Self::pallet_id();
+        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
+
+        T::Rbac::assign_role_to_user(
+            admin.clone(), 
+            pallet_id.clone(), 
+            &global_scope, 
+            ProxyRole::Administrator.id())?;
+        
+        Self::deposit_event(Event::AdministratorAssigned(admin));
+        Ok(())
+    }
+
+    pub fn do_sudo_remove_administrator(
+        admin: T::AccountId, 
+    ) -> DispatchResult{
+        let pallet_id = Self::pallet_id();
+        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
+
+        T::Rbac::remove_role_from_user(
+            admin.clone(), 
+            pallet_id.clone(), 
+            &global_scope, 
+            ProxyRole::Administrator.id())?;
+        
+        Self::deposit_event(Event::AdministratorRemoved(admin));
         Ok(())
     }
     
@@ -44,7 +70,6 @@ impl<T: Config> Pallet<T> {
 		issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
 		regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
         ) -> DispatchResult {
-        //TOREVIEW: admin only - check if validation is working
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
@@ -199,6 +224,7 @@ impl<T: Config> Pallet<T> {
             Self::module_name().as_bytes().to_vec()
         )
     }
+
 
     pub fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
         //ensure project exists

@@ -38,7 +38,7 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
-        T::Rbac::create_scope(Self::pallet_id(),marketplace_id)?;
+        T::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
