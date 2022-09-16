@@ -3,10 +3,6 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
-
-//use frame_system::pallet_prelude::*;
-
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -140,19 +136,6 @@ pub enum ProxyRole{
     RegionalCenter,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectStatus{
-    Started,
-    Completed,
-}
-impl Default for ProjectStatus{
-    fn default() -> Self {
-        ProjectStatus::Started
-    }
-}
-
-
-
 impl ProxyRole{
     pub fn to_vec(self) -> Vec<u8>{
         match self{
@@ -170,28 +153,41 @@ impl ProxyRole{
         self.to_vec().using_encoded(blake2_256)
     }
 
-
     pub fn enum_to_vec() -> Vec<Vec<u8>>{
         use crate::types::ProxyRole::*;
         [Administrator.to_vec(), Developer.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
     }
 
-
 }
 
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProjectStatus{
+    Started,
+    Completed,
+}
+impl Default for ProjectStatus{
+    fn default() -> Self {
+        ProjectStatus::Started
+    }
+}
 
 /// Extrinsics which require previous authorization to call them
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyPermission{
+    RegisterUser, // accounts_add_user
     CreateProject, // projects_create_project
-    AddUser, // projects_add_user
+    EditProject, // projects_edit_project
+    DeleteProject, // projects_delete_project
 }
 
 impl ProxyPermission{ 
     pub fn to_vec(self) -> Vec<u8>{
         match self{
             Self::CreateProject => "CreateProject".as_bytes().to_vec(),
-            Self::AddUser => "AddUser".as_bytes().to_vec(),
+            Self::RegisterUser => "AddUser".as_bytes().to_vec(),
+            Self::EditProject => "EditProject".as_bytes().to_vec(),
+            Self::DeleteProject => "DeleteProject".as_bytes().to_vec(),
         }
     }
 
@@ -201,10 +197,16 @@ impl ProxyPermission{
 
     pub fn administrator_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        [
-        CreateProject.to_vec(), 
-        AddUser.to_vec(),
-        ].to_vec()
+        //TODO: change it to mut when add new roles
+        let administrator_permissions = [
+            RegisterUser.to_vec(), 
+            CreateProject.to_vec(),
+            EditProject.to_vec(),
+            DeleteProject.to_vec(),
+        ].to_vec();
+
+        administrator_permissions
+
     }
 
 

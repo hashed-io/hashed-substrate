@@ -184,16 +184,19 @@ pub mod pallet {
 
 		// A C C O U N T S
 		// --------------------------------------------------------------------------------------------
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn accounts_add_user(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
-		// 	// let who = ensure_signed(origin)?; // origin will be market owner
-		// 	// let m = Marketplace{
-		// 	// 	label,
-		// 	// };
-		// 	// Self::do_create_marketplace(who, admin, m)
-		// }
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn accounts_register_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId, 
+			role: ProxyRole, 
+			related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, 
+			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
 
+			Self::do_register_user(who, user, role, related_projects, documents)
+		}
 		
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
@@ -242,20 +245,9 @@ pub mod pallet {
 			Self::do_delete_project(who, project_id)
 		}
 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_add_user(
-			origin: OriginFor<T>, 
-			user: T::AccountId, 
-			role: ProxyRole, 
-			related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, 
-			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_add_user(who, user, role, related_projects, documents)
-		}
-
+		// B U D G E T  E X P E N D I T U R E 
+		// --------------------------------------------------------------------------------------------
 
 
 	}

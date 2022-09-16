@@ -14,17 +14,22 @@ impl<T: Config> Pallet<T> {
     
     pub fn do_initial_setup() -> DispatchResult{
         let pallet_id = Self::pallet_id();
-        let super_roles = vec![ProxyRole::Administrator.to_vec()];
-        //Admin rol & permissions
-        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
-        for super_role in super_role_ids{
-            T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, ProxyPermission::administrator_permissions())?;
-        }
-        //
-        Self::deposit_event(Event::ProxySetupCompleted);
         let global_scope = pallet_id.using_encoded(blake2_256);
         <GlobalScope<T>>::put(global_scope);
 
+        //Admin rol & permissions
+        let administrator_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Administrator.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), administrator_role_id[0], ProxyPermission::administrator_permissions())?;
+
+        //Admin rol & permissions
+        //let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
+        // for super_role in super_role_ids{
+        //     T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, ProxyPermission::administrator_permissions())?;
+        // }
+
+        //
+
+        Self::deposit_event(Event::ProxySetupCompleted);
         Ok(())
     }
     
@@ -145,7 +150,8 @@ impl<T: Config> Pallet<T> {
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotDeleteCompletedProject);
 
 
-        //TODO - Delete project scope from rbac & delete project data
+        //TODO - Delete project scope from rbac pallet & any extra data
+
         
         // Delete from ProjectsInfo storagemap
         ProjectsInfo::<T>::remove(project_id);
@@ -159,10 +165,10 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn do_add_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
+    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
         //TODO: admin only
 
-        // ensure if user is already registered
+        // check if user is already registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
 
         let user_data = UserData::<T> {
@@ -179,6 +185,7 @@ impl<T: Config> Pallet<T> {
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
+    
     /// Get the current timestamp in milliseconds
     fn get_timestamp_in_milliseconds() -> Option<u64> {
         let timestamp:u64 = T::Timestamp::now().into();
