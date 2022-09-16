@@ -70,6 +70,7 @@ impl<T: Config> Pallet<T> {
 		issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
 		regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
         ) -> DispatchResult {
+
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
@@ -118,8 +119,9 @@ impl<T: Config> Pallet<T> {
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
     ) -> DispatchResult {
-
-        //TODO: admin only - check if validation is working
+            
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
+        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
         
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -166,7 +168,9 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32], 
     ) -> DispatchResult {
-        // TODO: admin only - check if validation is working
+            
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
+        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -191,7 +195,9 @@ impl<T: Config> Pallet<T> {
 
 
     pub fn do_register_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
-        //TODO: admin only
+            
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
+        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
         // check if user is already registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
