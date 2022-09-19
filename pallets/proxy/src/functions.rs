@@ -100,6 +100,9 @@ impl<T: Config> Pallet<T> {
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
+        //TODO: create scope for project_id
+        T::Rbac::create_scope(Self::pallet_id(), project_id)?;
+
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
 
