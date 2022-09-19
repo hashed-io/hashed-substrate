@@ -162,7 +162,7 @@ pub mod pallet {
 		UserAssignedToProject(T::AccountId, [u8;32]),
 		/// User removed from project
 		UserUnassignedFromProject(T::AccountId, [u8;32]),
-		
+
 	}
 
 	#[pallet::error]
@@ -250,9 +250,20 @@ pub mod pallet {
 			Self::do_register_user(who, user, documents)
 		}
 
-		//TODO: DELETE AN USER ACCOUNT
-
 		//TODO: UPDATE AN USER ACCOUNT
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn users_update_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId, 
+			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_update_user(who, user, documents)
+		}
+
+		//TODO: DELETE AN USER ACCOUNT
 		
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
