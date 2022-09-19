@@ -179,6 +179,9 @@ impl<T: Config> Pallet<T> {
 
 
         //TODO - Delete project scope from rbac pallet & any extra data
+        //T::Rbac::delete_scope(Self::pallet_id(), project_id)?;
+        //TODO: unasign all roles from project scope
+
 
         
         // Delete from ProjectsInfo storagemap
@@ -236,14 +239,17 @@ impl<T: Config> Pallet<T> {
 
         //TODO: Ensure user is not assigened to that scope rbac pallet
 
+        //TOREVIEW: Should this storage map will be removed?
         //Insert user 
         <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
             let users = users.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-            users.try_push(user.clone());
+            //TODO: change error associated, should be related to Max users per project 
+            users.try_push(user.clone()).map_err(|_| Error::<T>::UserAlreadyAssignedToProject)?;
             Ok(())
-        }).map_err(|_| Error::<T>::UserAlreadyAssignedToProject)?;
+        })?;
 
-        // Inser user intoscope rbac pallet
+        // Insert user into scope rbac pallet
+        T::Rbac::assign_role_to_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
 
         //Event 
         Self::deposit_event(Event::UserAssignedToProject(user, project_id));
