@@ -174,18 +174,24 @@ impl<T: Config> Pallet<T> {
         //Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotDeleteCompletedProject);
 
+        // Delete scope from rbac pallet
+        T::Rbac::remove_scope(Self::pallet_id(), project_id)?;
 
-        //TODO - Delete project scope from rbac pallet & any extra data
-        //T::Rbac::delete_scope(Self::pallet_id(), project_id)?;
-        //TODO: unasign all roles from project scope
+        //TOREVIEW: check if this method is the best way to delete data from storage
+        // we could use get method (<UsersByProject<T>>::get()) instead getter function
+        // Delete project from ProjectsByUser storage
+        let users_by_project = Self::users_by_project(project_id).iter().cloned().collect::<Vec<T::AccountId>>();
+        for user in users_by_project {
+            <ProjectsByUser<T>>::mutate(user, |projects| {
+                projects.retain(|project| *project != project_id);
+            });
+        }
 
-
-        
         // Delete from ProjectsInfo storagemap
-        ProjectsInfo::<T>::remove(project_id);
+        <ProjectsInfo<T>>::remove(project_id);
 
         // Delete from UsersByProject storagemap
-        UsersByProject::<T>::remove(project_id);
+        <UsersByProject<T>>::remove(project_id);
 
         //Event 
         Self::deposit_event(Event::ProjectDeleted(project_id));
@@ -295,7 +301,6 @@ impl<T: Config> Pallet<T> {
         // Remove user from scope
         T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
 
-    
         Self::deposit_event(Event::UserUnassignedFromProject(user, project_id));
         Ok(())
     }
