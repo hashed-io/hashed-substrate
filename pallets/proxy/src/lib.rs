@@ -16,7 +16,7 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::*, BoundedVec};
+	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
@@ -126,7 +126,7 @@ pub mod pallet {
 		Identity, 
 		[u8;32], // Key project_id
 		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value users
-		OptionQuery,
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -136,7 +136,7 @@ pub mod pallet {
 		Identity, 
 		T::AccountId, // Key account_id
 		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
-		OptionQuery,
+		ValueQuery,
 	>;
 
 
@@ -191,6 +191,12 @@ pub mod pallet {
 		UserNotRegistered,
 		/// User has been already added to the project
 		UserAlreadyAssignedToProject,
+		/// Max number of users per project reached
+		MaxUsersPerProjectReached,
+		/// Max number of projects per user reached
+		MaxProjectsPerUserReached,
+		/// User already has the role
+		UserAlreadyHasRole,
 
 	}
 
