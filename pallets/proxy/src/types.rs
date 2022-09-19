@@ -20,6 +20,13 @@ pub struct ProjectData<T: Config>{
     pub updated_date: u64,
 }
 
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct UserData<T: Config>{
+    pub related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>,
+    pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
+}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
@@ -70,15 +77,6 @@ pub struct Budgets<T: Config>{
     pub updated_date: u64,
 }
 
-
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct UserData<T: Config>{
-    pub role: ProxyRole,
-    pub related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>,
-    pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
-}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownStatus{

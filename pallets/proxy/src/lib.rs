@@ -28,6 +28,7 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
+		//TODO: change all accounts names for users
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		
 		type Moment: Parameter
@@ -142,10 +143,12 @@ pub mod pallet {
 		ProjectEdited([u8;32]),
 		/// Project was deletedº
 		ProjectDeleted([u8;32]),
-		// administator added
+		/// Administator added
 		AdministratorAssigned(T::AccountId),
-		// administator removed
+		/// Administator removed
 		AdministratorRemoved(T::AccountId),
+		/// User assigned to project
+		UserAssignedToProject(T::AccountId, [u8;32]),
 	}
 
 	#[pallet::error]
@@ -173,6 +176,10 @@ pub mod pallet {
 		CannotDeleteCompletedProject,
 		/// Global scope is not set
 		GlobalScopeNotSet,
+		/// User is not registered
+		UserNotRegistered,
+		/// User has been already added to the project
+		UserAlreadyAssignedToProject,
 
 	}
 
@@ -207,21 +214,21 @@ pub mod pallet {
 
 
 
-		// A C C O U N T S
+		// U S E R S
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn accounts_register_user(
+		pub fn users_register_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
-			role: ProxyRole, 
-			related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, 
 			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, user, role, related_projects, documents)
+			Self::do_register_user(who, user, documents)
 		}
+
+		//TODO: DELETE AN ACCOUNT
 		
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
@@ -233,14 +240,10 @@ pub mod pallet {
 			description: BoundedVec<u8, T::ProjectDescMaxLen>, 
 			image:  BoundedVec<u8, T::CIDMaxLen>, 
 			completition_date: u64, 
-			developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>, 
-			investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>, 
-			issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
-			regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, tittle, description, image, completition_date, developer, investor, issuer, regional_center)
+			Self::do_create_project(who, tittle, description, image, completition_date)
 		}
 
 		#[transactional]
@@ -269,6 +272,21 @@ pub mod pallet {
 
 			Self::do_delete_project(who, project_id)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_assign_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId,
+			project_id: [u8;32],  
+			role: ProxyRole,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_assign_user(who, user, project_id, role)
+		}
+
+
 
 
 		// B U D G E T  E X P E N D I T U R E 

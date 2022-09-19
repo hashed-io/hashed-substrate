@@ -65,12 +65,8 @@ impl<T: Config> Pallet<T> {
         description: BoundedVec<u8, T::ProjectDescMaxLen>,
         image: BoundedVec<u8, T::CIDMaxLen>,
         completition_date: u64,
-		developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>, 
-		investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>, 
-		issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>, 
-		regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>, 
         ) -> DispatchResult {
-
+        //ensure admin permissions 
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
@@ -86,10 +82,10 @@ impl<T: Config> Pallet<T> {
         
         //Create project data
         let project_data = ProjectData::<T> {
-            developer,
-            investor,
-            issuer,
-            regional_center,
+            developer: None,
+            investor: None,
+            issuer: None,
+            regional_center: None,
             tittle,
             description,
             image,
@@ -119,7 +115,7 @@ impl<T: Config> Pallet<T> {
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
     ) -> DispatchResult {
-            
+        //ensure admin permissions             
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
         
@@ -168,7 +164,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32], 
     ) -> DispatchResult {
-            
+        //ensure admin permissions 
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
@@ -194,8 +190,8 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, role: ProxyRole, related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
-            
+    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
+        //ensure admin permissions     
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
         Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
 
@@ -203,14 +199,51 @@ impl<T: Config> Pallet<T> {
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
 
         let user_data = UserData::<T> {
-            role,
-            related_projects,
+            related_projects: None,
             documents,
         };
 
         //Insert user data
         <UsersInfo<T>>::insert(user.clone(), user_data);
         Self::deposit_event(Event::UserAdded(user));
+        Ok(())
+    }
+
+    pub fn do_assign_user(
+        admin: T::AccountId,
+        user: T::AccountId,
+        project_id: [u8;32], 
+        role: ProxyRole, 
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
+        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        //Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        //Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+
+        //Ensure user is not already assigned to the project
+        ensure!(Self::is_user_assigned_to_project(project_id, user.clone()), Error::<T>::UserAlreadyAssignedToProject);
+
+        //TODO: Ensure user is not assigened to that scope rbac pallet
+
+        //Insert user 
+        <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
+            let users = users.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            users.try_push(user.clone());
+            Ok(())
+        }).map_err(|_| Error::<T>::UserAlreadyAssignedToProject)?;
+
+        // Inser user intoscope rbac pallet
+
+        //Event 
+        Self::deposit_event(Event::UserAssignedToProject(user, project_id));
         Ok(())
     }
 
@@ -245,6 +278,16 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
+    fn is_user_assigned_to_project(project_id: [u8;32], user: T::AccountId) -> bool {
+        let project_data = match  <UsersByProject<T>>::try_get(project_id) {
+            Ok(project_data) => project_data,
+            Err(_) => return false,
+        };
+
+        project_data.iter().any(|user_id| user_id == &user)
+    }
+
 
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
