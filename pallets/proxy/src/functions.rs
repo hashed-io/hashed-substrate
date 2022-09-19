@@ -67,8 +67,7 @@ impl<T: Config> Pallet<T> {
         completition_date: u64,
         ) -> DispatchResult {
         //ensure admin permissions 
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
-        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //Add timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -119,8 +118,7 @@ impl<T: Config> Pallet<T> {
         completition_date: Option<u64>,  
     ) -> DispatchResult {
         //ensure admin permissions             
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
-        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
         
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -168,8 +166,7 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32], 
     ) -> DispatchResult {
         //ensure admin permissions 
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
-        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -198,8 +195,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_register_user(admin: T::AccountId, user: T::AccountId, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
         //ensure admin permissions     
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
-        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // check if user is already registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
@@ -221,8 +217,7 @@ impl<T: Config> Pallet<T> {
         role: ProxyRole, 
     ) -> DispatchResult {
         //ensure admin permissions 
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue)?;
-        Self::is_superuser(admin.clone(), &global_scope, ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -277,6 +272,12 @@ impl<T: Config> Pallet<T> {
         IdOrVec::Vec(
             Self::module_name().as_bytes().to_vec()
         )
+    }
+
+    /// Get global scope
+    pub fn get_global_scope() -> [u8;32] {
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue).unwrap();
+        global_scope
     }
 
 
