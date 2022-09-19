@@ -205,7 +205,6 @@ impl<T: Config> Pallet<T> {
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
 
         let user_data = UserData::<T> {
-            related_projects: None,
             documents,
         };
 
@@ -235,24 +234,23 @@ impl<T: Config> Pallet<T> {
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
         //Ensure user is not already assigned to the project
-        ensure!(Self::is_user_assigned_to_project(project_id, user.clone()), Error::<T>::UserAlreadyAssignedToProject);
+        ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.clone()), Error::<T>::UserAlreadyAssignedToProject);
+        ensure!(!<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
 
-        //TODO: Ensure user is not assigened to that scope rbac pallet
+        //TODO: Ensure user is not assigened to the selected scope (project_id) with the selected role
+        ensure!(!T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyHasRole);
 
-        // Add related project to user data
-        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user| {
-            let user = user.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-            user.related_projects = Some(project_id);
-
-            Ok(())    
+        //TOREVIEW: this storage map will be removed?
+        // Insert project to ProjectsByUser storagemap
+        <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |projects| {
+            projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
+            Ok(())
         })?;
 
-        //TOREVIEW: Should this storage map will be removed?
-        //Insert user 
+        //TOREVIEW: this storage map will be removed?
+        // Insert user to UsersByProject storagemap
         <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
-            let users = users.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-            //TODO: change error associated, should be related to Max users per project 
-            users.try_push(user.clone()).map_err(|_| Error::<T>::UserAlreadyAssignedToProject)?;
+            users.try_push(user.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
             Ok(())
         })?;
 
