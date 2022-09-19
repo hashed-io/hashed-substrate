@@ -3,6 +3,10 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
+pub type FieldName = BoundedVec<u8,ConstU32<100>>;
+pub type CID = BoundedVec<u8,ConstU32<100>>;
+
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -24,6 +28,11 @@ pub struct ProjectData<T: Config>{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct UserData<T: Config>{
+    pub name: FieldName,
+    pub role: Option<ProxyRole>,
+    pub image: BoundedVec<u8, T::CIDMaxLen>,
+    pub date_registered: u64,
+    pub email: BoundedVec<u8, T::UserEmailMaxLen>,
     pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
 }
 
