@@ -239,6 +239,14 @@ impl<T: Config> Pallet<T> {
 
         //TODO: Ensure user is not assigened to that scope rbac pallet
 
+        // Add related project to user data
+        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user| {
+            let user = user.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+            user.related_projects = Some(project_id);
+
+            Ok(())    
+        })?;
+
         //TOREVIEW: Should this storage map will be removed?
         //Insert user 
         <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
@@ -287,17 +295,6 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
-
-    fn is_user_assigned_to_project(project_id: [u8;32], user: T::AccountId) -> bool {
-        let project_data = match  <UsersByProject<T>>::try_get(project_id) {
-            Ok(project_data) => project_data,
-            Err(_) => return false,
-        };
-
-        project_data.iter().any(|user_id| user_id == &user)
-    }
-
-
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(

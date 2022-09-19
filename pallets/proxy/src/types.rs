@@ -24,7 +24,6 @@ pub struct ProjectData<T: Config>{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct UserData<T: Config>{
-    pub related_projects: Option<BoundedVec<[u8;32], T::MaxProjectsPerUser>>,
     pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
 }
 
