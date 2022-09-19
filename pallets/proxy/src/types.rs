@@ -30,9 +30,9 @@ pub struct ProjectData<T: Config>{
 pub struct UserData<T: Config>{
     pub name: FieldName,
     pub role: Option<ProxyRole>,
-    pub image: BoundedVec<u8, T::CIDMaxLen>,
+    pub image: CID,
     pub date_registered: u64,
-    pub email: BoundedVec<u8, T::UserEmailMaxLen>,
+    pub email: FieldName,
     pub documents: Option<BoundedVec<u8, T::MaxDocuments>>,
 }
 
