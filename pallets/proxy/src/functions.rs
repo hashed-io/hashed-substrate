@@ -333,6 +333,27 @@ impl<T: Config> Pallet<T> {
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
+        //Update user data
+        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
+            let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+
+            if let Some(name) = name {
+                user_info.name = name;
+            }
+            if let Some(image) = image {
+                user_info.image = image;
+            }
+            if let Some(email) = email {
+                user_info.email = email;
+            }
+            if let Some(documents) = documents {
+                user_info.documents = Some(documents);
+            }
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::UserUpdated(user));
+
         Ok(())
     }
 

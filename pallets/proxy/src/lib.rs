@@ -162,6 +162,8 @@ pub mod pallet {
 		UserAssignedToProject(T::AccountId, [u8;32]),
 		/// User removed from project
 		UserUnassignedFromProject(T::AccountId, [u8;32]),
+		/// User info updated
+		UserUpdated(T::AccountId),
 
 	}
 
