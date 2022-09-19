@@ -322,22 +322,17 @@ impl<T: Config> Pallet<T> {
     pub fn do_update_user(
         admin: T::AccountId,
         user: T::AccountId,
+        name: Option<FieldName>,
+        image: Option<CID>,
+        email: Option<FieldName>,
         documents: Option<BoundedVec<u8, T::MaxDocuments>>, 
     ) -> DispatchResult {
-        // //ensure admin permissions 
-        // Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // //Ensure user is registered
-        // ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+        //Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
-        // //Update user data
-        // <UsersInfo<T>>::mutate(user.clone(), |user_data| {
-        //     if let Some(documents) = documents {
-        //         user_data.documents = Some(documents);
-        //     }
-        // });
-
-        // Self::deposit_event(Event::UserUpdated(user));
         Ok(())
     }
 

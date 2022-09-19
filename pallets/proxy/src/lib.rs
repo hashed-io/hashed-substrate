@@ -21,7 +21,6 @@ pub mod pallet {
 	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
-use types::FieldName;
 
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
@@ -260,11 +259,14 @@ use types::FieldName;
 		pub fn users_update_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
+			name: Option<FieldName>,
+			image: Option<CID>,
+			email: Option<FieldName>,
 			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_update_user(who, user, documents)
+			Self::do_update_user(who, user, name, image, email, documents)
 		}
 
 		//TODO: DELETE AN USER ACCOUNT
