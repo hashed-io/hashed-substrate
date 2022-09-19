@@ -21,6 +21,7 @@ pub mod pallet {
 	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
+use types::FieldName;
 
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
@@ -243,11 +244,14 @@ pub mod pallet {
 		pub fn users_register_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
+			name: FieldName,
+			image: CID,
+			email: FieldName,
 			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, user, documents)
+			Self::do_register_user(who, user, name, image, email, documents)
 		}
 
 		//TODO: UPDATE AN USER ACCOUNT

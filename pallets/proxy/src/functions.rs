@@ -38,6 +38,9 @@ impl<T: Config> Pallet<T> {
             pallet_id.clone(), 
             &global_scope, 
             ProxyRole::Administrator.id())?;
+
+        //TODO: create a administrator user account
+        //Self::do_register_user(admin, user, documents)
         
         Self::deposit_event(Event::AdministratorAssigned(admin));
         Ok(())
@@ -54,6 +57,9 @@ impl<T: Config> Pallet<T> {
             pallet_id.clone(), 
             &global_scope, 
             ProxyRole::Administrator.id())?;
+        
+        //TODO: remove administrator user account
+        //Self::do_delete_user(admin, user, documents)
         
         Self::deposit_event(Event::AdministratorRemoved(admin));
         Ok(())
@@ -199,14 +205,22 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
+    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, name: FieldName, image: CID, email: FieldName, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // check if user is already registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
 
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
         let user_data = UserData::<T> {
+            name,
+            role: None,
+            image,
+            date_registered: current_timestamp,
+            email,
             documents,
         };
 
@@ -304,6 +318,29 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::UserUnassignedFromProject(user, project_id));
         Ok(())
     }
+
+    pub fn do_update_user(
+        admin: T::AccountId,
+        user: T::AccountId,
+        documents: Option<BoundedVec<u8, T::MaxDocuments>>, 
+    ) -> DispatchResult {
+        // //ensure admin permissions 
+        // Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // //Ensure user is registered
+        // ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+
+        // //Update user data
+        // <UsersInfo<T>>::mutate(user.clone(), |user_data| {
+        //     if let Some(documents) = documents {
+        //         user_data.documents = Some(documents);
+        //     }
+        // });
+
+        // Self::deposit_event(Event::UserUpdated(user));
+        Ok(())
+    }
+
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
     
