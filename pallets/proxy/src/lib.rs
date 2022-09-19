@@ -125,17 +125,17 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key project_id
-		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value
+		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value users
 		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn users_by_project)]
+	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value
+		T::AccountId, // Key account_id
+		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
 		OptionQuery,
 	>;
 
