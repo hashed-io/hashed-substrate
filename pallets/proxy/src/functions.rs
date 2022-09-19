@@ -257,6 +257,48 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_unassign_user(
+        admin: T::AccountId,
+        user: T::AccountId,
+        project_id: [u8;32], 
+        role: ProxyRole, 
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        //Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        //Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+
+        //Ensure user is assigned to the project
+        ensure!(<UsersByProject<T>>::get(project_id).contains(&user.clone()), Error::<T>::UserNotAssignedToProject);
+        ensure!(<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserNotAssignedToProject);
+
+        // Ensure user has roles assigned to the project
+        T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec())?;
+
+        // Remove user from UsersByProject storagemap
+        <UsersByProject<T>>::mutate(project_id, |users| {
+            users.retain(|u| u != &user);
+        });
+
+        // Remove user from ProjectsByUser storagemap
+        <ProjectsByUser<T>>::mutate(user.clone(), |projects| {
+            projects.retain(|p| p != &project_id);
+        });
+
+        // Remove user from scope
+        T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
+
+    
+        Self::deposit_event(Event::UserUnassignedFromProject(user, project_id));
+        Ok(())
+    }
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
     

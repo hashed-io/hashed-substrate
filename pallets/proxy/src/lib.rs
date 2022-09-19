@@ -160,6 +160,9 @@ pub mod pallet {
 		AdministratorRemoved(T::AccountId),
 		/// User assigned to project
 		UserAssignedToProject(T::AccountId, [u8;32]),
+		/// User removed from project
+		UserUnassignedFromProject(T::AccountId, [u8;32]),
+		
 	}
 
 	#[pallet::error]
@@ -197,6 +200,8 @@ pub mod pallet {
 		MaxProjectsPerUserReached,
 		/// User already has the role
 		UserAlreadyHasRole,
+		/// User is not assigned to the project
+		UserNotAssignedToProject,
 
 	}
 
@@ -245,7 +250,9 @@ pub mod pallet {
 			Self::do_register_user(who, user, documents)
 		}
 
-		//TODO: DELETE AN ACCOUNT
+		//TODO: DELETE AN USER ACCOUNT
+
+		//TODO: UPDATE AN USER ACCOUNT
 		
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
@@ -301,6 +308,19 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_assign_user(who, user, project_id, role)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn projects_unassign_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId,
+			project_id: [u8;32],  
+			role: ProxyRole,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_unassign_user(who, user, project_id, role)
 		}
 
 
