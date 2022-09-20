@@ -216,6 +216,8 @@ pub mod pallet {
 		MaxIssuersPerProjectReached,
 		/// Max number of regional centers per project reached
 		MaxRegionalCenterPerProjectReached,
+		/// Can not remove administator role
+		CannotRemoveAdminRole,
 	}
 
 	#[pallet::call]

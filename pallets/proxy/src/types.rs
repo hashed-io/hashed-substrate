@@ -3,8 +3,9 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
+//TODO: Fix types when using an Option, i.e: Option<CID>
 pub type FieldName = BoundedVec<u8,ConstU32<100>>;
-pub type FieldDescription = BoundedVec<u8,ConstU32<400>>;
+pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
 pub type CID = BoundedVec<u8,ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
 

@@ -274,7 +274,7 @@ impl<T: Config> Pallet<T> {
 
 
         //TODO:Update project data depending on the role assigned
-        Self::update_project_role(project_id, user.clone(), role)?;
+        Self::add_project_role(project_id, user.clone(), role)?;
 
         //TOREVIEW: this storage map will be removed?
         // Insert project to ProjectsByUser storagemap
@@ -322,6 +322,9 @@ impl<T: Config> Pallet<T> {
 
         // Ensure user has roles assigned to the project
         T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec())?;
+
+        // TODO: Update project data depending on the role unassigned
+        Self::remove_project_role(project_id, user.clone(), role)?;
 
         // Remove user from UsersByProject storagemap
         <UsersByProject<T>>::mutate(project_id, |users| {
@@ -457,7 +460,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn update_project_role(
+    fn add_project_role(
         project_id: [u8;32],
         user: T::AccountId,
         role: ProxyRole,
@@ -540,6 +543,86 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
+    pub fn remove_project_role(
+        project_id: [u8;32],
+        user: T::AccountId,
+        role: ProxyRole,
+    ) -> DispatchResult {
+
+        match role {
+            ProxyRole::Administrator => {
+                return Err(Error::<T>::CannotRemoveAdminRole.into());
+            },
+            ProxyRole::Developer => {
+                //Mutate project data
+                //TODO: Fix internal validations
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.developer.as_mut() {
+                        Some(developer) => {
+                            //developer.clone().iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            developer.retain(|u| *u != user);
+                        },
+                        None => {
+                            return Err(Error::<T>::UserNotAssignedToProject.into());
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::Investor => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.investor.as_mut() {
+                        Some(investor) => {
+                            //investor.iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            investor.retain(|u| *u != user);
+                        },
+                        None => {
+                            return Err(Error::<T>::UserNotAssignedToProject.into());
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::Issuer => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.issuer.as_mut() {
+                        Some(issuer) => {
+                            //issuer.iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            issuer.retain(|u| *u != user);
+                        },
+                        None => {
+                            return Err(Error::<T>::UserNotAssignedToProject.into());
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::RegionalCenter => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.regional_center.as_mut() {
+                        Some(regional_center) => {
+                            //regional_center.iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            regional_center.retain(|u| *u != user);
+                        },
+                        None => {
+                            return Err(Error::<T>::UserNotAssignedToProject.into());
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+        }
+        Ok(())
+    }
+    
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
