@@ -87,10 +87,10 @@ impl<T: Config> Pallet<T> {
         
         //Create project data
         let project_data = ProjectData::<T> {
-            developer: None,
-            investor: None,
-            issuer: None,
-            regional_center: None,
+            developer: Some(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default()),
+            investor: Some(BoundedVec::<T::AccountId, T::MaxInvestorsPerProject>::default()),
+            issuer: Some(BoundedVec::<T::AccountId, T::MaxIssuersPerProject>::default()),
+            regional_center: Some(BoundedVec::<T::AccountId, T::MaxRegionalCenterPerProject>::default()),
             tittle,
             description,
             image,
@@ -257,6 +257,7 @@ impl<T: Config> Pallet<T> {
 
 
         //TODO:Update project data depending on the role assigned
+        Self::update_project_role(project_id, user.clone(), role)?;
 
         //TOREVIEW: this storage map will be removed?
         // Insert project to ProjectsByUser storagemap
@@ -425,7 +426,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
+    fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
         //ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -435,6 +436,89 @@ impl<T: Config> Pallet<T> {
             project.status = status;
             Ok(())    
         })?;
+
+        Ok(())
+    }
+
+    fn update_project_role(
+        project_id: [u8;32],
+        user: T::AccountId,
+        role: ProxyRole,
+    ) -> DispatchResult {
+
+        match role {
+            ProxyRole::Administrator => {
+                return Err(Error::<T>::CannotRegisterAdminRole.into());
+            },
+            ProxyRole::Developer => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.developer.clone(){
+                        Some(mut developer) => {
+                            //developer.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            developer.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                        },
+                        None => {
+                            let devs = project.developer.get_or_insert(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default());
+                            devs.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::Investor => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.investor.clone(){
+                        Some(mut investor) => {
+                            investor.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            investor.try_push(user.clone()).map_err(|_| Error::<T>::MaxInvestorsPerProjectReached)?;
+                        },
+                        None => {
+                            let investors = project.investor.get_or_insert(BoundedVec::<T::AccountId, T::MaxInvestorsPerProject>::default());
+                            investors.try_push(user.clone()).map_err(|_| Error::<T>::MaxInvestorsPerProjectReached)?;
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::Issuer => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.issuer.clone(){
+                        Some(mut issuer) => {
+                            issuer.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            issuer.try_push(user.clone()).map_err(|_| Error::<T>::MaxIssuersPerProjectReached)?;
+                        },
+                        None => {
+                            let issuers = project.issuer.get_or_insert(BoundedVec::<T::AccountId, T::MaxIssuersPerProject>::default());
+                            issuers.try_push(user.clone()).map_err(|_| Error::<T>::MaxIssuersPerProjectReached)?;
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+            ProxyRole::RegionalCenter => {
+                //Mutate project data
+                <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+                    let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                    match project.regional_center.clone(){
+                        Some(mut regional_center) => {
+                            regional_center.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            regional_center.try_push(user.clone()).map_err(|_| Error::<T>::MaxRegionalCenterPerProjectReached)?;
+                        },
+                        None => {
+                            let regional_centers = project.regional_center.get_or_insert(BoundedVec::<T::AccountId, T::MaxRegionalCenterPerProject>::default());
+                            regional_centers.try_push(user.clone()).map_err(|_| Error::<T>::MaxRegionalCenterPerProjectReached)?;
+                        }
+                    }
+                    Ok(())    
+                })?;
+            },
+        }
 
         Ok(())
     }

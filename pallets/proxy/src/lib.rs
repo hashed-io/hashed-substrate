@@ -206,7 +206,16 @@ pub mod pallet {
 		UserAlreadyHasRole,
 		/// User is not assigned to the project
 		UserNotAssignedToProject,
-
+		/// Can not register administator role 
+		CannotRegisterAdminRole,
+		/// Max number of developers per project reached
+		MaxDevelopersPerProjectReached,
+		/// Max number of investors per project reached
+		MaxInvestorsPerProjectReached,
+		/// Max number of issuers per project reached
+		MaxIssuersPerProjectReached,
+		/// Max number of regional centers per project reached
+		MaxRegionalCenterPerProjectReached,
 	}
 
 	#[pallet::call]
