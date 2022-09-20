@@ -183,19 +183,28 @@ impl Default for ProjectStatus{
 /// Extrinsics which require previous authorization to call them
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyPermission{
-    RegisterUser, // accounts_add_user
+    RegisterUser, // users_register_user
+    UpdateUser, // users_update_user
+    DeleteUser, // users_delete_user
     CreateProject, // projects_create_project
     EditProject, // projects_edit_project
     DeleteProject, // projects_delete_project
+    AssignUser, // projects_assign_user
+    UnassignUser, // projects_unassign_user
 }
 
 impl ProxyPermission{ 
     pub fn to_vec(self) -> Vec<u8>{
         match self{
+            Self::RegisterUser => "RegisterUser".as_bytes().to_vec(),
+            Self::UpdateUser => "UpdateUser".as_bytes().to_vec(),
+            Self::DeleteUser => "DeleteUser".as_bytes().to_vec(),
             Self::CreateProject => "CreateProject".as_bytes().to_vec(),
-            Self::RegisterUser => "AddUser".as_bytes().to_vec(),
             Self::EditProject => "EditProject".as_bytes().to_vec(),
             Self::DeleteProject => "DeleteProject".as_bytes().to_vec(),
+            Self::AssignUser => "AssignUser".as_bytes().to_vec(),
+            Self::UnassignUser => "UnassignUser".as_bytes().to_vec(),
+
         }
     }
 
@@ -208,14 +217,23 @@ impl ProxyPermission{
         //TODO: change it to mut when add new roles
         let administrator_permissions = [
             RegisterUser.to_vec(), 
+            UpdateUser.to_vec(),
+            DeleteUser.to_vec(),
             CreateProject.to_vec(),
             EditProject.to_vec(),
             DeleteProject.to_vec(),
+            AssignUser.to_vec(),
+            UnassignUser.to_vec(),
         ].to_vec();
-
         administrator_permissions
-
     }
+
+    // pub fn developer_permissions() -> Vec<Vec<u8>>{
+    //     //use crate::types::ProxyPermission::*;
+    //     let developer_permissions = [
+    //     ].to_vec();
+    //     developer_permissions
+    // }
 
 
 }
