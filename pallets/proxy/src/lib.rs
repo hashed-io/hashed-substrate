@@ -298,8 +298,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(
 			origin: OriginFor<T>, 
-			tittle: BoundedVec<u8, T::ProjectNameMaxLen>, 
-			description: BoundedVec<u8, T::ProjectDescMaxLen>, 
+			tittle: FieldName, 
+			description: FieldDescription, 
 			image: CID, 
 			completition_date: u64, 
 		) -> DispatchResult {
@@ -313,8 +313,8 @@ pub mod pallet {
 		pub fn projects_edit_project(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
-			description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
+			tittle: Option<FieldName>,
+			description: Option<FieldDescription>, 
 			image: Option<CID>, 
 			creation_date: Option<u64>, 
 			completition_date: Option<u64>,  

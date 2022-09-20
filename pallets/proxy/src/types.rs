@@ -4,6 +4,7 @@ use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
 pub type FieldName = BoundedVec<u8,ConstU32<100>>;
+pub type FieldDescription = BoundedVec<u8,ConstU32<400>>;
 pub type CID = BoundedVec<u8,ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
 
@@ -17,8 +18,8 @@ pub struct ProjectData<T: Config>{
     pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
     pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,
     pub regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>,
-    pub tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
-    pub description: BoundedVec<u8, T::ProjectDescMaxLen>,
+    pub tittle: FieldName,
+    pub description: FieldDescription,
     pub image: CID,
     pub status: ProjectStatus,
     pub creation_date: u64,

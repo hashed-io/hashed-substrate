@@ -84,8 +84,8 @@ impl<T: Config> Pallet<T> {
     
     pub fn do_create_project(
         admin: T::AccountId, 
-        tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
-        description: BoundedVec<u8, T::ProjectDescMaxLen>,
+        tittle: FieldName,
+        description: FieldDescription,
         image: CID,
         completition_date: u64,
         ) -> DispatchResult {
@@ -134,8 +134,8 @@ impl<T: Config> Pallet<T> {
     pub fn do_edit_project(
         admin: T::AccountId,
         project_id: [u8;32], 
-        tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
-        description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
+        tittle: Option<FieldName>,
+        description: Option<FieldDescription>, 
         image: Option<CID>, 
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
