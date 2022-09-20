@@ -152,7 +152,7 @@ pub mod pallet {
 		UserAdded(T::AccountId),
 		/// Project was edited
 		ProjectEdited([u8;32]),
-		/// Project was deletedº
+		/// Project was deleted
 		ProjectDeleted([u8;32]),
 		/// Administator added
 		AdministratorAssigned(T::AccountId),
@@ -164,6 +164,8 @@ pub mod pallet {
 		UserUnassignedFromProject(T::AccountId, [u8;32]),
 		/// User info updated
 		UserUpdated(T::AccountId),
+		/// User removed
+		UserDeleted(T::AccountId),
 
 	}
 
@@ -255,7 +257,6 @@ pub mod pallet {
 			Self::do_register_user(who, user, name, image, email, documents)
 		}
 
-		//TODO: UPDATE AN USER ACCOUNT
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_update_user(
@@ -271,7 +272,16 @@ pub mod pallet {
 			Self::do_update_user(who, user, name, image, email, documents)
 		}
 
-		//TODO: DELETE AN USER ACCOUNT
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn users_delete_user(
+			origin: OriginFor<T>, 
+			user: T::AccountId, 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_delete_user(who, user)
+		}
 		
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
