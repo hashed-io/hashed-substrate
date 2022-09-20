@@ -5,6 +5,8 @@ use sp_runtime::sp_std::vec::Vec;
 
 pub type FieldName = BoundedVec<u8,ConstU32<100>>;
 pub type CID = BoundedVec<u8,ConstU32<100>>;
+pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
+
 
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
