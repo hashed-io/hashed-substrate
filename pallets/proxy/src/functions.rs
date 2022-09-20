@@ -443,7 +443,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
+    fn _change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
         //ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -468,12 +468,13 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
             ProxyRole::Developer => {
+                //TODO: Fix internal validations
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.developer.clone(){
-                        Some(mut developer) => {
-                            //developer.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                    match project.developer.as_mut() {
+                        Some(developer) => {
+                            //developer.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             developer.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
                         },
                         None => {
@@ -488,9 +489,9 @@ impl<T: Config> Pallet<T> {
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.investor.clone(){
-                        Some(mut investor) => {
-                            investor.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                    match project.investor.as_mut() {
+                        Some(investor) => {
+                            //investor.iter().find(|&u| *u == user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             investor.try_push(user.clone()).map_err(|_| Error::<T>::MaxInvestorsPerProjectReached)?;
                         },
                         None => {
@@ -505,9 +506,9 @@ impl<T: Config> Pallet<T> {
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.issuer.clone(){
-                        Some(mut issuer) => {
-                            issuer.iter().find(|&u| u == &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                    match project.issuer.as_mut() {
+                        Some(issuer) => {
+                            //issuer.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             issuer.try_push(user.clone()).map_err(|_| Error::<T>::MaxIssuersPerProjectReached)?;
                         },
                         None => {
@@ -522,9 +523,9 @@ impl<T: Config> Pallet<T> {
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.regional_center.clone(){
-                        Some(mut regional_center) => {
-                            regional_center.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                    match project.regional_center.as_mut() {
+                        Some(regional_center) => {
+                            //regional_center.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             regional_center.try_push(user.clone()).map_err(|_| Error::<T>::MaxRegionalCenterPerProjectReached)?;
                         },
                         None => {
