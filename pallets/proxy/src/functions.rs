@@ -69,7 +69,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId, 
         tittle: BoundedVec<u8, T::ProjectNameMaxLen>,
         description: BoundedVec<u8, T::ProjectDescMaxLen>,
-        image: BoundedVec<u8, T::CIDMaxLen>,
+        image: CID,
         completition_date: u64,
         ) -> DispatchResult {
         //ensure admin permissions 
@@ -119,7 +119,7 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32], 
         tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
         description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
-        image:  Option<BoundedVec<u8, T::CIDMaxLen>>, 
+        image: Option<CID>, 
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
     ) -> DispatchResult {
@@ -205,7 +205,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, name: FieldName, image: CID, email: FieldName, documents: Option<BoundedVec<u8, T::MaxDocuments>>, ) -> DispatchResult {
+    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, name: FieldName, image: CID, email: FieldName, documents: Option<Documents<T>>, ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
@@ -328,7 +328,7 @@ impl<T: Config> Pallet<T> {
         name: Option<FieldName>,
         image: Option<CID>,
         email: Option<FieldName>,
-        documents: Option<BoundedVec<u8, T::MaxDocuments>>, 
+        documents: Option<Documents<T>>, 
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -387,14 +387,14 @@ impl<T: Config> Pallet<T> {
 
         //TODO: Optimise this
         //Remove user from its scopes
-        for scope in projects_by_user {
-            //TODO: get each role from each scope instead guessing it
-            //create a method in rbac pallet to get all roles from a scope
-            T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Developer.id())?;
-            T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Investor.id())?;
-            T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Issuer.id())?;
-            T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::RegionalCenter.id())?;
-        }
+        // for scope in projects_by_user {
+        //     //TODO: get each role from each scope instead guessing it
+        //     //create a method in rbac pallet to get all roles from a scope
+        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Developer.id())?;
+        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Investor.id())?;
+        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Issuer.id())?;
+        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::RegionalCenter.id())?;
+        // }
 
         Self::deposit_event(Event::UserDeleted(user));
 

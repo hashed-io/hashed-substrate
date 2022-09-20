@@ -250,7 +250,7 @@ pub mod pallet {
 			name: FieldName,
 			image: CID,
 			email: FieldName,
-			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
+			documents: Option<Documents<T>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -265,7 +265,7 @@ pub mod pallet {
 			name: Option<FieldName>,
 			image: Option<CID>,
 			email: Option<FieldName>,
-			documents: Option<BoundedVec<u8, T::MaxDocuments>> 
+			documents: Option<Documents<T>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -291,7 +291,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			tittle: BoundedVec<u8, T::ProjectNameMaxLen>, 
 			description: BoundedVec<u8, T::ProjectDescMaxLen>, 
-			image:  CID, 
+			image: CID, 
 			completition_date: u64, 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -306,7 +306,7 @@ pub mod pallet {
 			project_id: [u8;32], 
 			tittle: Option<BoundedVec<u8, T::ProjectNameMaxLen>>,
 			description: Option<BoundedVec<u8, T::ProjectDescMaxLen>>, 
-			image:  Option<CID>, 
+			image: Option<CID>, 
 			creation_date: Option<u64>, 
 			completition_date: Option<u64>,  
 		) -> DispatchResult {
