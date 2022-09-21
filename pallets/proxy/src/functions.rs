@@ -402,7 +402,7 @@ impl<T: Config> Pallet<T> {
             ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
         }
 
-        //TODO: Can not delete an user if it has assigned projects
+        // Can not delete an user if it has assigned projects
         let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
 
         if projects_by_user.len() == 0 {
@@ -418,7 +418,6 @@ impl<T: Config> Pallet<T> {
 
             // Remove user from ProjectsByUser storagemap
             <ProjectsByUser<T>>::remove(user.clone());
-
 
             Self::deposit_event(Event::UserDeleted(user));
             Ok(())
@@ -479,6 +478,8 @@ impl<T: Config> Pallet<T> {
             },
             ProxyRole::Developer => {
                 //TODO: Fix internal validations
+                //TODO: move logic to a helper function to avoid boilerplate
+
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
@@ -562,8 +563,9 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRemoveAdminRole.into());
             },
             ProxyRole::Developer => {
-                //Mutate project data
                 //TODO: Fix internal validations
+                //TODO: move logic to a helper function to avoid boilerplate
+                //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.developer.as_mut() {
