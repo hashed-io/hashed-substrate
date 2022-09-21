@@ -552,9 +552,9 @@ parameter_types! {
 	pub const MaxChildrens:u32 = 20;
 	pub const MaxDocuments:u32 = 5;
 	pub const MaxAccountsPerTransaction:u32 = 5;
-	pub const MaxProjectsPerUser:u32 = 10;
+	pub const MaxProjectsPerUser:u32 = 5;
 	pub const CIDMaxLen:u32 = 64;
-	pub const MaxUserPerProject:u32 = 10;
+	pub const MaxUserPerProject:u32 = 50;
 	pub const MaxDevelopersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
 	pub const MaxIssuersPerProject:u32 = 1;

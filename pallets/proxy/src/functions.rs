@@ -87,6 +87,7 @@ impl<T: Config> Pallet<T> {
         tittle: FieldName,
         description: FieldDescription,
         image: CID,
+        adress: FieldName,
         completition_date: u64,
         ) -> DispatchResult {
         //ensure admin permissions 
@@ -111,6 +112,7 @@ impl<T: Config> Pallet<T> {
             tittle,
             description,
             image,
+            adress,
             status: ProjectStatus::default(), 
             creation_date: timestamp,
             completition_date,
@@ -137,6 +139,7 @@ impl<T: Config> Pallet<T> {
         tittle: Option<FieldName>,
         description: Option<FieldDescription>, 
         image: Option<CID>, 
+        adress: Option<FieldName>,
         creation_date: Option<u64>, 
         completition_date: Option<u64>,  
     ) -> DispatchResult {
@@ -164,6 +167,9 @@ impl<T: Config> Pallet<T> {
             }
             if let Some(image) = image {
                 project.image = image;
+            }
+            if let Some(adress) = adress {
+                project.adress = adress;
             }
             if let Some(creation_date) = creation_date {
                 //ensure new creation date is in the past

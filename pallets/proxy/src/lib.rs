@@ -82,9 +82,6 @@ pub mod pallet {
 		type MaxRegionalCenterPerProject: Get<u32>;
 
 
-
-		
-
 	
 		
 	}
@@ -303,11 +300,12 @@ pub mod pallet {
 			tittle: FieldName, 
 			description: FieldDescription, 
 			image: CID, 
+			adress: FieldName,
 			completition_date: u64, 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, tittle, description, image, completition_date)
+			Self::do_create_project(who, tittle, description, image, adress, completition_date)
 		}
 
 		#[transactional]
@@ -318,12 +316,13 @@ pub mod pallet {
 			tittle: Option<FieldName>,
 			description: Option<FieldDescription>, 
 			image: Option<CID>, 
+			adress: Option<FieldName>,
 			creation_date: Option<u64>, 
 			completition_date: Option<u64>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_project(who, project_id, tittle, description, image, creation_date, completition_date)
+			Self::do_edit_project(who, project_id, tittle, description, image, adress, creation_date, completition_date)
 		}
 
 		#[transactional]
