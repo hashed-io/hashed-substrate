@@ -402,35 +402,31 @@ impl<T: Config> Pallet<T> {
             ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
         }
 
-        //Remove user from UsersInfo storage map
-        <UsersInfo<T>>::remove(user.clone());
-
-        //Remove user data from UsersByProject storage map
+        //TODO: Can not delete an user if it has assigned projects
         let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
-        for project_id in projects_by_user.clone() {
-            <UsersByProject<T>>::mutate(project_id, |users| {
-                users.retain(|u| u != &user);
-            });
+
+        if projects_by_user.len() == 0 {
+            // Remove user from UsersInfo storagemap
+            <UsersInfo<T>>::remove(user.clone());
+
+            // Remove user from UsersByProject storagemap
+            for project_id in projects_by_user {
+                <UsersByProject<T>>::mutate(project_id, |users| {
+                    users.retain(|u| u != &user);
+                });
+            }
+
+            // Remove user from ProjectsByUser storagemap
+            <ProjectsByUser<T>>::remove(user.clone());
+
+
+            Self::deposit_event(Event::UserDeleted(user));
+            Ok(())
+        
+        } else {
+            Err(Error::<T>::CannotDeleteUserWithAssignedProjects.into())
         }
 
-        //Remove user from ProjectsByUser storage map
-        <ProjectsByUser<T>>::remove(user.clone());
-
-
-        //TODO: Optimise this
-        //Remove user from its scopes
-        // for scope in projects_by_user {
-        //     //TODO: get each role from each scope instead guessing it
-        //     //create a method in rbac pallet to get all roles from a scope
-        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Developer.id())?;
-        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Investor.id())?;
-        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::Issuer.id())?;
-        //     T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &scope, ProxyRole::RegionalCenter.id())?;
-        // }
-
-        Self::deposit_event(Event::UserDeleted(user));
-
-        Ok(())
     }
 
     // H E L P E R S

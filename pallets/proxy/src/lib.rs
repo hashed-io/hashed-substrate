@@ -215,6 +215,8 @@ pub mod pallet {
 		MaxRegionalCenterPerProjectReached,
 		/// Can not remove administator role
 		CannotRemoveAdminRole,
+		/// Can not delete an user with active projects
+		CannotDeleteUserWithAssignedProjects,
 	}
 
 	#[pallet::call]
