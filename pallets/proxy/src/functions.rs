@@ -124,7 +124,7 @@ impl<T: Config> Pallet<T> {
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
-        //TODO: create scope for project_id
+        // create scope for project_id
         T::Rbac::create_scope(Self::pallet_id(), project_id)?;
 
         // Event
@@ -275,11 +275,11 @@ impl<T: Config> Pallet<T> {
         ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.clone()), Error::<T>::UserAlreadyAssignedToProject);
         ensure!(!<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
 
-        //TODO: Ensure user is not assigened to the selected scope (project_id) with the selected role
+        // Ensure user is not assigened to the selected scope (project_id) with the selected role
         ensure!(!T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyHasRole);
 
 
-        //TODO:Update project data depending on the role assigned
+        // Update project data depending on the role assigned
         Self::add_project_role(project_id, user.clone(), role)?;
 
         //TOREVIEW: this storage map will be removed?
@@ -329,7 +329,7 @@ impl<T: Config> Pallet<T> {
         // Ensure user has roles assigned to the project
         T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec())?;
 
-        // TODO: Update project data depending on the role unassigned
+        // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
 
         // Remove user from UsersByProject storagemap
