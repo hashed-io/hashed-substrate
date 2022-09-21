@@ -56,8 +56,8 @@ impl<T: Config> Pallet<T> {
             &global_scope, 
             ProxyRole::Administrator.id())?;
 
-        //TODO: create a administrator user account
-        //Self::do_register_user(admin, user, documents)
+        // create a administrator user account
+        Self::sudo_register_admin(admin.clone())?;
         
         Self::deposit_event(Event::AdministratorAssigned(admin));
         Ok(())
@@ -75,8 +75,8 @@ impl<T: Config> Pallet<T> {
             &global_scope, 
             ProxyRole::Administrator.id())?;
         
-        //TODO: remove administrator user account
-        //Self::do_delete_user(admin, user, documents)
+        // remove administrator user account
+        Self::sudo_delete_admin(admin.clone())?;
         
         Self::deposit_event(Event::AdministratorRemoved(admin));
         Ok(())
@@ -394,8 +394,13 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure user is registered
-        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+        //Ensure user is registered & get user data
+        let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+        
+        //Prevent users from deleting an administator
+        if let Some(admin_role) = user_data.role{
+            ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
+        }
 
         //Remove user from UsersInfo storage map
         <UsersInfo<T>>::remove(user.clone());
@@ -646,6 +651,37 @@ impl<T: Config> Pallet<T> {
             scope_global,
             vec![rol_id],
         )
+    }
+
+    fn sudo_register_admin( admin: T::AccountId ) -> DispatchResult{
+        // check if user is already registered
+        ensure!(!<UsersInfo<T>>::contains_key(admin.clone()), Error::<T>::UserAlreadyRegistered);
+        
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        let user_data = UserData::<T> {
+            name: FieldName::default(),
+            role: Some(ProxyRole::Administrator),
+            image: CID::default(),
+            date_registered: current_timestamp,
+            email: FieldName::default(),
+            documents: None,
+        };
+
+        //Insert user data
+        <UsersInfo<T>>::insert(admin.clone(), user_data);
+        Ok(())
+    }
+
+    fn sudo_delete_admin( admin: T::AccountId ) -> DispatchResult{
+        // check if user is already registered
+        ensure!(<UsersInfo<T>>::contains_key(admin.clone()), Error::<T>::UserNotRegistered);
+        
+        //Remove user from UsersInfo storage map
+        <UsersInfo<T>>::remove(admin.clone());
+
+        Ok(())
     }
 
 
