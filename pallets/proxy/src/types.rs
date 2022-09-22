@@ -41,10 +41,26 @@ pub struct UserData<T: Config>{
     pub documents: Option<Documents<T>>,
 }
 
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ExpenditureData<T: Config>{
+    pub parent_id: [u8;32],
+    pub childrens: BoundedVec<[u8;32], T::MaxChildrens>,
+    pub num_childrens: u32,
+    pub name: FieldName,
+    pub expenditure_type: ExpenditureType,
+    pub balance: u64,
+    pub naics_code: u32,
+    pub jobs_multiplier: u32,
+    pub account_category: u32,
+}
+
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct Drawdown<T:Config>{
+pub struct DrawdownData<T:Config>{
     pub project_id: [u8;32],
     pub drawdown_number: u32,
     pub drawdown_type: DrawdownType,
@@ -55,24 +71,11 @@ pub struct Drawdown<T:Config>{
     pub creator: T::AccountId,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct Account<T: Config>{
-    pub parent_id: T::AccountId,
-    pub childrens: BoundedVec<T::AccountId, T::MaxChildrens>,
-    pub name: BoundedVec<u8, ConstU32<100>>,
-    pub account_type: AccountType,
-    pub account_sub_type: AccountSubType,
-    pub naics_code: u32,
-    pub jobs_multiplier: u32,
-    pub account_category: u32,
-}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct Transaction<T: Config>{
+pub struct TransactionData<T: Config>{
     pub drawdown_id: [u8;32],
     pub created_date: u64,
     pub balance: u32,
@@ -83,7 +86,7 @@ pub struct Transaction<T: Config>{
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct Budgets<T: Config>{
+pub struct BudgetData<T: Config>{
     pub account_id: T::AccountId,
     pub balance: u32,
     pub created_date: u64,
@@ -99,12 +102,12 @@ pub enum DrawdownStatus{
     Reviewed,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct AccountType{
     pub name: BoundedVec<u8, ConstU32<100>>,
-    pub class: AccountClass,
+    pub class: ExpenditureType,
     pub account_category: u32,
 }
 
@@ -132,7 +135,7 @@ pub enum DrawdownType{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum AccountClass{
+pub enum ExpenditureType{
     HardCost, 
     SoftCost,
 }
@@ -241,15 +244,6 @@ impl ProxyPermission{
 
 }
 
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum AccountSubType{
-    Assets,
-    Equity,
-    Expenses,
-    Income,
-    LiabiLiabilities,
-}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum Symbol {
