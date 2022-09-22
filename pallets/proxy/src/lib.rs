@@ -217,6 +217,9 @@ pub mod pallet {
 		CannotRemoveAdminRole,
 		/// Can not delete an user with active projects
 		CannotDeleteUserWithAssignedProjects,
+		/// Can not add admin role at user project assignment
+		CannotAddAdminRole,
+		
 	}
 
 	#[pallet::call]
