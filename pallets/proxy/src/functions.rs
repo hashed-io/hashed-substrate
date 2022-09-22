@@ -331,6 +331,8 @@ impl<T: Config> Pallet<T> {
         ensure!(<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserNotAssignedToProject);
 
         // Ensure user has roles assigned to the project
+        // TODO: catch error and return custom error
+        //ensure!(T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserDoesNotHaveRole);
         T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec())?;
 
         // Update project data depending on the role unassigned
@@ -649,8 +651,13 @@ impl<T: Config> Pallet<T> {
 
         // Check if user already has a role
         match user_data.role {
-            Some(_user_role) => {
-                return Ok(())
+            Some(user_role) => {
+                //TODO: Ccheck what role is the user trying to add
+                if user_role == role {
+                    return Ok(())
+                } else {
+                    return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
+                }
             },
             None => {
                 match role {

@@ -219,7 +219,8 @@ pub mod pallet {
 		CannotDeleteUserWithAssignedProjects,
 		/// Can not add admin role at user project assignment
 		CannotAddAdminRole,
-		
+		/// User can not have more than one role at the same time
+		UserCannotHaveMoreThanOneRole,
 	}
 
 	#[pallet::call]
