@@ -549,17 +549,18 @@ impl pallet_fruniques::Config for Runtime {
 parameter_types! {
 	pub const ProjectNameMaxLen:u32 = 32;
 	pub const ProjectDescMaxLen:u32 = 256;
-	pub const MaxChildrens:u32 = 20;
+	pub const MaxChildrens:u32 = 1000;
 	pub const MaxDocuments:u32 = 5;
 	pub const MaxAccountsPerTransaction:u32 = 5;
-	pub const MaxProjectsPerUser:u32 = 5;
-	pub const CIDMaxLen:u32 = 64;
+	pub const MaxProjectsPerUser:u32 = 10;
+	pub const CIDMaxLen:u32 = 100;	
 	pub const MaxUserPerProject:u32 = 50;
 	pub const MaxDevelopersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
 	pub const MaxBoundedVecs:u32 = 1;
+	pub const MaxExpendituresPerProject:u32 = 1000;
 
 
 }
@@ -586,6 +587,8 @@ impl pallet_proxy::Config for Runtime {
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
 	type MaxBoundedVecs = MaxBoundedVecs;
+	type MaxExpendituresPerProject = MaxExpendituresPerProject;
+
 
 
 }

@@ -84,6 +84,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxBoundedVecs: Get<u32>;
 
+		#[pallet::constant]
+		type MaxExpendituresPerProject: Get<u32>;
+
 
 	
 		
@@ -138,6 +141,28 @@ pub mod pallet {
 		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
 		ValueQuery,
 	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn expenditures)]
+	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key expenditure_id
+		ExpenditureData<T>,  // Value expenditure
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn expenditures_by_project)]
+	pub(super) type ExpendituresByProject<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		BoundedVec<[u8;32], T::MaxExpendituresPerProject>,  // Value expenditure
+		ValueQuery,
+	>;
+
+
 
 
 
