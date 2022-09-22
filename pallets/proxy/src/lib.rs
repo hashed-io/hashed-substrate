@@ -279,9 +279,9 @@ pub mod pallet {
 		pub fn users_update_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
-			name: Option<FieldName>,
-			image: Option<CID>,
-			email: Option<FieldName>,
+			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
+			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			documents: Option<Documents<T>> 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin

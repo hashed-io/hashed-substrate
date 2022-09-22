@@ -360,10 +360,10 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_update_user(
         admin: T::AccountId,
-        user: T::AccountId,
-        name: Option<FieldName>,
-        image: Option<CID>,
-        email: Option<FieldName>,
+        user: T::AccountId, 
+        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
+        email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         documents: Option<Documents<T>>, 
     ) -> DispatchResult {
         //ensure admin permissions 
@@ -377,13 +377,16 @@ impl<T: Config> Pallet<T> {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
             if let Some(name) = name {
-                user_info.name = name;
+                let mod_name = name.into_inner();
+                user_info.name = mod_name[0].clone();
             }
             if let Some(image) = image {
-                user_info.image = image;
+                let mod_image = image.into_inner();
+                user_info.image = mod_image[0].clone();
             }
             if let Some(email) = email {
-                user_info.email = email;
+                let mod_email = email.into_inner();
+                user_info.email = mod_email[0].clone();
             }
             if let Some(documents) = documents {
                 user_info.documents = Some(documents);
