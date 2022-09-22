@@ -762,7 +762,65 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_extrinisc_testing(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+        description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+        image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
+        adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        creation_date: Option<u64>, 
+        completition_date: Option<u64>, 
+    ) -> DispatchResult{
+                //ensure admin permissions             
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
+        // Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
 
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        //Mutate project data
+        <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
+            let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            
+            if let Some(tittle) = tittle {
+                let mod_tittle = tittle.into_inner();
+                project.tittle = mod_tittle[0].clone();
+            }
+            if let Some(description) = description {
+                let mod_description = description.into_inner();
+                project.description = mod_description[0].clone();
+            }
+            if let Some(image) = image {
+                let mod_image = image.into_inner();
+                project.image = mod_image[0].clone();
+            }
+            if let Some(adress) = adress {
+                let mod_adress = adress.into_inner();
+                project.adress = mod_adress[0].clone();
+            }
+            if let Some(creation_date) = creation_date {
+                //ensure new creation date is in the past
+                ensure!(creation_date < current_timestamp, Error::<T>::CreationDateMustBeInThePast);
+                project.creation_date = creation_date;
+            }
+            if let Some(completition_date) = completition_date {
+                //ensure new completition date is in the future
+                ensure!(completition_date > current_timestamp, Error::<T>::CompletitionDateMustBeLater);
+                project.completition_date = completition_date;
+            }
+
+            Ok(())    
+        })?;
+
+        // Event
+        Self::deposit_event(Event::ProjectEdited(project_id));
+        Ok(())
+    }
 
 }

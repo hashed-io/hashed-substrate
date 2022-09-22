@@ -71,6 +71,7 @@ parameter_types! {
 	pub const MaxInvestorsPerProject:u32 = 50;
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
+	pub const MaxBoundedVecs:u32 = 1;
 
 }
 
@@ -89,6 +90,7 @@ impl pallet_proxy::Config for Test {
 	type MaxInvestorsPerProject = MaxInvestorsPerProject;
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
+	type MaxBoundedVecs = MaxBoundedVecs;
 
 	type Timestamp = Timestamp;
 	type Moment = u64;

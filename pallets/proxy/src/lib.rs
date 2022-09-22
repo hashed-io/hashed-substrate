@@ -81,6 +81,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxRegionalCenterPerProject: Get<u32>;
 
+		#[pallet::constant]
+		type MaxBoundedVecs: Get<u32>;
+
 
 	
 		
@@ -366,6 +369,23 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_unassign_user(who, user, project_id, role)
+		}
+		//TOOD: Move this logic to edit after friday demo
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn extrinsic_testing_edit_project(
+			origin: OriginFor<T>, 
+			project_id: [u8;32], 
+			tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
+			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			creation_date: Option<u64>, 
+			completition_date: Option<u64>, 
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_extrinisc_testing(who, project_id, tittle, description, image, adress, creation_date, completition_date)
 		}
 
 
