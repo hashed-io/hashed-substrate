@@ -14,6 +14,9 @@ impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
     // --------------------------------------------------------------------------------------------
     
+    // I N I T I A L 
+    // --------------------------------------------------------------------------------------------
+		
     pub fn do_initial_setup() -> DispatchResult{
         let pallet_id = Self::pallet_id();
         let global_scope = pallet_id.using_encoded(blake2_256);
@@ -84,6 +87,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
     
+
+    // P R O J E C T S
+    // --------------------------------------------------------------------------------------------
+		
     pub fn do_create_project(
         admin: T::AccountId, 
         tittle: FieldName,
@@ -229,7 +236,9 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-
+    // U S E R S
+    // --------------------------------------------------------------------------------------------
+		
     pub fn do_register_user(admin: T::AccountId, user: T::AccountId, name: FieldName, image: CID, email: FieldName, documents: Option<Documents<T>>, ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -440,6 +449,13 @@ impl<T: Config> Pallet<T> {
 
     }
 
+
+
+
+
+
+
+    
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
     
@@ -466,7 +482,10 @@ impl<T: Config> Pallet<T> {
 
     fn _change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
         //ensure project exists
+        //TODO: change 
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        //TODO: check project status is not completed
 
         //Mutate project data
         <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
@@ -715,6 +734,8 @@ impl<T: Config> Pallet<T> {
             }
         }
     }
+
+    //TODO: create a function to fill parents and children expenditures
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
