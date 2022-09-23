@@ -50,11 +50,12 @@ pub struct ExpenditureData<T: Config>{
     pub childrens: BoundedVec<[u8;32], T::MaxChildrens>,
     pub num_childrens: u32,
     pub name: FieldName,
-    pub expenditure_subtype: ExpenditureSubType,
     pub expenditure_type: ExpenditureType,
+    pub expenditure_subtype: ExpenditureSubType,
     pub balance: u64,
     pub naics_code: u32,
     pub jobs_multiplier: u32,
+    pub budget_id: [u8;32],
 }
 
 
