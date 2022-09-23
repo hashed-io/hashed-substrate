@@ -420,16 +420,16 @@ pub mod pallet {
 		pub fn expenditures_create_expenditure(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
-			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			creation_date: Option<u64>, 
-			completition_date: Option<u64>, 
+			name: FieldName,
+			expenditure_type: ExpenditureType,
+			expenditure_subtype: ExpenditureSubType,
+			budget_amount: Option<u64>,
+			naics_code: Option<u32>,
+			jobs_multiplier: Option<u32>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_extrinisc_testing(who, project_id, tittle, description, image, adress, creation_date, completition_date)
+			Self::do_create_expenditure(who, project_id, name, expenditure_type, expenditure_subtype, budget_amount, naics_code, jobs_multiplier)
 		}
 
 	}
