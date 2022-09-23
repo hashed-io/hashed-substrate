@@ -449,13 +449,82 @@ impl<T: Config> Pallet<T> {
 
     }
 
+    // B U D G E T  E X P E N D I T U R E 
+    // --------------------------------------------------------------------------------------------
+    pub fn do_create_expenditure(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        name: FieldName,
+        expenditure_type: ExpenditureType,
+        expenditure_subtype: ExpenditureSubType,
+        budget_amount: Option<u64>,
+        naics_code: Option<u32>,
+        jobs_multiplier: Option<u32>,
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        //TODO: create a helper function to check project status
+        //Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        //Get timestamp 
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        //Create expenditure_id
+        let expenditure_id = (project_id, timestamp).using_encoded(blake2_256);
+
+        // Can't add paren accounts using this method
+        ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
+
+        //TODO: budget_amount if some, create its budget with the amount, if none, create it with zero amount
+        match budget_amount {
+            Some(amount) => {
+                //Create budget
+                let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
+                let budget = BudgetData::<T> {
+                    id: budget_id,
+                    amount: amount,
+                    spent: 0,
+                    created_at: timestamp,
+                    updated_at: timestamp,
+                };
+                <Budgets<T>>::insert(budget_id, budget);
+            },
+            None => {},
+        }
+
+
+        // Create expenditure data
+        let expenditure_data = ExpenditureData::<T> {
+            name, 
+            expenditure_type: expenditure_type,
+            expenditure_subtype: expenditure_subtype,
+            budget_amount: budget_amount,
+            naics_code: naics_code,
+            jobs_multiplier: jobs_multiplier,
+            status: ExpenditureStatus::Pending,
+            created_at: timestamp,
+            updated_at: timestamp,
+        };
+
+
+
+
+        Self::deposit_event(Event::ExpenditureCreated(expenditure_id));
+        Ok(())
+    }
 
 
 
 
 
 
-    
+
+
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
     
@@ -734,8 +803,8 @@ impl<T: Config> Pallet<T> {
             }
         }
     }
-
-    //TODO: create a function to fill parents and children expenditures
+    //TODO: Add function to create parenrt expenditures
+    //TODO: create a function to fill children expenditures
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(

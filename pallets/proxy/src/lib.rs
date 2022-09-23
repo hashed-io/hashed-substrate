@@ -191,6 +191,8 @@ pub mod pallet {
 		UserUpdated(T::AccountId),
 		/// User removed
 		UserDeleted(T::AccountId),
+		/// Expenditure was created successfully
+		ExpenditureCreated([u8;32]),
 
 	}
 
@@ -249,6 +251,8 @@ pub mod pallet {
 		CannotAddAdminRole,
 		/// User can not have more than one role at the same time
 		UserCannotHaveMoreThanOneRole,
+		/// Cannot create parent expenditure
+		CannotCreateParentExpenditure, 
 	}
 
 	#[pallet::call]
