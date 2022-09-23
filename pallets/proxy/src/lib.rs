@@ -87,6 +87,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxExpendituresPerProject: Get<u32>;
 
+		#[pallet::constant]
+		type MaxBudgetsPerProject: Get<u32>;
+
 
 	
 		
@@ -162,9 +165,31 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn budgets)]
+	pub(super) type BudgetsInfo<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key expenditure_id
+		BudgetData,  // Value budget
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn budgets_by_project)]
+	pub(super) type BudgetsByProject<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		BoundedVec<[u8;32], T::MaxBudgetsPerProject>,  // Value budgets
+		ValueQuery,
+	>;
+	
 
 
 
+	// E X T R I N S I C S
+	// ------------------------------------------------------------------------------------------------------------
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]

@@ -481,35 +481,35 @@ impl<T: Config> Pallet<T> {
         ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
 
         //TODO: budget_amount if some, create its budget with the amount, if none, create it with zero amount
-        match budget_amount {
-            Some(amount) => {
-                //Create budget
-                let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
-                let budget = BudgetData::<T> {
-                    id: budget_id,
-                    amount: amount,
-                    spent: 0,
-                    created_at: timestamp,
-                    updated_at: timestamp,
-                };
-                <Budgets<T>>::insert(budget_id, budget);
-            },
-            None => {},
-        }
+        // match budget_amount {
+        //     Some(amount) => {
+        //         //Create budget
+        //         let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
+        //         let budget = BudgetData::<T> {
+        //             id: budget_id,
+        //             amount: amount,
+        //             spent: 0,
+        //             created_at: timestamp,
+        //             updated_at: timestamp,
+        //         };
+        //         <Budgets<T>>::insert(budget_id, budget);
+        //     },
+        //     None => {},
+        // }
 
 
         // Create expenditure data
-        let expenditure_data = ExpenditureData::<T> {
-            name, 
-            expenditure_type: expenditure_type,
-            expenditure_subtype: expenditure_subtype,
-            budget_amount: budget_amount,
-            naics_code: naics_code,
-            jobs_multiplier: jobs_multiplier,
-            status: ExpenditureStatus::Pending,
-            created_at: timestamp,
-            updated_at: timestamp,
-        };
+        // let expenditure_data = ExpenditureData::<T> {
+        //     name, 
+        //     expenditure_type: expenditure_type,
+        //     expenditure_subtype: expenditure_subtype,
+        //     budget_amount: budget_amount,
+        //     naics_code: naics_code,
+        //     jobs_multiplier: jobs_multiplier,
+        //     status: ExpenditureStatus::Pending,
+        //     created_at: timestamp,
+        //     updated_at: timestamp,
+        // };
 
 
 
