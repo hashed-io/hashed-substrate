@@ -50,6 +50,7 @@ pub struct ExpenditureData<T: Config>{
     pub childrens: BoundedVec<[u8;32], T::MaxChildrens>,
     pub num_childrens: u32,
     pub name: FieldName,
+    pub expenditure_subtype: ExpenditureSubType,
     pub expenditure_type: ExpenditureType,
     pub balance: u64,
     pub naics_code: u32,
@@ -135,11 +136,16 @@ pub enum DrawdownType{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ExpenditureType{
+pub enum ExpenditureSubType{
     HardCost, 
     SoftCost,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ExpenditureType{
+    Parent, 
+    Child,
+}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyRole{
