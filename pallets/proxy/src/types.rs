@@ -45,6 +45,7 @@ pub struct UserData<T: Config>{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct ExpenditureData<T: Config>{
+    pub project_id: [u8;32],
     pub parent_id: [u8;32],
     pub childrens: BoundedVec<[u8;32], T::MaxChildrens>,
     pub num_childrens: u32,
@@ -53,7 +54,6 @@ pub struct ExpenditureData<T: Config>{
     pub balance: u64,
     pub naics_code: u32,
     pub jobs_multiplier: u32,
-    pub account_category: u32,
 }
 
 
