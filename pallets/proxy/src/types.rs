@@ -59,6 +59,28 @@ pub struct ExpenditureData<T: Config>{
     pub budget_id: [u8;32],
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ExpenditureType{
+    Parent, 
+    Child,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ExpenditureSubType{
+    HardCost, 
+    SoftCost,
+}
+
+//TODO: review this warning due not using the T type
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct BudgetData{
+    pub expenditure_id: [u8;32],
+    pub balance: u64,
+    pub created_date: u64,
+    pub updated_date: u64,
+}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
@@ -84,16 +106,6 @@ pub struct TransactionData<T: Config>{
     pub balance: u32,
     pub documents: BoundedVec<u8, T::MaxDocuments>,
     pub accounting: BoundedVec<u8, T::MaxAccountsPerTransaction>,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct BudgetData<T: Config>{
-    pub account_id: T::AccountId,
-    pub balance: u32,
-    pub created_date: u64,
-    pub updated_date: u64,
 }
 
 
@@ -137,17 +149,6 @@ pub enum DrawdownType{
     DeveloperEquity,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ExpenditureSubType{
-    HardCost, 
-    SoftCost,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ExpenditureType{
-    Parent, 
-    Child,
-}
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyRole{
