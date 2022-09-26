@@ -218,6 +218,9 @@ pub mod pallet {
 		UserDeleted(T::AccountId),
 		/// Expenditure was created successfully
 		ExpenditureCreated([u8;32]),
+		/// A bugdet was created successfully
+		BudgetCreated([u8;32]),
+
 
 	}
 
@@ -286,7 +289,8 @@ pub mod pallet {
 		ExpenditureSubtypeDoesNotMatch,
 		/// Parent expenditure is not found
 		ParentExpenditureNotFound,
-
+		/// Maximum number of budgets per project reached
+		MaxBudgetsPerProjectReached,
 	}
 
 	#[pallet::call]

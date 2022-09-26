@@ -522,7 +522,51 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    // B U D G E T S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_create_budget(
+        admin: T::AccountId,
+        expenditure_id: [u8;32],
+        amount: u64,
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        //TODO: ensure admin & developer permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
+        //Ensure expenditure_id exists 
+        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+
+        //TODO: balance check
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create budget id
+        let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
+
+        //TOREVIEW: Check if project_id exists.
+
+        // Create budget data
+        let budget_data = BudgetData {
+            expenditure_id,
+            balance: amount,
+            created_date: timestamp,
+            updated_date: timestamp,
+        };
+
+        // Insert budget data
+        <BudgetsInfo<T>>::insert(budget_id, budget_data);
+
+        // Insert budget id into BudgetsByProject
+        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
+            budgets.try_push(budget_id).map_err(|_| Error::<T>::MaxBudgetsPerProjectReached)?;
+            Ok(())
+        })?;
+
+        //TOREVIEW: Check if this event is needed
+        Self::deposit_event(Event::BudgetCreated(budget_id));
+        Ok(())
+    }
 
 
 
