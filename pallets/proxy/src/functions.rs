@@ -1,5 +1,3 @@
-use core::f32::consts::E;
-
 use super::*;
 use frame_support::{pallet_prelude::*};
 use frame_support::traits::Time;

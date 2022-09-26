@@ -72,9 +72,7 @@ pub enum ExpenditureSubType{
 }
 
 //TODO: review this warning due not using the T type
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData{
     pub expenditure_id: [u8;32],
     pub balance: u64,
