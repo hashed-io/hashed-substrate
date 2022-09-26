@@ -56,7 +56,7 @@ pub struct ExpenditureData<T: Config>{
     pub balance: u64,
     pub naics_code: Option<u32>,
     pub jobs_multiplier: Option<u32>,
-    pub budget_id: [u8;32],
+    //pub budget_id: [u8;32],
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
