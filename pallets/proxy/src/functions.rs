@@ -452,6 +452,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_create_expenditure(
         admin: T::AccountId,
         project_id: [u8;32], 
+        parent_id: [u8;32],
         name: FieldName,
         expenditure_type: ExpenditureType,
         expenditure_subtype: ExpenditureSubType,
@@ -473,10 +474,15 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Create expenditure_id
-        let expenditure_id = (project_id, timestamp).using_encoded(blake2_256);
+        let expenditure_id = (project_id, name).using_encoded(blake2_256);
 
         // Can't add paren accounts using this method
         ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
+
+        //TODO: check budget amount if valid
+
+        // Check expenditure type & expenditure subtype match
+        Self::check_expenditure_subtype(expenditure_subtype, parent_id, project_id)?;
 
         //TODO: budget_amount if some, create its budget with the amount, if none, create it with zero amount
         // match budget_amount {
@@ -803,6 +809,26 @@ impl<T: Config> Pallet<T> {
     }
     //TODO: Add function to create parenrt expenditures
     //TODO: create a function to fill children expenditures
+
+    fn check_expenditure_subtype(
+        subtype: ExpenditureSubType,
+        parent_id: [u8;32],
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure exist a parent expenditure for this project
+        ensure!(<ExpendituresByProject<T>>::get(project_id).contains(&parent_id), Error::<T>::ParentExpenditureNotFound);
+
+        // Get expenditure data
+        let expenditure_data = ExpendituresInfo::<T>::get(parent_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+
+        // ensure that the expenditure is a parent expenditure
+        ensure!(expenditure_data.expenditure_type == ExpenditureType::Parent, Error::<T>::ExpenditureIsNotParent);
+
+        // Ensure that the expenditure subtype matches the parent expenditure subtype
+        ensure!(expenditure_data.expenditure_subtype == subtype, Error::<T>::ExpenditureSubtypeDoesNotMatch);
+        
+        Ok(())
+    } 
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(

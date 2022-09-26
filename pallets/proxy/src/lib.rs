@@ -278,6 +278,15 @@ pub mod pallet {
 		UserCannotHaveMoreThanOneRole,
 		/// Cannot create parent expenditure
 		CannotCreateParentExpenditure, 
+		/// Expenditure not found
+		ExpenditureNotFound,
+		/// Expenditure is not a parent
+		ExpenditureIsNotParent,
+		/// Expenditure does not match parent subtype
+		ExpenditureSubtypeDoesNotMatch,
+		/// Parent expenditure is not found
+		ParentExpenditureNotFound,
+
 	}
 
 	#[pallet::call]
@@ -449,6 +458,7 @@ pub mod pallet {
 		pub fn expenditures_create_expenditure(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
+			parent_id: [u8;32],
 			name: FieldName,
 			expenditure_type: ExpenditureType,
 			expenditure_subtype: ExpenditureSubType,
@@ -458,7 +468,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_expenditure(who, project_id, name, expenditure_type, expenditure_subtype, budget_amount, naics_code, jobs_multiplier)
+			Self::do_create_expenditure(who, project_id, parent_id, name, expenditure_type, expenditure_subtype, budget_amount, naics_code, jobs_multiplier)
 		}
 
 	}
