@@ -299,6 +299,8 @@ pub mod pallet {
 		MaxChildrenPerProjectReached,
 		/// Name is too long
 		NameTooLong,
+		/// There is no expenditure with such project id
+		NoExpendituresFound, 
 	}
 
 	#[pallet::call]
