@@ -134,6 +134,9 @@ impl<T: Config> Pallet<T> {
         // create scope for project_id
         T::Rbac::create_scope(Self::pallet_id(), project_id)?;
 
+        // Create parent expenditures
+        Self::create_parent_expenditures(admin.clone(), project_id)?;
+
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
 
@@ -541,9 +544,8 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //TOREVIEW: Ensure project exists, we can't check at this point because project is not created yet
+        // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
 
         // Create vec of parent names
         let parent_names = vec![
@@ -569,9 +571,6 @@ impl<T: Config> Pallet<T> {
                 jobs_multiplier: None,
             };
 
-            //Create budget for parent expenditure
-            Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-
             // Insert expenditure data into ExpendituresInfo
             // Ensure expenditure_id is unique
             ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
@@ -582,6 +581,9 @@ impl<T: Config> Pallet<T> {
                 expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
                 Ok(())
             })?;
+
+            //Create budget for parent expenditure
+            Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
         }
 
         Ok(())
@@ -599,7 +601,7 @@ impl<T: Config> Pallet<T> {
         //TODO: ensure admin & developer permissions
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure expenditure_id exists 
+        // Ensure expenditure_id exists 
         ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
 
         //TODO: balance check
