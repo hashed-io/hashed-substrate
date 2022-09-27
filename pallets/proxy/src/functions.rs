@@ -1,4 +1,5 @@
 use super::*;
+use frame_support::bounded_vec;
 use frame_support::{pallet_prelude::*};
 use frame_support::traits::Time;
 use frame_support::sp_io::hashing::blake2_256;
@@ -474,7 +475,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Create expenditure_id
-        let expenditure_id = (project_id, name).using_encoded(blake2_256);
+        let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
 
         // Can't add paren accounts using this method
         ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
@@ -484,43 +485,109 @@ impl<T: Config> Pallet<T> {
         // Check expenditure type & expenditure subtype match
         Self::check_expenditure_subtype(expenditure_subtype, parent_id, project_id)?;
 
-        //TODO: budget_amount if some, create its budget with the amount, if none, create it with zero amount
-        // match budget_amount {
-        //     Some(amount) => {
-        //         //Create budget
-        //         let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
-        //         let budget = BudgetData::<T> {
-        //             id: budget_id,
-        //             amount: amount,
-        //             spent: 0,
-        //             created_at: timestamp,
-        //             updated_at: timestamp,
-        //         };
-        //         <Budgets<T>>::insert(budget_id, budget);
-        //     },
-        //     None => {},
-        // }
-
-
         // Create expenditure data
-        // let expenditure_data = ExpenditureData::<T> {
-        //     name, 
-        //     expenditure_type: expenditure_type,
-        //     expenditure_subtype: expenditure_subtype,
-        //     budget_amount: budget_amount,
-        //     naics_code: naics_code,
-        //     jobs_multiplier: jobs_multiplier,
-        //     status: ExpenditureStatus::Pending,
-        //     created_at: timestamp,
-        //     updated_at: timestamp,
-        // };
+        let expenditure_data = ExpenditureData::<T> {
+            project_id,
+            parent_id,  
+            children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
+            num_children: 0,
+            name,
+            expenditure_type,
+            expenditure_subtype,
+            budget_amount,
+            balance: 0,
+            naics_code,
+            jobs_multiplier,
+        };
 
+        // Insert expenditure data into ExpendituresInfo
+        // Ensure expenditure_id is unique
+        ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+        <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
+        //Insert expenditure_id into ExpendituresByProject
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+            expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+            Ok(())
+        })?;
+        
+        //TODO: update childrens number in parent expenditure
+        // Increment parent expenditure num_children
+        <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError,_>(parent_id, |expenditure_data| {
+            let parent_expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
+            parent_expenditure.num_children += 1;
+            parent_expenditure.children.try_push(expenditure_id).map_err(|_| Error::<T>::MaxChildrenPerProjectReached)?;
+            Ok(())
+        })?;
 
+        // Create a budget for the expenditure
+        match budget_amount {
+            Some(amount) => {
+                Self::do_create_budget(admin, expenditure_id, amount, project_id)?;
+            },
+            None => {
+                Self::do_create_budget(admin, expenditure_id, 0, project_id)?;
+            },
+        }
 
         Self::deposit_event(Event::ExpenditureCreated(expenditure_id));
         Ok(())
     }
+
+    /// Create parent expenditures
+    fn create_parent_expenditures(
+        admin: T::AccountId,
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //TOREVIEW: Ensure project exists, we can't check at this point because project is not created yet
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+
+        // Create vec of parent names
+        let parent_names = vec![
+            ("Hard Cost".as_bytes().to_vec(), ExpenditureSubType::HardCost),
+            ("Soft Cost".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
+        ];
+
+        // Create parent expenditures
+        for name in parent_names {
+            // Generate parent expenditure id
+            let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
+            let expenditure_data = ExpenditureData::<T> {
+                project_id,
+                parent_id: expenditure_id,  
+                children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
+                num_children: 0,
+                name: FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
+                expenditure_type: ExpenditureType::Parent,
+                expenditure_subtype: name.1,
+                budget_amount: None,
+                balance: 0,
+                naics_code: None,
+                jobs_multiplier: None,
+            };
+
+            //Create budget for parent expenditure
+            Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
+
+            // Insert expenditure data into ExpendituresInfo
+            // Ensure expenditure_id is unique
+            ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+            <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
+
+            //Insert expenditure_id into ExpendituresByProject
+            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+                Ok(())
+            })?;
+        }
+
+        Ok(())
+    }
+
 
     // B U D G E T S
     // --------------------------------------------------------------------------------------------

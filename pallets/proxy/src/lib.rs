@@ -291,6 +291,14 @@ pub mod pallet {
 		ParentExpenditureNotFound,
 		/// Maximum number of budgets per project reached
 		MaxBudgetsPerProjectReached,
+		/// Expenditure already exist
+		ExpenditureAlreadyExists,
+		/// Max number of expenditures per project reached
+		MaxExpendituresPerProjectReached,
+		/// Max number od children per project reached, 
+		MaxChildrenPerProjectReached,
+		/// Name is too long
+		NameTooLong,
 	}
 
 	#[pallet::call]
