@@ -4,7 +4,7 @@ use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
 //TODO: Fix types when using an Option, i.e: Option<CID>
-pub type FieldName = BoundedVec<u8,ConstU32<100>>;
+pub type FieldName = BoundedVec<u8, ConstU32<100>>;
 pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
 pub type CID = BoundedVec<u8,ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
@@ -47,8 +47,8 @@ pub struct UserData<T: Config>{
 pub struct ExpenditureData<T: Config>{
     pub project_id: [u8;32],
     pub parent_id: [u8;32],
-    pub childrens: BoundedVec<[u8;32], T::MaxChildrens>,
-    pub num_childrens: u32,
+    pub children: BoundedVec<[u8;32], T::MaxChildrens>,
+    pub num_children: u32,
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
     pub expenditure_subtype: ExpenditureSubType,
