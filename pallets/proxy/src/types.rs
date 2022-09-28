@@ -64,13 +64,6 @@ pub enum ExpenditureType{
 }
 
 
-//TODO: Update this enum
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ExpenditureSubType{
-    HardCost, 
-    SoftCost,
-}
-
 //TODO: review this warning due not using the T type
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData{
