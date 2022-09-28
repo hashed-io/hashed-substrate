@@ -59,8 +59,10 @@ pub struct ExpenditureData<T: Config>{
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ExpenditureType{
-    Parent, 
-    Child,
+    HardCost, 
+    SoftCost,
+    Operational, 
+    Others,
 }
 
 
