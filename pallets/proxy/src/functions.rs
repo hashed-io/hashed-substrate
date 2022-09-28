@@ -508,7 +508,7 @@ impl<T: Config> Pallet<T> {
             name,
             expenditure_type,
             expenditure_subtype,
-            budget_amount,
+            //budget_amount,
             balance: 0,
             naics_code,
             jobs_multiplier,
@@ -577,7 +577,7 @@ impl<T: Config> Pallet<T> {
                 name: FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
                 expenditure_type: ExpenditureType::Parent,
                 expenditure_subtype: name.1,
-                budget_amount: None,
+                //budget_amount: None,
                 balance: 0,
                 naics_code: None,
                 jobs_multiplier: None,
@@ -760,8 +760,8 @@ impl<T: Config> Pallet<T> {
             if let Some(budget_amount) = budget_amount {
                 //get budget id
                 let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-                // // Edit budget amount
-                // Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
+                // Edit budget amount
+                Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
                 // expenditure.budget_amount = budget_amount;
             }
             if let Some(naics_code) = naics_code {
@@ -857,6 +857,17 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn do_edit_budget(
+        admin: T::AccountId,
+        budget_id: [u8;32],
+        amount: u64,
+    ) -> DispatchResult {
+        //Ensure budget exists
+        ensure!(<BudgetsInfo<T>>::contains_key(budget_id), Error::<T>::BudgetNotFound);
+
+
+        Ok(())
+    }
 
 
 

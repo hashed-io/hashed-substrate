@@ -52,7 +52,7 @@ pub struct ExpenditureData<T: Config>{
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
     pub expenditure_subtype: ExpenditureSubType,
-    pub budget_amount: Option<u64>,
+    //pub budget_amount: Option<u64>,
     pub balance: u64,
     pub naics_code: Option<u32>,
     pub jobs_multiplier: Option<u32>,
