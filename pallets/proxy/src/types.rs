@@ -47,9 +47,6 @@ pub struct UserData<T: Config>{
 #[codec(mel_bound())]
 pub struct ExpenditureData<T: Config>{
     pub project_id: [u8;32],
-    pub parent_id: [u8;32],
-    pub children: BoundedVec<[u8;32], T::MaxChildrens>,
-    pub num_children: u32,
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
     pub balance: u64,
