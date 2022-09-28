@@ -26,6 +26,7 @@ pub struct ProjectData<T: Config>{
     pub status: ProjectStatus,
     pub creation_date: u64,
     pub completition_date: u64,
+    //TODO: project type
     pub updated_date: u64,
 }
 
@@ -52,19 +53,21 @@ pub struct ExpenditureData<T: Config>{
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
     pub expenditure_subtype: ExpenditureSubType,
-    //pub budget_amount: Option<u64>,
     pub balance: u64,
     pub naics_code: Option<u32>,
     pub jobs_multiplier: Option<u32>,
-    //pub budget_id: [u8;32],
 }
 
+
+//TODO: REMremove this emnum
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ExpenditureType{
     Parent, 
     Child,
 }
 
+
+//TODO: Update this enum
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ExpenditureSubType{
     HardCost, 

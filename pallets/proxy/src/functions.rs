@@ -134,6 +134,8 @@ impl<T: Config> Pallet<T> {
         // create scope for project_id
         T::Rbac::create_scope(Self::pallet_id(), project_id)?;
 
+
+        //TODO:match project type, call default types
         // Create parent expenditures
         Self::create_parent_expenditures(admin.clone(), project_id)?;
 
@@ -600,7 +602,7 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
-
+    //TODO: CREATE A FUNCTION FOR EACH PROJECT TYPE IN ORDER TO GENERATE DEFAULT EXPENDITURES
     /// Create child accounts
     fn create_child_expenditures(
         admin: T::AccountId,
@@ -726,8 +728,7 @@ impl<T: Config> Pallet<T> {
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
-        //Ensure admin permissions
-        //TODO: add developer permissions
+        //Ensure admin permissions, TODO: add developer permissions
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //Ensure project exists & get project data
@@ -760,6 +761,7 @@ impl<T: Config> Pallet<T> {
             if let Some(budget_amount) = budget_amount {
                 //get budget id
                 let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
+                //TODO:finish edit expenditure budget amount
                 // Edit budget amount
                 Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
                 // expenditure.budget_amount = budget_amount;
@@ -857,6 +859,8 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+
+    //TODO: finish edit budget
     fn do_edit_budget(
         admin: T::AccountId,
         budget_id: [u8;32],
@@ -868,8 +872,6 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
-
-
 
 
 
