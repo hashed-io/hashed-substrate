@@ -52,14 +52,11 @@ pub struct ExpenditureData<T: Config>{
     pub num_children: u32,
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
-    pub expenditure_subtype: ExpenditureSubType,
     pub balance: u64,
     pub naics_code: Option<u32>,
     pub jobs_multiplier: Option<u32>,
 }
 
-
-//TODO: REMremove this emnum
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ExpenditureType{
     Parent, 
