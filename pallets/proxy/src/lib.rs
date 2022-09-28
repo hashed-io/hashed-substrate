@@ -220,6 +220,8 @@ pub mod pallet {
 		ExpenditureCreated([u8;32]),
 		/// A bugdet was created successfully
 		BudgetCreated([u8;32]),
+		/// Expenditure was edited successfully
+		ExpenditureEdited([u8;32]),
 
 
 	}
@@ -297,10 +299,22 @@ pub mod pallet {
 		MaxExpendituresPerProjectReached,
 		/// Max number od children per project reached, 
 		MaxChildrenPerProjectReached,
-		/// Name is too long
+		/// Name for expenditure is too long
 		NameTooLong,
 		/// There is no expenditure with such project id
 		NoExpendituresFound, 
+		/// Field name can not be empty
+		FieldNameCannotBeEmpty,
+		/// Expenditure does not belong to the project
+		ExpenditureDoesNotBelongToProject,
+		/// User can not edit parent expenditure
+		CannotEditParentExpenditure,
+		/// There is no budgets for the project
+		ThereIsNoBudgetsForTheProject,
+		/// Budget id is not found
+		BudgetNotFound,
+
+
 	}
 
 	#[pallet::call]
@@ -330,8 +344,6 @@ pub mod pallet {
 			Self::do_sudo_remove_administrator(admin)?;
 			Ok(())
 		}
-
-
 
 
 		// U S E R S
@@ -377,6 +389,7 @@ pub mod pallet {
 			Self::do_delete_user(who, user)
 		}
 		
+
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
@@ -448,6 +461,7 @@ pub mod pallet {
 			Self::do_unassign_user(who, user, project_id, role)
 		}
 
+
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
@@ -467,6 +481,30 @@ pub mod pallet {
 
 			Self::do_create_expenditure(who, project_id, parent_id, name, expenditure_type, expenditure_subtype, budget_amount, naics_code, jobs_multiplier)
 		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn expenditures_edit_expenditure(
+			origin: OriginFor<T>, 
+			project_id: [u8;32], 
+			expenditure_id: [u8;32],
+			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+			budget_amount: Option<u64>,
+			naics_code: Option<u32>,
+			jobs_multiplier: Option<u32>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_edit_expenditure(who, project_id, expenditure_id, name, budget_amount, naics_code, jobs_multiplier)
+		}
+
+
+
+
+
+
+
+
 
 	}
 }

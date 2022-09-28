@@ -198,6 +198,8 @@ impl<T: Config> Pallet<T> {
                 ensure!(completition_date > current_timestamp, Error::<T>::CompletitionDateMustBeLater);
                 project.completition_date = completition_date;
             }
+            //TOREVIEW: Check if this is working
+            project.updated_date = current_timestamp;
 
             Ok(())    
         })?;
@@ -483,6 +485,9 @@ impl<T: Config> Pallet<T> {
         //Get timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
+        //TOREVIEW: ensure field name is not empty
+        ensure!(name.len() > 0, Error::<T>::FieldNameCannotBeEmpty);
+
         //Create expenditure_id
         let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
 
@@ -638,9 +643,7 @@ impl<T: Config> Pallet<T> {
         // Get parent expenditures id's (soft cost & hard cost)
         let (soft_cost_parent, hard_cost_parent): ([u8;32], [u8;32]) = Self::get_parent_expenditures(project_id)?;
 
-
         // Create child expenditures
-
         // Soft Cost
         for name in child_names_soft_cost {
             Self::do_create_expenditure(
@@ -713,6 +716,99 @@ impl<T: Config> Pallet<T> {
         Ok(parent_expenditures_id)
 
     }
+
+    pub fn do_edit_expenditure(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        expenditure_id: [u8;32],
+        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+        budget_amount: Option<u64>,
+        naics_code: Option<u32>,
+        jobs_multiplier: Option<u32>,
+    ) -> DispatchResult {
+        //Ensure admin permissions
+        //TODO: add developer permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Ensure project is not completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        // Ensure expenditure_id exists 
+        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+
+        // Mutate expenditure data
+        <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError, _>(expenditure_id, |expenditure_data| {
+            let expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
+
+            // Ensure expenditure belongs to project
+            ensure!(expenditure.project_id == project_id, Error::<T>::ExpenditureDoesNotBelongToProject);
+
+            // Ensure can not edit parent expenditure
+            ensure!(expenditure.expenditure_type != ExpenditureType::Parent, Error::<T>::CannotEditParentExpenditure);
+
+            //TODO: ensure name is unique
+
+            if let  Some(name) = name {
+                let mod_name = name.into_inner();
+                // Ensure name is not empty
+                ensure!(mod_name[0].len() > 0, Error::<T>::FieldNameCannotBeEmpty);
+                expenditure.name = mod_name[0].clone();
+            }
+            if let Some(budget_amount) = budget_amount {
+                //get budget id
+                let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
+                // // Edit budget amount
+                // Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
+                // expenditure.budget_amount = budget_amount;
+            }
+            if let Some(naics_code) = naics_code {
+                expenditure.naics_code = Some(naics_code);
+            }
+            if let Some(jobs_multiplier) = jobs_multiplier {
+                expenditure.jobs_multiplier = Some(jobs_multiplier);
+            }
+
+            Ok(())
+        })?;
+
+
+        Self::deposit_event(Event::ExpenditureEdited(expenditure_id));
+        Ok(())
+    }
+
+    fn get_budget_id(
+        project_id: [u8;32],
+        expenditure_id: [u8;32],
+    ) -> Result<[u8;32], DispatchError> {
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get budgets by project (Id's)
+        let budget_ids = Self::budgets_by_project(project_id).into_inner();
+
+        // Check if the project has any budgets
+        if budget_ids.len() == 0 {
+            return Err(Error::<T>::ThereIsNoBudgetsForTheProject.into());
+        }
+
+        // Get budget id
+        let budget_id: [u8;32] = budget_ids.iter().try_fold::<_,_,Result<[u8;32], DispatchError>>([0;32], |mut accumulator, &budget_id| {
+            // Get individual budget data
+            let budget_data = BudgetsInfo::<T>::get(budget_id).ok_or(Error::<T>::BudgetNotFound)?;
+
+            // Check if budget belongs to expenditure
+            if budget_data.expenditure_id == expenditure_id {
+                accumulator = budget_id;
+            }
+            Ok(accumulator)
+        })?;
+
+        Ok(budget_id)
+    }
+
 
 
     // B U D G E T S
@@ -1052,6 +1148,9 @@ impl<T: Config> Pallet<T> {
         parent_id: [u8;32],
         project_id: [u8;32],
     ) -> DispatchResult {
+        // Ensure parent expenditure exists
+        ensure!(ExpendituresInfo::<T>::contains_key(parent_id), Error::<T>::ParentExpenditureNotFound);
+
         // Ensure exist a parent expenditure for this project
         ensure!(<ExpendituresByProject<T>>::get(project_id).contains(&parent_id), Error::<T>::ParentExpenditureNotFound);
 
