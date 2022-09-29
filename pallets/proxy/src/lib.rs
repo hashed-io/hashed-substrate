@@ -52,9 +52,6 @@ pub mod pallet {
 		type ProjectDescMaxLen: Get<u32>;
 
 		#[pallet::constant]
-		type MaxChildrens: Get<u32>;
-
-		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
 
 		#[pallet::constant]

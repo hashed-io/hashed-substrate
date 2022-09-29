@@ -61,7 +61,6 @@ impl system::Config for Test {
 parameter_types! {
 	pub const ProjectNameMaxLen:u32 = 32;
 	pub const ProjectDescMaxLen:u32 = 256;
-	pub const MaxChildrens:u32 = 1000;
 	pub const MaxDocuments:u32 = 5;
 	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
@@ -85,7 +84,6 @@ impl pallet_proxy::Config for Test {
 	type MaxDocuments = MaxDocuments;
 	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
-	type MaxChildrens = MaxChildrens;
 	type CIDMaxLen = CIDMaxLen;
 	type MaxUserPerProject = MaxUserPerProject;
 	type MaxDevelopersPerProject = MaxDevelopersPerProject;
