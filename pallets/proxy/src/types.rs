@@ -42,10 +42,8 @@ pub struct UserData<T: Config>{
     pub documents: Option<Documents<T>>,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct ExpenditureData<T: Config>{
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct ExpenditureData {
     pub project_id: [u8;32],
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
