@@ -161,12 +161,6 @@ impl<T: Config> Pallet<T> {
             },
         }
 
-        // Create parent expenditures
-        //Self::create_parent_expenditures(admin.clone(), project_id)?;
-
-        // Create child expenditures
-        //Self::create_child_expenditures(admin.clone(), project_id)?;
-
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
 
