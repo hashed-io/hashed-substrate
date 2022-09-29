@@ -24,9 +24,9 @@ pub struct ProjectData<T: Config>{
     pub image: CID,
     pub adress: FieldName, 
     pub status: ProjectStatus,
+    pub project_type: ProjectType,
     pub creation_date: u64,
     pub completition_date: u64,
-    //TODO: project type
     pub updated_date: u64,
 }
 
@@ -61,6 +61,16 @@ pub enum ExpenditureType{
     Operational, 
     Others,
 }
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProjectType{
+    Construction, 
+    ConstructionOperation,
+    ConstructionBridge, 
+    Operation,
+}
+
+
 
 
 //TODO: review this warning due not using the T type
