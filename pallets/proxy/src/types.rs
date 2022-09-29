@@ -60,6 +60,12 @@ pub enum ExpenditureType{
     Others,
 }
 
+impl Default for ExpenditureType{
+    fn default() -> Self {
+        ExpenditureType::HardCost
+    }
+}
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProjectType{
     Construction, 
