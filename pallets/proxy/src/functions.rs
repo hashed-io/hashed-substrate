@@ -95,6 +95,7 @@ impl<T: Config> Pallet<T> {
         description: FieldDescription,
         image: CID,
         adress: FieldName,
+        project_type: ProjectType,
         completition_date: u64,
         ) -> DispatchResult {
         //ensure admin permissions 
@@ -121,26 +122,26 @@ impl<T: Config> Pallet<T> {
             image,
             adress,
             status: ProjectStatus::default(), 
+            project_type,
             creation_date: timestamp,
             completition_date,
             updated_date: timestamp,
         };
+
+        // create scope for project_id
+        T::Rbac::create_scope(Self::pallet_id(), project_id)?;
 
         //Insert project data
         // ensure that the project_id is not already in use
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
-        // create scope for project_id
-        T::Rbac::create_scope(Self::pallet_id(), project_id)?;
-
-
         //TODO:match project type, call default types
         // Create parent expenditures
-        Self::create_parent_expenditures(admin.clone(), project_id)?;
+        //Self::create_parent_expenditures(admin.clone(), project_id)?;
 
         // Create child expenditures
-        Self::create_child_expenditures(admin.clone(), project_id)?;
+        //Self::create_child_expenditures(admin.clone(), project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -466,10 +467,8 @@ impl<T: Config> Pallet<T> {
     pub fn do_create_expenditure(
         admin: T::AccountId,
         project_id: [u8;32], 
-        parent_id: [u8;32],
         name: FieldName,
         expenditure_type: ExpenditureType,
-        expenditure_subtype: ExpenditureSubType,
         budget_amount: Option<u64>,
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
@@ -494,23 +493,18 @@ impl<T: Config> Pallet<T> {
         let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
 
         // Can't add paren accounts using this method
-        ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
+        //ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
 
         //TODO: check budget amount if valid
 
         // Check expenditure type & expenditure subtype match
-        Self::check_expenditure_subtype(expenditure_subtype, parent_id, project_id)?;
+        //Self::check_expenditure_subtype(expenditure_subtype, parent_id, project_id)?;
 
         // Create expenditure data
-        let expenditure_data = ExpenditureData::<T> {
-            project_id,
-            parent_id,  
-            children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
-            num_children: 0,
+        let expenditure_data = ExpenditureData {
             name,
+            project_id,
             expenditure_type,
-            expenditure_subtype,
-            //budget_amount,
             balance: 0,
             naics_code,
             jobs_multiplier,
@@ -527,14 +521,14 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
         
-        //TODO: update childrens number in parent expenditure
-        // Increment parent expenditure num_children
-        <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError,_>(parent_id, |expenditure_data| {
-            let parent_expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
-            parent_expenditure.num_children += 1;
-            parent_expenditure.children.try_push(expenditure_id).map_err(|_| Error::<T>::MaxChildrenPerProjectReached)?;
-            Ok(())
-        })?;
+        // //TODO: update childrens number in parent expenditure
+        // // Increment parent expenditure num_children
+        // <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError,_>(parent_id, |expenditure_data| {
+        //     let parent_expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
+        //     parent_expenditure.num_children += 1;
+        //     parent_expenditure.children.try_push(expenditure_id).map_err(|_| Error::<T>::MaxChildrenPerProjectReached)?;
+        //     Ok(())
+        // })?;
 
         // Create a budget for the expenditure
         match budget_amount {
@@ -551,60 +545,60 @@ impl<T: Config> Pallet<T> {
     }
 
     /// Create parent expenditures
-    fn create_parent_expenditures(
-        admin: T::AccountId,
-        project_id: [u8;32],
-    ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+    // fn create_parent_expenditures(
+    //     admin: T::AccountId,
+    //     project_id: [u8;32],
+    // ) -> DispatchResult {
+    //     //ensure admin permissions 
+    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Create vec of parent names
-        let parent_names = vec![
-            ("Hard Cost".as_bytes().to_vec(), ExpenditureSubType::HardCost),
-            ("Soft Cost".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-        ];
+    //     // Create vec of parent names
+    //     let parent_names = vec![
+    //         ("Hard Cost".as_bytes().to_vec(), ExpenditureSubType::HardCost),
+    //         ("Soft Cost".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
+    //     ];
 
-        // Create parent expenditures
-        for name in parent_names {
-            // Generate parent expenditure id
-            let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
-            let expenditure_data = ExpenditureData::<T> {
-                project_id,
-                parent_id: expenditure_id,  
-                children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
-                num_children: 0,
-                name: FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
-                expenditure_type: ExpenditureType::Parent,
-                expenditure_subtype: name.1,
-                //budget_amount: None,
-                balance: 0,
-                naics_code: None,
-                jobs_multiplier: None,
-            };
+    //     // Create parent expenditures
+    //     for name in parent_names {
+    //         // Generate parent expenditure id
+    //         let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
+    //         let expenditure_data = ExpenditureData::<T> {
+    //             project_id,
+    //             parent_id: expenditure_id,  
+    //             children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
+    //             num_children: 0,
+    //             name: FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
+    //             expenditure_type: ExpenditureType::Parent,
+    //             expenditure_subtype: name.1,
+    //             //budget_amount: None,
+    //             balance: 0,
+    //             naics_code: None,
+    //             jobs_multiplier: None,
+    //         };
 
-            // Insert expenditure data into ExpendituresInfo
-            // Ensure expenditure_id is unique
-            ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
-            <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
+    //         // Insert expenditure data into ExpendituresInfo
+    //         // Ensure expenditure_id is unique
+    //         ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+    //         <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-            //Insert expenditure_id into ExpendituresByProject
-            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-                Ok(())
-            })?;
+    //         //Insert expenditure_id into ExpendituresByProject
+    //         <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+    //             expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+    //             Ok(())
+    //         })?;
 
-            //Create budget for parent expenditure
-            Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-        }
+    //         //Create budget for parent expenditure
+    //         Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
+    //     }
 
-        Ok(())
-    }
-    //TODO: CREATE A FUNCTION FOR EACH PROJECT TYPE IN ORDER TO GENERATE DEFAULT EXPENDITURES
-    /// Create child accounts
-    fn create_child_expenditures(
+    //     Ok(())
+    // }
+
+    /// Generate Hard Cost 
+    fn do_generate_hard_cost_defaults(
         admin: T::AccountId,
         project_id: [u8;32],
     ) -> DispatchResult{
@@ -614,62 +608,19 @@ impl<T: Config> Pallet<T> {
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Create vec of child names (soft cost & hard cost)
-        let child_names_soft_cost = vec![
-            ("Architect & Design".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Building Permits & Impact Fees".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Developer Reimbursable".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Builder Risk Insurance".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Environment / Soils / Survey".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Testing & Inspections".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Legal & Professional".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Real Estate Taxes & Owner's Liability Insurance".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Pre - Development Fee".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Equity Management Fee".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Bank Origination Fee".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Lender Debt Placement Fee".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Title, Appraisal, Feasibility, Plan Review & Closing".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Interest Carry during Construction".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Ops Stabilization & Interest Carry Reserve".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Sales & Marketing".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Pre - Opening Expenses".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-            ("Contingency".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
+        let hard_cost_expenditures = vec![
+            "Construction".as_bytes().to_vec(),
+            "Furniture, Fixtures & Allowance".as_bytes().to_vec(),
+            "Hard Cost contingency & Allowance".as_bytes().to_vec(),
         ];
 
-        let child_names_hard_cost = vec![
-            ("Construction".as_bytes().to_vec(), ExpenditureSubType::HardCost),
-            ("Furniture, Fixtures & Allowance".as_bytes().to_vec(), ExpenditureSubType::HardCost),
-            ("Hard Cost contingency & Allowance".as_bytes().to_vec(), ExpenditureSubType::HardCost),
-        ];
-
-        // Get parent expenditures id's (soft cost & hard cost)
-        let (soft_cost_parent, hard_cost_parent): ([u8;32], [u8;32]) = Self::get_parent_expenditures(project_id)?;
-
-        // Create child expenditures
-        // Soft Cost
-        for name in child_names_soft_cost {
+        //Create default expenditures
+        for name in hard_cost_expenditures {
             Self::do_create_expenditure(
                 admin.clone(), 
                 project_id, 
-                soft_cost_parent, 
-                FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::Child,
-                name.1,
-                None,
-                None,
-                None,
-            )?;
-        }
-
-        // Hard Cost
-        for name in child_names_hard_cost {
-            Self::do_create_expenditure(
-                admin.clone(), 
-                project_id, 
-                hard_cost_parent, 
-                FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::Child,
-                name.1,
+                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+                ExpenditureType::HardCost,
                 None,
                 None,
                 None,
@@ -679,45 +630,158 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    /// Returns parent expenditures id's (soft cost & hard cost).
-    /// 
-    /// The first element of the tuple is the soft cost parent expenditure id.
-    /// 
-    /// The second element of the tuple is the hard cost parent expenditure id.
-    pub fn get_parent_expenditures(
+    fn do_generate_soft_cost_defaults(
+        admin: T::AccountId,
         project_id: [u8;32],
-    ) -> Result<([u8;32], [u8;32]), DispatchError> {
+    ) -> DispatchResult{
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        
+        let soft_cost_expenditures = vec![
+            "Architect & Design".as_bytes().to_vec(),
+            "Building Permits & Impact Fees".as_bytes().to_vec(),
+            "Developer Reimbursable".as_bytes().to_vec(),
+            "Builder Risk Insurance".as_bytes().to_vec(),
+            "Environment / Soils / Survey".as_bytes().to_vec(),
+            "Testing & Inspections".as_bytes().to_vec(),
+            "Legal & Professional".as_bytes().to_vec(),
+            "Real Estate Taxes & Owner's Liability Insurance".as_bytes().to_vec(),
+            "Pre - Development Fee".as_bytes().to_vec(),
+            "Equity Management Fee".as_bytes().to_vec(),
+            "Bank Origination Fee".as_bytes().to_vec(),
+            "Lender Debt Placement Fee".as_bytes().to_vec(),
+            "Title, Appraisal, Feasibility, Plan Review & Closing".as_bytes().to_vec(),
+            "Interest Carry during Construction".as_bytes().to_vec(),
+            "Ops Stabilization & Interest Carry Reserve".as_bytes().to_vec(),
+            "Sales & Marketing".as_bytes().to_vec(),
+            "Pre - Opening Expenses".as_bytes().to_vec(),
+            "Contingency".as_bytes().to_vec(),
+        ];
+
+        //Create default expenditures
+        for name in soft_cost_expenditures {
+            Self::do_create_expenditure(
+                admin.clone(), 
+                project_id, 
+                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+                ExpenditureType::SoftCost,
+                None,
+                None,
+                None,
+            )?;
+        }
+
+        Ok(())
+    }
+
+
+    fn do_generate_operational_defaults(
+        admin: T::AccountId,
+        project_id: [u8;32],
+    ) -> DispatchResult{
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Get expenditures by project (Id's)
-        let expenditures = Self::expenditures_by_project(project_id).into_inner();
+        let operational_expenditures = vec![
+            "Operational default 1".as_bytes().to_vec(),
+            "Operational default 2".as_bytes().to_vec(),
+            "Operational default 3".as_bytes().to_vec(),
+        ];
 
-        // Check if the project has any expenditures
-        if expenditures.len() == 0 {
-            return Err(Error::<T>::NoExpendituresFound.into());
+        //Create default expenditures
+        for name in operational_expenditures {
+            Self::do_create_expenditure(
+                admin.clone(), 
+                project_id, 
+                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+                ExpenditureType::Operational,
+                None,
+                None,
+                None,
+            )?;
         }
 
-        // Get parent expenditures id's (soft cost & hard cost)
-        let parent_expenditures_id: ([u8;32], [u8;32]) = expenditures.iter().try_fold::<_,_,Result<([u8;32], [u8;32]), DispatchError>>(([0;32], [0;32]), |mut accumulator, &expenditure_id| {
-            // Get individual expenditure data
-            let expenditure_data = ExpendituresInfo::<T>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
-
-            // Check if expenditure is a parent expenditure
-            if expenditure_data.expenditure_type == ExpenditureType::Parent {
-                // Check if expenditure is a soft cost or hard cost
-                if expenditure_data.expenditure_subtype == ExpenditureSubType::SoftCost {
-                    accumulator.0 = expenditure_id;
-                } else if expenditure_data.expenditure_subtype == ExpenditureSubType::HardCost {
-                    accumulator.1 = expenditure_id;
-                }
-            }
-            Ok(accumulator)
-        })?;
-
-        Ok(parent_expenditures_id)
-
+        Ok(())
     }
+
+
+    fn do_generate_others_defaults(
+        admin: T::AccountId,
+        project_id: [u8;32],
+    ) -> DispatchResult{
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        let hard_cost_expenditures = vec![
+            "Construction".as_bytes().to_vec(),
+            "Furniture, Fixtures & Allowance".as_bytes().to_vec(),
+            "Hard Cost contingency & Allowance".as_bytes().to_vec(),
+        ];
+
+        //Create default expenditures
+        for name in hard_cost_expenditures {
+            Self::do_create_expenditure(
+                admin.clone(), 
+                project_id, 
+                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+                ExpenditureType::Others,
+                None,
+                None,
+                None,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    // /// Returns parent expenditures id's (soft cost & hard cost).
+    // /// 
+    // /// The first element of the tuple is the soft cost parent expenditure id.
+    // /// 
+    // /// The second element of the tuple is the hard cost parent expenditure id.
+    // pub fn get_parent_expenditures(
+    //     project_id: [u8;32],
+    // ) -> Result<([u8;32], [u8;32]), DispatchError> {
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+    //     // Get expenditures by project (Id's)
+    //     let expenditures = Self::expenditures_by_project(project_id).into_inner();
+
+    //     // Check if the project has any expenditures
+    //     if expenditures.len() == 0 {
+    //         return Err(Error::<T>::NoExpendituresFound.into());
+    //     }
+
+    //     // Get parent expenditures id's (soft cost & hard cost)
+    //     let parent_expenditures_id: ([u8;32], [u8;32]) = expenditures.iter().try_fold::<_,_,Result<([u8;32], [u8;32]), DispatchError>>(([0;32], [0;32]), |mut accumulator, &expenditure_id| {
+    //         // Get individual expenditure data
+    //         let expenditure_data = ExpendituresInfo::<T>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+
+    //         // Check if expenditure is a parent expenditure
+    //         if expenditure_data.expenditure_type == ExpenditureType::Parent {
+    //             // Check if expenditure is a soft cost or hard cost
+    //             if expenditure_data.expenditure_subtype == ExpenditureSubType::SoftCost {
+    //                 accumulator.0 = expenditure_id;
+    //             } else if expenditure_data.expenditure_subtype == ExpenditureSubType::HardCost {
+    //                 accumulator.1 = expenditure_id;
+    //             }
+    //         }
+    //         Ok(accumulator)
+    //     })?;
+
+    //     Ok(parent_expenditures_id)
+
+    // }
 
     pub fn do_edit_expenditure(
         admin: T::AccountId,
@@ -747,8 +811,8 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure belongs to project
             ensure!(expenditure.project_id == project_id, Error::<T>::ExpenditureDoesNotBelongToProject);
 
-            // Ensure can not edit parent expenditure
-            ensure!(expenditure.expenditure_type != ExpenditureType::Parent, Error::<T>::CannotEditParentExpenditure);
+            // // Ensure can not edit parent expenditure
+            // ensure!(expenditure.expenditure_type != ExpenditureType::Parent, Error::<T>::CannotEditParentExpenditure);
 
             //TODO: ensure name is unique
 
@@ -1156,28 +1220,28 @@ impl<T: Config> Pallet<T> {
     //TODO: Add function to create parenrt expenditures
     //TODO: create a function to fill children expenditures
 
-    fn check_expenditure_subtype(
-        subtype: ExpenditureSubType,
-        parent_id: [u8;32],
-        project_id: [u8;32],
-    ) -> DispatchResult {
-        // Ensure parent expenditure exists
-        ensure!(ExpendituresInfo::<T>::contains_key(parent_id), Error::<T>::ParentExpenditureNotFound);
+    // fn check_expenditure_subtype(
+    //     subtype: ExpenditureSubType,
+    //     parent_id: [u8;32],
+    //     project_id: [u8;32],
+    // ) -> DispatchResult {
+    //     // Ensure parent expenditure exists
+    //     ensure!(ExpendituresInfo::<T>::contains_key(parent_id), Error::<T>::ParentExpenditureNotFound);
 
-        // Ensure exist a parent expenditure for this project
-        ensure!(<ExpendituresByProject<T>>::get(project_id).contains(&parent_id), Error::<T>::ParentExpenditureNotFound);
+    //     // Ensure exist a parent expenditure for this project
+    //     ensure!(<ExpendituresByProject<T>>::get(project_id).contains(&parent_id), Error::<T>::ParentExpenditureNotFound);
 
-        // Get expenditure data
-        let expenditure_data = ExpendituresInfo::<T>::get(parent_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+    //     // Get expenditure data
+    //     let expenditure_data = ExpendituresInfo::<T>::get(parent_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
-        // ensure that the expenditure is a parent expenditure
-        ensure!(expenditure_data.expenditure_type == ExpenditureType::Parent, Error::<T>::ExpenditureIsNotParent);
+    //     // ensure that the expenditure is a parent expenditure
+    //     ensure!(expenditure_data.expenditure_type == ExpenditureType::Parent, Error::<T>::ExpenditureIsNotParent);
 
-        // Ensure that the expenditure subtype matches the parent expenditure subtype
-        ensure!(expenditure_data.expenditure_subtype == subtype, Error::<T>::ExpenditureSubtypeDoesNotMatch);
+    //     // Ensure that the expenditure subtype matches the parent expenditure subtype
+    //     ensure!(expenditure_data.expenditure_subtype == subtype, Error::<T>::ExpenditureSubtypeDoesNotMatch);
         
-        Ok(())
-    } 
+    //     Ok(())
+    // } 
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
