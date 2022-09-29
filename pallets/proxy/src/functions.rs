@@ -136,7 +136,31 @@ impl<T: Config> Pallet<T> {
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
-        //TODO:match project type, call default types
+        // Match project type, call default expednitures
+        match project_type {
+            ProjectType::Construction => {
+                //Generate its related expenditures
+                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+            },
+            ProjectType::ConstructionOperation => {
+                //Generate its related expenditures
+                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+                Self::do_generate_operational_defaults(admin.clone(), project_id)?;
+            },
+            ProjectType::ConstructionBridge => {
+                //Generate its related expenditures
+                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+                Self::do_generate_others_defaults(admin.clone(), project_id)?;
+            },
+            ProjectType::Operation => {
+                //Generate its related expenditures
+                Self::do_generate_operational_defaults(admin.clone(), project_id)?;
+            },
+        }
+
         // Create parent expenditures
         //Self::create_parent_expenditures(admin.clone(), project_id)?;
 
@@ -722,9 +746,9 @@ impl<T: Config> Pallet<T> {
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         let hard_cost_expenditures = vec![
-            "Construction".as_bytes().to_vec(),
-            "Furniture, Fixtures & Allowance".as_bytes().to_vec(),
-            "Hard Cost contingency & Allowance".as_bytes().to_vec(),
+            "Others default 1".as_bytes().to_vec(),
+            "Others default 2".as_bytes().to_vec(),
+            "Others default 3".as_bytes().to_vec(),
         ];
 
         //Create default expenditures
