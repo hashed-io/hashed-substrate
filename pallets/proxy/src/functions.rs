@@ -537,60 +537,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    /// Create parent expenditures
-    // fn create_parent_expenditures(
-    //     admin: T::AccountId,
-    //     project_id: [u8;32],
-    // ) -> DispatchResult {
-    //     //ensure admin permissions 
-    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-    //     // Ensure project exists
-    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-    //     // Create vec of parent names
-    //     let parent_names = vec![
-    //         ("Hard Cost".as_bytes().to_vec(), ExpenditureSubType::HardCost),
-    //         ("Soft Cost".as_bytes().to_vec(), ExpenditureSubType::SoftCost),
-    //     ];
-
-    //     // Create parent expenditures
-    //     for name in parent_names {
-    //         // Generate parent expenditure id
-    //         let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
-    //         let expenditure_data = ExpenditureData::<T> {
-    //             project_id,
-    //             parent_id: expenditure_id,  
-    //             children: BoundedVec::<[u8;32], T::MaxChildrens>::default(),
-    //             num_children: 0,
-    //             name: FieldName::try_from(name.0).map_err(|_| Error::<T>::NameTooLong)?,
-    //             expenditure_type: ExpenditureType::Parent,
-    //             expenditure_subtype: name.1,
-    //             //budget_amount: None,
-    //             balance: 0,
-    //             naics_code: None,
-    //             jobs_multiplier: None,
-    //         };
-
-    //         // Insert expenditure data into ExpendituresInfo
-    //         // Ensure expenditure_id is unique
-    //         ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
-    //         <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
-
-    //         //Insert expenditure_id into ExpendituresByProject
-    //         <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-    //             expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-    //             Ok(())
-    //         })?;
-
-    //         //Create budget for parent expenditure
-    //         Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-    //     }
-
-    //     Ok(())
-    // }
-
-    /// Generate Hard Cost 
+    /// Generate Hard Cost default expenditures
     fn do_generate_hard_cost_defaults(
         admin: T::AccountId,
         project_id: [u8;32],
