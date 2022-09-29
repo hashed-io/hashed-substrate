@@ -280,16 +280,8 @@ pub mod pallet {
 		CannotAddAdminRole,
 		/// User can not have more than one role at the same time
 		UserCannotHaveMoreThanOneRole,
-		/// Cannot create parent expenditure
-		CannotCreateParentExpenditure, 
 		/// Expenditure not found
 		ExpenditureNotFound,
-		/// Expenditure is not a parent
-		ExpenditureIsNotParent,
-		/// Expenditure does not match parent subtype
-		ExpenditureSubtypeDoesNotMatch,
-		/// Parent expenditure is not found
-		ParentExpenditureNotFound,
 		/// Maximum number of budgets per project reached
 		MaxBudgetsPerProjectReached,
 		/// Expenditure already exist
@@ -306,8 +298,6 @@ pub mod pallet {
 		FieldNameCannotBeEmpty,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
-		/// User can not edit parent expenditure
-		CannotEditParentExpenditure,
 		/// There is no budgets for the project
 		ThereIsNoBudgetsForTheProject,
 		/// Budget id is not found
