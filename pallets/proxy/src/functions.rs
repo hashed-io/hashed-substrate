@@ -500,13 +500,7 @@ impl<T: Config> Pallet<T> {
         //Create expenditure_id
         let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
 
-        // Can't add paren accounts using this method
-        //ensure!(expenditure_type != ExpenditureType::Parent, Error::<T>::CannotCreateParentExpenditure);
-
         //TODO: check budget amount if valid
-
-        // Check expenditure type & expenditure subtype match
-        //Self::check_expenditure_subtype(expenditure_subtype, parent_id, project_id)?;
 
         // Create expenditure data
         let expenditure_data = ExpenditureData {
@@ -528,15 +522,6 @@ impl<T: Config> Pallet<T> {
             expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
             Ok(())
         })?;
-        
-        // //TODO: update childrens number in parent expenditure
-        // // Increment parent expenditure num_children
-        // <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError,_>(parent_id, |expenditure_data| {
-        //     let parent_expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
-        //     parent_expenditure.num_children += 1;
-        //     parent_expenditure.children.try_push(expenditure_id).map_err(|_| Error::<T>::MaxChildrenPerProjectReached)?;
-        //     Ok(())
-        // })?;
 
         // Create a budget for the expenditure
         match budget_amount {
