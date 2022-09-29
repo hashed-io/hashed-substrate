@@ -246,8 +246,6 @@ pub mod pallet {
 		DateCanNotBeInThePast,
 		/// Can not modify project
 		CannotEditCompletedProject,
-		/// Creation date must be in the past
-		CreationDateMustBeInThePast,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
 		/// Global scope is not set
@@ -418,14 +416,12 @@ pub mod pallet {
 			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
 			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			//TODO: remove creation_date
-			creation_date: Option<u64>, 
 			completition_date: Option<u64>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 			//TOREVIEW: Should we allow project_type modification? 
 			// It implies to change their expenditure types and so on...
-			Self::do_edit_project(who, project_id, tittle, description, image, adress, creation_date, completition_date)
+			Self::do_edit_project(who, project_id, tittle, description, image, adress, completition_date)
 		}
 
 		#[transactional]

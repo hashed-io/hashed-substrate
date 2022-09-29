@@ -173,8 +173,7 @@ impl<T: Config> Pallet<T> {
         tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
         description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-        creation_date: Option<u64>, 
+        adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
         completition_date: Option<u64>,  
     ) -> DispatchResult {
         //ensure admin permissions             
@@ -208,11 +207,6 @@ impl<T: Config> Pallet<T> {
             if let Some(adress) = adress {
                 let mod_adress = adress.into_inner();
                 project.adress = mod_adress[0].clone();
-            }
-            if let Some(creation_date) = creation_date {
-                //ensure new creation date is in the past
-                ensure!(creation_date < current_timestamp, Error::<T>::CreationDateMustBeInThePast);
-                project.creation_date = creation_date;
             }
             if let Some(completition_date) = completition_date {
                 //ensure new completition date is in the future
