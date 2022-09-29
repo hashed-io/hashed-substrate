@@ -135,6 +135,7 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	//TOREVIEW: change identity -> Blake2_128Concat
 	#[pallet::storage]
 	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
@@ -151,7 +152,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key expenditure_id
-		ExpenditureData<T>,  // Value expenditure
+		ExpenditureData,  // Value expenditure
 		OptionQuery,
 	>;
 
@@ -400,11 +401,12 @@ pub mod pallet {
 			description: FieldDescription, 
 			image: CID, 
 			adress: FieldName,
+			project_type: ProjectType,
 			completition_date: u64, 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, tittle, description, image, adress, completition_date)
+			Self::do_create_project(who, tittle, description, image, adress, project_type, completition_date)
 		}
 
 		#[transactional]
@@ -420,7 +422,8 @@ pub mod pallet {
 			completition_date: Option<u64>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-
+			//TOREVIEW: Should we allow project_type modification? 
+			// It implies to change their expenditure types and so on...
 			Self::do_edit_project(who, project_id, tittle, description, image, adress, creation_date, completition_date)
 		}
 
@@ -469,17 +472,15 @@ pub mod pallet {
 		pub fn expenditures_create_expenditure(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			parent_id: [u8;32],
 			name: FieldName,
 			expenditure_type: ExpenditureType,
-			expenditure_subtype: ExpenditureSubType,
 			budget_amount: Option<u64>,
 			naics_code: Option<u32>,
 			jobs_multiplier: Option<u32>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_expenditure(who, project_id, parent_id, name, expenditure_type, expenditure_subtype, budget_amount, naics_code, jobs_multiplier)
+			Self::do_create_expenditure(who, project_id, name, expenditure_type, budget_amount, naics_code, jobs_multiplier)
 		}
 
 		#[transactional]
