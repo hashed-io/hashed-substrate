@@ -288,8 +288,6 @@ pub mod pallet {
 		ExpenditureAlreadyExists,
 		/// Max number of expenditures per project reached
 		MaxExpendituresPerProjectReached,
-		/// Max number od children per project reached, 
-		MaxChildrenPerProjectReached,
 		/// Name for expenditure is too long
 		NameTooLong,
 		/// There is no expenditure with such project id
