@@ -74,10 +74,6 @@ pub enum ProjectType{
     Operation,
 }
 
-
-
-
-//TODO: review this warning due not using the T type
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData{
     pub expenditure_id: [u8;32],

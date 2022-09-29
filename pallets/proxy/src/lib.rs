@@ -13,6 +13,15 @@ mod benchmarking;
 
 mod functions;
 mod types;
+//TODO: Remobe unused parameters, types, etc used for development
+// - Remove unused constants
+// - Change extrinsic names
+// - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
+// - Remove unused pallet errors
+// - Remove unused pallet events
+// - Add internal documentation for each extrinsic
+// - Add external documentation for each extrinsic
+// - Update hasher for each storage map depending on the use case 
 
 #[frame_support::pallet]
 pub mod pallet {

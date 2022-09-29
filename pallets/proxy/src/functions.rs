@@ -576,10 +576,8 @@ impl<T: Config> Pallet<T> {
             if let Some(budget_amount) = budget_amount {
                 //get budget id
                 let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-                //TODO:finish edit expenditure budget amount
                 // Edit budget amount
                 Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
-                // expenditure.budget_amount = budget_amount;
             }
             if let Some(naics_code) = naics_code {
                 expenditure.naics_code = Some(naics_code);
@@ -822,16 +820,30 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-
-    //TODO: finish edit budget
     fn do_edit_budget(
         admin: T::AccountId,
         budget_id: [u8;32],
         amount: u64,
     ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        
         //Ensure budget exists
         ensure!(<BudgetsInfo<T>>::contains_key(budget_id), Error::<T>::BudgetNotFound);
 
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Mutate budget data
+        <BudgetsInfo<T>>::try_mutate::<_,_,DispatchError,_>(budget_id, |budget_data| {
+            let mod_budget_data = budget_data.as_mut().ok_or(Error::<T>::BudgetNotFound)?;
+            // Update budget data
+            mod_budget_data.balance = amount;
+            mod_budget_data.updated_date = timestamp;
+            Ok(())
+        })?;
+
+        //TOREVIEW: Check if an event is needed
 
         Ok(())
     }
