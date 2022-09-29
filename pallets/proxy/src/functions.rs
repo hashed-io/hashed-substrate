@@ -565,9 +565,6 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure belongs to project
             ensure!(expenditure.project_id == project_id, Error::<T>::ExpenditureDoesNotBelongToProject);
 
-            // // Ensure can not edit parent expenditure
-            // ensure!(expenditure.expenditure_type != ExpenditureType::Parent, Error::<T>::CannotEditParentExpenditure);
-
             //TODO: ensure name is unique
 
             if let  Some(name) = name {
