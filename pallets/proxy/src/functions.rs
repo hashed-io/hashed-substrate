@@ -594,6 +594,40 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_delete_expenditure(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        expenditure_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure project is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Ensure expenditure_id exists 
+        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+
+        // Delete expenditure data
+        <ExpendituresInfo<T>>::remove(expenditure_id);
+
+        // Delete expenditure_id from ExpendituresByProject
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+            expenditures.retain(|expenditure| expenditure != &expenditure_id);
+            Ok(())
+        })?;
+
+        // Delete expenditure budget
+        Self::do_delete_budget(admin, project_id, expenditure_id)?;
+
+        Self::deposit_event(Event::ExpenditureDeleted(expenditure_id));
+        Ok(())
+    }
+
+
     /// Generate Hard Cost default expenditures
     fn do_generate_hard_cost_defaults(
         admin: T::AccountId,
@@ -776,7 +810,8 @@ impl<T: Config> Pallet<T> {
 
     // B U D G E T S
     // --------------------------------------------------------------------------------------------
-    pub fn do_create_budget(
+    // Buget functions are not exposed to the public. They are only used internally by the module.
+    fn do_create_budget(
         admin: T::AccountId,
         expenditure_id: [u8;32],
         amount: u64,
@@ -848,6 +883,37 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn do_delete_budget(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        expenditure_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure expenditure exists
+        ensure!(ExpendituresInfo::<T>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+
+        // Get budget id
+        let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
+
+        // Remove budget data
+        <BudgetsInfo<T>>::remove(budget_id);
+
+        //TOREVIEW: Check budget id is deleted
+        // Delete budget_id from BudgetsByProject
+        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
+            budgets.retain(|budget| budget != &budget_id);
+            Ok(())
+        })?;
+        
+        //TOREVIEW: Check if an event is needed
+
+        Ok(())
+    }
 
 
     // H E L P E R S

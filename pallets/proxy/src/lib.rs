@@ -229,7 +229,8 @@ pub mod pallet {
 		BudgetCreated([u8;32]),
 		/// Expenditure was edited successfully
 		ExpenditureEdited([u8;32]),
-
+		/// Expenditure was deleted successfully
+		ExpenditureDeleted([u8;32]),
 
 	}
 
@@ -488,6 +489,18 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_edit_expenditure(who, project_id, expenditure_id, name, budget_amount, naics_code, jobs_multiplier)
+		}
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn expenditures_delete_expenditure(
+			origin: OriginFor<T>, 
+			project_id: [u8;32], 
+			expenditure_id: [u8;32],
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_delete_expenditure(who, project_id, expenditure_id)
 		}
 
 
