@@ -180,11 +180,11 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions             
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
         
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+        Self::is_project_completed(project_id)?;
 
         //Get current timestamp
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -304,11 +304,11 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+        // Ensure project is not completed
+        Self::is_project_completed(project_id)?;
 
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
@@ -357,11 +357,11 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+        // Ensure project is not completed
+        Self::is_project_completed(project_id)?;
 
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
@@ -494,15 +494,11 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //TODO: create a helper function to check project status
-        //Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
-
-        //Get timestamp 
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+        // Ensure project is not completed
+        Self::is_project_completed(project_id)?;
 
         //TOREVIEW: ensure field name is not empty
         ensure!(name.len() > 0, Error::<T>::FieldNameCannotBeEmpty);
@@ -813,11 +809,11 @@ impl<T: Config> Pallet<T> {
         //Ensure admin permissions, TODO: add developer permissions
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+        Self::is_project_completed(project_id)?;
 
         // Ensure expenditure_id exists 
         ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
@@ -1260,6 +1256,18 @@ impl<T: Config> Pallet<T> {
         
     //     Ok(())
     // } 
+
+    fn is_project_completed(
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        // Get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Ensure project is completed
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+
+        Ok(())
+    }
 
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(

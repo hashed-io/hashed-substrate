@@ -418,6 +418,7 @@ pub mod pallet {
 			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
 			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			//TODO: remove creation_date
 			creation_date: Option<u64>, 
 			completition_date: Option<u64>,  
 		) -> DispatchResult {
