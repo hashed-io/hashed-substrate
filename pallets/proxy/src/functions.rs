@@ -1119,31 +1119,6 @@ impl<T: Config> Pallet<T> {
             }
         }
     }
-    //TODO: Add function to create parenrt expenditures
-    //TODO: create a function to fill children expenditures
-
-    // fn check_expenditure_subtype(
-    //     subtype: ExpenditureSubType,
-    //     parent_id: [u8;32],
-    //     project_id: [u8;32],
-    // ) -> DispatchResult {
-    //     // Ensure parent expenditure exists
-    //     ensure!(ExpendituresInfo::<T>::contains_key(parent_id), Error::<T>::ParentExpenditureNotFound);
-
-    //     // Ensure exist a parent expenditure for this project
-    //     ensure!(<ExpendituresByProject<T>>::get(project_id).contains(&parent_id), Error::<T>::ParentExpenditureNotFound);
-
-    //     // Get expenditure data
-    //     let expenditure_data = ExpendituresInfo::<T>::get(parent_id).ok_or(Error::<T>::ExpenditureNotFound)?;
-
-    //     // ensure that the expenditure is a parent expenditure
-    //     ensure!(expenditure_data.expenditure_type == ExpenditureType::Parent, Error::<T>::ExpenditureIsNotParent);
-
-    //     // Ensure that the expenditure subtype matches the parent expenditure subtype
-    //     ensure!(expenditure_data.expenditure_subtype == subtype, Error::<T>::ExpenditureSubtypeDoesNotMatch);
-        
-    //     Ok(())
-    // } 
 
     fn is_project_completed(
         project_id: [u8;32],
