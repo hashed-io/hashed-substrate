@@ -140,29 +140,12 @@ pub enum DrawdownStatus{
     Reviewed,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct AccountType{
-    pub name: BoundedVec<u8, ConstU32<100>>,
-    pub class: ExpenditureType,
-    pub account_category: u32,
-}
-
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct TransactionSubtype{
     pub account_name: BoundedVec<u8, ConstU32<100>>,
     pub balance: u32,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct Balance{
-    pub amount: u32,
-    pub symbol: Symbol,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
