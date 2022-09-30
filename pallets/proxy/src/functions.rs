@@ -891,12 +891,6 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure expenditure exists
-        ensure!(ExpendituresInfo::<T>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
-
         // Get budget id
         let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
 
