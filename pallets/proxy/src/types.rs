@@ -10,7 +10,6 @@ pub type CID = BoundedVec<u8,ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
 
 
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -30,6 +29,26 @@ pub struct ProjectData<T: Config>{
     pub updated_date: u64,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProjectStatus{
+    Started,
+    Completed,
+}
+impl Default for ProjectStatus{
+    fn default() -> Self {
+        ProjectStatus::Started
+    }
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProjectType{
+    Construction, 
+    ConstructionOperation,
+    ConstructionBridge, 
+    Operation,
+}
+
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -41,6 +60,16 @@ pub struct UserData<T: Config>{
     pub email: FieldName,
     pub documents: Option<Documents<T>>,
 }
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProxyRole{
+    Administrator,
+    Developer,
+    Investor,
+    Issuer,
+    RegionalCenter,
+}
+
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ExpenditureData {
@@ -66,13 +95,6 @@ impl Default for ExpenditureType{
     }
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectType{
-    Construction, 
-    ConstructionOperation,
-    ConstructionBridge, 
-    Operation,
-}
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData{
@@ -81,6 +103,7 @@ pub struct BudgetData{
     pub created_date: u64,
     pub updated_date: u64,
 }
+
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
@@ -150,14 +173,7 @@ pub enum DrawdownType{
 }
 
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProxyRole{
-    Administrator,
-    Developer,
-    Investor,
-    Issuer,
-    RegionalCenter,
-}
+
 
 impl ProxyRole{
     pub fn to_vec(self) -> Vec<u8>{
@@ -184,16 +200,6 @@ impl ProxyRole{
 }
 
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectStatus{
-    Started,
-    Completed,
-}
-impl Default for ProjectStatus{
-    fn default() -> Self {
-        ProjectStatus::Started
-    }
-}
 
 /// Extrinsics which require previous authorization to call them
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -252,10 +258,3 @@ impl ProxyPermission{
 
 
 }
-
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum Symbol {
-    USD,
-}   
-
