@@ -161,6 +161,9 @@ impl<T: Config> Pallet<T> {
             },
         }
 
+        //TODO: Generate drawdowns
+        //Self::do_generate_drawdowns(admin.clone(), project_id)?;
+
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
 
@@ -776,38 +779,6 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn get_budget_id(
-        project_id: [u8;32],
-        expenditure_id: [u8;32],
-    ) -> Result<[u8;32], DispatchError> {
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Get budgets by project (Id's)
-        let budget_ids = Self::budgets_by_project(project_id).into_inner();
-
-        // Check if the project has any budgets
-        if budget_ids.len() == 0 {
-            return Err(Error::<T>::ThereIsNoBudgetsForTheProject.into());
-        }
-
-        // Get budget id
-        let budget_id: [u8;32] = budget_ids.iter().try_fold::<_,_,Result<[u8;32], DispatchError>>([0;32], |mut accumulator, &budget_id| {
-            // Get individual budget data
-            let budget_data = BudgetsInfo::<T>::get(budget_id).ok_or(Error::<T>::BudgetNotFound)?;
-
-            // Check if budget belongs to expenditure
-            if budget_data.expenditure_id == expenditure_id {
-                accumulator = budget_id;
-            }
-            Ok(accumulator)
-        })?;
-
-        Ok(budget_id)
-    }
-
-
-
     // B U D G E T S
     // --------------------------------------------------------------------------------------------
     // Buget functions are not exposed to the public. They are only used internally by the module.
@@ -909,6 +880,49 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn get_budget_id(
+        project_id: [u8;32],
+        expenditure_id: [u8;32],
+    ) -> Result<[u8;32], DispatchError> {
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get budgets by project (Id's)
+        let budget_ids = Self::budgets_by_project(project_id).into_inner();
+
+        // Check if the project has any budgets
+        if budget_ids.len() == 0 {
+            return Err(Error::<T>::ThereIsNoBudgetsForTheProject.into());
+        }
+
+        // Get budget id
+        let budget_id: [u8;32] = budget_ids.iter().try_fold::<_,_,Result<[u8;32], DispatchError>>([0;32], |mut accumulator, &budget_id| {
+            // Get individual budget data
+            let budget_data = BudgetsInfo::<T>::get(budget_id).ok_or(Error::<T>::BudgetNotFound)?;
+
+            // Check if budget belongs to expenditure
+            if budget_data.expenditure_id == expenditure_id {
+                accumulator = budget_id;
+            }
+            Ok(accumulator)
+        })?;
+
+        Ok(budget_id)
+    }
+
+
+    // D R A W D O W N S
+    // --------------------------------------------------------------------------------------------
+    // For now drawdowns functions are private, but in the future they may be public
+    
+//    create(const eosio::name &drawdown_type, const uint64_t &drawdown_number);
+//    update(const uint64_t &drawdown_id, const eosio::asset &total_amount, const bool &is_add_balance);
+  
+//    submit(const uint64_t &drawdown_id);
+  
+//    approve(const uint64_t &drawdown_id);
+//    reject(const uint64_t &drawdown_id);
+//    edit(const uint64_t &drawdown_id,
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
@@ -934,12 +948,19 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn _change_project_status(project_id: [u8;32], status: ProjectStatus) -> DispatchResult {
+    fn _change_project_status(
+        admin: T::AccountId,
+        project_id: [u8;32], 
+        status: ProjectStatus
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
         //ensure project exists
-        //TODO: change 
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //TODO: check project status is not completed
+        // Check project status is not completed
+        Self::is_project_completed(project_id)?;
 
         //Mutate project data
         <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
