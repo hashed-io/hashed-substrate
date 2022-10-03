@@ -562,6 +562,9 @@ parameter_types! {
 	pub const MaxExpendituresPerProject:u32 = 1000;
 	pub const MaxBudgetsPerProject:u32 = 1000;
 	pub const MaxDrawdownsPerProject:u32 = 1000;
+	pub const MaxTransactionsPerProject:u32 = 1000;
+	pub const MaxTransactionsPerDrawdown:u32 = 500;
+	pub const MaxTransactionsPerExpenditure:u32 = 500;
 
 
 }
@@ -590,6 +593,9 @@ impl pallet_proxy::Config for Runtime {
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 	type MaxBudgetsPerProject = MaxBudgetsPerProject;
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
+	type MaxTransactionsPerProject = MaxTransactionsPerProject;
+	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
+	type MaxTransactionsPerExpenditure = MaxTransactionsPerExpenditure;
 
 }
 
