@@ -96,6 +96,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxBudgetsPerProject: Get<u32>;
 
+		#[pallet::constant]
+		type MaxDrawdownsPerProject: Get<u32>;
+
 
 	
 		
@@ -109,15 +112,19 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn global_scope)]
-	pub(super) type GlobalScope<T> = StorageValue<_, [u8;32], ValueQuery>;
+	pub(super) type GlobalScope<T> = StorageValue<
+		_,
+		[u8;32], // Value gobal scope id
+		ValueQuery
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn users_info)]
 	pub(super) type UsersInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
-		T::AccountId, // Key
-		UserData<T>,  // Value
+		T::AccountId, // Key account_id
+		UserData<T>,  // Value UserData<T>
 		OptionQuery,
 	>;
 
@@ -127,7 +134,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key project_id
-		ProjectData<T>,  // Value
+		ProjectData<T>,  // Value ProjectData<T>
 		OptionQuery,
 	>;
 
@@ -141,7 +148,6 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
-	//TOREVIEW: change identity -> Blake2_128Concat
 	#[pallet::storage]
 	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
@@ -158,7 +164,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key expenditure_id
-		ExpenditureData,  // Value expenditure
+		ExpenditureData,  // Value ExpenditureData<T>
 		OptionQuery,
 	>;
 
@@ -178,7 +184,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key expenditure_id
-		BudgetData,  // Value budget
+		BudgetData,  // Value BudgetData
 		OptionQuery,
 	>;
 
@@ -191,7 +197,26 @@ pub mod pallet {
 		BoundedVec<[u8;32], T::MaxBudgetsPerProject>,  // Value budgets
 		ValueQuery,
 	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn drawdowns)]
+	pub(super) type DrawdownsInfo<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key drawdown id
+		DrawdownData<T>,  // Value DrawdownData<T>
+		OptionQuery,
+	>;
 	
+	#[pallet::storage]
+	#[pallet::getter(fn drawdowns_by_project)]
+	pub(super) type DrawdownsByProject<T: Config> = StorageMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		BoundedVec<[u8;32], T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		ValueQuery,
+	>;
 
 
 
