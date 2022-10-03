@@ -140,11 +140,15 @@ pub enum DrawdownStatus{
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct TransactionData<T: Config>{
+    pub project_id: [u8;32],
     pub drawdown_id: [u8;32],
+    pub expenditure_id: [u8;32],
+    pub creator: T::AccountId,
     pub created_date: u64,
-    pub balance: u32,
-    pub documents: BoundedVec<u8, T::MaxDocuments>,
-    pub accounting: BoundedVec<u8, T::MaxAccountsPerTransaction>,
+    pub updated_date: u64,
+    pub description: FieldDescription,
+    pub amount: u32,
+    pub documents: Documents<T>,
 }
 
 
