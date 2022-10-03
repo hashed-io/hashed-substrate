@@ -120,6 +120,21 @@ pub struct DrawdownData<T:Config>{
     pub creator: Option<T::AccountId>,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum DrawdownType{
+    EB5, 
+    ConstructionLoan,
+    DeveloperEquity,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum DrawdownStatus{
+    Draft, 
+    Submitted,
+    Approved,
+    Rejected,
+}
+
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
 #[scale_info(skip_type_params(T))]
@@ -131,32 +146,6 @@ pub struct TransactionData<T: Config>{
     pub documents: BoundedVec<u8, T::MaxDocuments>,
     pub accounting: BoundedVec<u8, T::MaxAccountsPerTransaction>,
 }
-
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum DrawdownStatus{
-    Draft, 
-    Submitted,
-    Approved,
-    Rejected,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct TransactionSubtype{
-    pub account_name: BoundedVec<u8, ConstU32<100>>,
-    pub balance: u32,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum DrawdownType{
-    EB5, 
-    ConstructionLoan,
-    DeveloperEquity,
-}
-
-
 
 
 impl ProxyRole{
