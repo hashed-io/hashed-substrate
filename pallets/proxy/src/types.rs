@@ -138,7 +138,7 @@ pub enum DrawdownStatus{
     Draft, 
     Submitted,
     Approved,
-    Reviewed,
+    Rejected,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
