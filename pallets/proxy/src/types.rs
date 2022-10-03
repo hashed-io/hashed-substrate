@@ -105,18 +105,19 @@ pub struct BudgetData{
 }
 
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct DrawdownData<T:Config>{
     pub project_id: [u8;32],
     pub drawdown_number: u32,
     pub drawdown_type: DrawdownType,
-    pub total_amount: u32,
+    pub total_amount: u64,
     pub status: DrawdownStatus,
-    pub open_date: u64,
+    //TODO: add Option<Files> -> Bulk Upload
+    pub created_date: u64,
     pub close_date: u64,
-    pub creator: T::AccountId,
+    pub creator: Option<T::AccountId>,
 }
 
 

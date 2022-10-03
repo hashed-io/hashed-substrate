@@ -561,6 +561,7 @@ parameter_types! {
 	pub const MaxBoundedVecs:u32 = 1;
 	pub const MaxExpendituresPerProject:u32 = 1000;
 	pub const MaxBudgetsPerProject:u32 = 1000;
+	pub const MaxDrawdownsPerProject:u32 = 1000;
 
 
 }
@@ -588,6 +589,7 @@ impl pallet_proxy::Config for Runtime {
 	type MaxBoundedVecs = MaxBoundedVecs;
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 	type MaxBudgetsPerProject = MaxBudgetsPerProject;
+	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 
 }
 
