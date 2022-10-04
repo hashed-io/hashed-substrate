@@ -136,7 +136,7 @@ impl<T: Config> Pallet<T> {
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
-        // Match project type, call default expednitures
+        // Match project type, call default expenditures
         match project_type {
             ProjectType::Construction => {
                 //Generate its related expenditures
@@ -161,8 +161,8 @@ impl<T: Config> Pallet<T> {
             },
         }
 
-        //TODO: Generate drawdowns
-        //Self::do_generate_drawdowns(admin.clone(), project_id)?;
+        //Initialize drawdowns
+        Self::do_initialize_drawdowns(admin.clone(), project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -817,7 +817,28 @@ impl<T: Config> Pallet<T> {
 //    update(const uint64_t &drawdown_id, const eosio::asset &total_amount, const bool &is_add_balance);
 //    edit(const uint64_t &drawdown_id,
 
+    /// TODO: Function to create initial drawdowns for a project
+    fn do_initialize_drawdowns(
+        admin: T::AccountId,
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        //Create a EB5 drawdown
+        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::EB5, 1)?;
+
+        //Create a Construction Loan drawdown
+        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::ConstructionLoan, 1)?;
+
+        //Create a Developer Equity drawdown
+        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::DeveloperEquity, 1)?;
+
+        Ok(())
+    }
 
 
 //    submit(const uint64_t &drawdown_id);
