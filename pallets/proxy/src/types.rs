@@ -135,6 +135,11 @@ pub enum DrawdownStatus{
     Rejected,
 }
 
+impl Default for DrawdownStatus{
+    fn default() -> Self {
+        DrawdownStatus::Draft
+    }
+}
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
