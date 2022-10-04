@@ -890,10 +890,11 @@ impl<T: Config> Pallet<T> {
             drawdown_id,
             expenditure_id,
             creator: admin.clone(),
-            amount,
-            description,
             created_date: timestamp,
             updated_date: timestamp,
+            description,
+            amount,
+            status: TransactionStatus::default(),
             documents,
         };
 
