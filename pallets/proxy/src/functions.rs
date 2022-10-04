@@ -767,14 +767,62 @@ impl<T: Config> Pallet<T> {
     // D R A W D O W N S
     // --------------------------------------------------------------------------------------------
     // For now drawdowns functions are private, but in the future they may be public
-//    create(const eosio::name &drawdown_type, const uint64_t &drawdown_number);
+    
+    fn do_create_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_type: DrawdownType,
+        drawdown_number: u32,
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create drawdown id
+        let drawdown_id = (project_id, drawdown_type, drawdown_number).using_encoded(blake2_256);
+
+        // Create drawdown data
+        let drawdown_data = DrawdownData::<T> {
+            project_id,
+            drawdown_number,
+            drawdown_type,
+            total_amount: 0,
+            status: DrawdownStatus::default(),
+            created_date: timestamp,
+            close_date: 0,
+            creator: Some(admin.clone()),
+        };
+
+        // Insert drawdown data
+        // Ensure drawdown id is unique
+        ensure!(!DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownAlreadyExists);
+        <DrawdownsInfo<T>>::insert(drawdown_id, drawdown_data);
+
+        // Insert drawdown id into DrawdownsByProject
+        <DrawdownsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |drawdowns| {
+            drawdowns.try_push(drawdown_id).map_err(|_| Error::<T>::MaxDrawdownsPerProjectReached)?;
+            Ok(())
+        })?;
+
+        //TOREVIEW: Check if an event is needed
+
+        Ok(())
+    }
+
 //    update(const uint64_t &drawdown_id, const eosio::asset &total_amount, const bool &is_add_balance);
-  
+//    edit(const uint64_t &drawdown_id,
+
+
+
+
 //    submit(const uint64_t &drawdown_id);
-  
 //    approve(const uint64_t &drawdown_id);
 //    reject(const uint64_t &drawdown_id);
-//    edit(const uint64_t &drawdown_id,
 
 
     // T R A N S A C T I O N S

@@ -275,7 +275,7 @@ pub mod pallet {
 		BoundedVec<[u8;32], T::MaxTransactionsPerExpenditure>, // Value transactions
 		ValueQuery
 	>; 
-	// E X T R I N S I C S
+	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
 
 	#[pallet::event]
@@ -316,6 +316,8 @@ pub mod pallet {
 
 	}
 
+	// E R R O R S
+	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Error names should be descriptive.
@@ -405,10 +407,16 @@ pub mod pallet {
 		MaxTransactionsPerDrawdownReached,
 		/// Max number of transactions per expenditure reached
 		MaxTransactionsPerExpenditureReached,
+		/// Drawdown already exist
+		DrawdownAlreadyExists,
+		/// Max number of drawdowns per project reached
+		MaxDrawdownsPerProjectReached,
 
 
 	}
 
+	// E X T R I N S I C S
+	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		// I N I T I A L 
