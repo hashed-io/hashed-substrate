@@ -892,6 +892,7 @@ impl<T: Config> Pallet<T> {
             creator: admin.clone(),
             created_date: timestamp,
             updated_date: timestamp,
+            closed_date: 0,
             description,
             amount,
             status: TransactionStatus::default(),

@@ -151,6 +151,7 @@ pub struct TransactionData<T: Config>{
     pub creator: T::AccountId,
     pub created_date: u64,
     pub updated_date: u64,
+    pub closed_date: u64,
     pub description: FieldDescription,
     pub amount: u64,
     pub status: TransactionStatus,
