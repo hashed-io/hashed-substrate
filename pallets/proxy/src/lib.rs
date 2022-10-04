@@ -54,6 +54,10 @@ pub mod pallet {
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 
+		//TODO: Update pallet errors related to bounded vecs bounds
+		//ie: BoundedVec<T::AccountId, T::MaxDevelopersPerProject>
+		// -> MaxDevelopersPerProjectReached 
+
 		#[pallet::constant]
 		type ProjectNameMaxLen: Get<u32>;
 
@@ -307,6 +311,8 @@ pub mod pallet {
 		ExpenditureEdited([u8;32]),
 		/// Expenditure was deleted successfully
 		ExpenditureDeleted([u8;32]),
+		/// Transaction was created successfully
+		TransactionCreated([u8;32]),
 
 	}
 
@@ -383,6 +389,22 @@ pub mod pallet {
 		ThereIsNoBudgetsForTheProject,
 		/// Budget id is not found
 		BudgetNotFound,
+		/// Drowdown id is not found
+		DrawdownNotFound,
+		/// Invalid amount
+		InvalidAmount, 
+		/// Documents field is empty
+		DocumentsIsEmpty,
+		/// Transaction id is not found
+		TransactionNotFound,
+		/// Transaction already exist
+		TransactionAlreadyExists,
+		/// Max number of transactions per project reached
+		MaxTransactionsPerProjectReached,
+		/// Max number of transactions per drawdown reached
+		MaxTransactionsPerDrawdownReached,
+		/// Max number of transactions per expenditure reached
+		MaxTransactionsPerExpenditureReached,
 
 
 	}
