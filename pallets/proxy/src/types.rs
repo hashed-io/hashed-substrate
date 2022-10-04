@@ -153,9 +153,23 @@ pub struct TransactionData<T: Config>{
     pub updated_date: u64,
     pub description: FieldDescription,
     pub amount: u64,
+    pub status: TransactionStatus,
     pub documents: Option<Documents<T>>,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum TransactionStatus{
+    Draft, 
+    Submitted,
+    Approved,
+    Rejected,
+}
+
+impl Default for TransactionStatus{
+    fn default() -> Self {
+        TransactionStatus::Draft
+    }
+}
 
 impl ProxyRole{
     pub fn to_vec(self) -> Vec<u8>{
