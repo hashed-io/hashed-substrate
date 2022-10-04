@@ -899,8 +899,6 @@ impl<T: Config> Pallet<T> {
             documents,
         };
 
-        //TODO: Update drawdown with this transaction id
-
         // Insert transaction data
         // Ensure transaction id is unique
         ensure!(!TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionAlreadyExists);
@@ -930,8 +928,68 @@ impl<T: Config> Pallet<T> {
 
     }
 
-    // update()
-    // edit()
+    fn do_edit_transaction(
+        admin: T::AccountId,
+        transaction_id: [u8;32],
+        amount: Option<u64>,
+        description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+        documents: Option<Documents<T>>
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure transaction exists
+        ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+        // Ensure amount is valid.
+        if let Some(mod_amount) = amount.clone() {
+            Self::is_amount_valid(mod_amount)?;
+        }
+
+        // Ensure documents is not empty
+        if let Some(mod_documents) = documents.clone() {
+            ensure!(mod_documents.len() > 0, Error::<T>::DocumentsIsEmpty);
+        }
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+        
+        // Ensure transaction is not completed
+        Self::is_transaction_editable(transaction_id)?;
+
+        // Try mutate transaction data
+        <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+            let mod_transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;  
+            
+            // Ensure project is not completed
+            Self::is_project_completed(mod_transaction_data.project_id)?;
+
+            // Ensure drawdown is not completed
+            Self::is_drawdown_editable(mod_transaction_data.drawdown_id)?;
+
+            // Ensure expenditure exists
+            ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
+            
+            if let Some(amount) = amount.clone() {
+                mod_transaction_data.amount = amount;
+            }
+            if let Some(description) = description.clone() {
+                let mod_description = description.into_inner();
+                mod_transaction_data.description = mod_description[0].clone();
+            }
+            if let Some(documents) = documents.clone() {
+                mod_transaction_data.documents = Some(documents);
+            }
+            mod_transaction_data.updated_date = timestamp;
+            Ok(())
+        })?;
+        
+        //TOREVIEW: Check if this event is needed
+        Self::deposit_event(Event::TransactionEdited(transaction_id));
+
+        Ok(())
+    }
+
     // delete()
 
 
@@ -1237,6 +1295,52 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    #[allow(dead_code)]
+    fn is_drawdown_editable(
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        // Get drawdown data
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure transaction is in draft or rejected status
+        // Match drawdown status
+        match drawdown_data.status {
+            DrawdownStatus::Draft => {
+                return Ok(())
+            },
+            DrawdownStatus::Rejected => {
+                return Ok(())
+            },
+            _ => {
+                return Err(Error::<T>::CannotEditDrawdown.into());
+            }
+        }
+    }
+
+    #[allow(dead_code)]
+    fn is_transaction_editable(
+        transaction_id: [u8;32],
+    ) -> DispatchResult {
+        // Get transaction data
+        let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+        // Ensure transaction is in draft or rejected status
+        // Match transaction status
+        match transaction_data.status {
+            TransactionStatus::Draft => {
+                return Ok(())
+            },
+            TransactionStatus::Rejected => {
+                return Ok(())
+            },
+            _ => {
+                return Err(Error::<T>::CannotEditTransaction.into());
+            }
+        }
+    }
+
+    //TODO: remove macro when used 
+    #[allow(dead_code)]
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
             authority,
@@ -1434,6 +1538,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn is_amount_valid(amount: u64,) -> DispatchResult {
         let minimun_amount: u64 = 0;
         ensure!(amount >= minimun_amount, Error::<T>::InvalidAmount);

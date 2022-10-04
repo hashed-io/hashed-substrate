@@ -313,7 +313,8 @@ pub mod pallet {
 		ExpenditureDeleted([u8;32]),
 		/// Transaction was created successfully
 		TransactionCreated([u8;32]),
-
+		/// Transaction was edited successfully
+		TransactionEdited([u8;32]),
 	}
 
 	// E R R O R S
@@ -411,6 +412,14 @@ pub mod pallet {
 		DrawdownAlreadyExists,
 		/// Max number of drawdowns per project reached
 		MaxDrawdownsPerProjectReached,
+		/// Can not modify a completed drawdown
+		CannotEditDrawdown,
+		/// Can not delete a completed drawdown
+		CannotDeleteCompletedDrawdown,
+		/// Can not modify a transaction at this moment
+		CannotEditTransaction,
+		/// Can not delete a completed transaction
+		CannotDeleteCompletedTransaction,
 
 
 	}
