@@ -54,7 +54,7 @@ pub enum ProjectType{
 #[codec(mel_bound())]
 pub struct UserData<T: Config>{
     pub name: FieldName,
-    pub role: Option<ProxyRole>,
+    pub role: ProxyRole,
     pub image: CID,
     pub date_registered: u64,
     pub email: FieldName,
