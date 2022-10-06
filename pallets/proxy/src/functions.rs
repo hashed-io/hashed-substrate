@@ -49,6 +49,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_sudo_add_administrator(
         admin: T::AccountId, 
+        name: FieldName,
     ) -> DispatchResult{
         let pallet_id = Self::pallet_id();
         let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
@@ -60,7 +61,7 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator.id())?;
 
         // create a administrator user account
-        Self::sudo_register_admin(admin.clone())?;
+        Self::sudo_register_admin(admin.clone(), name)?;
         
         Self::deposit_event(Event::AdministratorAssigned(admin));
         Ok(())
@@ -1417,7 +1418,10 @@ impl<T: Config> Pallet<T> {
         )
     }
 
-    fn sudo_register_admin( admin: T::AccountId ) -> DispatchResult{
+    fn sudo_register_admin(
+        admin: T::AccountId,
+        name: FieldName,
+    ) -> DispatchResult{
         // check if user is already registered
         ensure!(!<UsersInfo<T>>::contains_key(admin.clone()), Error::<T>::UserAlreadyRegistered);
         
@@ -1425,8 +1429,8 @@ impl<T: Config> Pallet<T> {
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         let user_data = UserData::<T> {
-            name: FieldName::default(),
-            role: Some(ProxyRole::Administrator),
+            name,
+            role: ProxyRole::Administrator,
             image: CID::default(),
             date_registered: current_timestamp,
             email: FieldName::default(),
