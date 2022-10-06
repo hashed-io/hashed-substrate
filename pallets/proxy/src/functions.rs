@@ -267,7 +267,12 @@ impl<T: Config> Pallet<T> {
     // U S E R S
     // --------------------------------------------------------------------------------------------
 		
-    pub fn do_register_user(admin: T::AccountId, user: T::AccountId, name: FieldName, image: CID, email: FieldName, documents: Option<Documents<T>>, ) -> DispatchResult {
+    pub fn do_register_user(
+        admin: T::AccountId,
+        user: T::AccountId,
+        name: FieldName,
+        rol: ProxyRole,
+    ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
@@ -276,6 +281,15 @@ impl<T: Config> Pallet<T> {
 
         //Get current timestamp
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        match rol {
+            ProxyRole::Administrator => {
+
+            },
+            _ => {
+
+            },
+        }
 
         let user_data = UserData::<T> {
             name,
