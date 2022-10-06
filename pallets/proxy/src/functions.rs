@@ -990,7 +990,51 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // delete()
+    fn do_delete_transaction(
+        admin: T::AccountId,
+        transaction_id: [u8;32]
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure transaction exists and get transaction data
+        let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+        // Ensure project is not completed
+        Self::is_project_completed(transaction_data.project_id)?;
+
+        // Ensure drawdown is not completed
+        ensure!(Self::is_drawdown_editable(transaction_data.drawdown_id).is_ok(), Error::<T>::DrawdownIsAlreadyCompleted);
+
+        // Ensure transaction is not completed
+        ensure!(Self::is_transaction_editable(transaction_id).is_ok(), Error::<T>::TransactionIsAlreadyCompleted);
+
+        // Remove transaction from TransactionsByProject
+        <TransactionsByProject<T>>::try_mutate::<_,_,DispatchError,_>(transaction_data.project_id, |transactions| {
+            transactions.retain(|transaction| transaction != &transaction_id);
+            Ok(())
+        })?;
+
+        // Remove transaction from TransactionsByDrawdown
+        <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.drawdown_id, |transactions| {
+            transactions.retain(|transaction| transaction != &transaction_id);
+            Ok(())
+        })?;
+
+        // Remove transaction from TransactionsByExpenditure
+        <TransactionsByExpenditure<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.expenditure_id, |transactions| {
+            transactions.retain(|transaction| transaction != &transaction_id);
+            Ok(())
+        })?;
+
+        // Remove transaction from TransactionsInfo
+        <TransactionsInfo<T>>::remove(transaction_id);
+
+        //TOREVIEW: Check if this event is needed
+        Self::deposit_event(Event::TransactionDeleted(transaction_id));
+
+        Ok(())
+    }
 
 
     //TODO: create a function to automatically create a drawdown when the project is created
@@ -1290,7 +1334,7 @@ impl<T: Config> Pallet<T> {
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
         // Ensure project is completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotEditCompletedProject);
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
 
         Ok(())
     }

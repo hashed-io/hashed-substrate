@@ -315,6 +315,8 @@ pub mod pallet {
 		TransactionCreated([u8;32]),
 		/// Transaction was edited successfully
 		TransactionEdited([u8;32]),
+		/// Transaction was deleted successfully
+		TransactionDeleted([u8;32]),
 	}
 
 	// E R R O R S
@@ -322,7 +324,9 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Error names should be descriptive.
-		/// TODO: map each constant type used by bounded vecs to a descriptive error
+		/// TODO: map each constant type used by bounded vecs to a pallet error
+		/// when boundaries are exceeded
+		/// TODO: Update and remove unused  pallet errors
 		NoneValue,
 		/// Project ID is already in use
 		ProjectIdAlreadyInUse,
@@ -336,8 +340,8 @@ pub mod pallet {
 		ProjectNotFound,
 		///Date can not be in the past
 		DateCanNotBeInThePast,
-		/// Can not modify project
-		CannotEditCompletedProject,
+		/// Project is not active anymore
+		ProjectIsAlreadyCompleted,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
 		/// Global scope is not set
@@ -420,6 +424,10 @@ pub mod pallet {
 		CannotEditTransaction,
 		/// Can not delete a completed transaction
 		CannotDeleteCompletedTransaction,
+		/// Drawdown is already completed
+		DrawdownIsAlreadyCompleted,
+		/// Transaction is already completed
+		TransactionIsAlreadyCompleted,
 
 
 	}

@@ -166,6 +166,7 @@ pub enum TransactionStatus{
     Rejected,
 }
 
+
 impl Default for TransactionStatus{
     fn default() -> Self {
         TransactionStatus::Draft
