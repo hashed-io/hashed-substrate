@@ -272,7 +272,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         user: T::AccountId,
         name: FieldName,
-        rol: ProxyRole,
+        role: ProxyRole,
     ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -283,28 +283,30 @@ impl<T: Config> Pallet<T> {
         //Get current timestamp
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        match rol {
+        match role {
             ProxyRole::Administrator => {
-
+                Self::do_sudo_add_administrator(user.clone(), name)
             },
             _ => {
-
+                // Create user data
+                let user_data = UserData::<T> {
+                    name,
+                    role,
+                    image: CID::default(),
+                    date_registered: current_timestamp,
+                    email: FieldName::default(),
+                    documents: None,
+                };
+                //Insert user data
+                <UsersInfo<T>>::insert(user.clone(), user_data);
+                Self::deposit_event(Event::UserAdded(user));
+                Ok(())
             },
         }
 
-        let user_data = UserData::<T> {
-            name,
-            role: None,
-            image,
-            date_registered: current_timestamp,
-            email,
-            documents,
-        };
 
-        //Insert user data
-        <UsersInfo<T>>::insert(user.clone(), user_data);
-        Self::deposit_event(Event::UserAdded(user));
-        Ok(())
+
+
     }
 
     pub fn do_assign_user(
@@ -335,8 +337,10 @@ impl<T: Config> Pallet<T> {
         // Update project data depending on the role assigned
         Self::add_project_role(project_id, user.clone(), role)?;
 
+                
+        //HERE
         //Update user data depending on the role assigned
-        Self::add_user_role(user.clone(), role)?;
+        //Self::add_user_role(user.clone(), role)?;
 
         //TOREVIEW: this storage map will be removed?
         // Insert project to ProjectsByUser storagemap
@@ -389,9 +393,10 @@ impl<T: Config> Pallet<T> {
 
         // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
-
+        
+        //HERE
         // Update user data depending on the role unassigned
-        Self::remove_user_role(user.clone())?;
+        //Self::remove_user_role(user.clone())?;
 
         // Remove user from UsersByProject storagemap
         <UsersByProject<T>>::mutate(project_id, |users| {
@@ -461,10 +466,11 @@ impl<T: Config> Pallet<T> {
         //Ensure user is registered & get user data
         let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
         
+        //HERE
         //Prevent users from deleting an administator
-        if let Some(admin_role) = user_data.role{
-            ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
-        }
+        // if let Some(admin_role) = user_data.role{
+        //     ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
+        // }
 
         // Can not delete an user if it has assigned projects
         let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
@@ -1270,77 +1276,80 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
     
+        
+    //HERE
+    // fn add_user_role(
+    //     user: T::AccountId,
+    //     role: ProxyRole,
+    // ) -> DispatchResult {
+    //     // Get user account data
+    //     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-    fn add_user_role(
-        user: T::AccountId,
-        role: ProxyRole,
-    ) -> DispatchResult {
-        // Get user account data
-        let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+    //     // Check if user already has a role
+    //     match user_data.role {
+    //         Some(user_role) => {
+    //             //TODO: Ccheck what role is the user trying to add
+    //             if user_role == role {
+    //                 return Ok(())
+    //             } else {
+    //                 return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
+    //             }
+    //         },
+    //         None => {
+    //             match role {
+    //                 ProxyRole::Administrator => {
+    //                     return Err(Error::<T>::CannotAddAdminRole.into());
+    //                 },
+    //                 _ => {
+    //                     // Update user data
+    //                     <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
+    //                         let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+    //                         user_data.role = Some(role);
+    //                         Ok(())
+    //                     })?;
+    //                     //TOREVIEW: Remove ? operator and final Ok(())
+    //                     Ok(())
+    //                 },
+    //             }
+    //         }
+    //     }
+    // }
 
-        // Check if user already has a role
-        match user_data.role {
-            Some(user_role) => {
-                //TODO: Ccheck what role is the user trying to add
-                if user_role == role {
-                    return Ok(())
-                } else {
-                    return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
-                }
-            },
-            None => {
-                match role {
-                    ProxyRole::Administrator => {
-                        return Err(Error::<T>::CannotAddAdminRole.into());
-                    },
-                    _ => {
-                        // Update user data
-                        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
-                            let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-                            user_data.role = Some(role);
-                            Ok(())
-                        })?;
-                        //TOREVIEW: Remove ? operator and final Ok(())
-                        Ok(())
-                    },
-                }
-            }
-        }
-    }
+            
+    //HERE
+    // fn remove_user_role(
+    //     user: T::AccountId,
+    // ) -> DispatchResult {
+    //     // Get user account data
+    //     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-    fn remove_user_role(
-        user: T::AccountId,
-    ) -> DispatchResult {
-        // Get user account data
-        let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
-
-        // Check if user already has a role
-        match user_data.role {
-            Some(_user_role) => {
-                //Check how many projects the user has assigned
-                let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
+    //     // Check if user already has a role
+    //     match user_data.role {
+    //         Some(_user_role) => {
+    //             //Check how many projects the user has assigned
+    //             let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
                 
-                match projects_by_user.len() {
-                    1 => {
-                        // Update user data
-                        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
-                            let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-                            user_data.role = None;
-                            Ok(())
-                        })?;
-                        //TOREVIEW: Remove ? operator and final Ok(())
-                        Ok(())
-                    },
-                    _ => {
-                        return Ok(())
-                    }
-                }
-            },
-            None => {
-                return Ok(())
-            }
-        }
-    }
+    //             match projects_by_user.len() {
+    //                 1 => {
+    //                     // Update user data
+    //                     <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
+    //                         let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+    //                         user_data.role = None;
+    //                         Ok(())
+    //                     })?;
+    //                     //TOREVIEW: Remove ? operator and final Ok(())
+    //                     Ok(())
+    //                 },
+    //                 _ => {
+    //                     return Ok(())
+    //                 }
+    //             }
+    //         },
+    //         None => {
+    //             return Ok(())
+    //         }
+    //     }
+    // }
 
     fn is_project_completed(
         project_id: [u8;32],
