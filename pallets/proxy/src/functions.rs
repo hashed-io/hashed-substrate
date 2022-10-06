@@ -278,17 +278,13 @@ impl<T: Config> Pallet<T> {
         //Get current timestamp
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        //Get users bounded vec
-        let vec_users = users.into_inner();
-
-        for user in vec_users {
+        for user in users {
             // Ensure if user is already registered
             ensure!(!<UsersInfo<T>>::contains_key(user.0.clone()), Error::<T>::UserAlreadyRegistered);
 
             match user.2 {
                 ProxyRole::Administrator => {
                     Self::do_sudo_add_administrator(user.0.clone(), user.1.clone())?;
-                    return Ok(())
                 },
                 _ => {
                     // Create user data
@@ -304,7 +300,6 @@ impl<T: Config> Pallet<T> {
                     //Insert user data
                     <UsersInfo<T>>::insert(user.0.clone(), user_data);
                     Self::deposit_event(Event::UserAdded(user.0));
-                    return Ok(())
                 },
             }
         }
@@ -466,8 +461,8 @@ impl<T: Config> Pallet<T> {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure user is registered & get user data
-        let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+        //Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
         
         //HERE
         //Prevent users from deleting an administator
@@ -483,6 +478,7 @@ impl<T: Config> Pallet<T> {
             <UsersInfo<T>>::remove(user.clone());
 
             // Remove user from UsersByProject storagemap
+            //TODO: FIX THIS ITERATION
             for project_id in projects_by_user {
                 <UsersByProject<T>>::mutate(project_id, |users| {
                     users.retain(|u| u != &user);
