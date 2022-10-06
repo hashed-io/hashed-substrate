@@ -77,6 +77,7 @@ parameter_types! {
 	pub const MaxTransactionsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxTransactionsPerExpenditure:u32 = 500;
+	pub const MaxResgitrationsAtTime:u32 = 50;
 
 }
 
@@ -101,6 +102,7 @@ impl pallet_proxy::Config for Test {
 	type MaxTransactionsPerProject = MaxTransactionsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxTransactionsPerExpenditure = MaxTransactionsPerExpenditure;
+	type MaxResgitrationsAtTime = MaxResgitrationsAtTime;
 
 	type Timestamp = Timestamp;
 	type Moment = u64;

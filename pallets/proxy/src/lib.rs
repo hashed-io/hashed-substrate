@@ -111,10 +111,10 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxTransactionsPerExpenditure: Get<u32>;
-		
-		
 
-	
+		#[pallet::constant]
+		type MaxResgitrationsAtTime: Get<u32>;
+		
 		
 	}
 
@@ -478,13 +478,11 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_register_user(
 			origin: OriginFor<T>, 
-			user: T::AccountId, 
-			name: FieldName,
-			role: ProxyRole, 
+			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgitrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, user, name, role)
+			Self::do_register_user(who, users)
 		}
 
 		#[transactional]
