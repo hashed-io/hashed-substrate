@@ -440,7 +440,9 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
-		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+		pub fn initial_setup(
+			origin: OriginFor<T>,
+		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_initial_setup()?;
 			Ok(())
@@ -448,15 +450,22 @@ pub mod pallet {
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
-		pub fn sudo_add_administrator(origin: OriginFor<T>, admin: T::AccountId) -> DispatchResult {
+		pub fn sudo_add_administrator(
+			origin: OriginFor<T>,
+			admin: T::AccountId,
+			name: FieldName,
+		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			Self::do_sudo_add_administrator(admin)?;
+			Self::do_sudo_add_administrator(admin, name)?;
 			Ok(())
 		}
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
-		pub fn sudo_remove_administrator(origin: OriginFor<T>, admin: T::AccountId) -> DispatchResult {
+		pub fn sudo_remove_administrator(
+			origin: OriginFor<T>,
+			admin: T::AccountId
+		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_sudo_remove_administrator(admin)?;
 			Ok(())
