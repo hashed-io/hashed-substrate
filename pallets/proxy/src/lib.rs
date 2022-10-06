@@ -471,13 +471,11 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
 			name: FieldName,
-			image: CID,
-			email: FieldName,
-			documents: Option<Documents<T>> 
+			rol: ProxyRole, 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, user, name, image, email, documents)
+			Self::do_register_user(who, user, name, rol)?;
 		}
 
 		#[transactional]
