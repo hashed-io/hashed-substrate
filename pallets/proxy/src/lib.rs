@@ -305,7 +305,7 @@ pub mod pallet {
 		/// User removed
 		UserDeleted(T::AccountId),
 		/// Expenditure was created successfully
-		ExpenditureCreated([u8;32]),
+		ExpenditureCreated,
 		/// A bugdet was created successfully
 		BudgetCreated([u8;32]),
 		/// Expenditure was edited successfully
@@ -429,7 +429,8 @@ pub mod pallet {
 		DrawdownIsAlreadyCompleted,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
-
+		/// Expenditure type does not match project type
+		InvalidExpenditureType,
 
 	}
 
@@ -593,16 +594,17 @@ pub mod pallet {
 		pub fn expenditures_create_expenditure(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			name: FieldName,
-			expenditure_type: ExpenditureType,
-			budget_amount: Option<u64>,
-			naics_code: Option<u32>,
-			jobs_multiplier: Option<u32>,
-			//expenditures: BoundedVec<Expenditure, T::MaxResgistrationsAtTime>,  
+			expenditures: BoundedVec<(
+				FieldName,
+				ExpenditureType,
+				Option<u64>,
+				Option<u32>,
+				Option<u32>,
+			), T::MaxResgistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_expenditure(who, project_id, name, expenditure_type, budget_amount, naics_code, jobs_multiplier)
+			Self::do_create_expenditure(who, project_id, expenditures)
 		}
 
 		#[transactional]
