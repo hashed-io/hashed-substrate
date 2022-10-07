@@ -22,6 +22,7 @@ mod types;
 // - Add internal documentation for each extrinsic
 // - Add external documentation for each extrinsic
 // - Update hasher for each storage map depending on the use case 
+// - Fix typos
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -113,7 +114,7 @@ pub mod pallet {
 		type MaxTransactionsPerExpenditure: Get<u32>;
 
 		#[pallet::constant]
-		type MaxResgitrationsAtTime: Get<u32>;
+		type MaxResgistrationsAtTime: Get<u32>;
 		
 		
 	}
@@ -478,7 +479,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_register_user(
 			origin: OriginFor<T>, 
-			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgitrationsAtTime>,
+			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -597,6 +598,7 @@ pub mod pallet {
 			budget_amount: Option<u64>,
 			naics_code: Option<u32>,
 			jobs_multiplier: Option<u32>,
+			//expenditures: BoundedVec<Expenditure, T::MaxResgistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
