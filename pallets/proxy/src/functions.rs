@@ -99,7 +99,7 @@ impl<T: Config> Pallet<T> {
         project_type: ProjectType,
         completition_date: u64,
         ) -> DispatchResult {
-        //ensure admin permissions 
+        // Ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //Add timestamp 
@@ -138,29 +138,29 @@ impl<T: Config> Pallet<T> {
         ProjectsInfo::<T>::insert(project_id, project_data);
 
         // Match project type, call default expenditures
-        match project_type {
-            ProjectType::Construction => {
-                //Generate its related expenditures
-                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-            },
-            ProjectType::ConstructionOperation => {
-                //Generate its related expenditures
-                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-                Self::do_generate_operational_defaults(admin.clone(), project_id)?;
-            },
-            ProjectType::ConstructionBridge => {
-                //Generate its related expenditures
-                Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-                Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-                Self::do_generate_others_defaults(admin.clone(), project_id)?;
-            },
-            ProjectType::Operation => {
-                //Generate its related expenditures
-                Self::do_generate_operational_defaults(admin.clone(), project_id)?;
-            },
-        }
+        // match project_type {
+        //     ProjectType::Construction => {
+        //         //Generate its related expenditures
+        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+        //     },
+        //     ProjectType::ConstructionOperation => {
+        //         //Generate its related expenditures
+        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+        //         Self::do_generate_operational_defaults(admin.clone(), project_id)?;
+        //     },
+        //     ProjectType::ConstructionBridge => {
+        //         //Generate its related expenditures
+        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
+        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
+        //         Self::do_generate_others_defaults(admin.clone(), project_id)?;
+        //     },
+        //     ProjectType::Operation => {
+        //         //Generate its related expenditures
+        //         Self::do_generate_operational_defaults(admin.clone(), project_id)?;
+        //     },
+        // }
 
         //Initialize drawdowns
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
@@ -270,7 +270,7 @@ impl<T: Config> Pallet<T> {
 	//TODO: Create a custom type for users bounded vec	
     pub fn do_register_user(
         admin: T::AccountId,
-        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgitrationsAtTime>,
+        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -335,7 +335,7 @@ impl<T: Config> Pallet<T> {
         // Update project data depending on the role assigned
         Self::add_project_role(project_id, user.clone(), role)?;
 
-                
+                 
         //HERE
         //Update user data depending on the role assigned
         //Self::add_user_role(user.clone(), role)?;
@@ -502,61 +502,89 @@ impl<T: Config> Pallet<T> {
     pub fn do_create_expenditure(
         admin: T::AccountId,
         project_id: [u8;32], 
-        name: FieldName,
-        expenditure_type: ExpenditureType,
-        budget_amount: Option<u64>,
-        naics_code: Option<u32>,
-        jobs_multiplier: Option<u32>,
+        expenditures: BoundedVec<(
+            FieldName,
+            ExpenditureType,
+            Option<u64>,
+            Option<u32>,
+            Option<u32>,
+        ), T::MaxResgistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        // We use this way to validate because it's necessary to get the project type 
+        // in order to generate the right expenditure types 
+        //Ensure project exists & get project data
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
+        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
 
-        //TOREVIEW: ensure field name is not empty
-        ensure!(name.len() > 0, Error::<T>::FieldNameCannotBeEmpty);
+        for expenditure in expenditures {
+            // Ensure expenditure name is not empty
+            ensure!(!expenditure.0.is_empty(), Error::<T>::FieldNameCannotBeEmpty);
 
-        //Create expenditure_id
-        let expenditure_id = (project_id, name.clone()).using_encoded(blake2_256);
+            // Create expenditure id
+            let expenditure_id = (project_id, expenditure.0.clone(), expenditure.1, timestamp).using_encoded(blake2_256);
 
-        //TODO: check budget amount if valid
+            // Match project type to validate expenditure type
+            match project_data.project_type {
+                ProjectType::Construction => {
+                    // Ensure expenditure type is valid
+                    ensure!(expenditure.1 == ExpenditureType::HardCost || expenditure.1 == ExpenditureType::SoftCost, Error::<T>::InvalidExpenditureType);
+                },
+                ProjectType::ConstructionOperation => {
+                    // Ensure expenditure type is valid
+                    ensure!(expenditure.1 != ExpenditureType::Others, Error::<T>::InvalidExpenditureType);
+                },
+                ProjectType::ConstructionBridge => {
+                    // Ensure expenditure type is valid
+                    ensure!(expenditure.1 != ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
+                },
+                ProjectType::Operation => {
+                    // Ensure expenditure type is valid
+                    ensure!(expenditure.1 == ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
+                },
+            }
 
-        // Create expenditure data
-        let expenditure_data = ExpenditureData {
-            name,
-            project_id,
-            expenditure_type,
-            balance: 0,
-            naics_code,
-            jobs_multiplier,
-        };
+            // Create expenditure data
+            let expenditure_data = ExpenditureData {
+                project_id,
+                name: expenditure.0.clone(),
+                expenditure_type: expenditure.1,
+                balance: 0,
+                naics_code: expenditure.3,
+                jobs_multiplier: expenditure.4,
+            };  
 
-        // Insert expenditure data into ExpendituresInfo
-        // Ensure expenditure_id is unique
-        ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
-        <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
+            // Insert expenditure data into ExpendituresInfo
+            // Ensure expenditure_id is unique
+            ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+            <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-        //Insert expenditure_id into ExpendituresByProject
-        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-            expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-            Ok(())
-        })?;
+            //Insert expenditure_id into ExpendituresByProject
+            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+                Ok(())
+            })?;
 
-        // Create a budget for the expenditure
-        match budget_amount {
-            Some(amount) => {
-                Self::do_create_budget(admin, expenditure_id, amount, project_id)?;
-            },
-            None => {
-                Self::do_create_budget(admin, expenditure_id, 0, project_id)?;
+            // Create a budget for the expenditure
+            match expenditure.2 {
+                Some(amount) => {
+                    Self::do_create_budget(admin.clone(), expenditure_id, amount, project_id)?;
+                },
+                None => {
+                    Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
             },
         }
 
-        Self::deposit_event(Event::ExpenditureCreated(expenditure_id));
+        }
+
+        Self::deposit_event(Event::ExpenditureCreated);
         Ok(())
     }
 
@@ -1462,151 +1490,151 @@ impl<T: Config> Pallet<T> {
 
 
     /// Generate Hard Cost default expenditures
-    fn do_generate_hard_cost_defaults(
-        admin: T::AccountId,
-        project_id: [u8;32],
-    ) -> DispatchResult{
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+    // fn do_generate_hard_cost_defaults(
+    //     admin: T::AccountId,
+    //     project_id: [u8;32],
+    // ) -> DispatchResult{
+    //     //ensure admin permissions
+    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        let hard_cost_expenditures = vec![
-            "Construction".as_bytes().to_vec(),
-            "Furniture, Fixtures & Allowance".as_bytes().to_vec(),
-            "Hard Cost contingency & Allowance".as_bytes().to_vec(),
-        ];
+    //     let hard_cost_expenditures = vec![
+    //         "Construction".as_bytes().to_vec(),
+    //         "Furniture, Fixtures & Allowance".as_bytes().to_vec(),
+    //         "Hard Cost contingency & Allowance".as_bytes().to_vec(),
+    //     ];
 
-        //Create default expenditures
-        for name in hard_cost_expenditures {
-            Self::do_create_expenditure(
-                admin.clone(), 
-                project_id, 
-                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::HardCost,
-                None,
-                None,
-                None,
-            )?;
-        }
+    //     //Create default expenditures
+    //     for name in hard_cost_expenditures {
+    //         Self::do_create_expenditure(
+    //             admin.clone(), 
+    //             project_id, 
+    //             FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+    //             ExpenditureType::HardCost,
+    //             None,
+    //             None,
+    //             None,
+    //         )?;
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     /// Generate Soft Cost default expenditures
-    fn do_generate_soft_cost_defaults(
-        admin: T::AccountId,
-        project_id: [u8;32],
-    ) -> DispatchResult{
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+    // fn do_generate_soft_cost_defaults(
+    //     admin: T::AccountId,
+    //     project_id: [u8;32],
+    // ) -> DispatchResult{
+    //     //ensure admin permissions
+    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
         
-        let soft_cost_expenditures = vec![
-            "Architect & Design".as_bytes().to_vec(),
-            "Building Permits & Impact Fees".as_bytes().to_vec(),
-            "Developer Reimbursable".as_bytes().to_vec(),
-            "Builder Risk Insurance".as_bytes().to_vec(),
-            "Environment / Soils / Survey".as_bytes().to_vec(),
-            "Testing & Inspections".as_bytes().to_vec(),
-            "Legal & Professional".as_bytes().to_vec(),
-            "Real Estate Taxes & Owner's Liability Insurance".as_bytes().to_vec(),
-            "Pre - Development Fee".as_bytes().to_vec(),
-            "Equity Management Fee".as_bytes().to_vec(),
-            "Bank Origination Fee".as_bytes().to_vec(),
-            "Lender Debt Placement Fee".as_bytes().to_vec(),
-            "Title, Appraisal, Feasibility, Plan Review & Closing".as_bytes().to_vec(),
-            "Interest Carry during Construction".as_bytes().to_vec(),
-            "Ops Stabilization & Interest Carry Reserve".as_bytes().to_vec(),
-            "Sales & Marketing".as_bytes().to_vec(),
-            "Pre - Opening Expenses".as_bytes().to_vec(),
-            "Contingency".as_bytes().to_vec(),
-        ];
+    //     let soft_cost_expenditures = vec![
+    //         "Architect & Design".as_bytes().to_vec(),
+    //         "Building Permits & Impact Fees".as_bytes().to_vec(),
+    //         "Developer Reimbursable".as_bytes().to_vec(),
+    //         "Builder Risk Insurance".as_bytes().to_vec(),
+    //         "Environment / Soils / Survey".as_bytes().to_vec(),
+    //         "Testing & Inspections".as_bytes().to_vec(),
+    //         "Legal & Professional".as_bytes().to_vec(),
+    //         "Real Estate Taxes & Owner's Liability Insurance".as_bytes().to_vec(),
+    //         "Pre - Development Fee".as_bytes().to_vec(),
+    //         "Equity Management Fee".as_bytes().to_vec(),
+    //         "Bank Origination Fee".as_bytes().to_vec(),
+    //         "Lender Debt Placement Fee".as_bytes().to_vec(),
+    //         "Title, Appraisal, Feasibility, Plan Review & Closing".as_bytes().to_vec(),
+    //         "Interest Carry during Construction".as_bytes().to_vec(),
+    //         "Ops Stabilization & Interest Carry Reserve".as_bytes().to_vec(),
+    //         "Sales & Marketing".as_bytes().to_vec(),
+    //         "Pre - Opening Expenses".as_bytes().to_vec(),
+    //         "Contingency".as_bytes().to_vec(),
+    //     ];
 
-        //Create default expenditures
-        for name in soft_cost_expenditures {
-            Self::do_create_expenditure(
-                admin.clone(), 
-                project_id, 
-                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::SoftCost,
-                None,
-                None,
-                None,
-            )?;
-        }
+    //     //Create default expenditures
+    //     for name in soft_cost_expenditures {
+    //         Self::do_create_expenditure(
+    //             admin.clone(), 
+    //             project_id, 
+    //             FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+    //             ExpenditureType::SoftCost,
+    //             None,
+    //             None,
+    //             None,
+    //         )?;
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     /// Generate Operational default expenditures
-    fn do_generate_operational_defaults(
-        admin: T::AccountId,
-        project_id: [u8;32],
-    ) -> DispatchResult{
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+    // fn do_generate_operational_defaults(
+    //     admin: T::AccountId,
+    //     project_id: [u8;32],
+    // ) -> DispatchResult{
+    //     //ensure admin permissions
+    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        let operational_expenditures = vec![
-            "Operational default 1".as_bytes().to_vec(),
-            "Operational default 2".as_bytes().to_vec(),
-            "Operational default 3".as_bytes().to_vec(),
-        ];
+    //     let operational_expenditures = vec![
+    //         "Operational default 1".as_bytes().to_vec(),
+    //         "Operational default 2".as_bytes().to_vec(),
+    //         "Operational default 3".as_bytes().to_vec(),
+    //     ];
 
-        //Create default expenditures
-        for name in operational_expenditures {
-            Self::do_create_expenditure(
-                admin.clone(), 
-                project_id, 
-                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::Operational,
-                None,
-                None,
-                None,
-            )?;
-        }
+    //     //Create default expenditures
+    //     for name in operational_expenditures {
+    //         Self::do_create_expenditure(
+    //             admin.clone(), 
+    //             project_id, 
+    //             FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+    //             ExpenditureType::Operational,
+    //             None,
+    //             None,
+    //             None,
+    //         )?;
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     /// Generate Other Costs default expenditures
-    fn do_generate_others_defaults(
-        admin: T::AccountId,
-        project_id: [u8;32],
-    ) -> DispatchResult{
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+    // fn do_generate_others_defaults(
+    //     admin: T::AccountId,
+    //     project_id: [u8;32],
+    // ) -> DispatchResult{
+    //     //ensure admin permissions
+    //     Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+    //     // Ensure project exists
+    //     ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        let hard_cost_expenditures = vec![
-            "Others default 1".as_bytes().to_vec(),
-            "Others default 2".as_bytes().to_vec(),
-            "Others default 3".as_bytes().to_vec(),
-        ];
+    //     let hard_cost_expenditures = vec![
+    //         "Others default 1".as_bytes().to_vec(),
+    //         "Others default 2".as_bytes().to_vec(),
+    //         "Others default 3".as_bytes().to_vec(),
+    //     ];
 
-        //Create default expenditures
-        for name in hard_cost_expenditures {
-            Self::do_create_expenditure(
-                admin.clone(), 
-                project_id, 
-                FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
-                ExpenditureType::Others,
-                None,
-                None,
-                None,
-            )?;
-        }
+    //     //Create default expenditures
+    //     for name in hard_cost_expenditures {
+    //         Self::do_create_expenditure(
+    //             admin.clone(), 
+    //             project_id, 
+    //             FieldName::try_from(name).map_err(|_| Error::<T>::NameTooLong)?,
+    //             ExpenditureType::Others,
+    //             None,
+    //             None,
+    //             None,
+    //         )?;
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     #[allow(dead_code)]
     fn is_amount_valid(amount: u64,) -> DispatchResult {
