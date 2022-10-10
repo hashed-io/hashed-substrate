@@ -2,13 +2,12 @@ use cumulus_primitives_core::ParaId;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 
-use hashed_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
+use hashed_parachain_runtime::{AccountId, AuraId, Signature, SudoConfig, EXISTENTIAL_DEPOSIT};
 use sc_chain_spec::{ChainSpecExtension};
 use sc_service::ChainType;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 pub mod hashed;
-pub mod luhn;
 pub mod md5;
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
@@ -30,7 +29,7 @@ pub fn get_public_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pa
 /// Additional parameters for some Substrate core modules,
 /// customizable from the chain spec.
 #[derive(Default, Clone, Serialize, Deserialize, ChainSpecExtension)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct Extensions {
 	/// The relay chain of the Parachain.
 	pub relay_chain: String,
@@ -116,6 +115,7 @@ pub fn development_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				1000.into(),
 			)
 		},
@@ -171,6 +171,7 @@ pub fn local_testnet_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				1000.into(),
 			)
 		},
@@ -195,6 +196,7 @@ pub fn local_testnet_config() -> ChainSpec {
 fn testnet_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	root_key: AccountId,
 	id: ParaId,
 ) -> hashed_parachain_runtime::GenesisConfig {
 	hashed_parachain_runtime::GenesisConfig {
@@ -206,6 +208,9 @@ fn testnet_genesis(
 		balances: hashed_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
+		sudo: SudoConfig { key: Some(root_key) },
+		council: Default::default(),
+		treasury: Default::default(),
 		parachain_info: hashed_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: hashed_parachain_runtime::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
