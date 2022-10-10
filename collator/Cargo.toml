@@ -5,14 +5,14 @@ authors = ["Hashed <https://github.com/hashed-io>"]
 description = "Cumulus FRAME-based Substrate Node for the Hashed Network"
 license = "MIT"
 homepage = "https://hashed.io"
-repository = "https://github.com/hashed-io/hashed-parachain"
+repository = "https://github.com/hashed-io/hashed-substrate"
 edition = "2021"
 build = "build.rs"
 
 [dependencies]
 clap = { version = "3.2.15", features = ["derive"] }
 derive_more = "0.99.2"
-log = "0.4.17"
+log = "0.4"
 codec = { package = "parity-scale-codec", version = "3.0.0" }
 serde = { version = "1.0.140", features = ["derive"] }
 hex-literal = "0.3.4"
