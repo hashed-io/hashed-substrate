@@ -107,7 +107,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_save_psbt(signer: T::AccountId, proposal_id: [u8;32], signature_payload: BoundedVec<u8, T::PSBTMaxLen>) -> DispatchResult{
-        // validations: proposal exists, signer is member of vault, proposal is pending, 
+        // validations: proposal exists, signer is member of vault, proposal is pending,
         let vault_id = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?.vault_id;
         let vault =  <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
         ensure!(vault.is_vault_member(&signer), Error::<T>::SignerPermissionsNeeded);
@@ -118,9 +118,13 @@ impl<T: Config> Pallet<T> {
         <Proposals<T>>::try_mutate::<_,(),DispatchError,_>(proposal_id, |proposal| {
             proposal.as_ref().ok_or(Error::<T>::ProposalNotFound)?;
             if let Some(p) = proposal {
-                let signed_already = p.signed_psbts.iter().find(|&signature|{ signature.signer ==signer }).is_some();
+                let signed_already = p.signed_psbts.iter().find(|&signature|{ signature.signer == signer }).is_some();
                 ensure!(!signed_already, Error::<T>::AlreadySigned);
                 p.signed_psbts.try_push(signature).map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
+				// Check if the threshold has ben met, if so, finalize the proposal
+				if p.signed_psbts.len() as u32 == vault.threshold {
+					Self::do_finalize_psbt(signer.clone(), proposal_id, false);
+				}
             }
             Ok(())
         })?;
@@ -136,9 +140,9 @@ impl<T: Config> Pallet<T> {
         // can be called by any vault signer
         ensure!(vault.is_vault_member(&signer), Error::<T>::SignerPermissionsNeeded);
         // if its finalized then fire error "already finalized" or "already broadcasted"
-        ensure!(proposal.status.eq(&ProposalStatus::Pending) || proposal.status.eq(&ProposalStatus::Finalized), 
+        ensure!(proposal.status.eq(&ProposalStatus::Pending) || proposal.status.eq(&ProposalStatus::Finalized),
             Error::<T>::PendingProposalRequired );
-        // signs must be greater or equal than threshold 
+        // signs must be greater or equal than threshold
         ensure!(proposal.signed_psbts.len() as u32 >= vault.threshold, Error::<T>::NotEnoughSignatures);
         // set status to: ready to be finalized
         <Proposals<T>>::try_mutate::<_,(),DispatchError,_>(proposal_id, |proposal|{
@@ -174,7 +178,7 @@ impl<T: Config> Pallet<T> {
     }
 
     /*---- Offchain extrinsics ----*/
-    
+
     pub fn do_insert_descriptors(vault_id: [u8;32], descriptors: Descriptors<T::OutputDescriptorMaxLen>, status: BDKStatus<T::VaultDescriptionMaxLen>) -> DispatchResult {
         <Vaults<T>>::try_mutate(vault_id, | v |{
             match v {
@@ -225,8 +229,8 @@ impl<T: Config> Pallet<T> {
     pub fn get_pending_vaults() -> Vec<[u8; 32]> {
         <Vaults<T>>::iter()
             .filter_map(|(entry, vault)| {
-                if vault.descriptors.output_descriptor.is_empty() && 
-                (vault.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) || 
+                if vault.descriptors.output_descriptor.is_empty() &&
+                (vault.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) ||
                  vault.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::RecoverableError(
                     BoundedVec::<u8,T::VaultDescriptionMaxLen>::default() )) )  {
                     Some(entry)
@@ -240,8 +244,8 @@ impl<T: Config> Pallet<T> {
     pub fn get_pending_proposals() -> Vec<[u8; 32]>{
         <Proposals<T>>::iter()
             .filter_map(|(id, proposal)|{
-                if proposal.psbt.is_empty() && 
-                (proposal.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) || 
+                if proposal.psbt.is_empty() &&
+                (proposal.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::Pending) ||
                 proposal.offchain_status.eq(&BDKStatus::<T::VaultDescriptionMaxLen>::RecoverableError(
                     BoundedVec::<u8,T::VaultDescriptionMaxLen>::default() )) ){
                     Some(id)
@@ -353,7 +357,7 @@ impl<T: Config> Pallet<T> {
         };
         body.push(("threshold".chars().collect::<Vec<char>>(), JsonValue::Number(threshold)));
         let vault_signers = vault.cosigners.clone().to_vec();
-        
+
         //get the xpub for each cosigner
         let xpubs = Self::get_accounts_xpubs(vault_signers).map_err(|_|
             Self::build_offchain_err(false, "One of the cosigner xpubs wasn't found"))?;
@@ -428,7 +432,7 @@ impl<T: Config> Pallet<T> {
                     vault_payload.change_descriptor.clone_from(&descriptors.1);
                 },
                 Err(status) => {vault_payload.status.clone_from(&status)},
-            };     
+            };
             // Build offchain vaults struct and push it to a Vec
             generated_vaults.push(vault_payload);
         });
@@ -492,7 +496,7 @@ impl<T: Config> Pallet<T> {
         Ok(response_body)
     }
 
-    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>, api_endpoint: Vec<u8>, 
+    pub fn gen_proposals_payload_by_bulk(pending_proposals : Vec<[u8;32]>, api_endpoint: Vec<u8>,
         json_builder: &dyn Fn([u8;32])-> Result<Vec<u8>,OffchainStatus>
     ) ->  Vec<SingleProposalPayload>{
         let mut generated_proposals = Vec::<SingleProposalPayload>::new();
@@ -531,7 +535,7 @@ impl<T: Config> Pallet<T> {
         let mapped_signatures: Vec<JsonValue> = proposal.signed_psbts.iter().map(|psbt|{
             JsonValue::String(str::from_utf8(&psbt.signature).unwrap_or_default().chars().collect())
         }).collect();
-        
+
         let broadcast= match proposal.status{
             ProposalStatus::ReadyToFinalize(flag) => flag,
             _ => false,
@@ -544,7 +548,7 @@ impl<T: Config> Pallet<T> {
         // // Parse the JSON and print the resulting lite-json structure.
         Ok(jsonSerialize::format(&json_object, 4) )
     }
-    
+
     // pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus >{
     //     let raw_json = Self::gen_finalize_json_body(proposal_id)?;
     //     let request_body =
@@ -564,7 +568,7 @@ impl<T: Config> Pallet<T> {
     //     let mut finalized_proposals = Vec::<SingleProposalPayload>::new();
     //     finalized_proposals
     // }
-    
+
     fn build_offchain_err(recoverable: bool, msj: &str )-> OffchainStatus{
         let bounded_msj = msj.as_bytes().to_vec();
         match recoverable{
