@@ -297,7 +297,7 @@ pub mod pallet {
 		/// Administator removed
 		AdministratorRemoved(T::AccountId),
 		/// User assigned to project
-		UserAssignedToProject(T::AccountId, [u8;32]),
+		UserAssignedToProject,
 		/// User removed from project
 		UserUnassignedFromProject(T::AccountId, [u8;32]),
 		/// User info updated
@@ -560,17 +560,17 @@ pub mod pallet {
 			Self::do_delete_project(who, project_id)
 		}
 
+		// Users: (user, role)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>, 
-			user: T::AccountId,
 			project_id: [u8;32],  
-			role: ProxyRole,
+			users: BoundedVec<(T::AccountId, ProxyRole), T::MaxResgistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_assign_user(who, user, project_id, role)
+			Self::do_assign_user(who, project_id, users)
 		}
 
 		#[transactional]

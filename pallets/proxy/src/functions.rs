@@ -309,9 +309,8 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_assign_user(
         admin: T::AccountId,
-        user: T::AccountId,
         project_id: [u8;32], 
-        role: ProxyRole, 
+        users: BoundedVec<(T::AccountId, ProxyRole), T::MaxResgistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -322,43 +321,38 @@ impl<T: Config> Pallet<T> {
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
 
-        //Ensure user is registered
-        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+        for user in users{
+            // Basic validations prior to assign user
+            Self::check_user_role(user.0.clone(), user.1)?;
 
-        //Ensure user is not already assigned to the project
-        ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.clone()), Error::<T>::UserAlreadyAssignedToProject);
-        ensure!(!<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
+            //Ensure user is not already assigned to the project
+            ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.0), Error::<T>::UserAlreadyAssignedToProject);
+            ensure!(!<ProjectsByUser<T>>::get(user.0.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
 
-        // Ensure user is not assigened to the selected scope (project_id) with the selected role
-        ensure!(!T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyHasRole);
+            // Ensure user is not assigened to the selected scope (project_id) with the selected role
+            ensure!(!T::Rbac::has_role(user.0.clone(), Self::pallet_id(), &project_id, [user.1.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyAssignedToProject);
 
-        // Update project data depending on the role assigned
-        Self::add_project_role(project_id, user.clone(), role)?;
+            // Update project data depending on the role assigned
+            Self::add_project_role(project_id, user.0.clone(), user.1)?;
 
-                 
-        //HERE
-        //Update user data depending on the role assigned
-        //Self::add_user_role(user.clone(), role)?;
+            // Insert project to ProjectsByUser storagemap
+            <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.0.clone(), |projects| {
+                projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
+                Ok(())
+            })?;
 
-        //TOREVIEW: this storage map will be removed?
-        // Insert project to ProjectsByUser storagemap
-        <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |projects| {
-            projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
-            Ok(())
-        })?;
+            // Insert user to UsersByProject storagemap
+            <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
+                users.try_push(user.0.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
+                Ok(())
+            })?;
 
-        //TOREVIEW: this storage map will be removed?
-        // Insert user to UsersByProject storagemap
-        <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
-            users.try_push(user.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
-            Ok(())
-        })?;
-
-        // Insert user into scope rbac pallet
-        T::Rbac::assign_role_to_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
+            // Insert user into scope rbac pallet
+            T::Rbac::assign_role_to_user(user.0.clone(), Self::pallet_id(), &project_id, user.1.id())?;
+    }
 
         //Event 
-        Self::deposit_event(Event::UserAssignedToProject(user, project_id));
+        Self::deposit_event(Event::UserAssignedToProject);
         Ok(())
     }
 
@@ -499,6 +493,19 @@ impl<T: Config> Pallet<T> {
 
     // B U D G E T  E X P E N D I T U R E 
     // --------------------------------------------------------------------------------------------
+    /// Create a new budget expenditure
+    /// 
+    /// # Arguments
+    /// 
+    /// * `admin` - The admin user that creates the budget expenditure
+    /// * `project_id` - The project id where the budget expenditure will be created
+    /// 
+    /// Then we add the budget expenditure data
+    /// * `name` - The name of the budget expenditure
+    /// * `type` - The type of the budget expenditure
+    /// * `budget amount` - The amount of the budget expenditure
+    /// * `naics code` - The naics code of the budget expenditure
+    /// * `jobs_multiplier` - The jobs multiplier of the budget expenditure
     pub fn do_create_expenditure(
         admin: T::AccountId,
         project_id: [u8;32], 
@@ -579,9 +586,8 @@ impl<T: Config> Pallet<T> {
                 },
                 None => {
                     Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-            },
-        }
-
+                },
+            }
         }
 
         Self::deposit_event(Event::ExpenditureCreated);
@@ -1304,43 +1310,30 @@ impl<T: Config> Pallet<T> {
     }
     
         
-    //HERE
-    // fn add_user_role(
-    //     user: T::AccountId,
-    //     role: ProxyRole,
-    // ) -> DispatchResult {
-    //     // Get user account data
-    //     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+    /// This functions performs the following checks:
+    /// 
+    /// 1. Checks if the user is registered in the system
+    /// 2. Checks if the user has the required role from UsersInfo storage
+    /// 3. Checks if the user is trying to assign an admin role
+    fn check_user_role(
+        user: T::AccountId,
+        role: ProxyRole,
+    ) -> DispatchResult {
+        //  Ensure user is registered & get user data
+        let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-    //     // Check if user already has a role
-    //     match user_data.role {
-    //         Some(user_role) => {
-    //             //TODO: Ccheck what role is the user trying to add
-    //             if user_role == role {
-    //                 return Ok(())
-    //             } else {
-    //                 return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
-    //             }
-    //         },
-    //         None => {
-    //             match role {
-    //                 ProxyRole::Administrator => {
-    //                     return Err(Error::<T>::CannotAddAdminRole.into());
-    //                 },
-    //                 _ => {
-    //                     // Update user data
-    //                     <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
-    //                         let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-    //                         user_data.role = Some(role);
-    //                         Ok(())
-    //                     })?;
-    //                     //TOREVIEW: Remove ? operator and final Ok(())
-    //                     Ok(())
-    //                 },
-    //             }
-    //         }
-    //     }
-    // }
+        // Check if the user role trying to be assigned matchs the actual user role from UsersInfo storage
+        if user_data.role != role {
+            return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
+        }   
+
+        // Can't assign an admin to a project, admins exists globally 
+        if role == ProxyRole::Administrator {
+            return Err(Error::<T>::CannotAddAdminRole.into());
+        }
+
+        Ok(())
+    }
 
             
     //HERE
