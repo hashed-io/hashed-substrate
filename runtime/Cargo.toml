@@ -67,6 +67,8 @@ pallet-bitcoin-vaults = { default-features = false, path = "../pallets/bitcoin-v
 pallet-gated-marketplace = { default-features = false, path = "../pallets/gated-marketplace" }
 pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
+pallet-proxy = { default-features = false, path = "../pallets/proxy" }
+
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
@@ -105,6 +107,7 @@ std = [
 	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
 	"pallet-confidential-docs/std",
+	"pallet-proxy/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",

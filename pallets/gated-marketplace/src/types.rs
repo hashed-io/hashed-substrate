@@ -16,7 +16,7 @@ pub type CustodianFields<T> = ( AccountIdOf<T>, Cids<<T as Config>::MaxFiles>);
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Marketplace<T: Config>{
-    pub label: BoundedVec<u8,T::LabelMaxLen>,
+    pub label: BoundedVec<u8, T::LabelMaxLen>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]

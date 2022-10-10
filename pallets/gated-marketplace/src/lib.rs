@@ -201,6 +201,8 @@ pub mod pallet {
 		OfferDuplicated([u8;32], [u8;32]),
 		/// Offer was removed. [offer_id], [marketplace_id]
 		OfferRemoved([u8;32], [u8;32]), 
+		/// Initial palllet setup 
+		MarketplaceSetupCompleted,
 	}
 
 	// Errors inform users that something went wrong.

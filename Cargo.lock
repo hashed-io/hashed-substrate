@@ -3104,6 +3104,7 @@ dependencies = [
  "pallet-indices",
  "pallet-membership",
  "pallet-node-authorization",
+ "pallet-proxy 4.0.0-dev",
  "pallet-randomness-collective-flip",
  "pallet-rbac",
  "pallet-recovery",
@@ -3686,7 +3687,7 @@ dependencies = [
  "pallet-offences",
  "pallet-offences-benchmarking",
  "pallet-preimage",
- "pallet-proxy",
+ "pallet-proxy 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27)",
  "pallet-recovery",
  "pallet-scheduler",
  "pallet-session",
@@ -5841,6 +5842,23 @@ dependencies = [
 [[package]]
 name = "pallet-proxy"
 version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-rbac",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
+name = "pallet-proxy"
+version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27#8eff668a42325aeb4433eace1604f4d286a6ec05"
 dependencies = [
  "frame-benchmarking",
@@ -7433,7 +7451,7 @@ dependencies = [
  "pallet-offences",
  "pallet-offences-benchmarking",
  "pallet-preimage",
- "pallet-proxy",
+ "pallet-proxy 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27)",
  "pallet-scheduler",
  "pallet-session",
  "pallet-session-benchmarking",
@@ -8335,7 +8353,7 @@ dependencies = [
  "pallet-mmr",
  "pallet-multisig",
  "pallet-offences",
- "pallet-proxy",
+ "pallet-proxy 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27)",
  "pallet-session",
  "pallet-staking",
  "pallet-sudo",
@@ -11992,7 +12010,7 @@ dependencies = [
  "pallet-offences",
  "pallet-offences-benchmarking",
  "pallet-preimage",
- "pallet-proxy",
+ "pallet-proxy 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27)",
  "pallet-recovery",
  "pallet-scheduler",
  "pallet-session",
