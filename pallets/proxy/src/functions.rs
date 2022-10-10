@@ -270,7 +270,7 @@ impl<T: Config> Pallet<T> {
 	//TODO: Create a custom type for users bounded vec	
     pub fn do_register_user(
         admin: T::AccountId,
-        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgistrationsAtTime>,
+        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions     
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -310,7 +310,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_assign_user(
         admin: T::AccountId,
         project_id: [u8;32], 
-        users: BoundedVec<(T::AccountId, ProxyRole), T::MaxResgistrationsAtTime>,
+        users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -515,7 +515,7 @@ impl<T: Config> Pallet<T> {
             Option<u64>,
             Option<u32>,
             Option<u32>,
-        ), T::MaxResgistrationsAtTime>,
+        ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;

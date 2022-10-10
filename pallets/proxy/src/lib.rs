@@ -114,7 +114,7 @@ pub mod pallet {
 		type MaxTransactionsPerExpenditure: Get<u32>;
 
 		#[pallet::constant]
-		type MaxResgistrationsAtTime: Get<u32>;
+		type MaxRegistrationsAtTime: Get<u32>;
 		
 		
 	}
@@ -480,7 +480,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_register_user(
 			origin: OriginFor<T>, 
-			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxResgistrationsAtTime>,
+			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -520,16 +520,27 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(
 			origin: OriginFor<T>, 
-			tittle: FieldName, 
+			title: FieldName, 
 			description: FieldDescription, 
 			image: CID, 
-			adress: FieldName,
+			address: FieldName,
 			project_type: ProjectType,
-			completition_date: u64, 
+			completion_date: u64, 
+			expenditures: BoundedVec<(
+				FieldName,
+				ExpenditureType,
+				Option<u64>,
+				Option<u32>,
+				Option<u32>,
+			), T::MaxRegistrationsAtTime>,
+			users: BoundedVec<(
+				T::AccountId,
+				ProxyRole
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, tittle, description, image, adress, project_type, completition_date)
+			Self::do_create_project(who, title, description, image, address, project_type, completion_date)
 		}
 
 		#[transactional]
@@ -566,7 +577,7 @@ pub mod pallet {
 		pub fn projects_assign_user(
 			origin: OriginFor<T>, 
 			project_id: [u8;32],  
-			users: BoundedVec<(T::AccountId, ProxyRole), T::MaxResgistrationsAtTime>,
+			users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -600,7 +611,7 @@ pub mod pallet {
 				Option<u64>,
 				Option<u32>,
 				Option<u32>,
-			), T::MaxResgistrationsAtTime>,  
+			), T::MaxRegistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
