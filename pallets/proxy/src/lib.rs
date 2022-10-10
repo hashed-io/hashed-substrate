@@ -334,7 +334,7 @@ pub mod pallet {
 		/// Timestamp error
 		TimestampError,
 		/// Completition date must be later than creation date
-		CompletitionDateMustBeLater,
+		CompletionDateMustBeLater,
 		/// User is already registered
 		UserAlreadyRegistered,
 		/// Project is not found
@@ -533,14 +533,14 @@ pub mod pallet {
 				Option<u32>,
 				Option<u32>,
 			), T::MaxRegistrationsAtTime>,
-			users: BoundedVec<(
+			users: Option<BoundedVec<(
 				T::AccountId,
 				ProxyRole
-			), T::MaxRegistrationsAtTime>,
+			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, project_type, completion_date)
+			Self::do_create_project(who, title, description, image, address, project_type, completion_date, expenditures, users)
 		}
 
 		#[transactional]

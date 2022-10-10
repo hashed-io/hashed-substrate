@@ -18,14 +18,14 @@ pub struct ProjectData<T: Config>{
     pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
     pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,
     pub regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>,
-    pub tittle: FieldName,
+    pub title: FieldName,
     pub description: FieldDescription,
     pub image: CID,
-    pub adress: FieldName, 
+    pub address: FieldName, 
     pub status: ProjectStatus,
     pub project_type: ProjectType,
     pub creation_date: u64,
-    pub completition_date: u64,
+    pub completion_date: u64,
     pub updated_date: u64,
 }
 

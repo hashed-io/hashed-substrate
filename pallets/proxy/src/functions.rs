@@ -92,12 +92,23 @@ impl<T: Config> Pallet<T> {
 		
     pub fn do_create_project(
         admin: T::AccountId, 
-        tittle: FieldName,
+        title: FieldName,
         description: FieldDescription,
         image: CID,
-        adress: FieldName,
+        address: FieldName,
         project_type: ProjectType,
-        completition_date: u64,
+        completion_date: u64,
+        expenditures: BoundedVec<(
+            FieldName,
+            ExpenditureType,
+            Option<u64>,
+            Option<u32>,
+            Option<u32>,
+        ), T::MaxRegistrationsAtTime>,
+        users: Option<BoundedVec<(
+            T::AccountId,
+            ProxyRole
+        ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -107,10 +118,10 @@ impl<T: Config> Pallet<T> {
 
         //Create project_id
         //TOREVIEW: We could use only name as project_id or use a method/storagemap to check if the name is already in use
-        let project_id = (tittle.clone()).using_encoded(blake2_256);
+        let project_id = (title.clone()).using_encoded(blake2_256);
 
-        //ensure completition date is in the future
-        ensure!(completition_date > timestamp, Error::<T>::CompletitionDateMustBeLater);
+        //ensure completion_date is in the future
+        ensure!(completion_date > timestamp, Error::<T>::CompletionDateMustBeLater);
         
         //Create project data
         let project_data = ProjectData::<T> {
@@ -118,14 +129,14 @@ impl<T: Config> Pallet<T> {
             investor: Some(BoundedVec::<T::AccountId, T::MaxInvestorsPerProject>::default()),
             issuer: Some(BoundedVec::<T::AccountId, T::MaxIssuersPerProject>::default()),
             regional_center: Some(BoundedVec::<T::AccountId, T::MaxRegionalCenterPerProject>::default()),
-            tittle,
+            title,
             description,
             image,
-            adress,
+            address,
             status: ProjectStatus::default(), 
             project_type,
             creation_date: timestamp,
-            completition_date,
+            completion_date,
             updated_date: timestamp,
         };
 
@@ -137,30 +148,16 @@ impl<T: Config> Pallet<T> {
         ensure!(!ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectIdAlreadyInUse);
         ProjectsInfo::<T>::insert(project_id, project_data);
 
-        // Match project type, call default expenditures
-        // match project_type {
-        //     ProjectType::Construction => {
-        //         //Generate its related expenditures
-        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-        //     },
-        //     ProjectType::ConstructionOperation => {
-        //         //Generate its related expenditures
-        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-        //         Self::do_generate_operational_defaults(admin.clone(), project_id)?;
-        //     },
-        //     ProjectType::ConstructionBridge => {
-        //         //Generate its related expenditures
-        //         Self::do_generate_hard_cost_defaults(admin.clone(), project_id)?;
-        //         Self::do_generate_soft_cost_defaults(admin.clone(), project_id)?;
-        //         Self::do_generate_others_defaults(admin.clone(), project_id)?;
-        //     },
-        //     ProjectType::Operation => {
-        //         //Generate its related expenditures
-        //         Self::do_generate_operational_defaults(admin.clone(), project_id)?;
-        //     },
-        // }
+        //Add expenditures
+        Self::do_create_expenditure(admin.clone(), project_id, expenditures)?;
+
+        match users {
+            Some(users) => {
+                //Add users
+                Self::do_assign_user(admin.clone(), project_id, users)?;
+            },
+            None => {}
+        }
 
         //Initialize drawdowns
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
@@ -174,11 +171,11 @@ impl<T: Config> Pallet<T> {
     pub fn do_edit_project(
         admin: T::AccountId,
         project_id: [u8;32], 
-        tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
         description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-        completition_date: Option<u64>,  
+        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+        completion_date: Option<u64>,  
     ) -> DispatchResult {
         //ensure admin permissions             
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -196,9 +193,9 @@ impl<T: Config> Pallet<T> {
         <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
             
-            if let Some(tittle) = tittle {
-                let mod_tittle = tittle.into_inner();
-                project.tittle = mod_tittle[0].clone();
+            if let Some(title) = title {
+                let mod_title = title.into_inner();
+                project.title = mod_title[0].clone();
             }
             if let Some(description) = description {
                 let mod_description = description.into_inner();
@@ -208,14 +205,14 @@ impl<T: Config> Pallet<T> {
                 let mod_image = image.into_inner();
                 project.image = mod_image[0].clone();
             }
-            if let Some(adress) = adress {
-                let mod_adress = adress.into_inner();
-                project.adress = mod_adress[0].clone();
+            if let Some(address) = address {
+                let mod_address = address.into_inner();
+                project.address = mod_address[0].clone();
             }
-            if let Some(completition_date) = completition_date {
-                //ensure new completition date is in the future
-                ensure!(completition_date > current_timestamp, Error::<T>::CompletitionDateMustBeLater);
-                project.completition_date = completition_date;
+            if let Some(completion_date) = completion_date {
+                //ensure new completion_date date is in the future
+                ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
+                project.completion_date = completion_date;
             }
             //TOREVIEW: Check if this is working
             project.updated_date = current_timestamp;
