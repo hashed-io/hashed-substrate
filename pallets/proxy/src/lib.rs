@@ -431,6 +431,8 @@ pub mod pallet {
 		TransactionIsAlreadyCompleted,
 		/// Expenditure type does not match project type
 		InvalidExpenditureType,
+		/// User does not have the specified role
+		UserDoesNotHaveRole,
 
 	}
 
