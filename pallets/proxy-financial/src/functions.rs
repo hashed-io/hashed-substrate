@@ -844,8 +844,6 @@ impl<T: Config> Pallet<T> {
             creator: Some(admin.clone()),
         };
 
-        let draws = DrawdownsByProjectByType::<T>::get(project_id, _);
-
         // Insert drawdown data
         // Ensure drawdown id is unique
         ensure!(!DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownAlreadyExists);

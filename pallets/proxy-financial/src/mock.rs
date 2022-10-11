@@ -1,4 +1,4 @@
-use crate as pallet_proxy;
+use crate as pallet_proxy_financial;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -20,7 +20,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
+		Proxy: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
@@ -81,7 +81,7 @@ parameter_types! {
 
 }
 
-impl pallet_proxy::Config for Test {
+impl pallet_proxy_financial::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ProjectNameMaxLen = ProjectNameMaxLen;
