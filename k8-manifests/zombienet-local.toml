@@ -1,0 +1,23 @@
+[relaychain]
+default_image = "docker.io/parity/polkadot:v0.9.27"
+default_command = "polkadot"
+default_args = [ "-lparachain=debug" ]
+
+chain = "rococo-local"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+
+[[parachains]]
+id = 2000
+cumulus_based = true
+
+  [parachains.collator]
+  name = "collator01"
+  image = "docker.io/abhashed/test-collator"
+  command = "hashed-parachain"

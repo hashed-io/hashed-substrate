@@ -29,7 +29,7 @@ use frame_system::{EnsureRoot, EnsureSigned};
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EnsureOneOf},
+	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight, 
@@ -272,6 +272,7 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Runtime {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
@@ -454,6 +455,7 @@ impl pallet_treasury::Config for Runtime {
 	type ProposalBondMinimum = ProposalBondMinimum;
 	type ProposalBondMaximum = ProposalBondMaximum; //set to () on the substrate repo
 	type SpendPeriod = SpendPeriod;
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
 	type Burn = Burn;
 	type BurnDestination = Treasury;
 	type MaxApprovals = MaxApprovals;
@@ -545,6 +547,63 @@ impl pallet_fruniques::Config for Runtime {
 }
 
 parameter_types! {
+	pub const ProjectNameMaxLen:u32 = 32;
+	pub const ProjectDescMaxLen:u32 = 256;
+	pub const MaxDocuments:u32 = 5;
+	pub const MaxAccountsPerTransaction:u32 = 5;
+	pub const MaxProjectsPerUser:u32 = 10;
+	pub const CIDMaxLen:u32 = 100;	
+	pub const MaxUserPerProject:u32 = 50;
+	pub const MaxDevelopersPerProject:u32 = 1;
+	pub const MaxInvestorsPerProject:u32 = 50;
+	pub const MaxIssuersPerProject:u32 = 1;
+	pub const MaxRegionalCenterPerProject:u32 = 1;
+	pub const MaxBoundedVecs:u32 = 1;
+	pub const MaxExpendituresPerProject:u32 = 1000;
+	pub const MaxBudgetsPerProject:u32 = 1000;
+	pub const MaxDrawdownsPerProject:u32 = 1000;
+	pub const MaxTransactionsPerProject:u32 = 1000;
+	pub const MaxTransactionsPerDrawdown:u32 = 500;
+	pub const MaxTransactionsPerExpenditure:u32 = 500;
+	pub const MaxRegistrationsAtTime:u32 = 50;
+
+
+}
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type Timestamp = Timestamp;
+	type Moment = Moment; 
+	type Rbac = RBAC;
+		type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	
+	type ProjectNameMaxLen = ProjectNameMaxLen;
+	type ProjectDescMaxLen = ProjectDescMaxLen;
+	type MaxDocuments = MaxDocuments;
+	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
+	type MaxProjectsPerUser = MaxProjectsPerUser;
+	type CIDMaxLen = CIDMaxLen;
+	type MaxUserPerProject = MaxUserPerProject;
+	type MaxDevelopersPerProject = MaxDevelopersPerProject;
+	type MaxInvestorsPerProject = MaxInvestorsPerProject;
+	type MaxIssuersPerProject = MaxIssuersPerProject;
+	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
+	type MaxBoundedVecs = MaxBoundedVecs;
+	type MaxExpendituresPerProject = MaxExpendituresPerProject;
+	type MaxBudgetsPerProject = MaxBudgetsPerProject;
+	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
+	type MaxTransactionsPerProject = MaxTransactionsPerProject;
+	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
+	type MaxTransactionsPerExpenditure = MaxTransactionsPerExpenditure;
+	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
+
+}
+
+
+
+parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
 	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
@@ -559,7 +618,7 @@ parameter_types! {
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EnsureOneOf<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -588,10 +647,10 @@ parameter_types! {
 	pub const MaxProposalsPerVault: u32 = 5;
 }
 
-impl pallet_nbv_storage::Config for Runtime {
-	type AuthorityId = pallet_nbv_storage::types::crypto::TestAuthId;
+impl pallet_bitcoin_vaults::Config for Runtime {
+	type AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
 	type Event = Event;
-	type ChangeBDKOrigin = EnsureOneOf<
+	type ChangeBDKOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -616,7 +675,7 @@ parameter_types! {
 
 impl pallet_confidential_docs::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EnsureOneOf<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -740,9 +799,10 @@ construct_runtime!(
 		Fruniques: pallet_fruniques,
 		GatedMarketplace: pallet_gated_marketplace,
 		Assets: pallet_assets,
-		NBVStorage: pallet_nbv_storage,
+		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
+		Proxy: pallet_proxy,
 	}
 );
 

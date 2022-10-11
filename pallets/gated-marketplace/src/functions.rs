@@ -27,6 +27,8 @@ impl<T: Config> Pallet<T> {
         let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
         // redemption specialist role and permissions
         let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
+        
+        Self::deposit_event(Event::MarketplaceSetupCompleted);
         Ok(())
     }
 
@@ -36,7 +38,7 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
-        T::Rbac::create_scope(Self::pallet_id(),marketplace_id)?;
+        T::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
@@ -622,7 +624,7 @@ impl<T: Config> Pallet<T> {
         });  
 
         // remove from ApplicantsByMarketplace list
-        <ApplicantsByMarketplace<T>>::remove_prefix(marketplace_id, None);
+        let _ = <ApplicantsByMarketplace<T>>::clear_prefix(marketplace_id,1000, None);
 
         // remove from Custodians list
         <Custodians<T>>::iter().for_each(|(_k1, _k2, _k3)|{

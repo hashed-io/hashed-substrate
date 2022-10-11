@@ -1,8 +1,13 @@
 [workspace]
 members = [
+    'collator',
     'node',
-    'pallets/template',
-    'pallets/nbv-storage',
+    'pallets/bitcoin-vaults',
+    'pallets/confidential-docs',
+    'pallets/rbac',
+    'pallets/fruniques',
+    'pallets/gated-marketplace',
+    'parachain-runtime',
     'runtime',
 ]
 [profile.release]

@@ -24,7 +24,7 @@ jobs:
         run:  SKIP_WASM_BUILD=1 cargo doc --all --no-deps
 
       - name: Make index.html
-        run:  echo "<meta http-equiv=refresh content=0;url=hashed_substrate/index.html>" > ./target/doc/index.html
+        run:  echo "<meta http-equiv=refresh content=0;url=hashed_runtime/index.html>" > ./target/doc/index.html
 
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3
