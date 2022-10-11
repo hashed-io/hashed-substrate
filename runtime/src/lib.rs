@@ -32,7 +32,7 @@ pub use frame_support::{
 	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-		ConstantMultiplier, IdentityFee, Weight, 
+		ConstantMultiplier, IdentityFee, Weight,
 	},
 	PalletId, StorageValue,
 };
@@ -68,7 +68,7 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
-pub type Moment = u64;	
+pub type Moment = u64;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -106,7 +106,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 116,
+	spec_version: 117,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -552,7 +552,7 @@ parameter_types! {
 	pub const MaxDocuments:u32 = 5;
 	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
-	pub const CIDMaxLen:u32 = 100;	
+	pub const CIDMaxLen:u32 = 100;
 	pub const MaxUserPerProject:u32 = 50;
 	pub const MaxDevelopersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
@@ -572,13 +572,13 @@ parameter_types! {
 impl pallet_proxy_financial::Config for Runtime {
 	type Event = Event;
 	type Timestamp = Timestamp;
-	type Moment = Moment; 
+	type Moment = Moment;
 	type Rbac = RBAC;
 		type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
-	
+
 	type ProjectNameMaxLen = ProjectNameMaxLen;
 	type ProjectDescMaxLen = ProjectDescMaxLen;
 	type MaxDocuments = MaxDocuments;
@@ -609,7 +609,7 @@ parameter_types! {
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
 	pub const NotesMaxLen: u32 = 256;
-	pub const MaxFeedbackLen: u32 = 256; 
+	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
 	pub const MaxFiles: u32 = 10;
 	pub const MaxApplicationsPerCustodian: u32 = 10;
@@ -634,7 +634,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxMarketsPerItem = MaxMarketsPerItem;
 	type MaxOffersPerMarket = MaxOffersPerMarket;
 	type Timestamp = Timestamp;
-	type Moment = Moment; 
+	type Moment = Moment;
 	type Rbac = RBAC;
 }
 parameter_types! {
