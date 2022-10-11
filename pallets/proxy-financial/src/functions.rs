@@ -89,7 +89,11 @@ impl<T: Config> Pallet<T> {
 
     // P R O J E C T S
     // --------------------------------------------------------------------------------------------
-		
+	
+    /// Create a new project
+    /// - only administrator can create a new project
+    /// expenditures = (name, type, budget amount, naics code, jobs multiplier)
+    /// users = (accountid, role)
     pub fn do_create_project(
         admin: T::AccountId, 
         title: FieldName,
@@ -101,7 +105,7 @@ impl<T: Config> Pallet<T> {
         expenditures: BoundedVec<(
             FieldName,
             ExpenditureType,
-            Option<u64>,
+            u64,
             Option<u32>,
             Option<u32>,
         ), T::MaxRegistrationsAtTime>,
@@ -504,7 +508,7 @@ impl<T: Config> Pallet<T> {
         expenditures: BoundedVec<(
             FieldName,
             ExpenditureType,
-            Option<u64>,
+            u64,
             Option<u32>,
             Option<u32>,
         ), T::MaxRegistrationsAtTime>,
@@ -555,7 +559,7 @@ impl<T: Config> Pallet<T> {
                 project_id,
                 name: expenditure.0.clone(),
                 expenditure_type: expenditure.1,
-                balance: 0,
+                expenditure_amount: expenditure.2,
                 naics_code: expenditure.3,
                 jobs_multiplier: expenditure.4,
             };  
@@ -572,14 +576,7 @@ impl<T: Config> Pallet<T> {
             })?;
 
             // Create a budget for the expenditure
-            match expenditure.2 {
-                Some(amount) => {
-                    Self::do_create_budget(admin.clone(), expenditure_id, amount, project_id)?;
-                },
-                None => {
-                    Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-                },
-            }
+            Self::do_create_budget(expenditure_id, 0, project_id)?;
         }
 
         Self::deposit_event(Event::ExpenditureCreated);
@@ -591,7 +588,7 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32], 
         expenditure_id: [u8;32],
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-        budget_amount: Option<u64>,
+        expenditure_amount: Option<u64>,
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
@@ -622,11 +619,8 @@ impl<T: Config> Pallet<T> {
                 ensure!(mod_name[0].len() > 0, Error::<T>::FieldNameCannotBeEmpty);
                 expenditure.name = mod_name[0].clone();
             }
-            if let Some(budget_amount) = budget_amount {
-                //get budget id
-                let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-                // Edit budget amount
-                Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
+            if let Some(expenditure_amount) = expenditure_amount {
+                expenditure.expenditure_amount = expenditure_amount;
             }
             if let Some(naics_code) = naics_code {
                 expenditure.naics_code = Some(naics_code);
@@ -670,7 +664,7 @@ impl<T: Config> Pallet<T> {
         })?;
 
         // Delete expenditure budget
-        Self::do_delete_budget(admin, project_id, expenditure_id)?;
+        Self::do_delete_budget(project_id, expenditure_id)?;
 
         Self::deposit_event(Event::ExpenditureDeleted(expenditure_id));
         Ok(())
@@ -682,18 +676,12 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
     // Buget functions are not exposed to the public. They are only used internally by the module.
     fn do_create_budget(
-        admin: T::AccountId,
         expenditure_id: [u8;32],
         amount: u64,
         project_id: [u8;32],
     ) -> DispatchResult {
-        //TODO: ensure admin & developer permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure expenditure_id exists 
         ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
-
-        //TODO: balance check
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -725,7 +713,8 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn do_edit_budget(
+    //For now budgets are not editable.
+    fn _do_edit_budget(
         admin: T::AccountId,
         budget_id: [u8;32],
         amount: u64,
@@ -748,34 +737,25 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        //TOREVIEW: Check if an event is needed
-
         Ok(())
     }
 
     fn do_delete_budget(
-        admin: T::AccountId,
         project_id: [u8;32],
         expenditure_id: [u8;32],
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Get budget id
         let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
 
         // Remove budget data
         <BudgetsInfo<T>>::remove(budget_id);
 
-        //TOREVIEW: Check budget id is deleted
         // Delete budget_id from BudgetsByProject
         <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
             budgets.retain(|budget| budget != &budget_id);
             Ok(())
         })?;
         
-        //TOREVIEW: Check if an event is needed
-
         Ok(())
     }
 
