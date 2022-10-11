@@ -8,6 +8,7 @@ var sourcesIndex = JSON.parse('{\
 "pallet_fruniques":["",[],["functions.rs","lib.rs"]],\
 "pallet_gated_marketplace":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_proxy":["",[],["functions.rs","lib.rs","types.rs"]],\
+"pallet_proxy_financial":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_rbac":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_template":["",[],["lib.rs"]]\
 }');
