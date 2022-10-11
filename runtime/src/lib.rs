@@ -802,7 +802,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
-		Proxy: pallet_proxy_financial,
+		ProxyFinancial: pallet_proxy_financial,
 	}
 );
 
