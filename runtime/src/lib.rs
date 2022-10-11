@@ -569,7 +569,7 @@ parameter_types! {
 
 
 }
-impl pallet_proxy::Config for Runtime {
+impl pallet_proxy_financial::Config for Runtime {
 	type Event = Event;
 	type Timestamp = Timestamp;
 	type Moment = Moment; 
@@ -802,7 +802,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
-		Proxy: pallet_proxy,
+		Proxy: pallet_proxy_financial,
 	}
 );
 

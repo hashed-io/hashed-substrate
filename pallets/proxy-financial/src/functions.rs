@@ -151,12 +151,9 @@ impl<T: Config> Pallet<T> {
         //Add expenditures
         Self::do_create_expenditure(admin.clone(), project_id, expenditures)?;
 
-        match users {
-            Some(users) => {
-                //Add users
-                Self::do_assign_user(admin.clone(), project_id, users)?;
-            },
-            None => {}
+        // Add users
+        if let Some(users) = users {
+            Self::do_assign_user(admin.clone(), project_id, users)?;
         }
 
         //Initialize drawdowns
@@ -375,10 +372,8 @@ impl<T: Config> Pallet<T> {
         ensure!(<UsersByProject<T>>::get(project_id).contains(&user.clone()), Error::<T>::UserNotAssignedToProject);
         ensure!(<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserNotAssignedToProject);
 
-        // Ensure user has roles assigned to the project
-        // TODO: catch error and return custom error
-        //ensure!(T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserDoesNotHaveRole);
-        T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec())?;
+        // Ensure user has the specified role assigned in the selected project
+        ensure!(T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserDoesNotHaveRole);
 
         // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
@@ -1319,7 +1314,7 @@ impl<T: Config> Pallet<T> {
         //  Ensure user is registered & get user data
         let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-        // Check if the user role trying to be assigned matchs the actual user role from UsersInfo storage
+        // Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
         if user_data.role != role {
             return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
         }   
