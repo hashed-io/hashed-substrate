@@ -234,6 +234,18 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn drawdowns_by_project_by_type)]
+	pub(super) type DrawdownsByProjectByType<T: Config> = StorageDoubleMap<
+		_, 
+		Identity, 
+		[u8;32], // Key project_id
+		Identity,
+		DrawdownType, // Key drawdown type
+		BoundedVec<[u8;32], T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn transactions)]
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
 		_, 

@@ -151,12 +151,9 @@ impl<T: Config> Pallet<T> {
         //Add expenditures
         Self::do_create_expenditure(admin.clone(), project_id, expenditures)?;
 
-        match users {
-            Some(users) => {
-                //Add users
-                Self::do_assign_user(admin.clone(), project_id, users)?;
-            },
-            None => {}
+        // Add users
+        if let Some(users) = users {
+            Self::do_assign_user(admin.clone(), project_id, users)?;
         }
 
         //Initialize drawdowns
@@ -847,6 +844,8 @@ impl<T: Config> Pallet<T> {
             creator: Some(admin.clone()),
         };
 
+        let draws = DrawdownsByProjectByType::<T>::get(project_id, _);
+
         // Insert drawdown data
         // Ensure drawdown id is unique
         ensure!(!DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownAlreadyExists);
@@ -1317,7 +1316,7 @@ impl<T: Config> Pallet<T> {
         //  Ensure user is registered & get user data
         let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-        // Check if the user role trying to be assigned matchs the actual user role from UsersInfo storage
+        // Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
         if user_data.role != role {
             return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
         }   
