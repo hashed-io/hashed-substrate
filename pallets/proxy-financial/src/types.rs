@@ -97,7 +97,7 @@ impl Default for ExpenditureType{
 
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct BudgetData{
+pub struct BudgetData {
     pub expenditure_id: [u8;32],
     pub balance: u64,
     pub created_date: u64,
@@ -105,10 +105,8 @@ pub struct BudgetData{
 }
 
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct DrawdownData<T:Config>{
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct DrawdownData {
     pub project_id: [u8;32],
     pub drawdown_number: u32,
     pub drawdown_type: DrawdownType,
@@ -117,7 +115,6 @@ pub struct DrawdownData<T:Config>{
     //TODO: add Option<Files> -> Bulk Upload
     pub created_date: u64,
     pub close_date: u64,
-    pub creator: Option<T::AccountId>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -125,6 +122,12 @@ pub enum DrawdownType{
     EB5, 
     ConstructionLoan,
     DeveloperEquity,
+}
+
+impl Default for DrawdownType{
+    fn default() -> Self {
+        DrawdownType::EB5
+    }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
