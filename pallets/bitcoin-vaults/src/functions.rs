@@ -123,7 +123,8 @@ impl<T: Config> Pallet<T> {
                 p.signed_psbts.try_push(signature).map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
 				// Check if the threshold has ben met, if so, finalize the proposal
 				if p.signed_psbts.len() as u32 == vault.threshold {
-					Self::do_finalize_psbt(signer.clone(), proposal_id, false);
+					p.status.clone_from(&ProposalStatus::ReadyToFinalize(false));
+					Self::deposit_event(Event::ProposalFinalized(proposal_id, signer.clone()));
 				}
             }
             Ok(())
