@@ -3104,6 +3104,7 @@ dependencies = [
  "pallet-indices",
  "pallet-membership",
  "pallet-node-authorization",
+ "pallet-proxy-financial",
  "pallet-randomness-collective-flip",
  "pallet-rbac",
  "pallet-recovery",
@@ -5851,6 +5852,23 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-proxy-financial"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-rbac",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
 ]
 
 [[package]]

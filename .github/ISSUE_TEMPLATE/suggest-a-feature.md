@@ -6,7 +6,7 @@ labels: enhancement
 assignees: ""
 ---
 
-**Motivation**
+**Description**
 
 _Describe the need or frustration that motivated you to make this suggestion. Please note that the
 goal of this project is to provide a general-purpose template project, so please take care when
