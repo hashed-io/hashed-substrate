@@ -219,7 +219,7 @@ pub mod pallet {
 		_, 
 		Identity, 
 		[u8;32], // Key drawdown id
-		DrawdownData<T>,  // Value DrawdownData<T>
+		DrawdownData,  // Value DrawdownData<T>
 		OptionQuery,
 	>;
 	

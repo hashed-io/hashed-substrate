@@ -151,7 +151,6 @@ pub struct TransactionData<T: Config>{
     pub project_id: [u8;32],
     pub drawdown_id: [u8;32],
     pub expenditure_id: [u8;32],
-    pub creator: T::AccountId,
     pub created_date: u64,
     pub updated_date: u64,
     pub closed_date: u64,
