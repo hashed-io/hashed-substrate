@@ -13,7 +13,7 @@ pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct ProjectData<T: Config>{
+pub struct ProjectData<T: Config> {
     pub developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>,
     pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
     pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,
@@ -30,18 +30,18 @@ pub struct ProjectData<T: Config>{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectStatus{
+pub enum ProjectStatus {
     Started,
     Completed,
 }
-impl Default for ProjectStatus{
+impl Default for ProjectStatus {
     fn default() -> Self {
         ProjectStatus::Started
     }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectType{
+pub enum ProjectType {
     Construction, 
     ConstructionOperation,
     ConstructionBridge, 
@@ -52,7 +52,7 @@ pub enum ProjectType{
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct UserData<T: Config>{
+pub struct UserData<T: Config> {
     pub name: FieldName,
     pub role: ProxyRole,
     pub image: CID,
@@ -62,7 +62,7 @@ pub struct UserData<T: Config>{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProxyRole{
+pub enum ProxyRole {
     Administrator,
     Developer,
     Investor,
@@ -82,14 +82,14 @@ pub struct ExpenditureData {
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ExpenditureType{
+pub enum ExpenditureType {
     HardCost, 
     SoftCost,
     Operational, 
     Others,
 }
 
-impl Default for ExpenditureType{
+impl Default for ExpenditureType {
     fn default() -> Self {
         ExpenditureType::HardCost
     }
@@ -105,40 +105,42 @@ pub struct BudgetData {
 }
 
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct DrawdownData {
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct DrawdownData<T: Config> {
     pub project_id: [u8;32],
     pub drawdown_number: u32,
     pub drawdown_type: DrawdownType,
     pub total_amount: u64,
     pub status: DrawdownStatus,
-    //TODO: add Option<Files> -> Bulk Upload
+    pub documents: Option<Documents<T>>,
     pub created_date: u64,
     pub close_date: u64,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum DrawdownType{
+pub enum DrawdownType {
     EB5, 
     ConstructionLoan,
     DeveloperEquity,
 }
 
-impl Default for DrawdownType{
+impl Default for DrawdownType {
     fn default() -> Self {
         DrawdownType::EB5
     }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum DrawdownStatus{
+pub enum DrawdownStatus {
     Draft, 
     Submitted,
     Approved,
     Rejected,
 }
 
-impl Default for DrawdownStatus{
+impl Default for DrawdownStatus {
     fn default() -> Self {
         DrawdownStatus::Draft
     }
@@ -147,7 +149,7 @@ impl Default for DrawdownStatus{
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct TransactionData<T: Config>{
+pub struct TransactionData<T: Config> {
     pub project_id: [u8;32],
     pub drawdown_id: [u8;32],
     pub expenditure_id: [u8;32],
@@ -161,14 +163,14 @@ pub struct TransactionData<T: Config>{
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum TransactionStatus{
+pub enum TransactionStatus {
     Draft, 
     Submitted,
     Approved,
     Rejected,
 }
 
-impl Default for TransactionStatus{
+impl Default for TransactionStatus {
     fn default() -> Self {
         TransactionStatus::Draft
     }
@@ -182,7 +184,7 @@ pub enum CURD {
     Delete,
 }
 
-impl ProxyRole{
+impl ProxyRole {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
             //TOREVIEW: optimization (?)
@@ -210,7 +212,7 @@ impl ProxyRole{
 
 /// Extrinsics which require previous authorization to call them
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProxyPermission{
+pub enum ProxyPermission {
     RegisterUser, // users_register_user
     UpdateUser, // users_update_user
     DeleteUser, // users_delete_user
@@ -221,7 +223,7 @@ pub enum ProxyPermission{
     UnassignUser, // projects_unassign_user
 }
 
-impl ProxyPermission{ 
+impl ProxyPermission { 
     pub fn to_vec(self) -> Vec<u8>{
         match self{
             Self::RegisterUser => "RegisterUser".as_bytes().to_vec(),
