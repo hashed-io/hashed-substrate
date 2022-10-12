@@ -152,7 +152,7 @@ pub struct TransactionData<T: Config>{
     pub created_date: u64,
     pub updated_date: u64,
     pub closed_date: u64,
-    pub description: FieldDescription,
+    pub feedback: FieldDescription,
     pub amount: u64,
     pub status: TransactionStatus,
     pub documents: Option<Documents<T>>,
@@ -166,11 +166,18 @@ pub enum TransactionStatus{
     Rejected,
 }
 
-
 impl Default for TransactionStatus{
     fn default() -> Self {
         TransactionStatus::Draft
     }
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum CURD {
+    Create,
+    Update,
+    Read,
+    Delete,
 }
 
 impl ProxyRole{
