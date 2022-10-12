@@ -3,7 +3,7 @@
 use super::*;
 
 #[allow(unused)]
-use crate::Pallet as NBVStorage;
+use crate::Pallet as BitconVaults;
 use frame_benchmarking::{benchmarks, whitelisted_caller};
 use frame_system::RawOrigin;
 
@@ -16,5 +16,5 @@ benchmarks! {
 		assert_eq!(Something::<T>::get(), Some(s));
 	}
 
-	impl_benchmark_test_suite!(NBVStorage, crate::mock::new_test_ext(), crate::mock::Test);
+	impl_benchmark_test_suite!(BitconVaults, crate::mock::new_test_ext(), crate::mock::Test);
 }

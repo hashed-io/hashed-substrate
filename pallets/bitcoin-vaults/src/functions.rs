@@ -124,7 +124,6 @@ impl<T: Config> Pallet<T> {
 				// Check if the threshold has ben met, if so, finalize the proposal
 				if p.signed_psbts.len() as u32 == vault.threshold {
 					p.status.clone_from(&ProposalStatus::ReadyToFinalize(false));
-					Self::deposit_event(Event::ProposalFinalized(proposal_id, signer.clone()));
 				}
             }
             Ok(())
