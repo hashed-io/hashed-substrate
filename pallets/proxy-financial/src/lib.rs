@@ -95,10 +95,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxBoundedVecs: Get<u32>;
 
-
-		#[pallet::constant]
-		type MaxBudgetsPerProject: Get<u32>;
-
 		#[pallet::constant]
 		type MaxDrawdownsPerProject: Get<u32>;
 
@@ -110,6 +106,9 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxDrawdownsByStatus: Get<u32>;
+
+		#[pallet::constant]
+		type MaxExpendituresPerProject: Get<u32>;
 		
 		
 	}
@@ -139,7 +138,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn projects)]
+	#[pallet::getter(fn projects_info)]
 	pub(super) type ProjectsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -169,7 +168,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn expenditures)]
+	#[pallet::getter(fn expenditures_info)]
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -178,25 +177,13 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
-	//TODO: remove
 	#[pallet::storage]
-	#[pallet::getter(fn budgets)]
-	pub(super) type BudgetsInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key expenditure_id
-		BudgetData,  // Value BudgetData
-		OptionQuery,
-	>;
-
-	//TODO: remove
-	#[pallet::storage]
-	#[pallet::getter(fn budgets_by_project)]
-	pub(super) type BudgetsByProject<T: Config> = StorageMap<
+	#[pallet::getter(fn expenditures_by_project)]
+	pub(super) type ExpendituresByProject<T: Config> = StorageMap<
 		_, 
 		Identity, 
 		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxBudgetsPerProject>,  // Value budgets
+		BoundedVec<[u8;32], T::MaxExpendituresPerProject>,  // Value expenditures
 		ValueQuery,
 	>;
 
@@ -345,10 +332,10 @@ pub mod pallet {
 		UserCannotHaveMoreThanOneRole,
 		/// Expenditure not found
 		ExpenditureNotFound,
-		/// Maximum number of budgets per project reached
-		MaxBudgetsPerProjectReached,
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
+		/// Max number of expenditures per project reached
+		MaxExpendituresPerProjectReached,
 		/// Name for expenditure is too long
 		NameTooLong,
 		/// There is no expenditure with such project id

@@ -569,8 +569,11 @@ impl<T: Config> Pallet<T> {
             ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
             <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-            // Create a budget for the expenditure
-            Self::do_create_budget(expenditure_id, 0, project_id)?;
+            //Insert expenditure_id into ExpendituresByProject
+            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+                Ok(())
+            })?;
         }
 
         Self::deposit_event(Event::ExpenditureCreated);
@@ -651,132 +654,15 @@ impl<T: Config> Pallet<T> {
         // Delete expenditure data
         <ExpendituresInfo<T>>::remove(expenditure_id);
 
-        // Delete expenditure budget
-        Self::do_delete_budget(project_id, expenditure_id)?;
+        // Delete expenditure_id from ExpendituresByProject
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+            expenditures.retain(|expenditure| expenditure != &expenditure_id);
+            Ok(())
+        })?;
 
         Self::deposit_event(Event::ExpenditureDeleted(expenditure_id));
         Ok(())
     }
-
-
-
-    // B U D G E T S
-    // --------------------------------------------------------------------------------------------
-    // Buget functions are not exposed to the public. They are only used internally by the module.
-    fn do_create_budget(
-        expenditure_id: [u8;32],
-        amount: u64,
-        project_id: [u8;32],
-    ) -> DispatchResult {
-        // Ensure expenditure_id exists 
-        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
-
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
-        // Create budget id
-        let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
-
-        //TOREVIEW: Check if project_id exists.
-
-        // Create budget data
-        let budget_data = BudgetData {
-            expenditure_id,
-            balance: amount,
-            created_date: timestamp,
-            updated_date: timestamp,
-        };
-
-        // Insert budget data
-        <BudgetsInfo<T>>::insert(budget_id, budget_data);
-
-        // Insert budget id into BudgetsByProject
-        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
-            budgets.try_push(budget_id).map_err(|_| Error::<T>::MaxBudgetsPerProjectReached)?;
-            Ok(())
-        })?;
-
-        //TOREVIEW: Check if this event is needed
-        Self::deposit_event(Event::BudgetCreated(budget_id));
-        Ok(())
-    }
-
-    //For now budgets are not editable.
-    fn _do_edit_budget(
-        admin: T::AccountId,
-        budget_id: [u8;32],
-        amount: u64,
-    ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-        
-        //Ensure budget exists
-        ensure!(<BudgetsInfo<T>>::contains_key(budget_id), Error::<T>::BudgetNotFound);
-
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
-        // Mutate budget data
-        <BudgetsInfo<T>>::try_mutate::<_,_,DispatchError,_>(budget_id, |budget_data| {
-            let mod_budget_data = budget_data.as_mut().ok_or(Error::<T>::BudgetNotFound)?;
-            // Update budget data
-            mod_budget_data.balance = amount;
-            mod_budget_data.updated_date = timestamp;
-            Ok(())
-        })?;
-
-        Ok(())
-    }
-
-    fn do_delete_budget(
-        project_id: [u8;32],
-        expenditure_id: [u8;32],
-    ) -> DispatchResult {
-        // Get budget id
-        let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-
-        // Remove budget data
-        <BudgetsInfo<T>>::remove(budget_id);
-
-        // Delete budget_id from BudgetsByProject
-        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
-            budgets.retain(|budget| budget != &budget_id);
-            Ok(())
-        })?;
-        
-        Ok(())
-    }
-
-    fn get_budget_id(
-        project_id: [u8;32],
-        expenditure_id: [u8;32],
-    ) -> Result<[u8;32], DispatchError> {
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Get budgets by project (Id's)
-        let budget_ids = Self::budgets_by_project(project_id).into_inner();
-
-        // Check if the project has any budgets
-        if budget_ids.len() == 0 {
-            return Err(Error::<T>::ThereIsNoBudgetsForTheProject.into());
-        }
-
-        // Get budget id
-        let budget_id: [u8;32] = budget_ids.iter().try_fold::<_,_,Result<[u8;32], DispatchError>>([0;32], |mut accumulator, &budget_id| {
-            // Get individual budget data
-            let budget_data = BudgetsInfo::<T>::get(budget_id).ok_or(Error::<T>::BudgetNotFound)?;
-
-            // Check if budget belongs to expenditure
-            if budget_data.expenditure_id == expenditure_id {
-                accumulator = budget_id;
-            }
-            Ok(accumulator)
-        })?;
-
-        Ok(budget_id)
-    }
-
 
     // D R A W D O W N S
     // --------------------------------------------------------------------------------------------

@@ -71,11 +71,11 @@ parameter_types! {
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
 	pub const MaxBoundedVecs:u32 = 1;
-	pub const MaxBudgetsPerProject:u32 = 1000;
 	pub const MaxDrawdownsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
 	pub const MaxDrawdownsByStatus:u32 = 2000;
+	pub const MaxExpendituresPerProject:u32 = 1000;
 
 }
 
@@ -94,11 +94,11 @@ impl pallet_proxy_financial::Config for Test {
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
 	type MaxBoundedVecs = MaxBoundedVecs;
-	type MaxBudgetsPerProject = MaxBudgetsPerProject; 
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
 	type MaxDrawdownsByStatus = MaxDrawdownsByStatus;
+	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 
 
 	type Timestamp = Timestamp;
