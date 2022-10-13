@@ -188,7 +188,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn drawdowns)]
+	#[pallet::getter(fn drawdowns_info)]
 	pub(super) type DrawdownsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -208,7 +208,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn transactions)]
+	#[pallet::getter(fn transactions_info)]
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
