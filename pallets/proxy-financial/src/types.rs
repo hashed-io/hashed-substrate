@@ -177,10 +177,9 @@ impl Default for TransactionStatus {
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum CURD {
+pub enum CUDAction {
     Create,
     Update,
-    Read,
     Delete,
 }
 
