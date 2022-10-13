@@ -156,7 +156,7 @@ pub struct TransactionData<T: Config> {
     pub created_date: u64,
     pub updated_date: u64,
     pub closed_date: u64,
-    pub feedback: FieldDescription,
+    pub feedback: Option<FieldDescription>,
     pub amount: u64,
     pub status: TransactionStatus,
     pub documents: Option<Documents<T>>,
