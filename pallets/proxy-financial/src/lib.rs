@@ -95,8 +95,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxBoundedVecs: Get<u32>;
 
-		#[pallet::constant]
-		type MaxExpendituresPerProject: Get<u32>;
 
 		#[pallet::constant]
 		type MaxBudgetsPerProject: Get<u32>;
@@ -105,16 +103,13 @@ pub mod pallet {
 		type MaxDrawdownsPerProject: Get<u32>;
 
 		#[pallet::constant]
-		type MaxTransactionsPerProject: Get<u32>;
-
-		#[pallet::constant]
 		type MaxTransactionsPerDrawdown: Get<u32>;
 
 		#[pallet::constant]
-		type MaxTransactionsPerExpenditure: Get<u32>;
+		type MaxRegistrationsAtTime: Get<u32>;
 
 		#[pallet::constant]
-		type MaxRegistrationsAtTime: Get<u32>;
+		type MaxDrawdownsByStatus: Get<u32>;
 		
 		
 	}
@@ -183,16 +178,7 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
-	#[pallet::storage]
-	#[pallet::getter(fn expenditures_by_project)]
-	pub(super) type ExpendituresByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxExpendituresPerProject>,  // Value expenditures
-		ValueQuery,
-	>;
-
+	//TODO: remove
 	#[pallet::storage]
 	#[pallet::getter(fn budgets)]
 	pub(super) type BudgetsInfo<T: Config> = StorageMap<
@@ -203,6 +189,7 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	//TODO: remove
 	#[pallet::storage]
 	#[pallet::getter(fn budgets_by_project)]
 	pub(super) type BudgetsByProject<T: Config> = StorageMap<
@@ -234,18 +221,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn drawdowns_by_project_by_type)]
-	pub(super) type DrawdownsByProjectByType<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		Identity,
-		DrawdownType, // Key drawdown type
-		BoundedVec<[u8;32], T::MaxDrawdownsPerProject>,  // Value Drawdowns
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn transactions)]
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
 		_, 
@@ -253,16 +228,6 @@ pub mod pallet {
 		[u8;32], // Key transaction id
 		TransactionData<T>,  // Value TransactionData<T>
 		OptionQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn transactions_by_project)]
-	pub(super) type TransactionsByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxTransactionsPerProject>,  // Value transactions
-		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -277,17 +242,6 @@ pub mod pallet {
 		ValueQuery
 	>; 
 
-	#[pallet::storage]
-	#[pallet::getter(fn transactions_by_expenditure)]
-	pub(super) type TransactionsByExpenditure<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], //K1: project id
-		Identity, 
-		[u8;32], //K2: expenditure id
-		BoundedVec<[u8;32], T::MaxTransactionsPerExpenditure>, // Value transactions
-		ValueQuery
-	>; 
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
 
@@ -395,8 +349,6 @@ pub mod pallet {
 		MaxBudgetsPerProjectReached,
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
-		/// Max number of expenditures per project reached
-		MaxExpendituresPerProjectReached,
 		/// Name for expenditure is too long
 		NameTooLong,
 		/// There is no expenditure with such project id
@@ -419,12 +371,8 @@ pub mod pallet {
 		TransactionNotFound,
 		/// Transaction already exist
 		TransactionAlreadyExists,
-		/// Max number of transactions per project reached
-		MaxTransactionsPerProjectReached,
 		/// Max number of transactions per drawdown reached
 		MaxTransactionsPerDrawdownReached,
-		/// Max number of transactions per expenditure reached
-		MaxTransactionsPerExpenditureReached,
 		/// Drawdown already exist
 		DrawdownAlreadyExists,
 		/// Max number of drawdowns per project reached

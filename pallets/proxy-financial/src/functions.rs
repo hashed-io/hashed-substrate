@@ -569,12 +569,6 @@ impl<T: Config> Pallet<T> {
             ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
             <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-            //Insert expenditure_id into ExpendituresByProject
-            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-                Ok(())
-            })?;
-
             // Create a budget for the expenditure
             Self::do_create_budget(expenditure_id, 0, project_id)?;
         }
@@ -656,12 +650,6 @@ impl<T: Config> Pallet<T> {
 
         // Delete expenditure data
         <ExpendituresInfo<T>>::remove(expenditure_id);
-
-        // Delete expenditure_id from ExpendituresByProject
-        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-            expenditures.retain(|expenditure| expenditure != &expenditure_id);
-            Ok(())
-        })?;
 
         // Delete expenditure budget
         Self::do_delete_budget(project_id, expenditure_id)?;
@@ -795,13 +783,12 @@ impl<T: Config> Pallet<T> {
     // For now drawdowns functions are private, but in the future they may be public
     
     fn do_create_drawdown(
-        admin: T::AccountId,
         project_id: [u8;32],
         drawdown_type: DrawdownType,
         drawdown_number: u32,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // TOOD: Ensure builder permissions
+        //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -810,7 +797,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Create drawdown id
-        let drawdown_id = (project_id, drawdown_type, drawdown_number).using_encoded(blake2_256);
+        let drawdown_id = (project_id, drawdown_type, drawdown_number, timestamp).using_encoded(blake2_256);
 
         // Create drawdown data
         let drawdown_data = DrawdownData::<T> {
@@ -819,9 +806,9 @@ impl<T: Config> Pallet<T> {
             drawdown_type,
             total_amount: 0,
             status: DrawdownStatus::default(),
+            documents: None,
             created_date: timestamp,
             close_date: 0,
-            creator: Some(admin.clone()),
         };
 
         // Insert drawdown data
@@ -836,7 +823,6 @@ impl<T: Config> Pallet<T> {
         })?;
 
         //TOREVIEW: Check if an event is needed
-
         Ok(())
     }
 
@@ -855,13 +841,13 @@ impl<T: Config> Pallet<T> {
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         //Create a EB5 drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::EB5, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::EB5, 1)?;
 
         //Create a Construction Loan drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::ConstructionLoan, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::ConstructionLoan, 1)?;
 
         //Create a Developer Equity drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::DeveloperEquity, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
         Ok(())
     }
@@ -880,18 +866,24 @@ impl<T: Config> Pallet<T> {
     // when a drawdown is approved, the amount is transfered to every expenditure
     // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
+    fn do_execute_transaction(
+    ) -> DispatchResult {
+
+
+        Ok(())
+    }
+
+
     fn do_create_transaction(
-        admin: T::AccountId,
         project_id: [u8;32],
         drawdown_id: [u8;32],
         expenditure_id: [u8;32],
         amount: u64,
-        description: FieldDescription,
+        feedback: FieldDescription,
         //TOREVIEW: Is mandatory to upload documents with every transaction? If not we can wrap this field in an Option
         documents: Option<Documents<T>>
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // TODO:Ensure builder permissions
 
         // Ensure drawdown exists
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
@@ -915,11 +907,10 @@ impl<T: Config> Pallet<T> {
             project_id,
             drawdown_id,
             expenditure_id,
-            creator: admin.clone(),
             created_date: timestamp,
             updated_date: timestamp,
             closed_date: 0,
-            description,
+            feedback,
             amount,
             status: TransactionStatus::default(),
             documents,
@@ -930,21 +921,9 @@ impl<T: Config> Pallet<T> {
         ensure!(!TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionAlreadyExists);
         <TransactionsInfo<T>>::insert(transaction_id, transaction_data);
 
-        // Insert transaction id into TransactionsByProject
-        <TransactionsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |transactions| {
-            transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerProjectReached)?;
-            Ok(())
-        })?;
-
         // Insert transaction id into TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, drawdown_id, |transactions| {
             transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerDrawdownReached)?;
-            Ok(())
-        })?;
-
-        // Insert transaction id into TransactionsByExpenditure
-        <TransactionsByExpenditure<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, expenditure_id, |transactions| {
-            transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerExpenditureReached)?;
             Ok(())
         })?;
 
@@ -958,7 +937,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         transaction_id: [u8;32],
         amount: Option<u64>,
-        description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+        feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         documents: Option<Documents<T>>
     ) -> DispatchResult {
         // Ensure admin permissions
@@ -999,9 +978,9 @@ impl<T: Config> Pallet<T> {
             if let Some(amount) = amount.clone() {
                 mod_transaction_data.amount = amount;
             }
-            if let Some(description) = description.clone() {
-                let mod_description = description.into_inner();
-                mod_transaction_data.description = mod_description[0].clone();
+            if let Some(feedback) = feedback.clone() {
+                let mod_feedback = feedback.into_inner();
+                mod_transaction_data.feedback = mod_feedback[0].clone();
             }
             if let Some(documents) = documents.clone() {
                 mod_transaction_data.documents = Some(documents);
@@ -1035,20 +1014,8 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction is not completed
         ensure!(Self::is_transaction_editable(transaction_id).is_ok(), Error::<T>::TransactionIsAlreadyCompleted);
 
-        // Remove transaction from TransactionsByProject
-        <TransactionsByProject<T>>::try_mutate::<_,_,DispatchError,_>(transaction_data.project_id, |transactions| {
-            transactions.retain(|transaction| transaction != &transaction_id);
-            Ok(())
-        })?;
-
         // Remove transaction from TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.drawdown_id, |transactions| {
-            transactions.retain(|transaction| transaction != &transaction_id);
-            Ok(())
-        })?;
-
-        // Remove transaction from TransactionsByExpenditure
-        <TransactionsByExpenditure<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.expenditure_id, |transactions| {
             transactions.retain(|transaction| transaction != &transaction_id);
             Ok(())
         })?;
