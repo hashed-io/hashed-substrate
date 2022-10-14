@@ -25,6 +25,7 @@ pub struct ProjectData<T: Config> {
     pub status: ProjectStatus,
     pub creation_date: u64,
     pub completion_date: u64,
+    pub registration_date: u64,
     pub updated_date: u64,
 }
 
