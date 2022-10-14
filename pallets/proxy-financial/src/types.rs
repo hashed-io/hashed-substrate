@@ -40,14 +40,6 @@ impl Default for ProjectStatus {
     }
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProjectType {
-    Construction, 
-    ConstructionOperation,
-    ConstructionBridge, 
-    Operation,
-}
-
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
