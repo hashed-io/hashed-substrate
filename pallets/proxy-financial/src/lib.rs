@@ -512,8 +512,7 @@ pub mod pallet {
 			// start_day 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-			//TOREVIEW: Should we allow project_type modification? 
-			// It implies to change their expenditure types and so on...
+
 			Self::do_edit_project(who, project_id, tittle, description, image, adress, completition_date)
 		}
 

@@ -534,26 +534,6 @@ impl<T: Config> Pallet<T> {
             // Create expenditure id
             let expenditure_id = (project_id, expenditure.0.clone(), expenditure.1, timestamp).using_encoded(blake2_256);
 
-            // Match project type to validate expenditure type
-            match project_data.project_type {
-                ProjectType::Construction => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 == ExpenditureType::HardCost || expenditure.1 == ExpenditureType::SoftCost, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::ConstructionOperation => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 != ExpenditureType::Others, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::ConstructionBridge => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 != ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::Operation => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 == ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
-                },
-            }
-
             // Create expenditure data
             let expenditure_data = ExpenditureData {
                 project_id,
