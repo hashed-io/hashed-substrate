@@ -487,7 +487,7 @@ impl<T: Config> Pallet<T> {
 
     }
 
-    // B U D G E T  E X P E N D I T U R E 
+    // B U D G E T  E X P E N D I T U R E
     // --------------------------------------------------------------------------------------------
     /// Create a new budget expenditure
     /// 
