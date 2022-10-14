@@ -480,6 +480,7 @@ pub mod pallet {
 			description: FieldDescription, 
 			image: CID, 
 			address: FieldName,
+			creation_date: u64,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
 				FieldName,
@@ -495,7 +496,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, project_type, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, creation_date, completion_date, expenditures, users)
 		}
 
 		#[transactional]

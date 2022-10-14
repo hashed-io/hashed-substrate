@@ -100,7 +100,7 @@ impl<T: Config> Pallet<T> {
         description: FieldDescription,
         image: CID,
         address: FieldName,
-        project_type: ProjectType,
+        creation_date: u64,
         completion_date: u64,
         expenditures: BoundedVec<(
             FieldName,
@@ -138,8 +138,8 @@ impl<T: Config> Pallet<T> {
             image,
             address,
             status: ProjectStatus::default(), 
-            project_type,
-            creation_date: timestamp,
+            registration_date: timestamp,
+            creation_date,
             completion_date,
             updated_date: timestamp,
         };
