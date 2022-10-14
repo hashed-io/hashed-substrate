@@ -504,11 +504,12 @@ pub mod pallet {
 		pub fn projects_edit_project(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+			tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	//typo
 			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			completition_date: Option<u64>,  
+			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, //typo
+			completition_date: Option<u64>,  //typo
+			// start_day 
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 			//TOREVIEW: Should we allow project_type modification? 

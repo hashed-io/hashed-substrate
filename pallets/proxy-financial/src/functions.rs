@@ -783,16 +783,16 @@ impl<T: Config> Pallet<T> {
                     Self::do_create_transaction(
                         project_id,
                         drawdown_id,
-                        transaction.0,
-                        transaction.1,
+                        transaction.0.ok_or(Error::<T>::NoneValue)?,
+                        transaction.1.ok_or(Error::<T>::NoneValue)?,
                         transaction.2,
                     )?;
                 },
                 CUDAction::Update => {
-                    // Update transaction needs (                    
+                    // Update transaction needs (amount, documents, transaction_id)       
                     Self::do_update_transaction(
-                        transaction.1,
-                        transaction.2,
+                        transaction.1.ok_or(Error::<T>::NoneValue)?, 
+                        transaction.2, 
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
                 },
@@ -806,7 +806,7 @@ impl<T: Config> Pallet<T> {
 
         }
 
-        // TOOD: update total_amount of drawdown -> submit/draft drawdown
+        // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
 
         Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
