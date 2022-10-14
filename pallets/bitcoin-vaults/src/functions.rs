@@ -121,7 +121,9 @@ impl<T: Config> Pallet<T> {
                 let signed_already = p.signed_psbts.iter().find(|&signature|{ signature.signer ==signer }).is_some();
                 ensure!(!signed_already, Error::<T>::AlreadySigned);
                 p.signed_psbts.try_push(signature).map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
-				p.status.clone_from(&ProposalStatus::ReadyToFinalize(false));
+				if p.signed_psbts.len() as u32 == vault.threshold {
+					p.status.clone_from(&ProposalStatus::ReadyToFinalize(false));
+				}
             }
             Ok(())
         })?;
