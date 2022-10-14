@@ -757,8 +757,8 @@ impl<T: Config> Pallet<T> {
         drawdown_id: [u8;32],
         _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         transactions: BoundedVec<(
-            [u8;32], // expenditure_id
-            u64, // amount
+            Option<[u8;32]>, // expenditure_id
+            Option<u64>, // amount
             Option<Documents<T>>, //Documents
             CUDAction, // Action
             Option<[u8;32]>, // transaction_id
