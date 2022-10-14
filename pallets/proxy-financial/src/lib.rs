@@ -265,12 +265,15 @@ pub mod pallet {
 		ExpenditureEdited([u8;32]),
 		/// Expenditure was deleted successfully
 		ExpenditureDeleted([u8;32]),
+		/// Trasactions was completed successfully
+		TransactionsCompleted,
 		/// Transaction was created successfully
 		TransactionCreated([u8;32]),
 		/// Transaction was edited successfully
 		TransactionEdited([u8;32]),
 		/// Transaction was deleted successfully
 		TransactionDeleted([u8;32]),
+
 	}
 
 	// E R R O R S
@@ -380,6 +383,10 @@ pub mod pallet {
 		InvalidExpenditureType,
 		/// User does not have the specified role
 		UserDoesNotHaveRole,
+		/// Transactions vector is empty
+		EmptyTransactions, 
+		/// Transaction ID was not found in do_execute_transaction
+		TransactionIdNotFound,
 
 	}
 
@@ -597,12 +604,21 @@ pub mod pallet {
 			Self::do_delete_expenditure(who, project_id, expenditure_id)
 		}
 
+		// /// Testing extrinsic  
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn testing_extrinsic(
+		// 	origin: OriginFor<T>, 
+		// 	transactions: BoundedVec<(
+		// 		[u8;32], // expenditure_id
+		// 		u64, // amount
+		// 		Option<Documents<T>> //Documents
+		// 	), T::MaxRegistrationsAtTime>,
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; // origin need to be an admin
 
-
-
-
-
-
+		// 	Self::do_execute_transactions(who, transactions)
+		// }
 
 
 	}

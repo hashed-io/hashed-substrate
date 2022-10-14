@@ -749,13 +749,66 @@ impl<T: Config> Pallet<T> {
     // For now transactions functions are private, but in the future they may be public
     // TOREVIEW: Each transaction has an amount and it refers to a selected expenditure,
     // so each drawdown sums the amount of each transaction -> drawdown.total_amount = transaction.amount + transaction.amount + transaction.amount
-    // when a drawdown is approved, the amount is transfered to every expenditure
+    // when a drawdown is approved, the amount is transfered to each expenditure
     // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
-    fn do_execute_transaction(
+    pub fn do_execute_transactions(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
+        transactions: BoundedVec<(
+            [u8;32], // expenditure_id
+            u64, // amount
+            Option<Documents<T>>, //Documents
+            CUDAction, // Action
+            Option<[u8;32]>, // transaction_id
+        ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
+        // Check permissions here so helper private functions doesn't need to check it
+        // TODO: Ensure admin & builder permissions
 
+        // Ensure project exists so helper private functions doesn't need to check it
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
+        //Ensure drawdown exists so helper private functions doesn't need to check it
+        ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+
+        // Ensure transactions are not empty
+        ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+
+        for transaction in transactions {
+            match transaction.3 {
+                CUDAction::Create => {
+                    // Create transaction only needs (expenditure_id, amount, documents)
+                    Self::do_create_transaction(
+                        project_id,
+                        drawdown_id,
+                        transaction.0,
+                        transaction.1,
+                        transaction.2,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update transaction needs (                    
+                    Self::do_update_transaction(
+                        transaction.1,
+                        transaction.2,
+                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete transaction needs (expenditure_id, transaction_id)
+                    Self::do_delete_transaction(
+                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                    )?;
+                },
+            }
+
+        }
+
+        // TOOD: update total_amount of drawdown -> submit/draft drawdown
+
+        Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
     }
 
@@ -765,9 +818,7 @@ impl<T: Config> Pallet<T> {
         drawdown_id: [u8;32],
         expenditure_id: [u8;32],
         amount: u64,
-        feedback: FieldDescription,
-        //TOREVIEW: Is mandatory to upload documents with every transaction? If not we can wrap this field in an Option
-        documents: Option<Documents<T>>
+        documents: Option<Documents<T>>,
     ) -> DispatchResult {
         // TODO:Ensure builder permissions
 
@@ -777,10 +828,8 @@ impl<T: Config> Pallet<T> {
         // Ensure amount is valid
         Self::is_amount_valid(amount)?;
 
-        // Ensure documents is not empty
-        if let Some(mod_documents) = documents.clone() {
-            ensure!(mod_documents.len() > 0, Error::<T>::DocumentsIsEmpty);
-        }
+        //TOREVIEW: If documents are mandatory, we need to check if they are provided
+        // TOOD: Ensure documents is not empty
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -796,7 +845,7 @@ impl<T: Config> Pallet<T> {
             created_date: timestamp,
             updated_date: timestamp,
             closed_date: 0,
-            feedback,
+            feedback: None,
             amount,
             status: TransactionStatus::default(),
             documents,
@@ -819,23 +868,16 @@ impl<T: Config> Pallet<T> {
 
     }
 
-    fn do_edit_transaction(
-        admin: T::AccountId,
+    fn do_update_transaction(
+        amount: u64,
+        documents: Option<Documents<T>>,
         transaction_id: [u8;32],
-        amount: Option<u64>,
-        feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-        documents: Option<Documents<T>>
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure transaction exists
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
         // Ensure amount is valid.
-        if let Some(mod_amount) = amount.clone() {
-            Self::is_amount_valid(mod_amount)?;
-        }
+        Self::is_amount_valid(amount)?;
 
         // Ensure documents is not empty
         if let Some(mod_documents) = documents.clone() {
@@ -861,13 +903,8 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
             
-            if let Some(amount) = amount.clone() {
-                mod_transaction_data.amount = amount;
-            }
-            if let Some(feedback) = feedback.clone() {
-                let mod_feedback = feedback.into_inner();
-                mod_transaction_data.feedback = mod_feedback[0].clone();
-            }
+            mod_transaction_data.amount = amount;
+
             if let Some(documents) = documents.clone() {
                 mod_transaction_data.documents = Some(documents);
             }
@@ -882,12 +919,8 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_delete_transaction(
-        admin: T::AccountId,
         transaction_id: [u8;32]
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure transaction exists and get transaction data
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
