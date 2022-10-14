@@ -480,7 +480,6 @@ pub mod pallet {
 			description: FieldDescription, 
 			image: CID, 
 			address: FieldName,
-			project_type: ProjectType,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
 				FieldName,
