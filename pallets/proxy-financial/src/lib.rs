@@ -607,9 +607,24 @@ pub mod pallet {
 		// T R A N S A C T I O N S   &  D R A W D O W N S
 		// --------------------------------------------------------------------------------------------
 
+		/// Create a transaction
+		/// 
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
+		/// - `transactions`: The array of transactions as follows:
+		/// 	- `expenditure_id`: The expenditure id
+		/// 	- `amount`: The amount
+		/// 	- `documents`: The array of documents
+		/// 	- `CUDAction`: The action to perform (create, update, delete)
+		/// 	- `transaction_id`: The transaction id
+		/// 	Note that all parameters are optional because 
+		///     it depends on the action to perform
+		/// - `submit`: Boolean to indicate if the drawdown is submitted or 
+		/// saved as draft
+		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn submit_drawdown_as_draft(
+		pub fn submit_drawdown(
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
@@ -620,12 +635,12 @@ pub mod pallet {
 				CUDAction, // Action
 				Option<[u8;32]>, // transaction_id
 			), T::MaxRegistrationsAtTime>,
+			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_execute_transactions(who, project_id, drawdown_id, transactions)
+			Self::do_execute_transactions(who, project_id, drawdown_id, transactions, submit)
 		}
-		
 		
 
 		// /// Testing extrinsic  
