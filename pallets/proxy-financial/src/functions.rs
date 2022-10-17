@@ -740,9 +740,9 @@ impl<T: Config> Pallet<T> {
     // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
     pub fn do_execute_transactions(
+        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
-        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         transactions: BoundedVec<(
             Option<[u8;32]>, // expenditure_id
             Option<u64>, // amount
@@ -750,6 +750,7 @@ impl<T: Config> Pallet<T> {
             CUDAction, // Action
             Option<[u8;32]>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
+        submit: bool,
     ) -> DispatchResult {
         // Check permissions here so helper private functions doesn't need to check it
         // TODO: Ensure admin & builder permissions
@@ -794,6 +795,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
+        // TODO: match bool submit to submit or draft drawdown
 
         Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
@@ -822,7 +824,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Create transaction id
-        let transaction_id = (drawdown_id, timestamp).using_encoded(blake2_256);
+        let transaction_id = (drawdown_id, amount, expenditure_id, timestamp, project_id).using_encoded(blake2_256);
 
         // Create transaction data
         let transaction_data = TransactionData::<T> {
@@ -1341,6 +1343,36 @@ impl<T: Config> Pallet<T> {
     fn is_amount_valid(amount: u64,) -> DispatchResult {
         let minimun_amount: u64 = 0;
         ensure!(amount >= minimun_amount, Error::<T>::InvalidAmount);
+        Ok(())
+    }
+
+    fn calculate_drawdown_total_amount(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure drawdown exists
+        ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+        // Calculate drawdown total amount
+        let mut drawdown_total_amount: u64 = 0;
+
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Add transaction amount to drawdown total amount
+            drawdown_total_amount = drawdown_total_amount + transaction_data.amount;
+        }
+
+        // Update drawdown total amount
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.total_amount = drawdown_total_amount;
+            Ok(())
+        })?;
+
         Ok(())
     }
 
