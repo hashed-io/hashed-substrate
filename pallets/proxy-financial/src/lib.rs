@@ -96,25 +96,19 @@ pub mod pallet {
 		type MaxBoundedVecs: Get<u32>;
 
 		#[pallet::constant]
-		type MaxExpendituresPerProject: Get<u32>;
-
-		#[pallet::constant]
-		type MaxBudgetsPerProject: Get<u32>;
-
-		#[pallet::constant]
 		type MaxDrawdownsPerProject: Get<u32>;
-
-		#[pallet::constant]
-		type MaxTransactionsPerProject: Get<u32>;
 
 		#[pallet::constant]
 		type MaxTransactionsPerDrawdown: Get<u32>;
 
 		#[pallet::constant]
-		type MaxTransactionsPerExpenditure: Get<u32>;
+		type MaxRegistrationsAtTime: Get<u32>;
 
 		#[pallet::constant]
-		type MaxRegistrationsAtTime: Get<u32>;
+		type MaxDrawdownsByStatus: Get<u32>;
+
+		#[pallet::constant]
+		type MaxExpendituresPerProject: Get<u32>;
 		
 		
 	}
@@ -144,7 +138,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn projects)]
+	#[pallet::getter(fn projects_info)]
 	pub(super) type ProjectsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -174,7 +168,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn expenditures)]
+	#[pallet::getter(fn expenditures_info)]
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -194,27 +188,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn budgets)]
-	pub(super) type BudgetsInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key expenditure_id
-		BudgetData,  // Value BudgetData
-		OptionQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn budgets_by_project)]
-	pub(super) type BudgetsByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxBudgetsPerProject>,  // Value budgets
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn drawdowns)]
+	#[pallet::getter(fn drawdowns_info)]
 	pub(super) type DrawdownsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
@@ -234,35 +208,13 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn drawdowns_by_project_by_type)]
-	pub(super) type DrawdownsByProjectByType<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		Identity,
-		DrawdownType, // Key drawdown type
-		BoundedVec<[u8;32], T::MaxDrawdownsPerProject>,  // Value Drawdowns
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn transactions)]
+	#[pallet::getter(fn transactions_info)]
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
 		_, 
 		Identity, 
 		[u8;32], // Key transaction id
 		TransactionData<T>,  // Value TransactionData<T>
 		OptionQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn transactions_by_project)]
-	pub(super) type TransactionsByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxTransactionsPerProject>,  // Value transactions
-		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -277,17 +229,6 @@ pub mod pallet {
 		ValueQuery
 	>; 
 
-	#[pallet::storage]
-	#[pallet::getter(fn transactions_by_expenditure)]
-	pub(super) type TransactionsByExpenditure<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], //K1: project id
-		Identity, 
-		[u8;32], //K2: expenditure id
-		BoundedVec<[u8;32], T::MaxTransactionsPerExpenditure>, // Value transactions
-		ValueQuery
-	>; 
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
 
@@ -324,12 +265,15 @@ pub mod pallet {
 		ExpenditureEdited([u8;32]),
 		/// Expenditure was deleted successfully
 		ExpenditureDeleted([u8;32]),
+		/// Trasactions was completed successfully
+		TransactionsCompleted,
 		/// Transaction was created successfully
 		TransactionCreated([u8;32]),
 		/// Transaction was edited successfully
 		TransactionEdited([u8;32]),
 		/// Transaction was deleted successfully
 		TransactionDeleted([u8;32]),
+
 	}
 
 	// E R R O R S
@@ -345,7 +289,7 @@ pub mod pallet {
 		ProjectIdAlreadyInUse,
 		/// Timestamp error
 		TimestampError,
-		/// Completition date must be later than creation date
+		/// Completion date must be later than creation date
 		CompletionDateMustBeLater,
 		/// User is already registered
 		UserAlreadyRegistered,
@@ -391,8 +335,6 @@ pub mod pallet {
 		UserCannotHaveMoreThanOneRole,
 		/// Expenditure not found
 		ExpenditureNotFound,
-		/// Maximum number of budgets per project reached
-		MaxBudgetsPerProjectReached,
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
 		/// Max number of expenditures per project reached
@@ -419,12 +361,8 @@ pub mod pallet {
 		TransactionNotFound,
 		/// Transaction already exist
 		TransactionAlreadyExists,
-		/// Max number of transactions per project reached
-		MaxTransactionsPerProjectReached,
 		/// Max number of transactions per drawdown reached
 		MaxTransactionsPerDrawdownReached,
-		/// Max number of transactions per expenditure reached
-		MaxTransactionsPerExpenditureReached,
 		/// Drawdown already exist
 		DrawdownAlreadyExists,
 		/// Max number of drawdowns per project reached
@@ -445,6 +383,10 @@ pub mod pallet {
 		InvalidExpenditureType,
 		/// User does not have the specified role
 		UserDoesNotHaveRole,
+		/// Transactions vector is empty
+		EmptyTransactions, 
+		/// Transaction ID was not found in do_execute_transaction
+		TransactionIdNotFound,
 
 	}
 
@@ -538,12 +480,12 @@ pub mod pallet {
 			description: FieldDescription, 
 			image: CID, 
 			address: FieldName,
-			project_type: ProjectType,
+			creation_date: u64,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
 				FieldName,
 				ExpenditureType,
-				Option<u64>,
+				u64,
 				Option<u32>,
 				Option<u32>,
 			), T::MaxRegistrationsAtTime>,
@@ -554,7 +496,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, project_type, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, creation_date, completion_date, expenditures, users)
 		}
 
 		#[transactional]
@@ -562,16 +504,16 @@ pub mod pallet {
 		pub fn projects_edit_project(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
-			tittle: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+			title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-			adress: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			completition_date: Option<u64>,  
+			address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			creation_date: Option<u64>,
+			completion_date: Option<u64>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-			//TOREVIEW: Should we allow project_type modification? 
-			// It implies to change their expenditure types and so on...
-			Self::do_edit_project(who, project_id, tittle, description, image, adress, completition_date)
+
+			Self::do_edit_project(who, project_id, title, description, image, address, creation_date, completion_date)
 		}
 
 		#[transactional]
@@ -614,6 +556,8 @@ pub mod pallet {
 
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------
+		
+		// Expenditures: (name, type, amount, naics code, jobs multiplier)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn expenditures_create_expenditure(
@@ -622,7 +566,7 @@ pub mod pallet {
 			expenditures: BoundedVec<(
 				FieldName,
 				ExpenditureType,
-				Option<u64>,
+				u64,
 				Option<u32>,
 				Option<u32>,
 			), T::MaxRegistrationsAtTime>,  
@@ -639,13 +583,13 @@ pub mod pallet {
 			project_id: [u8;32], 
 			expenditure_id: [u8;32],
 			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-			budget_amount: Option<u64>,
+			expenditure_amount: Option<u64>,
 			naics_code: Option<u32>,
 			jobs_multiplier: Option<u32>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_expenditure(who, project_id, expenditure_id, name, budget_amount, naics_code, jobs_multiplier)
+			Self::do_edit_expenditure(who, project_id, expenditure_id, name, expenditure_amount, naics_code, jobs_multiplier)
 		}
 
 		#[transactional]
@@ -660,12 +604,21 @@ pub mod pallet {
 			Self::do_delete_expenditure(who, project_id, expenditure_id)
 		}
 
+		// /// Testing extrinsic  
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn testing_extrinsic(
+		// 	origin: OriginFor<T>, 
+		// 	transactions: BoundedVec<(
+		// 		[u8;32], // expenditure_id
+		// 		u64, // amount
+		// 		Option<Documents<T>> //Documents
+		// 	), T::MaxRegistrationsAtTime>,
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; // origin need to be an admin
 
-
-
-
-
-
+		// 	Self::do_execute_transactions(who, transactions)
+		// }
 
 
 	}

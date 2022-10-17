@@ -106,7 +106,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 117,
+	spec_version: 118,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -559,13 +559,11 @@ parameter_types! {
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
 	pub const MaxBoundedVecs:u32 = 1;
-	pub const MaxExpendituresPerProject:u32 = 1000;
-	pub const MaxBudgetsPerProject:u32 = 1000;
 	pub const MaxDrawdownsPerProject:u32 = 1000;
-	pub const MaxTransactionsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
-	pub const MaxTransactionsPerExpenditure:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
+	pub const MaxDrawdownsByStatus:u32 = 2000;
+	pub const MaxExpendituresPerProject:u32 = 1000;
 
 
 }
@@ -591,13 +589,11 @@ impl pallet_proxy_financial::Config for Runtime {
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
 	type MaxBoundedVecs = MaxBoundedVecs;
-	type MaxExpendituresPerProject = MaxExpendituresPerProject;
-	type MaxBudgetsPerProject = MaxBudgetsPerProject;
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
-	type MaxTransactionsPerProject = MaxTransactionsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
-	type MaxTransactionsPerExpenditure = MaxTransactionsPerExpenditure;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
+	type MaxDrawdownsByStatus = MaxDrawdownsByStatus;
+	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 
 }
 

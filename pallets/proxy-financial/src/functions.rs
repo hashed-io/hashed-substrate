@@ -89,19 +89,23 @@ impl<T: Config> Pallet<T> {
 
     // P R O J E C T S
     // --------------------------------------------------------------------------------------------
-		
+	
+    /// Create a new project
+    /// - only administrator can create a new project
+    /// expenditures = (name, type, budget amount, naics code, jobs multiplier)
+    /// users = (accountid, role)
     pub fn do_create_project(
         admin: T::AccountId, 
         title: FieldName,
         description: FieldDescription,
         image: CID,
         address: FieldName,
-        project_type: ProjectType,
+        creation_date: u64,
         completion_date: u64,
         expenditures: BoundedVec<(
             FieldName,
             ExpenditureType,
-            Option<u64>,
+            u64,
             Option<u32>,
             Option<u32>,
         ), T::MaxRegistrationsAtTime>,
@@ -121,7 +125,7 @@ impl<T: Config> Pallet<T> {
         let project_id = (title.clone()).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
-        ensure!(completion_date > timestamp, Error::<T>::CompletionDateMustBeLater);
+        ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
         
         //Create project data
         let project_data = ProjectData::<T> {
@@ -134,8 +138,8 @@ impl<T: Config> Pallet<T> {
             image,
             address,
             status: ProjectStatus::default(), 
-            project_type,
-            creation_date: timestamp,
+            registration_date: timestamp,
+            creation_date,
             completion_date,
             updated_date: timestamp,
         };
@@ -168,10 +172,11 @@ impl<T: Config> Pallet<T> {
     pub fn do_edit_project(
         admin: T::AccountId,
         project_id: [u8;32], 
-        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        creation_date: Option<u64>,
         completion_date: Option<u64>,  
     ) -> DispatchResult {
         //ensure admin permissions             
@@ -206,9 +211,12 @@ impl<T: Config> Pallet<T> {
                 let mod_address = address.into_inner();
                 project.address = mod_address[0].clone();
             }
+            if let Some(creation_date) = creation_date {
+                project.creation_date = creation_date;
+            }
             if let Some(completion_date) = completion_date {
                 //ensure new completion_date date is in the future
-                ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
+                //ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
                 project.completion_date = completion_date;
             }
             //TOREVIEW: Check if this is working
@@ -216,6 +224,9 @@ impl<T: Config> Pallet<T> {
 
             Ok(())    
         })?;
+
+        //Ensure completion_date is later than creation_date
+        Self::is_project_completion_date_later(project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectEdited(project_id));
@@ -483,7 +494,7 @@ impl<T: Config> Pallet<T> {
 
     }
 
-    // B U D G E T  E X P E N D I T U R E 
+    // B U D G E T  E X P E N D I T U R E
     // --------------------------------------------------------------------------------------------
     /// Create a new budget expenditure
     /// 
@@ -504,7 +515,7 @@ impl<T: Config> Pallet<T> {
         expenditures: BoundedVec<(
             FieldName,
             ExpenditureType,
-            Option<u64>,
+            u64,
             Option<u32>,
             Option<u32>,
         ), T::MaxRegistrationsAtTime>,
@@ -530,32 +541,12 @@ impl<T: Config> Pallet<T> {
             // Create expenditure id
             let expenditure_id = (project_id, expenditure.0.clone(), expenditure.1, timestamp).using_encoded(blake2_256);
 
-            // Match project type to validate expenditure type
-            match project_data.project_type {
-                ProjectType::Construction => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 == ExpenditureType::HardCost || expenditure.1 == ExpenditureType::SoftCost, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::ConstructionOperation => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 != ExpenditureType::Others, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::ConstructionBridge => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 != ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
-                },
-                ProjectType::Operation => {
-                    // Ensure expenditure type is valid
-                    ensure!(expenditure.1 == ExpenditureType::Operational, Error::<T>::InvalidExpenditureType);
-                },
-            }
-
             // Create expenditure data
             let expenditure_data = ExpenditureData {
                 project_id,
                 name: expenditure.0.clone(),
                 expenditure_type: expenditure.1,
-                balance: 0,
+                expenditure_amount: expenditure.2,
                 naics_code: expenditure.3,
                 jobs_multiplier: expenditure.4,
             };  
@@ -570,16 +561,6 @@ impl<T: Config> Pallet<T> {
                 expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
                 Ok(())
             })?;
-
-            // Create a budget for the expenditure
-            match expenditure.2 {
-                Some(amount) => {
-                    Self::do_create_budget(admin.clone(), expenditure_id, amount, project_id)?;
-                },
-                None => {
-                    Self::do_create_budget(admin.clone(), expenditure_id, 0, project_id)?;
-                },
-            }
         }
 
         Self::deposit_event(Event::ExpenditureCreated);
@@ -591,7 +572,7 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32], 
         expenditure_id: [u8;32],
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-        budget_amount: Option<u64>,
+        expenditure_amount: Option<u64>,
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
@@ -622,11 +603,8 @@ impl<T: Config> Pallet<T> {
                 ensure!(mod_name[0].len() > 0, Error::<T>::FieldNameCannotBeEmpty);
                 expenditure.name = mod_name[0].clone();
             }
-            if let Some(budget_amount) = budget_amount {
-                //get budget id
-                let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-                // Edit budget amount
-                Self::do_edit_budget(admin.clone(), budget_id, budget_amount)?;
+            if let Some(expenditure_amount) = expenditure_amount {
+                expenditure.expenditure_amount = expenditure_amount;
             }
             if let Some(naics_code) = naics_code {
                 expenditure.naics_code = Some(naics_code);
@@ -669,159 +647,21 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        // Delete expenditure budget
-        Self::do_delete_budget(admin, project_id, expenditure_id)?;
-
         Self::deposit_event(Event::ExpenditureDeleted(expenditure_id));
         Ok(())
     }
-
-
-
-    // B U D G E T S
-    // --------------------------------------------------------------------------------------------
-    // Buget functions are not exposed to the public. They are only used internally by the module.
-    fn do_create_budget(
-        admin: T::AccountId,
-        expenditure_id: [u8;32],
-        amount: u64,
-        project_id: [u8;32],
-    ) -> DispatchResult {
-        //TODO: ensure admin & developer permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // Ensure expenditure_id exists 
-        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
-
-        //TODO: balance check
-
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
-        // Create budget id
-        let budget_id = (expenditure_id, timestamp).using_encoded(blake2_256);
-
-        //TOREVIEW: Check if project_id exists.
-
-        // Create budget data
-        let budget_data = BudgetData {
-            expenditure_id,
-            balance: amount,
-            created_date: timestamp,
-            updated_date: timestamp,
-        };
-
-        // Insert budget data
-        <BudgetsInfo<T>>::insert(budget_id, budget_data);
-
-        // Insert budget id into BudgetsByProject
-        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
-            budgets.try_push(budget_id).map_err(|_| Error::<T>::MaxBudgetsPerProjectReached)?;
-            Ok(())
-        })?;
-
-        //TOREVIEW: Check if this event is needed
-        Self::deposit_event(Event::BudgetCreated(budget_id));
-        Ok(())
-    }
-
-    fn do_edit_budget(
-        admin: T::AccountId,
-        budget_id: [u8;32],
-        amount: u64,
-    ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-        
-        //Ensure budget exists
-        ensure!(<BudgetsInfo<T>>::contains_key(budget_id), Error::<T>::BudgetNotFound);
-
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
-        // Mutate budget data
-        <BudgetsInfo<T>>::try_mutate::<_,_,DispatchError,_>(budget_id, |budget_data| {
-            let mod_budget_data = budget_data.as_mut().ok_or(Error::<T>::BudgetNotFound)?;
-            // Update budget data
-            mod_budget_data.balance = amount;
-            mod_budget_data.updated_date = timestamp;
-            Ok(())
-        })?;
-
-        //TOREVIEW: Check if an event is needed
-
-        Ok(())
-    }
-
-    fn do_delete_budget(
-        admin: T::AccountId,
-        project_id: [u8;32],
-        expenditure_id: [u8;32],
-    ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // Get budget id
-        let budget_id = Self::get_budget_id(project_id, expenditure_id)?;
-
-        // Remove budget data
-        <BudgetsInfo<T>>::remove(budget_id);
-
-        //TOREVIEW: Check budget id is deleted
-        // Delete budget_id from BudgetsByProject
-        <BudgetsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |budgets| {
-            budgets.retain(|budget| budget != &budget_id);
-            Ok(())
-        })?;
-        
-        //TOREVIEW: Check if an event is needed
-
-        Ok(())
-    }
-
-    fn get_budget_id(
-        project_id: [u8;32],
-        expenditure_id: [u8;32],
-    ) -> Result<[u8;32], DispatchError> {
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Get budgets by project (Id's)
-        let budget_ids = Self::budgets_by_project(project_id).into_inner();
-
-        // Check if the project has any budgets
-        if budget_ids.len() == 0 {
-            return Err(Error::<T>::ThereIsNoBudgetsForTheProject.into());
-        }
-
-        // Get budget id
-        let budget_id: [u8;32] = budget_ids.iter().try_fold::<_,_,Result<[u8;32], DispatchError>>([0;32], |mut accumulator, &budget_id| {
-            // Get individual budget data
-            let budget_data = BudgetsInfo::<T>::get(budget_id).ok_or(Error::<T>::BudgetNotFound)?;
-
-            // Check if budget belongs to expenditure
-            if budget_data.expenditure_id == expenditure_id {
-                accumulator = budget_id;
-            }
-            Ok(accumulator)
-        })?;
-
-        Ok(budget_id)
-    }
-
 
     // D R A W D O W N S
     // --------------------------------------------------------------------------------------------
     // For now drawdowns functions are private, but in the future they may be public
     
     fn do_create_drawdown(
-        admin: T::AccountId,
         project_id: [u8;32],
         drawdown_type: DrawdownType,
         drawdown_number: u32,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // TOOD: Ensure builder permissions
+        //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -830,7 +670,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Create drawdown id
-        let drawdown_id = (project_id, drawdown_type, drawdown_number).using_encoded(blake2_256);
+        let drawdown_id = (project_id, drawdown_type, drawdown_number, timestamp).using_encoded(blake2_256);
 
         // Create drawdown data
         let drawdown_data = DrawdownData::<T> {
@@ -839,9 +679,9 @@ impl<T: Config> Pallet<T> {
             drawdown_type,
             total_amount: 0,
             status: DrawdownStatus::default(),
+            documents: None,
             created_date: timestamp,
             close_date: 0,
-            creator: Some(admin.clone()),
         };
 
         // Insert drawdown data
@@ -856,7 +696,6 @@ impl<T: Config> Pallet<T> {
         })?;
 
         //TOREVIEW: Check if an event is needed
-
         Ok(())
     }
 
@@ -875,13 +714,13 @@ impl<T: Config> Pallet<T> {
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         //Create a EB5 drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::EB5, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::EB5, 1)?;
 
         //Create a Construction Loan drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::ConstructionLoan, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::ConstructionLoan, 1)?;
 
         //Create a Developer Equity drawdown
-        Self::do_create_drawdown(admin.clone(), project_id, DrawdownType::DeveloperEquity, 1)?;
+        Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
         Ok(())
     }
@@ -897,21 +736,78 @@ impl<T: Config> Pallet<T> {
     // For now transactions functions are private, but in the future they may be public
     // TOREVIEW: Each transaction has an amount and it refers to a selected expenditure,
     // so each drawdown sums the amount of each transaction -> drawdown.total_amount = transaction.amount + transaction.amount + transaction.amount
-    // when a drawdown is approved, the amount is transfered to every expenditure
+    // when a drawdown is approved, the amount is transfered to each expenditure
     // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
+    pub fn do_execute_transactions(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
+        transactions: BoundedVec<(
+            Option<[u8;32]>, // expenditure_id
+            Option<u64>, // amount
+            Option<Documents<T>>, //Documents
+            CUDAction, // Action
+            Option<[u8;32]>, // transaction_id
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        // Check permissions here so helper private functions doesn't need to check it
+        // TODO: Ensure admin & builder permissions
+
+        // Ensure project exists so helper private functions doesn't need to check it
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        //Ensure drawdown exists so helper private functions doesn't need to check it
+        ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+
+        // Ensure transactions are not empty
+        ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+
+        for transaction in transactions {
+            match transaction.3 {
+                CUDAction::Create => {
+                    // Create transaction only needs (expenditure_id, amount, documents)
+                    Self::do_create_transaction(
+                        project_id,
+                        drawdown_id,
+                        transaction.0.ok_or(Error::<T>::NoneValue)?,
+                        transaction.1.ok_or(Error::<T>::NoneValue)?,
+                        transaction.2,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update transaction needs (amount, documents, transaction_id)       
+                    Self::do_update_transaction(
+                        transaction.1.ok_or(Error::<T>::NoneValue)?, 
+                        transaction.2, 
+                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete transaction needs (expenditure_id, transaction_id)
+                    Self::do_delete_transaction(
+                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                    )?;
+                },
+            }
+
+        }
+
+        // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
+
+        Self::deposit_event(Event::TransactionsCompleted);
+        Ok(())
+    }
+
+
     fn do_create_transaction(
-        admin: T::AccountId,
         project_id: [u8;32],
         drawdown_id: [u8;32],
         expenditure_id: [u8;32],
         amount: u64,
-        description: FieldDescription,
-        //TOREVIEW: Is mandatory to upload documents with every transaction? If not we can wrap this field in an Option
-        documents: Option<Documents<T>>
+        documents: Option<Documents<T>>,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // TODO:Ensure builder permissions
 
         // Ensure drawdown exists
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
@@ -919,10 +815,8 @@ impl<T: Config> Pallet<T> {
         // Ensure amount is valid
         Self::is_amount_valid(amount)?;
 
-        // Ensure documents is not empty
-        if let Some(mod_documents) = documents.clone() {
-            ensure!(mod_documents.len() > 0, Error::<T>::DocumentsIsEmpty);
-        }
+        //TOREVIEW: If documents are mandatory, we need to check if they are provided
+        // TOOD: Ensure documents is not empty
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -935,11 +829,10 @@ impl<T: Config> Pallet<T> {
             project_id,
             drawdown_id,
             expenditure_id,
-            creator: admin.clone(),
             created_date: timestamp,
             updated_date: timestamp,
             closed_date: 0,
-            description,
+            feedback: None,
             amount,
             status: TransactionStatus::default(),
             documents,
@@ -950,21 +843,9 @@ impl<T: Config> Pallet<T> {
         ensure!(!TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionAlreadyExists);
         <TransactionsInfo<T>>::insert(transaction_id, transaction_data);
 
-        // Insert transaction id into TransactionsByProject
-        <TransactionsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |transactions| {
-            transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerProjectReached)?;
-            Ok(())
-        })?;
-
         // Insert transaction id into TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, drawdown_id, |transactions| {
             transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerDrawdownReached)?;
-            Ok(())
-        })?;
-
-        // Insert transaction id into TransactionsByExpenditure
-        <TransactionsByExpenditure<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, expenditure_id, |transactions| {
-            transactions.try_push(transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerExpenditureReached)?;
             Ok(())
         })?;
 
@@ -974,23 +855,16 @@ impl<T: Config> Pallet<T> {
 
     }
 
-    fn do_edit_transaction(
-        admin: T::AccountId,
+    fn do_update_transaction(
+        amount: u64,
+        documents: Option<Documents<T>>,
         transaction_id: [u8;32],
-        amount: Option<u64>,
-        description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-        documents: Option<Documents<T>>
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure transaction exists
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
         // Ensure amount is valid.
-        if let Some(mod_amount) = amount.clone() {
-            Self::is_amount_valid(mod_amount)?;
-        }
+        Self::is_amount_valid(amount)?;
 
         // Ensure documents is not empty
         if let Some(mod_documents) = documents.clone() {
@@ -1016,13 +890,8 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
             
-            if let Some(amount) = amount.clone() {
-                mod_transaction_data.amount = amount;
-            }
-            if let Some(description) = description.clone() {
-                let mod_description = description.into_inner();
-                mod_transaction_data.description = mod_description[0].clone();
-            }
+            mod_transaction_data.amount = amount;
+
             if let Some(documents) = documents.clone() {
                 mod_transaction_data.documents = Some(documents);
             }
@@ -1037,12 +906,8 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_delete_transaction(
-        admin: T::AccountId,
         transaction_id: [u8;32]
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure transaction exists and get transaction data
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
@@ -1055,20 +920,8 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction is not completed
         ensure!(Self::is_transaction_editable(transaction_id).is_ok(), Error::<T>::TransactionIsAlreadyCompleted);
 
-        // Remove transaction from TransactionsByProject
-        <TransactionsByProject<T>>::try_mutate::<_,_,DispatchError,_>(transaction_data.project_id, |transactions| {
-            transactions.retain(|transaction| transaction != &transaction_id);
-            Ok(())
-        })?;
-
         // Remove transaction from TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.drawdown_id, |transactions| {
-            transactions.retain(|transaction| transaction != &transaction_id);
-            Ok(())
-        })?;
-
-        // Remove transaction from TransactionsByExpenditure
-        <TransactionsByExpenditure<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.expenditure_id, |transactions| {
             transactions.retain(|transaction| transaction != &transaction_id);
             Ok(())
         })?;
@@ -1132,6 +985,17 @@ impl<T: Config> Pallet<T> {
             Ok(())    
         })?;
 
+        Ok(())
+    }
+
+    fn is_project_completion_date_later(
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        // Get project data & ensure project exists
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Ensure completion date is later than start date
+        ensure!(project_data.completion_date > project_data.creation_date, Error::<T>::CompletionDateMustBeLater);
         Ok(())
     }
 
