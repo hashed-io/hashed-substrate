@@ -797,8 +797,10 @@ impl<T: Config> Pallet<T> {
         // Update total amount of the drawdown
         Self::do_calculate_drawdown_total_amount(project_id, drawdown_id)?;
 
-        // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
-        // TODO: match bool submit to submit or draft drawdown
+        // If submit is true, submit drawdown to be approved
+        if submit {
+            Self::do_submit_drawdown(project_id, drawdown_id)?;
+        }
 
         Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
@@ -944,8 +946,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-
-    //TODO: create a function to automatically create a drawdown when the project is created
     //TODO: create a function to automatically tracks the drawdown number of each type
 
 
@@ -1377,6 +1377,48 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.total_amount = drawdown_total_amount;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn do_submit_drawdown(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in draft status
+        ensure!(drawdown_data.status == DrawdownStatus::Draft, Error::<T>::DrawdownIsNotInDraftStatus);
+
+        // Ensure drawdown has transactions
+        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to submitted
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in draft status
+            ensure!(transaction_data.status == TransactionStatus::Draft, Error::<T>::TransactionIsNotInDraftStatus);
+
+            // Update transaction status to submitted
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Submitted;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Submitted;
             Ok(())
         })?;
 

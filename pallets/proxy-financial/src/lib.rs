@@ -391,6 +391,8 @@ pub mod pallet {
 		DrawdownIsNotInDraftStatus,
 		/// Drawdown can not be submitted if does not has any transactions
 		DrawdownHasNoTransactions,
+		/// Transaction  is not in draft status
+		TransactionIsNotInDraftStatus,
 
 
 	}
