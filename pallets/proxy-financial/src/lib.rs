@@ -387,6 +387,11 @@ pub mod pallet {
 		EmptyTransactions, 
 		/// Transaction ID was not found in do_execute_transaction
 		TransactionIdNotFound,
+		/// Drawdown can not be submitted if is still in draft
+		DrawdownIsNotInDraftStatus,
+		/// Drawdown can not be submitted if does not has any transactions
+		DrawdownHasNoTransactions,
+
 
 	}
 
