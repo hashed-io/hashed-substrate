@@ -125,7 +125,7 @@ impl<T: Config> Pallet<T> {
         let project_id = (title.clone()).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
-        ensure!(completion_date > timestamp, Error::<T>::CompletionDateMustBeLater);
+        ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
         
         //Create project data
         let project_data = ProjectData::<T> {
@@ -172,10 +172,11 @@ impl<T: Config> Pallet<T> {
     pub fn do_edit_project(
         admin: T::AccountId,
         project_id: [u8;32], 
-        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,	
+        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        creation_date: Option<u64>,
         completion_date: Option<u64>,  
     ) -> DispatchResult {
         //ensure admin permissions             
@@ -210,9 +211,12 @@ impl<T: Config> Pallet<T> {
                 let mod_address = address.into_inner();
                 project.address = mod_address[0].clone();
             }
+            if let Some(creation_date) = creation_date {
+                project.creation_date = creation_date;
+            }
             if let Some(completion_date) = completion_date {
                 //ensure new completion_date date is in the future
-                ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
+                //ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
                 project.completion_date = completion_date;
             }
             //TOREVIEW: Check if this is working
@@ -220,6 +224,9 @@ impl<T: Config> Pallet<T> {
 
             Ok(())    
         })?;
+
+        //Ensure completion_date is later than creation_date
+        Self::is_project_completion_date_later(project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectEdited(project_id));
@@ -978,6 +985,17 @@ impl<T: Config> Pallet<T> {
             Ok(())    
         })?;
 
+        Ok(())
+    }
+
+    fn is_project_completion_date_later(
+        project_id: [u8;32],
+    ) -> DispatchResult {
+        // Get project data & ensure project exists
+        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+
+        // Ensure completion date is later than start date
+        ensure!(project_data.completion_date > project_data.creation_date, Error::<T>::CompletionDateMustBeLater);
         Ok(())
     }
 

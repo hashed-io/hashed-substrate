@@ -289,7 +289,7 @@ pub mod pallet {
 		ProjectIdAlreadyInUse,
 		/// Timestamp error
 		TimestampError,
-		/// Completition date must be later than creation date
+		/// Completion date must be later than creation date
 		CompletionDateMustBeLater,
 		/// User is already registered
 		UserAlreadyRegistered,
