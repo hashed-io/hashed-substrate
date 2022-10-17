@@ -604,6 +604,30 @@ pub mod pallet {
 			Self::do_delete_expenditure(who, project_id, expenditure_id)
 		}
 
+		// T R A N S A C T I O N S   &  D R A W D O W N S
+		// --------------------------------------------------------------------------------------------
+
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn submit_drawdown_as_draft(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			transactions: BoundedVec<(
+				Option<[u8;32]>, // expenditure_id
+				Option<u64>, // amount
+				Option<Documents<T>>, //Documents
+				CUDAction, // Action
+				Option<[u8;32]>, // transaction_id
+			), T::MaxRegistrationsAtTime>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_execute_transactions(who, project_id, drawdown_id, transactions)
+		}
+		
+		
+
 		// /// Testing extrinsic  
 		// #[transactional]
 		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
