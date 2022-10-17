@@ -779,7 +779,7 @@ impl<T: Config> Pallet<T> {
                 CUDAction::Update => {
                     // Update transaction needs (amount, documents, transaction_id)       
                     Self::do_update_transaction(
-                        transaction.1.ok_or(Error::<T>::NoneValue)?, 
+                        transaction.1,
                         transaction.2, 
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
@@ -793,6 +793,9 @@ impl<T: Config> Pallet<T> {
             }
 
         }
+
+        // Update total amount of the drawdown
+        Self::do_calculate_drawdown_total_amount(project_id, drawdown_id)?;
 
         // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
         // TODO: match bool submit to submit or draft drawdown
@@ -858,7 +861,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_update_transaction(
-        amount: u64,
+        amount: Option<u64>,
         documents: Option<Documents<T>>,
         transaction_id: [u8;32],
     ) -> DispatchResult {
@@ -866,7 +869,9 @@ impl<T: Config> Pallet<T> {
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
         // Ensure amount is valid.
-        Self::is_amount_valid(amount)?;
+        if let Some(amount) = amount {
+            Self::is_amount_valid(amount)?;
+        }
 
         // Ensure documents is not empty
         if let Some(mod_documents) = documents.clone() {
@@ -892,7 +897,9 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
             
-            mod_transaction_data.amount = amount;
+            if let Some(mod_amount) = amount {
+                mod_transaction_data.amount = mod_amount;
+            }
 
             if let Some(documents) = documents.clone() {
                 mod_transaction_data.documents = Some(documents);
@@ -1346,7 +1353,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn calculate_drawdown_total_amount(
+    fn do_calculate_drawdown_total_amount(
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
