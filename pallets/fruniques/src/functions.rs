@@ -39,7 +39,7 @@ impl<T: Config> Pallet<T> {
 		class_id: &T::CollectionId,
 		instance_id: &T::ItemId,
 		key: &Vec<u8>,
-	) -> BoundedVec<u8, T::ValueLimit> {
+	) -> AttributeValue<T> {
 		if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
 			return BoundedVec::<u8, T::ValueLimit>::try_from(a)
 				.expect("Error on converting the attribute to BoundedVec");
@@ -55,8 +55,8 @@ impl<T: Config> Pallet<T> {
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
 		instance_id: T::ItemId,
-		key: BoundedVec<u8, T::KeyLimit>,
-		value: BoundedVec<u8, T::ValueLimit>,
+		key: AttributeKey<T>,
+		value: AttributeValue<T>,
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::set_attribute(
 			origin,
@@ -103,6 +103,28 @@ impl<T: Config> Pallet<T> {
 			instance_id,
 			Some(Self::account_id_to_lookup_source(&admin.unwrap())),
 		)?;
+		Ok(())
+	}
+
+	pub fn do_create_collection(
+		origin: OriginFor<T>,
+		class_id: T::CollectionId,
+		metadata: BoundedVec<u8, T::StringLimit>,
+		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+	) -> DispatchResult {
+		pallet_uniques::Pallet::<T>::create(
+			origin.clone(),
+			class_id,
+			admin,
+		)?;
+
+		pallet_uniques::Pallet::<T>::set_collection_metadata(
+			origin,
+			class_id,
+			metadata,
+			false
+		)?;
+
 		Ok(())
 	}
 
