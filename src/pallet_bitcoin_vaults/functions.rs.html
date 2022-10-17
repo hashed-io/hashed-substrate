@@ -639,6 +639,9 @@
 <span id="639">639</span>
 <span id="640">640</span>
 <span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">sp_io::hashing::blake2_256</span>};
@@ -748,7 +751,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_save_psbt</span>(<span class="ident">signer</span>: <span class="ident">T::AccountId</span>, <span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">signature_payload</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="comment">// validations: proposal exists, signer is member of vault, proposal is pending, </span>
+        <span class="comment">// validations: proposal exists, signer is member of vault, proposal is pending,</span>
         <span class="kw">let</span> <span class="ident">vault_id</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>.<span class="ident">vault_id</span>;
         <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
         <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_vault_member</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerPermissionsNeeded</span>);
@@ -762,6 +765,9 @@
                 <span class="kw">let</span> <span class="ident">signed_already</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">signature</span><span class="op">|</span>{ <span class="ident">signature</span>.<span class="ident">signer</span> <span class="op">==</span><span class="ident">signer</span> }).<span class="ident">is_some</span>();
                 <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">signed_already</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::AlreadySigned</span>);
                 <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">try_push</span>(<span class="ident">signature</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ExceedMaxCosignersPerVault</span>)<span class="question-mark">?</span>;
+				<span class="kw">if</span> <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">vault</span>.<span class="ident">threshold</span> {
+					<span class="ident">p</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::ReadyToFinalize</span>(<span class="bool-val">false</span>));
+				}
             }
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
@@ -777,9 +783,9 @@
         <span class="comment">// can be called by any vault signer</span>
         <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_vault_member</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerPermissionsNeeded</span>);
         <span class="comment">// if its finalized then fire error &quot;already finalized&quot; or &quot;already broadcasted&quot;</span>
-        <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Pending</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Finalized</span>), 
+        <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Pending</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Finalized</span>),
             <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::PendingProposalRequired</span> );
-        <span class="comment">// signs must be greater or equal than threshold </span>
+        <span class="comment">// signs must be greater or equal than threshold</span>
         <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">signed_psbts</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vault</span>.<span class="ident">threshold</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NotEnoughSignatures</span>);
         <span class="comment">// set status to: ready to be finalized</span>
         <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,(),<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proposal_id</span>, <span class="op">|</span><span class="ident">proposal</span><span class="op">|</span>{
@@ -815,7 +821,7 @@
     }
 
     <span class="comment">/*---- Offchain extrinsics ----*/</span>
-    
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_insert_descriptors</span>(<span class="ident">vault_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">descriptors</span>: <span class="ident">Descriptors</span><span class="op">&lt;</span><span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span>, <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
         <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">vault_id</span>, <span class="op">|</span> <span class="ident">v</span> <span class="op">|</span>{
             <span class="kw">match</span> <span class="ident">v</span> {
@@ -866,8 +872,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pending_vaults</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> {
         <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>()
             .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">entry</span>, <span class="ident">vault</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">output_descriptor</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> 
-                (<span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span> 
+                <span class="kw">if</span> <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">output_descriptor</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span>
+                (<span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span>
                  <span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::RecoverableError</span>(
                     <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::default</span>() )) )  {
                     <span class="prelude-val">Some</span>(<span class="ident">entry</span>)
@@ -881,8 +887,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pending_proposals</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>{
         <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>()
             .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">proposal</span>)<span class="op">|</span>{
-                <span class="kw">if</span> <span class="ident">proposal</span>.<span class="ident">psbt</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> 
-                (<span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span> 
+                <span class="kw">if</span> <span class="ident">proposal</span>.<span class="ident">psbt</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span>
+                (<span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span>
                 <span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::RecoverableError</span>(
                     <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::default</span>() )) ){
                     <span class="prelude-val">Some</span>(<span class="ident">id</span>)
@@ -994,7 +1000,7 @@
         };
         <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;threshold&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Number</span>(<span class="ident">threshold</span>)));
         <span class="kw">let</span> <span class="ident">vault_signers</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">cosigners</span>.<span class="ident">clone</span>().<span class="ident">to_vec</span>();
-        
+
         <span class="comment">//get the xpub for each cosigner</span>
         <span class="kw">let</span> <span class="ident">xpubs</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_accounts_xpubs</span>(<span class="ident">vault_signers</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span>
             <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;One of the cosigner xpubs wasn&#39;t found&quot;</span>))<span class="question-mark">?</span>;
@@ -1069,7 +1075,7 @@
                     <span class="ident">vault_payload</span>.<span class="ident">change_descriptor</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">descriptors</span>.<span class="number">1</span>);
                 },
                 <span class="prelude-val">Err</span>(<span class="ident">status</span>) =&gt; {<span class="ident">vault_payload</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>)},
-            };     
+            };
             <span class="comment">// Build offchain vaults struct and push it to a Vec</span>
             <span class="ident">generated_vaults</span>.<span class="ident">push</span>(<span class="ident">vault_payload</span>);
         });
@@ -1133,7 +1139,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">response_body</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_proposals_payload_by_bulk</span>(<span class="ident">pending_proposals</span> : <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="ident">api_endpoint</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_proposals_payload_by_bulk</span>(<span class="ident">pending_proposals</span> : <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="ident">api_endpoint</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">json_builder</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>([<span class="ident">u8</span>;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,<span class="ident">OffchainStatus</span><span class="op">&gt;</span>
     ) -&gt;  <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span>{
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">generated_proposals</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span><span class="ident">::new</span>();
@@ -1172,7 +1178,7 @@
         <span class="kw">let</span> <span class="ident">mapped_signatures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">JsonValue</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proposal</span>.<span class="ident">signed_psbts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">psbt</span><span class="op">|</span>{
             <span class="ident">JsonValue::String</span>(<span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">psbt</span>.<span class="ident">signature</span>).<span class="ident">unwrap_or_default</span>().<span class="ident">chars</span>().<span class="ident">collect</span>())
         }).<span class="ident">collect</span>();
-        
+
         <span class="kw">let</span> <span class="ident">broadcast</span><span class="op">=</span> <span class="kw">match</span> <span class="ident">proposal</span>.<span class="ident">status</span>{
             <span class="ident">ProposalStatus::ReadyToFinalize</span>(<span class="ident">flag</span>) =&gt; <span class="ident">flag</span>,
             <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
@@ -1185,7 +1191,7 @@
         <span class="comment">// // Parse the JSON and print the resulting lite-json structure.</span>
         <span class="prelude-val">Ok</span>(<span class="ident">jsonSerialize::format</span>(<span class="kw-2">&amp;</span><span class="ident">json_object</span>, <span class="number">4</span>) )
     }
-    
+
     <span class="comment">// pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-&gt; Result&lt;Vec&lt;u8&gt;,OffchainStatus &gt;{</span>
     <span class="comment">//     let raw_json = Self::gen_finalize_json_body(proposal_id)?;</span>
     <span class="comment">//     let request_body =</span>
@@ -1205,7 +1211,7 @@
     <span class="comment">//     let mut finalized_proposals = Vec::&lt;SingleProposalPayload&gt;::new();</span>
     <span class="comment">//     finalized_proposals</span>
     <span class="comment">// }</span>
-    
+
     <span class="kw">fn</span> <span class="ident">build_offchain_err</span>(<span class="ident">recoverable</span>: <span class="ident">bool</span>, <span class="ident">msj</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> )-&gt; <span class="ident">OffchainStatus</span>{
         <span class="kw">let</span> <span class="ident">bounded_msj</span> <span class="op">=</span> <span class="ident">msj</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
         <span class="kw">match</span> <span class="ident">recoverable</span>{
@@ -1279,5 +1285,6 @@
     <span class="kw">fn</span> <span class="ident">current_block_number</span>() -&gt; <span class="ident"><span class="self">Self</span>::BlockNumber</span> {
         <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>()
     }
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
