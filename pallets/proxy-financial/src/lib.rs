@@ -387,12 +387,16 @@ pub mod pallet {
 		EmptyTransactions, 
 		/// Transaction ID was not found in do_execute_transaction
 		TransactionIdNotFound,
-		/// Drawdown can not be submitted if is still in draft
-		DrawdownIsNotInDraftStatus,
 		/// Drawdown can not be submitted if does not has any transactions
 		DrawdownHasNoTransactions,
-		/// Transaction  is not in draft status
-		TransactionIsNotInDraftStatus,
+		/// Cannot submit transaction
+		CannotSubmitTransaction,
+		/// Drawdown can not be submitted
+		CannotSubmitDrawdown,
+		/// Drawdown can not be approved if is not in submitted status
+		DrawdownIsNotInSubmittedStatus,
+		/// Transactions is not in submitted status
+		TransactionIsNotInSubmittedStatus,
 
 
 	}
@@ -647,6 +651,23 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_execute_transactions(who, project_id, drawdown_id, transactions, submit)
+		}
+
+		/// Approve a drawdown
+		/// 
+		/// - `origin`: The admin
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn approve_drawdown(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_approve_drawdown(who, project_id, drawdown_id)
 		}
 		
 

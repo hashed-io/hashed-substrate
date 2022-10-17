@@ -1390,8 +1390,8 @@ impl<T: Config> Pallet<T> {
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-        // Ensure drawdown is in draft status
-        ensure!(drawdown_data.status == DrawdownStatus::Draft, Error::<T>::DrawdownIsNotInDraftStatus);
+        // Ensure drawdown is in draft or rejected status
+        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::CannotSubmitDrawdown);
 
         // Ensure drawdown has transactions
         ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
@@ -1404,8 +1404,8 @@ impl<T: Config> Pallet<T> {
             // Get transaction data
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-            // Ensure transaction is in draft status
-            ensure!(transaction_data.status == TransactionStatus::Draft, Error::<T>::TransactionIsNotInDraftStatus);
+            // Ensure transaction is in draft or rejected status
+            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
 
             // Update transaction status to submitted
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -1421,6 +1421,52 @@ impl<T: Config> Pallet<T> {
             drawdown_data.status = DrawdownStatus::Submitted;
             Ok(())
         })?;
+
+        Ok(())
+    }
+
+    pub fn do_approve_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to approved
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to approved
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Approved;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Approved;
+            Ok(())
+        })?;
+
+        // Generate the next drawdown
+        Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
 
         Ok(())
     }
