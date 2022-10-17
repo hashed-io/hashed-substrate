@@ -623,53 +623,6 @@
 <span id="623">623</span>
 <span id="624">624</span>
 <span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
-<span id="668">668</span>
-<span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
-<span id="672">672</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -768,25 +721,19 @@
 		<span class="kw">type</span> <span class="ident">MaxBoundedVecs</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxExpendituresPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxBudgetsPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxDrawdownsPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxTransactionsPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxTransactionsPerDrawdown</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxTransactionsPerExpenditure</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="kw">type</span> <span class="ident">MaxRegistrationsAtTime</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxRegistrationsAtTime</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="kw">type</span> <span class="ident">MaxDrawdownsByStatus</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
+		<span class="kw">type</span> <span class="ident">MaxExpendituresPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 		
 		
 	}
@@ -816,7 +763,7 @@
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">projects</span>)]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">projects_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ProjectsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
 		<span class="kw">_</span>, 
 		<span class="ident">Identity</span>, 
@@ -846,7 +793,7 @@
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">expenditures</span>)]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">expenditures_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ExpendituresInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
 		<span class="kw">_</span>, 
 		<span class="ident">Identity</span>, 
@@ -866,27 +813,7 @@
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">budgets</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">BudgetsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key expenditure_id</span>
-		<span class="ident">BudgetData</span>,  <span class="comment">// Value BudgetData</span>
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
-
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">budgets_by_project</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">BudgetsByProject</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxBudgetsPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value budgets</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
-
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">drawdowns</span>)]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">drawdowns_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
 		<span class="kw">_</span>, 
 		<span class="ident">Identity</span>, 
@@ -906,35 +833,13 @@
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">drawdowns_by_project_by_type</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">DrawdownsByProjectByType</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
-		<span class="ident">Identity</span>,
-		<span class="ident">DrawdownType</span>, <span class="comment">// Key drawdown type</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxDrawdownsPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value Drawdowns</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
-
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions</span>)]</span>
+	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
 		<span class="kw">_</span>, 
 		<span class="ident">Identity</span>, 
 		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key transaction id</span>
 		<span class="ident">TransactionData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value TransactionData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
-
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions_by_project</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">TransactionsByProject</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxTransactionsPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value transactions</span>
-		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
@@ -949,17 +854,6 @@
 		<span class="ident">ValueQuery</span>
 	<span class="op">&gt;</span>; 
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions_by_expenditure</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">TransactionsByExpenditure</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K1: project id</span>
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K2: expenditure id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxTransactionsPerExpenditure</span><span class="op">&gt;</span>, <span class="comment">// Value transactions</span>
-		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>; 
 	<span class="comment">// E V E N T S</span>
 	<span class="comment">// ------------------------------------------------------------------------------------------------------------</span>
 
@@ -996,12 +890,15 @@
 		<span class="ident">ExpenditureEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Expenditure was deleted successfully</span>
 		<span class="ident">ExpenditureDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Trasactions was completed successfully</span>
+		<span class="ident">TransactionsCompleted</span>,
 		<span class="doccomment">/// Transaction was created successfully</span>
 		<span class="ident">TransactionCreated</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Transaction was edited successfully</span>
 		<span class="ident">TransactionEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Transaction was deleted successfully</span>
 		<span class="ident">TransactionDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+
 	}
 
 	<span class="comment">// E R R O R S</span>
@@ -1017,7 +914,7 @@
 		<span class="ident">ProjectIdAlreadyInUse</span>,
 		<span class="doccomment">/// Timestamp error</span>
 		<span class="ident">TimestampError</span>,
-		<span class="doccomment">/// Completition date must be later than creation date</span>
+		<span class="doccomment">/// Completion date must be later than creation date</span>
 		<span class="ident">CompletionDateMustBeLater</span>,
 		<span class="doccomment">/// User is already registered</span>
 		<span class="ident">UserAlreadyRegistered</span>,
@@ -1063,8 +960,6 @@
 		<span class="ident">UserCannotHaveMoreThanOneRole</span>,
 		<span class="doccomment">/// Expenditure not found</span>
 		<span class="ident">ExpenditureNotFound</span>,
-		<span class="doccomment">/// Maximum number of budgets per project reached</span>
-		<span class="ident">MaxBudgetsPerProjectReached</span>,
 		<span class="doccomment">/// Expenditure already exist</span>
 		<span class="ident">ExpenditureAlreadyExists</span>,
 		<span class="doccomment">/// Max number of expenditures per project reached</span>
@@ -1091,12 +986,8 @@
 		<span class="ident">TransactionNotFound</span>,
 		<span class="doccomment">/// Transaction already exist</span>
 		<span class="ident">TransactionAlreadyExists</span>,
-		<span class="doccomment">/// Max number of transactions per project reached</span>
-		<span class="ident">MaxTransactionsPerProjectReached</span>,
 		<span class="doccomment">/// Max number of transactions per drawdown reached</span>
 		<span class="ident">MaxTransactionsPerDrawdownReached</span>,
-		<span class="doccomment">/// Max number of transactions per expenditure reached</span>
-		<span class="ident">MaxTransactionsPerExpenditureReached</span>,
 		<span class="doccomment">/// Drawdown already exist</span>
 		<span class="ident">DrawdownAlreadyExists</span>,
 		<span class="doccomment">/// Max number of drawdowns per project reached</span>
@@ -1117,6 +1008,10 @@
 		<span class="ident">InvalidExpenditureType</span>,
 		<span class="doccomment">/// User does not have the specified role</span>
 		<span class="ident">UserDoesNotHaveRole</span>,
+		<span class="doccomment">/// Transactions vector is empty</span>
+		<span class="ident">EmptyTransactions</span>, 
+		<span class="doccomment">/// Transaction ID was not found in do_execute_transaction</span>
+		<span class="ident">TransactionIdNotFound</span>,
 
 	}
 
@@ -1210,12 +1105,12 @@
 			<span class="ident">description</span>: <span class="ident">FieldDescription</span>, 
 			<span class="ident">image</span>: <span class="ident">CID</span>, 
 			<span class="ident">address</span>: <span class="ident">FieldName</span>,
-			<span class="ident">project_type</span>: <span class="ident">ProjectType</span>,
+			<span class="ident">creation_date</span>: <span class="ident">u64</span>,
 			<span class="ident">completion_date</span>: <span class="ident">u64</span>, 
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
 				<span class="ident">FieldName</span>,
 				<span class="ident">ExpenditureType</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+				<span class="ident">u64</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
@@ -1226,7 +1121,7 @@
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_create_project</span>(<span class="ident">who</span>, <span class="ident">title</span>, <span class="ident">description</span>, <span class="ident">image</span>, <span class="ident">address</span>, <span class="ident">project_type</span>, <span class="ident">completion_date</span>, <span class="ident">expenditures</span>, <span class="ident">users</span>)
+			<span class="ident"><span class="self">Self</span>::do_create_project</span>(<span class="ident">who</span>, <span class="ident">title</span>, <span class="ident">description</span>, <span class="ident">image</span>, <span class="ident">address</span>, <span class="ident">creation_date</span>, <span class="ident">completion_date</span>, <span class="ident">expenditures</span>, <span class="ident">users</span>)
 		}
 
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1234,16 +1129,16 @@
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_edit_project</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
-			<span class="ident">tittle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,	
+			<span class="ident">title</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">adress</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">completition_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,  
+			<span class="ident">address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+			<span class="ident">creation_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+			<span class="ident">completion_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,  
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
-			<span class="comment">//TOREVIEW: Should we allow project_type modification? </span>
-			<span class="comment">// It implies to change their expenditure types and so on...</span>
-			<span class="ident"><span class="self">Self</span>::do_edit_project</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">tittle</span>, <span class="ident">description</span>, <span class="ident">image</span>, <span class="ident">adress</span>, <span class="ident">completition_date</span>)
+
+			<span class="ident"><span class="self">Self</span>::do_edit_project</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">title</span>, <span class="ident">description</span>, <span class="ident">image</span>, <span class="ident">address</span>, <span class="ident">creation_date</span>, <span class="ident">completion_date</span>)
 		}
 
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1286,6 +1181,8 @@
 
 		<span class="comment">// B U D G E T  E X P E N D I T U R E </span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
+		
+		<span class="comment">// Expenditures: (name, type, amount, naics code, jobs multiplier)</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures_create_expenditure</span>(
@@ -1294,7 +1191,7 @@
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
 				<span class="ident">FieldName</span>,
 				<span class="ident">ExpenditureType</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+				<span class="ident">u64</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,  
@@ -1311,13 +1208,13 @@
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
 			<span class="ident">expenditure_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, 
-			<span class="ident">budget_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+			<span class="ident">expenditure_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 			<span class="ident">naics_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 			<span class="ident">jobs_multiplier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_edit_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditure_id</span>, <span class="ident">name</span>, <span class="ident">budget_amount</span>, <span class="ident">naics_code</span>, <span class="ident">jobs_multiplier</span>)
+			<span class="ident"><span class="self">Self</span>::do_edit_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditure_id</span>, <span class="ident">name</span>, <span class="ident">expenditure_amount</span>, <span class="ident">naics_code</span>, <span class="ident">jobs_multiplier</span>)
 		}
 
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1332,12 +1229,21 @@
 			<span class="ident"><span class="self">Self</span>::do_delete_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditure_id</span>)
 		}
 
+		<span class="comment">// /// Testing extrinsic  </span>
+		<span class="comment">// #[transactional]</span>
+		<span class="comment">// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]</span>
+		<span class="comment">// pub fn testing_extrinsic(</span>
+		<span class="comment">// 	origin: OriginFor&lt;T&gt;, </span>
+		<span class="comment">// 	transactions: BoundedVec&lt;(</span>
+		<span class="comment">// 		[u8;32], // expenditure_id</span>
+		<span class="comment">// 		u64, // amount</span>
+		<span class="comment">// 		Option&lt;Documents&lt;T&gt;&gt; //Documents</span>
+		<span class="comment">// 	), T::MaxRegistrationsAtTime&gt;,</span>
+		<span class="comment">// ) -&gt; DispatchResult {</span>
+		<span class="comment">// 	let who = ensure_signed(origin)?; // origin need to be an admin</span>
 
-
-
-
-
-
+		<span class="comment">// 	Self::do_execute_transactions(who, transactions)</span>
+		<span class="comment">// }</span>
 
 
 	}

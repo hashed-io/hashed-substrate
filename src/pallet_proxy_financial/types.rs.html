@@ -256,6 +256,8 @@
 <span id="256">256</span>
 <span id="257">257</span>
 <span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
@@ -271,7 +273,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
 <span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
 <span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProjectData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProjectData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">developer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxDevelopersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">investor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxInvestorsPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">issuer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxIssuersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -281,36 +283,28 @@
     <span class="kw">pub</span> <span class="ident">image</span>: <span class="ident">CID</span>,
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">FieldName</span>, 
     <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">ProjectStatus</span>,
-    <span class="kw">pub</span> <span class="ident">project_type</span>: <span class="ident">ProjectType</span>,
     <span class="kw">pub</span> <span class="ident">creation_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">completion_date</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">registration_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">updated_date</span>: <span class="ident">u64</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProjectStatus</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProjectStatus</span> {
     <span class="ident">Started</span>,
     <span class="ident">Completed</span>,
 }
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ProjectStatus</span>{
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ProjectStatus</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">ProjectStatus::Started</span>
     }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProjectType</span>{
-    <span class="ident">Construction</span>, 
-    <span class="ident">ConstructionOperation</span>,
-    <span class="ident">ConstructionBridge</span>, 
-    <span class="ident">Operation</span>,
 }
 
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
 <span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
 <span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UserData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UserData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">FieldName</span>,
     <span class="kw">pub</span> <span class="ident">role</span>: <span class="ident">ProxyRole</span>,
     <span class="kw">pub</span> <span class="ident">image</span>: <span class="ident">CID</span>,
@@ -320,7 +314,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyRole</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyRole</span> {
     <span class="ident">Administrator</span>,
     <span class="ident">Developer</span>,
     <span class="ident">Investor</span>,
@@ -334,20 +328,20 @@
     <span class="kw">pub</span> <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">FieldName</span>,
     <span class="kw">pub</span> <span class="ident">expenditure_type</span>: <span class="ident">ExpenditureType</span>,
-    <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">expenditure_amount</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">naics_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">jobs_multiplier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExpenditureType</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExpenditureType</span> {
     <span class="ident">HardCost</span>, 
     <span class="ident">SoftCost</span>,
     <span class="ident">Operational</span>, 
     <span class="ident">Others</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ExpenditureType</span>{
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ExpenditureType</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">ExpenditureType::HardCost</span>
     }
@@ -355,7 +349,7 @@
 
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BudgetData</span>{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BudgetData</span> {
     <span class="kw">pub</span> <span class="ident">expenditure_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">u64</span>,
@@ -366,34 +360,39 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
 <span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
 <span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrawdownData</span><span class="op">&lt;</span><span class="ident">T</span>:<span class="ident">Config</span><span class="op">&gt;</span>{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrawdownData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     <span class="kw">pub</span> <span class="ident">drawdown_number</span>: <span class="ident">u32</span>,
     <span class="kw">pub</span> <span class="ident">drawdown_type</span>: <span class="ident">DrawdownType</span>,
     <span class="kw">pub</span> <span class="ident">total_amount</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">DrawdownStatus</span>,
-    <span class="comment">//TODO: add Option&lt;Files&gt; -&gt; Bulk Upload</span>
+    <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">close_date</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">creator</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownType</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownType</span> {
     <span class="ident">EB5</span>, 
     <span class="ident">ConstructionLoan</span>,
     <span class="ident">DeveloperEquity</span>,
 }
 
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DrawdownType</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+        <span class="ident">DrawdownType::EB5</span>
+    }
+}
+
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownStatus</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownStatus</span> {
     <span class="ident">Draft</span>, 
     <span class="ident">Submitted</span>,
     <span class="ident">Approved</span>,
     <span class="ident">Rejected</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DrawdownStatus</span>{
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DrawdownStatus</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">DrawdownStatus::Draft</span>
     }
@@ -402,36 +401,41 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
 <span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
 <span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     <span class="kw">pub</span> <span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     <span class="kw">pub</span> <span class="ident">expenditure_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-    <span class="kw">pub</span> <span class="ident">creator</span>: <span class="ident">T::AccountId</span>,
     <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">updated_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">closed_date</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">description</span>: <span class="ident">FieldDescription</span>,
+    <span class="kw">pub</span> <span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">TransactionStatus</span>,
     <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionStatus</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionStatus</span> {
     <span class="ident">Draft</span>, 
     <span class="ident">Submitted</span>,
     <span class="ident">Approved</span>,
     <span class="ident">Rejected</span>,
 }
 
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TransactionStatus</span>{
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TransactionStatus</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">TransactionStatus::Draft</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ProxyRole</span>{
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CUDAction</span> {
+    <span class="ident">Create</span>,
+    <span class="ident">Update</span>,
+    <span class="ident">Delete</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">ProxyRole</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>{
         <span class="kw">match</span> <span class="self">self</span>{
             <span class="comment">//TOREVIEW: optimization (?)</span>
@@ -459,7 +463,7 @@
 
 <span class="doccomment">/// Extrinsics which require previous authorization to call them</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyPermission</span>{
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyPermission</span> {
     <span class="ident">RegisterUser</span>, <span class="comment">// users_register_user</span>
     <span class="ident">UpdateUser</span>, <span class="comment">// users_update_user</span>
     <span class="ident">DeleteUser</span>, <span class="comment">// users_delete_user</span>
@@ -470,7 +474,7 @@
     <span class="ident">UnassignUser</span>, <span class="comment">// projects_unassign_user</span>
 }
 
-<span class="kw">impl</span> <span class="ident">ProxyPermission</span>{ 
+<span class="kw">impl</span> <span class="ident">ProxyPermission</span> { 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>{
         <span class="kw">match</span> <span class="self">self</span>{
             <span class="ident"><span class="self">Self</span>::RegisterUser</span> =&gt; <span class="string">&quot;RegisterUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
