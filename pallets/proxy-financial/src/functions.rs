@@ -1471,6 +1471,61 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_reject_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to rejected
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to rejected
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Rejected;
+                Ok(())
+            })?;
+        }
+
+        // Update feedback if provided
+        if let Some(mod_feedback) = feedback {
+            for (transaction_id, field_description) in mod_feedback {
+                // Update transaction feedback
+                <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                    let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                    transaction_data.feedback = Some(field_description);
+                    Ok(())
+                })?;
+            }
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Rejected;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
 
 
 }

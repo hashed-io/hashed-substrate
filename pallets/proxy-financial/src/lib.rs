@@ -669,6 +669,27 @@ pub mod pallet {
 
 			Self::do_approve_drawdown(who, project_id, drawdown_id)
 		}
+
+		/// Reject a drawdown
+		/// 
+		/// - `origin`: The admin
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
+		/// 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reject_drawdown(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_reject_drawdown(who, project_id, drawdown_id, feedback)
+		}
+
+
 		
 
 		// /// Testing extrinsic  
