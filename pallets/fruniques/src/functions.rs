@@ -1,9 +1,11 @@
 use super::*;
 
-use frame_support::traits::tokens::nonfungibles::Inspect;
 use frame_system::pallet_prelude::*;
+use crate::types::*;
+
+use frame_support::traits::tokens::nonfungibles::Inspect;
 use scale_info::prelude::string::String;
-// use crate::types::*;
+
 use frame_support::pallet_prelude::*;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
@@ -13,6 +15,13 @@ impl<T: Config> Pallet<T> {
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		T::ItemId::from(input)
+	}
+
+	pub fn u32_to_class_id(input: u32) -> T::CollectionId
+	where
+		<T as pallet_uniques::Config>::CollectionId: From<u32>,
+	{
+		T::CollectionId::from(input)
 	}
 
 	pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
@@ -87,8 +96,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// TODO: add a function to get the owner of an instance
-	// TODO: add a function to burn an instance
 	pub fn burn(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -106,10 +113,13 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+
+	/// Helper function to create a new collection
+	/// Creates a collection and updates its metadata if needed.
 	pub fn do_create_collection(
 		origin: OriginFor<T>,
 		class_id: T::CollectionId,
-		metadata: BoundedVec<u8, T::StringLimit>,
+		metadata: Option<StringLimit<T>>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::create(
@@ -118,12 +128,14 @@ impl<T: Config> Pallet<T> {
 			admin,
 		)?;
 
-		pallet_uniques::Pallet::<T>::set_collection_metadata(
+		if let Some(metadata) = metadata {
+			pallet_uniques::Pallet::<T>::set_collection_metadata(
 			origin,
 			class_id,
 			metadata,
 			false
-		)?;
+			)?;
+		}
 
 		Ok(())
 	}
@@ -157,7 +169,40 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn do_spawn() -> DispatchResult {
+	pub fn do_spawn(
+		origin: OriginFor<T>,
+		collection: T::CollectionId,
+		item: T::ItemId,
+		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		_numeric_value: Option<Permill>,
+		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
+	) -> DispatchResult {
+
+		pallet_uniques::Pallet::<T>::mint(
+			origin.clone(),
+			collection,
+			item,
+			owner
+		)?;
+
+		if let Some(attributes) = attributes {
+			for (key, value) in attributes {
+				pallet_uniques::Pallet::<T>::set_attribute(
+					origin.clone(),
+					collection,
+					Some(item),
+					key,
+					value,
+				)?;
+			}
+		}
+		// let instance_id: T::ItemId = Self::u32_to_instance_id(input);
+
+		// pallet_uniques::Pallet::<T>::mint(origin,
+		// 	Self::u32_to_class_id(class_id),
+		// 	Self::u32_to_instance_id(instance_id),
+		// 	owner)?;
+
 		Ok(())
 	}
 }

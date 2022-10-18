@@ -461,7 +461,7 @@ impl InstanceFilter<Call> for ProxyType {
 			ProxyType::NonTransfer => !matches!(
 				c,
 				Call::Balances(..)
-					| Call::Assets(..) 
+					| Call::Assets(..)
 					| Call::Uniques(..)
 					| Call::Vesting(pallet_vesting::Call::vested_transfer { .. })
 					| Call::Indices(pallet_indices::Call::transfer { .. })
@@ -470,14 +470,14 @@ impl InstanceFilter<Call> for ProxyType {
 				c,
 				Call::Bounties(..)
 					| Call::ChildBounties(..)
-					| Call::Council(..) 
+					| Call::Council(..)
 					| Call::Society(..)
 					// | Call::TechnicalCommittee(..)
 					// | Call::Elections(..)
 					| Call::Treasury(..)
 			),
 			ProxyType::Marketplaces => matches!(
-				c, 
+				c,
 				Call::GatedMarketplace(..)
 			),
 		}
@@ -970,6 +970,7 @@ impl pallet_uniques::Config for Runtime {
 
 impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
+	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 }
 
 parameter_types! {
@@ -988,7 +989,6 @@ parameter_types! {
 
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
@@ -1081,7 +1081,7 @@ construct_runtime!(
 		Remark: pallet_remark::{Pallet, Call, Storage, Event<T>}  = 52,
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>}  = 100,
 		Whitelist: pallet_whitelist::{Pallet, Call, Storage, Event<T>}  = 101,
-	
+
 		// Custom Pallets
 		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 151,
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 152,

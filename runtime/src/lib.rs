@@ -544,6 +544,11 @@ impl pallet_uniques::Config for Runtime {
 
 impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
+	type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+
 }
 
 parameter_types! {
@@ -574,7 +579,7 @@ impl pallet_proxy_financial::Config for Runtime {
 	type Timestamp = Timestamp;
 	type Moment = Moment;
 	type Rbac = RBAC;
-		type RemoveOrigin = EitherOfDiverse<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
@@ -618,10 +623,6 @@ parameter_types! {
 }
 impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
-	type RemoveOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
-	>;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
