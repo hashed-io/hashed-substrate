@@ -66,6 +66,8 @@ pub mod pallet {
 		ValueTooLong,
 		// Calling set on a non-existing attributes
 		AttributesEmpty,
+		// The collection doenst exist
+		CollectionNotFound,
 	}
 
 	#[pallet::storage]
@@ -116,6 +118,15 @@ pub mod pallet {
 	where
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		pub fn initial_setup(
+			origin: OriginFor<T>,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			// Self::do_initial_setup()?;
+			Ok(())
+		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_collection(

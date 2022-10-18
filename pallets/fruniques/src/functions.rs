@@ -60,6 +60,13 @@ impl<T: Config> Pallet<T> {
 		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
 	}
 
+	pub fn collection_exists(class_id: &T::CollectionId) -> bool {
+		if let Some(_owner) = pallet_uniques::Pallet::<T>::collection_owner(*class_id) {
+			return true;
+		}
+		false
+	}
+
 	pub fn set_attribute(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -178,6 +185,7 @@ impl<T: Config> Pallet<T> {
 		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 	) -> DispatchResult {
 
+		ensure!(Self::collection_exists(&collection),  <Error<T>>::CollectionNotFound);
 		pallet_uniques::Pallet::<T>::mint(
 			origin.clone(),
 			collection,
@@ -196,12 +204,6 @@ impl<T: Config> Pallet<T> {
 				)?;
 			}
 		}
-		// let instance_id: T::ItemId = Self::u32_to_instance_id(input);
-
-		// pallet_uniques::Pallet::<T>::mint(origin,
-		// 	Self::u32_to_class_id(class_id),
-		// 	Self::u32_to_instance_id(instance_id),
-		// 	owner)?;
 
 		Ok(())
 	}
