@@ -12,7 +12,7 @@ impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
     // --------------------------------------------------------------------------------------------
     
-    // I N I T I A L 
+    // I N I T I A L   S E T U P
     // --------------------------------------------------------------------------------------------
 		
     pub fn do_initial_setup() -> DispatchResult{
@@ -92,7 +92,7 @@ impl<T: Config> Pallet<T> {
 	
     /// Create a new project
     /// - only administrator can create a new project
-    /// expenditures = (name, type, budget amount, naics code, jobs multiplier)
+    /// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
     /// users = (accountid, role)
     pub fn do_create_project(
         admin: T::AccountId, 
@@ -103,11 +103,13 @@ impl<T: Config> Pallet<T> {
         creation_date: u64,
         completion_date: u64,
         expenditures: BoundedVec<(
-            FieldName,
-            ExpenditureType,
-            u64,
+            Option<FieldName>,
+            Option<ExpenditureType>,
+            Option<u64>,
             Option<u32>,
             Option<u32>,
+            CUDAction,
+            Option<[u8;32]>,
         ), T::MaxRegistrationsAtTime>,
         users: Option<BoundedVec<(
             T::AccountId,
@@ -153,7 +155,7 @@ impl<T: Config> Pallet<T> {
         ProjectsInfo::<T>::insert(project_id, project_data);
 
         //Add expenditures
-        Self::do_create_expenditure(admin.clone(), project_id, expenditures)?;
+        Self::do_execute_expenditures(admin.clone(), project_id, expenditures)?;
 
         // Add users
         if let Some(users) = users {
@@ -492,6 +494,70 @@ impl<T: Config> Pallet<T> {
 
     // B U D G E T  E X P E N D I T U R E
     // --------------------------------------------------------------------------------------------
+ 
+    // Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
+    pub fn do_execute_expenditures(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        expenditures: BoundedVec<(
+            Option<FieldName>, // 0: name
+            Option<ExpenditureType>, // 1: type
+            Option<u64>, // 2: amount
+            Option<u32>, // 3: naics code
+            Option<u32>, // 4: jobs multiplier
+            CUDAction, // 5: CUDAction
+            Option<[u8;32]>, // 6: expenditure_id
+        ), T::MaxRegistrationsAtTime>, 
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure expenditures are not empty
+        ensure!(!expenditures.is_empty(), Error::<T>::EmptyExpenditures);
+
+        for expenditure in expenditures {
+            match expenditure.5 {
+                CUDAction::Create => {
+                    // Create expenditure only needs: name, type, amount, naics code, jobs multiplier
+                    Self::do_create_expenditure(
+                        project_id,
+                        expenditure.0.ok_or(Error::<T>::ExpenditureNameRequired)?,
+                        expenditure.1.ok_or(Error::<T>::ExpenditureTypeRequired)?,
+                        expenditure.2.ok_or(Error::<T>::ExpenditureAmountRequired)?,
+                        expenditure.3,
+                        expenditure.4,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update expenditure only needs: expenditure_id, name, amount, naics code, jobs multiplier
+                    Self::do_update_expenditure(
+                        project_id,
+                        expenditure.6.ok_or(Error::<T>::ExpenditureIdRequired)?,
+                        expenditure.0,
+                        expenditure.2,
+                        expenditure.3,
+                        expenditure.4,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete expenditure only needs: expenditure_id
+                    Self::do_delete_expenditure(
+                        expenditure.6.ok_or(Error::<T>::ExpenditureIdRequired)?,
+                    )?;
+                },
+            }
+
+        }
+
+
+
+        Ok(())
+    }
+
+
     /// Create a new budget expenditure
     /// 
     /// # Arguments
@@ -505,76 +571,62 @@ impl<T: Config> Pallet<T> {
     /// * `budget amount` - The amount of the budget expenditure
     /// * `naics code` - The naics code of the budget expenditure
     /// * `jobs_multiplier` - The jobs multiplier of the budget expenditure
-    pub fn do_create_expenditure(
-        admin: T::AccountId,
+    fn do_create_expenditure(
         project_id: [u8;32], 
-        expenditures: BoundedVec<(
-            FieldName,
-            ExpenditureType,
-            u64,
-            Option<u32>,
-            Option<u32>,
-        ), T::MaxRegistrationsAtTime>,
+        name: FieldName,
+        expenditure_type: ExpenditureType,
+        expenditure_amount: u64,
+        naics_code: Option<u32>,
+        jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // We use this way to validate because it's necessary to get the project type 
-        // in order to generate the right expenditure types 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
+        Self::is_project_completed(project_id)?;
 
-        for expenditure in expenditures {
-            // Ensure expenditure name is not empty
-            ensure!(!expenditure.0.is_empty(), Error::<T>::FieldNameCannotBeEmpty);
+        //Ejnsure expenditure name is not empty
+        ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
-            // Create expenditure id
-            let expenditure_id = (project_id, expenditure.0.clone(), expenditure.1, timestamp).using_encoded(blake2_256);
+        // Create expenditure id
+        let expenditure_id = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
-            // Create expenditure data
-            let expenditure_data = ExpenditureData {
-                project_id,
-                name: expenditure.0.clone(),
-                expenditure_type: expenditure.1,
-                expenditure_amount: expenditure.2,
-                naics_code: expenditure.3,
-                jobs_multiplier: expenditure.4,
-            };  
+        // Create expenditurte data
+        let expenditure_data = ExpenditureData {
+            project_id,
+            name,
+            expenditure_type,
+            expenditure_amount,
+            naics_code,
+            jobs_multiplier, 
+        };
 
-            // Insert expenditure data into ExpendituresInfo
-            // Ensure expenditure_id is unique
-            ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
-            <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
+        // Insert expenditure data into ExpendituresInfo
+        // Ensure expenditure_id is unique
+        ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+        <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-            //Insert expenditure_id into ExpendituresByProject
-            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-                Ok(())
-            })?;
-        }
+        //Insert expenditure_id into ExpendituresByProject
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+            expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+            Ok(())
+        })?;
 
         Self::deposit_event(Event::ExpenditureCreated);
         Ok(())
     }
 
-    pub fn do_edit_expenditure(
-        admin: T::AccountId,
+    fn do_update_expenditure(
         project_id: [u8;32], 
         expenditure_id: [u8;32],
-        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
+        name: Option<FieldName>, 
         expenditure_amount: Option<u64>,
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
-        //Ensure admin permissions, TODO: add developer permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -593,52 +645,37 @@ impl<T: Config> Pallet<T> {
 
             //TODO: ensure name is unique
 
-            if let  Some(name) = name {
-                let mod_name = name.into_inner();
-                // Ensure name is not empty
-                ensure!(mod_name[0].len() > 0, Error::<T>::FieldNameCannotBeEmpty);
-                expenditure.name = mod_name[0].clone();
+            if let  Some(mod_name) = name {
+                expenditure.name = mod_name;
             }
-            if let Some(expenditure_amount) = expenditure_amount {
-                expenditure.expenditure_amount = expenditure_amount;
+            if let Some(mod_expenditure_amount) = expenditure_amount {
+                expenditure.expenditure_amount = mod_expenditure_amount;
             }
-            if let Some(naics_code) = naics_code {
-                expenditure.naics_code = Some(naics_code);
+            if let Some(mod_naics_code) = naics_code {
+                expenditure.naics_code = Some(mod_naics_code);
             }
-            if let Some(jobs_multiplier) = jobs_multiplier {
-                expenditure.jobs_multiplier = Some(jobs_multiplier);
+            if let Some(mod_jobs_multiplier) = jobs_multiplier {
+                expenditure.jobs_multiplier = Some(mod_jobs_multiplier);
             }
 
             Ok(())
         })?;
 
-
         Self::deposit_event(Event::ExpenditureEdited(expenditure_id));
         Ok(())
     }
 
-    pub fn do_delete_expenditure(
-        admin: T::AccountId,
-        project_id: [u8;32], 
+    fn do_delete_expenditure(
         expenditure_id: [u8;32],
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
-        // Ensure expenditure_id exists 
-        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+        // Ensure expenditure_id exists & get expenditure data
+        let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
         // Delete expenditure data
         <ExpendituresInfo<T>>::remove(expenditure_id);
 
         // Delete expenditure_id from ExpendituresByProject
-        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(expenditure_data.project_id, |expenditures| {
             expenditures.retain(|expenditure| expenditure != &expenditure_id);
             Ok(())
         })?;
@@ -891,6 +928,7 @@ impl<T: Config> Pallet<T> {
         // Ensure transactions are not empty
         ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
 
+        //Todo: create custom error to replace nonevalue error
         for transaction in transactions {
             match transaction.3 {
                 CUDAction::Create => {

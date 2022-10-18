@@ -344,7 +344,7 @@ pub mod pallet {
 		/// There is no expenditure with such project id
 		NoExpendituresFound, 
 		/// Field name can not be empty
-		FieldNameCannotBeEmpty,
+		EmptyExpenditureName,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
 		/// There is no budgets for the project
@@ -397,6 +397,18 @@ pub mod pallet {
 		DrawdownIsNotInSubmittedStatus,
 		/// Transactions is not in submitted status
 		TransactionIsNotInSubmittedStatus,
+		/// Array of expenditures is empty
+		EmptyExpenditures,
+		/// Expenditure name is required
+		ExpenditureNameRequired,
+		/// Expenditure type is required
+		ExpenditureTypeRequired,
+		/// Expenditure amount is required
+		ExpenditureAmountRequired,
+		/// Expenditure id is required
+		ExpenditureIdRequired,
+
+
 
 
 	}
@@ -494,11 +506,13 @@ pub mod pallet {
 			creation_date: u64,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
-				FieldName,
-				ExpenditureType,
-				u64,
+				Option<FieldName>,
+				Option<ExpenditureType>,
+				Option<u64>,
 				Option<u32>,
 				Option<u32>,
+				CUDAction,
+				Option<[u8;32]>,
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
 				T::AccountId,
@@ -568,51 +582,25 @@ pub mod pallet {
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------
 		
-		// Expenditures: (name, type, amount, naics code, jobs multiplier)
+		// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_create_expenditure(
+		pub fn expenditures(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
 			expenditures: BoundedVec<(
-				FieldName,
-				ExpenditureType,
-				u64,
+				Option<FieldName>,
+				Option<ExpenditureType>,
+				Option<u64>,
 				Option<u32>,
 				Option<u32>,
+				CUDAction,
+				Option<[u8;32]>,
 			), T::MaxRegistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_expenditure(who, project_id, expenditures)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_edit_expenditure(
-			origin: OriginFor<T>, 
-			project_id: [u8;32], 
-			expenditure_id: [u8;32],
-			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-			expenditure_amount: Option<u64>,
-			naics_code: Option<u32>,
-			jobs_multiplier: Option<u32>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_edit_expenditure(who, project_id, expenditure_id, name, expenditure_amount, naics_code, jobs_multiplier)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_delete_expenditure(
-			origin: OriginFor<T>, 
-			project_id: [u8;32], 
-			expenditure_id: [u8;32],
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_delete_expenditure(who, project_id, expenditure_id)
+			Self::do_execute_expenditures(who, project_id, expenditures)
 		}
 
 		// T R A N S A C T I O N S   &  D R A W D O W N S
@@ -632,7 +620,6 @@ pub mod pallet {
 		///     it depends on the action to perform
 		/// - `submit`: Boolean to indicate if the drawdown is submitted or 
 		/// saved as draft
-		/// 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn submit_drawdown(
