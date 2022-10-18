@@ -388,10 +388,6 @@ impl<T: Config> Pallet<T> {
 
         // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
-        
-        //HERE
-        // Update user data depending on the role unassigned
-        //Self::remove_user_role(user.clone())?;
 
         // Remove user from UsersByProject storagemap
         <UsersByProject<T>>::mutate(project_id, |users| {
@@ -699,10 +695,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-//    update(const uint64_t &drawdown_id, const eosio::asset &total_amount, const bool &is_add_balance);
-//    edit(const uint64_t &drawdown_id,
-
-    /// TODO: Function to create initial drawdowns for a project
     fn do_initialize_drawdowns(
         admin: T::AccountId,
         project_id: [u8;32],
@@ -725,19 +717,154 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn do_submit_drawdown(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-//    submit(const uint64_t &drawdown_id);
-//    approve(const uint64_t &drawdown_id);
-//    reject(const uint64_t &drawdown_id);
+        // Ensure drawdown is in draft or rejected status
+        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::CannotSubmitDrawdown);
+
+        // Ensure drawdown has transactions
+        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to submitted
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in draft or rejected status
+            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
+
+            // Update transaction status to submitted
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Submitted;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Submitted;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    pub fn do_approve_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to approved
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to approved
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Approved;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Approved;
+            Ok(())
+        })?;
+
+        // Generate the next drawdown
+        Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
+
+        Ok(())
+    }
+
+    pub fn do_reject_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to rejected
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to rejected
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Rejected;
+                Ok(())
+            })?;
+        }
+
+        // Update feedback if provided
+        if let Some(mod_feedback) = feedback {
+            for (transaction_id, field_description) in mod_feedback {
+                // Update transaction feedback
+                <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                    let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                    transaction_data.feedback = Some(field_description);
+                    Ok(())
+                })?;
+            }
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Rejected;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
 
 
     // T R A N S A C T I O N S
     // --------------------------------------------------------------------------------------------
     // For now transactions functions are private, but in the future they may be public
-    // TOREVIEW: Each transaction has an amount and it refers to a selected expenditure,
-    // so each drawdown sums the amount of each transaction -> drawdown.total_amount = transaction.amount + transaction.amount + transaction.amount
-    // when a drawdown is approved, the amount is transfered to each expenditure
-    // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
     pub fn do_execute_transactions(
         _user: T::AccountId, //TODO: remove underscore when permissions are implemented
@@ -805,7 +932,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
     }
-
 
     fn do_create_transaction(
         project_id: [u8;32],
@@ -946,7 +1072,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    //TODO: create a function to automatically tracks the drawdown number of each type
 
 
     // H E L P E R S
@@ -971,7 +1096,6 @@ impl<T: Config> Pallet<T> {
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue).unwrap();
         global_scope
     }
-
 
     fn _change_project_status(
         admin: T::AccountId,
@@ -1200,42 +1324,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-            
-    //HERE
-    // fn remove_user_role(
-    //     user: T::AccountId,
-    // ) -> DispatchResult {
-    //     // Get user account data
-    //     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
-
-    //     // Check if user already has a role
-    //     match user_data.role {
-    //         Some(_user_role) => {
-    //             //Check how many projects the user has assigned
-    //             let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
-                
-    //             match projects_by_user.len() {
-    //                 1 => {
-    //                     // Update user data
-    //                     <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
-    //                         let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-    //                         user_data.role = None;
-    //                         Ok(())
-    //                     })?;
-    //                     //TOREVIEW: Remove ? operator and final Ok(())
-    //                     Ok(())
-    //                 },
-    //                 _ => {
-    //                     return Ok(())
-    //                 }
-    //             }
-    //         },
-    //         None => {
-    //             return Ok(())
-    //         }
-    //     }
-    // }
-
     fn is_project_completed(
         project_id: [u8;32],
     ) -> DispatchResult {
@@ -1383,149 +1471,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn do_submit_drawdown(
-        project_id: [u8;32],
-        drawdown_id: [u8;32],
-    ) -> DispatchResult {
-        //  Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-        // Ensure drawdown is in draft or rejected status
-        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::CannotSubmitDrawdown);
-
-        // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
-
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Update each transaction status to submitted
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in draft or rejected status
-            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
-
-            // Update transaction status to submitted
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Submitted;
-                Ok(())
-            })?;
-        }
-
-        // Update drawdown status
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.status = DrawdownStatus::Submitted;
-            Ok(())
-        })?;
-
-        Ok(())
-    }
-
-    pub fn do_approve_drawdown(
-        admin: T::AccountId,
-        project_id: [u8;32],
-        drawdown_id: [u8;32],
-    ) -> DispatchResult {
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //  Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
-
-        // Ensure drawdown is in submitted status
-        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
-
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Update each transaction status to approved
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
-
-            // Update transaction status to approved
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Approved;
-                Ok(())
-            })?;
-        }
-
-        // Update drawdown status
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.status = DrawdownStatus::Approved;
-            Ok(())
-        })?;
-
-        // Generate the next drawdown
-        Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
-
-        Ok(())
-    }
-
-    pub fn do_reject_drawdown(
-        admin: T::AccountId,
-        project_id: [u8;32],
-        drawdown_id: [u8;32],
-        feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
-    ) -> DispatchResult {
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //  Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
-
-        // Ensure drawdown is in submitted status
-        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
-
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Update each transaction status to rejected
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
-
-            // Update transaction status to rejected
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Rejected;
-                Ok(())
-            })?;
-        }
-
-        // Update feedback if provided
-        if let Some(mod_feedback) = feedback {
-            for (transaction_id, field_description) in mod_feedback {
-                // Update transaction feedback
-                <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                    let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                    transaction_data.feedback = Some(field_description);
-                    Ok(())
-                })?;
-            }
-        }
-
-        // Update drawdown status
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.status = DrawdownStatus::Rejected;
-            Ok(())
-        })?;
-
-        Ok(())
-    }
 
 
 }
