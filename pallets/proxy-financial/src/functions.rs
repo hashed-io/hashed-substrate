@@ -57,7 +57,7 @@ impl<T: Config> Pallet<T> {
         T::Rbac::assign_role_to_user(
             admin.clone(), 
             pallet_id.clone(), 
-            &global_scope, 
+            &global_scope,
             ProxyRole::Administrator.id())?;
 
         // create a administrator user account
@@ -272,48 +272,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // U S E R S
-    // --------------------------------------------------------------------------------------------
-	//TODO: Create a custom type for users bounded vec	
-    pub fn do_register_user(
-        admin: T::AccountId,
-        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
-    ) -> DispatchResult {
-        //ensure admin permissions     
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //Get current timestamp
-        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
-        for user in users {
-            // Ensure if user is already registered
-            ensure!(!<UsersInfo<T>>::contains_key(user.0.clone()), Error::<T>::UserAlreadyRegistered);
-
-            match user.2 {
-                ProxyRole::Administrator => {
-                    Self::do_sudo_add_administrator(user.0.clone(), user.1.clone())?;
-                },
-                _ => {
-                    // Create user data
-                    let user_data = UserData::<T> {
-                        name: user.1.clone(),
-                        role: user.2,
-                        image: CID::default(),
-                        date_registered: current_timestamp,
-                        email: FieldName::default(),
-                        documents: None,
-                    };
-
-                    //Insert user data
-                    <UsersInfo<T>>::insert(user.0.clone(), user_data);
-                    Self::deposit_event(Event::UserAdded(user.0));
-                },
-            }
-        }
-
-        Ok(())
-    }
-
     pub fn do_assign_user(
         admin: T::AccountId,
         project_id: [u8;32], 
@@ -408,17 +366,158 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_update_user(
+
+    // U S E R S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_users(
         admin: T::AccountId,
+        users: BoundedVec<(
+            T::AccountId, // 0:account id
+            Option<FieldName>, // 1:name
+            Option<ProxyRole>, // 2:role
+            CUDAction, // 3:action
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        for user in users{
+            match user.3 {
+                CUDAction::Create => {
+                    // Create user only needs: account id, name and role
+                    Self::do_create_user(
+                        user.0.clone(), 
+                        user.1.clone().ok_or(Error::<T>::UserNameRequired)?,
+                        user.2.clone().ok_or(Error::<T>::UserRoleRequired)?,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update user only needs: account id, name and role
+                    Self::do_update_user(
+                        user.0.clone(),
+                        user.1.clone(),
+                        user.2.clone()
+                    )?;
+                },
+                CUDAction::Delete => {
+                    Self::do_delete_user(
+                        user.0.clone()
+                    )?;
+                },
+            }
+        }
+
+        // Event
+        Self::deposit_event(Event::UsersExecuted);
+        Ok(())
+    }
+
+
+    fn do_create_user(
+        user: T::AccountId,
+        name: FieldName,
+        role: ProxyRole,
+    ) -> DispatchResult {
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Ensure user is not registered
+        ensure!(!<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
+
+        match role {
+            ProxyRole::Administrator => {
+                Self::do_sudo_add_administrator(user.clone(), name.clone())?;
+            },
+            _ => {
+                // Create user data
+                let user_data = UserData::<T> {
+                    name: name.clone(),
+                    role,
+                    image: CID::default(),
+                    date_registered: current_timestamp,
+                    email: FieldName::default(),
+                    documents: None,
+                };
+
+                // Insert user data
+                <UsersInfo<T>>::insert(user.clone(), user_data);
+                Self::deposit_event(Event::UserAdded(user.clone()));
+            },
+        }
+
+        Ok(())
+    }
+
+    fn do_update_user(
+        user: T::AccountId,
+        name: Option<FieldName>,
+        role: Option<ProxyRole>,
+    ) -> DispatchResult {
+        // Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+
+        // Update user data
+        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
+            let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+
+            if let Some(mod_name) = name {
+                user_info.name = mod_name;
+            }
+            if let Some(mod_role) = role {
+                user_info.role = mod_role;
+            }
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::UserUpdated(user));
+        Ok(())
+    }
+
+    fn do_delete_user(
+        user: T::AccountId,
+    ) -> DispatchResult {
+        //Ensure user is registered & get user data
+        let user_data = <UsersInfo<T>>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+
+        match user_data.role {
+            ProxyRole::Administrator => {
+                Self::do_sudo_remove_administrator(user.clone())?;
+            },
+            _ => {
+                // Can not delete a user if the user is assigned to a project
+                //TOREVIEW: Check if this validations is working as expected
+                let projects_by_user = <ProjectsByUser<T>>::try_get(user.clone()).map_err(|_| Error::<T>::UserNotAssignedToProject)?;
+                ensure!(projects_by_user.is_empty(), Error::<T>::UserHasAssignedProjects);
+
+                // Remove user from UsersInfo storage map
+                <UsersInfo<T>>::remove(user.clone());
+
+                // Remove user from ProjectsByUser storage map
+                <ProjectsByUser<T>>::remove(user.clone());
+
+                // Remove user from UsersByProject storage map
+                for project in projects_by_user {
+                    <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project, |users| {
+                        users.retain(|u| u != &user);
+                        Ok(())
+                    })?;
+                }
+                    
+                Self::deposit_event(Event::UserDeleted(user.clone()));
+            },
+        }
+
+        Ok(())
+
+    }
+
+    pub fn do_edit_user(
         user: T::AccountId, 
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
         email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         documents: Option<Documents<T>>, 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
@@ -447,49 +546,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::UserUpdated(user));
 
         Ok(())
-    }
-
-    pub fn do_delete_user(
-        admin: T::AccountId,
-        user: T::AccountId,
-    ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //Ensure user is registered
-        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
-        
-        //HERE
-        //Prevent users from deleting an administator
-        // if let Some(admin_role) = user_data.role{
-        //     ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
-        // }
-
-        // Can not delete an user if it has assigned projects
-        let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
-
-        if projects_by_user.len() == 0 {
-            // Remove user from UsersInfo storagemap
-            <UsersInfo<T>>::remove(user.clone());
-
-            // Remove user from UsersByProject storagemap
-            //TODO: FIX THIS ITERATION
-            for project_id in projects_by_user {
-                <UsersByProject<T>>::mutate(project_id, |users| {
-                    users.retain(|u| u != &user);
-                });
-            }
-
-            // Remove user from ProjectsByUser storagemap
-            <ProjectsByUser<T>>::remove(user.clone());
-
-            Self::deposit_event(Event::UserDeleted(user));
-            Ok(())
-        
-        } else {
-            Err(Error::<T>::CannotDeleteUserWithAssignedProjects.into())
-        }
-
     }
 
     // B U D G E T  E X P E N D I T U R E

@@ -273,6 +273,8 @@ pub mod pallet {
 		TransactionEdited([u8;32]),
 		/// Transaction was deleted successfully
 		TransactionDeleted([u8;32]),
+		/// Users extrinsic was completed successfully
+		UsersExecuted,
 
 	}
 
@@ -407,8 +409,12 @@ pub mod pallet {
 		ExpenditureAmountRequired,
 		/// Expenditure id is required
 		ExpenditureIdRequired,
-
-
+		/// User name is required
+		UserNameRequired,
+		/// User role is required
+		UserRoleRequired,
+		/// Can not delete a user if the user is assigned to a project
+		UserHasAssignedProjects,
 
 
 	}
@@ -457,18 +463,23 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_register_user(
+		pub fn users(
 			origin: OriginFor<T>, 
-			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
+			users: BoundedVec<(
+				T::AccountId, // account id
+				Option<FieldName>, // name
+				Option<ProxyRole>, // role
+				CUDAction, // action
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, users)
+			Self::do_execute_users(who, users)
 		}
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_update_user(
+		pub fn users_edit_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
 			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
@@ -476,22 +487,10 @@ pub mod pallet {
 			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			documents: Option<Documents<T>> 
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
+			let _who = ensure_signed(origin)?;
 
-			Self::do_update_user(who, user, name, image, email, documents)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_delete_user(
-			origin: OriginFor<T>, 
-			user: T::AccountId, 
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_delete_user(who, user)
-		}
-		
+			Self::do_edit_user(user, name, image, email, documents)
+		}	
 
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
