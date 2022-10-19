@@ -17,10 +17,10 @@ mod functions;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{pallet_prelude::*, traits::tokens::nonfungibles::Inspect, BoundedVec, transactional};
+	use frame_support::{pallet_prelude::*, BoundedVec, transactional};
 	use frame_system::pallet_prelude::*;
 	use scale_info::prelude::vec::Vec;
-	use sp_runtime::{traits::StaticLookup, Permill};
+	use sp_runtime::{Permill};
 	use crate::types::*;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -103,6 +103,19 @@ pub mod pallet {
 	#[pallet::getter(fn frunique_parent)]
 	/// Keeps track of hierarchical information for a frunique.
 	pub(super) type FruniqueParent<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		CollectionId,
+		Blake2_128Concat,
+		ItemId, // FruniqueId
+		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
+		ValueQuery
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_child)]
+	/// Keeps track of hierarchical information for a frunique.
+	pub(super) type FruniqueChild<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		CollectionId,

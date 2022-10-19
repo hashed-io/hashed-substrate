@@ -12,3 +12,19 @@ pub type CollectionId = u32;
 pub type ItemId = u32;
 
 pub type HierarchicalInfo = (ItemId, bool);
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct FruniqueChild {
+	pub child_id: ItemId,
+	pub collection_id: CollectionId,
+	pub is_hierarchical: bool,
+	pub weight: u32,
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct FruniqueInheritance<T: pallet_uniques::Config> {
+	pub parent: Option<(CollectionId, ItemId)>,
+	pub children: Vec<(CollectionId, ItemId)>,
+}
