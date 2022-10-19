@@ -67,6 +67,13 @@ impl<T: Config> Pallet<T> {
 		false
 	}
 
+	pub fn item_exists(class_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+		if let Some(_owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
+			return true;
+		}
+		false
+	}
+
 	pub fn set_attribute(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,

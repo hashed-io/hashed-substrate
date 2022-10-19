@@ -11,4 +11,4 @@ pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLi
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
-pub type HierarchicalInfo = (Option<ItemId>, bool);
+pub type HierarchicalInfo = (ItemId, bool);
