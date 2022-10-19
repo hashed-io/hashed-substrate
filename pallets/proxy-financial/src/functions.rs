@@ -389,7 +389,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         users: BoundedVec<(
             T::AccountId, // 0:account id
-            Option<FieldName>, // 1:name
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
             Option<ProxyRole>, // 2:role
             CUDAction, // 3:action
         ), T::MaxRegistrationsAtTime>,
@@ -431,7 +431,7 @@ impl<T: Config> Pallet<T> {
 
     fn do_create_user(
         user: T::AccountId,
-        name: FieldName,
+        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
         role: ProxyRole,
     ) -> DispatchResult {
         //Get current timestamp
@@ -440,14 +440,17 @@ impl<T: Config> Pallet<T> {
         // Ensure user is not registered
         ensure!(!<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
 
+        //Ensure name is not empty
+        ensure!(!name.is_empty(), Error::<T>::UserNameRequired);
+
         match role {
             ProxyRole::Administrator => {
-                Self::do_sudo_add_administrator(user.clone(), name.clone())?;
+                Self::do_sudo_add_administrator(user.clone(), name[0].clone())?;
             },
             _ => {
                 // Create user data
                 let user_data = UserData::<T> {
-                    name: name.clone(),
+                    name: name[0].clone(),
                     role,
                     image: CID::default(),
                     date_registered: current_timestamp,
@@ -466,7 +469,7 @@ impl<T: Config> Pallet<T> {
 
     fn do_update_user(
         user: T::AccountId,
-        name: Option<FieldName>,
+        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
         role: Option<ProxyRole>,
     ) -> DispatchResult {
         // Ensure user is registered
@@ -477,7 +480,7 @@ impl<T: Config> Pallet<T> {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
             if let Some(mod_name) = name {
-                user_info.name = mod_name;
+                user_info.name = mod_name.into_inner()[0].clone();
             }
             if let Some(mod_role) = role {
                 user_info.role = mod_role;
@@ -502,7 +505,7 @@ impl<T: Config> Pallet<T> {
             _ => {
                 // Can not delete a user if the user is assigned to a project
                 //TOREVIEW: Check if this validations is working as expected
-                let projects_by_user = <ProjectsByUser<T>>::try_get(user.clone()).map_err(|_| Error::<T>::UserNotAssignedToProject)?;
+                let projects_by_user = <ProjectsByUser<T>>::get(user.clone());
                 ensure!(projects_by_user.is_empty(), Error::<T>::UserHasAssignedProjects);
 
                 // Remove user from UsersInfo storage map
@@ -541,6 +544,7 @@ impl<T: Config> Pallet<T> {
         <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
+            //TODO: evaluate this inner method, optimize it
             if let Some(name) = name {
                 let mod_name = name.into_inner();
                 user_info.name = mod_name[0].clone();

@@ -469,7 +469,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			users: BoundedVec<(
 				T::AccountId, // account id
-				Option<FieldName>, // name
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
 				Option<ProxyRole>, // role
 				CUDAction, // action
 			), T::MaxRegistrationsAtTime>,
