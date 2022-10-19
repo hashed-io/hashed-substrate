@@ -1001,8 +1001,10 @@ impl<T: Config> Pallet<T> {
         //Ensure drawdown exists so helper private functions doesn't need to check it
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-        // Ensure transactions are not empty
-        ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+        // Ensure transactions are not empty if submit is true
+        if submit == false {
+            ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+        }
 
         //Todo: create custom error to replace nonevalue error
         for transaction in transactions {
@@ -1039,7 +1041,7 @@ impl<T: Config> Pallet<T> {
         Self::do_calculate_drawdown_total_amount(project_id, drawdown_id)?;
 
         // If submit is true, submit drawdown to be approved
-        if submit {
+        if submit == true {
             Self::do_submit_drawdown(project_id, drawdown_id)?;
         }
 
