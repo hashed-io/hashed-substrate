@@ -623,6 +623,73 @@
 <span id="623">623</span>
 <span id="624">624</span>
 <span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -874,10 +941,10 @@
 		<span class="ident">AdministratorAssigned</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// Administator removed</span>
 		<span class="ident">AdministratorRemoved</span>(<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// User assigned to project</span>
-		<span class="ident">UserAssignedToProject</span>,
-		<span class="doccomment">/// User removed from project</span>
-		<span class="ident">UserUnassignedFromProject</span>(<span class="ident">T::AccountId</span>, [<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Users has been assigned from the selected project</span>
+		<span class="ident">UsersAssignationCompleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Users has been removed from the selected project</span>
+		<span class="ident">UsersUnassignationCompleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// User info updated</span>
 		<span class="ident">UserUpdated</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// User removed</span>
@@ -898,6 +965,10 @@
 		<span class="ident">TransactionEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Transaction was deleted successfully</span>
 		<span class="ident">TransactionDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Users extrinsic was completed successfully</span>
+		<span class="ident">UsersExecuted</span>,
+		<span class="doccomment">/// Assign users extrinsic was completed successfully</span>
+		<span class="ident">UsersAssignationExecuted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 
 	}
 
@@ -969,7 +1040,7 @@
 		<span class="doccomment">/// There is no expenditure with such project id</span>
 		<span class="ident">NoExpendituresFound</span>, 
 		<span class="doccomment">/// Field name can not be empty</span>
-		<span class="ident">FieldNameCannotBeEmpty</span>,
+		<span class="ident">EmptyExpenditureName</span>,
 		<span class="doccomment">/// Expenditure does not belong to the project</span>
 		<span class="ident">ExpenditureDoesNotBelongToProject</span>,
 		<span class="doccomment">/// There is no budgets for the project</span>
@@ -1012,6 +1083,33 @@
 		<span class="ident">EmptyTransactions</span>, 
 		<span class="doccomment">/// Transaction ID was not found in do_execute_transaction</span>
 		<span class="ident">TransactionIdNotFound</span>,
+		<span class="doccomment">/// Drawdown can not be submitted if does not has any transactions</span>
+		<span class="ident">DrawdownHasNoTransactions</span>,
+		<span class="doccomment">/// Cannot submit transaction</span>
+		<span class="ident">CannotSubmitTransaction</span>,
+		<span class="doccomment">/// Drawdown can not be submitted</span>
+		<span class="ident">CannotSubmitDrawdown</span>,
+		<span class="doccomment">/// Drawdown can not be approved if is not in submitted status</span>
+		<span class="ident">DrawdownIsNotInSubmittedStatus</span>,
+		<span class="doccomment">/// Transactions is not in submitted status</span>
+		<span class="ident">TransactionIsNotInSubmittedStatus</span>,
+		<span class="doccomment">/// Array of expenditures is empty</span>
+		<span class="ident">EmptyExpenditures</span>,
+		<span class="doccomment">/// Expenditure name is required</span>
+		<span class="ident">ExpenditureNameRequired</span>,
+		<span class="doccomment">/// Expenditure type is required</span>
+		<span class="ident">ExpenditureTypeRequired</span>,
+		<span class="doccomment">/// Expenditure amount is required</span>
+		<span class="ident">ExpenditureAmountRequired</span>,
+		<span class="doccomment">/// Expenditure id is required</span>
+		<span class="ident">ExpenditureIdRequired</span>,
+		<span class="doccomment">/// User name is required</span>
+		<span class="ident">UserNameRequired</span>,
+		<span class="doccomment">/// User role is required</span>
+		<span class="ident">UserRoleRequired</span>,
+		<span class="doccomment">/// Can not delete a user if the user is assigned to a project</span>
+		<span class="ident">UserHasAssignedProjects</span>,
+
 
 	}
 
@@ -1059,18 +1157,23 @@
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_register_user</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(<span class="ident">T::AccountId</span>, <span class="ident">FieldName</span>, <span class="ident">ProxyRole</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
+			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
+				<span class="ident">T::AccountId</span>, <span class="comment">// account id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">// name</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ProxyRole</span><span class="op">&gt;</span>, <span class="comment">// role</span>
+				<span class="ident">CUDAction</span>, <span class="comment">// action</span>
+			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_register_user</span>(<span class="ident">who</span>, <span class="ident">users</span>)
+			<span class="ident"><span class="self">Self</span>::do_execute_users</span>(<span class="ident">who</span>, <span class="ident">users</span>)
 		}
 
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_update_user</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_edit_user</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">user</span>: <span class="ident">T::AccountId</span>, 
 			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1078,22 +1181,10 @@
 			<span class="ident">email</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
 		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
+			<span class="kw">let</span> <span class="ident">_who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
-			<span class="ident"><span class="self">Self</span>::do_update_user</span>(<span class="ident">who</span>, <span class="ident">user</span>, <span class="ident">name</span>, <span class="ident">image</span>, <span class="ident">email</span>, <span class="ident">documents</span>)
-		}
-
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_delete_user</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">user</span>: <span class="ident">T::AccountId</span>, 
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
-
-			<span class="ident"><span class="self">Self</span>::do_delete_user</span>(<span class="ident">who</span>, <span class="ident">user</span>)
-		}
-		
+			<span class="ident"><span class="self">Self</span>::do_edit_user</span>(<span class="ident">user</span>, <span class="ident">name</span>, <span class="ident">image</span>, <span class="ident">email</span>, <span class="ident">documents</span>)
+		}	
 
 		<span class="comment">// P R O J E C T S</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
@@ -1108,15 +1199,18 @@
 			<span class="ident">creation_date</span>: <span class="ident">u64</span>,
 			<span class="ident">completion_date</span>: <span class="ident">u64</span>, 
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="ident">FieldName</span>,
-				<span class="ident">ExpenditureType</span>,
-				<span class="ident">u64</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureType</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+				<span class="ident">CUDAction</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 			<span class="ident">users</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="ident">T::AccountId</span>,
-				<span class="ident">ProxyRole</span>
+				<span class="ident">T::AccountId</span>, 
+				<span class="ident">ProxyRole</span>,
+				<span class="ident">AssignAction</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
@@ -1152,82 +1246,122 @@
 			<span class="ident"><span class="self">Self</span>::do_delete_project</span>(<span class="ident">who</span>, <span class="ident">project_id</span>)
 		}
 
-		<span class="comment">// Users: (user, role)</span>
+		<span class="comment">// Users: (user, role, assign action)</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_assign_user</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],  
-			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(<span class="ident">T::AccountId</span>, <span class="ident">ProxyRole</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
+			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
+				<span class="ident">T::AccountId</span>, 
+				<span class="ident">ProxyRole</span>,
+				<span class="ident">AssignAction</span>,
+			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_assign_user</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">users</span>)
+			<span class="ident"><span class="self">Self</span>::do_execute_assign_users</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">users</span>)
 		}
-
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_unassign_user</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">user</span>: <span class="ident">T::AccountId</span>,
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],  
-			<span class="ident">role</span>: <span class="ident">ProxyRole</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
-
-			<span class="ident"><span class="self">Self</span>::do_unassign_user</span>(<span class="ident">who</span>, <span class="ident">user</span>, <span class="ident">project_id</span>, <span class="ident">role</span>)
-		}
-
 
 		<span class="comment">// B U D G E T  E X P E N D I T U R E </span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
 		
-		<span class="comment">// Expenditures: (name, type, amount, naics code, jobs multiplier)</span>
+		<span class="comment">// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures_create_expenditure</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="ident">FieldName</span>,
-				<span class="ident">ExpenditureType</span>,
-				<span class="ident">u64</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureType</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+				<span class="ident">CUDAction</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,  
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_create_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditures</span>)
+			<span class="ident"><span class="self">Self</span>::do_execute_expenditures</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditures</span>)
 		}
 
+		<span class="comment">// T R A N S A C T I O N S   &amp;  D R A W D O W N S</span>
+		<span class="comment">// --------------------------------------------------------------------------------------------</span>
+
+		<span class="doccomment">/// Create a transaction</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// - `project_id`: The project id</span>
+		<span class="doccomment">/// - `drawdown_id`: The drawdown id</span>
+		<span class="doccomment">/// - `transactions`: The array of transactions as follows:</span>
+		<span class="doccomment">/// 	- `expenditure_id`: The expenditure id</span>
+		<span class="doccomment">/// 	- `amount`: The amount</span>
+		<span class="doccomment">/// 	- `documents`: The array of documents</span>
+		<span class="doccomment">/// 	- `CUDAction`: The action to perform (create, update, delete)</span>
+		<span class="doccomment">/// 	- `transaction_id`: The transaction id</span>
+		<span class="doccomment">/// 	Note that all parameters are optional because </span>
+		<span class="doccomment">///     it depends on the action to perform</span>
+		<span class="doccomment">/// - `submit`: Boolean to indicate if the drawdown is submitted or </span>
+		<span class="doccomment">/// saved as draft</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures_edit_expenditure</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">submit_drawdown</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
-			<span class="ident">expenditure_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, 
-			<span class="ident">expenditure_amount</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-			<span class="ident">naics_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-			<span class="ident">jobs_multiplier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">transactions</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">//Documents</span>
+				<span class="ident">CUDAction</span>, <span class="comment">// Action</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
+			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
+			<span class="ident">submit</span>: <span class="ident">bool</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_edit_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditure_id</span>, <span class="ident">name</span>, <span class="ident">expenditure_amount</span>, <span class="ident">naics_code</span>, <span class="ident">jobs_multiplier</span>)
+			<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">transactions</span>, <span class="ident">submit</span>)
 		}
 
+		<span class="doccomment">/// Approve a drawdown</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// - `origin`: The admin</span>
+		<span class="doccomment">/// - `project_id`: The project id</span>
+		<span class="doccomment">/// - `drawdown_id`: The drawdown id</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures_delete_expenditure</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">approve_drawdown</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
-			<span class="ident">expenditure_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_delete_expenditure</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">expenditure_id</span>)
+			<span class="ident"><span class="self">Self</span>::do_approve_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)
 		}
+
+		<span class="doccomment">/// Reject a drawdown</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// - `origin`: The admin</span>
+		<span class="doccomment">/// - `project_id`: The project id</span>
+		<span class="doccomment">/// - `drawdown_id`: The drawdown id</span>
+		<span class="doccomment">/// </span>
+		<span class="attribute">#[<span class="ident">transactional</span>]</span>
+		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_drawdown</span>(
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
+			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+		) -&gt; <span class="ident">DispatchResult</span> {
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
+
+			<span class="ident"><span class="self">Self</span>::do_reject_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">feedback</span>)
+		}
+
+
+		
 
 		<span class="comment">// /// Testing extrinsic  </span>
 		<span class="comment">// #[transactional]</span>
