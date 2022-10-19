@@ -249,10 +249,10 @@ pub mod pallet {
 		AdministratorAssigned(T::AccountId),
 		/// Administator removed
 		AdministratorRemoved(T::AccountId),
-		/// User assigned to project
-		UserAssignedToProject,
-		/// User removed from project
-		UserUnassignedFromProject(T::AccountId, [u8;32]),
+		/// Users has been assigned from the selected project
+		UsersAssignationCompleted([u8;32]),
+		/// Users has been removed from the selected project
+		UsersUnassignationCompleted([u8;32]),
 		/// User info updated
 		UserUpdated(T::AccountId),
 		/// User removed
@@ -273,6 +273,10 @@ pub mod pallet {
 		TransactionEdited([u8;32]),
 		/// Transaction was deleted successfully
 		TransactionDeleted([u8;32]),
+		/// Users extrinsic was completed successfully
+		UsersExecuted,
+		/// Assign users extrinsic was completed successfully
+		UsersAssignationExecuted([u8;32]),
 
 	}
 
@@ -344,7 +348,7 @@ pub mod pallet {
 		/// There is no expenditure with such project id
 		NoExpendituresFound, 
 		/// Field name can not be empty
-		FieldNameCannotBeEmpty,
+		EmptyExpenditureName,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
 		/// There is no budgets for the project
@@ -387,6 +391,33 @@ pub mod pallet {
 		EmptyTransactions, 
 		/// Transaction ID was not found in do_execute_transaction
 		TransactionIdNotFound,
+		/// Drawdown can not be submitted if does not has any transactions
+		DrawdownHasNoTransactions,
+		/// Cannot submit transaction
+		CannotSubmitTransaction,
+		/// Drawdown can not be submitted
+		CannotSubmitDrawdown,
+		/// Drawdown can not be approved if is not in submitted status
+		DrawdownIsNotInSubmittedStatus,
+		/// Transactions is not in submitted status
+		TransactionIsNotInSubmittedStatus,
+		/// Array of expenditures is empty
+		EmptyExpenditures,
+		/// Expenditure name is required
+		ExpenditureNameRequired,
+		/// Expenditure type is required
+		ExpenditureTypeRequired,
+		/// Expenditure amount is required
+		ExpenditureAmountRequired,
+		/// Expenditure id is required
+		ExpenditureIdRequired,
+		/// User name is required
+		UserNameRequired,
+		/// User role is required
+		UserRoleRequired,
+		/// Can not delete a user if the user is assigned to a project
+		UserHasAssignedProjects,
+
 
 	}
 
@@ -434,18 +465,23 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_register_user(
+		pub fn users(
 			origin: OriginFor<T>, 
-			users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
+			users: BoundedVec<(
+				T::AccountId, // account id
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+				Option<ProxyRole>, // role
+				CUDAction, // action
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_register_user(who, users)
+			Self::do_execute_users(who, users)
 		}
 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_update_user(
+		pub fn users_edit_user(
 			origin: OriginFor<T>, 
 			user: T::AccountId, 
 			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
@@ -453,22 +489,10 @@ pub mod pallet {
 			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			documents: Option<Documents<T>> 
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
+			let _who = ensure_signed(origin)?;
 
-			Self::do_update_user(who, user, name, image, email, documents)
-		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn users_delete_user(
-			origin: OriginFor<T>, 
-			user: T::AccountId, 
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_delete_user(who, user)
-		}
-		
+			Self::do_edit_user(user, name, image, email, documents)
+		}	
 
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
@@ -483,15 +507,18 @@ pub mod pallet {
 			creation_date: u64,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
-				FieldName,
-				ExpenditureType,
-				u64,
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+				Option<ExpenditureType>,
+				Option<u64>,
 				Option<u32>,
 				Option<u32>,
+				CUDAction,
+				Option<[u8;32]>,
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
-				T::AccountId,
-				ProxyRole
+				T::AccountId, 
+				ProxyRole,
+				AssignAction,
 			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -527,82 +554,122 @@ pub mod pallet {
 			Self::do_delete_project(who, project_id)
 		}
 
-		// Users: (user, role)
+		// Users: (user, role, assign action)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>, 
 			project_id: [u8;32],  
-			users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
+			users: BoundedVec<(
+				T::AccountId, 
+				ProxyRole,
+				AssignAction,
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_assign_user(who, project_id, users)
+			Self::do_execute_assign_users(who, project_id, users)
 		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_unassign_user(
-			origin: OriginFor<T>, 
-			user: T::AccountId,
-			project_id: [u8;32],  
-			role: ProxyRole,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_unassign_user(who, user, project_id, role)
-		}
-
 
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------
 		
-		// Expenditures: (name, type, amount, naics code, jobs multiplier)
+		// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_create_expenditure(
+		pub fn expenditures(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
 			expenditures: BoundedVec<(
-				FieldName,
-				ExpenditureType,
-				u64,
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+				Option<ExpenditureType>,
+				Option<u64>,
 				Option<u32>,
 				Option<u32>,
+				CUDAction,
+				Option<[u8;32]>,
 			), T::MaxRegistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_expenditure(who, project_id, expenditures)
+			Self::do_execute_expenditures(who, project_id, expenditures)
 		}
 
+		// T R A N S A C T I O N S   &  D R A W D O W N S
+		// --------------------------------------------------------------------------------------------
+
+		/// Create a transaction
+		/// 
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
+		/// - `transactions`: The array of transactions as follows:
+		/// 	- `expenditure_id`: The expenditure id
+		/// 	- `amount`: The amount
+		/// 	- `documents`: The array of documents
+		/// 	- `CUDAction`: The action to perform (create, update, delete)
+		/// 	- `transaction_id`: The transaction id
+		/// 	Note that all parameters are optional because 
+		///     it depends on the action to perform
+		/// - `submit`: Boolean to indicate if the drawdown is submitted or 
+		/// saved as draft
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_edit_expenditure(
+		pub fn submit_drawdown(
 			origin: OriginFor<T>, 
-			project_id: [u8;32], 
-			expenditure_id: [u8;32],
-			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
-			expenditure_amount: Option<u64>,
-			naics_code: Option<u32>,
-			jobs_multiplier: Option<u32>,
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			transactions: BoundedVec<(
+				Option<[u8;32]>, // expenditure_id
+				Option<u64>, // amount
+				Option<Documents<T>>, //Documents
+				CUDAction, // Action
+				Option<[u8;32]>, // transaction_id
+			), T::MaxRegistrationsAtTime>,
+			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_expenditure(who, project_id, expenditure_id, name, expenditure_amount, naics_code, jobs_multiplier)
+			Self::do_execute_transactions(who, project_id, drawdown_id, transactions, submit)
 		}
 
+		/// Approve a drawdown
+		/// 
+		/// - `origin`: The admin
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures_delete_expenditure(
+		pub fn approve_drawdown(
 			origin: OriginFor<T>, 
-			project_id: [u8;32], 
-			expenditure_id: [u8;32],
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_delete_expenditure(who, project_id, expenditure_id)
+			Self::do_approve_drawdown(who, project_id, drawdown_id)
 		}
+
+		/// Reject a drawdown
+		/// 
+		/// - `origin`: The admin
+		/// - `project_id`: The project id
+		/// - `drawdown_id`: The drawdown id
+		/// 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reject_drawdown(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_reject_drawdown(who, project_id, drawdown_id, feedback)
+		}
+
+
+		
 
 		// /// Testing extrinsic  
 		// #[transactional]
