@@ -159,8 +159,8 @@ impl<T: Config> Pallet<T> {
         Self::do_execute_expenditures(admin.clone(), project_id, expenditures)?;
 
         // Add users
-        if let Some(users) = users {
-            Self::do_execute_assign_users(admin.clone(), project_id, users)?;
+        if let Some(mod_users) = users {
+            Self::do_execute_assign_users(admin.clone(), project_id, mod_users)?;
         }
 
         //Initialize drawdowns

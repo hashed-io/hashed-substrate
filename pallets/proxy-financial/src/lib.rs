@@ -516,8 +516,9 @@ pub mod pallet {
 				Option<[u8;32]>,
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
-				T::AccountId,
-				ProxyRole
+				T::AccountId, 
+				ProxyRole,
+				AssignAction,
 			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
