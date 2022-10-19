@@ -103,7 +103,7 @@ impl<T: Config> Pallet<T> {
         creation_date: u64,
         completion_date: u64,
         expenditures: BoundedVec<(
-            Option<FieldName>,
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
             Option<ExpenditureType>,
             Option<u64>,
             Option<u32>,
@@ -576,7 +576,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32],
         expenditures: BoundedVec<(
-            Option<FieldName>, // 0: name
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // 0: name
             Option<ExpenditureType>, // 1: type
             Option<u64>, // 2: amount
             Option<u32>, // 3: naics code
@@ -649,7 +649,7 @@ impl<T: Config> Pallet<T> {
     /// * `jobs_multiplier` - The jobs multiplier of the budget expenditure
     fn do_create_expenditure(
         project_id: [u8;32], 
-        name: FieldName,
+        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
         expenditure_type: ExpenditureType,
         expenditure_amount: u64,
         naics_code: Option<u32>,
@@ -673,7 +673,7 @@ impl<T: Config> Pallet<T> {
         // Create expenditurte data
         let expenditure_data = ExpenditureData {
             project_id,
-            name,
+            name: name.into_inner()[0].clone(),
             expenditure_type,
             expenditure_amount,
             naics_code,
@@ -698,7 +698,7 @@ impl<T: Config> Pallet<T> {
     fn do_update_expenditure(
         project_id: [u8;32], 
         expenditure_id: [u8;32],
-        name: Option<FieldName>, 
+        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
         expenditure_amount: Option<u64>,
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
@@ -722,7 +722,7 @@ impl<T: Config> Pallet<T> {
             //TODO: ensure name is unique
 
             if let  Some(mod_name) = name {
-                expenditure.name = mod_name;
+                expenditure.name = mod_name.into_inner()[0].clone();
             }
             if let Some(mod_expenditure_amount) = expenditure_amount {
                 expenditure.expenditure_amount = mod_expenditure_amount;

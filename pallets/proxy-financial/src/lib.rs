@@ -507,7 +507,7 @@ pub mod pallet {
 			creation_date: u64,
 			completion_date: u64, 
 			expenditures: BoundedVec<(
-				Option<FieldName>,
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 				Option<ExpenditureType>,
 				Option<u64>,
 				Option<u32>,
@@ -581,7 +581,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
 			expenditures: BoundedVec<(
-				Option<FieldName>,
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 				Option<ExpenditureType>,
 				Option<u64>,
 				Option<u32>,
