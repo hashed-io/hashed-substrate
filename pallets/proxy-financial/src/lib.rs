@@ -249,10 +249,10 @@ pub mod pallet {
 		AdministratorAssigned(T::AccountId),
 		/// Administator removed
 		AdministratorRemoved(T::AccountId),
-		/// User assigned to project
-		UserAssignedToProject,
-		/// User removed from project
-		UserUnassignedFromProject(T::AccountId, [u8;32]),
+		/// Users has been assigned from the selected project
+		UsersAssignationCompleted([u8;32]),
+		/// Users has been removed from the selected project
+		UsersUnassignationCompleted([u8;32]),
 		/// User info updated
 		UserUpdated(T::AccountId),
 		/// User removed
@@ -275,6 +275,8 @@ pub mod pallet {
 		TransactionDeleted([u8;32]),
 		/// Users extrinsic was completed successfully
 		UsersExecuted,
+		/// Assign users extrinsic was completed successfully
+		UsersAssignationExecuted([u8;32]),
 
 	}
 
@@ -551,32 +553,22 @@ pub mod pallet {
 			Self::do_delete_project(who, project_id)
 		}
 
-		// Users: (user, role)
+		// Users: (user, role, assign action)
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>, 
 			project_id: [u8;32],  
-			users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
+			users: BoundedVec<(
+				T::AccountId, 
+				ProxyRole,
+				AssignAction,
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_assign_user(who, project_id, users)
+			Self::do_execute_assign_users(who, project_id, users)
 		}
-
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn projects_unassign_user(
-			origin: OriginFor<T>, 
-			user: T::AccountId,
-			project_id: [u8;32],  
-			role: ProxyRole,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin need to be an admin
-
-			Self::do_unassign_user(who, user, project_id, role)
-		}
-
 
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------

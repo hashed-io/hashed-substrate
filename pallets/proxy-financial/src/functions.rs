@@ -113,7 +113,8 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
         users: Option<BoundedVec<(
             T::AccountId,
-            ProxyRole
+            ProxyRole,
+            AssignAction,
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions 
@@ -159,7 +160,7 @@ impl<T: Config> Pallet<T> {
 
         // Add users
         if let Some(users) = users {
-            Self::do_assign_user(admin.clone(), project_id, users)?;
+            Self::do_execute_assign_users(admin.clone(), project_id, users)?;
         }
 
         //Initialize drawdowns
@@ -272,10 +273,14 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_assign_user(
+    pub fn do_execute_assign_users(
         admin: T::AccountId,
         project_id: [u8;32], 
-        users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
+        users: BoundedVec<(
+            T::AccountId, 
+            ProxyRole,
+            AssignAction,
+        ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -283,59 +288,70 @@ impl<T: Config> Pallet<T> {
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Ensure project is not completed
+        //Ensure project is not completed
         Self::is_project_completed(project_id)?;
 
-        for user in users{
-            // Basic validations prior to assign user
-            Self::check_user_role(user.0.clone(), user.1)?;
+        //Assign users
+        for user in users {
+            match user.2 {
+                AssignAction::Assign => {
+                    Self::do_assign_user(project_id, user.0, user.1)?;
+                },
+                AssignAction::Unassign => {
+                    Self::do_unassign_user(project_id, user.0, user.1)?;
+                },
+            }
 
-            //Ensure user is not already assigned to the project
-            ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.0), Error::<T>::UserAlreadyAssignedToProject);
-            ensure!(!<ProjectsByUser<T>>::get(user.0.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
+        }
 
-            // Ensure user is not assigened to the selected scope (project_id) with the selected role
-            ensure!(!T::Rbac::has_role(user.0.clone(), Self::pallet_id(), &project_id, [user.1.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyAssignedToProject);
-
-            // Update project data depending on the role assigned
-            Self::add_project_role(project_id, user.0.clone(), user.1)?;
-
-            // Insert project to ProjectsByUser storagemap
-            <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.0.clone(), |projects| {
-                projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
-                Ok(())
-            })?;
-
-            // Insert user to UsersByProject storagemap
-            <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
-                users.try_push(user.0.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
-                Ok(())
-            })?;
-
-            // Insert user into scope rbac pallet
-            T::Rbac::assign_role_to_user(user.0.clone(), Self::pallet_id(), &project_id, user.1.id())?;
-    }
-
-        //Event 
-        Self::deposit_event(Event::UserAssignedToProject);
+        // Event
+        Self::deposit_event(Event::UsersAssignationExecuted(project_id));
         Ok(())
     }
 
-    pub fn do_unassign_user(
-        admin: T::AccountId,
-        user: T::AccountId,
+    fn do_assign_user(
         project_id: [u8;32], 
+        user: T::AccountId,
+        role: ProxyRole,
+    ) -> DispatchResult {
+        // Basic validations prior to assign user
+        Self::check_user_role(user.clone(), role)?;
+
+        // Ensure user is not already assigned to the project
+        ensure!(!<UsersByProject<T>>::get(project_id).contains(&user), Error::<T>::UserAlreadyAssignedToProject);
+        ensure!(!<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
+
+        // Ensure user is not assigened to the selected scope (project_id) with the selected role
+        ensure!(!T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyAssignedToProject);
+        
+        // Update project data depending on the role assigned
+        Self::add_project_role(project_id, user.clone(), role)?;
+
+        // Insert project to ProjectsByUser storagemap
+        <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |projects| {
+            projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
+            Ok(())
+        })?;
+
+        // Insert user to UsersByProject storagemap
+        <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
+            users.try_push(user.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
+            Ok(())
+        })?;
+
+        // Insert user into scope rbac pallet
+        T::Rbac::assign_role_to_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
+
+        //Event 
+        Self::deposit_event(Event::UsersAssignationCompleted(project_id));
+        Ok(())
+    }
+
+    fn do_unassign_user(
+        project_id: [u8;32], 
+        user: T::AccountId,
         role: ProxyRole, 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
@@ -359,10 +375,10 @@ impl<T: Config> Pallet<T> {
             projects.retain(|p| p != &project_id);
         });
 
-        // Remove user from scope
+        // Remove user from the scope rbac pallet
         T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
 
-        Self::deposit_event(Event::UserUnassignedFromProject(user, project_id));
+        Self::deposit_event(Event::UsersUnassignationCompleted(project_id));
         Ok(())
     }
 
