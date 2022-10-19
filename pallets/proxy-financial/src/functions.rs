@@ -12,7 +12,7 @@ impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
     // --------------------------------------------------------------------------------------------
     
-    // I N I T I A L 
+    // I N I T I A L   S E T U P
     // --------------------------------------------------------------------------------------------
 		
     pub fn do_initial_setup() -> DispatchResult{
@@ -57,7 +57,7 @@ impl<T: Config> Pallet<T> {
         T::Rbac::assign_role_to_user(
             admin.clone(), 
             pallet_id.clone(), 
-            &global_scope, 
+            &global_scope,
             ProxyRole::Administrator.id())?;
 
         // create a administrator user account
@@ -92,7 +92,7 @@ impl<T: Config> Pallet<T> {
 	
     /// Create a new project
     /// - only administrator can create a new project
-    /// expenditures = (name, type, budget amount, naics code, jobs multiplier)
+    /// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
     /// users = (accountid, role)
     pub fn do_create_project(
         admin: T::AccountId, 
@@ -103,15 +103,18 @@ impl<T: Config> Pallet<T> {
         creation_date: u64,
         completion_date: u64,
         expenditures: BoundedVec<(
-            FieldName,
-            ExpenditureType,
-            u64,
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+            Option<ExpenditureType>,
+            Option<u64>,
             Option<u32>,
             Option<u32>,
+            CUDAction,
+            Option<[u8;32]>,
         ), T::MaxRegistrationsAtTime>,
         users: Option<BoundedVec<(
             T::AccountId,
-            ProxyRole
+            ProxyRole,
+            AssignAction,
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions 
@@ -153,11 +156,11 @@ impl<T: Config> Pallet<T> {
         ProjectsInfo::<T>::insert(project_id, project_data);
 
         //Add expenditures
-        Self::do_create_expenditure(admin.clone(), project_id, expenditures)?;
+        Self::do_execute_expenditures(admin.clone(), project_id, expenditures)?;
 
         // Add users
-        if let Some(users) = users {
-            Self::do_assign_user(admin.clone(), project_id, users)?;
+        if let Some(mod_users) = users {
+            Self::do_execute_assign_users(admin.clone(), project_id, mod_users)?;
         }
 
         //Initialize drawdowns
@@ -270,112 +273,85 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // U S E R S
-    // --------------------------------------------------------------------------------------------
-	//TODO: Create a custom type for users bounded vec	
-    pub fn do_register_user(
+    pub fn do_execute_assign_users(
         admin: T::AccountId,
-        users: BoundedVec<(T::AccountId, FieldName, ProxyRole), T::MaxRegistrationsAtTime>,
+        project_id: [u8;32], 
+        users: BoundedVec<(
+            T::AccountId, 
+            ProxyRole,
+            AssignAction,
+        ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //ensure admin permissions     
+        //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //Get current timestamp
-        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+        //Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
+        //Ensure project is not completed
+        Self::is_project_completed(project_id)?;
+
+        //Assign users
         for user in users {
-            // Ensure if user is already registered
-            ensure!(!<UsersInfo<T>>::contains_key(user.0.clone()), Error::<T>::UserAlreadyRegistered);
-
             match user.2 {
-                ProxyRole::Administrator => {
-                    Self::do_sudo_add_administrator(user.0.clone(), user.1.clone())?;
+                AssignAction::Assign => {
+                    Self::do_assign_user(project_id, user.0, user.1)?;
                 },
-                _ => {
-                    // Create user data
-                    let user_data = UserData::<T> {
-                        name: user.1.clone(),
-                        role: user.2,
-                        image: CID::default(),
-                        date_registered: current_timestamp,
-                        email: FieldName::default(),
-                        documents: None,
-                    };
-
-                    //Insert user data
-                    <UsersInfo<T>>::insert(user.0.clone(), user_data);
-                    Self::deposit_event(Event::UserAdded(user.0));
+                AssignAction::Unassign => {
+                    Self::do_unassign_user(project_id, user.0, user.1)?;
                 },
             }
+
         }
 
+        // Event
+        Self::deposit_event(Event::UsersAssignationExecuted(project_id));
         Ok(())
     }
 
-    pub fn do_assign_user(
-        admin: T::AccountId,
+    fn do_assign_user(
         project_id: [u8;32], 
-        users: BoundedVec<(T::AccountId, ProxyRole), T::MaxRegistrationsAtTime>,
+        user: T::AccountId,
+        role: ProxyRole,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Basic validations prior to assign user
+        Self::check_user_role(user.clone(), role)?;
 
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        // Ensure user is not already assigned to the project
+        ensure!(!<UsersByProject<T>>::get(project_id).contains(&user), Error::<T>::UserAlreadyAssignedToProject);
+        ensure!(!<ProjectsByUser<T>>::get(user.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
 
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
+        // Ensure user is not assigened to the selected scope (project_id) with the selected role
+        ensure!(!T::Rbac::has_role(user.clone(), Self::pallet_id(), &project_id, [role.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyAssignedToProject);
+        
+        // Update project data depending on the role assigned
+        Self::add_project_role(project_id, user.clone(), role)?;
 
-        for user in users{
-            // Basic validations prior to assign user
-            Self::check_user_role(user.0.clone(), user.1)?;
+        // Insert project to ProjectsByUser storagemap
+        <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |projects| {
+            projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
+            Ok(())
+        })?;
 
-            //Ensure user is not already assigned to the project
-            ensure!(!<UsersByProject<T>>::get(project_id).contains(&user.0), Error::<T>::UserAlreadyAssignedToProject);
-            ensure!(!<ProjectsByUser<T>>::get(user.0.clone()).contains(&project_id), Error::<T>::UserAlreadyAssignedToProject);
+        // Insert user to UsersByProject storagemap
+        <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
+            users.try_push(user.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
+            Ok(())
+        })?;
 
-            // Ensure user is not assigened to the selected scope (project_id) with the selected role
-            ensure!(!T::Rbac::has_role(user.0.clone(), Self::pallet_id(), &project_id, [user.1.id()].to_vec()).is_ok(), Error::<T>::UserAlreadyAssignedToProject);
-
-            // Update project data depending on the role assigned
-            Self::add_project_role(project_id, user.0.clone(), user.1)?;
-
-            // Insert project to ProjectsByUser storagemap
-            <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.0.clone(), |projects| {
-                projects.try_push(project_id).map_err(|_| Error::<T>::MaxProjectsPerUserReached)?;
-                Ok(())
-            })?;
-
-            // Insert user to UsersByProject storagemap
-            <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
-                users.try_push(user.0.clone()).map_err(|_| Error::<T>::MaxUsersPerProjectReached)?;
-                Ok(())
-            })?;
-
-            // Insert user into scope rbac pallet
-            T::Rbac::assign_role_to_user(user.0.clone(), Self::pallet_id(), &project_id, user.1.id())?;
-    }
+        // Insert user into scope rbac pallet
+        T::Rbac::assign_role_to_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
 
         //Event 
-        Self::deposit_event(Event::UserAssignedToProject);
+        Self::deposit_event(Event::UsersAssignationCompleted(project_id));
         Ok(())
     }
 
-    pub fn do_unassign_user(
-        admin: T::AccountId,
-        user: T::AccountId,
+    fn do_unassign_user(
         project_id: [u8;32], 
+        user: T::AccountId,
         role: ProxyRole, 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
@@ -388,10 +364,6 @@ impl<T: Config> Pallet<T> {
 
         // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
-        
-        //HERE
-        // Update user data depending on the role unassigned
-        //Self::remove_user_role(user.clone())?;
 
         // Remove user from UsersByProject storagemap
         <UsersByProject<T>>::mutate(project_id, |users| {
@@ -403,24 +375,168 @@ impl<T: Config> Pallet<T> {
             projects.retain(|p| p != &project_id);
         });
 
-        // Remove user from scope
+        // Remove user from the scope rbac pallet
         T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
 
-        Self::deposit_event(Event::UserUnassignedFromProject(user, project_id));
+        Self::deposit_event(Event::UsersUnassignationCompleted(project_id));
         Ok(())
     }
 
-    pub fn do_update_user(
+
+    // U S E R S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_users(
         admin: T::AccountId,
+        users: BoundedVec<(
+            T::AccountId, // 0:account id
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+            Option<ProxyRole>, // 2:role
+            CUDAction, // 3:action
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        //ensure admin permissions 
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        for user in users{
+            match user.3 {
+                CUDAction::Create => {
+                    // Create user only needs: account id, name and role
+                    Self::do_create_user(
+                        user.0.clone(), 
+                        user.1.clone().ok_or(Error::<T>::UserNameRequired)?,
+                        user.2.clone().ok_or(Error::<T>::UserRoleRequired)?,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update user only needs: account id, name and role
+                    Self::do_update_user(
+                        user.0.clone(),
+                        user.1.clone(),
+                        user.2.clone()
+                    )?;
+                },
+                CUDAction::Delete => {
+                    Self::do_delete_user(
+                        user.0.clone()
+                    )?;
+                },
+            }
+        }
+
+        // Event
+        Self::deposit_event(Event::UsersExecuted);
+        Ok(())
+    }
+
+
+    fn do_create_user(
+        user: T::AccountId,
+        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
+        role: ProxyRole,
+    ) -> DispatchResult {
+        //Get current timestamp
+        let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Ensure user is not registered
+        ensure!(!<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserAlreadyRegistered);
+
+        //Ensure name is not empty
+        ensure!(!name.is_empty(), Error::<T>::UserNameRequired);
+
+        match role {
+            ProxyRole::Administrator => {
+                Self::do_sudo_add_administrator(user.clone(), name[0].clone())?;
+            },
+            _ => {
+                // Create user data
+                let user_data = UserData::<T> {
+                    name: name[0].clone(),
+                    role,
+                    image: CID::default(),
+                    date_registered: current_timestamp,
+                    email: FieldName::default(),
+                    documents: None,
+                };
+
+                // Insert user data
+                <UsersInfo<T>>::insert(user.clone(), user_data);
+                Self::deposit_event(Event::UserAdded(user.clone()));
+            },
+        }
+
+        Ok(())
+    }
+
+    fn do_update_user(
+        user: T::AccountId,
+        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+        role: Option<ProxyRole>,
+    ) -> DispatchResult {
+        // Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
+
+        // Update user data
+        <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
+            let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
+
+            if let Some(mod_name) = name {
+                user_info.name = mod_name.into_inner()[0].clone();
+            }
+            if let Some(mod_role) = role {
+                user_info.role = mod_role;
+            }
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::UserUpdated(user));
+        Ok(())
+    }
+
+    fn do_delete_user(
+        user: T::AccountId,
+    ) -> DispatchResult {
+        //Ensure user is registered & get user data
+        let user_data = <UsersInfo<T>>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
+
+        match user_data.role {
+            ProxyRole::Administrator => {
+                Self::do_sudo_remove_administrator(user.clone())?;
+            },
+            _ => {
+                // Can not delete a user if the user is assigned to a project
+                //TOREVIEW: Check if this validations is working as expected
+                let projects_by_user = <ProjectsByUser<T>>::get(user.clone());
+                ensure!(projects_by_user.is_empty(), Error::<T>::UserHasAssignedProjects);
+
+                // Remove user from UsersInfo storage map
+                <UsersInfo<T>>::remove(user.clone());
+
+                // Remove user from ProjectsByUser storage map
+                <ProjectsByUser<T>>::remove(user.clone());
+
+                // Remove user from UsersByProject storage map
+                for project in projects_by_user {
+                    <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project, |users| {
+                        users.retain(|u| u != &user);
+                        Ok(())
+                    })?;
+                }
+                    
+                Self::deposit_event(Event::UserDeleted(user.clone()));
+            },
+        }
+
+        Ok(())
+
+    }
+
+    pub fn do_edit_user(
         user: T::AccountId, 
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
         email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
         documents: Option<Documents<T>>, 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         //Ensure user is registered
         ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
 
@@ -428,6 +544,7 @@ impl<T: Config> Pallet<T> {
         <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
+            //TODO: evaluate this inner method, optimize it
             if let Some(name) = name {
                 let mod_name = name.into_inner();
                 user_info.name = mod_name[0].clone();
@@ -451,51 +568,72 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_delete_user(
-        admin: T::AccountId,
-        user: T::AccountId,
-    ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        //Ensure user is registered
-        ensure!(<UsersInfo<T>>::contains_key(user.clone()), Error::<T>::UserNotRegistered);
-        
-        //HERE
-        //Prevent users from deleting an administator
-        // if let Some(admin_role) = user_data.role{
-        //     ensure!(admin_role != ProxyRole::Administrator, Error::<T>::CannotRemoveAdminRole);
-        // }
-
-        // Can not delete an user if it has assigned projects
-        let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
-
-        if projects_by_user.len() == 0 {
-            // Remove user from UsersInfo storagemap
-            <UsersInfo<T>>::remove(user.clone());
-
-            // Remove user from UsersByProject storagemap
-            //TODO: FIX THIS ITERATION
-            for project_id in projects_by_user {
-                <UsersByProject<T>>::mutate(project_id, |users| {
-                    users.retain(|u| u != &user);
-                });
-            }
-
-            // Remove user from ProjectsByUser storagemap
-            <ProjectsByUser<T>>::remove(user.clone());
-
-            Self::deposit_event(Event::UserDeleted(user));
-            Ok(())
-        
-        } else {
-            Err(Error::<T>::CannotDeleteUserWithAssignedProjects.into())
-        }
-
-    }
-
     // B U D G E T  E X P E N D I T U R E
     // --------------------------------------------------------------------------------------------
+ 
+    // Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
+    pub fn do_execute_expenditures(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        expenditures: BoundedVec<(
+            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // 0: name
+            Option<ExpenditureType>, // 1: type
+            Option<u64>, // 2: amount
+            Option<u32>, // 3: naics code
+            Option<u32>, // 4: jobs multiplier
+            CUDAction, // 5: CUDAction
+            Option<[u8;32]>, // 6: expenditure_id
+        ), T::MaxRegistrationsAtTime>, 
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure expenditures are not empty
+        ensure!(!expenditures.is_empty(), Error::<T>::EmptyExpenditures);
+
+        for expenditure in expenditures {
+            match expenditure.5 {
+                CUDAction::Create => {
+                    // Create expenditure only needs: name, type, amount, naics code, jobs multiplier
+                    Self::do_create_expenditure(
+                        project_id,
+                        expenditure.0.ok_or(Error::<T>::ExpenditureNameRequired)?,
+                        expenditure.1.ok_or(Error::<T>::ExpenditureTypeRequired)?,
+                        expenditure.2.ok_or(Error::<T>::ExpenditureAmountRequired)?,
+                        expenditure.3,
+                        expenditure.4,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update expenditure only needs: expenditure_id, name, amount, naics code, jobs multiplier
+                    Self::do_update_expenditure(
+                        project_id,
+                        expenditure.6.ok_or(Error::<T>::ExpenditureIdRequired)?,
+                        expenditure.0,
+                        expenditure.2,
+                        expenditure.3,
+                        expenditure.4,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete expenditure only needs: expenditure_id
+                    Self::do_delete_expenditure(
+                        expenditure.6.ok_or(Error::<T>::ExpenditureIdRequired)?,
+                    )?;
+                },
+            }
+
+        }
+
+
+
+        Ok(())
+    }
+
+
     /// Create a new budget expenditure
     /// 
     /// # Arguments
@@ -509,66 +647,55 @@ impl<T: Config> Pallet<T> {
     /// * `budget amount` - The amount of the budget expenditure
     /// * `naics code` - The naics code of the budget expenditure
     /// * `jobs_multiplier` - The jobs multiplier of the budget expenditure
-    pub fn do_create_expenditure(
-        admin: T::AccountId,
+    fn do_create_expenditure(
         project_id: [u8;32], 
-        expenditures: BoundedVec<(
-            FieldName,
-            ExpenditureType,
-            u64,
-            Option<u32>,
-            Option<u32>,
-        ), T::MaxRegistrationsAtTime>,
+        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
+        expenditure_type: ExpenditureType,
+        expenditure_amount: u64,
+        naics_code: Option<u32>,
+        jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // We use this way to validate because it's necessary to get the project type 
-        // in order to generate the right expenditure types 
-        //Ensure project exists & get project data
-        let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
+        //Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Ensure project is not completed
-        ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
+        Self::is_project_completed(project_id)?;
 
-        for expenditure in expenditures {
-            // Ensure expenditure name is not empty
-            ensure!(!expenditure.0.is_empty(), Error::<T>::FieldNameCannotBeEmpty);
+        //Ejnsure expenditure name is not empty
+        ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
-            // Create expenditure id
-            let expenditure_id = (project_id, expenditure.0.clone(), expenditure.1, timestamp).using_encoded(blake2_256);
+        // Create expenditure id
+        let expenditure_id = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
-            // Create expenditure data
-            let expenditure_data = ExpenditureData {
-                project_id,
-                name: expenditure.0.clone(),
-                expenditure_type: expenditure.1,
-                expenditure_amount: expenditure.2,
-                naics_code: expenditure.3,
-                jobs_multiplier: expenditure.4,
-            };  
+        // Create expenditurte data
+        let expenditure_data = ExpenditureData {
+            project_id,
+            name: name.into_inner()[0].clone(),
+            expenditure_type,
+            expenditure_amount,
+            naics_code,
+            jobs_multiplier, 
+        };
 
-            // Insert expenditure data into ExpendituresInfo
-            // Ensure expenditure_id is unique
-            ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
-            <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
+        // Insert expenditure data into ExpendituresInfo
+        // Ensure expenditure_id is unique
+        ensure!(!<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureAlreadyExists);
+        <ExpendituresInfo<T>>::insert(expenditure_id, expenditure_data);
 
-            //Insert expenditure_id into ExpendituresByProject
-            <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
-                expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
-                Ok(())
-            })?;
-        }
+        //Insert expenditure_id into ExpendituresByProject
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+            expenditures.try_push(expenditure_id).map_err(|_| Error::<T>::MaxExpendituresPerProjectReached)?;
+            Ok(())
+        })?;
 
         Self::deposit_event(Event::ExpenditureCreated);
         Ok(())
     }
 
-    pub fn do_edit_expenditure(
-        admin: T::AccountId,
+    fn do_update_expenditure(
         project_id: [u8;32], 
         expenditure_id: [u8;32],
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
@@ -576,9 +703,6 @@ impl<T: Config> Pallet<T> {
         naics_code: Option<u32>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
-        //Ensure admin permissions, TODO: add developer permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -597,52 +721,37 @@ impl<T: Config> Pallet<T> {
 
             //TODO: ensure name is unique
 
-            if let  Some(name) = name {
-                let mod_name = name.into_inner();
-                // Ensure name is not empty
-                ensure!(mod_name[0].len() > 0, Error::<T>::FieldNameCannotBeEmpty);
-                expenditure.name = mod_name[0].clone();
+            if let  Some(mod_name) = name {
+                expenditure.name = mod_name.into_inner()[0].clone();
             }
-            if let Some(expenditure_amount) = expenditure_amount {
-                expenditure.expenditure_amount = expenditure_amount;
+            if let Some(mod_expenditure_amount) = expenditure_amount {
+                expenditure.expenditure_amount = mod_expenditure_amount;
             }
-            if let Some(naics_code) = naics_code {
-                expenditure.naics_code = Some(naics_code);
+            if let Some(mod_naics_code) = naics_code {
+                expenditure.naics_code = Some(mod_naics_code);
             }
-            if let Some(jobs_multiplier) = jobs_multiplier {
-                expenditure.jobs_multiplier = Some(jobs_multiplier);
+            if let Some(mod_jobs_multiplier) = jobs_multiplier {
+                expenditure.jobs_multiplier = Some(mod_jobs_multiplier);
             }
 
             Ok(())
         })?;
 
-
         Self::deposit_event(Event::ExpenditureEdited(expenditure_id));
         Ok(())
     }
 
-    pub fn do_delete_expenditure(
-        admin: T::AccountId,
-        project_id: [u8;32], 
+    fn do_delete_expenditure(
         expenditure_id: [u8;32],
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
-        // Ensure expenditure_id exists 
-        ensure!(<ExpendituresInfo<T>>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
+        // Ensure expenditure_id exists & get expenditure data
+        let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
         // Delete expenditure data
         <ExpendituresInfo<T>>::remove(expenditure_id);
 
         // Delete expenditure_id from ExpendituresByProject
-        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |expenditures| {
+        <ExpendituresByProject<T>>::try_mutate::<_,_,DispatchError,_>(expenditure_data.project_id, |expenditures| {
             expenditures.retain(|expenditure| expenditure != &expenditure_id);
             Ok(())
         })?;
@@ -699,10 +808,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-//    update(const uint64_t &drawdown_id, const eosio::asset &total_amount, const bool &is_add_balance);
-//    edit(const uint64_t &drawdown_id,
-
-    /// TODO: Function to create initial drawdowns for a project
     fn do_initialize_drawdowns(
         admin: T::AccountId,
         project_id: [u8;32],
@@ -725,24 +830,159 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    fn do_submit_drawdown(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-//    submit(const uint64_t &drawdown_id);
-//    approve(const uint64_t &drawdown_id);
-//    reject(const uint64_t &drawdown_id);
+        // Ensure drawdown is in draft or rejected status
+        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::CannotSubmitDrawdown);
+
+        // Ensure drawdown has transactions
+        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to submitted
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in draft or rejected status
+            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
+
+            // Update transaction status to submitted
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Submitted;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Submitted;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    pub fn do_approve_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to approved
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to approved
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Approved;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Approved;
+            Ok(())
+        })?;
+
+        // Generate the next drawdown
+        Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
+
+        Ok(())
+    }
+
+    pub fn do_reject_drawdown(
+        admin: T::AccountId,
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+    ) -> DispatchResult {
+        //ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        //  Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Update each transaction status to rejected
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Ensure transaction is in submitted status
+            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+            // Update transaction status to rejected
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Rejected;
+                Ok(())
+            })?;
+        }
+
+        // Update feedback if provided
+        if let Some(mod_feedback) = feedback {
+            for (transaction_id, field_description) in mod_feedback {
+                // Update transaction feedback
+                <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                    let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                    transaction_data.feedback = Some(field_description);
+                    Ok(())
+                })?;
+            }
+        }
+
+        // Update drawdown status
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status = DrawdownStatus::Rejected;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
 
 
     // T R A N S A C T I O N S
     // --------------------------------------------------------------------------------------------
     // For now transactions functions are private, but in the future they may be public
-    // TOREVIEW: Each transaction has an amount and it refers to a selected expenditure,
-    // so each drawdown sums the amount of each transaction -> drawdown.total_amount = transaction.amount + transaction.amount + transaction.amount
-    // when a drawdown is approved, the amount is transfered to each expenditure
-    // using the storage map, transactions_by_drawdown, we can get the transactions for a specific drawdown
 
     pub fn do_execute_transactions(
+        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
-        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         transactions: BoundedVec<(
             Option<[u8;32]>, // expenditure_id
             Option<u64>, // amount
@@ -750,6 +990,7 @@ impl<T: Config> Pallet<T> {
             CUDAction, // Action
             Option<[u8;32]>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
+        submit: bool,
     ) -> DispatchResult {
         // Check permissions here so helper private functions doesn't need to check it
         // TODO: Ensure admin & builder permissions
@@ -760,9 +1001,12 @@ impl<T: Config> Pallet<T> {
         //Ensure drawdown exists so helper private functions doesn't need to check it
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-        // Ensure transactions are not empty
-        ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+        // Ensure transactions are not empty if submit is true
+        if submit == false {
+            ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+        }
 
+        //Todo: create custom error to replace nonevalue error
         for transaction in transactions {
             match transaction.3 {
                 CUDAction::Create => {
@@ -778,7 +1022,7 @@ impl<T: Config> Pallet<T> {
                 CUDAction::Update => {
                     // Update transaction needs (amount, documents, transaction_id)       
                     Self::do_update_transaction(
-                        transaction.1.ok_or(Error::<T>::NoneValue)?, 
+                        transaction.1,
                         transaction.2, 
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
@@ -793,12 +1037,17 @@ impl<T: Config> Pallet<T> {
 
         }
 
-        // TOOD: update total_amount of drawdown -> at submit/draft drawdown (not here)
+        // Update total amount of the drawdown
+        Self::do_calculate_drawdown_total_amount(project_id, drawdown_id)?;
+
+        // If submit is true, submit drawdown to be approved
+        if submit == true {
+            Self::do_submit_drawdown(project_id, drawdown_id)?;
+        }
 
         Self::deposit_event(Event::TransactionsCompleted);
         Ok(())
     }
-
 
     fn do_create_transaction(
         project_id: [u8;32],
@@ -822,7 +1071,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Create transaction id
-        let transaction_id = (drawdown_id, timestamp).using_encoded(blake2_256);
+        let transaction_id = (drawdown_id, amount, expenditure_id, timestamp, project_id).using_encoded(blake2_256);
 
         // Create transaction data
         let transaction_data = TransactionData::<T> {
@@ -856,7 +1105,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_update_transaction(
-        amount: u64,
+        amount: Option<u64>,
         documents: Option<Documents<T>>,
         transaction_id: [u8;32],
     ) -> DispatchResult {
@@ -864,7 +1113,9 @@ impl<T: Config> Pallet<T> {
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
         // Ensure amount is valid.
-        Self::is_amount_valid(amount)?;
+        if let Some(amount) = amount {
+            Self::is_amount_valid(amount)?;
+        }
 
         // Ensure documents is not empty
         if let Some(mod_documents) = documents.clone() {
@@ -890,7 +1141,9 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
             
-            mod_transaction_data.amount = amount;
+            if let Some(mod_amount) = amount {
+                mod_transaction_data.amount = mod_amount;
+            }
 
             if let Some(documents) = documents.clone() {
                 mod_transaction_data.documents = Some(documents);
@@ -936,9 +1189,6 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    //TODO: create a function to automatically create a drawdown when the project is created
-    //TODO: create a function to automatically tracks the drawdown number of each type
-
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
@@ -962,7 +1212,6 @@ impl<T: Config> Pallet<T> {
         let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue).unwrap();
         global_scope
     }
-
 
     fn _change_project_status(
         admin: T::AccountId,
@@ -1191,42 +1440,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-            
-    //HERE
-    // fn remove_user_role(
-    //     user: T::AccountId,
-    // ) -> DispatchResult {
-    //     // Get user account data
-    //     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
-
-    //     // Check if user already has a role
-    //     match user_data.role {
-    //         Some(_user_role) => {
-    //             //Check how many projects the user has assigned
-    //             let projects_by_user = Self::projects_by_user(user.clone()).iter().cloned().collect::<Vec<[u8;32]>>();
-                
-    //             match projects_by_user.len() {
-    //                 1 => {
-    //                     // Update user data
-    //                     <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
-    //                         let user_data = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
-    //                         user_data.role = None;
-    //                         Ok(())
-    //                     })?;
-    //                     //TOREVIEW: Remove ? operator and final Ok(())
-    //                     Ok(())
-    //                 },
-    //                 _ => {
-    //                     return Ok(())
-    //                 }
-    //             }
-    //         },
-    //         None => {
-    //             return Ok(())
-    //         }
-    //     }
-    // }
-
     fn is_project_completed(
         project_id: [u8;32],
     ) -> DispatchResult {
@@ -1343,6 +1556,37 @@ impl<T: Config> Pallet<T> {
         ensure!(amount >= minimun_amount, Error::<T>::InvalidAmount);
         Ok(())
     }
+
+    fn do_calculate_drawdown_total_amount(
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+    ) -> DispatchResult {
+        // Ensure drawdown exists
+        ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+        // Calculate drawdown total amount
+        let mut drawdown_total_amount: u64 = 0;
+
+        for transaction_id in drawdown_transactions {
+            // Get transaction data
+            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+            // Add transaction amount to drawdown total amount
+            drawdown_total_amount = drawdown_total_amount + transaction_data.amount;
+        }
+
+        // Update drawdown total amount
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.total_amount = drawdown_total_amount;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
 
 
 

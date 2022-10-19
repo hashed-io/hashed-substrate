@@ -175,6 +175,12 @@ pub enum CUDAction {
     Delete,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum AssignAction {
+    Assign,
+    Unassign,
+}
+
 impl ProxyRole {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
