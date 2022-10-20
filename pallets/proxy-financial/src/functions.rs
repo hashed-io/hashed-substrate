@@ -877,9 +877,9 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //ensure admin permissions
+        //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
+  
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
@@ -1001,11 +1001,16 @@ impl<T: Config> Pallet<T> {
         //Ensure drawdown exists so helper private functions doesn't need to check it
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-        // Ensure transactions are not empty if submit is true
-        if submit == false {
-            ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+        // Ensure transactions are not empty
+        match submit {
+            true => {
+                ensure!(TransactionsByDrawdown::<T>::contains_key(project_id, drawdown_id), Error::<T>::NoTransactionsToSubmit);
+            },
+            false => {
+                ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
+            },
         }
-
+        
         //Todo: create custom error to replace nonevalue error
         for transaction in transactions {
             match transaction.3 {

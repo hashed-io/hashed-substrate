@@ -417,6 +417,8 @@ pub mod pallet {
 		UserRoleRequired,
 		/// Can not delete a user if the user is assigned to a project
 		UserHasAssignedProjects,
+		/// Can not send a drawdown to submitted status if it has no transactions
+		NoTransactionsToSubmit,
 
 
 	}
