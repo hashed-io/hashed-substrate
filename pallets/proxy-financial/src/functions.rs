@@ -416,6 +416,9 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
+                    // Ensure admin cannot delete himself
+                    ensure!(user.0 != admin, Error::<T>::AdministatorsCannotDeleteThemselves);
+
                     Self::do_delete_user(
                         user.0.clone()
                     )?;
@@ -789,6 +792,8 @@ impl<T: Config> Pallet<T> {
             total_amount: 0,
             status: DrawdownStatus::default(),
             documents: None,
+            description: None,
+            feedback: None,
             created_date: timestamp,
             close_date: 0,
         };
@@ -876,6 +881,13 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32],
         drawdown_id: [u8;32],
+        transactions: Option<BoundedVec<(
+            Option<[u8;32]>, // expenditure_id
+            Option<u64>, // amount
+            Option<Documents<T>>, //Documents
+            CUDAction, // Action
+            Option<[u8;32]>, // transaction_id
+        ), T::MaxRegistrationsAtTime>>,
     ) -> DispatchResult {
         //ensure admin permissions 
         Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
@@ -886,24 +898,64 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
 
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+        // Match drawdown type
+        match drawdown_data.drawdown_type {
+            DrawdownType::EB5 => {
+                // Ensure drawdown has transactions
+                ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+                
+                // Get drawdown transactions
+                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-        // Update each transaction status to approved
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+                // Update each transaction status to approved
+                for transaction_id in drawdown_transactions {
+                    // Get transaction data
+                    let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+                    // Ensure transaction is in submitted status
+                    ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
 
-            // Update transaction status to approved
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Approved;
-                Ok(())
-            })?;
+                    // Update transaction status to approved
+                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                        transaction_data.status = TransactionStatus::Approved;
+                        Ok(())
+                    })?;
+                }
+                
+            },
+            _ => {
+                // Ensure transactions is some
+                let mod_transactions = transactions.ok_or(Error::<T>::NoTransactionsProvidedForBulkUpload)?;
+
+                // Create transactions
+                for transaction in mod_transactions {
+                    // Create transaction
+                    Self::do_create_transaction(
+                        project_id,
+                        drawdown_id,
+                        transaction.0.ok_or(Error::<T>::ExpenditureIdRequired)?,
+                        transaction.1.ok_or(Error::<T>::AmountRequired)?,
+                        transaction.2,
+                    )?;
+                }
+
+                // Get drawdown transactions
+                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+                // Update each transaction status to approved
+                for transaction_id in drawdown_transactions {
+                    // Update transaction status to approved
+                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                        transaction_data.status = TransactionStatus::Approved;
+                        Ok(())
+                    })?;
+                }
+
+            },
         }
+
 
         // Update drawdown status
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -960,7 +1012,7 @@ impl<T: Config> Pallet<T> {
                     let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
                     transaction_data.feedback = Some(field_description);
                     Ok(())
-                })?;
+                }).map_err(|_| Error::<T>::TransactionNotFound)?;
             }
         }
 
@@ -1010,7 +1062,7 @@ impl<T: Config> Pallet<T> {
                 ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
             },
         }
-        
+
         //Todo: create custom error to replace nonevalue error
         for transaction in transactions {
             match transaction.3 {
@@ -1193,7 +1245,45 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    // B U L K   U P L O A D   T R A N S A C T I O N S
 
+    pub fn do_bulk_upload(
+        _user: T::AccountId, //TODO: Remove underscore when permissions are implemented
+        project_id: [u8;32],
+        drawdown_id: [u8;32],
+        description: FieldDescription,
+        total_amount: u64,
+        documents: Documents<T>,
+    ) -> DispatchResult {
+        // TODO: Ensure builder permissions
+
+        // Ensure project is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Ensure drawdown is not completed
+        Self::is_drawdown_editable(drawdown_id)?;
+
+        // Ensure amount is valid
+        Self::is_amount_valid(total_amount)?;
+
+        // Ensure documents is not empty
+        ensure!(!documents.is_empty(), Error::<T>::DocumentsIsEmpty);
+
+        // Ensure description is not empty
+        ensure!(!description.is_empty(), Error::<T>::BulkUploadDescriptionRequired);
+
+        // Mutate drawdown data
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let mod_drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            mod_drawdown_data.total_amount = total_amount;
+            mod_drawdown_data.description = Some(description);
+            mod_drawdown_data.documents = Some(documents);
+            mod_drawdown_data.status = DrawdownStatus::Submitted;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
@@ -1448,7 +1538,7 @@ impl<T: Config> Pallet<T> {
     fn is_project_completed(
         project_id: [u8;32],
     ) -> DispatchResult {
-        // Get project data
+        // Get project data & ensure project exists
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
         // Ensure project is completed
@@ -1461,10 +1551,10 @@ impl<T: Config> Pallet<T> {
     fn is_drawdown_editable(
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        // Get drawdown data
+        // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-        // Ensure transaction is in draft or rejected status
+        // Ensure drawdown is in draft or rejected status
         // Match drawdown status
         match drawdown_data.status {
             DrawdownStatus::Draft => {

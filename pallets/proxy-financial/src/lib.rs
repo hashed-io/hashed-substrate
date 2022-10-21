@@ -415,11 +415,18 @@ pub mod pallet {
 		UserNameRequired,
 		/// User role is required
 		UserRoleRequired,
+		/// Amount is required
+		AmountRequired,
 		/// Can not delete a user if the user is assigned to a project
 		UserHasAssignedProjects,
 		/// Can not send a drawdown to submitted status if it has no transactions
 		NoTransactionsToSubmit,
-
+		/// Bulk upload description is required
+		BulkUploadDescriptionRequired,
+		/// Administator can not delete themselves
+		AdministatorsCannotDeleteThemselves,
+		/// No transactions were provided for bulk upload
+		NoTransactionsProvidedForBulkUpload,
 
 	}
 
@@ -645,10 +652,17 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
+			transactions: Option<BoundedVec<(
+				Option<[u8;32]>, // expenditure_id
+				Option<u64>, // amount
+				Option<Documents<T>>, //Documents
+				CUDAction, // Action
+				Option<[u8;32]>, // transaction_id
+			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_approve_drawdown(who, project_id, drawdown_id)
+			Self::do_approve_drawdown(who, project_id, drawdown_id, transactions)
 		}
 
 		/// Reject a drawdown
@@ -670,6 +684,23 @@ pub mod pallet {
 			Self::do_reject_drawdown(who, project_id, drawdown_id, feedback)
 		}
 
+		/// Bulk upload drawdowns
+		/// 
+		/// This extrinsic is called by the builder 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn bulkupload(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			description: FieldDescription,
+			total_amount: u64,
+			documents: Documents<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be a builder
+
+			Self::do_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
+		}
 
 		
 
