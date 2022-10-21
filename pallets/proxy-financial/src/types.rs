@@ -107,6 +107,8 @@ pub struct DrawdownData<T: Config> {
     pub total_amount: u64,
     pub status: DrawdownStatus,
     pub documents: Option<Documents<T>>,
+    pub description: Option<FieldDescription>,
+    pub feedback: Option<FieldDescription>,
     pub created_date: u64,
     pub close_date: u64,
 }
