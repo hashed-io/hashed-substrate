@@ -1422,7 +1422,7 @@
 		<span class="doccomment">/// This extrinsic is called by the builder </span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bulkupload</span>(
+		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">up_bulkupload</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
@@ -1432,7 +1432,7 @@
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be a builder</span>
 
-			<span class="ident"><span class="self">Self</span>::do_bulk_upload</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">description</span>, <span class="ident">total_amount</span>, <span class="ident">documents</span>)
+			<span class="ident"><span class="self">Self</span>::do_up_bulk_upload</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">description</span>, <span class="ident">total_amount</span>, <span class="ident">documents</span>)
 		}
 
 		
