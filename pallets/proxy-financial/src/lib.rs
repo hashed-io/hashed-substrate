@@ -427,6 +427,10 @@ pub mod pallet {
 		AdministatorsCannotDeleteThemselves,
 		/// No transactions were provided for bulk upload
 		NoTransactionsProvidedForBulkUpload,
+		/// No feedback was provided for bulk upload
+		NoFeedbackProvidedForBulkUpload,
+		/// Feedback provided for bulk upload should be one
+		FeedbackProvidedForBulkUploadShouldBeOne,
 
 	}
 

@@ -985,43 +985,67 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
 
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+        match drawdown_data.drawdown_type {
+            DrawdownType::EB5 => {
+                // Ensure drawdown has transactions
+                ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+                
+                // Get drawdown transactions
+                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-        // Update each transaction status to rejected
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+                // Update each transaction status to rejected
+                for transaction_id in drawdown_transactions {
+                    // Get transaction data
+                    let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+                    // Ensure transaction is in submitted status
+                    ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
 
-            // Update transaction status to rejected
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Rejected;
+                    // Update transaction status to rejected
+                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                        transaction_data.status = TransactionStatus::Rejected;
+                        Ok(())
+                    })?;
+                }
+
+                // Update feedback if provided
+                if let Some(mod_feedback) = feedback.clone() {
+                    for (transaction_id, field_description) in mod_feedback {
+                        // Update transaction feedback
+                        <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                            let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                            transaction_data.feedback = Some(field_description);
+                            Ok(())
+                        }).map_err(|_| Error::<T>::TransactionNotFound)?;
+                    }
+                }
+
+            // Update drawdown status
+            <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+                let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+                drawdown_data.status = DrawdownStatus::Rejected;
                 Ok(())
             })?;
-        }
+                
+            },
+            _ => {
+                // Ensure feedback is some
+                let mod_feedback = feedback.clone().ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
 
-        // Update feedback if provided
-        if let Some(mod_feedback) = feedback {
-            for (transaction_id, field_description) in mod_feedback {
-                // Update transaction feedback
-                <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                    let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                    transaction_data.feedback = Some(field_description);
+                // Ensure for bulkupload feedback provided len == 1
+                ensure!(mod_feedback.len() == 1, Error::<T>::FeedbackProvidedForBulkUploadShouldBeOne);
+
+                // Update feedback for bulkupload.
+                <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+                    let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+                    drawdown_data.feedback = Some(mod_feedback[0].1.clone());
+                    drawdown_data.status = DrawdownStatus::Rejected;
                     Ok(())
-                }).map_err(|_| Error::<T>::TransactionNotFound)?;
-            }
-        }
+                })?;
 
-        // Update drawdown status
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.status = DrawdownStatus::Rejected;
-            Ok(())
-        })?;
+            },
+        }
 
         Ok(())
     }
