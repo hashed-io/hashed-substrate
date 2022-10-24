@@ -1271,7 +1271,7 @@ impl<T: Config> Pallet<T> {
 
     // B U L K   U P L O A D   T R A N S A C T I O N S
 
-    pub fn do_bulk_upload(
+    pub fn do_up_bulk_upload(
         _user: T::AccountId, //TODO: Remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],

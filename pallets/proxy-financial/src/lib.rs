@@ -693,7 +693,7 @@ pub mod pallet {
 		/// This extrinsic is called by the builder 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn bulkupload(
+		pub fn up_bulkupload(
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
@@ -703,7 +703,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be a builder
 
-			Self::do_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
+			Self::do_up_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
 		}
 
 		
