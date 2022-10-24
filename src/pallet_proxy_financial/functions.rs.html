@@ -1686,6 +1686,30 @@
 <span id="1686">1686</span>
 <span id="1687">1687</span>
 <span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
+<span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">frame_support::traits::Time</span>;
@@ -2673,43 +2697,67 @@
         <span class="comment">// Ensure drawdown is in submitted status</span>
         <span class="macro">ensure!</span>(<span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">DrawdownStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownIsNotInSubmittedStatus</span>);
 
-        <span class="comment">// Get drawdown transactions</span>
-        <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> {
+            <span class="ident">DrawdownType::EB5</span> =&gt; {
+                <span class="comment">// Ensure drawdown has transactions</span>
+                <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownHasNoTransactions</span>);
+                
+                <span class="comment">// Get drawdown transactions</span>
+                <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// Update each transaction status to rejected</span>
-        <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
-            <span class="comment">// Get transaction data</span>
-            <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">transaction_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                <span class="comment">// Update each transaction status to rejected</span>
+                <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
+                    <span class="comment">// Get transaction data</span>
+                    <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">transaction_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
 
-            <span class="comment">// Ensure transaction is in submitted status</span>
-            <span class="macro">ensure!</span>(<span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">TransactionStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIsNotInSubmittedStatus</span>);
+                    <span class="comment">// Ensure transaction is in submitted status</span>
+                    <span class="macro">ensure!</span>(<span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">TransactionStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIsNotInSubmittedStatus</span>);
 
-            <span class="comment">// Update transaction status to rejected</span>
-            <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-                <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Rejected</span>;
+                    <span class="comment">// Update transaction status to rejected</span>
+                    <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
+                        <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                        <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Rejected</span>;
+                        <span class="prelude-val">Ok</span>(())
+                    })<span class="question-mark">?</span>;
+                }
+
+                <span class="comment">// Update feedback if provided</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">mod_feedback</span>) <span class="op">=</span> <span class="ident">feedback</span>.<span class="ident">clone</span>() {
+                    <span class="kw">for</span> (<span class="ident">transaction_id</span>, <span class="ident">field_description</span>) <span class="kw">in</span> <span class="ident">mod_feedback</span> {
+                        <span class="comment">// Update transaction feedback</span>
+                        <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
+                            <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                            <span class="ident">transaction_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">field_description</span>);
+                            <span class="prelude-val">Ok</span>(())
+                        }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                    }
+                }
+
+            <span class="comment">// Update drawdown status</span>
+            <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">drawdown_id</span>, <span class="op">|</span><span class="ident">drawdown_data</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">drawdown_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
+                <span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">DrawdownStatus::Rejected</span>;
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
-        }
+                
+            },
+            <span class="kw">_</span> =&gt; {
+                <span class="comment">// Ensure feedback is some</span>
+                <span class="kw">let</span> <span class="ident">mod_feedback</span> <span class="op">=</span> <span class="ident">feedback</span>.<span class="ident">clone</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NoFeedbackProvidedForBulkUpload</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// Update feedback if provided</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">mod_feedback</span>) <span class="op">=</span> <span class="ident">feedback</span> {
-            <span class="kw">for</span> (<span class="ident">transaction_id</span>, <span class="ident">field_description</span>) <span class="kw">in</span> <span class="ident">mod_feedback</span> {
-                <span class="comment">// Update transaction feedback</span>
-                <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-                    <span class="ident">transaction_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">field_description</span>);
+                <span class="comment">// Ensure for bulkupload feedback provided len == 1</span>
+                <span class="macro">ensure!</span>(<span class="ident">mod_feedback</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::FeedbackProvidedForBulkUploadShouldBeOne</span>);
+
+                <span class="comment">// Update feedback for bulkupload.</span>
+                <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">drawdown_id</span>, <span class="op">|</span><span class="ident">drawdown_data</span><span class="op">|</span> {
+                    <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">drawdown_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
+                    <span class="ident">drawdown_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">mod_feedback</span>[<span class="number">0</span>].<span class="number">1</span>.<span class="ident">clone</span>());
+                    <span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">DrawdownStatus::Rejected</span>;
                     <span class="prelude-val">Ok</span>(())
-                }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-            }
-        }
+                })<span class="question-mark">?</span>;
 
-        <span class="comment">// Update drawdown status</span>
-        <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">drawdown_id</span>, <span class="op">|</span><span class="ident">drawdown_data</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">drawdown_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
-            <span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">DrawdownStatus::Rejected</span>;
-            <span class="prelude-val">Ok</span>(())
-        })<span class="question-mark">?</span>;
+            },
+        }
 
         <span class="prelude-val">Ok</span>(())
     }

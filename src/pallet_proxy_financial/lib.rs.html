@@ -723,6 +723,10 @@
 <span id="723">723</span>
 <span id="724">724</span>
 <span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -1152,6 +1156,10 @@
 		<span class="ident">AdministatorsCannotDeleteThemselves</span>,
 		<span class="doccomment">/// No transactions were provided for bulk upload</span>
 		<span class="ident">NoTransactionsProvidedForBulkUpload</span>,
+		<span class="doccomment">/// No feedback was provided for bulk upload</span>
+		<span class="ident">NoFeedbackProvidedForBulkUpload</span>,
+		<span class="doccomment">/// Feedback provided for bulk upload should be one</span>
+		<span class="ident">FeedbackProvidedForBulkUploadShouldBeOne</span>,
 
 	}
 
