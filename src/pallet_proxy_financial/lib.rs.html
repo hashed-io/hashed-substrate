@@ -727,6 +727,90 @@
 <span id="727">727</span>
 <span id="728">728</span>
 <span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -1006,6 +1090,12 @@
 		<span class="ident">UsersExecuted</span>,
 		<span class="doccomment">/// Assign users extrinsic was completed successfully</span>
 		<span class="ident">UsersAssignationExecuted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Drawdown was submitted successfully</span>
+		<span class="ident">DrawdownSubmitted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Drawdown was approved successfully</span>
+		<span class="ident">DrawdownApproved</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Drawdown was rejected successfully</span>
+		<span class="ident">DrawdownRejected</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 
 	}
 
@@ -1160,6 +1250,10 @@
 		<span class="ident">NoFeedbackProvidedForBulkUpload</span>,
 		<span class="doccomment">/// Feedback provided for bulk upload should be one</span>
 		<span class="ident">FeedbackProvidedForBulkUploadShouldBeOne</span>,
+		<span class="doccomment">/// Bulkupdate param is missed to execute a bulkupload drawdown</span>
+		<span class="ident">BulkUpdateIsRequired</span>,
+		<span class="doccomment">/// NO feedback for EN5 drawdown was provided</span>
+		<span class="ident">EB5FeebackMissing</span>,
 
 	}
 
@@ -1360,18 +1454,46 @@
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">transactions</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
+			<span class="ident">transactions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">//Documents</span>
 				<span class="ident">CUDAction</span>, <span class="comment">// Action</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
-			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
+			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">submit</span>: <span class="ident">bool</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
+			
+			<span class="kw">match</span> <span class="ident">submit</span>{
+				<span class="bool-val">false</span> =&gt; {
+					<span class="comment">// Do execute transactions</span>
+					<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
+						<span class="ident">who</span>,
+						<span class="ident">project_id</span>,
+						<span class="ident">drawdown_id</span>,
+						<span class="ident">transactions</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EmptyTransactions</span>)<span class="question-mark">?</span>,
+					)
+				},
+				<span class="bool-val">true</span> =&gt; {
+					<span class="comment">// Check if there&#39;s transactions to execute</span>
+					<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">transactions</span>) <span class="op">=</span> <span class="ident">transactions</span> {
+						<span class="comment">// Do execute transactions</span>
+						<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
+							<span class="ident">who</span>.<span class="ident">clone</span>(),
+							<span class="ident">project_id</span>,
+							<span class="ident">drawdown_id</span>,
+							<span class="ident">transactions</span>,
+						)<span class="question-mark">?</span>;
+					}
 
-			<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">transactions</span>, <span class="ident">submit</span>)
+					<span class="comment">// Do submit drawdown</span>
+					<span class="ident"><span class="self">Self</span>::do_submit_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)
+					<span class="comment">// - ensure drawdown has transactions</span>
+					<span class="comment">//ensure!(TransactionsByDrawdown::&lt;T&gt;::contains_key(project_id, drawdown_id), Error::&lt;T&gt;::NoTransactionsToSubmit);</span>
+				},
+			}
+
 		}
 
 		<span class="doccomment">/// Approve a drawdown</span>
@@ -1385,6 +1507,7 @@
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">bulkupdate</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
 			<span class="ident">transactions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
@@ -1395,7 +1518,51 @@
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_approve_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">transactions</span>)
+			<span class="comment">// Match bulkupdate</span>
+			<span class="kw">match</span> <span class="ident">bulkupdate</span> {
+				<span class="prelude-val">Some</span>(<span class="ident">approval</span>) =&gt; {
+					<span class="comment">// Execute bulkupload flow (construction loan &amp; developer equity)</span>
+					<span class="kw">match</span> <span class="ident">approval</span> {
+						<span class="bool-val">false</span> =&gt; {
+							<span class="comment">// 1. Do execute transactions</span>
+							<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
+								<span class="ident">who</span>.<span class="ident">clone</span>(),
+								<span class="ident">project_id</span>,
+								<span class="ident">drawdown_id</span>,
+								<span class="ident">transactions</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EmptyTransactions</span>)<span class="question-mark">?</span>,
+							)<span class="question-mark">?</span>;
+
+							<span class="comment">// 2. Do submit drawdown</span>
+							<span class="ident"><span class="self">Self</span>::do_submit_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)
+
+						},
+						<span class="bool-val">true</span>  =&gt; {
+							<span class="comment">// 1.Execute transactions if provided</span>
+							<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">transactions</span>) <span class="op">=</span> <span class="ident">transactions</span> {
+								<span class="comment">// Do execute transactions</span>
+								<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
+									<span class="ident">who</span>.<span class="ident">clone</span>(),
+									<span class="ident">project_id</span>,
+									<span class="ident">drawdown_id</span>,
+									<span class="ident">transactions</span>,
+								)<span class="question-mark">?</span>;
+
+								<span class="comment">// 2. Submit drawdown</span>
+								<span class="ident"><span class="self">Self</span>::do_submit_drawdown</span>(<span class="ident">who</span>.<span class="ident">clone</span>(), <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)<span class="question-mark">?</span>;
+							}
+
+							<span class="comment">// 3. Approve drawdown</span>
+							<span class="ident"><span class="self">Self</span>::do_approve_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)
+						},
+					}
+
+				},
+				<span class="prelude-val">None</span> =&gt; {
+					<span class="comment">// Execute normal flow (EB5)</span>
+					<span class="ident"><span class="self">Self</span>::do_approve_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>)
+				}
+			}
+
 		}
 
 		<span class="doccomment">/// Reject a drawdown</span>
@@ -1410,11 +1577,12 @@
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
 			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+			<span class="ident">transactions_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+			<span class="ident">drawdown_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
-			<span class="ident"><span class="self">Self</span>::do_reject_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">feedback</span>)
+			<span class="ident"><span class="self">Self</span>::do_reject_drawdown</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">drawdown_id</span>, <span class="ident">transactions_feedback</span>, <span class="ident">drawdown_feedback</span>)
 		}
 
 		<span class="doccomment">/// Bulk upload drawdowns</span>
