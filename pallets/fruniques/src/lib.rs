@@ -8,28 +8,30 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
 
-pub mod types;
 mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{pallet_prelude::*, BoundedVec, transactional};
+	use crate::types::*;
+	use frame_support::{pallet_prelude::*, transactional, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use scale_info::prelude::vec::Vec;
-	use sp_runtime::{Permill};
-	use crate::types::*;
+	use sp_runtime::Permill;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
-
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 
+		/// Maximum number of children a Frunique can have
+		#[pallet::constant]
+		type ChildMaxLen: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -66,18 +68,14 @@ pub mod pallet {
 		ValueTooLong,
 		// Calling set on a non-existing attributes
 		AttributesEmpty,
-		// The collection doenst exist
+		// The collection doesn't exist
 		CollectionNotFound,
 	}
 
 	#[pallet::storage]
 	#[pallet::getter(fn frunique_cnt)]
 	/// Keeps track of the number of Kitties in existence.
-	pub(super) type FruniqueCnt<T: Config> = StorageValue<
-		_,
-		ItemId,
-		ValueQuery
-	>;
+	pub(super) type FruniqueCnt<T: Config> = StorageValue<_, ItemId, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection)]
@@ -85,7 +83,7 @@ pub mod pallet {
 	pub(super) type NextCollection<T: Config> = StorageValue<
 		_,
 		CollectionId, // Next collection id.
-		ValueQuery
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -95,8 +93,8 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		CollectionId,
-		ItemId,  // The next frunique id for a collection.
-		ValueQuery
+		ItemId, // The next frunique id for a collection.
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -107,9 +105,9 @@ pub mod pallet {
 		Blake2_128Concat,
 		CollectionId,
 		Blake2_128Concat,
-		ItemId, // FruniqueId
+		ItemId,                   // FruniqueId
 		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
-		ValueQuery
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -120,11 +118,10 @@ pub mod pallet {
 		Blake2_128Concat,
 		CollectionId,
 		Blake2_128Concat,
-		ItemId, // FruniqueId
+		ItemId,                   // FruniqueId
 		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
-		ValueQuery
+		ValueQuery,
 	>;
-
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
@@ -133,9 +130,7 @@ pub mod pallet {
 	{
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
-		pub fn initial_setup(
-			origin: OriginFor<T>,
-		) -> DispatchResult {
+		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			// Self::do_initial_setup()?;
 			Ok(())
@@ -146,7 +141,6 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			metadata: Option<StringLimit<T>>,
 		) -> DispatchResult {
-
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
 
 			let new_collection_id: u32 = Self::next_collection().try_into().unwrap();
@@ -158,12 +152,9 @@ pub mod pallet {
 				Self::account_id_to_lookup_source(&admin),
 			)?;
 
-			Self::deposit_event(Event::FruniqueCollectionCreated(
-				admin,
-				new_collection_id,
-			));
+			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
 
-			<NextCollection<T>>::put(Self::next_collection() + 1 );
+			<NextCollection<T>>::put(Self::next_collection() + 1);
 
 			Ok(())
 		}
@@ -244,7 +235,6 @@ pub mod pallet {
 			parent_info: Option<HierarchicalInfo>,
 			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 		) -> DispatchResult {
-
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 			let account_id = Self::account_id_to_lookup_source(&owner);
 
@@ -257,14 +247,22 @@ pub mod pallet {
 				instance_id,
 				account_id,
 				numeric_value,
-				attributes
+				attributes,
 			)?;
 
-			Self::deposit_event(Event::FruniqueCreated(owner.clone(), owner, class_id, instance_id));
+			Self::deposit_event(Event::FruniqueCreated(
+				owner.clone(),
+				owner,
+				class_id,
+				instance_id,
+			));
 
 			if let Some(parent_info) = parent_info {
 				// ! check if parent exists
-				ensure!(Self::item_exists(&class_id, &parent_info.0),  <Error<T>>::CollectionNotFound);
+				ensure!(
+					Self::item_exists(&class_id, &parent_info.0),
+					<Error<T>>::CollectionNotFound
+				);
 				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
 				// Self::do_hierarchical_division(origin.clone(), class_id, instance_id, parent_info)?;
 			}
@@ -284,15 +282,12 @@ pub mod pallet {
 		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn kill_storage(
-			origin: OriginFor<T>,
-		) -> DispatchResult{
+		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			let _ = <FruniqueCnt<T>>::put(0);
 			let _ = <NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			Ok(())
 		}
-
 	}
 }

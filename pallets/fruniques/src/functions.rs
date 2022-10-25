@@ -6,6 +6,8 @@ use crate::types::*;
 use frame_support::traits::tokens::nonfungibles::Inspect;
 use scale_info::prelude::string::String;
 
+use pallet_rbac::types::*;
+
 use frame_support::pallet_prelude::*;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
@@ -72,6 +74,12 @@ impl<T: Config> Pallet<T> {
 			return true;
 		}
 		false
+	}
+
+	pub fn do_initial_setup() -> DispatchResult {
+		let pallet_id = Self::pallet_id();
+
+		Ok(())
 	}
 
 	pub fn set_attribute(
@@ -214,4 +222,11 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
+	pub fn pallet_id()->IdOrVec{
+        IdOrVec::Vec(
+            Self::module_name().as_bytes().to_vec()
+        )
+    }
+
 }
