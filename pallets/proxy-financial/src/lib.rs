@@ -123,7 +123,7 @@ pub mod pallet {
 	#[pallet::getter(fn global_scope)]
 	pub(super) type GlobalScope<T> = StorageValue<
 		_,
-		[u8;32], // Value gobal scope id
+		[u8;32], // Value global scope id
 		ValueQuery
 	>;
 
@@ -788,6 +788,38 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be a builder
 
 			Self::do_up_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
+		}
+
+		/// Kill all the stored data.
+		/// 
+		/// This function is used to kill ALL the stored data.
+		/// Use it with caution!
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action. 
+		/// 
+		/// ### Considerations:
+		/// - This function is only available to the `admin` with sudo access.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			let _ = <GlobalScope<T>>::kill();
+			let _ = <UsersInfo<T>>::clear(1000, None);
+			let _ = <ProjectsInfo<T>>::clear(1000, None);
+			let _ = <UsersByProject<T>>::clear(1000, None);
+			let _ = <ProjectsByUser<T>>::clear(1000, None);
+			let _ = <ExpendituresInfo<T>>::clear(1000, None);
+			let _ = <ExpendituresByProject<T>>::clear(1000, None);
+			let _ = <DrawdownsInfo<T>>::clear(1000, None);
+			let _ = <DrawdownsByProject<T>>::clear(1000, None);
+			let _ = <TransactionsInfo<T>>::clear(1000, None);
+			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
+
+			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
+			Ok(())
 		}
 
 		
