@@ -23,6 +23,7 @@ pub struct ProjectData<T: Config> {
     pub image: CID,
     pub address: FieldName, 
     pub status: ProjectStatus,
+    pub inflation_rate: Option<u32>,
     pub creation_date: u64,
     pub completion_date: u64,
     pub registration_date: u64,
@@ -107,6 +108,8 @@ pub struct DrawdownData<T: Config> {
     pub total_amount: u64,
     pub status: DrawdownStatus,
     pub documents: Option<Documents<T>>,
+    pub description: Option<FieldDescription>,
+    pub feedback: Option<FieldDescription>,
     pub created_date: u64,
     pub close_date: u64,
 }
