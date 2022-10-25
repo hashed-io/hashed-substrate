@@ -264,6 +264,9 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
@@ -289,6 +292,7 @@
     <span class="kw">pub</span> <span class="ident">image</span>: <span class="ident">CID</span>,
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">FieldName</span>, 
     <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">ProjectStatus</span>,
+    <span class="kw">pub</span> <span class="ident">inflation_rate</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">creation_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">completion_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">registration_date</span>: <span class="ident">u64</span>,
@@ -373,6 +377,8 @@
     <span class="kw">pub</span> <span class="ident">total_amount</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">DrawdownStatus</span>,
     <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">close_date</span>: <span class="ident">u64</span>,
 }
