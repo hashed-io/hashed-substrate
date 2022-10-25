@@ -277,6 +277,12 @@ pub mod pallet {
 		UsersExecuted,
 		/// Assign users extrinsic was completed successfully
 		UsersAssignationExecuted([u8;32]),
+		/// Drawdown was submitted successfully
+		DrawdownSubmitted([u8;32]),
+		/// Drawdown was approved successfully
+		DrawdownApproved([u8;32]),
+		/// Drawdown was rejected successfully
+		DrawdownRejected([u8;32]),
 
 	}
 
@@ -431,6 +437,10 @@ pub mod pallet {
 		NoFeedbackProvidedForBulkUpload,
 		/// Feedback provided for bulk upload should be one
 		FeedbackProvidedForBulkUploadShouldBeOne,
+		/// Bulkupdate param is missed to execute a bulkupload drawdown
+		BulkUpdateIsRequired,
+		/// NO feedback for EN5 drawdown was provided
+		EB5FeebackMissing,
 
 	}
 
@@ -631,18 +641,46 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			transactions: BoundedVec<(
+			transactions: Option<BoundedVec<(
 				Option<[u8;32]>, // expenditure_id
 				Option<u64>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
 				Option<[u8;32]>, // transaction_id
-			), T::MaxRegistrationsAtTime>,
+			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
+			
+			match submit{
+				false => {
+					// Do execute transactions
+					Self::do_execute_transactions(
+						who,
+						project_id,
+						drawdown_id,
+						transactions.ok_or(Error::<T>::EmptyTransactions)?,
+					)
+				},
+				true => {
+					// Check if there's transactions to execute
+					if let Some(transactions) = transactions {
+						// Do execute transactions
+						Self::do_execute_transactions(
+							who.clone(),
+							project_id,
+							drawdown_id,
+							transactions,
+						)?;
+					}
 
-			Self::do_execute_transactions(who, project_id, drawdown_id, transactions, submit)
+					// Do submit drawdown
+					Self::do_submit_drawdown(who, project_id, drawdown_id)
+					// - ensure drawdown has transactions
+					//ensure!(TransactionsByDrawdown::<T>::contains_key(project_id, drawdown_id), Error::<T>::NoTransactionsToSubmit);
+				},
+			}
+
 		}
 
 		/// Approve a drawdown
@@ -656,6 +694,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
+			bulkupdate: Option<bool>,
 			transactions: Option<BoundedVec<(
 				Option<[u8;32]>, // expenditure_id
 				Option<u64>, // amount
@@ -666,7 +705,51 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_approve_drawdown(who, project_id, drawdown_id, transactions)
+			// Match bulkupdate
+			match bulkupdate {
+				Some(approval) => {
+					// Execute bulkupload flow (construction loan & developer equity)
+					match approval {
+						false => {
+							// 1. Do execute transactions
+							Self::do_execute_transactions(
+								who.clone(),
+								project_id,
+								drawdown_id,
+								transactions.ok_or(Error::<T>::EmptyTransactions)?,
+							)?;
+
+							// 2. Do submit drawdown
+							Self::do_submit_drawdown(who, project_id, drawdown_id)
+
+						},
+						true  => {
+							// 1.Execute transactions if provided
+							if let Some(transactions) = transactions {
+								// Do execute transactions
+								Self::do_execute_transactions(
+									who.clone(),
+									project_id,
+									drawdown_id,
+									transactions,
+								)?;
+
+								// 2. Submit drawdown
+								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;
+							}
+
+							// 3. Approve drawdown
+							Self::do_approve_drawdown(who, project_id, drawdown_id)
+						},
+					}
+
+				},
+				None => {
+					// Execute normal flow (EB5)
+					Self::do_approve_drawdown(who, project_id, drawdown_id)
+				}
+			}
+
 		}
 
 		/// Reject a drawdown
@@ -681,11 +764,12 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+			drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_reject_drawdown(who, project_id, drawdown_id, feedback)
+			Self::do_reject_drawdown(who, project_id, drawdown_id, transactions_feedback, drawdown_feedback)
 		}
 
 		/// Bulk upload drawdowns
