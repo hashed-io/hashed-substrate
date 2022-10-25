@@ -109,11 +109,11 @@ impl Permission {
 			Transfer.to_vec(),
 		]
 		.to_vec();
-		admin_permissions.append(&mut Permission::participant_permissions());
+		admin_permissions.append(&mut Permission::holder_permissions());
 		admin_permissions
 	}
 
-	pub fn participant_permissions() -> Vec<Vec<u8>> {
+	pub fn holder_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
 		[
 			None.to_vec(),
