@@ -23,6 +23,7 @@ pub struct ProjectData<T: Config> {
     pub image: CID,
     pub address: FieldName, 
     pub status: ProjectStatus,
+    pub inflation_rate: Option<u32>,
     pub creation_date: u64,
     pub completion_date: u64,
     pub registration_date: u64,
