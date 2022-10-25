@@ -141,6 +141,7 @@ impl<T: Config> Pallet<T> {
             image,
             address,
             status: ProjectStatus::default(), 
+            inflation_rate: None,
             registration_date: timestamp,
             creation_date,
             completion_date,
@@ -840,7 +841,7 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //TODO: Ensure builder permissions
+        //TODO: Ensure builder & admin permissions
 
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
@@ -1241,6 +1242,51 @@ impl<T: Config> Pallet<T> {
             mod_drawdown_data.status = DrawdownStatus::Submitted;
             Ok(())
         })?;
+
+        Ok(())
+    }
+
+    // I N F L A T I O N   A D J U S T M E N T
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_inflation_adjustment(
+        admin: T::AccountId,
+        projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+
+        // Ensure projects is not empty
+        ensure!(!projects.is_empty(), Error::<T>::ProjectsIsEmpty);
+
+        // Match each CUD action
+        for project in projects {
+            // Ensure project exists
+            ensure!(ProjectsInfo::<T>::contains_key(project.0), Error::<T>::ProjectNotFound);
+            match project.2 {
+                // Delete need: project_id
+                CUDAction::Delete => {
+                    // Mutate project data
+                    <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
+                        let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                        mod_project_data.inflation_rate = None;
+                        Ok(())
+                    })?;
+                },
+                // Creation & Update need: project_id, inflation_rate
+                _ => {
+                    // Mutate project data
+
+                    // Ensure inflation rate is provided
+                    let inflation_rate = project.1.ok_or(Error::<T>::InflationRateRequired)?;
+
+                    <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
+                        let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                        mod_project_data.inflation_rate = Some(inflation_rate);
+                        Ok(())
+                    })?;
+                },
+            }
+        }
 
         Ok(())
     }

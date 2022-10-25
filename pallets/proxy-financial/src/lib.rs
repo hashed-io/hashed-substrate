@@ -441,6 +441,10 @@ pub mod pallet {
 		BulkUpdateIsRequired,
 		/// NO feedback for EN5 drawdown was provided
 		EB5FeebackMissing,
+		/// Inflation rate extrinsic is missing an array of changes
+		ProjectsIsEmpty,
+		/// Inflation rate was not provided
+		InflationRateRequired,
 
 	}
 
@@ -676,8 +680,6 @@ pub mod pallet {
 
 					// Do submit drawdown
 					Self::do_submit_drawdown(who, project_id, drawdown_id)
-					// - ensure drawdown has transactions
-					//ensure!(TransactionsByDrawdown::<T>::contains_key(project_id, drawdown_id), Error::<T>::NoTransactionsToSubmit);
 				},
 			}
 
@@ -790,6 +792,21 @@ pub mod pallet {
 			Self::do_up_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
 		}
 
+		/// Modify inflation rate 
+		/// 
+		/// projects: project_id, inflation_rate, CUDAction
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn inflation_rate(
+			origin: OriginFor<T>, 
+			projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be a builder
+
+			Self::do_execute_inflation_adjustment(who, projects)
+		}
+
+
 		/// Kill all the stored data.
 		/// 
 		/// This function is used to kill ALL the stored data.
@@ -821,8 +838,6 @@ pub mod pallet {
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
-
-		
 
 		// /// Testing extrinsic  
 		// #[transactional]
