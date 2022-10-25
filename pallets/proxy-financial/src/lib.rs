@@ -123,7 +123,7 @@ pub mod pallet {
 	#[pallet::getter(fn global_scope)]
 	pub(super) type GlobalScope<T> = StorageValue<
 		_,
-		[u8;32], // Value gobal scope id
+		[u8;32], // Value global scope id
 		ValueQuery
 	>;
 
@@ -277,6 +277,12 @@ pub mod pallet {
 		UsersExecuted,
 		/// Assign users extrinsic was completed successfully
 		UsersAssignationExecuted([u8;32]),
+		/// Drawdown was submitted successfully
+		DrawdownSubmitted([u8;32]),
+		/// Drawdown was approved successfully
+		DrawdownApproved([u8;32]),
+		/// Drawdown was rejected successfully
+		DrawdownRejected([u8;32]),
 
 	}
 
@@ -415,9 +421,30 @@ pub mod pallet {
 		UserNameRequired,
 		/// User role is required
 		UserRoleRequired,
+		/// Amount is required
+		AmountRequired,
 		/// Can not delete a user if the user is assigned to a project
 		UserHasAssignedProjects,
-
+		/// Can not send a drawdown to submitted status if it has no transactions
+		NoTransactionsToSubmit,
+		/// Bulk upload description is required
+		BulkUploadDescriptionRequired,
+		/// Administator can not delete themselves
+		AdministatorsCannotDeleteThemselves,
+		/// No transactions were provided for bulk upload
+		NoTransactionsProvidedForBulkUpload,
+		/// No feedback was provided for bulk upload
+		NoFeedbackProvidedForBulkUpload,
+		/// Feedback provided for bulk upload should be one
+		FeedbackProvidedForBulkUploadShouldBeOne,
+		/// Bulkupdate param is missed to execute a bulkupload drawdown
+		BulkUpdateIsRequired,
+		/// NO feedback for EN5 drawdown was provided
+		EB5FeebackMissing,
+		/// Inflation rate extrinsic is missing an array of changes
+		ProjectsIsEmpty,
+		/// Inflation rate was not provided
+		InflationRateRequired,
 
 	}
 
@@ -618,18 +645,44 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			transactions: BoundedVec<(
+			transactions: Option<BoundedVec<(
 				Option<[u8;32]>, // expenditure_id
 				Option<u64>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
 				Option<[u8;32]>, // transaction_id
-			), T::MaxRegistrationsAtTime>,
+			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
+			
+			match submit{
+				false => {
+					// Do execute transactions
+					Self::do_execute_transactions(
+						who,
+						project_id,
+						drawdown_id,
+						transactions.ok_or(Error::<T>::EmptyTransactions)?,
+					)
+				},
+				true => {
+					// Check if there's transactions to execute
+					if let Some(transactions) = transactions {
+						// Do execute transactions
+						Self::do_execute_transactions(
+							who.clone(),
+							project_id,
+							drawdown_id,
+							transactions,
+						)?;
+					}
 
-			Self::do_execute_transactions(who, project_id, drawdown_id, transactions, submit)
+					// Do submit drawdown
+					Self::do_submit_drawdown(who, project_id, drawdown_id)
+				},
+			}
+
 		}
 
 		/// Approve a drawdown
@@ -643,10 +696,62 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
+			bulkupdate: Option<bool>,
+			transactions: Option<BoundedVec<(
+				Option<[u8;32]>, // expenditure_id
+				Option<u64>, // amount
+				Option<Documents<T>>, //Documents
+				CUDAction, // Action
+				Option<[u8;32]>, // transaction_id
+			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_approve_drawdown(who, project_id, drawdown_id)
+			// Match bulkupdate
+			match bulkupdate {
+				Some(approval) => {
+					// Execute bulkupload flow (construction loan & developer equity)
+					match approval {
+						false => {
+							// 1. Do execute transactions
+							Self::do_execute_transactions(
+								who.clone(),
+								project_id,
+								drawdown_id,
+								transactions.ok_or(Error::<T>::EmptyTransactions)?,
+							)?;
+
+							// 2. Do submit drawdown
+							Self::do_submit_drawdown(who, project_id, drawdown_id)
+
+						},
+						true  => {
+							// 1.Execute transactions if provided
+							if let Some(transactions) = transactions {
+								// Do execute transactions
+								Self::do_execute_transactions(
+									who.clone(),
+									project_id,
+									drawdown_id,
+									transactions,
+								)?;
+
+								// 2. Submit drawdown
+								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;
+							}
+
+							// 3. Approve drawdown
+							Self::do_approve_drawdown(who, project_id, drawdown_id)
+						},
+					}
+
+				},
+				None => {
+					// Execute normal flow (EB5)
+					Self::do_approve_drawdown(who, project_id, drawdown_id)
+				}
+			}
+
 		}
 
 		/// Reject a drawdown
@@ -661,15 +766,78 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
+			drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_reject_drawdown(who, project_id, drawdown_id, feedback)
+			Self::do_reject_drawdown(who, project_id, drawdown_id, transactions_feedback, drawdown_feedback)
+		}
+
+		/// Bulk upload drawdowns
+		/// 
+		/// This extrinsic is called by the builder 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn up_bulkupload(
+			origin: OriginFor<T>, 
+			project_id: [u8;32],
+			drawdown_id: [u8;32],
+			description: FieldDescription,
+			total_amount: u64,
+			documents: Documents<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be a builder
+
+			Self::do_up_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
+		}
+
+		/// Modify inflation rate 
+		/// 
+		/// projects: project_id, inflation_rate, CUDAction
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn inflation_rate(
+			origin: OriginFor<T>, 
+			projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be a builder
+
+			Self::do_execute_inflation_adjustment(who, projects)
 		}
 
 
-		
+		/// Kill all the stored data.
+		/// 
+		/// This function is used to kill ALL the stored data.
+		/// Use it with caution!
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action. 
+		/// 
+		/// ### Considerations:
+		/// - This function is only available to the `admin` with sudo access.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn kill_storage(
+			origin: OriginFor<T>,
+		) -> DispatchResult{
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			let _ = <GlobalScope<T>>::kill();
+			let _ = <UsersInfo<T>>::clear(1000, None);
+			let _ = <ProjectsInfo<T>>::clear(1000, None);
+			let _ = <UsersByProject<T>>::clear(1000, None);
+			let _ = <ProjectsByUser<T>>::clear(1000, None);
+			let _ = <ExpendituresInfo<T>>::clear(1000, None);
+			let _ = <ExpendituresByProject<T>>::clear(1000, None);
+			let _ = <DrawdownsInfo<T>>::clear(1000, None);
+			let _ = <DrawdownsByProject<T>>::clear(1000, None);
+			let _ = <TransactionsInfo<T>>::clear(1000, None);
+			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
+
+			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
+			Ok(())
+		}
 
 		// /// Testing extrinsic  
 		// #[transactional]
