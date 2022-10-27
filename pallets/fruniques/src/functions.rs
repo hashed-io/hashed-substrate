@@ -77,7 +77,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_initial_setup() -> DispatchResult {
-		let pallet_id = Self::pallet_id();
+		let _pallet_id = Self::pallet_id();
 
 		Ok(())
 	}

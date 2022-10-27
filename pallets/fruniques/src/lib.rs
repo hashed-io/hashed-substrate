@@ -116,10 +116,10 @@ pub mod pallet {
 	pub(super) type FruniqueChild<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		CollectionId,
+		CollectionId, // Parent collection id
 		Blake2_128Concat,
-		ItemId,                   // FruniqueId
-		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
+		ItemId, // Parent item id
+		Option<ChildInfo>, // ParentId and flag if it inherit attributes
 		ValueQuery,
 	>;
 
@@ -257,14 +257,20 @@ pub mod pallet {
 				instance_id,
 			));
 
+
 			if let Some(parent_info) = parent_info {
-				// ! check if parent exists
 				ensure!(
 					Self::item_exists(&class_id, &parent_info.0),
 					<Error<T>>::CollectionNotFound
 				);
 				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
-				// Self::do_hierarchical_division(origin.clone(), class_id, instance_id, parent_info)?;
+
+				// let child_info = ChildInfo {
+				// 	collection_id: class_id,
+				// 	child_id: instance_id,
+				// 	is_hierarchical: parent_info.1,
+				// 	weight: numeric_value.unwrap()
+				// }
 			}
 
 			Ok(())
