@@ -16,7 +16,6 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use core::str::Bytes;
 
 use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
