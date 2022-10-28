@@ -487,7 +487,7 @@ impl<T: Config> Pallet<T> {
                 user_info.name = mod_name.into_inner()[0].clone();
             }
             if let Some(mod_role) = role {
-                // If user has assigned projects cannot update it's role
+                // If user has assigned projects cannot update role
                 ensure!(<ProjectsByUser<T>>::get(user.clone()).is_empty(), Error::<T>::UserHasAssignedProjectsCannotUpdateRole);
 
                 user_info.role = mod_role;
