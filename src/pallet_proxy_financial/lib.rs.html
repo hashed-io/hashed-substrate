@@ -858,6 +858,12 @@
 <span id="858">858</span>
 <span id="859">859</span>
 <span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -1305,6 +1311,12 @@
 		<span class="ident">ProjectsIsEmpty</span>,
 		<span class="doccomment">/// Inflation rate was not provided</span>
 		<span class="ident">InflationRateRequired</span>,
+		<span class="doccomment">/// Bulkupload drawdowns are only allowed for Construction Loan &amp; Developer Equity</span>
+		<span class="ident">DrawdownTypeNotSupportedForBulkUpload</span>,
+		<span class="doccomment">/// Cannot edit user role if the user is assigned to a project</span>
+		<span class="ident">UserHasAssignedProjectsCannotUpdateRole</span>,
+		<span class="doccomment">/// Cannot delete user if the user is assigned to a project</span>
+		<span class="ident">UserHasAssignedProjectsCannotDelete</span>,
 
 	}
 

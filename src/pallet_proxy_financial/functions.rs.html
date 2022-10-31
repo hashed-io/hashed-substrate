@@ -1702,6 +1702,21 @@
 <span id="1702">1702</span>
 <span id="1703">1703</span>
 <span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">frame_support::traits::Time</span>;
@@ -2191,6 +2206,9 @@
                 <span class="ident">user_info</span>.<span class="ident">name</span> <span class="op">=</span> <span class="ident">mod_name</span>.<span class="ident">into_inner</span>()[<span class="number">0</span>].<span class="ident">clone</span>();
             }
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">mod_role</span>) <span class="op">=</span> <span class="ident">role</span> {
+                <span class="comment">// If user has assigned projects cannot update role</span>
+                <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">ProjectsByUser</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">user</span>.<span class="ident">clone</span>()).<span class="ident">is_empty</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserHasAssignedProjectsCannotUpdateRole</span>);
+
                 <span class="ident">user_info</span>.<span class="ident">role</span> <span class="op">=</span> <span class="ident">mod_role</span>;
             }
             <span class="prelude-val">Ok</span>(())
@@ -2211,10 +2229,9 @@
                 <span class="ident"><span class="self">Self</span>::do_sudo_remove_administrator</span>(<span class="ident">user</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
             },
             <span class="kw">_</span> =&gt; {
-                <span class="comment">// Can not delete a user if the user is assigned to a project</span>
-                <span class="comment">//TOREVIEW: Check if this validations is working as expected</span>
+                <span class="comment">// Can not delete a user if the user has assigned projects</span>
                 <span class="kw">let</span> <span class="ident">projects_by_user</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ProjectsByUser</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">user</span>.<span class="ident">clone</span>());
-                <span class="macro">ensure!</span>(<span class="ident">projects_by_user</span>.<span class="ident">is_empty</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserHasAssignedProjects</span>);
+                <span class="macro">ensure!</span>(<span class="ident">projects_by_user</span>.<span class="ident">is_empty</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserHasAssignedProjectsCannotDelete</span>);
 
                 <span class="comment">// Remove user from UsersInfo storage map</span>
                 <span class="op">&lt;</span><span class="ident">UsersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">user</span>.<span class="ident">clone</span>());
@@ -2608,6 +2625,8 @@
         <span class="comment">// Get drawdown transactions</span>
         <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
 
+        <span class="comment">// Get timestamp</span>
+        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_timestamp_in_milliseconds</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TimestampError</span>)<span class="question-mark">?</span>;
         <span class="comment">// Update each transaction status to approved</span>
         <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
             <span class="comment">// Get transaction data</span>
@@ -2620,6 +2639,7 @@
             <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
                 <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Approved</span>;
+                <span class="ident">transaction_data</span>.<span class="ident">closed_date</span> <span class="op">=</span> <span class="ident">timestamp</span>;
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
         }
@@ -2628,6 +2648,7 @@
         <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">drawdown_id</span>, <span class="op">|</span><span class="ident">drawdown_data</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">drawdown_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
             <span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">DrawdownStatus::Approved</span>;
+            <span class="ident">drawdown_data</span>.<span class="ident">close_date</span> <span class="op">=</span> <span class="ident">timestamp</span>;
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
@@ -2656,8 +2677,10 @@
         <span class="comment">// Ensure drawdown is in submitted status</span>
         <span class="macro">ensure!</span>(<span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">DrawdownStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownIsNotInSubmittedStatus</span>);
 
-        <span class="comment">// Ensure drawdown has transactions</span>
-        <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownHasNoTransactions</span>);
+        <span class="comment">// Ensure drawdown has transactions if drawdown type == EB5</span>
+        <span class="kw">if</span> <span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> <span class="op">==</span> <span class="ident">DrawdownType::EB5</span> {
+            <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownHasNoTransactions</span>);
+        }
         
         <span class="comment">// Get drawdown transactions</span>
         <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
@@ -2772,7 +2795,7 @@
                     )<span class="question-mark">?</span>;
                 },
                 <span class="ident">CUDAction::Delete</span> =&gt; {
-                    <span class="comment">// Delete transaction needs (expenditure_id, transaction_id)</span>
+                    <span class="comment">// Delete transaction needs (transaction_id)</span>
                     <span class="ident"><span class="self">Self</span>::do_delete_transaction</span>(
                         <span class="ident">transaction</span>.<span class="number">4</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIdNotFound</span>)<span class="question-mark">?</span>,
                     )<span class="question-mark">?</span>;
@@ -2806,6 +2829,9 @@
 
         <span class="comment">// Create transaction id</span>
         <span class="kw">let</span> <span class="ident">transaction_id</span> <span class="op">=</span> (<span class="ident">drawdown_id</span>, <span class="ident">amount</span>, <span class="ident">expenditure_id</span>, <span class="ident">timestamp</span>, <span class="ident">project_id</span>).<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
+
+        <span class="comment">// Ensure expenditure id exists</span>
+        <span class="macro">ensure!</span>(<span class="ident">ExpendituresInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">expenditure_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ExpenditureNotFound</span>);
 
         <span class="comment">// Create transaction data</span>
         <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionData</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -2930,6 +2956,10 @@
 
         <span class="comment">// Ensure amount is valid</span>
         <span class="ident"><span class="self">Self</span>::is_amount_valid</span>(<span class="ident">total_amount</span>)<span class="question-mark">?</span>;
+
+        <span class="comment">//Ensure only Construction loan &amp; developer equity drawdowns can be bulk uploaded</span>
+        <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">DrawdownsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">drawdown_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(<span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> <span class="op">==</span> <span class="ident">DrawdownType::ConstructionLoan</span> <span class="op">|</span><span class="op">|</span> <span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> <span class="op">==</span> <span class="ident">DrawdownType::DeveloperEquity</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownTypeNotSupportedForBulkUpload</span>);
 
         <span class="comment">// Ensure documents is not empty</span>
         <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">documents</span>.<span class="ident">is_empty</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DocumentsIsEmpty</span>);
