@@ -1,6 +1,7 @@
 use crate as pallet_fruniques;
 use frame_support::{construct_runtime, parameter_types, traits::AsEnsureOriginWithArg};
 use frame_system::EnsureSigned;
+use frame_system::EnsureRoot;
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
@@ -25,6 +26,7 @@ construct_runtime!(
 );
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
+	pub const ChildMaxLen: u32 = 10;
 }
 impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
@@ -55,6 +57,8 @@ impl frame_system::Config for Test {
 
 impl pallet_fruniques::Config for Test {
 	type Event = Event;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
+	type ChildMaxLen = ChildMaxLen;
 }
 
 parameter_types! {
@@ -87,7 +91,7 @@ impl pallet_uniques::Config for Test {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
 	type Locker = ();
-	
+
 }
 
 parameter_types! {

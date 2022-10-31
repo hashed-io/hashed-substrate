@@ -76,7 +76,6 @@ parameter_types! {
 
 impl pallet_gated_marketplace::Config for Test {
 	type Event = Event;
-	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
@@ -96,6 +95,7 @@ impl pallet_gated_marketplace::Config for Test {
 
 impl pallet_fruniques::Config for Test {
 	type Event = Event;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 }
 
 parameter_types! {
@@ -128,7 +128,7 @@ impl pallet_uniques::Config for Test {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
 	type Locker = ();
-	
+
 }
 
 parameter_types! {
