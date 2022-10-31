@@ -487,6 +487,9 @@ impl<T: Config> Pallet<T> {
                 user_info.name = mod_name.into_inner()[0].clone();
             }
             if let Some(mod_role) = role {
+                // If user has assigned projects cannot update role
+                ensure!(<ProjectsByUser<T>>::get(user.clone()).is_empty(), Error::<T>::UserHasAssignedProjectsCannotUpdateRole);
+
                 user_info.role = mod_role;
             }
             Ok(())
@@ -507,10 +510,9 @@ impl<T: Config> Pallet<T> {
                 Self::do_sudo_remove_administrator(user.clone())?;
             },
             _ => {
-                // Can not delete a user if the user is assigned to a project
-                //TOREVIEW: Check if this validations is working as expected
+                // Can not delete a user if the user has assigned projects
                 let projects_by_user = <ProjectsByUser<T>>::get(user.clone());
-                ensure!(projects_by_user.is_empty(), Error::<T>::UserHasAssignedProjects);
+                ensure!(projects_by_user.is_empty(), Error::<T>::UserHasAssignedProjectsCannotDelete);
 
                 // Remove user from UsersInfo storage map
                 <UsersInfo<T>>::remove(user.clone());
@@ -904,6 +906,8 @@ impl<T: Config> Pallet<T> {
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
         // Update each transaction status to approved
         for transaction_id in drawdown_transactions {
             // Get transaction data
@@ -916,6 +920,7 @@ impl<T: Config> Pallet<T> {
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                 let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
                 transaction_data.status = TransactionStatus::Approved;
+                transaction_data.closed_date = timestamp;
                 Ok(())
             })?;
         }
@@ -924,6 +929,7 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Approved;
+            drawdown_data.close_date = timestamp;
             Ok(())
         })?;
 
@@ -952,8 +958,10 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
 
-        // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        // Ensure drawdown has transactions if drawdown type == EB5
+        if drawdown_data.drawdown_type == DrawdownType::EB5 {
+            ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        }
         
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
@@ -1068,7 +1076,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
-                    // Delete transaction needs (expenditure_id, transaction_id)
+                    // Delete transaction needs (transaction_id)
                     Self::do_delete_transaction(
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
@@ -1102,6 +1110,9 @@ impl<T: Config> Pallet<T> {
 
         // Create transaction id
         let transaction_id = (drawdown_id, amount, expenditure_id, timestamp, project_id).using_encoded(blake2_256);
+
+        // Ensure expenditure id exists
+        ensure!(ExpendituresInfo::<T>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
 
         // Create transaction data
         let transaction_data = TransactionData::<T> {
@@ -1226,6 +1237,10 @@ impl<T: Config> Pallet<T> {
 
         // Ensure amount is valid
         Self::is_amount_valid(total_amount)?;
+
+        //Ensure only Construction loan & developer equity drawdowns can be bulk uploaded
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+        ensure!(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::<T>::DrawdownTypeNotSupportedForBulkUpload);
 
         // Ensure documents is not empty
         ensure!(!documents.is_empty(), Error::<T>::DocumentsIsEmpty);
