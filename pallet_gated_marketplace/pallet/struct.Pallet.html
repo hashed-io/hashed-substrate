@@ -14,7 +14,7 @@ It doesn’t affect any other storage source/workflow.</p>
 <li><code>label</code>: The name of the marketplace.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.apply" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#334">source</a></span><h4 class="code-header">pub fn <a href="#method.apply" class="fnname">apply</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;fields: BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_gated_marketplace::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxFiles" title="type pallet_gated_marketplace::pallet::Config::MaxFiles">MaxFiles</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;custodian_fields: <a class="enum" href="https://doc.rust-lang.org/1.64.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;(&lt;T as Config&gt;::AccountId, BoundedVec&lt;BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_gated_marketplace::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxFiles" title="type pallet_gated_marketplace::pallet::Config::MaxFiles">MaxFiles</a>&gt;)&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Apply to a marketplace.</p>
-<p>Applies to the selected marketplace. </p>
+<p>Applies to the selected marketplace.</p>
 <h6 id="parameters-1"><a href="#parameters-1">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The applicant.</li>
@@ -25,9 +25,9 @@ It doesn’t affect any other storage source/workflow.</p>
 <h6 id="considerations"><a href="#considerations">Considerations:</a></h6>
 <ul>
 <li>You can add many documents, up to the maximum allowed (10).</li>
-<li>The custodian account is optional. You can apply to a marketplace without a 
+<li>The custodian account is optional. You can apply to a marketplace without a
 custodian account.</li>
-<li>All custodian fields are optional. </li>
+<li>All custodian fields are optional.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.reapply" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#372">source</a></span><h4 class="code-header">pub fn <a href="#method.reapply" class="fnname">reapply</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;fields: BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_gated_marketplace::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxFiles" title="type pallet_gated_marketplace::pallet::Config::MaxFiles">MaxFiles</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;custodian_fields: <a class="enum" href="https://doc.rust-lang.org/1.64.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;(&lt;T as Config&gt;::AccountId, BoundedVec&lt;BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_gated_marketplace::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxFiles" title="type pallet_gated_marketplace::pallet::Config::MaxFiles">MaxFiles</a>&gt;)&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Accept or reject a reapplyment.</p>
 <p>Allows the applicant for a second chance to apply to the selected marketplace.</p>
@@ -45,8 +45,8 @@ custodian account.</li>
 <li>Since we know the application exists, we can check the current status of the application.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.enroll" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#417">source</a></span><h4 class="code-header">pub fn <a href="#method.enroll" class="fnname">enroll</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;account_or_application: AccountOrApplication&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;approved: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.bool.html">bool</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;feedback: BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, T::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxFeedbackLen" title="type pallet_gated_marketplace::pallet::Config::MaxFeedbackLen">MaxFeedbackLen</a>&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Accept or reject an application.</p>
-<p>If the application is accepted, 
-the user will be added to the list of applicants. 
+<p>If the application is accepted,
+the user will be added to the list of applicants.
 If the application is rejected,
 the user will be moved to the list of rejected applicants.</p>
 <h6 id="parameters-3"><a href="#parameters-3">Parameters:</a></h6>
@@ -60,14 +60,14 @@ the user will be moved to the list of rejected applicants.</p>
 <ul>
 <li>You can only accept or reject applications where you are the owner/admin of the marketplace.</li>
 <li>Ensure that your extrinsic has selected the right option account/application
-because some fields changes. </li>
-<li>If you select <code>Account</code> you need to enter the account to be accepted. </li>
-<li>If you select <code>Application</code> you need to enter the <code>application_id</code> to be accepted. </li>
+because some fields changes.</li>
+<li>If you select <code>Account</code> you need to enter the account to be accepted.</li>
+<li>If you select <code>Application</code> you need to enter the <code>application_id</code> to be accepted.</li>
 </ul>
-</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.add_authority" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#439">source</a></span><h4 class="code-header">pub fn <a href="#method.add_authority" class="fnname">add_authority</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;account: T::AccountId,<br>&nbsp;&nbsp;&nbsp;&nbsp;authority_type: MarketplaceRole,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Add an Authority type </p>
-<p>This extrinsic adds an authority type for the selected account 
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.add_authority" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#439">source</a></span><h4 class="code-header">pub fn <a href="#method.add_authority" class="fnname">add_authority</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;account: T::AccountId,<br>&nbsp;&nbsp;&nbsp;&nbsp;authority_type: MarketplaceRole,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Add an Authority type</p>
+<p>This extrinsic adds an authority type for the selected account
 from the selected marketplace.</p>
-<h6 id="parameters-"><a href="#parameters-">Parameters:	</a></h6>
+<h6 id="parameters-4"><a href="#parameters-4">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>account</code>: The account to be removed.</li>
@@ -75,11 +75,11 @@ from the selected marketplace.</p>
 <li><code>marketplace_id</code>: The id of the marketplace where we want to add the account.</li>
 </ul>
 <h6 id="considerations-3"><a href="#considerations-3">Considerations:</a></h6>
-<p>If the user has already applied to the marketplace for that particular 
+<p>If the user has already applied to the marketplace for that particular
 authority type, it will throw an error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.remove_authority" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#461">source</a></span><h4 class="code-header">pub fn <a href="#method.remove_authority" class="fnname">remove_authority</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;account: T::AccountId,<br>&nbsp;&nbsp;&nbsp;&nbsp;authority_type: MarketplaceRole,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Remove an Authority type</p>
 <p>This extrinsic removes an authority type for the selected account from the selected marketplace.</p>
-<h6 id="parameters-4"><a href="#parameters-4">Parameters:</a></h6>
+<h6 id="parameters-5"><a href="#parameters-5">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>account</code>: The account to be removed.</li>
@@ -94,7 +94,7 @@ If the user doesn’t have the selected authority type, it will throw an error.<
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.update_label_marketplace" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#484">source</a></span><h4 class="code-header">pub fn <a href="#method.update_label_marketplace" class="fnname">update_label_marketplace</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;new_label: BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>, T::<a class="associatedtype" href="trait.Config.html#associatedtype.LabelMaxLen" title="type pallet_gated_marketplace::pallet::Config::LabelMaxLen">LabelMaxLen</a>&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Update marketplace’s label.</p>
 <p>This extrinsic updates the label of the selected marketplace.</p>
-<h6 id="parameters-5"><a href="#parameters-5">Parameters:</a></h6>
+<h6 id="parameters-6"><a href="#parameters-6">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>marketplace_id</code>: The id of the marketplace where we want to update the label.</li>
@@ -110,7 +110,7 @@ If the user doesn’t have the selected authority type, it will throw an error.<
 <p>This extrinsic removes the selected marketplace.
 It removes all the applications related with the marketplace.
 It removes all the authorities from the lists of the marketplace.</p>
-<h6 id="parameters-6"><a href="#parameters-6">Parameters:</a></h6>
+<h6 id="parameters-7"><a href="#parameters-7">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>marketplace_id</code>: The id of the marketplace to be removed.</li>
@@ -122,7 +122,7 @@ It removes all the authorities from the lists of the marketplace.</p>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.enlist_sell_offer" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#529">source</a></span><h4 class="code-header">pub fn <a href="#method.enlist_sell_offer" class="fnname">enlist_sell_offer</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;collection_id: T::CollectionId,<br>&nbsp;&nbsp;&nbsp;&nbsp;item_id: T::ItemId,<br>&nbsp;&nbsp;&nbsp;&nbsp;price: <a class="type" href="type.BalanceOf.html" title="type pallet_gated_marketplace::pallet::BalanceOf">BalanceOf</a>&lt;T&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Enlist a sell order.</p>
 <p>This extrinsic creates a sell order in the selected marketplace.</p>
-<h6 id="parameters-7"><a href="#parameters-7">Parameters:</a></h6>
+<h6 id="parameters-8"><a href="#parameters-8">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>marketplace_id</code>: The id of the marketplace where we want to create the sell order.</li>
@@ -140,7 +140,7 @@ It removes all the authorities from the lists of the marketplace.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.take_sell_offer" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#551">source</a></span><h4 class="code-header">pub fn <a href="#method.take_sell_offer" class="fnname">take_sell_offer</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;offer_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Accepts a sell order.</p>
 <p>This extrisicn is called by the user who wants to buy the item.
 Aaccepts a sell order in the selected marketplace.</p>
-<h6 id="parameters-8"><a href="#parameters-8">Parameters:</a></h6>
+<h6 id="parameters-9"><a href="#parameters-9">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li>’offer_id`: The id of the sell order to be accepted.</li>
@@ -154,7 +154,7 @@ Aaccepts a sell order in the selected marketplace.</p>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.remove_offer" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#573">source</a></span><h4 class="code-header">pub fn <a href="#method.remove_offer" class="fnname">remove_offer</a>(origin: OriginFor&lt;T&gt;, offer_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Delete an offer.</p>
 <p>This extrinsic deletes an offer in the selected marketplace.</p>
-<h6 id="parameters-9"><a href="#parameters-9">Parameters:</a></h6>
+<h6 id="parameters-10"><a href="#parameters-10">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>offer_id</code>: The id of the offer to be deleted.</li>
@@ -164,12 +164,12 @@ Aaccepts a sell order in the selected marketplace.</p>
 <li>You can delete sell orders or buy orders.</li>
 <li>You can only delete an offer if you are the creator of the offer.</li>
 <li>Only open offers can be deleted.</li>
-<li>If you need to delete multiple offers for the same item, you need to 
+<li>If you need to delete multiple offers for the same item, you need to
 delete them one by one.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.enlist_buy_offer" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#598">source</a></span><h4 class="code-header">pub fn <a href="#method.enlist_buy_offer" class="fnname">enlist_buy_offer</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;origin: OriginFor&lt;T&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;marketplace_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;collection_id: T::CollectionId,<br>&nbsp;&nbsp;&nbsp;&nbsp;item_id: T::ItemId,<br>&nbsp;&nbsp;&nbsp;&nbsp;price: <a class="type" href="type.BalanceOf.html" title="type pallet_gated_marketplace::pallet::BalanceOf">BalanceOf</a>&lt;T&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Enlist a buy order.</p>
 <p>This extrinsic creates a buy order in the selected marketplace.</p>
-<h6 id="parameters-10"><a href="#parameters-10">Parameters:</a></h6>
+<h6 id="parameters-11"><a href="#parameters-11">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>marketplace_id</code>: The id of the marketplace where we want to create the buy order.</li>
@@ -186,7 +186,7 @@ delete them one by one.</li>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.take_buy_offer" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#623">source</a></span><h4 class="code-header">pub fn <a href="#method.take_buy_offer" class="fnname">take_buy_offer</a>(origin: OriginFor&lt;T&gt;, offer_id: <a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">[</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.array.html">; 32]</a>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Accepts a buy order.</p>
 <p>This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.
 Accepts a buy order in the selected marketplace.</p>
-<h6 id="parameters-11"><a href="#parameters-11">Parameters:</a></h6>
+<h6 id="parameters-12"><a href="#parameters-12">Parameters:</a></h6>
 <ul>
 <li><code>origin</code>: The user who performs the action.</li>
 <li><code>offer_id</code>: The id of the buy order to be accepted.</li>
@@ -203,9 +203,9 @@ Accepts a buy order in the selected marketplace.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.kill_storage" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_gated_marketplace/lib.rs.html#644">source</a></span><h4 class="code-header">pub fn <a href="#method.kill_storage" class="fnname">kill_storage</a>(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Kill all the stored data.</p>
 <p>This function is used to kill ALL the stored data.
 Use with caution!</p>
-<h6 id="parameters-12"><a href="#parameters-12">Parameters:</a></h6>
+<h6 id="parameters-13"><a href="#parameters-13">Parameters:</a></h6>
 <ul>
-<li><code>origin</code>: The user who performs the action. </li>
+<li><code>origin</code>: The user who performs the action.</li>
 </ul>
 <h6 id="considerations-12"><a href="#considerations-12">Considerations:</a></h6>
 <ul>

@@ -5,7 +5,7 @@ var sourcesIndex = JSON.parse('{\
 "hashed_runtime":["",[],["constants.rs","lib.rs"]],\
 "pallet_bitcoin_vaults":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_confidential_docs":["",[],["functions.rs","lib.rs","types.rs"]],\
-"pallet_fruniques":["",[],["functions.rs","lib.rs"]],\
+"pallet_fruniques":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_gated_marketplace":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_proxy":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_proxy_financial":["",[],["functions.rs","lib.rs","types.rs"]],\

@@ -681,10 +681,10 @@
 	<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
 	<span class="kw">use</span> <span class="ident">sp_runtime::traits::Scale</span>;
 	<span class="kw">use</span> <span class="ident">frame_support::traits</span>::{<span class="ident">Currency</span>, <span class="ident">Time</span>};
-		
+
 	<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
 	<span class="kw">use</span> <span class="ident">pallet_rbac::types::RoleBasedAccessControl</span>;
-	
+
 	<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BalanceOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet_uniques::Config</span><span class="op">&gt;</span><span class="ident">::Currency</span> <span class="kw">as</span> <span class="ident">Currency</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::AccountId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Balance</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
@@ -702,7 +702,7 @@
 
 		<span class="kw">type</span> <span class="ident">Timestamp</span>: <span class="ident">Time</span><span class="op">&lt;</span><span class="ident">Moment</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Moment</span><span class="op">&gt;</span>;
 
-		<span class="kw">type</span> <span class="ident">RemoveOrigin</span>: <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;		
+		<span class="comment">// type RemoveOrigin: EnsureOrigin&lt;Self::Origin&gt;;</span>
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxAuthsPerMarket</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
@@ -721,11 +721,11 @@
 		<span class="kw">type</span> <span class="ident">MaxFiles</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxApplicationsPerCustodian</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>	
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxMarketsPerItem</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>	
+		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxOffersPerMarket</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		
+
 		<span class="kw">type</span> <span class="ident">Rbac</span> : <span class="ident">RoleBasedAccessControl</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::AccountId</span><span class="op">&gt;</span>;
 	}
 
@@ -738,8 +738,8 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">marketplaces</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Marketplaces</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
 		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">// Key</span>
 		<span class="ident">Marketplace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value</span>
 		<span class="ident">OptionQuery</span>,
@@ -748,21 +748,21 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">applications</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Applications</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
 		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K1: application_id</span>
-		<span class="ident">Application</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
+		<span class="ident">Application</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		<span class="ident">OptionQuery</span>
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">applications_by_account</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::AccountId</span>, <span class="comment">// K1: account_id</span>
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// k2: marketplace_id </span>
+		<span class="ident">Identity</span>,
+		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// k2: marketplace_id</span>
 		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//application_id</span>
 		<span class="ident">OptionQuery</span>
 	<span class="op">&gt;</span>;
@@ -771,35 +771,35 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">applicants_by_marketplace</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ApplicantsByMarketplace</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
 		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K1: marketplace_id</span>
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">ApplicationStatus</span>, <span class="comment">//K2: application_status</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>,<span class="ident">T::MaxApplicants</span><span class="op">&gt;</span>, 
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>,<span class="ident">T::MaxApplicants</span><span class="op">&gt;</span>,
 		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>; 
+	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">custodians</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Custodians</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::AccountId</span>, <span class="comment">//custodians</span>
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//marketplace_id </span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>,<span class="ident">T::MaxApplicationsPerCustodian</span><span class="op">&gt;</span>, <span class="comment">//applicants </span>
+		<span class="ident">Identity</span>,
+		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//marketplace_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>,<span class="ident">T::MaxApplicationsPerCustodian</span><span class="op">&gt;</span>, <span class="comment">//applicants</span>
 		<span class="ident">ValueQuery</span>
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">offers_by_item</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OffersByItem</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::CollectionId</span>, <span class="comment">//collection_id</span>
-		<span class="ident">Blake2_128Concat</span>, 
-		<span class="ident">T::ItemId</span>, <span class="comment">//item_id </span>
+		<span class="ident">Blake2_128Concat</span>,
+		<span class="ident">T::ItemId</span>, <span class="comment">//item_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxOffersPerMarket</span><span class="op">&gt;</span>, <span class="comment">// offer_id&#39;s</span>
 		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
@@ -807,8 +807,8 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">offers_by_account</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OffersByAccount</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::AccountId</span>, <span class="comment">// account_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxOffersPerMarket</span><span class="op">&gt;</span>, <span class="comment">// offer_id&#39;s</span>
 		<span class="ident">ValueQuery</span>,
@@ -817,8 +817,8 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">offers_by_marketplace</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OffersByMarketplace</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
 		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">// Marketplace_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxOffersPerMarket</span><span class="op">&gt;</span>,  <span class="comment">// offer_id&#39;s</span>
 		<span class="ident">ValueQuery</span>,
@@ -827,15 +827,15 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">offers_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OffersInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
 		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">// offer_id</span>
 		<span class="comment">//StorageDoubleMap -&gt; marketplace_id(?)</span>
 		<span class="ident">OfferData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// offer data</span>
 		<span class="ident">OptionQuery</span>,
 	<span class="op">&gt;</span>;
 
-	
+
 
 	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
@@ -861,8 +861,8 @@
 		<span class="doccomment">/// Offer was duplicated. [new_offer_id, new_marketplace_id]</span>
 		<span class="ident">OfferDuplicated</span>([<span class="ident">u8</span>;<span class="number">32</span>], [<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Offer was removed. [offer_id], [marketplace_id]</span>
-		<span class="ident">OfferRemoved</span>([<span class="ident">u8</span>;<span class="number">32</span>], [<span class="ident">u8</span>;<span class="number">32</span>]), 
-		<span class="doccomment">/// Initial palllet setup </span>
+		<span class="ident">OfferRemoved</span>([<span class="ident">u8</span>;<span class="number">32</span>], [<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="doccomment">/// Initial palllet setup</span>
 		<span class="ident">MarketplaceSetupCompleted</span>,
 	}
 
@@ -873,7 +873,7 @@
 		<span class="ident">LimitExceeded</span>,
 		<span class="doccomment">/// The account supervises too many marketplaces</span>
 		<span class="ident">ExceedMaxMarketsPerAuth</span>,
-		<span class="doccomment">/// The account has too many roles in that marketplace </span>
+		<span class="doccomment">/// The account has too many roles in that marketplace</span>
 		<span class="ident">ExceedMaxRolesPerAuth</span>,
 		<span class="doccomment">/// Too many applicants for this market! try again later</span>
 		<span class="ident">ExceedMaxApplicants</span>,
@@ -946,8 +946,8 @@
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> 
-	<span class="kw">where</span> 
+	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+	<span class="kw">where</span>
 		<span class="ident">T</span>: <span class="ident">pallet_uniques::Config</span><span class="op">&lt;</span><span class="ident">CollectionId</span> <span class="op">=</span> <span class="ident">u32</span>, <span class="ident">ItemId</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;</span>,
 	{
 
@@ -960,7 +960,7 @@
 		}
 
 		<span class="doccomment">/// Create a new marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Creates a new marketplace with the given label</span>
 		<span class="doccomment">/// .</span>
 		<span class="doccomment">/// ### Parameters:</span>
@@ -978,34 +978,34 @@
 		}
 
 		<span class="doccomment">/// Apply to a marketplace.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Applies to the selected marketplace. </span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">/// Applies to the selected marketplace.</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The applicant.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to apply.</span>
 		<span class="doccomment">/// - `fields`: Confidential user documents, any files necessary for the application</span>
 		<span class="doccomment">/// - `custodian_fields`: The custodian account and their documents.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can add many documents, up to the maximum allowed (10).</span>
-		<span class="doccomment">/// - The custodian account is optional. You can apply to a marketplace without a </span>
+		<span class="doccomment">/// - The custodian account is optional. You can apply to a marketplace without a</span>
 		<span class="doccomment">/// custodian account.</span>
-		<span class="doccomment">/// - All custodian fields are optional. </span>
+		<span class="doccomment">/// - All custodian fields are optional.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 			<span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields</span>
 			<span class="ident">fields</span> : <span class="ident">Fields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
+			<span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
-			<span class="kw">let</span> (<span class="ident">custodian</span>, <span class="ident">fields</span>) <span class="op">=</span> 
+			<span class="kw">let</span> (<span class="ident">custodian</span>, <span class="ident">fields</span>) <span class="op">=</span>
 				<span class="ident"><span class="self">Self</span>::set_up_application</span>(<span class="ident">fields</span>,<span class="ident">custodian_fields</span>);
-			
+
 
 			<span class="kw">let</span> <span class="ident">application</span> <span class="op">=</span> <span class="ident">Application</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>{
 				<span class="ident">status</span>: <span class="ident">ApplicationStatus::default</span>(),
@@ -1017,15 +1017,15 @@
 		}
 
 		<span class="doccomment">/// Accept or reject a reapplyment.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Allows the applicant for a second chance to apply to the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The reapplicant.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to reapply.</span>
 		<span class="doccomment">/// - `fields`: Confidential user documents, any files necessary for the reapplication</span>
 		<span class="doccomment">/// - `custodian_fields`: The custodian account and their documents.</span>
-		<span class="doccomment">/// 	</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).</span>
 		<span class="doccomment">/// - The custodian account is optional. You can replace the previous custodian.</span>
@@ -1033,17 +1033,17 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reapply</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 			<span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
 			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields</span>
 			<span class="ident">fields</span> : <span class="ident">Fields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
+			<span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
-			<span class="kw">let</span> (<span class="ident">custodian</span>, <span class="ident">fields</span>) <span class="op">=</span> 
+			<span class="kw">let</span> (<span class="ident">custodian</span>, <span class="ident">fields</span>) <span class="op">=</span>
 				<span class="ident"><span class="self">Self</span>::set_up_application</span>(<span class="ident">fields</span>,<span class="ident">custodian_fields</span>);
-			
+
 			<span class="kw">let</span> <span class="ident">application</span> <span class="op">=</span> <span class="ident">Application</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>{
 				<span class="ident">status</span>: <span class="ident">ApplicationStatus::default</span>(),
 				<span class="ident">fields</span>,
@@ -1054,27 +1054,27 @@
 
 			<span class="ident"><span class="self">Self</span>::do_apply</span>(<span class="ident">who</span>, <span class="ident">custodian</span>, <span class="ident">marketplace_id</span>, <span class="ident">application</span>)
 		}
-		
+
 
 		<span class="doccomment">/// Accept or reject an application.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// If the application is accepted, </span>
-		<span class="doccomment">/// the user will be added to the list of applicants. </span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">/// If the application is accepted,</span>
+		<span class="doccomment">/// the user will be added to the list of applicants.</span>
 		<span class="doccomment">/// If the application is rejected,</span>
 		<span class="doccomment">/// the user will be moved to the list of rejected applicants.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`:  The owner/admin of the marketplace.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to enroll users.</span>
 		<span class="doccomment">/// - `account_or_application`: The account or application id to accept or reject.</span>
 		<span class="doccomment">/// - `approved`:  Whether to accept or reject the account/application.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can only accept or reject applications where you are the owner/admin of the marketplace.</span>
 		<span class="doccomment">/// - Ensure that your extrinsic has selected the right option account/application</span>
-		<span class="doccomment">/// because some fields changes. </span>
-		<span class="doccomment">/// - If you select `Account` you need to enter the account to be accepted. </span>
-		<span class="doccomment">/// - If you select `Application` you need to enter the `application_id` to be accepted. </span>
+		<span class="doccomment">/// because some fields changes.</span>
+		<span class="doccomment">/// - If you select `Account` you need to enter the account to be accepted.</span>
+		<span class="doccomment">/// - If you select `Application` you need to enter the `application_id` to be accepted.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enroll</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">account_or_application</span>: <span class="ident">AccountOrApplication</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">approved</span>: <span class="ident">bool</span>, <span class="ident">feedback</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::MaxFeedbackLen</span><span class="op">&gt;</span>, ) -&gt; <span class="ident">DispatchResult</span> {
@@ -1083,19 +1083,19 @@
 			<span class="ident"><span class="self">Self</span>::do_enroll</span>(<span class="ident">who</span>, <span class="ident">marketplace_id</span>, <span class="ident">account_or_application</span>, <span class="ident">approved</span>, <span class="ident">feedback</span>)
 		}
 
-		<span class="doccomment">/// Add an Authority type </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// This extrinsic adds an authority type for the selected account </span>
+		<span class="doccomment">/// Add an Authority type</span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">/// This extrinsic adds an authority type for the selected account</span>
 		<span class="doccomment">/// from the selected marketplace.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:	</span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `account`: The account to be removed.</span>
 		<span class="doccomment">/// - `authority_type`: The type of authority to be added.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to add the account.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
-		<span class="doccomment">/// If the user has already applied to the marketplace for that particular </span>
+		<span class="doccomment">/// If the user has already applied to the marketplace for that particular</span>
 		<span class="doccomment">/// authority type, it will throw an error.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
@@ -1106,15 +1106,15 @@
 		}
 
 		<span class="doccomment">/// Remove an Authority type</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic removes an authority type for the selected account from the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `account`: The account to be removed.</span>
 		<span class="doccomment">/// - `authority_type`: The type of authority to be removed.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to remove the account.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - This extrinsic doesn&#39;t remove the account from the marketplace,</span>
 		<span class="doccomment">/// it only removes the selected authority type for that account.</span>
@@ -1123,21 +1123,21 @@
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_authority</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">account</span>: <span class="ident">T::AccountId</span>, <span class="ident">authority_type</span>: <span class="ident">MarketplaceRole</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="comment">//TOREVIEW: If we&#39;re allowing more than one role per user per marketplace, we should </span>
+			<span class="comment">//TOREVIEW: If we&#39;re allowing more than one role per user per marketplace, we should</span>
 			<span class="comment">// check what role we want to remove instead of removing the user completely from</span>
-			<span class="comment">// selected marketplace. </span>
+			<span class="comment">// selected marketplace.</span>
 			<span class="ident"><span class="self">Self</span>::do_remove_authority</span>(<span class="ident">who</span>, <span class="ident">account</span>, <span class="ident">authority_type</span>, <span class="ident">marketplace_id</span>)
 		}
 
 		<span class="doccomment">/// Update marketplace&#39;s label.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic updates the label of the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to update the label.</span>
 		<span class="doccomment">/// - `label`: The new label for the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.</span>
 		<span class="doccomment">/// - The label must be less than or equal to `T::LabelMaxLen</span>
@@ -1151,15 +1151,15 @@
 		}
 
 		<span class="doccomment">/// Remove a particular marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic removes the selected marketplace.</span>
 		<span class="doccomment">/// It removes all the applications related with the marketplace.</span>
 		<span class="doccomment">/// It removes all the authorities from the lists of the marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace to be removed.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can only remove the marketplace where you are the owner/admin of the marketplace.</span>
 		<span class="doccomment">/// - If the selected marketplace doesn&#39;t exist, it will throw an error.</span>
@@ -1170,18 +1170,18 @@
 
 			<span class="ident"><span class="self">Self</span>::do_remove_marketplace</span>(<span class="ident">who</span>, <span class="ident">marketplace_id</span>)
 		}
-		
+
 		<span class="doccomment">/// Enlist a sell order.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic creates a sell order in the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to create the sell order.</span>
 		<span class="doccomment">/// - `collection_id`: The id of the collection.</span>
 		<span class="doccomment">/// - `item_id`: The id of the item inside the collection.</span>
 		<span class="doccomment">/// - `price`: The price of the item.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can only create a sell order in the marketplace if you are the owner of the item.</span>
 		<span class="doccomment">/// - You can create only one sell order for each item per marketplace.</span>
@@ -1190,21 +1190,21 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enlist_sell_offer</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">collection_id</span>: <span class="ident">T::CollectionId</span>, <span class="ident">item_id</span>: <span class="ident">T::ItemId</span>, <span class="ident">price</span>: <span class="ident">BalanceOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; 
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_enlist_sell_offer</span>(<span class="ident">who</span>, <span class="ident">marketplace_id</span>, <span class="ident">collection_id</span>, <span class="ident">item_id</span>, <span class="ident">price</span>)
 		}
 
 		<span class="doccomment">/// Accepts a sell order.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrisicn is called by the user who wants to buy the item.</span>
 		<span class="doccomment">/// Aaccepts a sell order in the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - &#39;offer_id`: The id of the sell order to be accepted.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You don&#39;t need to be the owner of the item to accept the sell order.</span>
 		<span class="doccomment">/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.</span>
@@ -1212,69 +1212,69 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_sell_offer</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">offer_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>; 
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_take_sell_offer</span>(<span class="ident">who</span>, <span class="ident">offer_id</span>)
 		}
-		
+
 		<span class="doccomment">/// Delete an offer.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic deletes an offer in the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `offer_id`: The id of the offer to be deleted.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You can delete sell orders or buy orders.</span>
 		<span class="doccomment">/// - You can only delete an offer if you are the creator of the offer.</span>
 		<span class="doccomment">/// - Only open offers can be deleted.</span>
-		<span class="doccomment">/// - If you need to delete multiple offers for the same item, you need to </span>
+		<span class="doccomment">/// - If you need to delete multiple offers for the same item, you need to</span>
 		<span class="doccomment">///  delete them one by one.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_offer</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">offer_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="comment">//Currently, we can only remove one offer at a time.</span>
 			<span class="comment">//TODO: Add support for removing multiple offers at a time.</span>
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>; 
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_remove_offer</span>(<span class="ident">who</span>, <span class="ident">offer_id</span>)
 		}
 
 		<span class="doccomment">/// Enlist a buy order.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic creates a buy order in the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we want to create the buy order.</span>
 		<span class="doccomment">/// - `collection_id`: The id of the collection.</span>
 		<span class="doccomment">/// - `item_id`: The id of the item inside the collection.</span>
 		<span class="doccomment">/// - `price`: The price of the item.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - Any user can create a buy order in the marketplace.</span>
 		<span class="doccomment">/// - An item can receive multiple buy orders at a time.</span>
 		<span class="doccomment">/// - You need to have the enough balance to create the buy order.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>	
+		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enlist_buy_offer</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">collection_id</span>: <span class="ident">T::CollectionId</span>, <span class="ident">item_id</span>: <span class="ident">T::ItemId</span>, <span class="ident">price</span>: <span class="ident">BalanceOf</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; 
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_enlist_buy_offer</span>(<span class="ident">who</span>, <span class="ident">marketplace_id</span>, <span class="ident">collection_id</span>, <span class="ident">item_id</span>, <span class="ident">price</span>)
 		}
 
 
 		<span class="doccomment">/// Accepts a buy order.</span>
-		<span class="doccomment">/// 	</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.</span>
 		<span class="doccomment">/// Accepts a buy order in the selected marketplace.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
 		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
 		<span class="doccomment">/// - `offer_id`: The id of the buy order to be accepted.</span>
 		<span class="doccomment">/// - `marketplace_id`: The id of the marketplace where we accept the buy order.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - You need to be the owner of the item to accept a buy order.</span>
 		<span class="doccomment">/// - Owner of the item can accept only one buy order at a time.</span>
@@ -1284,7 +1284,7 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_buy_offer</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">offer_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>; 
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_take_buy_offer</span>(<span class="ident">who</span>, <span class="ident">offer_id</span>)
 		}
@@ -1293,13 +1293,13 @@
 		<span class="comment">//TODO: Add CRUD operations for the offers</span>
 
 		<span class="doccomment">/// Kill all the stored data.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This function is used to kill ALL the stored data.</span>
 		<span class="doccomment">/// Use with caution!</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user who performs the action. </span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - This function is only available to the `admin` with sudo access.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1319,5 +1319,6 @@
 
 
 	}
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
