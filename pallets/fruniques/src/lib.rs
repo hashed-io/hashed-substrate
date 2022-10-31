@@ -265,12 +265,14 @@ pub mod pallet {
 				);
 				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
 
-				// let child_info = ChildInfo {
-				// 	collection_id: class_id,
-				// 	child_id: instance_id,
-				// 	is_hierarchical: parent_info.1,
-				// 	weight: numeric_value.unwrap()
-				// }
+				let child_info = ChildInfo {
+					collection_id: class_id,
+					child_id: instance_id,
+					is_hierarchical: parent_info.1,
+					weight: numeric_value.unwrap()
+				};
+
+				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
 			Ok(())
@@ -293,6 +295,8 @@ pub mod pallet {
 			let _ = <FruniqueCnt<T>>::put(0);
 			let _ = <NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
+			let _ = <FruniqueParent<T>>::clear(1000, None);
+			let _ = <FruniqueChild<T>>::clear(1000, None);
 			Ok(())
 		}
 	}
