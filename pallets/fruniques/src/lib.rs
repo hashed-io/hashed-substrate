@@ -152,6 +152,7 @@ pub mod pallet {
 				Self::account_id_to_lookup_source(&admin),
 			)?;
 
+
 			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
 
 			<NextCollection<T>>::put(Self::next_collection() + 1);
@@ -273,6 +274,7 @@ pub mod pallet {
 				};
 
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
+
 			}
 
 			Ok(())
@@ -297,6 +299,7 @@ pub mod pallet {
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueParent<T>>::clear(1000, None);
 			let _ = <FruniqueChild<T>>::clear(1000, None);
+
 			Ok(())
 		}
 	}
