@@ -20,10 +20,10 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Currency, Time};
-		
+
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
-	
+
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
@@ -41,7 +41,7 @@ pub mod pallet {
 
 		type Timestamp: Time<Moment = Self::Moment>;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
+		// type RemoveOrigin: EnsureOrigin<Self::Origin>;
 		#[pallet::constant]
 		type MaxAuthsPerMarket: Get<u32>;
 		#[pallet::constant]
@@ -60,11 +60,11 @@ pub mod pallet {
 		type MaxFiles: Get<u32>;
 		#[pallet::constant]
 		type MaxApplicationsPerCustodian: Get<u32>;
-		#[pallet::constant]	
+		#[pallet::constant]
 		type MaxMarketsPerItem: Get<u32>;
-		#[pallet::constant]	
+		#[pallet::constant]
 		type MaxOffersPerMarket: Get<u32>;
-		
+
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
 
@@ -77,8 +77,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn marketplaces)]
 	pub(super) type Marketplaces<T: Config> = StorageMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		[u8; 32], // Key
 		Marketplace<T>,  // Value
 		OptionQuery,
@@ -87,21 +87,21 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn applications)]
 	pub(super) type Applications<T: Config> = StorageMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		[u8;32], //K1: application_id
-		Application<T>, 
+		Application<T>,
 		OptionQuery
 	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn applications_by_account)]
 	pub(super) type ApplicationsByAccount<T: Config> = StorageDoubleMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::AccountId, // K1: account_id
-		Identity, 
-		[u8;32], // k2: marketplace_id 
+		Identity,
+		[u8;32], // k2: marketplace_id
 		[u8;32], //application_id
 		OptionQuery
 	>;
@@ -110,35 +110,35 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn applicants_by_marketplace)]
 	pub(super) type ApplicantsByMarketplace<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		[u8;32], //K1: marketplace_id
-		Blake2_128Concat, 
+		Blake2_128Concat,
 		ApplicationStatus, //K2: application_status
-		BoundedVec<T::AccountId,T::MaxApplicants>, 
+		BoundedVec<T::AccountId,T::MaxApplicants>,
 		ValueQuery
-	>; 
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn custodians)]
 	pub(super) type Custodians<T: Config> = StorageDoubleMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::AccountId, //custodians
-		Identity, 
-		[u8;32], //marketplace_id 
-		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants 
+		Identity,
+		[u8;32], //marketplace_id
+		BoundedVec<T::AccountId,T::MaxApplicationsPerCustodian>, //applicants
 		ValueQuery
 	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn offers_by_item)]
 	pub(super) type OffersByItem<T: Config> = StorageDoubleMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::CollectionId, //collection_id
-		Blake2_128Concat, 
-		T::ItemId, //item_id 
+		Blake2_128Concat,
+		T::ItemId, //item_id
 		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
@@ -146,8 +146,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn offers_by_account)]
 	pub(super) type OffersByAccount<T: Config> = StorageMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::AccountId, // account_id
 		BoundedVec<[u8;32], T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
@@ -156,8 +156,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn offers_by_marketplace)]
 	pub(super) type OffersByMarketplace<T: Config> = StorageMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		[u8; 32], // Marketplace_id
 		BoundedVec<[u8;32], T::MaxOffersPerMarket>,  // offer_id's
 		ValueQuery,
@@ -166,15 +166,15 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn offers_info)]
 	pub(super) type OffersInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		[u8; 32], // offer_id
 		//StorageDoubleMap -> marketplace_id(?)
 		OfferData<T>,  // offer data
 		OptionQuery,
 	>;
 
-	
+
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -200,8 +200,8 @@ pub mod pallet {
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
 		OfferDuplicated([u8;32], [u8;32]),
 		/// Offer was removed. [offer_id], [marketplace_id]
-		OfferRemoved([u8;32], [u8;32]), 
-		/// Initial palllet setup 
+		OfferRemoved([u8;32], [u8;32]),
+		/// Initial palllet setup
 		MarketplaceSetupCompleted,
 	}
 
@@ -212,7 +212,7 @@ pub mod pallet {
 		LimitExceeded,
 		/// The account supervises too many marketplaces
 		ExceedMaxMarketsPerAuth,
-		/// The account has too many roles in that marketplace 
+		/// The account has too many roles in that marketplace
 		ExceedMaxRolesPerAuth,
 		/// Too many applicants for this market! try again later
 		ExceedMaxApplicants,
@@ -285,8 +285,8 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
-	where 
+	impl<T: Config> Pallet<T>
+	where
 		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
 
@@ -299,7 +299,7 @@ pub mod pallet {
 		}
 
 		/// Create a new marketplace.
-		/// 
+		///
 		/// Creates a new marketplace with the given label
 		/// .
 		/// ### Parameters:
@@ -317,34 +317,34 @@ pub mod pallet {
 		}
 
 		/// Apply to a marketplace.
-		/// 
-		/// Applies to the selected marketplace. 
-		/// 
+		///
+		/// Applies to the selected marketplace.
+		///
 		/// ### Parameters:
 		/// - `origin`: The applicant.
 		/// - `marketplace_id`: The id of the marketplace where we want to apply.
 		/// - `fields`: Confidential user documents, any files necessary for the application
 		/// - `custodian_fields`: The custodian account and their documents.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can add many documents, up to the maximum allowed (10).
-		/// - The custodian account is optional. You can apply to a marketplace without a 
+		/// - The custodian account is optional. You can apply to a marketplace without a
 		/// custodian account.
-		/// - All custodian fields are optional. 
+		/// - All custodian fields are optional.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn apply(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
 			fields : Fields<T>,
-			custodian_fields: Option<CustodianFields<T>> 
+			custodian_fields: Option<CustodianFields<T>>
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let (custodian, fields) = 
+			let (custodian, fields) =
 				Self::set_up_application(fields,custodian_fields);
-			
+
 
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
@@ -356,15 +356,15 @@ pub mod pallet {
 		}
 
 		/// Accept or reject a reapplyment.
-		/// 
+		///
 		/// Allows the applicant for a second chance to apply to the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The reapplicant.
 		/// - `marketplace_id`: The id of the marketplace where we want to reapply.
 		/// - `fields`: Confidential user documents, any files necessary for the reapplication
 		/// - `custodian_fields`: The custodian account and their documents.
-		/// 	
+		///
 		/// ### Considerations:
 		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
 		/// - The custodian account is optional. You can replace the previous custodian.
@@ -372,17 +372,17 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reapply(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			marketplace_id: [u8;32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
 			fields : Fields<T>,
-			custodian_fields: Option<CustodianFields<T>> 
+			custodian_fields: Option<CustodianFields<T>>
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let (custodian, fields) = 
+			let (custodian, fields) =
 				Self::set_up_application(fields,custodian_fields);
-			
+
 			let application = Application::<T>{
 				status: ApplicationStatus::default(),
 				fields,
@@ -393,27 +393,27 @@ pub mod pallet {
 
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
-		
+
 
 		/// Accept or reject an application.
-		/// 
-		/// If the application is accepted, 
-		/// the user will be added to the list of applicants. 
+		///
+		/// If the application is accepted,
+		/// the user will be added to the list of applicants.
 		/// If the application is rejected,
 		/// the user will be moved to the list of rejected applicants.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`:  The owner/admin of the marketplace.
 		/// - `marketplace_id`: The id of the marketplace where we want to enroll users.
 		/// - `account_or_application`: The account or application id to accept or reject.
 		/// - `approved`:  Whether to accept or reject the account/application.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can only accept or reject applications where you are the owner/admin of the marketplace.
 		/// - Ensure that your extrinsic has selected the right option account/application
-		/// because some fields changes. 
-		/// - If you select `Account` you need to enter the account to be accepted. 
-		/// - If you select `Application` you need to enter the `application_id` to be accepted. 
+		/// because some fields changes.
+		/// - If you select `Account` you need to enter the account to be accepted.
+		/// - If you select `Application` you need to enter the `application_id` to be accepted.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>, ) -> DispatchResult {
@@ -422,19 +422,19 @@ pub mod pallet {
 			Self::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
 		}
 
-		/// Add an Authority type 
-		/// 
-		/// This extrinsic adds an authority type for the selected account 
+		/// Add an Authority type
+		///
+		/// This extrinsic adds an authority type for the selected account
 		/// from the selected marketplace.
-		/// 
-		/// ### Parameters:	
+		///
+		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `account`: The account to be removed.
 		/// - `authority_type`: The type of authority to be added.
 		/// - `marketplace_id`: The id of the marketplace where we want to add the account.
-		/// 
+		///
 		/// ### Considerations:
-		/// If the user has already applied to the marketplace for that particular 
+		/// If the user has already applied to the marketplace for that particular
 		/// authority type, it will throw an error.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -445,15 +445,15 @@ pub mod pallet {
 		}
 
 		/// Remove an Authority type
-		/// 
+		///
 		/// This extrinsic removes an authority type for the selected account from the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `account`: The account to be removed.
 		/// - `authority_type`: The type of authority to be removed.
 		/// - `marketplace_id`: The id of the marketplace where we want to remove the account.
-		/// 
+		///
 		/// ### Considerations:
 		/// - This extrinsic doesn't remove the account from the marketplace,
 		/// it only removes the selected authority type for that account.
@@ -462,21 +462,21 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should 
+			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should
 			// check what role we want to remove instead of removing the user completely from
-			// selected marketplace. 
+			// selected marketplace.
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
 
 		/// Update marketplace's label.
-		/// 
+		///
 		/// This extrinsic updates the label of the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `marketplace_id`: The id of the marketplace where we want to update the label.
 		/// - `label`: The new label for the selected marketplace.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
 		/// - The label must be less than or equal to `T::LabelMaxLen
@@ -490,15 +490,15 @@ pub mod pallet {
 		}
 
 		/// Remove a particular marketplace.
-		/// 
+		///
 		/// This extrinsic removes the selected marketplace.
 		/// It removes all the applications related with the marketplace.
 		/// It removes all the authorities from the lists of the marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `marketplace_id`: The id of the marketplace to be removed.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
 		/// - If the selected marketplace doesn't exist, it will throw an error.
@@ -509,18 +509,18 @@ pub mod pallet {
 
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
-		
+
 		/// Enlist a sell order.
-		/// 
+		///
 		/// This extrinsic creates a sell order in the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `marketplace_id`: The id of the marketplace where we want to create the sell order.
 		/// - `collection_id`: The id of the collection.
 		/// - `item_id`: The id of the item inside the collection.
 		/// - `price`: The price of the item.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can only create a sell order in the marketplace if you are the owner of the item.
 		/// - You can create only one sell order for each item per marketplace.
@@ -529,21 +529,21 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-			let who = ensure_signed(origin)?; 
+			let who = ensure_signed(origin)?;
 
 			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
 		}
 
 		/// Accepts a sell order.
-		/// 
+		///
 		/// This extrisicn is called by the user who wants to buy the item.
 		/// Aaccepts a sell order in the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - 'offer_id`: The id of the sell order to be accepted.
 		/// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You don't need to be the owner of the item to accept the sell order.
 		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
@@ -551,69 +551,69 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?; 
+			let who = ensure_signed(origin.clone())?;
 
 			Self::do_take_sell_offer(who, offer_id)
 		}
-		
+
 		/// Delete an offer.
-		/// 
+		///
 		/// This extrinsic deletes an offer in the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `offer_id`: The id of the offer to be deleted.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You can delete sell orders or buy orders.
 		/// - You can only delete an offer if you are the creator of the offer.
 		/// - Only open offers can be deleted.
-		/// - If you need to delete multiple offers for the same item, you need to 
+		/// - If you need to delete multiple offers for the same item, you need to
 		///  delete them one by one.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
-			let who = ensure_signed(origin.clone())?; 
+			let who = ensure_signed(origin.clone())?;
 
 			Self::do_remove_offer(who, offer_id)
 		}
 
 		/// Enlist a buy order.
-		/// 
+		///
 		/// This extrinsic creates a buy order in the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `marketplace_id`: The id of the marketplace where we want to create the buy order.
 		/// - `collection_id`: The id of the collection.
 		/// - `item_id`: The id of the item inside the collection.
 		/// - `price`: The price of the item.
-		/// 
+		///
 		/// ### Considerations:
 		/// - Any user can create a buy order in the marketplace.
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]	
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
-			let who = ensure_signed(origin)?; 
+			let who = ensure_signed(origin)?;
 
 			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
 		}
 
 
 		/// Accepts a buy order.
-		/// 	
+		///
 		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.
 		/// Accepts a buy order in the selected marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
 		/// - `offer_id`: The id of the buy order to be accepted.
 		/// - `marketplace_id`: The id of the marketplace where we accept the buy order.
-		/// 
+		///
 		/// ### Considerations:
 		/// - You need to be the owner of the item to accept a buy order.
 		/// - Owner of the item can accept only one buy order at a time.
@@ -623,7 +623,7 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?; 
+			let who = ensure_signed(origin.clone())?;
 
 			Self::do_take_buy_offer(who, offer_id)
 		}
@@ -632,13 +632,13 @@ pub mod pallet {
 		//TODO: Add CRUD operations for the offers
 
 		/// Kill all the stored data.
-		/// 
+		///
 		/// This function is used to kill ALL the stored data.
 		/// Use with caution!
-		/// 
+		///
 		/// ### Parameters:
-		/// - `origin`: The user who performs the action. 
-		/// 
+		/// - `origin`: The user who performs the action.
+		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]

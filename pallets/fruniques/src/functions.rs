@@ -1,9 +1,13 @@
 use super::*;
 
-use frame_support::traits::tokens::nonfungibles::Inspect;
 use frame_system::pallet_prelude::*;
+use crate::types::*;
+
+use frame_support::traits::tokens::nonfungibles::Inspect;
 use scale_info::prelude::string::String;
-// use crate::types::*;
+
+use pallet_rbac::types::*;
+
 use frame_support::pallet_prelude::*;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
@@ -13,6 +17,13 @@ impl<T: Config> Pallet<T> {
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		T::ItemId::from(input)
+	}
+
+	pub fn u32_to_class_id(input: u32) -> T::CollectionId
+	where
+		<T as pallet_uniques::Config>::CollectionId: From<u32>,
+	{
+		T::CollectionId::from(input)
 	}
 
 	pub fn bytes_to_u32(input: Vec<u8>) -> u32 {
@@ -39,7 +50,7 @@ impl<T: Config> Pallet<T> {
 		class_id: &T::CollectionId,
 		instance_id: &T::ItemId,
 		key: &Vec<u8>,
-	) -> BoundedVec<u8, T::ValueLimit> {
+	) -> AttributeValue<T> {
 		if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
 			return BoundedVec::<u8, T::ValueLimit>::try_from(a)
 				.expect("Error on converting the attribute to BoundedVec");
@@ -51,12 +62,32 @@ impl<T: Config> Pallet<T> {
 		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
 	}
 
+	pub fn collection_exists(class_id: &T::CollectionId) -> bool {
+		if let Some(_owner) = pallet_uniques::Pallet::<T>::collection_owner(*class_id) {
+			return true;
+		}
+		false
+	}
+
+	pub fn item_exists(class_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+		if let Some(_owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
+			return true;
+		}
+		false
+	}
+
+	pub fn do_initial_setup() -> DispatchResult {
+		let _pallet_id = Self::pallet_id();
+
+		Ok(())
+	}
+
 	pub fn set_attribute(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
 		instance_id: T::ItemId,
-		key: BoundedVec<u8, T::KeyLimit>,
-		value: BoundedVec<u8, T::ValueLimit>,
+		key: AttributeKey<T>,
+		value: AttributeValue<T>,
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::set_attribute(
 			origin,
@@ -87,8 +118,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// TODO: add a function to get the owner of an instance
-	// TODO: add a function to burn an instance
 	pub fn burn(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -103,6 +132,33 @@ impl<T: Config> Pallet<T> {
 			instance_id,
 			Some(Self::account_id_to_lookup_source(&admin.unwrap())),
 		)?;
+		Ok(())
+	}
+
+
+	/// Helper function to create a new collection
+	/// Creates a collection and updates its metadata if needed.
+	pub fn do_create_collection(
+		origin: OriginFor<T>,
+		class_id: T::CollectionId,
+		metadata: Option<StringLimit<T>>,
+		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+	) -> DispatchResult {
+		pallet_uniques::Pallet::<T>::create(
+			origin.clone(),
+			class_id,
+			admin,
+		)?;
+
+		if let Some(metadata) = metadata {
+			pallet_uniques::Pallet::<T>::set_collection_metadata(
+			origin,
+			class_id,
+			metadata,
+			false
+			)?;
+		}
+
 		Ok(())
 	}
 
@@ -135,7 +191,42 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn do_spawn() -> DispatchResult {
+	pub fn do_spawn(
+		origin: OriginFor<T>,
+		collection: T::CollectionId,
+		item: T::ItemId,
+		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		_numeric_value: Option<Permill>,
+		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
+	) -> DispatchResult {
+
+		ensure!(Self::collection_exists(&collection),  <Error<T>>::CollectionNotFound);
+		pallet_uniques::Pallet::<T>::mint(
+			origin.clone(),
+			collection,
+			item,
+			owner
+		)?;
+
+		if let Some(attributes) = attributes {
+			for (key, value) in attributes {
+				pallet_uniques::Pallet::<T>::set_attribute(
+					origin.clone(),
+					collection,
+					Some(item),
+					key,
+					value,
+				)?;
+			}
+		}
+
 		Ok(())
 	}
+
+	pub fn pallet_id()->IdOrVec{
+        IdOrVec::Vec(
+            Self::module_name().as_bytes().to_vec()
+        )
+    }
+
 }
