@@ -5523,6 +5523,7 @@ dependencies = [
  "frame-system",
  "log",
  "pallet-balances",
+ "pallet-rbac",
  "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
