@@ -301,6 +301,9 @@
 <span id="301">301</span>
 <span id="302">302</span>
 <span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -455,6 +458,7 @@
 				<span class="ident"><span class="self">Self</span>::account_id_to_lookup_source</span>(<span class="kw-2">&amp;</span><span class="ident">admin</span>),
 			)<span class="question-mark">?</span>;
 
+
 			<span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::FruniqueCollectionCreated</span>(<span class="ident">admin</span>, <span class="ident">new_collection_id</span>));
 
 			<span class="op">&lt;</span><span class="ident">NextCollection</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::put</span>(<span class="ident"><span class="self">Self</span>::next_collection</span>() <span class="op">+</span> <span class="number">1</span>);
@@ -576,6 +580,7 @@
 				};
 
 				<span class="op">&lt;</span><span class="ident">FruniqueChild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="prelude-val">Some</span>(<span class="ident">child_info</span>));
+
 			}
 
 			<span class="prelude-val">Ok</span>(())
@@ -600,6 +605,7 @@
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NextFrunique</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">FruniqueParent</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">FruniqueChild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+
 			<span class="prelude-val">Ok</span>(())
 		}
 	}
