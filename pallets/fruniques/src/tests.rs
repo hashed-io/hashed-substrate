@@ -1,4 +1,6 @@
 use crate::{mock::*, Error};
+use core::convert::TryFrom;
+use codec::{Encode};
 
 use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_runtime::Permill;
@@ -34,7 +36,18 @@ impl ExtBuilder {
 }
 
 fn dummy_description() -> BoundedVec<u8, StringLimit> {
-	bvec![b'a'; 10]
+	BoundedVec::<u8, StringLimit>::try_from(b"dummy description".to_vec()).unwrap()
+}
+
+fn dummy_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>)> {
+	vec![(
+			BoundedVec::<u8, KeyLimit>::try_from(b"dummy key".encode()).expect("Error on encoding key to BoundedVec"),
+			BoundedVec::<u8, ValueLimit>::try_from(b"dummy value".encode()).expect("Error on encoding value to BoundedVec"),
+		)]
+}
+
+fn dummy_value() -> Permill {
+	Permill::from_percent(50)
 }
 
 #[test]
@@ -47,10 +60,17 @@ fn create_collection_works() {
 #[test]
 fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, None, None, None), Error::<Test>::CollectionNotFound);
+		// A collection must be created before spawning an NFT
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, None, None), Error::<Test>::CollectionNotFound);
 
 		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
-		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, None, None));
+		// A NFT can be created with empty data
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, None));
+		// A NFT can be created with attributes
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, Some(dummy_attributes())));
+		// A NFT can be hierarchical
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, Some((0, false, 10)), None));
+
 	})
 }
 

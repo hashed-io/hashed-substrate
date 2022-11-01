@@ -224,7 +224,6 @@ pub mod pallet {
 		///
 		/// ### Parameters needed in order to divide a unique:
 		/// - `class_id`: The type of NFT that the function will create, categorized by numbers.
-		/// - `numeric_value`: The value of the NFT that the function will create.
 		/// - `parent_info`: Information of the parent NFT and a flag to indicate the child would inherit their attributes.
 		/// - `attributes`: Generates a list of attributes for the new NFT.
 		///
@@ -232,7 +231,6 @@ pub mod pallet {
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
-			numeric_value: Option<Permill>,
 			parent_info: Option<HierarchicalInfo>,
 			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 		) -> DispatchResult {
@@ -250,7 +248,6 @@ pub mod pallet {
 				class_id,
 				instance_id,
 				account_id,
-				numeric_value,
 				attributes,
 			)?;
 
@@ -273,7 +270,7 @@ pub mod pallet {
 					collection_id: class_id,
 					child_id: instance_id,
 					is_hierarchical: parent_info.1,
-					weight: numeric_value.unwrap()
+					weight: Self::percent_to_permill(parent_info.2),
 				};
 
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
