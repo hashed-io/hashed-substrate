@@ -1,16 +1,17 @@
 use crate::{mock::*, Error};
+use core::convert::TryFrom;
+use codec::{Encode};
 
-use frame_support::{assert_noop, assert_ok};
-use sp_runtime::Permill;
+use frame_support::{assert_noop, assert_ok, BoundedVec};
 
 pub struct ExtBuilder;
 
 // helper function to set BoundedVec
-macro_rules! bvec {
-	($( $x:tt )*) => {
-		vec![$( $x )*].try_into().unwrap()
-	}
-}
+// macro_rules! bvec {
+// 	($( $x:tt )*) => {
+// 		vec![$( $x )*].try_into().unwrap()
+// 	}
+// }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
@@ -33,87 +34,68 @@ impl ExtBuilder {
 	}
 }
 
+fn dummy_description() -> BoundedVec<u8, StringLimit> {
+	BoundedVec::<u8, StringLimit>::try_from(b"dummy description".to_vec()).unwrap()
+}
+
+fn dummy_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>)> {
+	vec![(
+			BoundedVec::<u8, KeyLimit>::try_from(b"dummy key".encode()).expect("Error on encoding key to BoundedVec"),
+			BoundedVec::<u8, ValueLimit>::try_from(b"dummy value".encode()).expect("Error on encoding value to BoundedVec"),
+		)]
+}
+
+fn dummy_empty_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>)> {
+	vec![]
+}
+
+
 #[test]
-fn create_frunique_works() {
-	// Create a frunique
+fn create_collection_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, Some(Permill::from_percent(50)), 1));
-	});
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
+	})
 }
 
 #[test]
-fn create_frunique_with_attributes_should_work() {
-	// Create a frunique with attributes
+fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_noop!(
-			Fruniques::create_with_attributes(
-				Origin::signed(1),
-				1,
-				0,
-				Some(Permill::from_percent(50)),
-				1,
-				vec![]
-			),
-			Error::<Test>::AttributesEmpty
-		);
+		// A collection must be created before spawning an NFT
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, None, None), Error::<Test>::CollectionNotFound);
 
-		assert_ok!(Fruniques::create_with_attributes(
-			Origin::signed(1),
-			1,
-			0,
-			Some(Permill::from_percent(50)),
-			1,
-			vec![(bvec![0], bvec![0])],
-		));
-	});
+		// Create a collection
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
+
+		// The first item can not be a child
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, Some((0, false, 10)), None), Error::<Test>::ParentNotFound);
+
+		// A NFT can be created with empty data
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, None));
+		// A NFT can be created with attributes
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, Some(dummy_attributes())));
+		// A NFT can be hierarchical
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, Some((0, false, 10)), None));
+		// The parent must exist
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, Some((100, false, 10)), None), Error::<Test>::ParentNotFound);
+
+	})
 }
 
-// this test is failing for some reason...
-/*---- tests::spawn_extrinsic_works stdout ----
-thread 'tests::spawn_extrinsic_works' panicked at 'Expected Ok(_). Got Err(
-		Module(
-				ModuleError {
-						index: 1,
-						error: [
-								1,
-								0,
-								0,
-								0,
-						],
-						message: Some(
-								"UnknownCollection",
-						),
-				},
-		),
-)', pallets/fruniques/src/tests.rs:41:9
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-*/
-// #[test]
-// fn spawn_extrinsic_works() {
-// 	ExtBuilder::default().build().execute_with(|| {
-// 		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, Some(Permill::from_percent(50)), 1));
-// 		assert_ok!(Fruniques::spawn(
-// 			Origin::signed(1),
-// 			1,
-// 			255,
-// 			true,
-// 			Permill::from_float(20.525),
-// 			1
-// 		));
-// 		//Fruniques::spawn(Origin::signed(1),1,255,true,Permill::from_float(20.525),1 );
-// 		assert_ok!(Fruniques::spawn(Origin::signed(1), 1, 1, true, Permill::from_float(20.525), 1));
-// 		assert_ok!(Fruniques::instance_exists(Origin::signed(1), 1, 1));
-// 	});
-// }
 
 #[test]
-fn set_attributes_should_work() {
+fn set_attributes_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0, Some(Permill::from_percent(50)), 1));
-		assert_noop!(
-			Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![]),
-			Error::<Test>::AttributesEmpty
-		);
-		assert_ok!(Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![(bvec![0], bvec![0])]));
-	});
+		// A collection must be created before spawning an NFT
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, None, None), Error::<Test>::CollectionNotFound);
+
+		// Create a collection
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
+		// Attributes can be added only to existing NFTs
+		assert_noop!(Fruniques::set_attributes(Origin::signed(1), 0, 0, dummy_attributes()), Error::<Test>::FruniqueNotFound);
+		// A NFT can be created with empty data
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, None));
+		// Attributes can not be empty
+		assert_noop!(Fruniques::set_attributes(Origin::signed(1), 0, 0, dummy_empty_attributes()), Error::<Test>::AttributesEmpty);
+
+	})
 }

@@ -445,6 +445,12 @@ pub mod pallet {
 		ProjectsIsEmpty,
 		/// Inflation rate was not provided
 		InflationRateRequired,
+		/// Bulkupload drawdowns are only allowed for Construction Loan & Developer Equity
+		DrawdownTypeNotSupportedForBulkUpload,
+		/// Cannot edit user role if the user is assigned to a project
+		UserHasAssignedProjectsCannotUpdateRole,
+		/// Cannot delete user if the user is assigned to a project
+		UserHasAssignedProjectsCannotDelete,
 
 	}
 

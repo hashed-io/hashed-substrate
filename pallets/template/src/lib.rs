@@ -16,7 +16,8 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+
+use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -38,6 +39,11 @@ pub mod pallet {
 	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
 	pub type Something<T> = StorageValue<_, u32>;
 
+
+	#[pallet::storage]
+	#[pallet::getter(fn my_bytes_val)]
+	pub type MyBytesVal<T> = StorageValue<_, MyBytes, ValueQuery>;
+
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/v3/runtime/events-and-errors
 	#[pallet::event]
@@ -47,6 +53,8 @@ pub mod pallet {
 		/// parameters. [something, who]
 		SomethingStored(u32, T::AccountId),
 	}
+
+	pub type MyBytes = BoundedVec<u8,ConstU32<16>>;
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
@@ -97,6 +105,20 @@ pub mod pallet {
 					Ok(())
 				},
 			}
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn insert_my_bytes(origin: OriginFor<T>, optional_bytes: Option<MyBytes>) -> DispatchResult {
+			// Check that the extrinsic was signed and get the signer.
+			// This function will return an error if the extrinsic is not signed.
+			// https://docs.substrate.io/v3/runtime/origins
+			let who = ensure_signed(origin)?;
+
+			// Update storage.
+			let s = optional_bytes.unwrap_or_default();
+			<MyBytesVal<T>>::put(s);
+			// Return a successful DispatchResultWithPostInfo
+			Ok(())
 		}
 	}
 }

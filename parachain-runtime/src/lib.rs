@@ -945,6 +945,7 @@ parameter_types! {
 	pub const ItemDeposit: Balance = 1 * DOLLARS;
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
+	pub const ChildMaxLen: u32 = 25;
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -971,6 +972,7 @@ impl pallet_uniques::Config for Runtime {
 impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
 	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
+	type ChildMaxLen = ChildMaxLen;
 }
 
 parameter_types! {

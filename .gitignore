@@ -31,3 +31,4 @@ gcloud-md5-ingress.yml
 .secrets
 collator-data
 relay-data
+.vscode/settings.json
