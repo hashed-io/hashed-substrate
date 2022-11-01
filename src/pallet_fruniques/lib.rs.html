@@ -301,6 +301,8 @@
 <span id="301">301</span>
 <span id="302">302</span>
 <span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -324,7 +326,6 @@
 	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>, <span class="ident">transactional</span>, <span class="ident">BoundedVec</span>};
 	<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
 	<span class="kw">use</span> <span class="ident">scale_info::prelude::vec::Vec</span>;
-	<span class="kw">use</span> <span class="ident">sp_runtime::Permill</span>;
 	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.</span>
 	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
 	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>: <span class="ident">frame_system::Config</span> <span class="op">+</span> <span class="ident">pallet_uniques::Config</span> {
@@ -344,11 +345,11 @@
 	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
 	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-		<span class="comment">// A frunique and asset class were succesfully created!</span>
+		<span class="comment">// A frunique and asset class were successfully created!</span>
 		<span class="ident">FruniqueCollectionCreated</span>(<span class="ident">T::AccountId</span>, <span class="ident">T::CollectionId</span>),
-		<span class="comment">// A frunique and asset class were succesfully created!</span>
+		<span class="comment">// A frunique and asset class were successfully created!</span>
 		<span class="ident">FruniqueCreated</span>(<span class="ident">T::AccountId</span>, <span class="ident">T::AccountId</span>, <span class="ident">T::CollectionId</span>, <span class="ident">T::ItemId</span>),
-		<span class="comment">// A frunique/unique was succesfully divided!</span>
+		<span class="comment">// A frunique/unique was successfully divided!</span>
 		<span class="ident">FruniqueDivided</span>(<span class="ident">T::AccountId</span>, <span class="ident">T::AccountId</span>, <span class="ident">T::CollectionId</span>, <span class="ident">T::ItemId</span>),
 		<span class="comment">// Counter should work?</span>
 		<span class="ident">NextFrunique</span>(<span class="ident">u32</span>),
@@ -356,10 +357,13 @@
 
 	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
 	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="ident">NoneValue</span>,
+		<span class="comment">// The user does not have permission to perform this action</span>
 		<span class="ident">NoPermission</span>,
+		<span class="comment">// Only the owner of the Frunique can perform this action</span>
 		<span class="ident">NotAdmin</span>,
+		<span class="comment">// The storage is full</span>
 		<span class="ident">StorageOverflow</span>,
+		<span class="comment">// A feature not implemented yet</span>
 		<span class="ident">NotYetImplemented</span>,
 		<span class="comment">// Too many fruniques were minted</span>
 		<span class="ident">FruniqueCntOverflow</span>,
@@ -373,6 +377,10 @@
 		<span class="ident">AttributesEmpty</span>,
 		<span class="comment">// The collection doesn&#39;t exist</span>
 		<span class="ident">CollectionNotFound</span>,
+		<span class="comment">// The parent doesn&#39;t exist</span>
+		<span class="ident">ParentNotFound</span>,
+		<span class="comment">// The frunique doesn&#39;t exist</span>
+		<span class="ident">FruniqueNotFound</span>,
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
@@ -421,7 +429,7 @@
 		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">CollectionId</span>, <span class="comment">// Parent collection id</span>
 		<span class="ident">Blake2_128Concat</span>,
-		<span class="ident">ItemId</span>, <span class="comment">// Parent item id</span>
+		<span class="ident">ItemId</span>,            <span class="comment">// Parent item id</span>
 		<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ChildInfo</span><span class="op">&gt;</span>, <span class="comment">// ParentId and flag if it inherit attributes</span>
 		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
@@ -480,12 +488,12 @@
 
 		<span class="doccomment">/// ## Set multiple attributes to a frunique.</span>
 		<span class="doccomment">/// `origin` must be signed by the owner of the frunique.</span>
+		<span class="doccomment">/// - `class_id` must be a valid class of the asset class.</span>
+		<span class="doccomment">/// - `instance_id` must be a valid instance of the asset class.</span>
 		<span class="doccomment">/// - `attributes` must be a list of pairs of `key` and `value`.</span>
 		<span class="doccomment">/// `key` must be a valid key for the asset class.</span>
 		<span class="doccomment">/// `value` must be a valid value for the asset class.</span>
 		<span class="doccomment">/// `attributes` must not be empty.</span>
-		<span class="doccomment">/// - `instance_id` must be a valid instance of the asset class.</span>
-		<span class="doccomment">/// - `class_id` must be a valid class of the asset class.</span>
 
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_attributes</span>(
@@ -494,6 +502,8 @@
 			<span class="ident">instance_id</span>: <span class="ident">T::ItemId</span>,
 			<span class="ident">attributes</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::KeyLimit</span><span class="op">&gt;</span>, <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::ValueLimit</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
+			<span class="macro">ensure!</span>(<span class="ident"><span class="self">Self</span>::item_exists</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>, <span class="kw-2">&amp;</span><span class="ident">instance_id</span>), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::FruniqueNotFound</span>);
+
 			<span class="comment">// ! Ensure the admin is the one who can add attributes to the frunique.</span>
 			<span class="kw">let</span> <span class="ident">admin</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::admin_of</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>, <span class="kw-2">&amp;</span><span class="ident">instance_id</span>);
 			<span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">core::prelude::v1::Some</span>(<span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>);
@@ -526,7 +536,6 @@
 		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters needed in order to divide a unique:</span>
 		<span class="doccomment">/// - `class_id`: The type of NFT that the function will create, categorized by numbers.</span>
-		<span class="doccomment">/// - `numeric_value`: The value of the NFT that the function will create.</span>
 		<span class="doccomment">/// - `parent_info`: Information of the parent NFT and a flag to indicate the child would inherit their attributes.</span>
 		<span class="doccomment">/// - `attributes`: Generates a list of attributes for the new NFT.</span>
 		<span class="doccomment">///</span>
@@ -534,24 +543,36 @@
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 			<span class="ident">class_id</span>: <span class="ident">CollectionId</span>,
-			<span class="ident">numeric_value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Permill</span><span class="op">&gt;</span>,
 			<span class="ident">parent_info</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HierarchicalInfo</span><span class="op">&gt;</span>,
 			<span class="ident">attributes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::KeyLimit</span><span class="op">&gt;</span>, <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::ValueLimit</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
+			<span class="macro">ensure!</span>(<span class="ident"><span class="self">Self</span>::collection_exists</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::CollectionNotFound</span>);
+
+			<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent_info</span>) <span class="op">=</span> <span class="ident">parent_info</span> {
+				<span class="macro">ensure!</span>(<span class="ident"><span class="self">Self</span>::item_exists</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>, <span class="kw-2">&amp;</span><span class="ident">parent_info</span>.<span class="number">0</span>), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::ParentNotFound</span>);
+			}
+
 			<span class="kw">let</span> <span class="ident">owner</span>: <span class="ident">T::AccountId</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 			<span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::account_id_to_lookup_source</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
 
 			<span class="kw">let</span> <span class="ident">instance_id</span>: <span class="ident">ItemId</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NextFrunique</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">class_id</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>);
 			<span class="op">&lt;</span><span class="ident">NextFrunique</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span> <span class="op">+</span> <span class="number">1</span>);
 
-			<span class="ident"><span class="self">Self</span>::do_spawn</span>(
-				<span class="ident">origin</span>.<span class="ident">clone</span>(),
-				<span class="ident">class_id</span>,
-				<span class="ident">instance_id</span>,
-				<span class="ident">account_id</span>,
-				<span class="ident">numeric_value</span>,
-				<span class="ident">attributes</span>,
-			)<span class="question-mark">?</span>;
+			<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent_info</span>) <span class="op">=</span> <span class="ident">parent_info</span> {
+				<span class="macro">ensure!</span>(<span class="ident"><span class="self">Self</span>::item_exists</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>, <span class="kw-2">&amp;</span><span class="ident">parent_info</span>.<span class="number">0</span>), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::ParentNotFound</span>);
+				<span class="op">&lt;</span><span class="ident">FruniqueParent</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="prelude-val">Some</span>(<span class="ident">parent_info</span>));
+
+				<span class="kw">let</span> <span class="ident">child_info</span> <span class="op">=</span> <span class="ident">ChildInfo</span> {
+					<span class="ident">collection_id</span>: <span class="ident">class_id</span>,
+					<span class="ident">child_id</span>: <span class="ident">instance_id</span>,
+					<span class="ident">is_hierarchical</span>: <span class="ident">parent_info</span>.<span class="number">1</span>,
+					<span class="ident">weight</span>: <span class="ident"><span class="self">Self</span>::percent_to_permill</span>(<span class="ident">parent_info</span>.<span class="number">2</span>),
+				};
+
+				<span class="op">&lt;</span><span class="ident">FruniqueChild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="prelude-val">Some</span>(<span class="ident">child_info</span>));
+			}
+
+			<span class="ident"><span class="self">Self</span>::do_spawn</span>(<span class="ident">origin</span>.<span class="ident">clone</span>(), <span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="ident">account_id</span>, <span class="ident">attributes</span>)<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::FruniqueCreated</span>(
 				<span class="ident">owner</span>.<span class="ident">clone</span>(),
@@ -559,24 +580,6 @@
 				<span class="ident">class_id</span>,
 				<span class="ident">instance_id</span>,
 			));
-
-
-			<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent_info</span>) <span class="op">=</span> <span class="ident">parent_info</span> {
-				<span class="macro">ensure!</span>(
-					<span class="ident"><span class="self">Self</span>::item_exists</span>(<span class="kw-2">&amp;</span><span class="ident">class_id</span>, <span class="kw-2">&amp;</span><span class="ident">parent_info</span>.<span class="number">0</span>),
-					<span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::CollectionNotFound</span>
-				);
-				<span class="op">&lt;</span><span class="ident">FruniqueParent</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="prelude-val">Some</span>(<span class="ident">parent_info</span>));
-
-				<span class="kw">let</span> <span class="ident">child_info</span> <span class="op">=</span> <span class="ident">ChildInfo</span> {
-					<span class="ident">collection_id</span>: <span class="ident">class_id</span>,
-					<span class="ident">child_id</span>: <span class="ident">instance_id</span>,
-					<span class="ident">is_hierarchical</span>: <span class="ident">parent_info</span>.<span class="number">1</span>,
-					<span class="ident">weight</span>: <span class="ident">numeric_value</span>.<span class="ident">unwrap</span>()
-				};
-
-				<span class="op">&lt;</span><span class="ident">FruniqueChild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">class_id</span>, <span class="ident">instance_id</span>, <span class="prelude-val">Some</span>(<span class="ident">child_info</span>));
-			}
 
 			<span class="prelude-val">Ok</span>(())
 		}
@@ -600,6 +603,7 @@
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NextFrunique</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">FruniqueParent</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">FruniqueChild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+
 			<span class="prelude-val">Ok</span>(())
 		}
 	}

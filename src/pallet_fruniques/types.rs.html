@@ -131,6 +131,7 @@
 <span id="131">131</span>
 <span id="132">132</span>
 <span id="133">133</span>
+<span id="134">134</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Defines the types required by the fruniques pallet</span>
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
@@ -149,7 +150,8 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CollectionId</span> <span class="op">=</span> <span class="ident">u32</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ItemId</span> <span class="op">=</span> <span class="ident">u32</span>;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">HierarchicalInfo</span> <span class="op">=</span> (<span class="ident">ItemId</span>, <span class="ident">bool</span>);
+<span class="comment">// (ParentId, Heirarchical)</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">HierarchicalInfo</span> <span class="op">=</span> (<span class="ident">ItemId</span>, <span class="ident">bool</span>, <span class="ident">u8</span>);
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChildInfo</span> {
