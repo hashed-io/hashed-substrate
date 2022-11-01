@@ -2,7 +2,7 @@
 ### **FR**actional **Uniques**
 > This is WIP - just being spec'd out
 
-This pallet is being developed **tightly coupled** to both [`pallet_assets`](https://paritytech.github.io/substrate/latest/pallet_assets/)  and [`pallet_uniques`](https://paritytech.github.io/substrate/latest/pallet_uniques/index.html). These are the default [Statemine](https://github.com/paritytech/cumulus/tree/master/polkadot-parachains/statemine) pallets for fungible and non-fungible tokens. 
+This pallet is being developed **tightly coupled** to both [`pallet_assets`](https://paritytech.github.io/substrate/latest/pallet_assets/)  and [`pallet_uniques`](https://paritytech.github.io/substrate/latest/pallet_uniques/index.html). These are the default [Statemine](https://github.com/paritytech/cumulus/tree/master/polkadot-parachains/statemine) pallets for fungible and non-fungible tokens.
 
 A Frunique is a type of Non-Fungible Token (NFT)
 
@@ -19,20 +19,20 @@ This pallet provides functionality that allows NFT holders to mint a fungible to
 
 The non-fungible token is created and minted using the Statemine `pallet_uniques`.
 
-The fungible token is created and minted using the Statemine `pallet_assets`. 
+The fungible token is created and minted using the Statemine `pallet_assets`.
 
 The NFT/Unique can be unlocked and released if and only if a single origin holds all of the corresponding fungible token.
 
 ![basket-of-fungibles](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/hashed-io/hashed-substrate/main/docs/fungible-basket-frunique.iuml)
 
 ## NFT <--> NFTs
-An NFT as a trie of NFTs. 
+An NFT as a trie of NFTs.
 
 ### Use cases
 #### Tax credit marketplace
 A credit is a single NFT, with an `amount`, state of redemption, expiration year, and other metadata. However, that owner can sell less than the `amount`, in which case the newly created credit NFT has all of the same associated data.  The sum of the children `amount` values must be equal to the parent.
 
-To support this, we'll create a `AggregatedFrunique` type that enforces the aggregation rules. 
+To support this, we'll create a `AggregatedFrunique` type that enforces the aggregation rules.
 
 #### Cannabis compliance
 For the NY state cannabis compliance program, all yield from all plants must be tracked. This aligns to a very similar data structure as above. Each mother plant is an NFT, each clone as an NFT, each package of flower an NFT, etc. Auditing a specific item is fairly easy via traversing all of its ancestors and descendants through to the harvest and dispensary.
@@ -58,7 +58,7 @@ yarn install
 ```bash
 yarn run:api tx.fruniques.create 1 1 1 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 1 100 --seed "//Alice"
 ```
-## Check NFT 
+## Check NFT
 ```bash
 yarn run:api query.uniques.class 1
 yarn run:api query.uniques.asset 1 1
@@ -71,9 +71,16 @@ yarn run:api query.assets.asset 1
 yarn run:api query.assets.account 1 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 ```
 
+## Tests of the pallet
+
+To run the test you simply run the following command
+```bash
+cargo test --package pallet-fruniques
+```
+
 # Similar Projects
 ### [Fractional Art](https://fractional.art/)
- 
+
 ### [Detailed Process Explainer with screenshots](https://medium.com/fractional-art/how-to-use-fractional-to-fractionalize-nfts-84da1a465b6d)
 
 License: MIT

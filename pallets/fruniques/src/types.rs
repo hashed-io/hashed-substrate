@@ -16,7 +16,8 @@ pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLi
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
-pub type HierarchicalInfo = (ItemId, bool);
+// (ParentId, Heirarchical)
+pub type HierarchicalInfo = (ItemId, bool, u8);
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ChildInfo {

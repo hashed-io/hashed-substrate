@@ -30,6 +30,10 @@ impl<T: Config> Pallet<T> {
 		u32::from_ne_bytes(input.try_into().unwrap())
 	}
 
+	pub fn percent_to_permill(input: u8) -> Permill {
+		Permill::from_percent(input as u32)
+	}
+
 	pub fn bytes_to_string(input: Vec<u8>) -> String {
 		let mut s = String::default();
 		for x in input {
@@ -196,7 +200,6 @@ impl<T: Config> Pallet<T> {
 		collection: T::CollectionId,
 		item: T::ItemId,
 		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-		_numeric_value: Option<Permill>,
 		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 	) -> DispatchResult {
 
