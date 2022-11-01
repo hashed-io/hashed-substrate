@@ -92,10 +92,14 @@ impl pallet_gated_marketplace::Config for Test {
 	//type LocalCurrency = Balances;
 	type Rbac = RBAC;
 }
+parameter_types! {
+	pub const ChildMaxLen: u32 = 10;
+}
 
 impl pallet_fruniques::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
+	type ChildMaxLen = ChildMaxLen;
 }
 
 parameter_types! {
