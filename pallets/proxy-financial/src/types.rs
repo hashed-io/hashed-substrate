@@ -251,7 +251,6 @@ impl ProxyPermission {
 
     pub fn administrator_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        //TODO: change it to mut when add new roles
         let administrator_permissions = [
             RegisterUser.to_vec(), 
             EditUser.to_vec(),
@@ -269,13 +268,28 @@ impl ProxyPermission {
         administrator_permissions
     }
 
-    pub fn developer_permissions() -> Vec<Vec<u8>>{
+    pub fn builder_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
         let developer_permissions = [
             EditUser.to_vec(),
             SubmitDrawdown.to_vec(),
-            
+            UpBulkupload.to_vec(),
+        ].to_vec();
+        developer_permissions
+    }
 
+    pub fn issuer_permissions() -> Vec<Vec<u8>>{
+        use crate::types::ProxyPermission::*;
+        let developer_permissions = [
+            EditUser.to_vec(),
+        ].to_vec();
+        developer_permissions
+    }
+
+    pub fn regional_center_permissions() -> Vec<Vec<u8>>{
+        use crate::types::ProxyPermission::*;
+        let developer_permissions = [
+            EditUser.to_vec(),
         ].to_vec();
         developer_permissions
     }
