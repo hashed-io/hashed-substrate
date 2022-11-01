@@ -21,7 +21,6 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*, transactional, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use scale_info::prelude::vec::Vec;
-	use sp_runtime::Permill;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
@@ -41,11 +40,11 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		// A frunique and asset class were succesfully created!
+		// A frunique and asset class were successfully created!
 		FruniqueCollectionCreated(T::AccountId, T::CollectionId),
-		// A frunique and asset class were succesfully created!
+		// A frunique and asset class were successfully created!
 		FruniqueCreated(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
-		// A frunique/unique was succesfully divided!
+		// A frunique/unique was successfully divided!
 		FruniqueDivided(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// Counter should work?
 		NextFrunique(u32),
@@ -53,10 +52,13 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
-		NoneValue,
+		// The user does not have permission to perform this action
 		NoPermission,
+		// Only the owner of the Frunique can perform this action
 		NotAdmin,
+		// The storage is full
 		StorageOverflow,
+		// A feature not implemented yet
 		NotYetImplemented,
 		// Too many fruniques were minted
 		FruniqueCntOverflow,
@@ -70,6 +72,10 @@ pub mod pallet {
 		AttributesEmpty,
 		// The collection doesn't exist
 		CollectionNotFound,
+		// The parent doesn't exist
+		ParentNotFound,
+		// The frunique doesn't exist
+		FruniqueNotFound,
 	}
 
 	#[pallet::storage]
@@ -118,7 +124,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		CollectionId, // Parent collection id
 		Blake2_128Concat,
-		ItemId, // Parent item id
+		ItemId,            // Parent item id
 		Option<ChildInfo>, // ParentId and flag if it inherit attributes
 		ValueQuery,
 	>;
@@ -152,7 +158,6 @@ pub mod pallet {
 				Self::account_id_to_lookup_source(&admin),
 			)?;
 
-
 			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
 
 			<NextCollection<T>>::put(Self::next_collection() + 1);
@@ -178,12 +183,12 @@ pub mod pallet {
 
 		/// ## Set multiple attributes to a frunique.
 		/// `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
 		/// `key` must be a valid key for the asset class.
 		/// `value` must be a valid value for the asset class.
 		/// `attributes` must not be empty.
-		/// - `instance_id` must be a valid instance of the asset class.
-		/// - `class_id` must be a valid class of the asset class.
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_attributes(
@@ -192,6 +197,8 @@ pub mod pallet {
 			instance_id: T::ItemId,
 			attributes: Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>,
 		) -> DispatchResult {
+			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
+
 			// ! Ensure the admin is the one who can add attributes to the frunique.
 			let admin = Self::admin_of(&class_id, &instance_id);
 			let signer = core::prelude::v1::Some(ensure_signed(origin.clone())?);
@@ -234,8 +241,11 @@ pub mod pallet {
 			parent_info: Option<HierarchicalInfo>,
 			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 		) -> DispatchResult {
+			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
 
-			ensure!(Self::collection_exists(&class_id),  <Error<T>>::CollectionNotFound);
+			if let Some(parent_info) = parent_info {
+				ensure!(Self::item_exists(&class_id, &parent_info.0), <Error<T>>::ParentNotFound);
+			}
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 			let account_id = Self::account_id_to_lookup_source(&owner);
@@ -243,27 +253,8 @@ pub mod pallet {
 			let instance_id: ItemId = <NextFrunique<T>>::try_get(class_id).unwrap_or(0);
 			<NextFrunique<T>>::insert(class_id, instance_id + 1);
 
-			Self::do_spawn(
-				origin.clone(),
-				class_id,
-				instance_id,
-				account_id,
-				attributes,
-			)?;
-
-			Self::deposit_event(Event::FruniqueCreated(
-				owner.clone(),
-				owner,
-				class_id,
-				instance_id,
-			));
-
-
 			if let Some(parent_info) = parent_info {
-				ensure!(
-					Self::item_exists(&class_id, &parent_info.0),
-					<Error<T>>::CollectionNotFound
-				);
+				ensure!(Self::item_exists(&class_id, &parent_info.0), <Error<T>>::ParentNotFound);
 				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
 
 				let child_info = ChildInfo {
@@ -274,8 +265,16 @@ pub mod pallet {
 				};
 
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
-
 			}
+
+			Self::do_spawn(origin.clone(), class_id, instance_id, account_id, attributes)?;
+
+			Self::deposit_event(Event::FruniqueCreated(
+				owner.clone(),
+				owner,
+				class_id,
+				instance_id,
+			));
 
 			Ok(())
 		}
