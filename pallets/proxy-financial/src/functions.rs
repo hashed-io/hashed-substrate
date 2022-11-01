@@ -16,9 +16,11 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
 		
     pub fn do_initial_setup() -> DispatchResult{
+        // Create a global scope for the administrator role
         let pallet_id = Self::pallet_id();
         let global_scope = pallet_id.using_encoded(blake2_256);
         <GlobalScope<T>>::put(global_scope);
+        T::Rbac::create_scope(Self::pallet_id(), global_scope)?;
 
         //Admin rol & permissions
         let administrator_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Administrator.to_vec()].to_vec())?;
@@ -39,9 +41,6 @@ impl<T: Config> Pallet<T> {
         // Regional center rol & permissions
         let regional_center_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::RegionalCenter.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;
-        
-        // Create a global scope for the administrator role
-        T::Rbac::create_scope(Self::pallet_id(), global_scope)?;
 
         Self::deposit_event(Event::ProxySetupCompleted);
         Ok(())
@@ -100,7 +99,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::CreateProject)?;
 
         //Add timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -165,8 +164,8 @@ impl<T: Config> Pallet<T> {
         creation_date: Option<u64>,
         completion_date: Option<u64>,  
     ) -> DispatchResult {
-        //ensure admin permissions             
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::EditProject)?;
         
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -223,8 +222,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32], 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::DeleteProject)?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -265,8 +264,8 @@ impl<T: Config> Pallet<T> {
             AssignAction,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
 
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -377,8 +376,8 @@ impl<T: Config> Pallet<T> {
             CUDAction, // 3:action
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::RegisterUser)?;
 
         for user in users{
             match user.3 {
@@ -573,8 +572,8 @@ impl<T: Config> Pallet<T> {
             Option<[u8;32]>, // 6: expenditure_id
         ), T::MaxRegistrationsAtTime>, 
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -751,7 +750,6 @@ impl<T: Config> Pallet<T> {
     // D R A W D O W N S
     // --------------------------------------------------------------------------------------------
     // For now drawdowns functions are private, but in the future they may be public
-    
     fn do_create_drawdown(
         project_id: [u8;32],
         drawdown_type: DrawdownType,
@@ -802,8 +800,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32],
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -821,12 +819,9 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_submit_drawdown(
-        _user: T::AccountId, //TODO: remove underscore when user permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //TODO: Ensure builder & admin permissions
-
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -873,9 +868,9 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-  
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
@@ -931,8 +926,8 @@ impl<T: Config> Pallet<T> {
         transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
     ) -> DispatchResult {
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -1011,7 +1006,6 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
     // For now transactions functions are private, but in the future they may be public
     pub fn do_execute_transactions(
-        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
         transactions: BoundedVec<(
@@ -1022,8 +1016,6 @@ impl<T: Config> Pallet<T> {
             Option<[u8;32]>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Check permissions here so helper private functions doesn't need to check it
-        // TODO: Ensure admin & builder permissions
 
         // Ensure project exists & is not completed so helper private functions doesn't need to check it
         Self::is_project_completed(project_id)?;
@@ -1202,14 +1194,15 @@ impl<T: Config> Pallet<T> {
     // B U L K   U P L O A D   T R A N S A C T I O N S
 
     pub fn do_up_bulk_upload(
-        _user: T::AccountId, //TODO: Remove underscore when permissions are implemented
+        user: T::AccountId, //TODO: Remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
         description: FieldDescription,
         total_amount: u64,
         documents: Documents<T>,
     ) -> DispatchResult {
-        // TODO: Ensure builder permissions
+        // Ensure builder permissions 
+        Self::is_authorized(user, &project_id, ProxyPermission::UpBulkupload)?;
 
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
@@ -1249,8 +1242,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure projects is not empty
         ensure!(!projects.is_empty(), Error::<T>::ProjectsIsEmpty);
@@ -1588,7 +1581,6 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    #[allow(dead_code)]
     fn is_transaction_editable(
         transaction_id: [u8;32],
     ) -> DispatchResult {
@@ -1608,7 +1600,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
+    pub fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
             authority,
             Self::pallet_id(), 
@@ -1617,6 +1609,7 @@ impl<T: Config> Pallet<T> {
         )
     }
 
+    #[allow(dead_code)]
     fn is_superuser( authority: T::AccountId, scope_global: &[u8;32], rol_id: RoleId ) -> DispatchResult{
         T::Rbac::has_role(
             authority,
