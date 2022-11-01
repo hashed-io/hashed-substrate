@@ -1708,15 +1708,6 @@
 <span id="1708">1708</span>
 <span id="1709">1709</span>
 <span id="1710">1710</span>
-<span id="1711">1711</span>
-<span id="1712">1712</span>
-<span id="1713">1713</span>
-<span id="1714">1714</span>
-<span id="1715">1715</span>
-<span id="1716">1716</span>
-<span id="1717">1717</span>
-<span id="1718">1718</span>
-<span id="1719">1719</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">frame_support::traits::Time</span>;
@@ -1735,32 +1726,31 @@
     <span class="comment">// --------------------------------------------------------------------------------------------</span>
 		
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_initial_setup</span>() -&gt; <span class="ident">DispatchResult</span>{
+        <span class="comment">// Create a global scope for the administrator role</span>
         <span class="kw">let</span> <span class="ident">pallet_id</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::pallet_id</span>();
         <span class="kw">let</span> <span class="ident">global_scope</span> <span class="op">=</span> <span class="ident">pallet_id</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
         <span class="op">&lt;</span><span class="ident">GlobalScope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::put</span>(<span class="ident">global_scope</span>);
+        <span class="ident">T::Rbac::create_scope</span>(<span class="ident"><span class="self">Self</span>::pallet_id</span>(), <span class="ident">global_scope</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//Admin rol &amp; permissions</span>
         <span class="kw">let</span> <span class="ident">administrator_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Administrator</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
         <span class="ident">T::Rbac::create_and_set_permissions</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), <span class="ident">administrator_role_id</span>[<span class="number">0</span>], <span class="ident">ProxyPermission::administrator_permissions</span>())<span class="question-mark">?</span>;
         
-        <span class="comment">//Developer rol &amp; permissions</span>
-        <span class="kw">let</span> <span class="ident">_developer_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Developer</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
-        <span class="comment">//T::Rbac::create_and_set_permissions(pallet_id.clone(), developer_role_id[0], ProxyPermission::developer_permissions())?;</span>
+        <span class="comment">//Builder rol &amp; permissions</span>
+        <span class="kw">let</span> <span class="ident">builder_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Builder</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
+        <span class="ident">T::Rbac::create_and_set_permissions</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), <span class="ident">builder_role_id</span>[<span class="number">0</span>], <span class="ident">ProxyPermission::builder_permissions</span>())<span class="question-mark">?</span>;
 
         <span class="comment">// Investor rol &amp; permissions</span>
-        <span class="kw">let</span> <span class="ident">_investor_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Investor</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
-        <span class="comment">//T::Rbac::create_and_set_permissions(pallet_id.clone(), investor_role_id[0], ProxyPermission::investor_permissions())?;</span>
+        <span class="kw">let</span> <span class="ident">investor_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Investor</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
+        <span class="ident">T::Rbac::create_and_set_permissions</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), <span class="ident">investor_role_id</span>[<span class="number">0</span>], <span class="ident">ProxyPermission::investor_permissions</span>())<span class="question-mark">?</span>;
 
         <span class="comment">// Issuer rol &amp; permissions</span>
-        <span class="kw">let</span> <span class="ident">_issuer_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Issuer</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
-        <span class="comment">//T::Rbac::create_and_set_permissions(pallet_id.clone(), issuer_role_id[0], ProxyPermission::issuer_permissions())?;</span>
+        <span class="kw">let</span> <span class="ident">issuer_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::Issuer</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
+        <span class="ident">T::Rbac::create_and_set_permissions</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), <span class="ident">issuer_role_id</span>[<span class="number">0</span>], <span class="ident">ProxyPermission::issuer_permissions</span>())<span class="question-mark">?</span>;
 
         <span class="comment">// Regional center rol &amp; permissions</span>
-        <span class="kw">let</span> <span class="ident">_regional_center_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::RegionalCenter</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
-        <span class="comment">//T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;</span>
-        
-        <span class="comment">// Create a global scope for the administrator role</span>
-        <span class="ident">T::Rbac::create_scope</span>(<span class="ident"><span class="self">Self</span>::pallet_id</span>(), <span class="ident">global_scope</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">regional_center_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">ProxyRole::RegionalCenter</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
+        <span class="ident">T::Rbac::create_and_set_permissions</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), <span class="ident">regional_center_role_id</span>[<span class="number">0</span>], <span class="ident">ProxyPermission::regional_center_permissions</span>())<span class="question-mark">?</span>;
 
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProxySetupCompleted</span>);
         <span class="prelude-val">Ok</span>(())
@@ -1770,16 +1760,7 @@
         <span class="ident">admin</span>: <span class="ident">T::AccountId</span>, 
         <span class="ident">name</span>: <span class="ident">FieldName</span>,
     ) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="kw">let</span> <span class="ident">pallet_id</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::pallet_id</span>();
-        <span class="kw">let</span> <span class="ident">global_scope</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">GlobalScope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::GlobalScopeNotSet</span>)<span class="question-mark">?</span>;
-
-        <span class="ident">T::Rbac::assign_role_to_user</span>(
-            <span class="ident">admin</span>.<span class="ident">clone</span>(), 
-            <span class="ident">pallet_id</span>.<span class="ident">clone</span>(), 
-            <span class="kw-2">&amp;</span><span class="ident">global_scope</span>,
-            <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
-
-        <span class="comment">// create a administrator user account</span>
+        <span class="comment">// create a administrator user account &amp; register it in the rbac pallet</span>
         <span class="ident"><span class="self">Self</span>::sudo_register_admin</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="ident">name</span>)<span class="question-mark">?</span>;
         
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::AdministratorAssigned</span>(<span class="ident">admin</span>));
@@ -1789,16 +1770,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_sudo_remove_administrator</span>(
         <span class="ident">admin</span>: <span class="ident">T::AccountId</span>, 
     ) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="kw">let</span> <span class="ident">pallet_id</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::pallet_id</span>();
-        <span class="kw">let</span> <span class="ident">global_scope</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">GlobalScope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::GlobalScopeNotSet</span>)<span class="question-mark">?</span>;
-
-        <span class="ident">T::Rbac::remove_role_from_user</span>(
-            <span class="ident">admin</span>.<span class="ident">clone</span>(), 
-            <span class="ident">pallet_id</span>.<span class="ident">clone</span>(), 
-            <span class="kw-2">&amp;</span><span class="ident">global_scope</span>, 
-            <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
-        
-        <span class="comment">// remove administrator user account</span>
+        <span class="comment">// remove administrator user account &amp; remove it from the rbac pallet</span>
         <span class="ident"><span class="self">Self</span>::sudo_delete_admin</span>(<span class="ident">admin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
         
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::AdministratorRemoved</span>(<span class="ident">admin</span>));
@@ -1837,7 +1809,7 @@
         ), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         ) -&gt; <span class="ident">DispatchResult</span> {
         <span class="comment">// Ensure admin permissions </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::CreateProject</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//Add timestamp </span>
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_timestamp_in_milliseconds</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TimestampError</span>)<span class="question-mark">?</span>;
@@ -1851,7 +1823,7 @@
         
         <span class="comment">//Create project data</span>
         <span class="kw">let</span> <span class="ident">project_data</span> <span class="op">=</span> <span class="ident">ProjectData</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-            <span class="ident">developer</span>: <span class="prelude-val">Some</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxDevelopersPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>()),
+            <span class="ident">builder</span>: <span class="prelude-val">Some</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxBuildersPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>()),
             <span class="ident">investor</span>: <span class="prelude-val">Some</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxInvestorsPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>()),
             <span class="ident">issuer</span>: <span class="prelude-val">Some</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxIssuersPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>()),
             <span class="ident">regional_center</span>: <span class="prelude-val">Some</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxRegionalCenterPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>()),
@@ -1902,8 +1874,8 @@
         <span class="ident">creation_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
         <span class="ident">completion_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,  
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions             </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::EditProject</span>)<span class="question-mark">?</span>;
         
         <span class="comment">//Ensure project exists</span>
         <span class="macro">ensure!</span>(<span class="ident">ProjectsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>);
@@ -1960,8 +1932,8 @@
         <span class="ident">admin</span>: <span class="ident">T::AccountId</span>,
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::DeleteProject</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//Ensure project exists &amp; get project data</span>
         <span class="kw">let</span> <span class="ident">project_data</span> <span class="op">=</span> <span class="ident">ProjectsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">project_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>)<span class="question-mark">?</span>;
@@ -2002,8 +1974,8 @@
             <span class="ident">AssignAction</span>,
         ), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::AssignUser</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//Ensure project exists</span>
         <span class="macro">ensure!</span>(<span class="ident">ProjectsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>);
@@ -2114,8 +2086,8 @@
             <span class="ident">CUDAction</span>, <span class="comment">// 3:action</span>
         ), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::RegisterUser</span>)<span class="question-mark">?</span>;
 
         <span class="kw">for</span> <span class="ident">user</span> <span class="kw">in</span> <span class="ident">users</span>{
             <span class="kw">match</span> <span class="ident">user</span>.<span class="number">3</span> {
@@ -2310,8 +2282,8 @@
             <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// 6: expenditure_id</span>
         ), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>, 
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">// Ensure admin permissions</span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::Expenditures</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists</span>
         <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">ProjectsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>);
@@ -2488,7 +2460,6 @@
     <span class="comment">// D R A W D O W N S</span>
     <span class="comment">// --------------------------------------------------------------------------------------------</span>
     <span class="comment">// For now drawdowns functions are private, but in the future they may be public</span>
-    
     <span class="kw">fn</span> <span class="ident">do_create_drawdown</span>(
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">drawdown_type</span>: <span class="ident">DrawdownType</span>,
@@ -2539,8 +2510,8 @@
         <span class="ident">admin</span>: <span class="ident">T::AccountId</span>,
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">// Ensure admin permissions</span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::Expenditures</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists</span>
         <span class="macro">ensure!</span>(<span class="ident">ProjectsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>);
@@ -2558,12 +2529,9 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_submit_drawdown</span>(
-        <span class="ident">_user</span>: <span class="ident">T::AccountId</span>, <span class="comment">//TODO: remove underscore when user permissions are implemented</span>
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//TODO: Ensure builder &amp; admin permissions</span>
-
         <span class="comment">// Ensure project exists &amp; is not completed</span>
         <span class="ident"><span class="self">Self</span>::is_project_completed</span>(<span class="ident">project_id</span>)<span class="question-mark">?</span>;
 
@@ -2610,9 +2578,9 @@
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions </span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
-  
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::Expenditures</span>)<span class="question-mark">?</span>;
+
         <span class="comment">//  Get drawdown data &amp; ensure drawdown exists</span>
         <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">DrawdownsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">drawdown_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
 
@@ -2668,8 +2636,8 @@
         <span class="ident">transactions_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">drawdown_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//ensure admin permissions</span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::Expenditures</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//  Get drawdown data &amp; ensure drawdown exists</span>
         <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">DrawdownsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">drawdown_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
@@ -2748,7 +2716,6 @@
     <span class="comment">// --------------------------------------------------------------------------------------------</span>
     <span class="comment">// For now transactions functions are private, but in the future they may be public</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_execute_transactions</span>(
-        <span class="ident">_user</span>: <span class="ident">T::AccountId</span>, <span class="comment">//TODO: remove underscore when permissions are implemented</span>
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">transactions</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
@@ -2759,8 +2726,6 @@
             <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
         ), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">// Check permissions here so helper private functions doesn&#39;t need to check it</span>
-        <span class="comment">// TODO: Ensure admin &amp; builder permissions</span>
 
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it</span>
         <span class="ident"><span class="self">Self</span>::is_project_completed</span>(<span class="ident">project_id</span>)<span class="question-mark">?</span>;
@@ -2939,14 +2904,15 @@
     <span class="comment">// B U L K   U P L O A D   T R A N S A C T I O N S</span>
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_up_bulk_upload</span>(
-        <span class="ident">_user</span>: <span class="ident">T::AccountId</span>, <span class="comment">//TODO: Remove underscore when permissions are implemented</span>
+        <span class="ident">user</span>: <span class="ident">T::AccountId</span>, <span class="comment">//TODO: Remove underscore when permissions are implemented</span>
         <span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
         <span class="ident">description</span>: <span class="ident">FieldDescription</span>,
         <span class="ident">total_amount</span>: <span class="ident">u64</span>,
         <span class="ident">documents</span>: <span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">// TODO: Ensure builder permissions</span>
+        <span class="comment">// Ensure builder permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">user</span>, <span class="kw-2">&amp;</span><span class="ident">project_id</span>, <span class="ident">ProxyPermission::UpBulkupload</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project is not completed</span>
         <span class="ident"><span class="self">Self</span>::is_project_completed</span>(<span class="ident">project_id</span>)<span class="question-mark">?</span>;
@@ -2986,8 +2952,8 @@
         <span class="ident">admin</span>: <span class="ident">T::AccountId</span>,
         <span class="ident">projects</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">CUDAction</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">// Ensure admin permissions</span>
-        <span class="ident"><span class="self">Self</span>::is_superuser</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions </span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(), <span class="ident">ProxyPermission::Expenditures</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure projects is not empty</span>
         <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">projects</span>.<span class="ident">is_empty</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectsIsEmpty</span>);
@@ -3093,21 +3059,21 @@
             <span class="ident">ProxyRole::Administrator</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CannotRegisterAdminRole</span>.<span class="ident">into</span>());
             },
-            <span class="ident">ProxyRole::Developer</span> =&gt; {
+            <span class="ident">ProxyRole::Builder</span> =&gt; {
                 <span class="comment">//TODO: Fix internal validations</span>
                 <span class="comment">//TODO: move logic to a helper function to avoid boilerplate</span>
 
                 <span class="comment">//Mutate project data</span>
                 <span class="op">&lt;</span><span class="ident">ProjectsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">project_id</span>, <span class="op">|</span><span class="ident">project</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="ident">project</span> <span class="op">=</span> <span class="ident">project</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>)<span class="question-mark">?</span>;
-                    <span class="kw">match</span> <span class="ident">project</span>.<span class="ident">developer</span>.<span class="ident">as_mut</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">developer</span>) =&gt; {
-                            <span class="comment">//developer.iter().find(|&amp;u| *u != user).ok_or(Error::&lt;T&gt;::UserAlreadyAssignedToProject)?;</span>
-                            <span class="ident">developer</span>.<span class="ident">try_push</span>(<span class="ident">user</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MaxDevelopersPerProjectReached</span>)<span class="question-mark">?</span>;
+                    <span class="kw">match</span> <span class="ident">project</span>.<span class="ident">builder</span>.<span class="ident">as_mut</span>() {
+                        <span class="prelude-val">Some</span>(<span class="ident">builder</span>) =&gt; {
+                            <span class="comment">//builder.iter().find(|&amp;u| *u != user).ok_or(Error::&lt;T&gt;::UserAlreadyAssignedToProject)?;</span>
+                            <span class="ident">builder</span>.<span class="ident">try_push</span>(<span class="ident">user</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MaxBuildersPerProjectReached</span>)<span class="question-mark">?</span>;
                         },
                         <span class="prelude-val">None</span> =&gt; {
-                            <span class="kw">let</span> <span class="ident">devs</span> <span class="op">=</span> <span class="ident">project</span>.<span class="ident">developer</span>.<span class="ident">get_or_insert</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxDevelopersPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>());
-                            <span class="ident">devs</span>.<span class="ident">try_push</span>(<span class="ident">user</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MaxDevelopersPerProjectReached</span>)<span class="question-mark">?</span>;
+                            <span class="kw">let</span> <span class="ident">devs</span> <span class="op">=</span> <span class="ident">project</span>.<span class="ident">builder</span>.<span class="ident">get_or_insert</span>(<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxBuildersPerProject</span><span class="op">&gt;</span><span class="ident">::default</span>());
+                            <span class="ident">devs</span>.<span class="ident">try_push</span>(<span class="ident">user</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MaxBuildersPerProjectReached</span>)<span class="question-mark">?</span>;
                         }
                     }
                     <span class="prelude-val">Ok</span>(())    
@@ -3179,16 +3145,16 @@
             <span class="ident">ProxyRole::Administrator</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CannotRemoveAdminRole</span>.<span class="ident">into</span>());
             },
-            <span class="ident">ProxyRole::Developer</span> =&gt; {
+            <span class="ident">ProxyRole::Builder</span> =&gt; {
                 <span class="comment">//TODO: Fix internal validations</span>
                 <span class="comment">//TODO: move logic to a helper function to avoid boilerplate</span>
                 <span class="comment">//Mutate project data</span>
                 <span class="op">&lt;</span><span class="ident">ProjectsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">project_id</span>, <span class="op">|</span><span class="ident">project</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="ident">project</span> <span class="op">=</span> <span class="ident">project</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProjectNotFound</span>)<span class="question-mark">?</span>;
-                    <span class="kw">match</span> <span class="ident">project</span>.<span class="ident">developer</span>.<span class="ident">as_mut</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">developer</span>) =&gt; {
-                            <span class="comment">//developer.clone().iter().find(|&amp;u| *u == user).ok_or(Error::&lt;T&gt;::UserNotAssignedToProject)?;</span>
-                            <span class="ident">developer</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">u</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">u</span> <span class="op">!</span><span class="op">=</span> <span class="ident">user</span>);
+                    <span class="kw">match</span> <span class="ident">project</span>.<span class="ident">builder</span>.<span class="ident">as_mut</span>() {
+                        <span class="prelude-val">Some</span>(<span class="ident">builder</span>) =&gt; {
+                            <span class="comment">//builder.clone().iter().find(|&amp;u| *u == user).ok_or(Error::&lt;T&gt;::UserNotAssignedToProject)?;</span>
+                            <span class="ident">builder</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">u</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">u</span> <span class="op">!</span><span class="op">=</span> <span class="ident">user</span>);
                         },
                         <span class="prelude-val">None</span> =&gt; {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::UserNotAssignedToProject</span>.<span class="ident">into</span>());
@@ -3325,7 +3291,6 @@
         }
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">fn</span> <span class="ident">is_transaction_editable</span>(
         <span class="ident">transaction_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
     ) -&gt; <span class="ident">DispatchResult</span> {
@@ -3344,9 +3309,8 @@
         }
     }
 
-    <span class="comment">//TODO: remove macro when used </span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">is_authorized</span>( <span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">project_id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">permission</span>: <span class="ident">ProxyPermission</span> ) -&gt; <span class="ident">DispatchResult</span>{
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_authorized</span>( <span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">project_id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">permission</span>: <span class="ident">ProxyPermission</span> ) -&gt; <span class="ident">DispatchResult</span>{
         <span class="ident">T::Rbac::is_authorized</span>(
             <span class="ident">authority</span>,
             <span class="ident"><span class="self">Self</span>::pallet_id</span>(), 
@@ -3355,6 +3319,7 @@
         )
     }
 
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">fn</span> <span class="ident">is_superuser</span>( <span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">scope_global</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">rol_id</span>: <span class="ident">RoleId</span> ) -&gt; <span class="ident">DispatchResult</span>{
         <span class="ident">T::Rbac::has_role</span>(
             <span class="ident">authority</span>,
@@ -3385,6 +3350,15 @@
 
         <span class="comment">//Insert user data</span>
         <span class="op">&lt;</span><span class="ident">UsersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">admin</span>.<span class="ident">clone</span>(), <span class="ident">user_data</span>);
+
+        <span class="comment">// Add administrator to rbac pallet</span>
+        <span class="ident">T::Rbac::assign_role_to_user</span>(
+            <span class="ident">admin</span>.<span class="ident">clone</span>(),
+            <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(),
+            <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>()
+        )<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -3394,6 +3368,14 @@
         
         <span class="comment">//Remove user from UsersInfo storage map</span>
         <span class="op">&lt;</span><span class="ident">UsersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">admin</span>.<span class="ident">clone</span>());
+
+        <span class="comment">// Remove administrator to rbac pallet</span>
+        <span class="ident">T::Rbac::remove_role_from_user</span>(
+            <span class="ident">admin</span>.<span class="ident">clone</span>(),
+            <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::get_global_scope</span>(),
+            <span class="ident">ProxyRole::Administrator</span>.<span class="ident">id</span>()
+        )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

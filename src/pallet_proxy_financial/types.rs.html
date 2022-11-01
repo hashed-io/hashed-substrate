@@ -267,6 +267,33 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
@@ -283,7 +310,7 @@
 <span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
 <span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProjectData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">developer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxDevelopersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">builder</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxBuildersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">investor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxInvestorsPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">issuer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxIssuersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">regional_center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxRegionalCenterPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -326,7 +353,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyRole</span> {
     <span class="ident">Administrator</span>,
-    <span class="ident">Developer</span>,
+    <span class="ident">Builder</span>,
     <span class="ident">Investor</span>,
     <span class="ident">Issuer</span>,
     <span class="ident">RegionalCenter</span>,
@@ -459,7 +486,7 @@
             <span class="comment">//TOREVIEW: optimization (?)</span>
             <span class="comment">//Self::Administrator =&gt; b&quot;Administrator&quot;.to_vec(),</span>
             <span class="ident"><span class="self">Self</span>::Administrator</span> =&gt; <span class="string">&quot;Administrator&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Developer</span> =&gt; <span class="string">&quot;Developer&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::Builder</span> =&gt; <span class="string">&quot;Builder&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::Investor</span> =&gt; <span class="string">&quot;Investor&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::Issuer</span> =&gt; <span class="string">&quot;Issuer&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::RegionalCenter</span> =&gt; <span class="string">&quot;RegionalCenter&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
@@ -472,7 +499,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enum_to_vec</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyRole</span>::<span class="kw-2">*</span>;
-        [<span class="ident">Administrator</span>.<span class="ident">to_vec</span>(), <span class="ident">Developer</span>.<span class="ident">to_vec</span>(), <span class="ident">Investor</span>.<span class="ident">to_vec</span>(), <span class="ident">Issuer</span>.<span class="ident">to_vec</span>(), <span class="ident">RegionalCenter</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+        [<span class="ident">Administrator</span>.<span class="ident">to_vec</span>(), <span class="ident">Builder</span>.<span class="ident">to_vec</span>(), <span class="ident">Investor</span>.<span class="ident">to_vec</span>(), <span class="ident">Issuer</span>.<span class="ident">to_vec</span>(), <span class="ident">RegionalCenter</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
     }
 
 }
@@ -482,28 +509,35 @@
 <span class="doccomment">/// Extrinsics which require previous authorization to call them</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyPermission</span> {
-    <span class="ident">RegisterUser</span>, <span class="comment">// users_register_user</span>
-    <span class="ident">UpdateUser</span>, <span class="comment">// users_update_user</span>
-    <span class="ident">DeleteUser</span>, <span class="comment">// users_delete_user</span>
+    <span class="ident">RegisterUser</span>, <span class="comment">// users</span>
+    <span class="ident">EditUser</span>, <span class="comment">// users_edit_user</span>
     <span class="ident">CreateProject</span>, <span class="comment">// projects_create_project</span>
     <span class="ident">EditProject</span>, <span class="comment">// projects_edit_project</span>
     <span class="ident">DeleteProject</span>, <span class="comment">// projects_delete_project</span>
     <span class="ident">AssignUser</span>, <span class="comment">// projects_assign_user</span>
-    <span class="ident">UnassignUser</span>, <span class="comment">// projects_unassign_user</span>
+    <span class="ident">Expenditures</span>, <span class="comment">// expenditures</span>
+    <span class="ident">SubmitDrawdown</span>, <span class="comment">// submit_drawdown</span>
+    <span class="ident">ApproveDrawdown</span>, <span class="comment">// approve_drawdown</span>
+    <span class="ident">RejectDrawdown</span>, <span class="comment">// reject_drawdown</span>
+    <span class="ident">UpBulkupload</span>, <span class="comment">// up_bulkupload</span>
+    <span class="ident">Inflation</span>, <span class="comment">// inflation</span>
 }
 
 <span class="kw">impl</span> <span class="ident">ProxyPermission</span> { 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>{
         <span class="kw">match</span> <span class="self">self</span>{
             <span class="ident"><span class="self">Self</span>::RegisterUser</span> =&gt; <span class="string">&quot;RegisterUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::UpdateUser</span> =&gt; <span class="string">&quot;UpdateUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::DeleteUser</span> =&gt; <span class="string">&quot;DeleteUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::EditUser</span> =&gt; <span class="string">&quot;EditUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::CreateProject</span> =&gt; <span class="string">&quot;CreateProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::EditProject</span> =&gt; <span class="string">&quot;EditProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::DeleteProject</span> =&gt; <span class="string">&quot;DeleteProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             <span class="ident"><span class="self">Self</span>::AssignUser</span> =&gt; <span class="string">&quot;AssignUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::UnassignUser</span> =&gt; <span class="string">&quot;UnassignUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-
+            <span class="ident"><span class="self">Self</span>::Expenditures</span> =&gt; <span class="string">&quot;Expenditures&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::SubmitDrawdown</span> =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::ApproveDrawdown</span> =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::RejectDrawdown</span> =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::UpBulkupload</span> =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+            <span class="ident"><span class="self">Self</span>::Inflation</span> =&gt; <span class="string">&quot;Inflation&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
         }
     }
 
@@ -513,26 +547,46 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">administrator_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
-        <span class="comment">//TODO: change it to mut when add new roles</span>
         <span class="kw">let</span> <span class="ident">administrator_permissions</span> <span class="op">=</span> [
             <span class="ident">RegisterUser</span>.<span class="ident">to_vec</span>(), 
-            <span class="ident">UpdateUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">DeleteUser</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),
             <span class="ident">CreateProject</span>.<span class="ident">to_vec</span>(),
             <span class="ident">EditProject</span>.<span class="ident">to_vec</span>(),
             <span class="ident">DeleteProject</span>.<span class="ident">to_vec</span>(),
             <span class="ident">AssignUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">UnassignUser</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">Expenditures</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">SubmitDrawdown</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">ApproveDrawdown</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">RejectDrawdown</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">UpBulkupload</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">Inflation</span>.<span class="ident">to_vec</span>(),
         ].<span class="ident">to_vec</span>();
         <span class="ident">administrator_permissions</span>
     }
 
-    <span class="comment">// pub fn developer_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{</span>
-    <span class="comment">//     //use crate::types::ProxyPermission::*;</span>
-    <span class="comment">//     let developer_permissions = [</span>
-    <span class="comment">//     ].to_vec();</span>
-    <span class="comment">//     developer_permissions</span>
-    <span class="comment">// }</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
+        [
+            <span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">SubmitDrawdown</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">UpBulkupload</span>.<span class="ident">to_vec</span>(),
+        ].<span class="ident">to_vec</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">investor_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
+        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">issuer_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
+        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regional_center_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
+        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    }
 
 
 }</code></pre></div>
