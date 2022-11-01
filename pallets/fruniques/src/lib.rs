@@ -308,7 +308,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin` must be signed by the Root origin.
 		/// - `class_id` must be a valid class of the asset class.
-		/// - `witness`
+		/// - `witness` the witness data to destroy the collection. This is used to prevent accidental destruction of the collection. The witness data is retrieved from the `class` storage.
 		/// - `maybe_check_owner` Optional value to check if the owner of the collection is the same as the signer.
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
