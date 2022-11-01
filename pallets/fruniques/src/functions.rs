@@ -145,7 +145,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_create_collection(
 		origin: OriginFor<T>,
 		class_id: T::CollectionId,
-		metadata: Option<StringLimit<T>>,
+		metadata: Option<CollectionDescription<T>>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
 		pallet_uniques::Pallet::<T>::create(

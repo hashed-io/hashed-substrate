@@ -76,6 +76,10 @@ pub mod pallet {
 		ParentNotFound,
 		// The frunique doesn't exist
 		FruniqueNotFound,
+		// Collection already exists
+		CollectionAlreadyExists,
+		// Frunique already exists
+		FruniqueAlreadyExists,
 	}
 
 	#[pallet::storage]
@@ -142,10 +146,17 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// # Creation of a collection
+		/// This function creates a collection and an asset class.
+		/// The collection is a unique identifier for a set of fruniques.
+		///
+		/// ## Parameters
+		/// - `origin`: The origin of the transaction.
+		/// - `Metadata`: The title of the collection.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_collection(
 			origin: OriginFor<T>,
-			metadata: Option<StringLimit<T>>,
+			metadata: Option<CollectionDescription<T>>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
 
@@ -182,14 +193,10 @@ pub mod pallet {
 		}
 
 		/// ## Set multiple attributes to a frunique.
-		/// `origin` must be signed by the owner of the frunique.
+		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
-		/// `key` must be a valid key for the asset class.
-		/// `value` must be a valid value for the asset class.
-		/// `attributes` must not be empty.
-
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_attributes(
 			origin: OriginFor<T>,
@@ -218,22 +225,12 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// ## NFT Division
-		///
-		/// PD: the Key/value length limits are inherited from the uniques pallet,
-		/// so they're not explicitly declared on this pallet
-		///
-		///
-		/// ### Boilerplate parameters:
-		///
-		/// - `admin`: The admin of this class of assets. The admin is the initial address of each
-		/// member of the asset class's admin team.
-		///
-		/// ### Parameters needed in order to divide a unique:
-		/// - `class_id`: The type of NFT that the function will create, categorized by numbers.
-		/// - `parent_info`: Information of the parent NFT and a flag to indicate the child would inherit their attributes.
-		/// - `attributes`: Generates a list of attributes for the new NFT.
-		///
+		/// ## NFT creation
+		/// ### Parameters:
+		/// - `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `parent_info` Optional value needed for the NFT division.
+		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
@@ -276,6 +273,61 @@ pub mod pallet {
 				instance_id,
 			));
 
+			Ok(())
+		}
+
+		/// ## Force set counter
+		/// ### Parameters:
+		/// `origin` must be signed by the Root origin.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `instance_id` must be a valid instance of the asset class.
+		///
+		/// ### Considerations:
+		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
+		/// This function it's not expected to be used in production as it can lead to unexpected results.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn force_set_counter(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			instance_id: Option<T::ItemId>,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+
+			if let Some(instance_id) = instance_id {
+				ensure!(!Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueAlreadyExists);
+				<NextFrunique<T>>::insert(class_id, instance_id);
+			} else {
+				ensure!(!Self::collection_exists(&class_id), <Error<T>>::CollectionAlreadyExists);
+				<NextCollection<T>>::set(class_id);
+			}
+
+			Ok(())
+		}
+
+		/// ## Force destroy collection
+		/// ### Parameters:
+		/// - `origin` must be signed by the Root origin.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `witness` the witness data to destroy the collection. This is used to prevent accidental destruction of the collection. The witness data is retrieved from the `class` storage.
+		/// - `maybe_check_owner` Optional value to check if the owner of the collection is the same as the signer.
+		/// ### Considerations:
+		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
+		/// This function it's not expected to be used in production as it can lead to unexpected results.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn force_destroy_collection(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			witness: pallet_uniques::DestroyWitness,
+			maybe_check_owner: Option<T::AccountId>,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+
+			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
+			pallet_uniques::Pallet::<T>::do_destroy_collection(
+				class_id,
+				witness,
+				maybe_check_owner,
+			)?;
 			Ok(())
 		}
 

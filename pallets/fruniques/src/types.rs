@@ -10,13 +10,14 @@ pub type AttributeKey<T> = BoundedVec<u8, <T as pallet_uniques::Config>::KeyLimi
 pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::ValueLimit>;
 pub type Attributes<T> = Vec<(AttributeKey<T>, AttributeValue<T>)>;
 
-pub type CollectionDescription = [u8; 32];
+// pub type CollectionDescription = [u8; 32];
 pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
 
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
-// (ParentId, Heirarchical)
+pub type CollectionDescription<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
+// (ParentId, Hierarchical, Percentage)
 pub type HierarchicalInfo = (ItemId, bool, u8);
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
