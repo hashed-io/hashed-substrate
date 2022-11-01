@@ -16,32 +16,31 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
 		
     pub fn do_initial_setup() -> DispatchResult{
+        // Create a global scope for the administrator role
         let pallet_id = Self::pallet_id();
         let global_scope = pallet_id.using_encoded(blake2_256);
         <GlobalScope<T>>::put(global_scope);
+        T::Rbac::create_scope(Self::pallet_id(), global_scope)?;
 
         //Admin rol & permissions
         let administrator_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Administrator.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id.clone(), administrator_role_id[0], ProxyPermission::administrator_permissions())?;
         
-        //Developer rol & permissions
-        let _developer_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Developer.to_vec()].to_vec())?;
-        //T::Rbac::create_and_set_permissions(pallet_id.clone(), developer_role_id[0], ProxyPermission::developer_permissions())?;
+        //Builder rol & permissions
+        let builder_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Builder.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), builder_role_id[0], ProxyPermission::builder_permissions())?;
 
         // Investor rol & permissions
-        let _investor_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Investor.to_vec()].to_vec())?;
-        //T::Rbac::create_and_set_permissions(pallet_id.clone(), investor_role_id[0], ProxyPermission::investor_permissions())?;
+        let investor_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Investor.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), investor_role_id[0], ProxyPermission::investor_permissions())?;
 
         // Issuer rol & permissions
-        let _issuer_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Issuer.to_vec()].to_vec())?;
-        //T::Rbac::create_and_set_permissions(pallet_id.clone(), issuer_role_id[0], ProxyPermission::issuer_permissions())?;
+        let issuer_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Issuer.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), issuer_role_id[0], ProxyPermission::issuer_permissions())?;
 
         // Regional center rol & permissions
-        let _regional_center_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::RegionalCenter.to_vec()].to_vec())?;
-        //T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;
-        
-        // Create a global scope for the administrator role
-        T::Rbac::create_scope(Self::pallet_id(), global_scope)?;
+        let regional_center_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::RegionalCenter.to_vec()].to_vec())?;
+        T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;
 
         Self::deposit_event(Event::ProxySetupCompleted);
         Ok(())
@@ -51,16 +50,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId, 
         name: FieldName,
     ) -> DispatchResult{
-        let pallet_id = Self::pallet_id();
-        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
-
-        T::Rbac::assign_role_to_user(
-            admin.clone(), 
-            pallet_id.clone(), 
-            &global_scope,
-            ProxyRole::Administrator.id())?;
-
-        // create a administrator user account
+        // create a administrator user account & register it in the rbac pallet
         Self::sudo_register_admin(admin.clone(), name)?;
         
         Self::deposit_event(Event::AdministratorAssigned(admin));
@@ -70,16 +60,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_sudo_remove_administrator(
         admin: T::AccountId, 
     ) -> DispatchResult{
-        let pallet_id = Self::pallet_id();
-        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
-
-        T::Rbac::remove_role_from_user(
-            admin.clone(), 
-            pallet_id.clone(), 
-            &global_scope, 
-            ProxyRole::Administrator.id())?;
-        
-        // remove administrator user account
+        // remove administrator user account & remove it from the rbac pallet
         Self::sudo_delete_admin(admin.clone())?;
         
         Self::deposit_event(Event::AdministratorRemoved(admin));
@@ -118,7 +99,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::CreateProject)?;
 
         //Add timestamp 
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -132,7 +113,7 @@ impl<T: Config> Pallet<T> {
         
         //Create project data
         let project_data = ProjectData::<T> {
-            developer: Some(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default()),
+            builder: Some(BoundedVec::<T::AccountId, T::MaxBuildersPerProject>::default()),
             investor: Some(BoundedVec::<T::AccountId, T::MaxInvestorsPerProject>::default()),
             issuer: Some(BoundedVec::<T::AccountId, T::MaxIssuersPerProject>::default()),
             regional_center: Some(BoundedVec::<T::AccountId, T::MaxRegionalCenterPerProject>::default()),
@@ -183,8 +164,8 @@ impl<T: Config> Pallet<T> {
         creation_date: Option<u64>,
         completion_date: Option<u64>,  
     ) -> DispatchResult {
-        //ensure admin permissions             
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::EditProject)?;
         
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -241,8 +222,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32], 
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::DeleteProject)?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -283,8 +264,8 @@ impl<T: Config> Pallet<T> {
             AssignAction,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
 
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -395,8 +376,8 @@ impl<T: Config> Pallet<T> {
             CUDAction, // 3:action
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::RegisterUser)?;
 
         for user in users{
             match user.3 {
@@ -591,8 +572,8 @@ impl<T: Config> Pallet<T> {
             Option<[u8;32]>, // 6: expenditure_id
         ), T::MaxRegistrationsAtTime>, 
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -769,7 +750,6 @@ impl<T: Config> Pallet<T> {
     // D R A W D O W N S
     // --------------------------------------------------------------------------------------------
     // For now drawdowns functions are private, but in the future they may be public
-    
     fn do_create_drawdown(
         project_id: [u8;32],
         drawdown_type: DrawdownType,
@@ -820,8 +800,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: [u8;32],
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -839,12 +819,9 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_submit_drawdown(
-        _user: T::AccountId, //TODO: remove underscore when user permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //TODO: Ensure builder & admin permissions
-
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -891,9 +868,9 @@ impl<T: Config> Pallet<T> {
         project_id: [u8;32],
         drawdown_id: [u8;32],
     ) -> DispatchResult {
-        //ensure admin permissions 
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-  
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
@@ -949,8 +926,8 @@ impl<T: Config> Pallet<T> {
         transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
     ) -> DispatchResult {
-        //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         //  Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -1029,7 +1006,6 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
     // For now transactions functions are private, but in the future they may be public
     pub fn do_execute_transactions(
-        _user: T::AccountId, //TODO: remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
         transactions: BoundedVec<(
@@ -1040,8 +1016,6 @@ impl<T: Config> Pallet<T> {
             Option<[u8;32]>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Check permissions here so helper private functions doesn't need to check it
-        // TODO: Ensure admin & builder permissions
 
         // Ensure project exists & is not completed so helper private functions doesn't need to check it
         Self::is_project_completed(project_id)?;
@@ -1220,14 +1194,15 @@ impl<T: Config> Pallet<T> {
     // B U L K   U P L O A D   T R A N S A C T I O N S
 
     pub fn do_up_bulk_upload(
-        _user: T::AccountId, //TODO: Remove underscore when permissions are implemented
+        user: T::AccountId, //TODO: Remove underscore when permissions are implemented
         project_id: [u8;32],
         drawdown_id: [u8;32],
         description: FieldDescription,
         total_amount: u64,
         documents: Documents<T>,
     ) -> DispatchResult {
-        // TODO: Ensure builder permissions
+        // Ensure builder permissions 
+        Self::is_authorized(user, &project_id, ProxyPermission::UpBulkupload)?;
 
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
@@ -1267,8 +1242,8 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure projects is not empty
         ensure!(!projects.is_empty(), Error::<T>::ProjectsIsEmpty);
@@ -1374,21 +1349,21 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator => {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
-            ProxyRole::Developer => {
+            ProxyRole::Builder => {
                 //TODO: Fix internal validations
                 //TODO: move logic to a helper function to avoid boilerplate
 
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.developer.as_mut() {
-                        Some(developer) => {
-                            //developer.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
-                            developer.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                    match project.builder.as_mut() {
+                        Some(builder) => {
+                            //builder.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            builder.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         },
                         None => {
-                            let devs = project.developer.get_or_insert(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default());
-                            devs.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                            let devs = project.builder.get_or_insert(BoundedVec::<T::AccountId, T::MaxBuildersPerProject>::default());
+                            devs.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         }
                     }
                     Ok(())    
@@ -1460,16 +1435,16 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator => {
                 return Err(Error::<T>::CannotRemoveAdminRole.into());
             },
-            ProxyRole::Developer => {
+            ProxyRole::Builder => {
                 //TODO: Fix internal validations
                 //TODO: move logic to a helper function to avoid boilerplate
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.developer.as_mut() {
-                        Some(developer) => {
-                            //developer.clone().iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
-                            developer.retain(|u| *u != user);
+                    match project.builder.as_mut() {
+                        Some(builder) => {
+                            //builder.clone().iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            builder.retain(|u| *u != user);
                         },
                         None => {
                             return Err(Error::<T>::UserNotAssignedToProject.into());
@@ -1606,7 +1581,6 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    #[allow(dead_code)]
     fn is_transaction_editable(
         transaction_id: [u8;32],
     ) -> DispatchResult {
@@ -1625,9 +1599,8 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    //TODO: remove macro when used 
-    #[allow(dead_code)]
-    fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
+
+    pub fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
             authority,
             Self::pallet_id(), 
@@ -1636,6 +1609,7 @@ impl<T: Config> Pallet<T> {
         )
     }
 
+    #[allow(dead_code)]
     fn is_superuser( authority: T::AccountId, scope_global: &[u8;32], rol_id: RoleId ) -> DispatchResult{
         T::Rbac::has_role(
             authority,
@@ -1666,6 +1640,15 @@ impl<T: Config> Pallet<T> {
 
         //Insert user data
         <UsersInfo<T>>::insert(admin.clone(), user_data);
+
+        // Add administrator to rbac pallet
+        T::Rbac::assign_role_to_user(
+            admin.clone(),
+            Self::pallet_id(),
+            &Self::get_global_scope(),
+            ProxyRole::Administrator.id()
+        )?;
+
         Ok(())
     }
 
@@ -1675,6 +1658,14 @@ impl<T: Config> Pallet<T> {
         
         //Remove user from UsersInfo storage map
         <UsersInfo<T>>::remove(admin.clone());
+
+        // Remove administrator to rbac pallet
+        T::Rbac::remove_role_from_user(
+            admin.clone(),
+            Self::pallet_id(),
+            &Self::get_global_scope(),
+            ProxyRole::Administrator.id()
+        )?;
 
         Ok(())
     }

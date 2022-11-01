@@ -562,7 +562,7 @@ parameter_types! {
 	pub const MaxProjectsPerUser:u32 = 10;
 	pub const CIDMaxLen:u32 = 100;
 	pub const MaxUserPerProject:u32 = 50;
-	pub const MaxDevelopersPerProject:u32 = 1;
+	pub const MaxBuildersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
@@ -592,7 +592,7 @@ impl pallet_proxy_financial::Config for Runtime {
 	type MaxProjectsPerUser = MaxProjectsPerUser;
 	type CIDMaxLen = CIDMaxLen;
 	type MaxUserPerProject = MaxUserPerProject;
-	type MaxDevelopersPerProject = MaxDevelopersPerProject;
+	type MaxBuildersPerProject = MaxBuildersPerProject;
 	type MaxInvestorsPerProject = MaxInvestorsPerProject;
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
