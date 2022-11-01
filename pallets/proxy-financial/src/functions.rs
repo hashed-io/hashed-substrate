@@ -51,16 +51,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId, 
         name: FieldName,
     ) -> DispatchResult{
-        let pallet_id = Self::pallet_id();
-        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
-
-        T::Rbac::assign_role_to_user(
-            admin.clone(), 
-            pallet_id.clone(), 
-            &global_scope,
-            ProxyRole::Administrator.id())?;
-
-        // create a administrator user account
+        // create a administrator user account & register it in the rbac pallet
         Self::sudo_register_admin(admin.clone(), name)?;
         
         Self::deposit_event(Event::AdministratorAssigned(admin));
@@ -70,16 +61,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_sudo_remove_administrator(
         admin: T::AccountId, 
     ) -> DispatchResult{
-        let pallet_id = Self::pallet_id();
-        let global_scope =  <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::GlobalScopeNotSet)?;
-
-        T::Rbac::remove_role_from_user(
-            admin.clone(), 
-            pallet_id.clone(), 
-            &global_scope, 
-            ProxyRole::Administrator.id())?;
-        
-        // remove administrator user account
+        // remove administrator user account & remove it from the rbac pallet
         Self::sudo_delete_admin(admin.clone())?;
         
         Self::deposit_event(Event::AdministratorRemoved(admin));
@@ -1625,8 +1607,7 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    //TODO: remove macro when used 
-    #[allow(dead_code)]
+
     fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
         T::Rbac::is_authorized(
             authority,
@@ -1666,6 +1647,15 @@ impl<T: Config> Pallet<T> {
 
         //Insert user data
         <UsersInfo<T>>::insert(admin.clone(), user_data);
+
+        // Add administrator to rbac pallet
+        T::Rbac::assign_role_to_user(
+            admin.clone(),
+            Self::pallet_id(),
+            &Self::get_global_scope(),
+            ProxyRole::Administrator.id()
+        )?;
+
         Ok(())
     }
 
@@ -1675,6 +1665,14 @@ impl<T: Config> Pallet<T> {
         
         //Remove user from UsersInfo storage map
         <UsersInfo<T>>::remove(admin.clone());
+
+        // Remove administrator to rbac pallet
+        T::Rbac::remove_role_from_user(
+            admin.clone(),
+            Self::pallet_id(),
+            &Self::get_global_scope(),
+            ProxyRole::Administrator.id()
+        )?;
 
         Ok(())
     }
