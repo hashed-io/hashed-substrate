@@ -14,7 +14,7 @@ pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct ProjectData<T: Config> {
-    pub developer: Option<BoundedVec<T::AccountId, T::MaxDevelopersPerProject>>,
+    pub builder: Option<BoundedVec<T::AccountId, T::MaxBuildersPerProject>>,
     pub investor: Option<BoundedVec<T::AccountId, T::MaxInvestorsPerProject>>,
     pub issuer: Option<BoundedVec<T::AccountId, T::MaxIssuersPerProject>>,
     pub regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>,
@@ -57,7 +57,7 @@ pub struct UserData<T: Config> {
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyRole {
     Administrator,
-    Developer,
+    Builder,
     Investor,
     Issuer,
     RegionalCenter,
@@ -190,7 +190,7 @@ impl ProxyRole {
             //TOREVIEW: optimization (?)
             //Self::Administrator => b"Administrator".to_vec(),
             Self::Administrator => "Administrator".as_bytes().to_vec(),
-            Self::Developer => "Developer".as_bytes().to_vec(),
+            Self::Builder => "Builder".as_bytes().to_vec(),
             Self::Investor => "Investor".as_bytes().to_vec(),
             Self::Issuer => "Issuer".as_bytes().to_vec(),
             Self::RegionalCenter => "RegionalCenter".as_bytes().to_vec(),
@@ -203,7 +203,7 @@ impl ProxyRole {
 
     pub fn enum_to_vec() -> Vec<Vec<u8>>{
         use crate::types::ProxyRole::*;
-        [Administrator.to_vec(), Developer.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
+        [Administrator.to_vec(), Builder.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
     }
 
 }
@@ -270,36 +270,26 @@ impl ProxyPermission {
 
     pub fn builder_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        let developer_permissions = [
+        [
             EditUser.to_vec(),
             SubmitDrawdown.to_vec(),
             UpBulkupload.to_vec(),
-        ].to_vec();
-        developer_permissions
+        ].to_vec()
     }
 
     pub fn investor_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        let developer_permissions = [
-            EditUser.to_vec(),
-        ].to_vec();
-        developer_permissions
+        [EditUser.to_vec(),].to_vec()
     }
 
     pub fn issuer_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        let developer_permissions = [
-            EditUser.to_vec(),
-        ].to_vec();
-        developer_permissions
+        [EditUser.to_vec(),].to_vec()
     }
 
     pub fn regional_center_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        let developer_permissions = [
-            EditUser.to_vec(),
-        ].to_vec();
-        developer_permissions
+        [EditUser.to_vec(),].to_vec()
     }
 
 

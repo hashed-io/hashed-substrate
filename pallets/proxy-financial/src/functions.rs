@@ -24,8 +24,8 @@ impl<T: Config> Pallet<T> {
         let administrator_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Administrator.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id.clone(), administrator_role_id[0], ProxyPermission::administrator_permissions())?;
         
-        //Developer rol & permissions
-        let builder_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Developer.to_vec()].to_vec())?;
+        //Builder rol & permissions
+        let builder_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::Builder.to_vec()].to_vec())?;
         T::Rbac::create_and_set_permissions(pallet_id.clone(), builder_role_id[0], ProxyPermission::builder_permissions())?;
 
         // Investor rol & permissions
@@ -132,7 +132,7 @@ impl<T: Config> Pallet<T> {
         
         //Create project data
         let project_data = ProjectData::<T> {
-            developer: Some(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default()),
+            builder: Some(BoundedVec::<T::AccountId, T::MaxBuildersPerProject>::default()),
             investor: Some(BoundedVec::<T::AccountId, T::MaxInvestorsPerProject>::default()),
             issuer: Some(BoundedVec::<T::AccountId, T::MaxIssuersPerProject>::default()),
             regional_center: Some(BoundedVec::<T::AccountId, T::MaxRegionalCenterPerProject>::default()),
@@ -1374,21 +1374,21 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator => {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
-            ProxyRole::Developer => {
+            ProxyRole::Builder => {
                 //TODO: Fix internal validations
                 //TODO: move logic to a helper function to avoid boilerplate
 
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.developer.as_mut() {
-                        Some(developer) => {
-                            //developer.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
-                            developer.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                    match project.builder.as_mut() {
+                        Some(builder) => {
+                            //builder.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
+                            builder.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         },
                         None => {
-                            let devs = project.developer.get_or_insert(BoundedVec::<T::AccountId, T::MaxDevelopersPerProject>::default());
-                            devs.try_push(user.clone()).map_err(|_| Error::<T>::MaxDevelopersPerProjectReached)?;
+                            let devs = project.builder.get_or_insert(BoundedVec::<T::AccountId, T::MaxBuildersPerProject>::default());
+                            devs.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         }
                     }
                     Ok(())    
@@ -1460,16 +1460,16 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator => {
                 return Err(Error::<T>::CannotRemoveAdminRole.into());
             },
-            ProxyRole::Developer => {
+            ProxyRole::Builder => {
                 //TODO: Fix internal validations
                 //TODO: move logic to a helper function to avoid boilerplate
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                    match project.developer.as_mut() {
-                        Some(developer) => {
-                            //developer.clone().iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
-                            developer.retain(|u| *u != user);
+                    match project.builder.as_mut() {
+                        Some(builder) => {
+                            //builder.clone().iter().find(|&u| *u == user).ok_or(Error::<T>::UserNotAssignedToProject)?;
+                            builder.retain(|u| *u != user);
                         },
                         None => {
                             return Err(Error::<T>::UserNotAssignedToProject.into());

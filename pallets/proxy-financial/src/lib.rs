@@ -55,10 +55,6 @@ pub mod pallet {
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 
-		//TODO: Update pallet errors related to bounded vecs bounds
-		//ie: BoundedVec<T::AccountId, T::MaxDevelopersPerProject>
-		// -> MaxDevelopersPerProjectReached 
-
 		#[pallet::constant]
 		type ProjectNameMaxLen: Get<u32>;
 
@@ -81,7 +77,7 @@ pub mod pallet {
 		type CIDMaxLen: Get<u32>;
 
 		#[pallet::constant]
-		type MaxDevelopersPerProject: Get<u32>;
+		type MaxBuildersPerProject: Get<u32>;
 
 		#[pallet::constant]
 		type MaxInvestorsPerProject: Get<u32>;
@@ -327,8 +323,8 @@ pub mod pallet {
 		UserNotAssignedToProject,
 		/// Can not register administator role 
 		CannotRegisterAdminRole,
-		/// Max number of developers per project reached
-		MaxDevelopersPerProjectReached,
+		/// Max number of builders per project reached
+		MaxBuildersPerProjectReached,
 		/// Max number of investors per project reached
 		MaxInvestorsPerProjectReached,
 		/// Max number of issuers per project reached
