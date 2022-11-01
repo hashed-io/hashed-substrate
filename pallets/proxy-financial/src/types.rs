@@ -278,6 +278,14 @@ impl ProxyPermission {
         developer_permissions
     }
 
+    pub fn investor_permissions() -> Vec<Vec<u8>>{
+        use crate::types::ProxyPermission::*;
+        let developer_permissions = [
+            EditUser.to_vec(),
+        ].to_vec();
+        developer_permissions
+    }
+
     pub fn issuer_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
         let developer_permissions = [
