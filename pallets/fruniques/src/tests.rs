@@ -1,6 +1,6 @@
 use crate::{mock::*, Error};
 
-use frame_support::{assert_noop, assert_ok};
+use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_runtime::Permill;
 
 pub struct ExtBuilder;
@@ -33,40 +33,61 @@ impl ExtBuilder {
 	}
 }
 
-#[test]
-fn create_frunique_works() {
-	// Create a frunique
-	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, Some(Permill::from_percent(50)), 1));
-	});
+fn dummy_description() -> BoundedVec<u8, StringLimit> {
+	bvec![b'a'; 10]
 }
 
 #[test]
-fn create_frunique_with_attributes_should_work() {
-	// Create a frunique with attributes
+fn create_collection_works() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_noop!(
-			Fruniques::create_with_attributes(
-				Origin::signed(1),
-				1,
-				0,
-				Some(Permill::from_percent(50)),
-				1,
-				vec![]
-			),
-			Error::<Test>::AttributesEmpty
-		);
-
-		assert_ok!(Fruniques::create_with_attributes(
-			Origin::signed(1),
-			1,
-			0,
-			Some(Permill::from_percent(50)),
-			1,
-			vec![(bvec![0], bvec![0])],
-		));
-	});
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
+	})
 }
+
+#[test]
+fn spawn_extrinsic_works() {
+	ExtBuilder::default().build().execute_with(|| {
+		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, None, None, None), Error::<Test>::CollectionNotFound);
+
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), Some(dummy_description())));
+		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, None, None, None));
+	})
+}
+
+// #[test]
+// fn create_frunique_works() {
+// 	// Create a frunique
+// 	ExtBuilder::default().build().execute_with(|| {
+// 		assert_ok!(Fruniques::create(Origin::signed(1), 1, 0, Some(Permill::from_percent(50)), 1));
+// 	});
+// }
+
+// #[test]
+// fn create_frunique_with_attributes_should_work() {
+// 	// Create a frunique with attributes
+// 	ExtBuilder::default().build().execute_with(|| {
+// 		assert_noop!(
+// 			Fruniques::create_with_attributes(
+// 				Origin::signed(1),
+// 				1,
+// 				0,
+// 				Some(Permill::from_percent(50)),
+// 				1,
+// 				vec![]
+// 			),
+// 			Error::<Test>::AttributesEmpty
+// 		);
+
+// 		assert_ok!(Fruniques::create_with_attributes(
+// 			Origin::signed(1),
+// 			1,
+// 			0,
+// 			Some(Permill::from_percent(50)),
+// 			1,
+// 			vec![(bvec![0], bvec![0])],
+// 		));
+// 	});
+// }
 
 // this test is failing for some reason...
 /*---- tests::spawn_extrinsic_works stdout ----
@@ -106,14 +127,14 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 // 	});
 // }
 
-#[test]
-fn set_attributes_should_work() {
-	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0, Some(Permill::from_percent(50)), 1));
-		assert_noop!(
-			Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![]),
-			Error::<Test>::AttributesEmpty
-		);
-		assert_ok!(Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![(bvec![0], bvec![0])]));
-	});
-}
+// #[test]
+// fn set_attributes_should_work() {
+// 	ExtBuilder::default().build().execute_with(|| {
+// 		assert_ok!(Fruniques::create(Origin::signed(1), 0, 0, Some(Permill::from_percent(50)), 1));
+// 		assert_noop!(
+// 			Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![]),
+// 			Error::<Test>::AttributesEmpty
+// 		);
+// 		assert_ok!(Fruniques::set_attributes(Origin::signed(1), 0, 0, vec![(bvec![0], bvec![0])]));
+// 	});
+// }

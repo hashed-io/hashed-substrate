@@ -236,6 +236,9 @@ pub mod pallet {
 			parent_info: Option<HierarchicalInfo>,
 			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 		) -> DispatchResult {
+
+			ensure!(Self::collection_exists(&class_id),  <Error<T>>::CollectionNotFound);
+
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 			let account_id = Self::account_id_to_lookup_source(&owner);
 
