@@ -77,6 +77,7 @@ fn spawn_extrinsic_works() {
 		assert_ok!(Fruniques::spawn(Origin::signed(1), 0, Some((0, false, 10)), None));
 		// The parent must exist
 		assert_noop!(Fruniques::spawn(Origin::signed(1), 0, Some((100, false, 10)), None), Error::<Test>::ParentNotFound);
+
 	})
 }
 
