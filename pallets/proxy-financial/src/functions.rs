@@ -398,7 +398,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
-                    // Ensure admin cannot delete himself
+                    // Ensure admin cannot delete themselves
                     ensure!(user.0 != admin, Error::<T>::AdministatorsCannotDeleteThemselves);
 
                     Self::do_delete_user(
@@ -1194,7 +1194,7 @@ impl<T: Config> Pallet<T> {
     // B U L K   U P L O A D   T R A N S A C T I O N S
 
     pub fn do_up_bulk_upload(
-        user: T::AccountId, //TODO: Remove underscore when permissions are implemented
+        user: T::AccountId,
         project_id: [u8;32],
         drawdown_id: [u8;32],
         description: FieldDescription,

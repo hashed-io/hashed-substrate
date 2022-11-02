@@ -6,11 +6,10 @@ use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use frame_system::EnsureRoot;
-
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+use frame_system::EnsureRoot;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -20,7 +19,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Proxy: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
+		ProxyFinancial: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
@@ -136,5 +135,7 @@ impl pallet_rbac::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	t.execute_with(|| ProxyFinancial::do_initial_setup().expect("Error on configuring initial setup"));
+	t
 }
