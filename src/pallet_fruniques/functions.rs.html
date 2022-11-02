@@ -380,7 +380,7 @@
 	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_create_collection</span>(
 		<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		<span class="ident">class_id</span>: <span class="ident">T::CollectionId</span>,
-		<span class="ident">metadata</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StringLimit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+		<span class="ident">metadata</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CollectionDescription</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 		<span class="ident">admin</span>: <span class="op">&lt;</span><span class="ident">T::Lookup</span> <span class="kw">as</span> <span class="ident">sp_runtime::traits::StaticLookup</span><span class="op">&gt;</span><span class="ident">::Source</span>,
 	) -&gt; <span class="ident">DispatchResult</span> {
 		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::create</span>(
