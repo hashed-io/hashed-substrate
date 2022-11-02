@@ -55,10 +55,6 @@ pub mod pallet {
 
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 
-		//TODO: Update pallet errors related to bounded vecs bounds
-		//ie: BoundedVec<T::AccountId, T::MaxDevelopersPerProject>
-		// -> MaxDevelopersPerProjectReached 
-
 		#[pallet::constant]
 		type ProjectNameMaxLen: Get<u32>;
 
@@ -81,7 +77,7 @@ pub mod pallet {
 		type CIDMaxLen: Get<u32>;
 
 		#[pallet::constant]
-		type MaxDevelopersPerProject: Get<u32>;
+		type MaxBuildersPerProject: Get<u32>;
 
 		#[pallet::constant]
 		type MaxInvestorsPerProject: Get<u32>;
@@ -327,8 +323,8 @@ pub mod pallet {
 		UserNotAssignedToProject,
 		/// Can not register administator role 
 		CannotRegisterAdminRole,
-		/// Max number of developers per project reached
-		MaxDevelopersPerProjectReached,
+		/// Max number of builders per project reached
+		MaxBuildersPerProjectReached,
 		/// Max number of investors per project reached
 		MaxInvestorsPerProjectReached,
 		/// Max number of issuers per project reached
@@ -661,12 +657,13 @@ pub mod pallet {
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-			
+			// Ensure builder permissions 
+			Self::is_authorized(who, &project_id, ProxyPermission::SubmitDrawdown)?;
+
 			match submit{
 				false => {
 					// Do execute transactions
 					Self::do_execute_transactions(
-						who,
 						project_id,
 						drawdown_id,
 						transactions.ok_or(Error::<T>::EmptyTransactions)?,
@@ -677,7 +674,6 @@ pub mod pallet {
 					if let Some(transactions) = transactions {
 						// Do execute transactions
 						Self::do_execute_transactions(
-							who.clone(),
 							project_id,
 							drawdown_id,
 							transactions,
@@ -685,7 +681,7 @@ pub mod pallet {
 					}
 
 					// Do submit drawdown
-					Self::do_submit_drawdown(who, project_id, drawdown_id)
+					Self::do_submit_drawdown(project_id, drawdown_id)
 				},
 			}
 
@@ -721,14 +717,13 @@ pub mod pallet {
 						false => {
 							// 1. Do execute transactions
 							Self::do_execute_transactions(
-								who.clone(),
 								project_id,
 								drawdown_id,
 								transactions.ok_or(Error::<T>::EmptyTransactions)?,
 							)?;
 
 							// 2. Do submit drawdown
-							Self::do_submit_drawdown(who, project_id, drawdown_id)
+							Self::do_submit_drawdown(project_id, drawdown_id)
 
 						},
 						true  => {
@@ -736,14 +731,13 @@ pub mod pallet {
 							if let Some(transactions) = transactions {
 								// Do execute transactions
 								Self::do_execute_transactions(
-									who.clone(),
 									project_id,
 									drawdown_id,
 									transactions,
 								)?;
 
 								// 2. Submit drawdown
-								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;
+								Self::do_submit_drawdown(project_id, drawdown_id)?;
 							}
 
 							// 3. Approve drawdown
