@@ -64,7 +64,7 @@ hex-literal = { version = "0.3.4", optional = true }
 pallet-template = { default-features = false, path = "../pallets/template" }
 pallet-fruniques = { version = "0.1.0-dev", default-features = false, path = "../pallets/fruniques" }
 pallet-bitcoin-vaults = { default-features = false, path = "../pallets/bitcoin-vaults" }
-pallet-afloat = { default-features = false, path = "../pallets/afloat" }
+pallet-gated-marketplace= { default-features = false, path = "../pallets/gated-marketplace" }
 pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
 pallet-proxy-financial = { default-features = false, path = "../pallets/proxy-financial" }
@@ -104,7 +104,7 @@ std = [
 	"pallet-uniques/std",
 	"pallet-node-authorization/std",
 	"pallet-bitcoin-vaults/std",
-	"pallet-afloat/std",
+	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
 	"pallet-confidential-docs/std",
 	"pallet-proxy-financial/std",

@@ -6,7 +6,7 @@ members = [
     'pallets/confidential-docs',
     'pallets/rbac',
     'pallets/fruniques',
-    'pallets/afloat',
+    'pallets/gated-marketplace',
     'parachain-runtime',
     'runtime',
 ]
