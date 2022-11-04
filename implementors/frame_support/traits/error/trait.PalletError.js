@@ -1,4 +1,5 @@
 (function() {var implementors = {};
+implementors["pallet_afloat"] = [{"text":"impl&lt;T&gt; PalletError for <a class=\"enum\" href=\"pallet_afloat/pallet/enum.Error.html\" title=\"enum pallet_afloat::pallet::Error\">Error</a>&lt;T&gt;","synthetic":false,"types":["pallet_afloat::pallet::Error"]}];
 implementors["pallet_bitcoin_vaults"] = [{"text":"impl&lt;T&gt; PalletError for <a class=\"enum\" href=\"pallet_bitcoin_vaults/pallet/enum.Error.html\" title=\"enum pallet_bitcoin_vaults::pallet::Error\">Error</a>&lt;T&gt;","synthetic":false,"types":["pallet_bitcoin_vaults::pallet::Error"]}];
 implementors["pallet_confidential_docs"] = [{"text":"impl&lt;T&gt; PalletError for <a class=\"enum\" href=\"pallet_confidential_docs/pallet/enum.Error.html\" title=\"enum pallet_confidential_docs::pallet::Error\">Error</a>&lt;T&gt;","synthetic":false,"types":["pallet_confidential_docs::pallet::Error"]}];
 implementors["pallet_fruniques"] = [{"text":"impl&lt;T&gt; PalletError for <a class=\"enum\" href=\"pallet_fruniques/pallet/enum.Error.html\" title=\"enum pallet_fruniques::pallet::Error\">Error</a>&lt;T&gt;","synthetic":false,"types":["pallet_fruniques::pallet::Error"]}];
