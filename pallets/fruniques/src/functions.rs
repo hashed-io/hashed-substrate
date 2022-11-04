@@ -1,7 +1,7 @@
 use super::*;
 
-use frame_system::pallet_prelude::*;
 use crate::types::*;
+use frame_system::pallet_prelude::*;
 
 use frame_support::traits::tokens::nonfungibles::Inspect;
 use scale_info::prelude::string::String;
@@ -9,6 +9,7 @@ use scale_info::prelude::string::String;
 use pallet_rbac::types::*;
 
 use frame_support::pallet_prelude::*;
+use frame_support::traits::EnsureOriginWithArg;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
@@ -139,29 +140,26 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-
 	/// Helper function to create a new collection
 	/// Creates a collection and updates its metadata if needed.
 	pub fn do_create_collection(
 		origin: OriginFor<T>,
 		class_id: T::CollectionId,
-		metadata: Option<CollectionDescription<T>>,
-		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		metadata: CollectionDescription<T>,
+		admin: T::AccountId,
 	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(
-			origin.clone(),
-			class_id,
-			admin,
+		let owner = T::CreateOrigin::ensure_origin(origin.clone(), &class_id)?;
+
+		pallet_uniques::Pallet::<T>::do_create_collection(
+			class_id.clone(),
+			owner.clone(),
+			admin.clone(),
+			T::CollectionDeposit::get(),
+			false,
+			pallet_uniques::Event::Created { collection: class_id, creator: admin, owner },
 		)?;
 
-		if let Some(metadata) = metadata {
-			pallet_uniques::Pallet::<T>::set_collection_metadata(
-			origin,
-			class_id,
-			metadata,
-			false
-			)?;
-		}
+		pallet_uniques::Pallet::<T>::set_collection_metadata(origin, class_id, metadata, false)?;
 
 		Ok(())
 	}
@@ -200,15 +198,18 @@ impl<T: Config> Pallet<T> {
 		collection: T::CollectionId,
 		item: T::ItemId,
 		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		metadata: CollectionDescription<T>,
 		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 	) -> DispatchResult {
+		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
+		pallet_uniques::Pallet::<T>::mint(origin.clone(), collection, item, owner)?;
 
-		ensure!(Self::collection_exists(&collection),  <Error<T>>::CollectionNotFound);
-		pallet_uniques::Pallet::<T>::mint(
+		pallet_uniques::Pallet::<T>::set_metadata(
 			origin.clone(),
 			collection,
 			item,
-			owner
+			metadata,
+			false,
 		)?;
 
 		if let Some(attributes) = attributes {
@@ -226,10 +227,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn pallet_id()->IdOrVec{
-        IdOrVec::Vec(
-            Self::module_name().as_bytes().to_vec()
-        )
-    }
-
+	pub fn pallet_id() -> IdOrVec {
+		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
+	}
 }

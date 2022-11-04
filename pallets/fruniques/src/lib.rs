@@ -31,6 +31,9 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
+		/// Solution to fix issue with an optional BoundedVec
+		#[pallet::constant]
+		type LimitBoundedVec: Get<u8>;
 	}
 
 	#[pallet::pallet]
@@ -152,11 +155,11 @@ pub mod pallet {
 		///
 		/// ## Parameters
 		/// - `origin`: The origin of the transaction.
-		/// - `Metadata`: The title of the collection.
+		/// - `metadata`: The title of the collection.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_collection(
 			origin: OriginFor<T>,
-			metadata: Option<CollectionDescription<T>>,
+			metadata: CollectionDescription<T>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
 
@@ -166,7 +169,7 @@ pub mod pallet {
 				origin,
 				new_collection_id,
 				metadata,
-				Self::account_id_to_lookup_source(&admin),
+				admin.clone(),
 			)?;
 
 			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
@@ -230,12 +233,14 @@ pub mod pallet {
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `parent_info` Optional value needed for the NFT division.
+		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
 			parent_info: Option<HierarchicalInfo>,
+			metadata: CollectionDescription<T>,
 			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
@@ -264,7 +269,7 @@ pub mod pallet {
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
-			Self::do_spawn(origin.clone(), class_id, instance_id, account_id, attributes)?;
+			Self::do_spawn(origin.clone(), class_id, instance_id, account_id, metadata, attributes)?;
 
 			Self::deposit_event(Event::FruniqueCreated(
 				owner.clone(),

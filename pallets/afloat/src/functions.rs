@@ -27,7 +27,7 @@ impl<T: Config> Pallet<T> {
         let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
         // redemption specialist role and permissions
         let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
-        
+
         Self::deposit_event(Event::MarketplaceSetupCompleted);
         Ok(())
     }
@@ -70,9 +70,32 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+	pub fn do_invite(authority: T::AccountId, marketplace_id: [u8;32], new_user: T::AccountId, fields : Fields<T>, custodian_fields: Option<CustodianFields<T>>) -> DispatchResult {
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+        // The user only can apply once by marketplace
+        ensure!(!<ApplicationsByAccount<T>>::contains_key(new_user.clone(), marketplace_id), Error::<T>::AlreadyApplied);
+
+		// ensure the origin is owner or admin
+        Self::is_authorized(authority.clone(), &marketplace_id, Permission::Enroll)?;
+
+		let (custodian, fields) =
+				Self::set_up_application(fields,custodian_fields);
+
+		let application = Application::<T>{
+				status: ApplicationStatus::default(),
+				fields,
+				feedback: BoundedVec::<u8, T::MaxFeedbackLen>::default(),
+			};
+
+		Self::do_apply(new_user.clone(), custodian, marketplace_id, application)?;
+
+		Self::do_enroll(authority, marketplace_id, AccountOrApplication::Account(new_user), true, BoundedVec::<u8, T::MaxFeedbackLen>::try_from(b"User enrolled by the marketplace admin".to_vec()).unwrap())?;
+
+		Ok(())
+	}
+
     pub fn do_enroll(authority: T::AccountId, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>,)->DispatchResult{
         // ensure the origin is owner or admin
-        //Self::can_enroll(authority, marketplace_id)?;
         Self::is_authorized(authority, &marketplace_id,Permission::Enroll)?;
         let next_status = match approved{
             true => ApplicationStatus::Approved,
@@ -139,7 +162,7 @@ impl<T: Config> Pallet<T> {
 
                 // Admis cannot be deleted between them, only the owner can
                 ensure!(!Self::is_admin(authority, marketplace_id), Error::<T>::CannotDeleteAdmin);
-        
+
                 Self::remove_from_market_lists(account.clone(), authority_type, marketplace_id)?;
             },
             _ =>{
@@ -148,7 +171,7 @@ impl<T: Config> Pallet<T> {
 
             }
         }
-        
+
         Self::deposit_event(Event::AuthorityRemoved(account, authority_type));
         Ok(())
     }
@@ -200,7 +223,7 @@ impl<T: Config> Pallet<T> {
         //create an offer_id
         let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
 
-        //create offer structure 
+        //create offer structure
         let offer_data = OfferData::<T> {
             marketplace_id,
             collection_id,
@@ -216,7 +239,7 @@ impl<T: Config> Pallet<T> {
 
         //ensure there is no a previous sell offer for this item
         Self::can_this_item_receive_sell_orders(collection_id, item_id, marketplace_id)?;
-        
+
         //insert in OffersByItem
         <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| {
             offers.try_push(offer_id)
@@ -305,7 +328,7 @@ impl<T: Config> Pallet<T> {
         <OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| {
             offers.try_push(offer_id)
         }).map_err(|_| Error::<T>::OfferStorageError)?;
-    
+
         Self::deposit_event(Event::OfferStored(collection_id, item_id));
         Ok(())
     }
@@ -321,14 +344,14 @@ impl<T: Config> Pallet<T> {
         let owner_item = pallet_uniques::Pallet::<T>::owner(offer_data.collection_id, offer_data.item_id).ok_or(Error::<T>::OwnerNotFound)?;
 
         //ensure owner is not the same as the buyer
-        ensure!(owner_item != buyer, Error::<T>::CannotTakeOffer); 
+        ensure!(owner_item != buyer, Error::<T>::CannotTakeOffer);
 
         //ensure the offer_id exists in OffersByItem
         Self::does_exist_offer_id_for_this_item(offer_data.collection_id, offer_data.item_id, offer_id)?;
 
         //ensure the offer is open and available
         ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
-        
+
         //TODO: Use free_balance instead of total_balance
         //Get the buyer's balance
         let total_amount_buyer = T::Currency::total_balance(&buyer);
@@ -347,7 +370,7 @@ impl<T: Config> Pallet<T> {
 
         //remove all the offers associated with the item
         Self::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id)?;
-        
+
         Self::deposit_event(Event::OfferWasAccepted(offer_id, buyer));
         Ok(())
     }
@@ -400,7 +423,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_remove_offer(authority: T::AccountId, offer_id: [u8;32]) -> DispatchResult {
         //ensure the offer_id exists
         ensure!(<OffersInfo<T>>::contains_key(offer_id), Error::<T>::OfferNotFound);
-        
+
         //get offer data
         let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
         Self::is_authorized(authority.clone(), &offer_data.marketplace_id,Permission::RemoveOffer)?;
@@ -437,19 +460,19 @@ impl<T: Config> Pallet<T> {
             offers.remove(offer_index);
             Ok(())
         }).map_err(|_:Error::<T>| Error::<T>::OfferNotFound)?;
-    
+
         Self::deposit_event(Event::OfferRemoved(offer_id, offer_data.marketplace_id));
-    
+
         Ok(())
     }
 
 
-    
+
     /*---- Helper functions ----*/
 
     pub fn set_up_application(
         fields : Fields<T>,
-        custodian_fields: Option<CustodianFields<T>> 
+        custodian_fields: Option<CustodianFields<T>>
     )-> (Option<T::AccountId>, BoundedVec<ApplicationField, T::MaxFiles> ){
         let mut f: Vec<ApplicationField>= fields.iter().map(|tuple|{
             ApplicationField{
@@ -473,7 +496,7 @@ impl<T: Config> Pallet<T> {
 
         T::Rbac::assign_role_to_user(authority, Self::pallet_id(),
              &marketplace_id, role.id())?;
-        
+
         Ok(())
     }
 
@@ -506,7 +529,7 @@ impl<T: Config> Pallet<T> {
 
     fn remove_from_market_lists(account: T::AccountId, author_type: MarketplaceRole , marketplace_id : [u8;32])->DispatchResult{
 
-        T::Rbac::remove_role_from_user(account, Self::pallet_id(), 
+        T::Rbac::remove_role_from_user(account, Self::pallet_id(),
             &marketplace_id, author_type.id())?;
         Ok(())
 
@@ -546,7 +569,7 @@ impl<T: Config> Pallet<T> {
     fn is_authorized( authority: T::AccountId, marketplace_id: &[u8;32], permission: Permission ) -> DispatchResult{
         T::Rbac::is_authorized(
             authority,
-            Self::pallet_id(), 
+            Self::pallet_id(),
             marketplace_id,
             &permission.id(),
         )
@@ -556,12 +579,12 @@ impl<T: Config> Pallet<T> {
     ///Lets us know if the selected user is an admin.
     /// It returns true if the user is an admin, false otherwise.
     fn is_admin(account: T::AccountId, marketplace_id: [u8;32]) -> bool{
-        T::Rbac::has_role(account, Self::pallet_id(), 
+        T::Rbac::has_role(account, Self::pallet_id(),
             &marketplace_id, [MarketplaceRole::Admin.id()].to_vec()).is_ok()
     }
 
 
-    /// Let us know if the selected account has the selected authority type. 
+    /// Let us know if the selected account has the selected authority type.
     /// It returns true if the account has the authority type, false otherwise
     // fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceRole) -> bool{
     //     let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
@@ -572,22 +595,22 @@ impl<T: Config> Pallet<T> {
     //     roles.iter().any(|authority| authority == &authority_type)
     // }
 
-    /// Let us know if there's an owner for the selected marketplace. 
+    /// Let us know if there's an owner for the selected marketplace.
     /// It returns true if there's an owner, false otherwise
     fn owner_exist(marketplace_id: [u8;32]) -> bool {
         // let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner){
         //     Ok(owners) => owners,
         //     Err(_) => return false,
         // };
-        
-        //owners.len() == 1 
-        T::Rbac::get_role_users_len(Self::pallet_id(), 
+
+        //owners.len() == 1
+        T::Rbac::get_role_users_len(Self::pallet_id(),
             &marketplace_id, &MarketplaceRole::Owner.id()) == 1
     }
 
     /// Let us update the marketplace's label.
     /// It returns ok if the update was successful, error otherwise.
-    fn  update_label(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {     
+    fn  update_label(marketplace_id : [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
         <Marketplaces<T>>::try_mutate(marketplace_id, |marketplace|{
         let market = marketplace.as_mut().ok_or(Error::<T>::MarketplaceNotFound)?;
         market.label = new_label;
@@ -595,18 +618,18 @@ impl<T: Config> Pallet<T> {
         })
     }
 
-    /// Let us delete the selected marketplace 
+    /// Let us delete the selected marketplace
     /// and remove all of its associated authorities from all the storage sources.
     /// If returns ok if the deletion was successful, error otherwise.
     /// Errors only could happen if the storage sources are corrupted.
     fn remove_selected_marketplace(marketplace_id: [u8;32]) -> DispatchResult {
         //TODO: evaluate use iter_key_prefix ->instead iter()
-        //Before to remove the marketplace, we need to remove all its associated authorities 
+        //Before to remove the marketplace, we need to remove all its associated authorities
         // as well as the applicants/applications.
 
         //First we need to get the list of all the authorities for the marketplace.
         let mut applications =  Vec::new();
-        
+
         // remove from Applications lists
         for ele in <ApplicationsByAccount<T>>::iter() {
             if ele.1 == marketplace_id {
@@ -621,7 +644,7 @@ impl<T: Config> Pallet<T> {
         // remove from ApplicationsByAccount list
         <ApplicationsByAccount<T>>::iter().for_each(|(_k1, _k2, _k3)|{
             <ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
-        });  
+        });
 
         // remove from ApplicantsByMarketplace list
         let _ = <ApplicantsByMarketplace<T>>::clear_prefix(marketplace_id,1000, None);
@@ -642,17 +665,17 @@ impl<T: Config> Pallet<T> {
 
     /// Let us check the curent status of the selected application.
     /// If the status is rejected, we can safely remove its data from the storage sources
-    /// so the user can apply again. 
+    /// so the user can apply again.
     /// It doesn't affect any other storage source/workflow.
     pub fn is_application_in_rejected_status(account: T::AccountId, marketplace_id: [u8;32]) -> DispatchResult{
         let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
             .map_err(|_| Error::<T>::ApplicationIdNotFound)?;
-        
+
         let application = <Applications<T>>::try_get(application_id)
             .map_err(|_| Error::<T>::ApplicationNotFound)?;
 
         match application.status {
-            ApplicationStatus::Pending => return Err(Error::<T>::ApplicationStatusStillPending.into()), 
+            ApplicationStatus::Pending => return Err(Error::<T>::ApplicationStatusStillPending.into()),
             ApplicationStatus::Approved => return Err(Error::<T>::ApplicationHasAlreadyBeenApproved.into()),
             ApplicationStatus::Rejected => {
                 //If status is Rejected, we need to delete the previous application from all the storage sources.
@@ -695,7 +718,7 @@ impl<T: Config> Pallet<T> {
 
     fn update_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;32]) -> DispatchResult{
         let offer_ids = <OffersByItem<T>>::try_get(collection_id, item_id).map_err(|_| Error::<T>::OfferNotFound)?;
-        
+
         for offer_id in offer_ids {
             <OffersInfo<T>>::try_mutate::<_,_,DispatchError,_>(offer_id, |offer|{
                 let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
@@ -742,7 +765,7 @@ impl<T: Config> Pallet<T> {
             let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
             //ensure the offer_type is SellOrder, because this vector also contains buy offers.
             if offer_info.marketplace_id == marketplace_id && offer_info.offer_type == OfferType::SellOrder {
-                return Ok(())      
+                return Ok(())
             }
         }
 
