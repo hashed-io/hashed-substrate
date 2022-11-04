@@ -787,6 +787,29 @@
 <span id="787">787</span>
 <span id="788">788</span>
 <span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
 </pre><pre class="rust"><code>
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
@@ -816,7 +839,7 @@
         <span class="kw">let</span> <span class="ident">_appraiser_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>.<span class="ident">clone</span>(), [<span class="ident">MarketplaceRole::Appraiser</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
         <span class="comment">// redemption specialist role and permissions</span>
         <span class="kw">let</span> <span class="ident">_redemption_role_id</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(<span class="ident">pallet_id</span>, [<span class="ident">MarketplaceRole::RedemptionSpecialist</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>())<span class="question-mark">?</span>;
-        
+
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::MarketplaceSetupCompleted</span>);
         <span class="prelude-val">Ok</span>(())
     }
@@ -859,9 +882,32 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_invite</span>(<span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">new_user</span>: <span class="ident">T::AccountId</span>, <span class="ident">fields</span> : <span class="ident">Fields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
+		<span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">Marketplaces</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">marketplace_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MarketplaceNotFound</span>);
+        <span class="comment">// The user only can apply once by marketplace</span>
+        <span class="macro">ensure!</span>(<span class="op">!</span><span class="op">&lt;</span><span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">new_user</span>.<span class="ident">clone</span>(), <span class="ident">marketplace_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::AlreadyApplied</span>);
+
+		<span class="comment">// ensure the origin is owner or admin</span>
+        <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">authority</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>, <span class="ident">Permission::Enroll</span>)<span class="question-mark">?</span>;
+
+		<span class="kw">let</span> (<span class="ident">custodian</span>, <span class="ident">fields</span>) <span class="op">=</span>
+				<span class="ident"><span class="self">Self</span>::set_up_application</span>(<span class="ident">fields</span>,<span class="ident">custodian_fields</span>);
+
+		<span class="kw">let</span> <span class="ident">application</span> <span class="op">=</span> <span class="ident">Application</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>{
+				<span class="ident">status</span>: <span class="ident">ApplicationStatus::default</span>(),
+				<span class="ident">fields</span>,
+				<span class="ident">feedback</span>: <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::MaxFeedbackLen</span><span class="op">&gt;</span><span class="ident">::default</span>(),
+			};
+
+		<span class="ident"><span class="self">Self</span>::do_apply</span>(<span class="ident">new_user</span>.<span class="ident">clone</span>(), <span class="ident">custodian</span>, <span class="ident">marketplace_id</span>, <span class="ident">application</span>)<span class="question-mark">?</span>;
+
+		<span class="ident"><span class="self">Self</span>::do_enroll</span>(<span class="ident">authority</span>, <span class="ident">marketplace_id</span>, <span class="ident">AccountOrApplication::Account</span>(<span class="ident">new_user</span>), <span class="bool-val">true</span>, <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::MaxFeedbackLen</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="string">b&quot;User enrolled by the marketplace admin&quot;</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_enroll</span>(<span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">account_or_application</span>: <span class="ident">AccountOrApplication</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">approved</span>: <span class="ident">bool</span>, <span class="ident">feedback</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::MaxFeedbackLen</span><span class="op">&gt;</span>,)-&gt;<span class="ident">DispatchResult</span>{
         <span class="comment">// ensure the origin is owner or admin</span>
-        <span class="comment">//Self::can_enroll(authority, marketplace_id)?;</span>
         <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">authority</span>, <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>,<span class="ident">Permission::Enroll</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">next_status</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">approved</span>{
             <span class="bool-val">true</span> =&gt; <span class="ident">ApplicationStatus::Approved</span>,
@@ -928,7 +974,7 @@
 
                 <span class="comment">// Admis cannot be deleted between them, only the owner can</span>
                 <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident"><span class="self">Self</span>::is_admin</span>(<span class="ident">authority</span>, <span class="ident">marketplace_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CannotDeleteAdmin</span>);
-        
+
                 <span class="ident"><span class="self">Self</span>::remove_from_market_lists</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">authority_type</span>, <span class="ident">marketplace_id</span>)<span class="question-mark">?</span>;
             },
             <span class="kw">_</span> =&gt;{
@@ -937,7 +983,7 @@
 
             }
         }
-        
+
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::AuthorityRemoved</span>(<span class="ident">account</span>, <span class="ident">authority_type</span>));
         <span class="prelude-val">Ok</span>(())
     }
@@ -989,7 +1035,7 @@
         <span class="comment">//create an offer_id</span>
         <span class="kw">let</span> <span class="ident">offer_id</span> <span class="op">=</span> (<span class="ident">marketplace_id</span>, <span class="ident">authority</span>.<span class="ident">clone</span>(), <span class="ident">collection_id</span>, <span class="ident">timestamp</span>, <span class="ident">timestamp2</span>).<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
 
-        <span class="comment">//create offer structure </span>
+        <span class="comment">//create offer structure</span>
         <span class="kw">let</span> <span class="ident">offer_data</span> <span class="op">=</span> <span class="ident">OfferData</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
             <span class="ident">marketplace_id</span>,
             <span class="ident">collection_id</span>,
@@ -1005,7 +1051,7 @@
 
         <span class="comment">//ensure there is no a previous sell offer for this item</span>
         <span class="ident"><span class="self">Self</span>::can_this_item_receive_sell_orders</span>(<span class="ident">collection_id</span>, <span class="ident">item_id</span>, <span class="ident">marketplace_id</span>)<span class="question-mark">?</span>;
-        
+
         <span class="comment">//insert in OffersByItem</span>
         <span class="op">&lt;</span><span class="ident">OffersByItem</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">collection_id</span>, <span class="ident">item_id</span>, <span class="op">|</span><span class="ident">offers</span><span class="op">|</span> {
             <span class="ident">offers</span>.<span class="ident">try_push</span>(<span class="ident">offer_id</span>)
@@ -1094,7 +1140,7 @@
         <span class="op">&lt;</span><span class="ident">OffersByMarketplace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">marketplace_id</span>, <span class="op">|</span><span class="ident">offers</span><span class="op">|</span> {
             <span class="ident">offers</span>.<span class="ident">try_push</span>(<span class="ident">offer_id</span>)
         }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferStorageError</span>)<span class="question-mark">?</span>;
-    
+
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::OfferStored</span>(<span class="ident">collection_id</span>, <span class="ident">item_id</span>));
         <span class="prelude-val">Ok</span>(())
     }
@@ -1110,14 +1156,14 @@
         <span class="kw">let</span> <span class="ident">owner_item</span> <span class="op">=</span> <span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::owner</span>(<span class="ident">offer_data</span>.<span class="ident">collection_id</span>, <span class="ident">offer_data</span>.<span class="ident">item_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OwnerNotFound</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//ensure owner is not the same as the buyer</span>
-        <span class="macro">ensure!</span>(<span class="ident">owner_item</span> <span class="op">!</span><span class="op">=</span> <span class="ident">buyer</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CannotTakeOffer</span>); 
+        <span class="macro">ensure!</span>(<span class="ident">owner_item</span> <span class="op">!</span><span class="op">=</span> <span class="ident">buyer</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::CannotTakeOffer</span>);
 
         <span class="comment">//ensure the offer_id exists in OffersByItem</span>
         <span class="ident"><span class="self">Self</span>::does_exist_offer_id_for_this_item</span>(<span class="ident">offer_data</span>.<span class="ident">collection_id</span>, <span class="ident">offer_data</span>.<span class="ident">item_id</span>, <span class="ident">offer_id</span>)<span class="question-mark">?</span>;
 
         <span class="comment">//ensure the offer is open and available</span>
         <span class="macro">ensure!</span>(<span class="ident">offer_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">OfferStatus::Open</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferIsNotAvailable</span>);
-        
+
         <span class="comment">//TODO: Use free_balance instead of total_balance</span>
         <span class="comment">//Get the buyer&#39;s balance</span>
         <span class="kw">let</span> <span class="ident">total_amount_buyer</span> <span class="op">=</span> <span class="ident">T::Currency::total_balance</span>(<span class="kw-2">&amp;</span><span class="ident">buyer</span>);
@@ -1136,7 +1182,7 @@
 
         <span class="comment">//remove all the offers associated with the item</span>
         <span class="ident"><span class="self">Self</span>::delete_all_offers_for_this_item</span>(<span class="ident">offer_data</span>.<span class="ident">collection_id</span>, <span class="ident">offer_data</span>.<span class="ident">item_id</span>)<span class="question-mark">?</span>;
-        
+
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::OfferWasAccepted</span>(<span class="ident">offer_id</span>, <span class="ident">buyer</span>));
         <span class="prelude-val">Ok</span>(())
     }
@@ -1189,7 +1235,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_remove_offer</span>(<span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">offer_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
         <span class="comment">//ensure the offer_id exists</span>
         <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">OffersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">offer_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>);
-        
+
         <span class="comment">//get offer data</span>
         <span class="kw">let</span> <span class="ident">offer_data</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OffersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">offer_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>)<span class="question-mark">?</span>;
         <span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">authority</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">offer_data</span>.<span class="ident">marketplace_id</span>,<span class="ident">Permission::RemoveOffer</span>)<span class="question-mark">?</span>;
@@ -1226,19 +1272,19 @@
             <span class="ident">offers</span>.<span class="ident">remove</span>(<span class="ident">offer_index</span>);
             <span class="prelude-val">Ok</span>(())
         }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span>:<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>)<span class="question-mark">?</span>;
-    
+
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::OfferRemoved</span>(<span class="ident">offer_id</span>, <span class="ident">offer_data</span>.<span class="ident">marketplace_id</span>));
-    
+
         <span class="prelude-val">Ok</span>(())
     }
 
 
-    
+
     <span class="comment">/*---- Helper functions ----*/</span>
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_up_application</span>(
         <span class="ident">fields</span> : <span class="ident">Fields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-        <span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
+        <span class="ident">custodian_fields</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CustodianFields</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>
     )-&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span>, <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">ApplicationField</span>, <span class="ident">T::MaxFiles</span><span class="op">&gt;</span> ){
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ApplicationField</span><span class="op">&gt;</span><span class="op">=</span> <span class="ident">fields</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">tuple</span><span class="op">|</span>{
             <span class="ident">ApplicationField</span>{
@@ -1262,7 +1308,7 @@
 
         <span class="ident">T::Rbac::assign_role_to_user</span>(<span class="ident">authority</span>, <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
              <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>, <span class="ident">role</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
-        
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1295,7 +1341,7 @@
 
     <span class="kw">fn</span> <span class="ident">remove_from_market_lists</span>(<span class="ident">account</span>: <span class="ident">T::AccountId</span>, <span class="ident">author_type</span>: <span class="ident">MarketplaceRole</span> , <span class="ident">marketplace_id</span> : [<span class="ident">u8</span>;<span class="number">32</span>])-&gt;<span class="ident">DispatchResult</span>{
 
-        <span class="ident">T::Rbac::remove_role_from_user</span>(<span class="ident">account</span>, <span class="ident"><span class="self">Self</span>::pallet_id</span>(), 
+        <span class="ident">T::Rbac::remove_role_from_user</span>(<span class="ident">account</span>, <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
             <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>, <span class="ident">author_type</span>.<span class="ident">id</span>())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
 
@@ -1335,7 +1381,7 @@
     <span class="kw">fn</span> <span class="ident">is_authorized</span>( <span class="ident">authority</span>: <span class="ident">T::AccountId</span>, <span class="ident">marketplace_id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">permission</span>: <span class="ident">Permission</span> ) -&gt; <span class="ident">DispatchResult</span>{
         <span class="ident">T::Rbac::is_authorized</span>(
             <span class="ident">authority</span>,
-            <span class="ident"><span class="self">Self</span>::pallet_id</span>(), 
+            <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
             <span class="ident">marketplace_id</span>,
             <span class="kw-2">&amp;</span><span class="ident">permission</span>.<span class="ident">id</span>(),
         )
@@ -1345,12 +1391,12 @@
     <span class="doccomment">///Lets us know if the selected user is an admin.</span>
     <span class="doccomment">/// It returns true if the user is an admin, false otherwise.</span>
     <span class="kw">fn</span> <span class="ident">is_admin</span>(<span class="ident">account</span>: <span class="ident">T::AccountId</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">bool</span>{
-        <span class="ident">T::Rbac::has_role</span>(<span class="ident">account</span>, <span class="ident"><span class="self">Self</span>::pallet_id</span>(), 
+        <span class="ident">T::Rbac::has_role</span>(<span class="ident">account</span>, <span class="ident"><span class="self">Self</span>::pallet_id</span>(),
             <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>, [<span class="ident">MarketplaceRole::Admin</span>.<span class="ident">id</span>()].<span class="ident">to_vec</span>()).<span class="ident">is_ok</span>()
     }
 
 
-    <span class="doccomment">/// Let us know if the selected account has the selected authority type. </span>
+    <span class="doccomment">/// Let us know if the selected account has the selected authority type.</span>
     <span class="doccomment">/// It returns true if the account has the authority type, false otherwise</span>
     <span class="comment">// fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceRole) -&gt; bool{</span>
     <span class="comment">//     let roles = match &lt;MarketplacesByAuthority&lt;T&gt;&gt;::try_get(account, marketplace_id){</span>
@@ -1361,22 +1407,22 @@
     <span class="comment">//     roles.iter().any(|authority| authority == &amp;authority_type)</span>
     <span class="comment">// }</span>
 
-    <span class="doccomment">/// Let us know if there&#39;s an owner for the selected marketplace. </span>
+    <span class="doccomment">/// Let us know if there&#39;s an owner for the selected marketplace.</span>
     <span class="doccomment">/// It returns true if there&#39;s an owner, false otherwise</span>
     <span class="kw">fn</span> <span class="ident">owner_exist</span>(<span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">bool</span> {
         <span class="comment">// let owners =  match &lt;AuthoritiesByMarketplace&lt;T&gt;&gt;::try_get( marketplace_id, MarketplaceAuthority::Owner){</span>
         <span class="comment">//     Ok(owners) =&gt; owners,</span>
         <span class="comment">//     Err(_) =&gt; return false,</span>
         <span class="comment">// };</span>
-        
-        <span class="comment">//owners.len() == 1 </span>
-        <span class="ident">T::Rbac::get_role_users_len</span>(<span class="ident"><span class="self">Self</span>::pallet_id</span>(), 
+
+        <span class="comment">//owners.len() == 1</span>
+        <span class="ident">T::Rbac::get_role_users_len</span>(<span class="ident"><span class="self">Self</span>::pallet_id</span>(),
             <span class="kw-2">&amp;</span><span class="ident">marketplace_id</span>, <span class="kw-2">&amp;</span><span class="ident">MarketplaceRole::Owner</span>.<span class="ident">id</span>()) <span class="op">==</span> <span class="number">1</span>
     }
 
     <span class="doccomment">/// Let us update the marketplace&#39;s label.</span>
     <span class="doccomment">/// It returns ok if the update was successful, error otherwise.</span>
-    <span class="kw">fn</span>  <span class="ident">update_label</span>(<span class="ident">marketplace_id</span> : [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">new_label</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::LabelMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {     
+    <span class="kw">fn</span>  <span class="ident">update_label</span>(<span class="ident">marketplace_id</span> : [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">new_label</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::LabelMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
         <span class="op">&lt;</span><span class="ident">Marketplaces</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">marketplace_id</span>, <span class="op">|</span><span class="ident">marketplace</span><span class="op">|</span>{
         <span class="kw">let</span> <span class="ident">market</span> <span class="op">=</span> <span class="ident">marketplace</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::MarketplaceNotFound</span>)<span class="question-mark">?</span>;
         <span class="ident">market</span>.<span class="ident">label</span> <span class="op">=</span> <span class="ident">new_label</span>;
@@ -1384,18 +1430,18 @@
         })
     }
 
-    <span class="doccomment">/// Let us delete the selected marketplace </span>
+    <span class="doccomment">/// Let us delete the selected marketplace</span>
     <span class="doccomment">/// and remove all of its associated authorities from all the storage sources.</span>
     <span class="doccomment">/// If returns ok if the deletion was successful, error otherwise.</span>
     <span class="doccomment">/// Errors only could happen if the storage sources are corrupted.</span>
     <span class="kw">fn</span> <span class="ident">remove_selected_marketplace</span>(<span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span> {
         <span class="comment">//TODO: evaluate use iter_key_prefix -&gt;instead iter()</span>
-        <span class="comment">//Before to remove the marketplace, we need to remove all its associated authorities </span>
+        <span class="comment">//Before to remove the marketplace, we need to remove all its associated authorities</span>
         <span class="comment">// as well as the applicants/applications.</span>
 
         <span class="comment">//First we need to get the list of all the authorities for the marketplace.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">applications</span> <span class="op">=</span>  <span class="ident">Vec::new</span>();
-        
+
         <span class="comment">// remove from Applications lists</span>
         <span class="kw">for</span> <span class="ident">ele</span> <span class="kw">in</span> <span class="op">&lt;</span><span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>() {
             <span class="kw">if</span> <span class="ident">ele</span>.<span class="number">1</span> <span class="op">==</span> <span class="ident">marketplace_id</span> {
@@ -1410,7 +1456,7 @@
         <span class="comment">// remove from ApplicationsByAccount list</span>
         <span class="op">&lt;</span><span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">_k1</span>, <span class="ident">_k2</span>, <span class="ident">_k3</span>)<span class="op">|</span>{
             <span class="op">&lt;</span><span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">_k1</span>, <span class="ident">marketplace_id</span>);
-        });  
+        });
 
         <span class="comment">// remove from ApplicantsByMarketplace list</span>
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ApplicantsByMarketplace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear_prefix</span>(<span class="ident">marketplace_id</span>,<span class="number">1000</span>, <span class="prelude-val">None</span>);
@@ -1431,17 +1477,17 @@
 
     <span class="doccomment">/// Let us check the curent status of the selected application.</span>
     <span class="doccomment">/// If the status is rejected, we can safely remove its data from the storage sources</span>
-    <span class="doccomment">/// so the user can apply again. </span>
+    <span class="doccomment">/// so the user can apply again.</span>
     <span class="doccomment">/// It doesn&#39;t affect any other storage source/workflow.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_application_in_rejected_status</span>(<span class="ident">account</span>: <span class="ident">T::AccountId</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span>{
         <span class="kw">let</span> <span class="ident">application_id</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ApplicationsByAccount</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">marketplace_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ApplicationIdNotFound</span>)<span class="question-mark">?</span>;
-        
+
         <span class="kw">let</span> <span class="ident">application</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Applications</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">application_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ApplicationNotFound</span>)<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="ident">application</span>.<span class="ident">status</span> {
-            <span class="ident">ApplicationStatus::Pending</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ApplicationStatusStillPending</span>.<span class="ident">into</span>()), 
+            <span class="ident">ApplicationStatus::Pending</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ApplicationStatusStillPending</span>.<span class="ident">into</span>()),
             <span class="ident">ApplicationStatus::Approved</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ApplicationHasAlreadyBeenApproved</span>.<span class="ident">into</span>()),
             <span class="ident">ApplicationStatus::Rejected</span> =&gt; {
                 <span class="comment">//If status is Rejected, we need to delete the previous application from all the storage sources.</span>
@@ -1484,7 +1530,7 @@
 
     <span class="kw">fn</span> <span class="ident">update_offers_status</span>(<span class="ident">buyer</span>: <span class="ident">T::AccountId</span>, <span class="ident">collection_id</span>: <span class="ident">T::CollectionId</span>, <span class="ident">item_id</span>: <span class="ident">T::ItemId</span>, <span class="ident">marketplace_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span>{
         <span class="kw">let</span> <span class="ident">offer_ids</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OffersByItem</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">collection_id</span>, <span class="ident">item_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>)<span class="question-mark">?</span>;
-        
+
         <span class="kw">for</span> <span class="ident">offer_id</span> <span class="kw">in</span> <span class="ident">offer_ids</span> {
             <span class="op">&lt;</span><span class="ident">OffersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">offer_id</span>, <span class="op">|</span><span class="ident">offer</span><span class="op">|</span>{
                 <span class="kw">let</span> <span class="ident">offer</span> <span class="op">=</span> <span class="ident">offer</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>)<span class="question-mark">?</span>;
@@ -1531,7 +1577,7 @@
             <span class="kw">let</span> <span class="ident">offer_info</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OffersInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">offer</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::OfferNotFound</span>)<span class="question-mark">?</span>;
             <span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.</span>
             <span class="kw">if</span> <span class="ident">offer_info</span>.<span class="ident">marketplace_id</span> <span class="op">==</span> <span class="ident">marketplace_id</span> <span class="op">&amp;&amp;</span> <span class="ident">offer_info</span>.<span class="ident">offer_type</span> <span class="op">==</span> <span class="ident">OfferType::SellOrder</span> {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(())      
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(())
             }
         }
 
@@ -1575,5 +1621,6 @@
         )
     }
 
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

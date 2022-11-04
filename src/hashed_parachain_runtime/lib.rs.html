@@ -1792,7 +1792,7 @@
 			),
 			<span class="ident">ProxyType::Marketplaces</span> =&gt; <span class="macro">matches!</span>(
 				<span class="ident">c</span>,
-				<span class="ident">Call::Afloat</span>(..)
+				<span class="ident">Call::GatedMarketplace</span>(..)
 			),
 		}
 	}
@@ -2305,7 +2305,7 @@
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxOffersPerMarket</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">pallet_afloat::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
+<span class="kw">impl</span> <span class="ident">pallet_gated_marketplace::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
 	<span class="kw">type</span> <span class="ident">MaxAuthsPerMarket</span> <span class="op">=</span> <span class="ident">MaxAuthsPerMarket</span>;
 	<span class="kw">type</span> <span class="ident">MaxRolesPerAuth</span> <span class="op">=</span> <span class="ident">MaxRolesPerAuth</span>;
@@ -2404,7 +2404,7 @@
 		<span class="ident">BitcoinVaults</span>: <span class="ident">pallet_bitcoin_vaults</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">ValidateUnsigned</span>}  <span class="op">=</span> <span class="number">151</span>,
 		<span class="ident">Uniques</span>: <span class="ident">pallet_uniques</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">152</span>,
 		<span class="ident">Fruniques</span>: <span class="ident">pallet_fruniques</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">153</span>,
-		<span class="ident">Afloat</span>: <span class="ident">pallet_afloat</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">154</span>,
+		<span class="ident">GatedMarketplace</span>: <span class="ident">pallet_gated_marketplace</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">154</span>,
 		<span class="ident">RBAC</span>: <span class="ident">pallet_rbac</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">155</span>,
 		<span class="ident">ConfidentialDocs</span>: <span class="ident">pallet_confidential_docs</span>::{<span class="ident">Pallet</span>, <span class="ident">Call</span>, <span class="ident">Storage</span>, <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>}  <span class="op">=</span> <span class="number">156</span>,
 	}
