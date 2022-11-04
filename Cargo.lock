@@ -3006,6 +3006,7 @@ dependencies = [
  "frame-try-runtime",
  "hex-literal",
  "log",
+ "pallet-afloat",
  "pallet-alliance",
  "pallet-asset-tx-payment",
  "pallet-assets",
@@ -3023,7 +3024,6 @@ dependencies = [
  "pallet-democracy",
  "pallet-elections-phragmen",
  "pallet-fruniques",
- "pallet-gated-marketplace",
  "pallet-gilt",
  "pallet-identity",
  "pallet-im-online",
@@ -3090,6 +3090,7 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "hex-literal",
  "log",
+ "pallet-afloat",
  "pallet-assets",
  "pallet-aura",
  "pallet-balances",
@@ -3098,7 +3099,6 @@ dependencies = [
  "pallet-collective",
  "pallet-confidential-docs",
  "pallet-fruniques",
- "pallet-gated-marketplace",
  "pallet-grandpa",
  "pallet-identity",
  "pallet-indices",
@@ -5112,6 +5112,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-afloat"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "pallet-fruniques",
+ "pallet-rbac",
+ "pallet-timestamp",
+ "pallet-uniques",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "pallet-alliance"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27#8eff668a42325aeb4433eace1604f4d286a6ec05"
@@ -5527,27 +5548,6 @@ dependencies = [
  "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
-]
-
-[[package]]
-name = "pallet-gated-marketplace"
-version = "4.0.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "pallet-balances",
- "pallet-fruniques",
- "pallet-rbac",
- "pallet-timestamp",
- "pallet-uniques",
- "parity-scale-codec",
- "scale-info",
- "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",

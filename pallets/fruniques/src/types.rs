@@ -16,7 +16,7 @@ pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLi
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
-pub type CollectionDescription<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
+pub type CollectionDescription<T> = StringLimit<T>;
 // (ParentId, Hierarchical, Percentage)
 pub type HierarchicalInfo = (ItemId, bool, u8);
 

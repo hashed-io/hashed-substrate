@@ -94,12 +94,14 @@ impl pallet_gated_marketplace::Config for Test {
 }
 parameter_types! {
 	pub const ChildMaxLen: u32 = 10;
+	pub const LimitBoundedVec: u8 = 1;
 }
 
 impl pallet_fruniques::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
+	type LimitBoundedVec = LimitBoundedVec;
 }
 
 parameter_types! {

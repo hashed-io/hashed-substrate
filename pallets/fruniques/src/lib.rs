@@ -18,9 +18,8 @@ pub mod types;
 pub mod pallet {
 	use super::*;
 	use crate::types::*;
-	use frame_support::{pallet_prelude::*, transactional, BoundedVec};
+	use frame_support::{pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
-	use scale_info::prelude::vec::Vec;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
@@ -31,6 +30,9 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
+		/// Solution to fix issue with an optional BoundedVec
+		#[pallet::constant]
+		type LimitBoundedVec: Get<u8>;
 	}
 
 	#[pallet::pallet]
@@ -152,21 +154,21 @@ pub mod pallet {
 		///
 		/// ## Parameters
 		/// - `origin`: The origin of the transaction.
-		/// - `Metadata`: The title of the collection.
+		/// - `metadata`: The title of the collection.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn create_collection(
 			origin: OriginFor<T>,
-			metadata: Option<CollectionDescription<T>>,
+			metadata: CollectionDescription<T>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
 
-			let new_collection_id: u32 = Self::next_collection().try_into().unwrap();
+			let new_collection_id: u32 = Self::next_collection();
 
 			Self::do_create_collection(
 				origin,
 				new_collection_id,
 				metadata,
-				Self::account_id_to_lookup_source(&admin),
+				admin.clone(),
 			)?;
 
 			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
@@ -202,7 +204,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
 			instance_id: T::ItemId,
-			attributes: Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>,
+			attributes: Attributes<T>,
 		) -> DispatchResult {
 			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
 
@@ -217,7 +219,7 @@ pub mod pallet {
 				Self::set_attribute(
 					origin.clone(),
 					&class_id.clone(),
-					Self::u32_to_instance_id(instance_id.clone()),
+					Self::u32_to_instance_id(instance_id),
 					attribute.0.clone(),
 					attribute.1.clone(),
 				)?;
@@ -230,13 +232,15 @@ pub mod pallet {
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `parent_info` Optional value needed for the NFT division.
+		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
 			parent_info: Option<HierarchicalInfo>,
-			attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
+			metadata: CollectionDescription<T>,
+			attributes: Option<Attributes<T>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
 
@@ -264,7 +268,7 @@ pub mod pallet {
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
-			Self::do_spawn(origin.clone(), class_id, instance_id, account_id, attributes)?;
+			Self::do_spawn(origin, class_id, instance_id, account_id, metadata, attributes)?;
 
 			Self::deposit_event(Event::FruniqueCreated(
 				owner.clone(),
@@ -291,7 +295,7 @@ pub mod pallet {
 			class_id: T::CollectionId,
 			instance_id: Option<T::ItemId>,
 		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			T::RemoveOrigin::ensure_origin(origin)?;
 
 			if let Some(instance_id) = instance_id {
 				ensure!(!Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueAlreadyExists);
@@ -320,7 +324,7 @@ pub mod pallet {
 			witness: pallet_uniques::DestroyWitness,
 			maybe_check_owner: Option<T::AccountId>,
 		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			T::RemoveOrigin::ensure_origin(origin)?;
 
 			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
 			pallet_uniques::Pallet::<T>::do_destroy_collection(
@@ -345,8 +349,8 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			let _ = <FruniqueCnt<T>>::put(0);
-			let _ = <NextCollection<T>>::put(0);
+			<FruniqueCnt<T>>::put(0);
+			<NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueParent<T>>::clear(1000, None);
 			let _ = <FruniqueChild<T>>::clear(1000, None);

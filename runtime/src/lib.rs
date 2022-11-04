@@ -519,7 +519,8 @@ parameter_types! {
 	pub const ItemDeposit: Balance = 1 * DOLLARS;
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
-	pub const ChildMaxLen: u32 = 25;
+	pub const ChildMaxLen: u32 = 100;
+	pub const LimitBoundedVec: u8 = 1;
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -551,6 +552,7 @@ impl pallet_fruniques::Config for Runtime {
 	>;
 
 	type ChildMaxLen = ChildMaxLen;
+	type LimitBoundedVec = LimitBoundedVec;
 
 }
 
@@ -620,7 +622,7 @@ parameter_types! {
 	pub const MaxMarketsPerItem: u32 = 10;
 	pub const MaxOffersPerMarket: u32 = 100;
 }
-impl pallet_gated_marketplace::Config for Runtime {
+impl pallet_afloat::Config for Runtime {
 	type Event = Event;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
@@ -797,7 +799,7 @@ construct_runtime!(
 		Bounties: pallet_bounties,
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
-		GatedMarketplace: pallet_gated_marketplace,
+		Afloat: pallet_afloat,
 		Assets: pallet_assets,
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
