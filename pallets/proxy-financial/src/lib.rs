@@ -447,6 +447,8 @@ pub mod pallet {
 		UserHasAssignedProjectsCannotUpdateRole,
 		/// Cannot delete user if the user is assigned to a project
 		UserHasAssignedProjectsCannotDelete,
+		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
+		DrawdownStatusNotSupportedForBulkUpload,
 
 	}
 

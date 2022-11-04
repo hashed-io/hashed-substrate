@@ -846,6 +846,7 @@ impl<T: Config> Pallet<T> {
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                 let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
                 transaction_data.status = TransactionStatus::Submitted;
+                transaction_data.feedback = None;
                 Ok(())
             })?;
         }
@@ -1213,9 +1214,12 @@ impl<T: Config> Pallet<T> {
         // Ensure amount is valid
         Self::is_amount_valid(total_amount)?;
 
-        //Ensure only Construction loan & developer equity drawdowns can be bulk uploaded
+        //Ensure only Construction loan & developer equity drawdowns can call bulk uploaded
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
         ensure!(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::<T>::DrawdownTypeNotSupportedForBulkUpload);
+
+        //Ensure drawdown status is draft or rejected
+        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::DrawdownStatusNotSupportedForBulkUpload);
 
         // Ensure documents is not empty
         ensure!(!documents.is_empty(), Error::<T>::DocumentsIsEmpty);
@@ -1230,6 +1234,7 @@ impl<T: Config> Pallet<T> {
             mod_drawdown_data.description = Some(description);
             mod_drawdown_data.documents = Some(documents);
             mod_drawdown_data.status = DrawdownStatus::Submitted;
+            mod_drawdown_data.feedback = None;
             Ok(())
         })?;
 
