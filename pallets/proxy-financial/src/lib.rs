@@ -710,7 +710,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			// Match bulkupdate
-			match bulkupdate {
+			match bulkupload {
 				Some(approval) => {
 					// Execute bulkupload flow (construction loan & developer equity)
 					match approval {
