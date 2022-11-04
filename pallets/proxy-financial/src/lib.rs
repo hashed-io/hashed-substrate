@@ -698,7 +698,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			bulkupdate: Option<bool>,
+			bulkupload: Option<bool>,
 			transactions: Option<BoundedVec<(
 				Option<[u8;32]>, // expenditure_id
 				Option<u64>, // amount
