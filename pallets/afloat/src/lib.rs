@@ -422,6 +422,24 @@ pub mod pallet {
 			Self::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
 		}
 
+		/// Invite a user to a marketplace.
+		///
+		/// The admin of the marketplace can invite a user to the marketplace.
+		/// ### Parameters:
+		/// - `origin`: The admin of the marketplace.
+		/// - `marketplace_id`: The id of the marketplace where we want to invite a user.
+		/// - `account`: The account to be invited.
+		///
+		/// ### Considerations:
+		/// - You can only invite users to a marketplace where you are the admin.
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn invite(origin: OriginFor<T>, marketplace_id: [u8;32], account: T::AccountId, fields : Fields<T>, custodian_fields: Option<CustodianFields<T>>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_invite(who, marketplace_id, account, fields, custodian_fields)
+		}
+
 		/// Add an Authority type
 		///
 		/// This extrinsic adds an authority type for the selected account

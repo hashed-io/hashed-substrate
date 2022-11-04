@@ -1,7 +1,7 @@
 use super::*;
 
-use frame_system::pallet_prelude::*;
 use crate::types::*;
+use frame_system::pallet_prelude::*;
 
 use frame_support::traits::tokens::nonfungibles::Inspect;
 use scale_info::prelude::string::String;
@@ -9,6 +9,7 @@ use scale_info::prelude::string::String;
 use pallet_rbac::types::*;
 
 use frame_support::pallet_prelude::*;
+use frame_support::traits::EnsureOriginWithArg;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
@@ -53,7 +54,7 @@ impl<T: Config> Pallet<T> {
 	pub fn get_nft_attribute(
 		class_id: &T::CollectionId,
 		instance_id: &T::ItemId,
-		key: &Vec<u8>,
+		key: &[u8],
 	) -> AttributeValue<T> {
 		if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
 			return BoundedVec::<u8, T::ValueLimit>::try_from(a)
@@ -139,29 +140,26 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-
 	/// Helper function to create a new collection
 	/// Creates a collection and updates its metadata if needed.
 	pub fn do_create_collection(
 		origin: OriginFor<T>,
 		class_id: T::CollectionId,
-		metadata: Option<CollectionDescription<T>>,
-		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		metadata: CollectionDescription<T>,
+		admin: T::AccountId,
 	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(
-			origin.clone(),
+		let owner = T::CreateOrigin::ensure_origin(origin.clone(), &class_id)?;
+
+		pallet_uniques::Pallet::<T>::do_create_collection(
 			class_id,
-			admin,
+			owner.clone(),
+			admin.clone(),
+			T::CollectionDeposit::get(),
+			false,
+			pallet_uniques::Event::Created { collection: class_id, creator: admin, owner },
 		)?;
 
-		if let Some(metadata) = metadata {
-			pallet_uniques::Pallet::<T>::set_collection_metadata(
-			origin,
-			class_id,
-			metadata,
-			false
-			)?;
-		}
+		pallet_uniques::Pallet::<T>::set_collection_metadata(origin, class_id, metadata, false)?;
 
 		Ok(())
 	}
@@ -174,9 +172,9 @@ impl<T: Config> Pallet<T> {
 		numeric_value: Option<Permill>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
+		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id, admin.clone())?;
 
-		Self::mint(origin.clone(), &class_id, instance_id.clone(), admin.clone())?;
+		Self::mint(origin.clone(), &class_id, instance_id, admin)?;
 
 		if let Some(n) = numeric_value {
 			let num_value_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
@@ -184,7 +182,7 @@ impl<T: Config> Pallet<T> {
 			let num_value = BoundedVec::<u8, T::ValueLimit>::try_from(n.encode())
 				.expect("Error on encoding the numeric value to BoundedVec");
 			pallet_uniques::Pallet::<T>::set_attribute(
-				origin.clone(),
+				origin,
 				class_id,
 				Some(instance_id),
 				num_value_key,
@@ -200,15 +198,18 @@ impl<T: Config> Pallet<T> {
 		collection: T::CollectionId,
 		item: T::ItemId,
 		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
+		metadata: CollectionDescription<T>,
+		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
+		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
+		pallet_uniques::Pallet::<T>::mint(origin.clone(), collection, item, owner)?;
 
-		ensure!(Self::collection_exists(&collection),  <Error<T>>::CollectionNotFound);
-		pallet_uniques::Pallet::<T>::mint(
+		pallet_uniques::Pallet::<T>::set_metadata(
 			origin.clone(),
 			collection,
 			item,
-			owner
+			metadata,
+			false,
 		)?;
 
 		if let Some(attributes) = attributes {
@@ -226,10 +227,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn pallet_id()->IdOrVec{
-        IdOrVec::Vec(
-            Self::module_name().as_bytes().to_vec()
-        )
-    }
-
+	pub fn pallet_id() -> IdOrVec {
+		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
+	}
 }
