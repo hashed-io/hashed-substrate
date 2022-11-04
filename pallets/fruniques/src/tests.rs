@@ -81,7 +81,6 @@ fn spawn_extrinsic_works() {
 	})
 }
 
-
 #[test]
 fn set_attributes_works() {
 	ExtBuilder::default().build().execute_with(|| {

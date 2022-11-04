@@ -54,7 +54,7 @@ impl<T: Config> Pallet<T> {
 	pub fn get_nft_attribute(
 		class_id: &T::CollectionId,
 		instance_id: &T::ItemId,
-		key: &Vec<u8>,
+		key: &[u8],
 	) -> AttributeValue<T> {
 		if let Some(a) = pallet_uniques::Pallet::<T>::attribute(class_id, instance_id, key) {
 			return BoundedVec::<u8, T::ValueLimit>::try_from(a)
@@ -151,7 +151,7 @@ impl<T: Config> Pallet<T> {
 		let owner = T::CreateOrigin::ensure_origin(origin.clone(), &class_id)?;
 
 		pallet_uniques::Pallet::<T>::do_create_collection(
-			class_id.clone(),
+			class_id,
 			owner.clone(),
 			admin.clone(),
 			T::CollectionDeposit::get(),
@@ -172,9 +172,9 @@ impl<T: Config> Pallet<T> {
 		numeric_value: Option<Permill>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id.clone(), admin.clone())?;
+		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id, admin.clone())?;
 
-		Self::mint(origin.clone(), &class_id, instance_id.clone(), admin.clone())?;
+		Self::mint(origin.clone(), &class_id, instance_id, admin)?;
 
 		if let Some(n) = numeric_value {
 			let num_value_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
@@ -182,7 +182,7 @@ impl<T: Config> Pallet<T> {
 			let num_value = BoundedVec::<u8, T::ValueLimit>::try_from(n.encode())
 				.expect("Error on encoding the numeric value to BoundedVec");
 			pallet_uniques::Pallet::<T>::set_attribute(
-				origin.clone(),
+				origin,
 				class_id,
 				Some(instance_id),
 				num_value_key,
@@ -199,7 +199,7 @@ impl<T: Config> Pallet<T> {
 		item: T::ItemId,
 		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 		metadata: CollectionDescription<T>,
-		attributes: Option<Vec<(BoundedVec<u8, T::KeyLimit>, BoundedVec<u8, T::ValueLimit>)>>,
+		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
 		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
 		pallet_uniques::Pallet::<T>::mint(origin.clone(), collection, item, owner)?;
