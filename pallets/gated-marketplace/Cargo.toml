@@ -1,5 +1,5 @@
 [package]
-name = "pallet-afloat"
+name = "pallet-gated-marketplace"
 version = "4.0.0-dev"
 description = "Pallet to create marketplaces"
 authors = ["Hashed <https://github.com/hashed-io"]

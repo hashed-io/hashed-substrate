@@ -478,7 +478,7 @@ impl InstanceFilter<Call> for ProxyType {
 			),
 			ProxyType::Marketplaces => matches!(
 				c,
-				Call::Afloat(..)
+				Call::GatedMarketplace(..)
 			),
 		}
 	}
@@ -991,7 +991,7 @@ parameter_types! {
 	pub const MaxOffersPerMarket: u32 = 100;
 }
 
-impl pallet_afloat::Config for Runtime {
+impl pallet_gated_marketplace::Config for Runtime {
 	type Event = Event;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
@@ -1090,7 +1090,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults::{Pallet, Call, Storage, Event<T>, ValidateUnsigned}  = 151,
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}  = 152,
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>}  = 153,
-		Afloat: pallet_afloat::{Pallet, Call, Storage, Event<T>}  = 154,
+		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 154,
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 155,
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
 	}
