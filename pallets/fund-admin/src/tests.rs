@@ -7,7 +7,7 @@ use std::vec;
 type RbacErr = pallet_rbac::Error<Test>;
 
 fn pallet_id() ->[u8;32]{
-	ProxyFinancial::pallet_id().to_id()
+	FundAdmin::pallet_id().to_id()
 }
 
 fn pallet_name()-> pallet_rbac::types::IdOrVec {
@@ -33,7 +33,7 @@ fn register_admin_works() {
 // fn sudo_register_administrator_account_works() {
 //     new_test_ext().execute_with(|| {
 //         // let alice_name = return_field_name("Alice Keys");
-//         // assert_ok!(ProxyFinancial::sudo_add_administrator(
+//         // assert_ok!(FundAdmin::sudo_add_administrator(
 //         //     Origin::signed(1),
 //         //     1,
 //         //     alice_name.clone()

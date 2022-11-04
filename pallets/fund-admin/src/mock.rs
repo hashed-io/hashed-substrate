@@ -19,7 +19,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		ProxyFinancial: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
+		FundAdmin: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
@@ -136,6 +136,6 @@ impl pallet_rbac::Config for Test {
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
-	t.execute_with(|| ProxyFinancial::do_initial_setup().expect("Error on configuring initial setup"));
+	t.execute_with(|| FundAdmin::do_initial_setup().expect("Error on configuring initial setup"));
 	t
 }

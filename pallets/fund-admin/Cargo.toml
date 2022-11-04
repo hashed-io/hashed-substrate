@@ -1,5 +1,5 @@
 [package]
-name = "pallet-proxy-financial"
+name = "pallet-fund-admin"
 version = "4.0.0-dev"
 description = "Proxy Financial Pallet"
 authors = ["Hashed <https://github.com/hashed-io"]

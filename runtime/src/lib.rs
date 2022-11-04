@@ -573,9 +573,9 @@ parameter_types! {
 	pub const MaxDrawdownsByStatus:u32 = 2000;
 	pub const MaxExpendituresPerProject:u32 = 1000;
 
-
 }
-impl pallet_proxy_financial::Config for Runtime {
+
+impl pallet_fund_admin::Config for Runtime {
 	type Event = Event;
 	type Timestamp = Timestamp;
 	type Moment = Moment;
@@ -802,7 +802,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
-		ProxyFinancial: pallet_proxy_financial,
+		FundAdmin: pallet_fund_admin,
 	}
 );
 
