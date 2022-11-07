@@ -114,13 +114,13 @@ impl pallet_timestamp::Config for Test {
 }
 
 parameter_types! {
-	pub const MaxScopesPerPallet: u32 = 2;
-	pub const MaxRolesPerPallet: u32 = 6;
-	pub const RoleMaxLen: u32 = 25;
-	pub const PermissionMaxLen: u32 = 25;
-	pub const MaxPermissionsPerRole: u32 = 20;
-	pub const MaxRolesPerUser: u32 = 2;
-	pub const MaxUsersPerRole: u32 = 2;
+	pub const MaxScopesPerPallet: u32 = 1000;
+	pub const MaxRolesPerPallet: u32 = 50;
+	pub const RoleMaxLen: u32 = 50;
+	pub const PermissionMaxLen: u32 = 50;
+	pub const MaxPermissionsPerRole: u32 = 100;
+	pub const MaxRolesPerUser: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 2500;
 }
 impl pallet_rbac::Config for Test {
 	type Event = Event;
