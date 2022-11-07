@@ -48,6 +48,8 @@ pub mod pallet {
 		FruniqueCreated(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// A frunique/unique was successfully divided!
 		FruniqueDivided(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
+		// A frunique has been verified.
+		FruniqueVerified(T::AccountId, CollectionId, ItemId),
 		// Counter should work?
 		NextFrunique(u32),
 	}
@@ -82,6 +84,8 @@ pub mod pallet {
 		CollectionAlreadyExists,
 		// Frunique already exists
 		FruniqueAlreadyExists,
+		// Frunique already verified
+		FruniqueAlreadyVerified
 	}
 
 	#[pallet::storage]
@@ -119,6 +123,19 @@ pub mod pallet {
 		Blake2_128Concat,
 		ItemId,                   // FruniqueId
 		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_verified)]
+	/// Keeps track of verified fruniques.
+	pub(super) type FruniqueVerified<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		CollectionId,
+		Blake2_128Concat,
+		ItemId,
+		bool,
 		ValueQuery,
 	>;
 
@@ -276,6 +293,28 @@ pub mod pallet {
 				class_id,
 				instance_id,
 			));
+
+			Ok(())
+		}
+
+		/// ## Verification of the NFT
+		/// ### Parameters:
+		/// - `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `instance_id` must be a valid instance of the asset class.
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn verify(
+			origin: OriginFor<T>,
+			class_id: CollectionId,
+			instance_id: ItemId,
+		) -> DispatchResult {
+			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
+
+			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			<FruniqueVerified<T>>::insert(class_id, instance_id, true);
+
+			Self::deposit_event(Event::FruniqueVerified(owner, class_id, instance_id));
 
 			Ok(())
 		}
