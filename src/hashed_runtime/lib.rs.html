@@ -1607,9 +1607,9 @@
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxDrawdownsByStatus</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">2000</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxExpendituresPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">1000</span>;
 
-
 }
-<span class="kw">impl</span> <span class="ident">pallet_proxy_financial::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
+
+<span class="kw">impl</span> <span class="ident">pallet_fund_admin::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
 	<span class="kw">type</span> <span class="ident">Timestamp</span> <span class="op">=</span> <span class="ident">Timestamp</span>;
 	<span class="kw">type</span> <span class="ident">Moment</span> <span class="op">=</span> <span class="ident">Moment</span>;
@@ -1725,12 +1725,12 @@
 
 <span class="macro">parameter_types!</span> {
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxScopesPerPallet</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1000</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxRolesPerPallet</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">20</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RoleMaxLen</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">30</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PermissionMaxLen</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">30</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxPermissionsPerRole</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">12</span>;
+	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxRolesPerPallet</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
+	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RoleMaxLen</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
+	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PermissionMaxLen</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
+	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxPermissionsPerRole</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxRolesPerUser</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxUsersPerRole</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
+	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxUsersPerRole</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2500</span>;
 }
 <span class="kw">impl</span> <span class="ident">pallet_rbac::Config</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
 	<span class="kw">type</span> <span class="ident">Event</span> <span class="op">=</span> <span class="ident">Event</span>;
@@ -1836,7 +1836,7 @@
 		<span class="ident">BitcoinVaults</span>: <span class="ident">pallet_bitcoin_vaults</span>,
 		<span class="ident">RBAC</span>: <span class="ident">pallet_rbac</span>,
 		<span class="ident">ConfidentialDocs</span>: <span class="ident">pallet_confidential_docs</span>,
-		<span class="ident">ProxyFinancial</span>: <span class="ident">pallet_proxy_financial</span>,
+		<span class="ident">FundAdmin</span>: <span class="ident">pallet_fund_admin</span>,
 	}
 );
 
