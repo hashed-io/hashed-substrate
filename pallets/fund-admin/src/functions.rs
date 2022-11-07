@@ -87,7 +87,7 @@ impl<T: Config> Pallet<T> {
             Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
             Option<ExpenditureType>,
             Option<u64>,
-            Option<u32>,
+            Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
             Option<u32>,
             CUDAction,
             Option<[u8;32]>,
@@ -398,7 +398,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
-                    // Ensure admin cannot delete himself
+                    // Ensure admin cannot delete themselves
                     ensure!(user.0 != admin, Error::<T>::AdministatorsCannotDeleteThemselves);
 
                     Self::do_delete_user(
@@ -566,7 +566,7 @@ impl<T: Config> Pallet<T> {
             Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // 0: name
             Option<ExpenditureType>, // 1: type
             Option<u64>, // 2: amount
-            Option<u32>, // 3: naics code
+            Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>, // 3: naics code
             Option<u32>, // 4: jobs multiplier
             CUDAction, // 5: CUDAction
             Option<[u8;32]>, // 6: expenditure_id
@@ -639,7 +639,7 @@ impl<T: Config> Pallet<T> {
         name: BoundedVec<FieldName, T::MaxBoundedVecs>,
         expenditure_type: ExpenditureType,
         expenditure_amount: u64,
-        naics_code: Option<u32>,
+        naics_code: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
         //Ensure project exists
@@ -657,13 +657,21 @@ impl<T: Config> Pallet<T> {
         // Create expenditure id
         let expenditure_id = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
+        // NAICS code
+        let get_naics_code = match naics_code {
+            Some(mod_naics_code) => {
+                Some(mod_naics_code.into_inner()[0].clone())
+            },
+            None => None,
+        };
+        
         // Create expenditurte data
         let expenditure_data = ExpenditureData {
             project_id,
             name: name.into_inner()[0].clone(),
             expenditure_type,
             expenditure_amount,
-            naics_code,
+            naics_code: get_naics_code,
             jobs_multiplier, 
         };
 
@@ -687,7 +695,7 @@ impl<T: Config> Pallet<T> {
         expenditure_id: [u8;32],
         name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, 
         expenditure_amount: Option<u64>,
-        naics_code: Option<u32>,
+        naics_code: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
         jobs_multiplier: Option<u32>,
     ) -> DispatchResult {
         //Ensure project exists
@@ -715,7 +723,7 @@ impl<T: Config> Pallet<T> {
                 expenditure.expenditure_amount = mod_expenditure_amount;
             }
             if let Some(mod_naics_code) = naics_code {
-                expenditure.naics_code = Some(mod_naics_code);
+                expenditure.naics_code = Some(mod_naics_code.into_inner()[0].clone());
             }
             if let Some(mod_jobs_multiplier) = jobs_multiplier {
                 expenditure.jobs_multiplier = Some(mod_jobs_multiplier);
@@ -846,6 +854,7 @@ impl<T: Config> Pallet<T> {
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                 let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
                 transaction_data.status = TransactionStatus::Submitted;
+                transaction_data.feedback = None;
                 Ok(())
             })?;
         }
@@ -1194,7 +1203,7 @@ impl<T: Config> Pallet<T> {
     // B U L K   U P L O A D   T R A N S A C T I O N S
 
     pub fn do_up_bulk_upload(
-        user: T::AccountId, //TODO: Remove underscore when permissions are implemented
+        user: T::AccountId,
         project_id: [u8;32],
         drawdown_id: [u8;32],
         description: FieldDescription,
@@ -1213,9 +1222,12 @@ impl<T: Config> Pallet<T> {
         // Ensure amount is valid
         Self::is_amount_valid(total_amount)?;
 
-        //Ensure only Construction loan & developer equity drawdowns can be bulk uploaded
+        //Ensure only Construction loan & developer equity drawdowns can call bulk uploaded
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
         ensure!(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::<T>::DrawdownTypeNotSupportedForBulkUpload);
+
+        //Ensure drawdown status is draft or rejected
+        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::DrawdownStatusNotSupportedForBulkUpload);
 
         // Ensure documents is not empty
         ensure!(!documents.is_empty(), Error::<T>::DocumentsIsEmpty);
@@ -1230,6 +1242,7 @@ impl<T: Config> Pallet<T> {
             mod_drawdown_data.description = Some(description);
             mod_drawdown_data.documents = Some(documents);
             mod_drawdown_data.status = DrawdownStatus::Submitted;
+            mod_drawdown_data.feedback = None;
             Ok(())
         })?;
 

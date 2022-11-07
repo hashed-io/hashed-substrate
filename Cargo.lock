@@ -3098,13 +3098,13 @@ dependencies = [
  "pallet-collective",
  "pallet-confidential-docs",
  "pallet-fruniques",
+ "pallet-fund-admin",
  "pallet-gated-marketplace",
  "pallet-grandpa",
  "pallet-identity",
  "pallet-indices",
  "pallet-membership",
  "pallet-node-authorization",
- "pallet-proxy-financial",
  "pallet-randomness-collective-flip",
  "pallet-rbac",
  "pallet-recovery",
@@ -5533,6 +5533,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-fund-admin"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-rbac",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "pallet-gated-marketplace"
 version = "4.0.0-dev"
 dependencies = [
@@ -5853,23 +5870,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-proxy-financial"
-version = "4.0.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "pallet-rbac",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
 ]
 
 [[package]]
