@@ -127,7 +127,7 @@ pub mod pallet {
 	#[pallet::getter(fn users_info)]
 	pub(super) type UsersInfo<T: Config> = StorageMap<
 		_, 
-		Identity, 
+		Blake2_128Concat, 
 		T::AccountId, // Key account_id
 		UserData<T>,  // Value UserData<T>
 		OptionQuery,
@@ -157,7 +157,7 @@ pub mod pallet {
 	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
 		_, 
-		Identity, 
+		Blake2_128Concat, 
 		T::AccountId, // Key account_id
 		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
 		ValueQuery,
