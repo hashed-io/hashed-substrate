@@ -30,9 +30,6 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
-		/// Solution to fix issue with an optional BoundedVec
-		#[pallet::constant]
-		type LimitBoundedVec: Get<u8>;
 	}
 
 	#[pallet::pallet]

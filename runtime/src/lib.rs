@@ -520,7 +520,6 @@ parameter_types! {
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
 	pub const ChildMaxLen: u32 = 100;
-	pub const LimitBoundedVec: u8 = 1;
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -552,7 +551,6 @@ impl pallet_fruniques::Config for Runtime {
 	>;
 
 	type ChildMaxLen = ChildMaxLen;
-	type LimitBoundedVec = LimitBoundedVec;
 
 }
 
