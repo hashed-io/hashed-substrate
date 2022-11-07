@@ -70,7 +70,7 @@ pub struct ExpenditureData {
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
     pub expenditure_amount: u64,
-    pub naics_code: Option<u32>,
+    pub naics_code: Option<FieldDescription>,
     pub jobs_multiplier: Option<u32>,
 }
 
