@@ -30,11 +30,13 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 				// initial collators.
 				vec![
 					(
-                        // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+						// Jonathan
+                        // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
                         hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),                    						
                         hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].unchecked_into(),
 					),
 					(
+						// Theresa
                         // 5DkJvQp2gqHraWZU1BNCDxEKTQHezn2Qy7z5hLPksUdjtEG9
                         hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),                    						
                         hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].unchecked_into(),
@@ -76,7 +78,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 					),
 				],
 				vec![
-                    // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+                    // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
                     hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),   
                     // 5DkJvQp2gqHraWZU1BNCDxEKTQHezn2Qy7z5hLPksUdjtEG9                 
                     hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),
@@ -98,7 +100,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 				// session keys at
 				vec![
 					(
-                        // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+                        // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
                         hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),                    						
                         hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].unchecked_into(),
 					),
@@ -143,7 +145,7 @@ pub fn get_chain_spec() -> Md5ChainSpec {
 						hex!["1eed3cc6fde968d5fe9c64c12241a5178577e07c707065026f476e868df0264b"].unchecked_into(),
 					)
 				],
-				// 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+				// 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
 				hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(), 
 				2089.into(),
 			)

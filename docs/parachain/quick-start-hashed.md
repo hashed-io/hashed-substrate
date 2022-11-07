@@ -35,7 +35,7 @@ cd hashed-substrate
 
 cargo build --release
 
-./target/release/hashed-parachain build-spec --chain md5 --disable-default-bootnode > md5-local-parachain.json
+./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > hashed-local-parachain.json
 ```
 
 # Add the ParaID
@@ -54,14 +54,14 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 # Build the Raw Spec File
 ```bash
 # build raw spec 
-./target/release/hashed-parachain build-spec --chain md5-local-parachain.json --raw --disable-default-bootnode > md5-local-parachain-raw.json
+./target/release/hashed-parachain build-spec --chain hashed-local-parachain.json --raw --disable-default-bootnode > hashed-local-parachain-raw.json
 ```
 
 # Building genesis state and wasm files
 ```bash
-./target/release/hashed-parachain export-genesis-state --chain md5-local-parachain-raw.json > md5-genesis-head
+./target/release/hashed-parachain export-genesis-state --chain hashed-local-parachain-raw.json > hashed-genesis-head
 
-./target/release/hashed-parachain export-genesis-wasm --chain md5-local-parachain-raw.json > md5-wasm
+./target/release/hashed-parachain export-genesis-wasm --chain hashed-local-parachain-raw.json > hashed-wasm
 ```
 
 # Start Collator 
@@ -70,7 +70,7 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
     --alice \
     --collator \
     --force-authoring \
-    --chain md5-local-parachain-raw.json \
+    --chain hashed-local-parachain-raw.json \
     --base-path /tmp/parachain/alice \
     --port 40333 \
     --ws-port 8844 \
