@@ -27,7 +27,6 @@ construct_runtime!(
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const ChildMaxLen: u32 = 10;
-	pub const LimitBoundedVec: u8 = 1;
 }
 
 impl frame_system::Config for Test {
@@ -61,7 +60,6 @@ impl pallet_fruniques::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
-	type LimitBoundedVec = LimitBoundedVec;
 }
 
 parameter_types! {
