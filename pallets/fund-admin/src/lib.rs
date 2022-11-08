@@ -55,25 +55,13 @@ pub mod pallet {
 		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
 
 		#[pallet::constant]
-		type ProjectNameMaxLen: Get<u32>;
-
-		#[pallet::constant]
-		type ProjectDescMaxLen: Get<u32>;
-
-		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
-
-		#[pallet::constant]
-		type MaxAccountsPerTransaction: Get<u32>;
 
 		#[pallet::constant]
 		type MaxProjectsPerUser: Get<u32>;
 
 		#[pallet::constant]
 		type MaxUserPerProject: Get<u32>;
-
-		#[pallet::constant]
-		type CIDMaxLen: Get<u32>;
 
 		#[pallet::constant]
 		type MaxBuildersPerProject: Get<u32>;
@@ -98,9 +86,6 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxRegistrationsAtTime: Get<u32>;
-
-		#[pallet::constant]
-		type MaxDrawdownsByStatus: Get<u32>;
 
 		#[pallet::constant]
 		type MaxExpendituresPerProject: Get<u32>;
