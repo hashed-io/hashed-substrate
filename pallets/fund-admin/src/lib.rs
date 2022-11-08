@@ -21,7 +21,6 @@ mod types;
 // - Remove unused pallet events
 // - Add internal documentation for each extrinsic
 // - Add external documentation for each extrinsic
-// - Update hasher for each storage map depending on the use case 
 // - Fix typos
 
 #[frame_support::pallet]
@@ -231,9 +230,9 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Project was created
+		/// Project was created successfully
 		ProjectCreated(T::AccountId, [u8;32]),
-		/// Proxy setup completed
+		/// Proxy initial setup completed
 		ProxySetupCompleted,
 		/// User registered successfully
 		UserAdded(T::AccountId),
@@ -255,8 +254,6 @@ pub mod pallet {
 		UserDeleted(T::AccountId),
 		/// Expenditure was created successfully
 		ExpenditureCreated,
-		/// A bugdet was created successfully
-		BudgetCreated([u8;32]),
 		/// Expenditure was edited successfully
 		ExpenditureEdited([u8;32]),
 		/// Expenditure was deleted successfully
@@ -279,7 +276,6 @@ pub mod pallet {
 		DrawdownApproved([u8;32]),
 		/// Drawdown was rejected successfully
 		DrawdownRejected([u8;32]),
-
 	}
 
 	// E R R O R S
@@ -289,26 +285,22 @@ pub mod pallet {
 		/// Error names should be descriptive.
 		/// TODO: map each constant type used by bounded vecs to a pallet error
 		/// when boundaries are exceeded
-		/// TODO: Update and remove unused  pallet errors
-		NoneValue,
+		/// No value was found for the global scope
+		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
 		ProjectIdAlreadyInUse,
-		/// Timestamp error
+		/// Timestamp was not genereated correctly
 		TimestampError,
 		/// Completion date must be later than creation date
 		CompletionDateMustBeLater,
-		/// User is already registered
+		/// User is already registered in the site
 		UserAlreadyRegistered,
-		/// Project is not found
+		/// Project was not found
 		ProjectNotFound,
-		///Date can not be in the past
-		DateCanNotBeInThePast,
 		/// Project is not active anymore
 		ProjectIsAlreadyCompleted,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
-		/// Global scope is not set
-		GlobalScopeNotSet,
 		/// User is not registered
 		UserNotRegistered,
 		/// User has been already added to the project
@@ -317,8 +309,6 @@ pub mod pallet {
 		MaxUsersPerProjectReached,
 		/// Max number of projects per user reached
 		MaxProjectsPerUserReached,
-		/// User already has the role
-		UserAlreadyHasRole,
 		/// User is not assigned to the project
 		UserNotAssignedToProject,
 		/// Can not register administator role 
@@ -333,8 +323,6 @@ pub mod pallet {
 		MaxRegionalCenterPerProjectReached,
 		/// Can not remove administator role
 		CannotRemoveAdminRole,
-		/// Can not delete an user with active projects
-		CannotDeleteUserWithAssignedProjects,
 		/// Can not add admin role at user project assignment
 		CannotAddAdminRole,
 		/// User can not have more than one role at the same time
@@ -345,18 +333,10 @@ pub mod pallet {
 		ExpenditureAlreadyExists,
 		/// Max number of expenditures per project reached
 		MaxExpendituresPerProjectReached,
-		/// Name for expenditure is too long
-		NameTooLong,
-		/// There is no expenditure with such project id
-		NoExpendituresFound, 
 		/// Field name can not be empty
 		EmptyExpenditureName,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
-		/// There is no budgets for the project
-		ThereIsNoBudgetsForTheProject,
-		/// Budget id is not found
-		BudgetNotFound,
 		/// Drowdown id is not found
 		DrawdownNotFound,
 		/// Invalid amount
@@ -375,18 +355,12 @@ pub mod pallet {
 		MaxDrawdownsPerProjectReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
-		/// Can not delete a completed drawdown
-		CannotDeleteCompletedDrawdown,
 		/// Can not modify a transaction at this moment
 		CannotEditTransaction,
-		/// Can not delete a completed transaction
-		CannotDeleteCompletedTransaction,
 		/// Drawdown is already completed
 		DrawdownIsAlreadyCompleted,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
-		/// Expenditure type does not match project type
-		InvalidExpenditureType,
 		/// User does not have the specified role
 		UserDoesNotHaveRole,
 		/// Transactions vector is empty
@@ -397,8 +371,6 @@ pub mod pallet {
 		DrawdownHasNoTransactions,
 		/// Cannot submit transaction
 		CannotSubmitTransaction,
-		/// Drawdown can not be submitted
-		CannotSubmitDrawdown,
 		/// Drawdown can not be approved if is not in submitted status
 		DrawdownIsNotInSubmittedStatus,
 		/// Transactions is not in submitted status
@@ -427,18 +399,12 @@ pub mod pallet {
 		BulkUploadDescriptionRequired,
 		/// Administator can not delete themselves
 		AdministatorsCannotDeleteThemselves,
-		/// No transactions were provided for bulk upload
-		NoTransactionsProvidedForBulkUpload,
 		/// No feedback was provided for bulk upload
 		NoFeedbackProvidedForBulkUpload,
-		/// Feedback provided for bulk upload should be one
-		FeedbackProvidedForBulkUploadShouldBeOne,
-		/// Bulkupdate param is missed to execute a bulkupload drawdown
-		BulkUpdateIsRequired,
 		/// NO feedback for EN5 drawdown was provided
-		EB5FeebackMissing,
-		/// Inflation rate extrinsic is missing an array of changes
-		ProjectsIsEmpty,
+		EB5MissingFeedback,
+		/// Inflation rate extrinsic is missing an array of project ids
+		InflationRateMissingProjectIds,
 		/// Inflation rate was not provided
 		InflationRateRequired,
 		/// Bulkupload drawdowns are only allowed for Construction Loan & Developer Equity
