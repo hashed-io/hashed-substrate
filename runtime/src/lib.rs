@@ -106,7 +106,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 124,
+	spec_version: 125,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -520,7 +520,6 @@ parameter_types! {
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
 	pub const ChildMaxLen: u32 = 100;
-	pub const LimitBoundedVec: u8 = 1;
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -552,7 +551,6 @@ impl pallet_fruniques::Config for Runtime {
 	>;
 
 	type ChildMaxLen = ChildMaxLen;
-	type LimitBoundedVec = LimitBoundedVec;
 
 }
 
@@ -575,9 +573,9 @@ parameter_types! {
 	pub const MaxDrawdownsByStatus:u32 = 2000;
 	pub const MaxExpendituresPerProject:u32 = 1000;
 
-
 }
-impl pallet_proxy_financial::Config for Runtime {
+
+impl pallet_fund_admin::Config for Runtime {
 	type Event = Event;
 	type Timestamp = Timestamp;
 	type Moment = Moment;
@@ -693,12 +691,12 @@ impl pallet_confidential_docs::Config for Runtime {
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
-	pub const MaxRolesPerPallet: u32 = 20;
-	pub const RoleMaxLen: u32 = 30;
-	pub const PermissionMaxLen: u32 = 30;
-	pub const MaxPermissionsPerRole: u32 = 12;
+	pub const MaxRolesPerPallet: u32 = 50;
+	pub const RoleMaxLen: u32 = 50;
+	pub const PermissionMaxLen: u32 = 50;
+	pub const MaxPermissionsPerRole: u32 = 100;
 	pub const MaxRolesPerUser: u32 = 10;
-	pub const MaxUsersPerRole: u32 = 10;
+	pub const MaxUsersPerRole: u32 = 2500;
 }
 impl pallet_rbac::Config for Runtime {
 	type Event = Event;
@@ -804,7 +802,7 @@ construct_runtime!(
 		BitcoinVaults: pallet_bitcoin_vaults,
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
-		ProxyFinancial: pallet_proxy_financial,
+		FundAdmin: pallet_fund_admin,
 	}
 );
 

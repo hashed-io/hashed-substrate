@@ -67,7 +67,7 @@ pallet-bitcoin-vaults = { default-features = false, path = "../pallets/bitcoin-v
 pallet-gated-marketplace= { default-features = false, path = "../pallets/gated-marketplace" }
 pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
-pallet-proxy-financial = { default-features = false, path = "../pallets/proxy-financial" }
+pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
 
 
 [build-dependencies]
@@ -107,7 +107,7 @@ std = [
 	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
 	"pallet-confidential-docs/std",
-	"pallet-proxy-financial/std",
+	"pallet-fund-admin/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",

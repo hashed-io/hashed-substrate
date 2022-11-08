@@ -127,7 +127,7 @@ pub mod pallet {
 	#[pallet::getter(fn users_info)]
 	pub(super) type UsersInfo<T: Config> = StorageMap<
 		_, 
-		Identity, 
+		Blake2_128Concat, 
 		T::AccountId, // Key account_id
 		UserData<T>,  // Value UserData<T>
 		OptionQuery,
@@ -157,7 +157,7 @@ pub mod pallet {
 	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
 		_, 
-		Identity, 
+		Blake2_128Concat, 
 		T::AccountId, // Key account_id
 		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
 		ValueQuery,
@@ -447,6 +447,8 @@ pub mod pallet {
 		UserHasAssignedProjectsCannotUpdateRole,
 		/// Cannot delete user if the user is assigned to a project
 		UserHasAssignedProjectsCannotDelete,
+		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
+		DrawdownStatusNotSupportedForBulkUpload,
 
 	}
 
@@ -539,7 +541,7 @@ pub mod pallet {
 				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 				Option<ExpenditureType>,
 				Option<u64>,
-				Option<u32>,
+				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 				Option<u32>,
 				CUDAction,
 				Option<[u8;32]>,
@@ -613,7 +615,7 @@ pub mod pallet {
 				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 				Option<ExpenditureType>,
 				Option<u64>,
-				Option<u32>,
+				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 				Option<u32>,
 				CUDAction,
 				Option<[u8;32]>,
@@ -698,7 +700,7 @@ pub mod pallet {
 			origin: OriginFor<T>, 
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
-			bulkupdate: Option<bool>,
+			bulkupload: Option<bool>,
 			transactions: Option<BoundedVec<(
 				Option<[u8;32]>, // expenditure_id
 				Option<u64>, // amount
@@ -710,7 +712,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			// Match bulkupdate
-			match bulkupdate {
+			match bulkupload {
 				Some(approval) => {
 					// Execute bulkupload flow (construction loan & developer equity)
 					match approval {
