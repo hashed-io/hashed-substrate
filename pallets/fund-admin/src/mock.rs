@@ -1,4 +1,4 @@
-use crate as pallet_proxy_financial;
+use crate as pallet_fund_admin;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -19,7 +19,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		FundAdmin: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
+		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
@@ -78,7 +78,7 @@ parameter_types! {
 
 }
 
-impl pallet_proxy_financial::Config for Test {
+impl pallet_fund_admin::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ProjectNameMaxLen = ProjectNameMaxLen;

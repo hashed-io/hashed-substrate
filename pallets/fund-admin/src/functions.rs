@@ -1672,7 +1672,7 @@ impl<T: Config> Pallet<T> {
         //Remove user from UsersInfo storage map
         <UsersInfo<T>>::remove(admin.clone());
 
-        // Remove administrator to rbac pallet
+        // Remove administrator from rbac pallet
         T::Rbac::remove_role_from_user(
             admin.clone(),
             Self::pallet_id(),
