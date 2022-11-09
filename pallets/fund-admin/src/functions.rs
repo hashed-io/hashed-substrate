@@ -399,7 +399,8 @@ impl<T: Config> Pallet<T> {
                 },
                 CUDAction::Delete => {
                     // Ensure admin cannot delete themselves
-                    ensure!(user.0 != admin, Error::<T>::AdministatorsCannotDeleteThemselves);
+                    ensure!(user.0 != admin, Error::<T>::AdministratorsCannotDeleteThemselves,
+                    );
 
                     Self::do_delete_user(
                         user.0.clone()
@@ -545,6 +546,8 @@ impl<T: Config> Pallet<T> {
                 user_info.email = mod_email[0].clone();
             }
             if let Some(documents) = documents {
+                // Ensure user is an investor
+                ensure!(user_info.role == ProxyRole::Investor, Error::<T>::UserIsNotAnInvestor);
                 user_info.documents = Some(documents);
             }
             Ok(())
