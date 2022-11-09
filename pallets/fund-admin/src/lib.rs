@@ -431,6 +431,8 @@ pub mod pallet {
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to add the first administrator to the site
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
+		/// - This function grants administator permissions to the user from the rbac pallet 
+		/// - Administator role have global scope permissions
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
@@ -453,6 +455,7 @@ pub mod pallet {
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to remove any administrator from the site
 		/// - If the user is not registered, the function will return an error: UserNotFound
+		/// - This function removes administator permissions of the user from the rbac pallet
 		/// 
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site, 
@@ -471,7 +474,7 @@ pub mod pallet {
 
 		// U S E R S
 		// --------------------------------------------------------------------------------------------
-		/// This extrinsic is used to register, update, or delete a user account 
+		/// This extrinsic is used to create, update, or delete a user account 
 		/// 
 		/// # Parameters:
 		/// - origin: The administrator account
@@ -490,13 +493,15 @@ pub mod pallet {
 		/// - This function can only be called by an administrator account
 		/// - Multiple users can be registered, updated, or deleted at the same time, but 
 		/// the user account must be unique. Multiple actions over the same user account
-		/// in the same call will result in an unexpected behavior.
+		/// in the same call, it could result in an unexpected behavior.
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		/// 
 		/// # Note:
 		/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
 		/// but administrators can not delete themselves.
+		/// WARNING: This function only registers, updates, or deletes users from the site. 
+		/// DOESN'T grant or remove permissions from the rbac pallet.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users(
@@ -578,7 +583,11 @@ pub mod pallet {
 		/// - For expenditures, apart from the expenditure id, naics code & jopbs multiplier, ALL parameters are required because for this
 		/// flow, the expenditures are always created. The naics code & the jobs multiplier
 		/// can be added later by the administrator.
-		#[transactional]
+		/// - Creating a project will automatically create a scope for the project.
+		/// 
+		/// # Note:
+		/// WARNING: If users are provided, the function will assign the users to the project, granting them
+		/// permissions in the rbac pallet.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(
 			origin: OriginFor<T>, 
@@ -608,6 +617,30 @@ pub mod pallet {
 			Self::do_create_project(who, title, description, image, address, creation_date, completion_date, expenditures, users)
 		}
 
+		/// Edits a project.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account
+		/// - project_id: The selected project id that will be edited
+		/// - title: The title of the project to be edited
+		/// - description: The description of the project to be edited
+		/// - image: The image of the project to be edited
+		/// - address: The address of the project to be edited
+		/// - creation_date: The creation date of the project to be edited
+		/// - completion_date: The completion date of the project to be edited
+		/// 
+		/// # Considerations:
+		/// - This function can only be called by an administrator account
+		/// - ALL parameters are optional because depends on what is being edited
+		/// - The project id is required because it is the only way to identify the project
+		/// - The project id must be registered. If the project is not registered, 
+		/// the function will return an error: ProjectNotFound
+		/// - It is not possible to edit the expenditures or the users assigned to the project 
+		/// through this function. For that, the administrator must use the extrinsics:
+		/// * expenditures
+		/// * projects_assign_user
+		/// - Project can only be edited in the Started status
+		/// - Completion date must be greater than creation date
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_edit_project(
@@ -625,6 +658,21 @@ pub mod pallet {
 			Self::do_edit_project(who, project_id, title, description, image, address, creation_date, completion_date)
 		}
 
+		/// Deletes a project.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account
+		/// - project_id: The selected project id that will be deleted
+		/// 
+		/// # Considerations:
+		/// - This function can only be called by an administrator account
+		/// - The project id is required because it is the only way to identify the project
+		/// - The project id must be registered. If the project is not registered,
+		/// the function will return an error: ProjectNotFound
+		/// 
+		/// # Note:
+		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
+		/// BE CAREFUL.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_delete_project(
@@ -636,7 +684,40 @@ pub mod pallet {
 			Self::do_delete_project(who, project_id)
 		}
 
-		// Users: (user, role, assign action)
+		/// Assigns a user to a project.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account
+		/// - project_id: The selected project id where user will be assigned
+		/// - users: The users to be assigned to the project. This is a vector of tuples 
+		/// where each entry is composed by:
+		/// * 0: The user account id
+		/// * 1: The user role
+		/// * 2: The AssignAction to be performed. (Assign or Unassign)
+		/// 
+		/// # Considerations:
+		/// - This function can only be called by an administrator account
+		/// - This extrinsic allows multiple users to be assigned/unassigned at the same time.
+		/// - The project id is required because it is the only way to identify the project
+		/// - This extrinsic is used for both assigning and unassigning users to a project
+		/// depending on the AssignAction. 
+		/// - After a user is assigned to a project, the user will be able to perform actions
+		/// in the project depending on the role assigned to the user.
+		/// - After a user is unassigned from a project, the user will not be able to perform actions
+		/// in the project anymore.
+		/// - If the user is already assigned to the project, the function will return an erro.
+		/// 
+		/// # Note:
+		/// - WARNING: ALL provided users needs to be registered in the site. If any of the users
+		/// is not registered, the function will return an error.
+		/// - Assigning or unassigning a user to a project will add or remove permissions to the user
+		/// from the RBAC pallet.  
+		/// - Warning: Cannot assign a user to a project with a different role than the one they 
+		/// have in UsersInfo. If the user has a different role, the function will return an error.
+		/// - Warning: Cannot unassign a user from a project with a different role than the one they
+		/// have in UsersInfo. If the user has a different role, the function will return an error.
+		/// - Warning: Do not perfom multiple actions over the same user in the same call, it could
+		/// result in an unexpected behavior.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
@@ -655,21 +736,20 @@ pub mod pallet {
 
 		// B U D G E T  E X P E N D I T U R E 
 		// --------------------------------------------------------------------------------------------
-		
-		// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
+		/// This extrinsic is used to create, update or delete expenditures.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn expenditures(
 			origin: OriginFor<T>, 
 			project_id: [u8;32], 
 			expenditures: BoundedVec<(
-				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-				Option<ExpenditureType>,
-				Option<u64>,
-				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-				Option<u32>,
-				CUDAction,
-				Option<[u8;32]>,
+				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+				Option<ExpenditureType>, // type
+				Option<u64>, // amount
+				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>, // naics code
+				Option<u32>, // jobs multiplier
+				CUDAction, // action
+				Option<[u8;32]>, // expenditure_id
 			), T::MaxRegistrationsAtTime>,  
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin

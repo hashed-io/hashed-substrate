@@ -278,7 +278,6 @@ impl<T: Config> Pallet<T> {
         // Deletes all drawdowns from DrawdownsByProject storagemap
         <DrawdownsByProject<T>>::remove(project_id);
 
-
         //Event 
         Self::deposit_event(Event::ProjectDeleted(project_id));
         Ok(())
