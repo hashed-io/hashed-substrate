@@ -1,4 +1,4 @@
-use crate as pallet_proxy_financial;
+use crate as pallet_fund_admin;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -19,7 +19,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		FundAdmin: pallet_proxy_financial::{Pallet, Call, Storage, Event<T>},
+		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
@@ -58,12 +58,8 @@ impl system::Config for Test {
 }
 
 parameter_types! {
-	pub const ProjectNameMaxLen:u32 = 32;
-	pub const ProjectDescMaxLen:u32 = 256;
 	pub const MaxDocuments:u32 = 5;
-	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
-	pub const CIDMaxLen:u32 = 100;	
 	pub const MaxUserPerProject:u32 = 50;
 	pub const MaxBuildersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
@@ -73,20 +69,15 @@ parameter_types! {
 	pub const MaxDrawdownsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
-	pub const MaxDrawdownsByStatus:u32 = 2000;
 	pub const MaxExpendituresPerProject:u32 = 1000;
 
 }
 
-impl pallet_proxy_financial::Config for Test {
+impl pallet_fund_admin::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
-	type ProjectNameMaxLen = ProjectNameMaxLen;
-	type ProjectDescMaxLen = ProjectDescMaxLen;
 	type MaxDocuments = MaxDocuments;
-	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
-	type CIDMaxLen = CIDMaxLen;
 	type MaxUserPerProject = MaxUserPerProject;
 	type MaxBuildersPerProject = MaxBuildersPerProject;
 	type MaxInvestorsPerProject = MaxInvestorsPerProject;
@@ -96,7 +87,6 @@ impl pallet_proxy_financial::Config for Test {
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
-	type MaxDrawdownsByStatus = MaxDrawdownsByStatus;
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 
 

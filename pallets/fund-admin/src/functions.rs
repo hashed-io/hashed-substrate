@@ -399,7 +399,8 @@ impl<T: Config> Pallet<T> {
                 },
                 CUDAction::Delete => {
                     // Ensure admin cannot delete themselves
-                    ensure!(user.0 != admin, Error::<T>::AdministatorsCannotDeleteThemselves);
+                    ensure!(user.0 != admin, Error::<T>::AdministratorsCannotDeleteThemselves,
+                    );
 
                     Self::do_delete_user(
                         user.0.clone()
@@ -545,6 +546,8 @@ impl<T: Config> Pallet<T> {
                 user_info.email = mod_email[0].clone();
             }
             if let Some(documents) = documents {
+                // Ensure user is an investor
+                ensure!(user_info.role == ProxyRole::Investor, Error::<T>::UserIsNotAnInvestor);
                 user_info.documents = Some(documents);
             }
             Ok(())
@@ -972,7 +975,7 @@ impl<T: Config> Pallet<T> {
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
                 // Ensure transactions_feedback is some
-                let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5FeebackMissing)?;
+                let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
                 for (transaction_id, field_description) in mod_transactions_feedback {
                     // Update transaction feedback
@@ -1259,7 +1262,7 @@ impl<T: Config> Pallet<T> {
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
         // Ensure projects is not empty
-        ensure!(!projects.is_empty(), Error::<T>::ProjectsIsEmpty);
+        ensure!(!projects.is_empty(), Error::<T>::InflationRateMissingProjectIds);
 
         // Match each CUD action
         for project in projects {
@@ -1313,7 +1316,7 @@ impl<T: Config> Pallet<T> {
 
     /// Get global scope
     pub fn get_global_scope() -> [u8;32] {
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoneValue).unwrap();
+        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoGlobalScopeValueWasFound).unwrap();
         global_scope
     }
 
@@ -1672,7 +1675,7 @@ impl<T: Config> Pallet<T> {
         //Remove user from UsersInfo storage map
         <UsersInfo<T>>::remove(admin.clone());
 
-        // Remove administrator to rbac pallet
+        // Remove administrator from rbac pallet
         T::Rbac::remove_role_from_user(
             admin.clone(),
             Self::pallet_id(),

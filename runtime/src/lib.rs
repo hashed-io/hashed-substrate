@@ -555,12 +555,8 @@ impl pallet_fruniques::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ProjectNameMaxLen:u32 = 32;
-	pub const ProjectDescMaxLen:u32 = 256;
 	pub const MaxDocuments:u32 = 5;
-	pub const MaxAccountsPerTransaction:u32 = 5;
 	pub const MaxProjectsPerUser:u32 = 10;
-	pub const CIDMaxLen:u32 = 100;
 	pub const MaxUserPerProject:u32 = 50;
 	pub const MaxBuildersPerProject:u32 = 1;
 	pub const MaxInvestorsPerProject:u32 = 50;
@@ -570,7 +566,6 @@ parameter_types! {
 	pub const MaxDrawdownsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
-	pub const MaxDrawdownsByStatus:u32 = 2000;
 	pub const MaxExpendituresPerProject:u32 = 1000;
 
 }
@@ -584,13 +579,9 @@ impl pallet_fund_admin::Config for Runtime {
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
-
-	type ProjectNameMaxLen = ProjectNameMaxLen;
-	type ProjectDescMaxLen = ProjectDescMaxLen;
+	
 	type MaxDocuments = MaxDocuments;
-	type MaxAccountsPerTransaction = MaxAccountsPerTransaction;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
-	type CIDMaxLen = CIDMaxLen;
 	type MaxUserPerProject = MaxUserPerProject;
 	type MaxBuildersPerProject = MaxBuildersPerProject;
 	type MaxInvestorsPerProject = MaxInvestorsPerProject;
@@ -600,7 +591,6 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
-	type MaxDrawdownsByStatus = MaxDrawdownsByStatus;
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
 
 }
