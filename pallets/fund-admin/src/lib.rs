@@ -14,11 +14,8 @@ mod benchmarking;
 mod functions;
 mod types;
 //TODO: Remobe unused parameters, types, etc used for development
-// - Remove unused constants
 // - Change extrinsic names
 // - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
-// - Remove unused pallet errors
-// - Remove unused pallet events
 // - Add internal documentation for each extrinsic
 // - Add external documentation for each extrinsic
 // - Fix typos
@@ -89,8 +86,7 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxExpendituresPerProject: Get<u32>;
-		
-		
+
 	}
 
 	#[pallet::pallet]
@@ -225,9 +221,9 @@ pub mod pallet {
 		ProjectEdited([u8;32]),
 		/// Project was deleted
 		ProjectDeleted([u8;32]),
-		/// Administator added
+		/// Administrator added
 		AdministratorAssigned(T::AccountId),
-		/// Administator removed
+		/// Administrator removed
 		AdministratorRemoved(T::AccountId),
 		/// Users has been assigned from the selected project
 		UsersAssignationCompleted([u8;32]),
@@ -267,9 +263,6 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
-		/// TODO: map each constant type used by bounded vecs to a pallet error
-		/// when boundaries are exceeded
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -296,7 +289,7 @@ pub mod pallet {
 		MaxProjectsPerUserReached,
 		/// User is not assigned to the project
 		UserNotAssignedToProject,
-		/// Can not register administator role 
+		/// Can not register administrator role 
 		CannotRegisterAdminRole,
 		/// Max number of builders per project reached
 		MaxBuildersPerProjectReached,
@@ -306,7 +299,7 @@ pub mod pallet {
 		MaxIssuersPerProjectReached,
 		/// Max number of regional centers per project reached
 		MaxRegionalCenterPerProjectReached,
-		/// Can not remove administator role
+		/// Can not remove administrator role
 		CannotRemoveAdminRole,
 		/// Can not add admin role at user project assignment
 		CannotAddAdminRole,
@@ -382,8 +375,8 @@ pub mod pallet {
 		NoTransactionsToSubmit,
 		/// Bulk upload description is required
 		BulkUploadDescriptionRequired,
-		/// Administator can not delete themselves
-		AdministatorsCannotDeleteThemselves,
+		/// Administrator can not delete themselves
+		AdministratorsCannotDeleteThemselves,
 		/// No feedback was provided for bulk upload
 		NoFeedbackProvidedForBulkUpload,
 		/// NO feedback for EN5 drawdown was provided
@@ -400,6 +393,8 @@ pub mod pallet {
 		UserHasAssignedProjectsCannotDelete,
 		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
 		DrawdownStatusNotSupportedForBulkUpload,
+		/// Only investors can update/edit their documents
+		UserIsNotAnInvestor,
 
 	}
 
@@ -409,6 +404,12 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		// I N I T I A L 
 		// --------------------------------------------------------------------------------------------
+		/// Initialize the pallet by setting the permissions for each role
+		/// & the global scope 
+		/// 
+		/// # Considerations: 
+		/// - This function can only be called once
+		/// - This function can only be called usinf the sudo pallet
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(
@@ -419,6 +420,17 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Adds an administrator account to the site
+		/// 
+		/// # Parameters:
+		/// - origin: The sudo account
+		/// - admin: The administrator account to be added
+		/// - name: The name of the administrator account
+		/// 
+		/// # Considerations:
+		/// - This function can only be called using the sudo pallet
+		/// - This function is used to add the first administrator to the site
+		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
@@ -431,6 +443,20 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Removes an administrator account from the site
+		/// 
+		/// # Parameters:
+		/// - origin: The sudo account
+		/// - admin: The administrator account to be removed
+		/// 
+		/// # Considerations:
+		/// - This function can only be called using the sudo pallet
+		/// - This function is used to remove any administrator from the site
+		/// - If the user is not registered, the function will return an error: UserNotFound
+		/// 
+		/// # Note:
+		/// WARNING: Administrators can remove themselves from the site, 
+		/// but they can add themselves back
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn sudo_remove_administrator(
@@ -445,6 +471,32 @@ pub mod pallet {
 
 		// U S E R S
 		// --------------------------------------------------------------------------------------------
+		/// This extrinsic is used to register, update, or delete a user account 
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account
+		/// - user: The target user account to be registered, updated, or deleted. 
+		/// It is an array of user accounts where each entry it should be a tuple of the following:
+		/// - 0: The user account
+		/// - 1: The user name
+		/// - 2: The user role
+		/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.
+		/// 
+		/// # Considerations:
+		/// - Users parameters are optional because depends on the CUD action as follows:
+		/// * **Create**: The user account, user name, user role & CUD action are required
+		/// * **Update**: The user account & CUD action are required. The user name & user role are optionals.
+		/// * **Delete**: The user account & CUD action are required. 
+		/// - This function can only be called by an administrator account
+		/// - Multiple users can be registered, updated, or deleted at the same time, but 
+		/// the user account must be unique. Multiple actions over the same user account
+		/// in the same call will result in an unexpected behavior.
+		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
+		/// - If the user is not registered, the function will return an error: UserNotFound
+		/// 
+		/// # Note:
+		/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
+		/// but administrators can not delete themselves.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users(
@@ -461,23 +513,71 @@ pub mod pallet {
 			Self::do_execute_users(who, users)
 		}
 
+		/// Edits an user account
+		/// 
+		/// # Parameters:
+		/// - origin: The user account which is being edited
+		/// - name: The name of the user account which is being edited
+		/// - image: The image of the user account which is being edited
+		/// - email: The email of the user account which is being edited
+		/// - documents: The documents of the user account which is being edited.
+		/// ONLY available for the investor role. 
+		/// 
+		/// 
+		/// # Considerations:
+		/// - If the user is not registered, the function will return an error: UserNotFound
+		/// - This function can only be called by a registered user account
+		/// - This function will be called by the user account itself
+		/// - ALL parameters are optional because depends on what is being edited
+		/// - ONLY the investor role can edit or update the documents
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_edit_user(
 			origin: OriginFor<T>, 
-			user: T::AccountId, 
 			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
 			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			documents: Option<Documents<T>> 
 		) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
-			Self::do_edit_user(user, name, image, email, documents)
+			Self::do_edit_user(who, name, image, email, documents)
 		}	
 
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
+		/// Registers a new project.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account
+		/// - title: The title of the project
+		/// - description: The description of the project
+		/// - image: The image of the project (CID)
+		/// - address: The address of the project
+		/// - creation_date: The creation date of the project
+		/// - completion_date: The completion date of the project
+		/// - expenditures: The expenditures of the project. It is an array of tuples where each entry
+		/// is a tuple of the following:
+		/// * 0: The expenditure name
+		/// * 1: The expenditure type
+		/// * 2: The expenditure amount
+		/// * 3: The expenditure NAICS code
+		/// * 4: The expenditure jobs multiplier
+		/// * 5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.
+		/// * 6: The expenditure id. It is optional because it is only required when updating or deleting
+		/// - users: The users who will be assigned to the project. It is an array of tuples where each entry
+		/// is a tuple of the following:
+		/// * 0: The user account
+		/// * 1: The user role
+		/// * 2: The AssignAction to be performed on the user.
+		/// 
+		/// # Considerations:
+		/// - This function can only be called by an administrator account
+		/// - For users assignation, the user account must be registered. If the user is not registered,
+		/// the function will return an error. ALL parameters are required.
+		/// - For expenditures, apart from the expenditure id, naics code & jopbs multiplier, ALL parameters are required because for this
+		/// flow, the expenditures are always created. The naics code & the jobs multiplier
+		/// can be added later by the administrator.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(
