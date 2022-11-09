@@ -250,6 +250,35 @@ impl<T: Config> Pallet<T> {
         // Delete from UsersByProject storagemap
         <UsersByProject<T>>::remove(project_id);
 
+        // Delete expenditures from ExpendituresInfo storagemap
+        let expenditures_by_project = Self::expenditures_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for expenditure_id in expenditures_by_project {
+            <ExpendituresInfo<T>>::remove(expenditure_id);
+        }
+
+        // Deletes all expenditures from ExpendituresByProject storagemap
+        <ExpendituresByProject<T>>::remove(project_id);
+
+        let drawdowns_by_project = Self::drawdowns_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for drawdown_id in drawdowns_by_project {
+            // Delete transactions from TransactionsInfo storagemap
+            let transactions_by_drawdown = Self::transactions_by_drawdown(project_id, drawdown_id).iter().cloned().collect::<Vec<[u8;32]>>();
+            for transaction_id in transactions_by_drawdown {
+                <TransactionsInfo<T>>::remove(transaction_id);
+            }
+
+            // Deletes all transactions from TransactionsByDrawdown storagemap
+            <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
+
+            // Delete drawdown from DrawdownsInfo storagemap
+            <DrawdownsInfo<T>>::remove(drawdown_id);
+
+        }
+
+        // Deletes all drawdowns from DrawdownsByProject storagemap
+        <DrawdownsByProject<T>>::remove(project_id);
+
+
         //Event 
         Self::deposit_event(Event::ProjectDeleted(project_id));
         Ok(())
