@@ -145,6 +145,48 @@ fn sudo_cannot_delete_an_administrator_account_that_doesnt_exist_shouldnt_work()
     });
 }
 
+#[test]
+fn sudo_administrator_can_remove_another_administrator_account_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(FundAdmin::sudo_add_administrator(
+            Origin::root(),
+            2,
+            return_field_name("Alice Keys")
+        ));
+        assert!(FundAdmin::users_info(2).is_some());
+
+        assert_ok!(FundAdmin::sudo_add_administrator(
+            Origin::root(),
+            3,
+            return_field_name("Bob Keys")
+        ));
+        assert!(FundAdmin::users_info(3).is_some());
+
+        assert_ok!(FundAdmin::sudo_remove_administrator(
+            Origin::root(),
+            2,
+        ));
+        assert!(FundAdmin::users_info(2).is_none());
+    });
+}
+
+#[test]
+fn sudo_administrator_can_remove_themselves_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(FundAdmin::sudo_add_administrator(
+            Origin::root(),
+            2,
+            return_field_name("Alice Keys")
+        ));
+        assert!(FundAdmin::users_info(2).is_some());
+
+        assert_ok!(FundAdmin::sudo_remove_administrator(
+            Origin::root(),
+            2,
+        ));
+        assert!(FundAdmin::users_info(2).is_none());
+    });
+}
 
 // U S E R S
 // -----------------------------------------------------------------------------------------
