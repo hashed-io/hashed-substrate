@@ -860,6 +860,57 @@
 <span id="860">860</span>
 <span id="861">861</span>
 <span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -876,14 +927,10 @@
 <span class="kw">mod</span> <span class="ident">functions</span>;
 <span class="kw">mod</span> <span class="ident">types</span>;
 <span class="comment">//TODO: Remobe unused parameters, types, etc used for development</span>
-<span class="comment">// - Remove unused constants</span>
 <span class="comment">// - Change extrinsic names</span>
 <span class="comment">// - Update extrinsic names to beign like CURD actions ( create, update, read, delete)</span>
-<span class="comment">// - Remove unused pallet errors</span>
-<span class="comment">// - Remove unused pallet events</span>
 <span class="comment">// - Add internal documentation for each extrinsic</span>
 <span class="comment">// - Add external documentation for each extrinsic</span>
-<span class="comment">// - Update hasher for each storage map depending on the use case </span>
 <span class="comment">// - Fix typos</span>
 
 <span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
@@ -918,25 +965,13 @@
 		<span class="kw">type</span> <span class="ident">RemoveOrigin</span>: <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;		
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">ProjectNameMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">ProjectDescMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxDocuments</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxAccountsPerTransaction</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxProjectsPerUser</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxUserPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">CIDMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxBuildersPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
@@ -963,12 +998,8 @@
 		<span class="kw">type</span> <span class="ident">MaxRegistrationsAtTime</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxDrawdownsByStatus</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxExpendituresPerProject</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		
-		
+
 	}
 
 	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
@@ -1093,9 +1124,9 @@
 	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
 	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Project was created</span>
+		<span class="doccomment">/// Project was created successfully</span>
 		<span class="ident">ProjectCreated</span>(<span class="ident">T::AccountId</span>, [<span class="ident">u8</span>;<span class="number">32</span>]),
-		<span class="doccomment">/// Proxy setup completed</span>
+		<span class="doccomment">/// Proxy initial setup completed</span>
 		<span class="ident">ProxySetupCompleted</span>,
 		<span class="doccomment">/// User registered successfully</span>
 		<span class="ident">UserAdded</span>(<span class="ident">T::AccountId</span>),
@@ -1103,9 +1134,9 @@
 		<span class="ident">ProjectEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Project was deleted</span>
 		<span class="ident">ProjectDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
-		<span class="doccomment">/// Administator added</span>
+		<span class="doccomment">/// Administrator added</span>
 		<span class="ident">AdministratorAssigned</span>(<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// Administator removed</span>
+		<span class="doccomment">/// Administrator removed</span>
 		<span class="ident">AdministratorRemoved</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// Users has been assigned from the selected project</span>
 		<span class="ident">UsersAssignationCompleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
@@ -1117,8 +1148,6 @@
 		<span class="ident">UserDeleted</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// Expenditure was created successfully</span>
 		<span class="ident">ExpenditureCreated</span>,
-		<span class="doccomment">/// A bugdet was created successfully</span>
-		<span class="ident">BudgetCreated</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Expenditure was edited successfully</span>
 		<span class="ident">ExpenditureEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Expenditure was deleted successfully</span>
@@ -1141,36 +1170,28 @@
 		<span class="ident">DrawdownApproved</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
 		<span class="doccomment">/// Drawdown was rejected successfully</span>
 		<span class="ident">DrawdownRejected</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
-
 	}
 
 	<span class="comment">// E R R O R S</span>
 	<span class="comment">// ------------------------------------------------------------------------------------------------------------</span>
 	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
 	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Error names should be descriptive.</span>
-		<span class="doccomment">/// TODO: map each constant type used by bounded vecs to a pallet error</span>
-		<span class="doccomment">/// when boundaries are exceeded</span>
-		<span class="doccomment">/// TODO: Update and remove unused  pallet errors</span>
-		<span class="ident">NoneValue</span>,
+		<span class="doccomment">/// No value was found for the global scope</span>
+		<span class="ident">NoGlobalScopeValueWasFound</span>,
 		<span class="doccomment">/// Project ID is already in use</span>
 		<span class="ident">ProjectIdAlreadyInUse</span>,
-		<span class="doccomment">/// Timestamp error</span>
+		<span class="doccomment">/// Timestamp was not genereated correctly</span>
 		<span class="ident">TimestampError</span>,
 		<span class="doccomment">/// Completion date must be later than creation date</span>
 		<span class="ident">CompletionDateMustBeLater</span>,
-		<span class="doccomment">/// User is already registered</span>
+		<span class="doccomment">/// User is already registered in the site</span>
 		<span class="ident">UserAlreadyRegistered</span>,
-		<span class="doccomment">/// Project is not found</span>
+		<span class="doccomment">/// Project was not found</span>
 		<span class="ident">ProjectNotFound</span>,
-		<span class="doccomment">///Date can not be in the past</span>
-		<span class="ident">DateCanNotBeInThePast</span>,
 		<span class="doccomment">/// Project is not active anymore</span>
 		<span class="ident">ProjectIsAlreadyCompleted</span>,
 		<span class="doccomment">/// Can not delete a completed project</span>
 		<span class="ident">CannotDeleteCompletedProject</span>,
-		<span class="doccomment">/// Global scope is not set</span>
-		<span class="ident">GlobalScopeNotSet</span>,
 		<span class="doccomment">/// User is not registered</span>
 		<span class="ident">UserNotRegistered</span>,
 		<span class="doccomment">/// User has been already added to the project</span>
@@ -1179,11 +1200,9 @@
 		<span class="ident">MaxUsersPerProjectReached</span>,
 		<span class="doccomment">/// Max number of projects per user reached</span>
 		<span class="ident">MaxProjectsPerUserReached</span>,
-		<span class="doccomment">/// User already has the role</span>
-		<span class="ident">UserAlreadyHasRole</span>,
 		<span class="doccomment">/// User is not assigned to the project</span>
 		<span class="ident">UserNotAssignedToProject</span>,
-		<span class="doccomment">/// Can not register administator role </span>
+		<span class="doccomment">/// Can not register administrator role </span>
 		<span class="ident">CannotRegisterAdminRole</span>,
 		<span class="doccomment">/// Max number of builders per project reached</span>
 		<span class="ident">MaxBuildersPerProjectReached</span>,
@@ -1193,10 +1212,8 @@
 		<span class="ident">MaxIssuersPerProjectReached</span>,
 		<span class="doccomment">/// Max number of regional centers per project reached</span>
 		<span class="ident">MaxRegionalCenterPerProjectReached</span>,
-		<span class="doccomment">/// Can not remove administator role</span>
+		<span class="doccomment">/// Can not remove administrator role</span>
 		<span class="ident">CannotRemoveAdminRole</span>,
-		<span class="doccomment">/// Can not delete an user with active projects</span>
-		<span class="ident">CannotDeleteUserWithAssignedProjects</span>,
 		<span class="doccomment">/// Can not add admin role at user project assignment</span>
 		<span class="ident">CannotAddAdminRole</span>,
 		<span class="doccomment">/// User can not have more than one role at the same time</span>
@@ -1207,18 +1224,10 @@
 		<span class="ident">ExpenditureAlreadyExists</span>,
 		<span class="doccomment">/// Max number of expenditures per project reached</span>
 		<span class="ident">MaxExpendituresPerProjectReached</span>,
-		<span class="doccomment">/// Name for expenditure is too long</span>
-		<span class="ident">NameTooLong</span>,
-		<span class="doccomment">/// There is no expenditure with such project id</span>
-		<span class="ident">NoExpendituresFound</span>, 
 		<span class="doccomment">/// Field name can not be empty</span>
 		<span class="ident">EmptyExpenditureName</span>,
 		<span class="doccomment">/// Expenditure does not belong to the project</span>
 		<span class="ident">ExpenditureDoesNotBelongToProject</span>,
-		<span class="doccomment">/// There is no budgets for the project</span>
-		<span class="ident">ThereIsNoBudgetsForTheProject</span>,
-		<span class="doccomment">/// Budget id is not found</span>
-		<span class="ident">BudgetNotFound</span>,
 		<span class="doccomment">/// Drowdown id is not found</span>
 		<span class="ident">DrawdownNotFound</span>,
 		<span class="doccomment">/// Invalid amount</span>
@@ -1237,18 +1246,12 @@
 		<span class="ident">MaxDrawdownsPerProjectReached</span>,
 		<span class="doccomment">/// Can not modify a completed drawdown</span>
 		<span class="ident">CannotEditDrawdown</span>,
-		<span class="doccomment">/// Can not delete a completed drawdown</span>
-		<span class="ident">CannotDeleteCompletedDrawdown</span>,
 		<span class="doccomment">/// Can not modify a transaction at this moment</span>
 		<span class="ident">CannotEditTransaction</span>,
-		<span class="doccomment">/// Can not delete a completed transaction</span>
-		<span class="ident">CannotDeleteCompletedTransaction</span>,
 		<span class="doccomment">/// Drawdown is already completed</span>
 		<span class="ident">DrawdownIsAlreadyCompleted</span>,
 		<span class="doccomment">/// Transaction is already completed</span>
 		<span class="ident">TransactionIsAlreadyCompleted</span>,
-		<span class="doccomment">/// Expenditure type does not match project type</span>
-		<span class="ident">InvalidExpenditureType</span>,
 		<span class="doccomment">/// User does not have the specified role</span>
 		<span class="ident">UserDoesNotHaveRole</span>,
 		<span class="doccomment">/// Transactions vector is empty</span>
@@ -1259,8 +1262,6 @@
 		<span class="ident">DrawdownHasNoTransactions</span>,
 		<span class="doccomment">/// Cannot submit transaction</span>
 		<span class="ident">CannotSubmitTransaction</span>,
-		<span class="doccomment">/// Drawdown can not be submitted</span>
-		<span class="ident">CannotSubmitDrawdown</span>,
 		<span class="doccomment">/// Drawdown can not be approved if is not in submitted status</span>
 		<span class="ident">DrawdownIsNotInSubmittedStatus</span>,
 		<span class="doccomment">/// Transactions is not in submitted status</span>
@@ -1287,20 +1288,14 @@
 		<span class="ident">NoTransactionsToSubmit</span>,
 		<span class="doccomment">/// Bulk upload description is required</span>
 		<span class="ident">BulkUploadDescriptionRequired</span>,
-		<span class="doccomment">/// Administator can not delete themselves</span>
-		<span class="ident">AdministatorsCannotDeleteThemselves</span>,
-		<span class="doccomment">/// No transactions were provided for bulk upload</span>
-		<span class="ident">NoTransactionsProvidedForBulkUpload</span>,
+		<span class="doccomment">/// Administrator can not delete themselves</span>
+		<span class="ident">AdministratorsCannotDeleteThemselves</span>,
 		<span class="doccomment">/// No feedback was provided for bulk upload</span>
 		<span class="ident">NoFeedbackProvidedForBulkUpload</span>,
-		<span class="doccomment">/// Feedback provided for bulk upload should be one</span>
-		<span class="ident">FeedbackProvidedForBulkUploadShouldBeOne</span>,
-		<span class="doccomment">/// Bulkupdate param is missed to execute a bulkupload drawdown</span>
-		<span class="ident">BulkUpdateIsRequired</span>,
 		<span class="doccomment">/// NO feedback for EN5 drawdown was provided</span>
-		<span class="ident">EB5FeebackMissing</span>,
-		<span class="doccomment">/// Inflation rate extrinsic is missing an array of changes</span>
-		<span class="ident">ProjectsIsEmpty</span>,
+		<span class="ident">EB5MissingFeedback</span>,
+		<span class="doccomment">/// Inflation rate extrinsic is missing an array of project ids</span>
+		<span class="ident">InflationRateMissingProjectIds</span>,
 		<span class="doccomment">/// Inflation rate was not provided</span>
 		<span class="ident">InflationRateRequired</span>,
 		<span class="doccomment">/// Bulkupload drawdowns are only allowed for Construction Loan &amp; Developer Equity</span>
@@ -1311,6 +1306,8 @@
 		<span class="ident">UserHasAssignedProjectsCannotDelete</span>,
 		<span class="doccomment">/// Cannot send a bulkupload drawdown if the drawdown status isn&#39;t in draft or rejected</span>
 		<span class="ident">DrawdownStatusNotSupportedForBulkUpload</span>,
+		<span class="doccomment">/// Only investors can update/edit their documents</span>
+		<span class="ident">UserIsNotAnInvestor</span>,
 
 	}
 
@@ -1320,6 +1317,12 @@
 	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="comment">// I N I T I A L </span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
+		<span class="doccomment">/// Initialize the pallet by setting the permissions for each role</span>
+		<span class="doccomment">/// &amp; the global scope </span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations: </span>
+		<span class="doccomment">/// - This function can only be called once</span>
+		<span class="doccomment">/// - This function can only be called usinf the sudo pallet</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initial_setup</span>(
@@ -1330,6 +1333,17 @@
 			<span class="prelude-val">Ok</span>(())
 		}
 
+		<span class="doccomment">/// Adds an administrator account to the site</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Parameters:</span>
+		<span class="doccomment">/// - origin: The sudo account</span>
+		<span class="doccomment">/// - admin: The administrator account to be added</span>
+		<span class="doccomment">/// - name: The name of the administrator account</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations:</span>
+		<span class="doccomment">/// - This function can only be called using the sudo pallet</span>
+		<span class="doccomment">/// - This function is used to add the first administrator to the site</span>
+		<span class="doccomment">/// - If the user is already registered, the function will return an error: UserAlreadyRegistered</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sudo_add_administrator</span>(
@@ -1342,6 +1356,20 @@
 			<span class="prelude-val">Ok</span>(())
 		}
 
+		<span class="doccomment">/// Removes an administrator account from the site</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Parameters:</span>
+		<span class="doccomment">/// - origin: The sudo account</span>
+		<span class="doccomment">/// - admin: The administrator account to be removed</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations:</span>
+		<span class="doccomment">/// - This function can only be called using the sudo pallet</span>
+		<span class="doccomment">/// - This function is used to remove any administrator from the site</span>
+		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Note:</span>
+		<span class="doccomment">/// WARNING: Administrators can remove themselves from the site, </span>
+		<span class="doccomment">/// but they can add themselves back</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sudo_remove_administrator</span>(
@@ -1356,6 +1384,32 @@
 
 		<span class="comment">// U S E R S</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
+		<span class="doccomment">/// This extrinsic is used to register, update, or delete a user account </span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Parameters:</span>
+		<span class="doccomment">/// - origin: The administrator account</span>
+		<span class="doccomment">/// - user: The target user account to be registered, updated, or deleted. </span>
+		<span class="doccomment">/// It is an array of user accounts where each entry it should be a tuple of the following:</span>
+		<span class="doccomment">/// - 0: The user account</span>
+		<span class="doccomment">/// - 1: The user name</span>
+		<span class="doccomment">/// - 2: The user role</span>
+		<span class="doccomment">/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations:</span>
+		<span class="doccomment">/// - Users parameters are optional because depends on the CUD action as follows:</span>
+		<span class="doccomment">/// * **Create**: The user account, user name, user role &amp; CUD action are required</span>
+		<span class="doccomment">/// * **Update**: The user account &amp; CUD action are required. The user name &amp; user role are optionals.</span>
+		<span class="doccomment">/// * **Delete**: The user account &amp; CUD action are required. </span>
+		<span class="doccomment">/// - This function can only be called by an administrator account</span>
+		<span class="doccomment">/// - Multiple users can be registered, updated, or deleted at the same time, but </span>
+		<span class="doccomment">/// the user account must be unique. Multiple actions over the same user account</span>
+		<span class="doccomment">/// in the same call will result in an unexpected behavior.</span>
+		<span class="doccomment">/// - If the user is already registered, the function will return an error: UserAlreadyRegistered</span>
+		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Note:</span>
+		<span class="doccomment">/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,</span>
+		<span class="doccomment">/// but administrators can not delete themselves.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users</span>(
@@ -1372,23 +1426,71 @@
 			<span class="ident"><span class="self">Self</span>::do_execute_users</span>(<span class="ident">who</span>, <span class="ident">users</span>)
 		}
 
+		<span class="doccomment">/// Edits an user account</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Parameters:</span>
+		<span class="doccomment">/// - origin: The user account which is being edited</span>
+		<span class="doccomment">/// - name: The name of the user account which is being edited</span>
+		<span class="doccomment">/// - image: The image of the user account which is being edited</span>
+		<span class="doccomment">/// - email: The email of the user account which is being edited</span>
+		<span class="doccomment">/// - documents: The documents of the user account which is being edited.</span>
+		<span class="doccomment">/// ONLY available for the investor role. </span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations:</span>
+		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
+		<span class="doccomment">/// - This function can only be called by a registered user account</span>
+		<span class="doccomment">/// - This function will be called by the user account itself</span>
+		<span class="doccomment">/// - ALL parameters are optional because depends on what is being edited</span>
+		<span class="doccomment">/// - ONLY the investor role can edit or update the documents</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_edit_user</span>(
 			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">user</span>: <span class="ident">T::AccountId</span>, 
 			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">email</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
 		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">_who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
+			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
-			<span class="ident"><span class="self">Self</span>::do_edit_user</span>(<span class="ident">user</span>, <span class="ident">name</span>, <span class="ident">image</span>, <span class="ident">email</span>, <span class="ident">documents</span>)
+			<span class="ident"><span class="self">Self</span>::do_edit_user</span>(<span class="ident">who</span>, <span class="ident">name</span>, <span class="ident">image</span>, <span class="ident">email</span>, <span class="ident">documents</span>)
 		}	
 
 		<span class="comment">// P R O J E C T S</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
+		<span class="doccomment">/// Registers a new project.</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Parameters:</span>
+		<span class="doccomment">/// - origin: The administrator account</span>
+		<span class="doccomment">/// - title: The title of the project</span>
+		<span class="doccomment">/// - description: The description of the project</span>
+		<span class="doccomment">/// - image: The image of the project (CID)</span>
+		<span class="doccomment">/// - address: The address of the project</span>
+		<span class="doccomment">/// - creation_date: The creation date of the project</span>
+		<span class="doccomment">/// - completion_date: The completion date of the project</span>
+		<span class="doccomment">/// - expenditures: The expenditures of the project. It is an array of tuples where each entry</span>
+		<span class="doccomment">/// is a tuple of the following:</span>
+		<span class="doccomment">/// * 0: The expenditure name</span>
+		<span class="doccomment">/// * 1: The expenditure type</span>
+		<span class="doccomment">/// * 2: The expenditure amount</span>
+		<span class="doccomment">/// * 3: The expenditure NAICS code</span>
+		<span class="doccomment">/// * 4: The expenditure jobs multiplier</span>
+		<span class="doccomment">/// * 5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.</span>
+		<span class="doccomment">/// * 6: The expenditure id. It is optional because it is only required when updating or deleting</span>
+		<span class="doccomment">/// - users: The users who will be assigned to the project. It is an array of tuples where each entry</span>
+		<span class="doccomment">/// is a tuple of the following:</span>
+		<span class="doccomment">/// * 0: The user account</span>
+		<span class="doccomment">/// * 1: The user role</span>
+		<span class="doccomment">/// * 2: The AssignAction to be performed on the user.</span>
+		<span class="doccomment">/// </span>
+		<span class="doccomment">/// # Considerations:</span>
+		<span class="doccomment">/// - This function can only be called by an administrator account</span>
+		<span class="doccomment">/// - For users assignation, the user account must be registered. If the user is not registered,</span>
+		<span class="doccomment">/// the function will return an error. ALL parameters are required.</span>
+		<span class="doccomment">/// - For expenditures, apart from the expenditure id, naics code &amp; jopbs multiplier, ALL parameters are required because for this</span>
+		<span class="doccomment">/// flow, the expenditures are always created. The naics code &amp; the jobs multiplier</span>
+		<span class="doccomment">/// can be added later by the administrator.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_create_project</span>(

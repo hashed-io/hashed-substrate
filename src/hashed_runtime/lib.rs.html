@@ -1018,16 +1018,6 @@
 <span id="1018">1018</span>
 <span id="1019">1019</span>
 <span id="1020">1020</span>
-<span id="1021">1021</span>
-<span id="1022">1022</span>
-<span id="1023">1023</span>
-<span id="1024">1024</span>
-<span id="1025">1025</span>
-<span id="1026">1026</span>
-<span id="1027">1027</span>
-<span id="1028">1028</span>
-<span id="1029">1029</span>
-<span id="1030">1030</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 <span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.</span>
 <span class="attribute">#![<span class="ident">recursion_limit</span> <span class="op">=</span> <span class="string">&quot;256&quot;</span>]</span>
@@ -1585,12 +1575,8 @@
 }
 
 <span class="macro">parameter_types!</span> {
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ProjectNameMaxLen</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">32</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ProjectDescMaxLen</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">256</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxDocuments</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxAccountsPerTransaction</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxProjectsPerUser</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">10</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CIDMaxLen</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxUserPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxBuildersPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxInvestorsPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
@@ -1600,7 +1586,6 @@
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxDrawdownsPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">1000</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxTransactionsPerDrawdown</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">500</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxRegistrationsAtTime</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">50</span>;
-	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxDrawdownsByStatus</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">2000</span>;
 	<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MaxExpendituresPerProject</span>:<span class="ident">u32</span> <span class="op">=</span> <span class="number">1000</span>;
 
 }
@@ -1614,13 +1599,9 @@
 		<span class="ident">EnsureRoot</span><span class="op">&lt;</span><span class="ident">AccountId</span><span class="op">&gt;</span>,
 		<span class="ident">pallet_collective::EnsureProportionAtLeast</span><span class="op">&lt;</span><span class="ident">AccountId</span>, <span class="ident">CouncilCollective</span>, <span class="number">3</span>, <span class="number">5</span><span class="op">&gt;</span>,
 	<span class="op">&gt;</span>;
-
-	<span class="kw">type</span> <span class="ident">ProjectNameMaxLen</span> <span class="op">=</span> <span class="ident">ProjectNameMaxLen</span>;
-	<span class="kw">type</span> <span class="ident">ProjectDescMaxLen</span> <span class="op">=</span> <span class="ident">ProjectDescMaxLen</span>;
+	
 	<span class="kw">type</span> <span class="ident">MaxDocuments</span> <span class="op">=</span> <span class="ident">MaxDocuments</span>;
-	<span class="kw">type</span> <span class="ident">MaxAccountsPerTransaction</span> <span class="op">=</span> <span class="ident">MaxAccountsPerTransaction</span>;
 	<span class="kw">type</span> <span class="ident">MaxProjectsPerUser</span> <span class="op">=</span> <span class="ident">MaxProjectsPerUser</span>;
-	<span class="kw">type</span> <span class="ident">CIDMaxLen</span> <span class="op">=</span> <span class="ident">CIDMaxLen</span>;
 	<span class="kw">type</span> <span class="ident">MaxUserPerProject</span> <span class="op">=</span> <span class="ident">MaxUserPerProject</span>;
 	<span class="kw">type</span> <span class="ident">MaxBuildersPerProject</span> <span class="op">=</span> <span class="ident">MaxBuildersPerProject</span>;
 	<span class="kw">type</span> <span class="ident">MaxInvestorsPerProject</span> <span class="op">=</span> <span class="ident">MaxInvestorsPerProject</span>;
@@ -1630,7 +1611,6 @@
 	<span class="kw">type</span> <span class="ident">MaxDrawdownsPerProject</span> <span class="op">=</span> <span class="ident">MaxDrawdownsPerProject</span>;
 	<span class="kw">type</span> <span class="ident">MaxTransactionsPerDrawdown</span> <span class="op">=</span> <span class="ident">MaxTransactionsPerDrawdown</span>;
 	<span class="kw">type</span> <span class="ident">MaxRegistrationsAtTime</span> <span class="op">=</span> <span class="ident">MaxRegistrationsAtTime</span>;
-	<span class="kw">type</span> <span class="ident">MaxDrawdownsByStatus</span> <span class="op">=</span> <span class="ident">MaxDrawdownsByStatus</span>;
 	<span class="kw">type</span> <span class="ident">MaxExpendituresPerProject</span> <span class="op">=</span> <span class="ident">MaxExpendituresPerProject</span>;
 
 }
