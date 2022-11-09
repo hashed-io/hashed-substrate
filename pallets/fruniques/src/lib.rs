@@ -305,6 +305,7 @@ pub mod pallet {
 			class_id: CollectionId,
 			instance_id: ItemId,
 		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;

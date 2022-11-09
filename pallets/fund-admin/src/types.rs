@@ -6,7 +6,7 @@ use sp_runtime::sp_std::vec::Vec;
 //TODO: Fix types when using an Option, i.e: Option<CID>
 pub type FieldName = BoundedVec<u8, ConstU32<100>>;
 pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
-pub type CID = BoundedVec<u8,ConstU32<100>>;
+pub type CID = BoundedVec<u8, ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
 
 
