@@ -1724,6 +1724,55 @@
 <span id="1724">1724</span>
 <span id="1725">1725</span>
 <span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
 <span class="kw">use</span> <span class="ident">frame_support::traits::Time</span>;
@@ -1975,6 +2024,34 @@
 
         <span class="comment">// Delete from UsersByProject storagemap</span>
         <span class="op">&lt;</span><span class="ident">UsersByProject</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">project_id</span>);
+
+        <span class="comment">// Delete expenditures from ExpendituresInfo storagemap</span>
+        <span class="kw">let</span> <span class="ident">expenditures_by_project</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::expenditures_by_project</span>(<span class="ident">project_id</span>).<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">for</span> <span class="ident">expenditure_id</span> <span class="kw">in</span> <span class="ident">expenditures_by_project</span> {
+            <span class="op">&lt;</span><span class="ident">ExpendituresInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">expenditure_id</span>);
+        }
+
+        <span class="comment">// Deletes all expenditures from ExpendituresByProject storagemap</span>
+        <span class="op">&lt;</span><span class="ident">ExpendituresByProject</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">project_id</span>);
+
+        <span class="kw">let</span> <span class="ident">drawdowns_by_project</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::drawdowns_by_project</span>(<span class="ident">project_id</span>).<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">for</span> <span class="ident">drawdown_id</span> <span class="kw">in</span> <span class="ident">drawdowns_by_project</span> {
+            <span class="comment">// Delete transactions from TransactionsInfo storagemap</span>
+            <span class="kw">let</span> <span class="ident">transactions_by_drawdown</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::transactions_by_drawdown</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span><span class="op">&gt;</span>();
+            <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">transactions_by_drawdown</span> {
+                <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">transaction_id</span>);
+            }
+
+            <span class="comment">// Deletes all transactions from TransactionsByDrawdown storagemap</span>
+            <span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>);
+
+            <span class="comment">// Delete drawdown from DrawdownsInfo storagemap</span>
+            <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">drawdown_id</span>);
+
+        }
+
+        <span class="comment">// Deletes all drawdowns from DrawdownsByProject storagemap</span>
+        <span class="op">&lt;</span><span class="ident">DrawdownsByProject</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">project_id</span>);
 
         <span class="comment">//Event </span>
         <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProjectDeleted</span>(<span class="ident">project_id</span>));
@@ -2673,51 +2750,72 @@
         <span class="comment">// Ensure drawdown is in submitted status</span>
         <span class="macro">ensure!</span>(<span class="ident">drawdown_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">DrawdownStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownIsNotInSubmittedStatus</span>);
 
-        <span class="comment">// Ensure drawdown has transactions if drawdown type == EB5</span>
-        <span class="kw">if</span> <span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> <span class="op">==</span> <span class="ident">DrawdownType::EB5</span> {
-            <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownHasNoTransactions</span>);
-        }
-        
-        <span class="comment">// Get drawdown transactions</span>
-        <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
-
-        <span class="comment">// Update each transaction status to rejected</span>
-        <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
-            <span class="comment">// Get transaction data</span>
-            <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">transaction_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-
-            <span class="comment">// Ensure transaction is in submitted status</span>
-            <span class="macro">ensure!</span>(<span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">TransactionStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIsNotInSubmittedStatus</span>);
-
-            <span class="comment">// Update transaction status to rejected</span>
-            <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-                <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Rejected</span>;
-                <span class="prelude-val">Ok</span>(())
-            })<span class="question-mark">?</span>;
-        }
-
-        <span class="comment">// Match drawdown type in order to provide a feedback</span>
+        <span class="comment">// Match drawdown type in order to update transactions status</span>
         <span class="kw">match</span> <span class="ident">drawdown_data</span>.<span class="ident">drawdown_type</span> {
             <span class="ident">DrawdownType::EB5</span> =&gt; {
-                <span class="comment">// Ensure transactions_feedback is some</span>
+                <span class="comment">// Ensure drawdown has transactions</span>
+                <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownHasNoTransactions</span>);
+
+                <span class="comment">// Get drawdown transactions</span>
+                <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
+
+                <span class="comment">// Update each transaction status to rejected</span>
+                <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
+                    <span class="comment">// Get transaction data</span>
+                    <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">transaction_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Ensure transaction is in submitted status</span>
+                    <span class="macro">ensure!</span>(<span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">TransactionStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIsNotInSubmittedStatus</span>);
+
+                    <span class="comment">// Update transaction status to rejected</span>
+                    <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
+                        <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                        <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Rejected</span>;
+                        <span class="prelude-val">Ok</span>(())
+                    })<span class="question-mark">?</span>;
+                }
+
+                <span class="comment">// Ensure transactions feedback is provided</span>
                 <span class="kw">let</span> <span class="ident">mod_transactions_feedback</span> <span class="op">=</span> <span class="ident">transactions_feedback</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::EB5MissingFeedback</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">for</span> (<span class="ident">transaction_id</span>, <span class="ident">field_description</span>) <span class="kw">in</span> <span class="ident">mod_transactions_feedback</span> {
+                <span class="kw">for</span> (<span class="ident">transaction_id</span>, <span class="ident">feedback</span>) <span class="kw">in</span> <span class="ident">mod_transactions_feedback</span> {
                     <span class="comment">// Update transaction feedback</span>
-                    <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_info</span><span class="op">|</span> {
-                        <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_info</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
-                        <span class="ident">transaction_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">field_description</span>);
+                    <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
+                        <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                        <span class="ident">transaction_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">feedback</span>);
                         <span class="prelude-val">Ok</span>(())
-                    }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                    })<span class="question-mark">?</span>;
                 }
-    
+
             },
             <span class="kw">_</span> =&gt; {
-                <span class="comment">// Ensure drawdown_feedback is some</span>
-                <span class="kw">let</span> <span class="ident">mod_drawdown_feedback</span> <span class="op">=</span> <span class="ident">drawdown_feedback</span>.<span class="ident">clone</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NoFeedbackProvidedForBulkUpload</span>)<span class="question-mark">?</span>;
+                <span class="comment">// Construction Loan &amp; Developer Equity drawdowns</span>
+                <span class="comment">// If drawdown has transactions, update each transaction status to rejected</span>
+                <span class="kw">if</span> <span class="op">&lt;</span><span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>) {
+                    <span class="comment">// Get drawdown transactions</span>
+                    <span class="kw">let</span> <span class="ident">drawdown_transactions</span> <span class="op">=</span> <span class="ident">TransactionsByDrawdown</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::try_get</span>(<span class="ident">project_id</span>, <span class="ident">drawdown_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
 
-                <span class="comment">// Update feedback for bulkupload.</span>
+                    <span class="comment">// Update each transaction status to rejected</span>
+                    <span class="kw">for</span> <span class="ident">transaction_id</span> <span class="kw">in</span> <span class="ident">drawdown_transactions</span> {
+                        <span class="comment">// Get transaction data</span>
+                        <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">TransactionsInfo</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">transaction_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+
+                        <span class="comment">// Ensure transaction is in submitted status</span>
+                        <span class="macro">ensure!</span>(<span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">==</span> <span class="ident">TransactionStatus::Submitted</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionIsNotInSubmittedStatus</span>);
+
+                        <span class="comment">// Update transaction status to rejected</span>
+                        <span class="op">&lt;</span><span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">transaction_id</span>, <span class="op">|</span><span class="ident">transaction_data</span><span class="op">|</span> {
+                            <span class="kw">let</span> <span class="ident">transaction_data</span> <span class="op">=</span> <span class="ident">transaction_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::TransactionNotFound</span>)<span class="question-mark">?</span>;
+                            <span class="ident">transaction_data</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TransactionStatus::Rejected</span>;
+                            <span class="prelude-val">Ok</span>(())
+                        })<span class="question-mark">?</span>;
+                    }
+                }
+
+                <span class="comment">// Ensure drawdown feedback is provided</span>
+                <span class="kw">let</span> <span class="ident">mod_drawdown_feedback</span> <span class="op">=</span> <span class="ident">drawdown_feedback</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NoFeedbackProvidedForBulkUpload</span>)<span class="question-mark">?</span>;
+
+                <span class="comment">// Update drawdown feedback</span>
                 <span class="op">&lt;</span><span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">drawdown_id</span>, <span class="op">|</span><span class="ident">drawdown_data</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="ident">drawdown_data</span> <span class="op">=</span> <span class="ident">drawdown_data</span>.<span class="ident">as_mut</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DrawdownNotFound</span>)<span class="question-mark">?</span>;
                     <span class="ident">drawdown_data</span>.<span class="ident">feedback</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">mod_drawdown_feedback</span>[<span class="number">0</span>].<span class="ident">clone</span>());
