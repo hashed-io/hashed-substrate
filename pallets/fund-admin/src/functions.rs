@@ -250,6 +250,34 @@ impl<T: Config> Pallet<T> {
         // Delete from UsersByProject storagemap
         <UsersByProject<T>>::remove(project_id);
 
+        // Delete expenditures from ExpendituresInfo storagemap
+        let expenditures_by_project = Self::expenditures_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for expenditure_id in expenditures_by_project {
+            <ExpendituresInfo<T>>::remove(expenditure_id);
+        }
+
+        // Deletes all expenditures from ExpendituresByProject storagemap
+        <ExpendituresByProject<T>>::remove(project_id);
+
+        let drawdowns_by_project = Self::drawdowns_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for drawdown_id in drawdowns_by_project {
+            // Delete transactions from TransactionsInfo storagemap
+            let transactions_by_drawdown = Self::transactions_by_drawdown(project_id, drawdown_id).iter().cloned().collect::<Vec<[u8;32]>>();
+            for transaction_id in transactions_by_drawdown {
+                <TransactionsInfo<T>>::remove(transaction_id);
+            }
+
+            // Deletes all transactions from TransactionsByDrawdown storagemap
+            <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
+
+            // Delete drawdown from DrawdownsInfo storagemap
+            <DrawdownsInfo<T>>::remove(drawdown_id);
+
+        }
+
+        // Deletes all drawdowns from DrawdownsByProject storagemap
+        <DrawdownsByProject<T>>::remove(project_id);
+
         //Event 
         Self::deposit_event(Event::ProjectDeleted(project_id));
         Ok(())
@@ -947,51 +975,72 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
 
-        // Ensure drawdown has transactions if drawdown type == EB5
-        if drawdown_data.drawdown_type == DrawdownType::EB5 {
-            ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
-        }
-        
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Update each transaction status to rejected
-        for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
-
-            // Update transaction status to rejected
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Rejected;
-                Ok(())
-            })?;
-        }
-
-        // Match drawdown type in order to provide a feedback
+        // Match drawdown type in order to update transactions status
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
-                // Ensure transactions_feedback is some
+                // Ensure drawdown has transactions
+                ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+
+                // Get drawdown transactions
+                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+                // Update each transaction status to rejected
+                for transaction_id in drawdown_transactions {
+                    // Get transaction data
+                    let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+                    // Ensure transaction is in submitted status
+                    ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+                    // Update transaction status to rejected
+                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                        transaction_data.status = TransactionStatus::Rejected;
+                        Ok(())
+                    })?;
+                }
+
+                // Ensure transactions feedback is provided
                 let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
-                for (transaction_id, field_description) in mod_transactions_feedback {
+                for (transaction_id, feedback) in mod_transactions_feedback {
                     // Update transaction feedback
-                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_info| {
-                        let transaction_data = transaction_info.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                        transaction_data.feedback = Some(field_description);
+                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                        transaction_data.feedback = Some(feedback);
                         Ok(())
-                    }).map_err(|_| Error::<T>::TransactionNotFound)?;
+                    })?;
                 }
-    
+
             },
             _ => {
-                // Ensure drawdown_feedback is some
-                let mod_drawdown_feedback = drawdown_feedback.clone().ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
+                // Construction Loan & Developer Equity drawdowns
+                // If drawdown has transactions, update each transaction status to rejected
+                if <TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id) {
+                    // Get drawdown transactions
+                    let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-                // Update feedback for bulkupload.
+                    // Update each transaction status to rejected
+                    for transaction_id in drawdown_transactions {
+                        // Get transaction data
+                        let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+                        // Ensure transaction is in submitted status
+                        ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+
+                        // Update transaction status to rejected
+                        <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                            let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                            transaction_data.status = TransactionStatus::Rejected;
+                            Ok(())
+                        })?;
+                    }
+                }
+
+                // Ensure drawdown feedback is provided
+                let mod_drawdown_feedback = drawdown_feedback.ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
+
+                // Update drawdown feedback
                 <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
                     let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
                     drawdown_data.feedback = Some(mod_drawdown_feedback[0].clone());
