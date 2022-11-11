@@ -670,7 +670,7 @@ pub mod pallet {
 			let _ = <ApplicationsByAccount<T>>::clear(1000, None);
 			let _ = <ApplicantsByMarketplace<T>>::clear(1000, None);
 			let _ = <Custodians<T>>::clear(1000, None);
-			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
+			// T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
 

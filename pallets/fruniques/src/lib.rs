@@ -20,6 +20,8 @@ pub mod pallet {
 	use crate::types::*;
 	use frame_support::{pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
+
+	use pallet_rbac::types::RoleBasedAccessControl;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
@@ -30,6 +32,8 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
+
+		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -416,7 +420,7 @@ pub mod pallet {
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueParent<T>>::clear(1000, None);
 			let _ = <FruniqueChild<T>>::clear(1000, None);
-
+			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
 	}

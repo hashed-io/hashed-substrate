@@ -549,7 +549,7 @@ impl pallet_fruniques::Config for Runtime {
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
-
+	type Rbac = RBAC;
 	type ChildMaxLen = ChildMaxLen;
 
 }
