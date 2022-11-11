@@ -269,7 +269,6 @@ pub mod pallet {
 			}
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
-			let account_id = Self::account_id_to_lookup_source(&owner);
 
 			let instance_id: ItemId = <NextFrunique<T>>::try_get(class_id).unwrap_or(0);
 			<NextFrunique<T>>::insert(class_id, instance_id + 1);
@@ -288,7 +287,7 @@ pub mod pallet {
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
-			Self::do_spawn(origin, class_id, instance_id, account_id, metadata, attributes)?;
+			Self::do_spawn(origin, class_id, instance_id, owner.clone(), metadata, attributes)?;
 
 			Self::deposit_event(Event::FruniqueCreated(
 				owner.clone(),
