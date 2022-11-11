@@ -47,6 +47,8 @@ pub mod pallet {
 		FruniqueDivided(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// A frunique has been verified.
 		FruniqueVerified(T::AccountId, CollectionId, ItemId),
+		// A user has been invited to collaborate on a collection.
+		InvitedToCollaborate(T::AccountId, T::AccountId, T::CollectionId),
 		// Counter should work?
 		NextFrunique(u32),
 	}
@@ -314,6 +316,29 @@ pub mod pallet {
 
 			Self::deposit_event(Event::FruniqueVerified(owner, class_id, instance_id));
 
+			Ok(())
+		}
+
+		/// ## Invite a user to become a collaborator in a collection.
+		/// ### Parameters:
+		/// - `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `invitee` must be a valid user.
+		/// ### Considerations:
+		/// This functions enables the owner of a collection to invite a user to become a collaborator.
+		/// The user will be able to create NFTs in the collection.
+		/// The user will be able to add attributes to the NFTs in the collection.
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn invite(
+			origin: OriginFor<T>,
+			class_id: CollectionId,
+			invitee: T::AccountId,
+		) -> DispatchResult {
+
+			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			Self::deposit_event(Event::InvitedToCollaborate(owner, invitee, class_id));
 			Ok(())
 		}
 
