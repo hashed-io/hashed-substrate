@@ -82,7 +82,63 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_initial_setup() -> DispatchResult {
-		let _pallet_id = Self::pallet_id();
+
+		let pallet: IdOrVec = Self::pallet_id();
+
+		let owner_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_owner_roles())?;
+
+		for owner_role in owner_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				owner_role,
+				Permission::owner_permissions())?;
+		}
+
+		let admin_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_admin_roles())?;
+
+		for admin_role in admin_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				admin_role,
+				Permission::admin_permissions())?;
+		}
+
+		let collaborator_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_collaborator_roles())?;
+
+		for collaborator_role in collaborator_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				collaborator_role,
+				Permission::collaborator_permissions())?;
+		}
+
+		let collector_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_collector_roles())?;
+
+		for collector_role in collector_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				collector_role,
+				Permission::collector_permissions())?;
+		}
+
+		let holder_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_holder_roles())?;
+
+		for holder_role in holder_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				holder_role,
+				Permission::holder_permissions())?;
+		}
 
 		Ok(())
 	}

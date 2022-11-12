@@ -137,3 +137,16 @@ impl pallet_rbac::Config for Test {
 // pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 // 	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 // }
+// Build genesis storage according to the mock runtime.
+
+
+pub fn new_test_ext() -> sp_io::TestExternalities {
+	let balance_amount = 1_000_000 as u64;
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, balance_amount), (2, balance_amount), (3, balance_amount)],
+	}.assimilate_storage(&mut t).expect("assimilate_storage failed");
+	let mut t: sp_io::TestExternalities = t.into();
+	t.execute_with(|| Fruniques::do_initial_setup().expect("Error on configuring initial setup"));
+	t
+}
