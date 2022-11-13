@@ -21,8 +21,8 @@ pub fn get_chain_spec() -> HashedChainSpec {
     let mut properties = sc_chain_spec::Properties::new();
 	properties.insert("tokenSymbol".into(), "LUHN".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 4000.into());
-	properties.insert("prefix".into(), 4000.into());
+	properties.insert("ss58Format".into(), 11486.into());
+	properties.insert("prefix".into(), 11486.into());
 	properties.insert("network".into(), "luhn".into());
 	properties.insert("displayName".into(), "Luhn Network".into());
 	properties.insert("standardAccount".into(),"*25519".into());
@@ -38,22 +38,23 @@ pub fn get_chain_spec() -> HashedChainSpec {
 				vec![
 					(
 						// Collator #1
-                        // 
+                        // uhsPQGuXYwjnLvoJWWttQ6FEVtztHSvsjE7UFzxS8mSfoSmts
                         hex!["1cfc7e49e91696b84bf8e931c16375ea634c3997b36155657faf7dc4716e273e"].into(),                    						
                         hex!["1cfc7e49e91696b84bf8e931c16375ea634c3997b36155657faf7dc4716e273e"].unchecked_into(),
 					),
 					(
 						// Collator #2
-                        // 
+                        // uhujXWvqSqGrY3K62qeamwCGQd7tTo1hm1s9ZYrgxAZFBLyLv
                         hex!["84ce3f0bc9ae73d8497c6161927e9e04f39f4bc54579689532d048188c10a77c"].into(),                    						
                         hex!["84ce3f0bc9ae73d8497c6161927e9e04f39f4bc54579689532d048188c10a77c"].unchecked_into(),
 					),
 				],
 				vec![
 					// PH
-					// 
+					// uhtqJBJ9ZeKguyAG4GJ2S7cme5FvJ661P5NVdHTYKQgvDEQAR
                     hex!["5cf8957922e4058a953281f82fdced2e4d389fe37c77f41a0fd2379df0caf877"].into(),
 				],
+				// uhtqJBJ9ZeKguyAG4GJ2S7cme5FvJ661P5NVdHTYKQgvDEQAR
 				hex!["5cf8957922e4058a953281f82fdced2e4d389fe37c77f41a0fd2379df0caf877"].into(), 
 				2232.into(),
 			)
