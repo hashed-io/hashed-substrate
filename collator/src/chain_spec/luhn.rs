@@ -19,20 +19,20 @@ pub type HashedChainSpec =
 pub fn get_chain_spec() -> HashedChainSpec {
 
     let mut properties = sc_chain_spec::Properties::new();
-	properties.insert("tokenSymbol".into(), "HASH".into());
+	properties.insert("tokenSymbol".into(), "LUHN".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 3000.into());
-	properties.insert("prefix".into(), 3000.into());
-	properties.insert("network".into(), "hashed".into());
-	properties.insert("displayName".into(), "Hashed Network".into());
+	properties.insert("ss58Format".into(), 4000.into());
+	properties.insert("prefix".into(), 4000.into());
+	properties.insert("network".into(), "luhn".into());
+	properties.insert("displayName".into(), "Luhn Network".into());
 	properties.insert("standardAccount".into(),"*25519".into());
-	properties.insert("website".into(), "https://hashed.network".into());
+	properties.insert("website".into(), "https://luhn.network".into());
 
     // REVIEW: this is where the Hashed genesis is customized, for now,
     //  it is just a duplicate of the development configuration
 	HashedChainSpec::from_genesis(
-		"Hashed Network",
-		"hashed",
+		"Luhn Network",
+		"luhn",
 		ChainType::Live,
 		move || {
 			hashed_genesis(
