@@ -139,5 +139,10 @@ fn invite_collaborator_works() {
 	new_test_ext().execute_with(|| {
 		// Create a collection
 		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
+		assert_ok!(Fruniques::invite(
+			Origin::signed(1),
+			0,
+			2
+		));
 	});
 }
