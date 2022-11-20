@@ -181,14 +181,14 @@ impl_opaque_keys! {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("hashed"),
-	impl_name: create_runtime_str!("hashed"),
-	authoring_version: 3,
-	spec_version: 3,
-	impl_version: 0,
+	spec_name: create_runtime_str!("luhn"),
+	impl_name: create_runtime_str!("luhn"),
+	authoring_version: 2,
+	spec_version: 2,
+	impl_version: 2,
 	apis: RUNTIME_API_VERSIONS,
-	transaction_version: 1,
-	state_version: 1,
+	transaction_version: 2,
+	state_version: 2,
 };
 
 /// This determines the average expected block time that we are targeting.
@@ -1081,6 +1081,12 @@ impl pallet_rbac::Config for Runtime {
 // 	type MaxStorageKeyLen = ConstU32<128>;
 // }
 
+
+// Configure the pallet-template in pallets/template.
+// impl pallet_template::Config for Runtime {
+// 	type Event = Event;
+// }
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1120,6 +1126,7 @@ construct_runtime!(
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 62,
 		ChildBounties: pallet_child_bounties::{Pallet, Call, Storage, Event<T>} = 63,
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>} = 64,
+		// Template: pallet_template::{Pallet, Call, Storage, Event<T>} = 65,
 		// Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>} = 65,
 		// AssetTxPayment: pallet_asset_tx_payment::{Pallet, Call, Storage, Event<T>} = 16,
 

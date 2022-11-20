@@ -35,13 +35,11 @@ cd hashed-substrate
 
 cargo build --release
 
-./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > hashed-local-parachain.json
-
-./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > hashed-local-parachain.json
+./target/release/hashed-parachain build-spec --chain luhn --disable-default-bootnode > luhn-local-parachain.json
 ```
 
 # Add the ParaID
-Update `md5-local-parachain.json` and change the parachain ID to 2000 in two places.
+Update `luhn-local-parachain.json` and change the parachain ID to 2000 in two places.
 
 ```json
 // --snip--
@@ -53,30 +51,24 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 // --snip--
 ```
 
-# Change amount for endowed account to
-
-1000000000000000000000000000
-
-1 billion with 18 decimal places
-
 # Build the Raw Spec File
 ```bash
 # build raw spec 
-./target/release/hashed-parachain build-spec --chain hashed-local-parachain.json --raw --disable-default-bootnode > hashed-local-parachain-raw.json
+./target/release/hashed-parachain build-spec --chain luhn-local-parachain.json --raw --disable-default-bootnode > luhn-local-parachain-raw.json
 ```
 
 # Building genesis state and wasm files
 ```bash
-./target/release/hashed-parachain export-genesis-state --chain hashed-local-parachain-raw.json > hashed-genesis-head
+./target/release/hashed-parachain export-genesis-state --chain luhn-local-parachain-raw.json > luhn-genesis-head
 
-./target/release/hashed-parachain export-genesis-wasm --chain hashed-local-parachain-raw.json > hashed-wasm-upgrade
+./target/release/hashed-parachain export-genesis-wasm --chain luhn-local-parachain-raw.json > luhn-wasm-upgrade
 ```
 
 # Building genesis state and wasm files
 ```bash
-./target/release/hashed-parachain export-genesis-state --chain hashed > hashed-genesis-head
+./target/release/hashed-parachain export-genesis-state --chain luhn > luhn-genesis-head
 
-./target/release/hashed-parachain export-genesis-wasm --chain hashed > hashed-wasm
+./target/release/hashed-parachain export-genesis-wasm --chain luhn > luhn-wasm
 ```
 
 # Start Collator #1
@@ -84,8 +76,8 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 ./target/release/hashed-parachain \
     --collator \
     --force-authoring \
-    --chain hashed \
-    --base-path /tmp/parachain/hashed-local \
+    --chain luhn \
+    --base-path /tmp/parachain/luhn-local \
     --port 40333 \
     --ws-port 8844 \
     -- \
@@ -142,3 +134,11 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 # Sometimes I use this:
 rm -rf /tmp/relay && rm -rf /tmp/parachain
 ```
+
+## Refresh the resources/chain specs
+
+./target/release/hashed-parachain build-spec --chain luhn --disable-default-bootnode > resources/luhn-spec.json
+
+./target/release/hashed-parachain build-spec --chain md5 --disable-default-bootnode > resources/md5-spec.json
+
+./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > resources/hashed-spec.json

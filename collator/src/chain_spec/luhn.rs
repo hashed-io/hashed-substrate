@@ -19,45 +19,44 @@ pub type HashedChainSpec =
 pub fn get_chain_spec() -> HashedChainSpec {
 
     let mut properties = sc_chain_spec::Properties::new();
-	properties.insert("tokenSymbol".into(), "HASH".into());
+	properties.insert("tokenSymbol".into(), "LUHN".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 3000.into());
-	properties.insert("prefix".into(), 3000.into());
-	properties.insert("network".into(), "hashed".into());
-	properties.insert("displayName".into(), "Hashed Network".into());
+	properties.insert("ss58Format".into(), 11486.into());
+	properties.insert("prefix".into(), 11486.into());
+	properties.insert("network".into(), "luhn".into());
+	properties.insert("displayName".into(), "Luhn Network".into());
 	properties.insert("standardAccount".into(),"*25519".into());
-	properties.insert("website".into(), "https://hashed.network".into());
+	properties.insert("website".into(), "https://luhn.network".into());
 
-    // REVIEW: this is where the Hashed genesis is customized, for now,
-    //  it is just a duplicate of the development configuration
 	HashedChainSpec::from_genesis(
-		"Hashed Network",
-		"hashed",
+		"Luhn Network",
+		"luhn",
 		ChainType::Live,
 		move || {
 			hashed_genesis(
 				// initial collators.
 				vec![
 					(
-						// LocalTestnet
-                        // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
-                        hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(),                    						
-                        hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].unchecked_into(),
+						// Collator #1
+                        // uhsPQGuXYwjnLvoJWWttQ6FEVtztHSvsjE7UFzxS8mSfoSmts
+                        hex!["1cfc7e49e91696b84bf8e931c16375ea634c3997b36155657faf7dc4716e273e"].into(),                    						
+                        hex!["1cfc7e49e91696b84bf8e931c16375ea634c3997b36155657faf7dc4716e273e"].unchecked_into(),
 					),
 					(
-						// Coll2
-                        // 5FcANChPbU6sNa4TxGiPMAKookH8u1XdUw9K2ruS3G2SYvHR
-                        hex!["9cb28bbb15e92ab4431f3ada24b5026c8a6c00ac236dd3ebf0196718c1d2f021"].into(),                    						
-                        hex!["9cb28bbb15e92ab4431f3ada24b5026c8a6c00ac236dd3ebf0196718c1d2f021"].unchecked_into(),
+						// Collator #2
+                        // uhujXWvqSqGrY3K62qeamwCGQd7tTo1hm1s9ZYrgxAZFBLyLv
+                        hex!["84ce3f0bc9ae73d8497c6161927e9e04f39f4bc54579689532d048188c10a77c"].into(),                    						
+                        hex!["84ce3f0bc9ae73d8497c6161927e9e04f39f4bc54579689532d048188c10a77c"].unchecked_into(),
 					),
 				],
 				vec![
-					// LocalTestnet
-					// 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
-                    hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(),
+					// PH
+					// uhtqJBJ9ZeKguyAG4GJ2S7cme5FvJ661P5NVdHTYKQgvDEQAR
+                    hex!["5cf8957922e4058a953281f82fdced2e4d389fe37c77f41a0fd2379df0caf877"].into(),
 				],
-				hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(), 
-				2000.into(),
+				// uhtqJBJ9ZeKguyAG4GJ2S7cme5FvJ661P5NVdHTYKQgvDEQAR
+				hex!["5cf8957922e4058a953281f82fdced2e4d389fe37c77f41a0fd2379df0caf877"].into(), 
+				2232.into(),
 			)
 		},
 		Vec::new(),
@@ -66,8 +65,8 @@ pub fn get_chain_spec() -> HashedChainSpec {
 		None,
 		Some(properties),
 		Extensions {
-			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: 2000,
+			relay_chain: "kusama".into(), 
+			para_id: 2232,
 		},
 	)
 }

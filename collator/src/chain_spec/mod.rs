@@ -8,6 +8,7 @@ use sc_service::ChainType;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 pub mod hashed;
+pub mod luhn;
 pub mod md5;
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
