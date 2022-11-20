@@ -21,8 +21,8 @@ pub fn get_chain_spec() -> HashedChainSpec {
     let mut properties = sc_chain_spec::Properties::new();
 	properties.insert("tokenSymbol".into(), "HASH".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 3000.into());
-	properties.insert("prefix".into(), 3000.into());
+	properties.insert("ss58Format".into(), 9072.into());
+	properties.insert("prefix".into(), 9072.into());
 	properties.insert("network".into(), "hashed".into());
 	properties.insert("displayName".into(), "Hashed Network".into());
 	properties.insert("standardAccount".into(),"*25519".into());
@@ -39,25 +39,25 @@ pub fn get_chain_spec() -> HashedChainSpec {
 				// initial collators.
 				vec![
 					(
-						// LocalTestnet
-                        // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
-                        hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(),                    						
-                        hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].unchecked_into(),
+						// JA
+                        // haZmb2DUWLEjv3z7NDn5nArSGoMgaN6xeJdAr9TDaeQYpxe6g
+                        hex!["90150e105b07c3357d43ed5c727efb9be347699cb2b5a41a26423b559615b222"].into(),                    						
+                        hex!["90150e105b07c3357d43ed5c727efb9be347699cb2b5a41a26423b559615b222"].unchecked_into(),
 					),
 					(
-						// Coll2
-                        // 5FcANChPbU6sNa4TxGiPMAKookH8u1XdUw9K2ruS3G2SYvHR
-                        hex!["9cb28bbb15e92ab4431f3ada24b5026c8a6c00ac236dd3ebf0196718c1d2f021"].into(),                    						
-                        hex!["9cb28bbb15e92ab4431f3ada24b5026c8a6c00ac236dd3ebf0196718c1d2f021"].unchecked_into(),
+						// MdL
+                        // haWa1d98tnLtvNCLSrdWmSo1DYHQDiKBoM9s5xNYtScTUwJ74
+                        hex!["028c3a5c8890c3e98023b35f99a5d904b170612b78b6b9fdd8f60cbf24ab9f59"].into(),                    						
+                        hex!["028c3a5c8890c3e98023b35f99a5d904b170612b78b6b9fdd8f60cbf24ab9f59"].unchecked_into(),
 					),
 				],
 				vec![
-					// LocalTestnet
-					// 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
-                    hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(),
+					// GW
+					// haWZRqBVdT9vDAM1Wpga7B1GZ99WDWnXsLyzCBtpwrjPLaZUa
+                    hex!["021a78fcc3ec988411388ec2f8ab25fbb79a7eaacead997d13f211ebe34ce359"].into(),
 				],
-				hex!["364e8e853de71a91892b8ce50308b4229c0c21863a7ec788d5e4f2f5f957e224"].into(), 
-				2000.into(),
+				hex!["021a78fcc3ec988411388ec2f8ab25fbb79a7eaacead997d13f211ebe34ce359"].into(), 
+				2093.into(),
 			)
 		},
 		Vec::new(),
@@ -66,8 +66,8 @@ pub fn get_chain_spec() -> HashedChainSpec {
 		None,
 		Some(properties),
 		Extensions {
-			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: 2000,
+			relay_chain: "polkadot".into(), // You MUST set this to the correct network!
+			para_id: 2093,
 		},
 	)
 }
