@@ -134,3 +134,11 @@ Update `luhn-local-parachain.json` and change the parachain ID to 2000 in two pl
 # Sometimes I use this:
 rm -rf /tmp/relay && rm -rf /tmp/parachain
 ```
+
+## Refresh the resources/chain specs
+
+./target/release/hashed-parachain build-spec --chain luhn --disable-default-bootnode > resources/luhn-spec.json
+
+./target/release/hashed-parachain build-spec --chain md5 --disable-default-bootnode > resources/md5-spec.json
+
+./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > resources/hashed-spec.json
