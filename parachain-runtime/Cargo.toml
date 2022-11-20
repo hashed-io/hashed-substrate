@@ -49,6 +49,7 @@ pallet-fruniques = { path = "../pallets/fruniques", default-features = false }
 pallet-gated-marketplace = { path = "../pallets/gated-marketplace", default-features = false }
 pallet-rbac = { path = "../pallets/rbac", default-features = false }
 pallet-confidential-docs = { path = "../pallets/confidential-docs", default-features = false }
+# pallet-template = { path = "../pallets/template", default-features = false }
 
 # Prebuilt Pallets
 pallet-alliance = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
@@ -62,6 +63,12 @@ pallet-bounties = { git = "https://github.com/paritytech/substrate", branch = "p
 pallet-child-bounties = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
 pallet-collator-selection = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.27", default-features = false }
 pallet-collective = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
+
+# Contracts specific packages
+# pallet-contracts = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts", default-features = false, features = ["unstable-interface"], branch = "polkadot-v0.9.27" }
+# pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts-primitives", default-features = false, branch = "polkadot-v0.9.27" }
+# pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts-rpc-runtime-api", default-features = false, branch = "polkadot-v0.9.27" }
+
 pallet-conviction-voting = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
 pallet-democracy = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
 pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", default-features = false }
@@ -145,6 +152,7 @@ std = [
 	"pallet-fruniques/std",
 	"pallet-gated-marketplace/std",
 	"pallet-rbac/std",
+	# "pallet-template/std",
 
 	# Prebuilt Pallets
 	"pallet-alliance/std",
@@ -158,6 +166,9 @@ std = [
 	"pallet-child-bounties/std",
 	"pallet-collator-selection/std",
 	"pallet-collective/std",
+	# "pallet-contracts/std",
+	# "pallet-contracts-primitives/std",
+	# "pallet-contracts-rpc-runtime-api/std",
 	"pallet-conviction-voting/std",
 	"pallet-democracy/std",
 	"pallet-elections-phragmen/std",
@@ -216,6 +227,7 @@ runtime-benchmarks = [
 	"frame-system-benchmarking",
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
+	# "pallet-contracts/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",

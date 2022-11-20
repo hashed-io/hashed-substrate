@@ -35,11 +35,11 @@ cd hashed-substrate
 
 cargo build --release
 
-./target/release/hashed-parachain build-spec --chain md5 --disable-default-bootnode > md5-local-parachain.json
+./target/release/hashed-parachain build-spec --chain luhn --disable-default-bootnode > luhn-local-parachain.json
 ```
 
 # Add the ParaID
-Update `md5-local-parachain.json` and change the parachain ID to 2000 in two places.
+Update `luhn-local-parachain.json` and change the parachain ID to 2000 in two places.
 
 ```json
 // --snip--
@@ -54,24 +54,30 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 # Build the Raw Spec File
 ```bash
 # build raw spec 
-./target/release/hashed-parachain build-spec --chain md5-local-parachain.json --raw --disable-default-bootnode > md5-local-parachain-raw.json
+./target/release/hashed-parachain build-spec --chain luhn-local-parachain.json --raw --disable-default-bootnode > luhn-local-parachain-raw.json
 ```
 
 # Building genesis state and wasm files
 ```bash
-./target/release/hashed-parachain export-genesis-state --chain md5-local-parachain-raw.json > md5-genesis-head
+./target/release/hashed-parachain export-genesis-state --chain luhn-local-parachain-raw.json > luhn-genesis-head
 
-./target/release/hashed-parachain export-genesis-wasm --chain md5-local-parachain-raw.json > md5-wasm
+./target/release/hashed-parachain export-genesis-wasm --chain luhn-local-parachain-raw.json > luhn-wasm-upgrade
 ```
 
-# Start Collator 
+# Building genesis state and wasm files
+```bash
+./target/release/hashed-parachain export-genesis-state --chain luhn > luhn-genesis-head
+
+./target/release/hashed-parachain export-genesis-wasm --chain luhn > luhn-wasm
+```
+
+# Start Collator #1
 ```bash
 ./target/release/hashed-parachain \
-    --alice \
     --collator \
     --force-authoring \
-    --chain md5-local-parachain-raw.json \
-    --base-path /tmp/parachain/alice \
+    --chain luhn \
+    --base-path /tmp/parachain/luhn-local \
     --port 40333 \
     --ws-port 8844 \
     -- \
@@ -85,6 +91,34 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 ## Sudo Register the parachain
 ![image](https://user-images.githubusercontent.com/2915325/99548884-1be13580-2987-11eb-9a8b-20be658d34f9.png)
 
+
+# Generate new WASM
+```bash
+./target/release/hashed-parachain export-genesis-wasm --chain hashed > hashed-wasm-upgrade
+```
+
+# Start Second Collator  
+```bash
+./target/release/hashed-parachain \
+    --bob \
+    --collator \
+    --force-authoring \
+    --chain hashed \
+    --base-path /tmp/parachain/bob \
+    --port 40334 \
+    --ws-port 8845 \
+    -- \
+    --execution wasm \
+    --chain ~/github.com/paritytech/polkadot/rococo-custom-2-raw.json \
+    --port 30344 \
+    --ws-port 9978
+
+```
+
+## Insert second collator key
+```bash
+./target/release/hashed key insert --scheme sr25519 --keystore-path /tmp/parachain/hashed-local/chains/hashed/keystore --key-type aura --suri ""
+```
 
 ### Purging the Chains
 ```bash
@@ -100,3 +134,11 @@ Update `md5-local-parachain.json` and change the parachain ID to 2000 in two pla
 # Sometimes I use this:
 rm -rf /tmp/relay && rm -rf /tmp/parachain
 ```
+
+## Refresh the resources/chain specs
+
+./target/release/hashed-parachain build-spec --chain luhn --disable-default-bootnode > resources/luhn-spec.json
+
+./target/release/hashed-parachain build-spec --chain md5 --disable-default-bootnode > resources/md5-spec.json
+
+./target/release/hashed-parachain build-spec --chain hashed --disable-default-bootnode > resources/hashed-spec.json

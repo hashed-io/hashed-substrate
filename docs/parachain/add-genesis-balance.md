@@ -26,7 +26,7 @@ In the genesis configuration, there is a vector of addresses:
 
 ```rust 
 vec![
-    // 5HgAxuAcEybo448w5BZdoceCuHMAbEW9AetBKsj9s5GEBZT3
+    // 5DHun9L82cdeZfR5ufzsod4tBfcU2AoQT3XJoRpCoasYefQj
     hex!["f83a0218e100ce3ede12c5d403116ef034124c62b181fff6935403cea9396d2f"].into(),
     // 5DkJvQp2gqHraWZU1BNCDxEKTQHezn2Qy7z5hLPksUdjtEG9             
     hex!["4a70d789b0f0897e0880e8d3d532187ac77cbda04228cfadf8bededdd0b1005e"].into(),
