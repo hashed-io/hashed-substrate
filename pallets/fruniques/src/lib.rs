@@ -164,7 +164,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			// Self::do_initial_setup()?;
+			Self::do_initial_setup()?;
 			Ok(())
 		}
 
@@ -340,6 +340,7 @@ pub mod pallet {
 		) -> DispatchResult {
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
+			Self::insert_auth_in_frunique_collection(invitee.clone(), class_id, FruniqueRole::Collaborator)?;
 
 			Self::deposit_event(Event::InvitedToCollaborate(owner, invitee, class_id));
 			Ok(())
