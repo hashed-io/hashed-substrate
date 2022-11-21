@@ -43,6 +43,7 @@ std = [
 	"frame-system/std",
 	"frame-benchmarking/std",
 	"sp-runtime/std",
+	"pallet-rbac/std",
 ]
 
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]

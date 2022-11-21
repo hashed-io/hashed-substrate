@@ -100,6 +100,7 @@ impl pallet_fruniques::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
+	type Rbac = RBAC;
 }
 
 parameter_types! {

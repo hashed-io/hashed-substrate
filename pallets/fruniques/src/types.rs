@@ -3,8 +3,8 @@ use super::*;
 use frame_support::pallet_prelude::*;
 
 use frame_support::sp_io::hashing::blake2_256;
-use sp_runtime::Permill;
 use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::Permill;
 
 pub type AttributeKey<T> = BoundedVec<u8, <T as pallet_uniques::Config>::KeyLimit>;
 pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::ValueLimit>;
@@ -19,6 +19,10 @@ pub type ItemId = u32;
 pub type CollectionDescription<T> = StringLimit<T>;
 // (ParentId, Hierarchical, Percentage)
 pub type HierarchicalInfo = (ItemId, bool, u8);
+
+// pub type RoleId<T> =
+
+// pub type RoleIds<T> = BoundedVec<[u8; 32], <<T as Config>::Rbac as RoleBasedAccessControl<<T as Config>::AccountId>>::MaxRolesPerPallet>;
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ChildInfo {
@@ -44,6 +48,7 @@ pub enum FruniqueRole {
 	Admin,
 	Collaborator,
 	Collector,
+	Holder,
 }
 
 impl Default for FruniqueRole {
@@ -59,6 +64,7 @@ impl FruniqueRole {
 			Self::Admin => "Admin".as_bytes().to_vec(),
 			Self::Collaborator => "Collaborator".as_bytes().to_vec(),
 			Self::Collector => "Collector".as_bytes().to_vec(),
+			Self::Holder => "Holder".as_bytes().to_vec(),
 		}
 	}
 
@@ -66,9 +72,31 @@ impl FruniqueRole {
 		self.to_vec().using_encoded(blake2_256)
 	}
 
+	pub fn get_owner_roles() -> Vec<Vec<u8>> {
+		[Self::Owner.to_vec()].to_vec()
+	}
+
+	pub fn get_admin_roles() -> Vec<Vec<u8>> {
+		[Self::Admin.to_vec()].to_vec()
+	}
+
+	pub fn get_collaborator_roles() -> Vec<Vec<u8>> {
+		[Self::Collaborator.to_vec()]
+			.to_vec()
+	}
+
+	pub fn get_collector_roles() -> Vec<Vec<u8>> {
+		[Self::Collector.to_vec()].to_vec()
+	}
+
+	pub fn get_holder_roles() -> Vec<Vec<u8>> {
+		[Self::Holder.to_vec()].to_vec()
+	}
+
 	pub fn enum_to_vec() -> Vec<Vec<u8>> {
 		use crate::types::FruniqueRole::*;
-		[Owner.to_vec(), Admin.to_vec(), Collaborator.to_vec(), Collector.to_vec()].to_vec()
+		[Owner.to_vec(), Admin.to_vec(), Collaborator.to_vec(), Collector.to_vec(), Holder.to_vec()]
+			.to_vec()
 	}
 }
 
@@ -77,26 +105,23 @@ impl FruniqueRole {
 	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 pub enum Permission {
-	/// No authorization required
+	/// Not a permission
 	None,
-	/// Authorization required
-	Required,
 	/// Authorization required and must be approved by the owner
 	Mint,
 	/// Authorization required and must be approved by a holder / collector
 	Transfer,
 	/// Allow a user to collaborate on a collection
-	Collaborate,
+	InviteCollaborator,
 }
 
 impl Permission {
 	pub fn to_vec(self) -> Vec<u8> {
 		match self {
 			Self::None => "None".as_bytes().to_vec(),
-			Self::Required => "Required".as_bytes().to_vec(),
 			Self::Mint => "Mint".as_bytes().to_vec(),
 			Self::Transfer => "Transfer".as_bytes().to_vec(),
-			Self::Collaborate => "Collaborate".as_bytes().to_vec(),
+			Self::InviteCollaborator => "InviteCollaborator".as_bytes().to_vec(),
 		}
 	}
 
@@ -104,21 +129,21 @@ impl Permission {
 		self.to_vec().using_encoded(blake2_256)
 	}
 
+	pub fn get_permissions() -> Vec<Vec<u8>> {
+		use crate::types::Permission::*;
+		[None.to_vec(), Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()]
+			.to_vec()
+	}
+
 	pub fn owner_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		[None.to_vec(), Required.to_vec(), Mint.to_vec(), Transfer.to_vec()].to_vec()
+		[Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
 	}
 
 	pub fn admin_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		let mut admin_permissions = [
-			None.to_vec(),
-			Required.to_vec(),
-			Mint.to_vec(),
-			Transfer.to_vec(),
-			Collaborate.to_vec(),
-		]
-		.to_vec();
+		let mut admin_permissions =
+			[Mint.to_vec(), InviteCollaborator.to_vec()].to_vec();
 		admin_permissions.append(&mut Permission::holder_permissions());
 		admin_permissions
 	}
@@ -128,8 +153,13 @@ impl Permission {
 		[Mint.to_vec()].to_vec()
 	}
 
+	pub fn collector_permissions() -> Vec<Vec<u8>> {
+		use crate::types::Permission::*;
+		[None.to_vec()].to_vec()
+	}
+
 	pub fn holder_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		[None.to_vec(), Required.to_vec(), Transfer.to_vec()].to_vec()
+		[Transfer.to_vec()].to_vec()
 	}
 }

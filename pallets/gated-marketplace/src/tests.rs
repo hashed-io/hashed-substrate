@@ -52,7 +52,7 @@ fn _create_file(name: &str, cid: &str, create_custodian_file: bool) -> Applicati
 }
 
 // due to encoding problems with polkadot-js, the custodians_cid generation will be done in another function
-fn create_application_fields( n_files: u32) -> 
+fn create_application_fields( n_files: u32) ->
 	BoundedVec<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles> {
 	let mut files = Vec::<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> )>::default();
 	for i in 0..n_files{
@@ -63,7 +63,7 @@ fn create_application_fields( n_files: u32) ->
 	BoundedVec::<(BoundedVec<u8,ConstU32<100> >,BoundedVec<u8,ConstU32<100>> ), MaxFiles>::try_from( files).unwrap_or_default()
 }
 
-fn create_custiodian_fields( custodian_account: u64, n_files: u32, ) ->
+fn create_custodian_fields( custodian_account: u64, n_files: u32, ) ->
 	Option<( u64,BoundedVec<BoundedVec<u8,ConstU32<100>>, MaxFiles>) >{
 	let cids: Vec<BoundedVec<u8,ConstU32<100>>> = (0..n_files).map(|n|{
 		let cid = format!("cid_custodian{}",n.to_string());
@@ -71,7 +71,7 @@ fn create_custiodian_fields( custodian_account: u64, n_files: u32, ) ->
 
 	}).collect();
 
-	Some( 
+	Some(
 		(custodian_account,BoundedVec::<BoundedVec<u8,ConstU32<100>>, MaxFiles>::try_from(cids).unwrap_or_default())
 	)
 }
@@ -83,7 +83,7 @@ fn create_marketplace_works() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert!(GatedMarketplace::marketplaces(m_id).is_some() );		
+		assert!(GatedMarketplace::marketplaces(m_id).is_some() );
 	});
 }
 
@@ -103,8 +103,8 @@ fn exceeding_max_roles_per_auth_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, m_label.clone() ));
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 2, MarketplaceRole::Appraiser, m_label.using_encoded(blake2_256)));
 		assert_noop!(
-			GatedMarketplace::add_authority(Origin::signed(1), 2, MarketplaceRole::RedemptionSpecialist, m_label.using_encoded(blake2_256) ), 
-			RbacErr::ExceedMaxRolesPerUser 
+			GatedMarketplace::add_authority(Origin::signed(1), 2, MarketplaceRole::RedemptionSpecialist, m_label.using_encoded(blake2_256) ),
+			RbacErr::ExceedMaxRolesPerUser
 		);
 
 	});
@@ -128,7 +128,7 @@ fn apply_with_custodian_works() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custiodian_fields(4,2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custodian_fields(4,2) ));
 
 		assert!( GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending).len() ==1);
 		assert!(GatedMarketplace::custodians(4, m_id).pop().is_some() );
@@ -142,7 +142,7 @@ fn apply_with_same_account_as_custodian_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert_noop!(
-			GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custiodian_fields(3,2) ),
+			GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custodian_fields(3,2) ),
 			Error::<Test>::ApplicantCannotBeCustodian
 		);
 	});
@@ -154,10 +154,10 @@ fn exceeding_max_applications_per_custodian_shouldnt_work() {
 		// Dispatch a signed extrinsic.
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custiodian_fields(6,2) ));
-		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(2), create_custiodian_fields(6,2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custodian_fields(6,2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(4),m_id, create_application_fields(2), create_custodian_fields(6,2) ));
 		assert_noop!(
-			GatedMarketplace::apply(Origin::signed(5),m_id, create_application_fields(2), create_custiodian_fields(6,2) ),
+			GatedMarketplace::apply(Origin::signed(5),m_id, create_application_fields(2), create_custodian_fields(6,2) ),
 			Error::<Test>::ExceedMaxApplicationsPerCustodian
 		);
 	});
@@ -464,10 +464,10 @@ fn update_marketplace_marketplace_not_found_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
-		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);	
+		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);
 		assert_noop!(GatedMarketplace::update_label_marketplace(Origin::signed(1), m_id_2, create_label("my marketplace 2")), Error::<Test>::MarketplaceNotFound);
 	});
-	
+
 }
 
 #[test]
@@ -486,9 +486,9 @@ fn update_label_marketplace_works(){
 	new_test_ext().execute_with(|| {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1),2, create_label("my marketplace") ));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		assert!(GatedMarketplace::marketplaces(m_id).is_some());		
+		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		assert_ok!(GatedMarketplace::update_label_marketplace(Origin::signed(1), m_id, create_label("my marketplace 2")));
-		assert!(GatedMarketplace::marketplaces(m_id).is_some() );	
+		assert!(GatedMarketplace::marketplaces(m_id).is_some() );
 	});
 }
 
@@ -504,7 +504,7 @@ fn remove_marketplace_marketplace_not_found_shouldnt_work(){
 		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);
 		assert_noop!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id_2), Error::<Test>::MarketplaceNotFound);
 	});
-	 
+
 }
 
 
@@ -538,7 +538,7 @@ fn remove_marketplace_deletes_storage_from_marketplaces_by_authority_works(){
 
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 3, MarketplaceRole::Appraiser, m_id));
 		assert_ok!(GatedMarketplace::add_authority(Origin::signed(1), 4, MarketplaceRole::RedemptionSpecialist, m_id));
-		
+
 		//assert!(GatedMarketplace::marketplaces_by_authority(1, m_id) == vec![MarketplaceRole::Owner]);
 		assert_ok!(<Test as Config>::Rbac::has_role(1, GatedMarketplace::pallet_id(), &m_id, vec![MarketplaceRole::Owner.id()]));
 		//assert!(GatedMarketplace::marketplaces_by_authority(2, m_id) == vec![MarketplaceRole::Admin]);
@@ -602,7 +602,7 @@ fn remove_marketplace_deletes_storage_from_custodians_works(){
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
-		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custiodian_fields(4,2) ));
+		assert_ok!(GatedMarketplace::apply(Origin::signed(3),m_id, create_application_fields(2), create_custodian_fields(4,2) ));
 		assert!(GatedMarketplace::custodians(4, m_id) == vec![3]);
 
 		assert_ok!(GatedMarketplace::remove_marketplace(Origin::signed(1), m_id));
@@ -804,12 +804,12 @@ fn enlist_sell_offer_works() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().offer_type, OfferType::SellOrder);
@@ -842,12 +842,12 @@ fn enlist_sell_offer_item_already_enlisted_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000), Error::<Test>::OfferAlreadyExists);
@@ -862,11 +862,11 @@ fn enlist_sell_offer_not_owner_tries_to_enlist_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
+
 		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(2), m_id, 0, 0, 10000), Error::<Test>::NotOwner);
 	});
 }
@@ -878,11 +878,11 @@ fn enlist_sell_offer_price_must_greater_than_zero_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
+
 		assert_noop!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 0), Error::<Test>::PriceMustBeGreaterThanZero);
 	});
 }
@@ -894,12 +894,12 @@ fn enlist_sell_offer_price_must_greater_than_minimun_amount_works() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-	
-		let minimum_amount = 1001;	
+
+		let minimum_amount = 1001;
 		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, minimum_amount));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
@@ -913,11 +913,11 @@ fn enlist_sell_offer_is_properly_stored_works() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
+
 		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
@@ -938,13 +938,13 @@ fn enlist_sell_offer_two_marketplaces(){
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace2")));
 		let m_id2 = create_label("my marketplace2").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id2, 0, 0, 11000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id2, 0, 0, 11000));
 
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 2);
 		assert_eq!(GatedMarketplace::offers_by_account(1).len(), 2);
@@ -962,12 +962,12 @@ fn enlist_buy_offer_works() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
@@ -986,12 +986,12 @@ fn enlist_buy_offer_item_is_not_for_sale_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
@@ -1008,20 +1008,20 @@ fn enlist_buy_offer_owner_cannnot_create_buy_offers_for_their_own_items_shouldnt
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
+
 		assert_noop!(GatedMarketplace::enlist_buy_offer(Origin::signed(1), m_id, 0, 0, 1100), Error::<Test>::CannotCreateOffer);
 	});
 }
 
-#[test] 
+#[test]
 fn enlist_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
@@ -1030,12 +1030,12 @@ fn enlist_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
@@ -1052,12 +1052,12 @@ fn enlist_buy_offer_price_must_greater_than_zero_shouldnt_work() {
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
@@ -1076,12 +1076,12 @@ fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers(){
 
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 10000));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
@@ -1107,15 +1107,15 @@ fn take_sell_offer_works(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
 		assert_ok!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id));
@@ -1130,15 +1130,15 @@ fn take_sell_offer_owner_cannnot_be_the_buyer_shouldnt_work() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
 		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(1), offer_id), Error::<Test>::CannotTakeOffer);
@@ -1150,15 +1150,15 @@ fn take_sell_offer_id_does_not_exist_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 		let offer_id2 = offer_id.using_encoded(blake2_256);
 
@@ -1172,15 +1172,15 @@ fn take_sell_offer_buyer_does_not_have_enough_balance_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1100);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1200));
 		let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
 		assert_noop!(GatedMarketplace::take_sell_offer(Origin::signed(2), offer_id), Error::<Test>::NotEnoughBalance);
@@ -1192,22 +1192,22 @@ fn take_buy_offer_works(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
-		
+
 		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2));
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
@@ -1219,20 +1219,20 @@ fn take_buy_offer_only_owner_can_accept_buy_offers_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
 
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 
@@ -1245,19 +1245,19 @@ fn take_buy_offer_id_does_not_exist_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
 
@@ -1272,22 +1272,22 @@ fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
-		
+
 		Balances::make_free_balance_be(&2, 0);
 		assert_noop!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2), Error::<Test>::NotEnoughBalance);
 	});
@@ -1298,18 +1298,18 @@ fn remove_sell_offer_works(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
+
 		assert_ok!(GatedMarketplace::remove_offer(Origin::signed(1), offer_id));
 		assert_eq!(GatedMarketplace::offers_by_account(1).len(), 0);
 		assert!(GatedMarketplace::offers_info(offer_id).is_none());
@@ -1321,22 +1321,22 @@ fn remove_buy_offer_works(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
 
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1001)); 
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1001));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id2).is_some());
-		
+
 		assert_ok!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2));
 		assert_eq!(GatedMarketplace::offers_by_account(2).len(), 0);
 		assert!(GatedMarketplace::offers_info(offer_id2).is_none());
@@ -1348,18 +1348,18 @@ fn remove_offer_id_does_not_exist_sholdnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
+
 		let offer_id2 = offer_id.using_encoded(blake2_256);
 		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2), Error::<Test>::OfferNotFound);
 	});
@@ -1370,18 +1370,18 @@ fn remove_offer_creator_doesnt_match_sholdnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
-		
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
+
 		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id), Error::<Test>::CannotRemoveOffer);
 	});
 }
@@ -1391,27 +1391,27 @@ fn remove_offer_status_is_closed_shouldnt_work(){
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
-	
+
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
-		
+
 		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
-		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001)); 
+		assert_ok!(GatedMarketplace::enlist_sell_offer(Origin::signed(1), m_id, 0, 0, 1001));
 		let offer_id = GatedMarketplace::offers_by_account(1).iter().next().unwrap().clone();
 		assert!(GatedMarketplace::offers_info(offer_id).is_some());
-		
-		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200)); 
+
+		assert_ok!(GatedMarketplace::enlist_buy_offer(Origin::signed(2), m_id, 0, 0, 1200));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
 		assert_eq!(GatedMarketplace::offers_info(offer_id2).unwrap().offer_type, OfferType::BuyOrder);
-		
+
 		assert_ok!(GatedMarketplace::take_buy_offer(Origin::signed(1), offer_id2));
 		assert_eq!(GatedMarketplace::offers_by_item(0, 0).len(), 0);
 		assert_eq!(GatedMarketplace::offers_info(offer_id).unwrap().status, OfferStatus::Closed);
 
 		assert_noop!(GatedMarketplace::remove_offer(Origin::signed(2), offer_id2), Error::<Test>::CannotDeleteOffer);
 	});
-	
+
 }
