@@ -127,6 +127,9 @@ impl<T: Config> Pallet<T> {
             creation_date,
             completion_date,
             updated_date: timestamp,
+			construction_loan_drawdown_status: DrawdownStatus::None,
+			developer_equity_drawdown_status: DrawdownStatus::None,
+			eb5_drawdown_status: DrawdownStatus::None,
         };
 
         // create scope for project_id
@@ -822,6 +825,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
         //TOREVIEW: Check if an event is needed
         Ok(())
     }
@@ -888,6 +892,8 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+
         //Event
         Self::deposit_event(Event::DrawdownSubmitted(drawdown_id));
 
@@ -940,6 +946,8 @@ impl<T: Config> Pallet<T> {
             drawdown_data.close_date = timestamp;
             Ok(())
         })?;
+
+		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
 
         // Generate the next drawdown
         Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
@@ -1046,6 +1054,8 @@ impl<T: Config> Pallet<T> {
             drawdown_data.status = DrawdownStatus::Rejected;
             Ok(())
         })?;
+
+		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
 
         //Event
         Self::deposit_event(Event::DrawdownRejected(drawdown_id));
@@ -1288,6 +1298,8 @@ impl<T: Config> Pallet<T> {
             mod_drawdown_data.feedback = None;
             Ok(())
         })?;
+
+		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         Ok(())
     }
@@ -1762,5 +1774,44 @@ impl<T: Config> Pallet<T> {
 
        Ok(())
     }
+
+	fn do_edit_drawdown_status_in_project_info(
+		project_id: ProjectId,
+		drawdown_id: DrawdownId,
+		drawdown_status: DrawdownStatus
+	) -> DispatchResult {
+		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Match drawdown type
+        match drawdown_data.drawdown_type {
+            DrawdownType::EB5 => {
+				// Update EB5 drawdown status in project info
+				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
+					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+					project_data.eb5_drawdown_status = drawdown_status;
+					Ok(())
+				})?;
+                Ok(())
+			},
+			DrawdownType::ConstructionLoan => {
+				// Update Construction Loan drawdown status in project info
+				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
+					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+					project_data.construction_loan_drawdown_status = drawdown_status;
+					Ok(())
+				})?;
+                Ok(())
+			},
+			DrawdownType::DeveloperEquity => {
+				// Update Developer Equity drawdown status in project info
+				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
+					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+					project_data.developer_equity_drawdown_status = drawdown_status;
+					Ok(())
+				})?;
+                Ok(())
+			},
+        }
+	}
 
 }

@@ -58,6 +58,9 @@ pub struct ProjectData<T: Config> {
     pub completion_date: CompletionDate,
     pub registration_date: RegistrationDate,
     pub updated_date: UpdatedDate,
+	pub eb5_drawdown_status: DrawdownStatus,
+	pub construction_loan_drawdown_status: DrawdownStatus,
+	pub developer_equity_drawdown_status: DrawdownStatus,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -159,6 +162,7 @@ impl Default for DrawdownType {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownStatus {
+	None,
     Draft,
     Submitted,
     Approved,
