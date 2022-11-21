@@ -36,7 +36,7 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		//TODO: change all accounts names for users
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		
+
 		type Moment: Parameter
 		+ Default
 		+ Scale<Self::BlockNumber, Output = Self::Moment>
@@ -49,7 +49,7 @@ pub mod pallet {
 
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;		
+		type RemoveOrigin: EnsureOrigin<Self::Origin>;
 
 		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
@@ -106,8 +106,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn users_info)]
 	pub(super) type UsersInfo<T: Config> = StorageMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::AccountId, // Key account_id
 		UserData<T>,  // Value UserData<T>
 		OptionQuery,
@@ -116,9 +116,9 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn projects_info)]
 	pub(super) type ProjectsInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
+		_,
+		Identity,
+		ProjectId, // Key project_id
 		ProjectData<T>,  // Value ProjectData<T>
 		OptionQuery,
 	>;
@@ -126,9 +126,9 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn users_by_project)]
 	pub(super) type UsersByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
+		_,
+		Identity,
+		ProjectId, // Key project_id
 		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value users
 		ValueQuery,
 	>;
@@ -136,8 +136,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn projects_by_user)]
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
-		_, 
-		Blake2_128Concat, 
+		_,
+		Blake2_128Concat,
 		T::AccountId, // Key account_id
 		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
 		ValueQuery,
@@ -146,9 +146,9 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn expenditures_info)]
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key expenditure_id
+		_,
+		Identity,
+		BudgetExpenditureId, // Key expenditure_id
 		ExpenditureData,  // Value ExpenditureData<T>
 		OptionQuery,
 	>;
@@ -156,9 +156,9 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn expenditures_by_project)]
 	pub(super) type ExpendituresByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
+		_,
+		Identity,
+		ProjectId, // Key project_id
 		BoundedVec<[u8;32], T::MaxExpendituresPerProject>,  // Value expenditures
 		ValueQuery,
 	>;
@@ -166,29 +166,29 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn drawdowns_info)]
 	pub(super) type DrawdownsInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key drawdown id
+		_,
+		Identity,
+		DrawdownId, // Key drawdown id
 		DrawdownData<T>,  // Value DrawdownData<T>
 		OptionQuery,
 	>;
-	
+
 	#[pallet::storage]
 	#[pallet::getter(fn drawdowns_by_project)]
 	pub(super) type DrawdownsByProject<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key project_id
-		BoundedVec<[u8;32], T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		_,
+		Identity,
+		ProjectId, // Key project_id
+		BoundedVec<DrawdownId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
 		ValueQuery,
 	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn transactions_info)]
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8;32], // Key transaction id
+		_,
+		Identity,
+		TransactionId, // Key transaction id
 		TransactionData<T>,  // Value TransactionData<T>
 		OptionQuery,
 	>;
@@ -196,14 +196,14 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn transactions_by_drawdown)]
 	pub(super) type TransactionsByDrawdown<T: Config> = StorageDoubleMap<
-		_, 
-		Identity, 
-		[u8;32], //K1: project id
-		Identity, 
-		[u8;32], //K2: drawdown id
-		BoundedVec<[u8;32], T::MaxTransactionsPerDrawdown>, // Value transactions
+		_,
+		Identity,
+		ProjectId, //K1: project id
+		Identity,
+		DrawdownId, //K2: drawdown id
+		BoundedVec<TransactionId, T::MaxTransactionsPerDrawdown>, // Value transactions
 		ValueQuery
-	>; 
+	>;
 
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
@@ -212,15 +212,15 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Project was created successfully
-		ProjectCreated(T::AccountId, [u8;32]),
+		ProjectCreated(T::AccountId, ProjectId),
 		/// Proxy initial setup completed
 		ProxySetupCompleted,
 		/// User registered successfully
 		UserAdded(T::AccountId),
 		/// Project was edited
-		ProjectEdited([u8;32]),
+		ProjectEdited(ProjectId),
 		/// Project was deleted
-		ProjectDeleted([u8;32]),
+		ProjectDeleted(ProjectId),
 		/// Administrator added
 		AdministratorAssigned(T::AccountId),
 		/// Administrator removed
@@ -236,17 +236,17 @@ pub mod pallet {
 		/// Expenditure was created successfully
 		ExpenditureCreated,
 		/// Expenditure was edited successfully
-		ExpenditureEdited([u8;32]),
+		ExpenditureEdited(BudgetExpenditureId),
 		/// Expenditure was deleted successfully
-		ExpenditureDeleted([u8;32]),
+		ExpenditureDeleted(BudgetExpenditureId),
 		/// Trasactions was completed successfully
 		TransactionsCompleted,
 		/// Transaction was created successfully
-		TransactionCreated([u8;32]),
+		TransactionCreated(TransactionId),
 		/// Transaction was edited successfully
-		TransactionEdited([u8;32]),
+		TransactionEdited(TransactionId),
 		/// Transaction was deleted successfully
-		TransactionDeleted([u8;32]),
+		TransactionDeleted(TransactionId),
 		/// Users extrinsic was completed successfully
 		UsersExecuted,
 		/// Assign users extrinsic was completed successfully
@@ -289,7 +289,7 @@ pub mod pallet {
 		MaxProjectsPerUserReached,
 		/// User is not assigned to the project
 		UserNotAssignedToProject,
-		/// Can not register administrator role 
+		/// Can not register administrator role
 		CannotRegisterAdminRole,
 		/// Max number of builders per project reached
 		MaxBuildersPerProjectReached,
@@ -318,7 +318,7 @@ pub mod pallet {
 		/// Drowdown id is not found
 		DrawdownNotFound,
 		/// Invalid amount
-		InvalidAmount, 
+		InvalidAmount,
 		/// Documents field is empty
 		DocumentsIsEmpty,
 		/// Transaction id is not found
@@ -342,7 +342,7 @@ pub mod pallet {
 		/// User does not have the specified role
 		UserDoesNotHaveRole,
 		/// Transactions vector is empty
-		EmptyTransactions, 
+		EmptyTransactions,
 		/// Transaction ID was not found in do_execute_transaction
 		TransactionIdNotFound,
 		/// Drawdown can not be submitted if does not has any transactions
@@ -402,12 +402,12 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// I N I T I A L 
+		// I N I T I A L
 		// --------------------------------------------------------------------------------------------
 		/// Initialize the pallet by setting the permissions for each role
-		/// & the global scope 
-		/// 
-		/// # Considerations: 
+		/// & the global scope
+		///
+		/// # Considerations:
 		/// - This function can only be called once
 		/// - This function can only be called usinf the sudo pallet
 		#[transactional]
@@ -421,17 +421,17 @@ pub mod pallet {
 		}
 
 		/// Adds an administrator account to the site
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The sudo account
 		/// - admin: The administrator account to be added
 		/// - name: The name of the administrator account
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to add the first administrator to the site
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
-		/// - This function grants administator permissions to the user from the rbac pallet 
+		/// - This function grants administator permissions to the user from the rbac pallet
 		/// - Administator role have global scope permissions
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
@@ -446,19 +446,19 @@ pub mod pallet {
 		}
 
 		/// Removes an administrator account from the site
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The sudo account
 		/// - admin: The administrator account to be removed
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to remove any administrator from the site
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		/// - This function removes administator permissions of the user from the rbac pallet
-		/// 
+		///
 		/// # Note:
-		/// WARNING: Administrators can remove themselves from the site, 
+		/// WARNING: Administrators can remove themselves from the site,
 		/// but they can add themselves back
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
@@ -474,38 +474,38 @@ pub mod pallet {
 
 		// U S E R S
 		// --------------------------------------------------------------------------------------------
-		/// This extrinsic is used to create, update, or delete a user account 
-		/// 
+		/// This extrinsic is used to create, update, or delete a user account
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
-		/// - user: The target user account to be registered, updated, or deleted. 
+		/// - user: The target user account to be registered, updated, or deleted.
 		/// It is an array of user accounts where each entry it should be a tuple of the following:
 		/// - 0: The user account
 		/// - 1: The user name
 		/// - 2: The user role
 		/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.
-		/// 
+		///
 		/// # Considerations:
 		/// - Users parameters are optional because depends on the CUD action as follows:
 		/// * **Create**: The user account, user name, user role & CUD action are required
 		/// * **Update**: The user account & CUD action are required. The user name & user role are optionals.
-		/// * **Delete**: The user account & CUD action are required. 
+		/// * **Delete**: The user account & CUD action are required.
 		/// - This function can only be called by an administrator account
-		/// - Multiple users can be registered, updated, or deleted at the same time, but 
+		/// - Multiple users can be registered, updated, or deleted at the same time, but
 		/// the user account must be unique. Multiple actions over the same user account
 		/// in the same call, it could result in an unexpected behavior.
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - If the user is not registered, the function will return an error: UserNotFound
-		/// 
+		///
 		/// # Note:
 		/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
 		/// but administrators can not delete themselves.
-		/// WARNING: This function only registers, updates, or deletes users from the site. 
+		/// WARNING: This function only registers, updates, or deletes users from the site.
 		/// DOESN'T grant or remove permissions from the rbac pallet.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			users: BoundedVec<(
 				T::AccountId, // account id
 				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
@@ -519,16 +519,16 @@ pub mod pallet {
 		}
 
 		/// Edits an user account
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The user account which is being edited
 		/// - name: The name of the user account which is being edited
 		/// - image: The image of the user account which is being edited
 		/// - email: The email of the user account which is being edited
 		/// - documents: The documents of the user account which is being edited.
-		/// ONLY available for the investor role. 
-		/// 
-		/// 
+		/// ONLY available for the investor role.
+		///
+		///
 		/// # Considerations:
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		/// - This function can only be called by a registered user account
@@ -538,21 +538,21 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_edit_user(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
 			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			documents: Option<Documents<T>> 
+			documents: Option<Documents<T>>
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_edit_user(who, name, image, email, documents)
-		}	
+		}
 
 		// P R O J E C T S
 		// --------------------------------------------------------------------------------------------
 		/// Registers a new project.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
 		/// - title: The title of the project
@@ -575,7 +575,7 @@ pub mod pallet {
 		/// * 0: The user account
 		/// * 1: The user role
 		/// * 2: The AssignAction to be performed on the user.
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
 		/// - For users assignation, the user account must be registered. If the user is not registered,
@@ -584,30 +584,30 @@ pub mod pallet {
 		/// flow, the expenditures are always created. The naics code & the jobs multiplier
 		/// can be added later by the administrator.
 		/// - Creating a project will automatically create a scope for the project.
-		/// 
+		///
 		/// # Note:
 		/// WARNING: If users are provided, the function will assign the users to the project, granting them
 		/// permissions in the rbac pallet.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_create_project(
-			origin: OriginFor<T>, 
-			title: FieldName, 
-			description: FieldDescription, 
-			image: CID, 
+			origin: OriginFor<T>,
+			title: FieldName,
+			description: FieldDescription,
+			image: Option<CID>,
 			address: FieldName,
-			creation_date: u64,
-			completion_date: u64, 
+			creation_date: CreationDate,
+			completion_date: CompletionDate,
 			expenditures: BoundedVec<(
 				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 				Option<ExpenditureType>,
-				Option<u64>,
-				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-				Option<u32>,
+				Option<ExpenditureAmount>,
+				Option<T::NAICSCode>,
+				Option<JobsMultiplier>,
 				CUDAction,
-				Option<[u8;32]>,
+				Option<BudgetExpenditureId>,
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
-				T::AccountId, 
+				T::AccountId,
 				ProxyRole,
 				AssignAction,
 			), T::MaxRegistrationsAtTime>>,
@@ -618,7 +618,7 @@ pub mod pallet {
 		}
 
 		/// Edits a project.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
 		/// - project_id: The selected project id that will be edited
@@ -628,14 +628,14 @@ pub mod pallet {
 		/// - address: The address of the project to be edited
 		/// - creation_date: The creation date of the project to be edited
 		/// - completion_date: The completion date of the project to be edited
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
 		/// - ALL parameters are optional because depends on what is being edited
 		/// - The project id is required because it is the only way to identify the project
-		/// - The project id must be registered. If the project is not registered, 
+		/// - The project id must be registered. If the project is not registered,
 		/// the function will return an error: ProjectNotFound
-		/// - It is not possible to edit the expenditures or the users assigned to the project 
+		/// - It is not possible to edit the expenditures or the users assigned to the project
 		/// through this function. For that, the administrator must use the extrinsics:
 		/// * expenditures
 		/// * projects_assign_user
@@ -644,14 +644,14 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_edit_project(
-			origin: OriginFor<T>, 
-			project_id: [u8;32], 
+			origin: OriginFor<T>,
+			project_id: ProjectId,
 			title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
 			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
 			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
 			address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			creation_date: Option<u64>,
-			completion_date: Option<u64>,  
+			creation_date: Option<CreationDate>,
+			completion_date: Option<CompletionDate>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -659,25 +659,25 @@ pub mod pallet {
 		}
 
 		/// Deletes a project.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
 		/// - project_id: The selected project id that will be deleted
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
 		/// - The project id is required because it is the only way to identify the project
 		/// - The project id must be registered. If the project is not registered,
 		/// the function will return an error: ProjectNotFound
-		/// 
+		///
 		/// # Note:
 		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
 		/// BE CAREFUL.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_delete_project(
-			origin: OriginFor<T>, 
-			project_id: [u8;32],  
+			origin: OriginFor<T>,
+			project_id: ProjectId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -685,34 +685,34 @@ pub mod pallet {
 		}
 
 		/// Assigns a user to a project.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
 		/// - project_id: The selected project id where user will be assigned
-		/// - users: The users to be assigned to the project. This is a vector of tuples 
+		/// - users: The users to be assigned to the project. This is a vector of tuples
 		/// where each entry is composed by:
 		/// * 0: The user account id
 		/// * 1: The user role
 		/// * 2: The AssignAction to be performed. (Assign or Unassign)
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple users to be assigned/unassigned at the same time.
 		/// - The project id is required because it is the only way to identify the project
 		/// - This extrinsic is used for both assigning and unassigning users to a project
-		/// depending on the AssignAction. 
+		/// depending on the AssignAction.
 		/// - After a user is assigned to a project, the user will be able to perform actions
 		/// in the project depending on the role assigned to the user.
 		/// - After a user is unassigned from a project, the user will not be able to perform actions
 		/// in the project anymore.
 		/// - If the user is already assigned to the project, the function will return an erro.
-		/// 
+		///
 		/// # Note:
 		/// - WARNING: ALL provided users needs to be registered in the site. If any of the users
 		/// is not registered, the function will return an error.
 		/// - Assigning or unassigning a user to a project will add or remove permissions to the user
-		/// from the RBAC pallet.  
-		/// - Warning: Cannot assign a user to a project with a different role than the one they 
+		/// from the RBAC pallet.
+		/// - Warning: Cannot assign a user to a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Cannot unassign a user from a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
@@ -721,10 +721,10 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
-			origin: OriginFor<T>, 
-			project_id: [u8;32],  
+			origin: OriginFor<T>,
+			project_id: ProjectId,
 			users: BoundedVec<(
-				T::AccountId, 
+				T::AccountId,
 				ProxyRole,
 				AssignAction,
 			), T::MaxRegistrationsAtTime>,
@@ -734,10 +734,10 @@ pub mod pallet {
 			Self::do_execute_assign_users(who, project_id, users)
 		}
 
-		// B U D G E T  E X P E N D I T U R E 
+		// B U D G E T  E X P E N D I T U R E
 		// --------------------------------------------------------------------------------------------
 		/// This extrinsic is used to create, update or delete expenditures.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account
 		/// - project_id: The selected project id where the expenditures will be created/updated/deleted
@@ -750,7 +750,7 @@ pub mod pallet {
 		/// * 4: The jobs multiplier of the expenditure
 		/// * 5: The expenditure action to be performed. (Create, Update or Delete)
 		/// * 6: The expenditure id. This is only used when updating or deleting an expenditure.
-		/// 
+		///
 		/// # Considerations:
 		/// - Naics code and jobs multiplier are always optional.
 		/// - This function can only be called by an administrator account
@@ -767,17 +767,17 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn expenditures(
-			origin: OriginFor<T>, 
-			project_id: [u8;32], 
+			origin: OriginFor<T>,
+			project_id: ProjectId,
 			expenditures: BoundedVec<(
 				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
 				Option<ExpenditureType>, // type
-				Option<u64>, // amount
+				Option<ExpenditureAmount>, // amount
 				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>, // naics code
-				Option<u32>, // jobs multiplier
+				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
-				Option<[u8;32]>, // expenditure_id
-			), T::MaxRegistrationsAtTime>,  
+				Option<BudgetExpenditureId>, // expenditure_id
+			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -789,7 +789,7 @@ pub mod pallet {
 
 		/// This extrinsic is used to create, update or delete transactions.
 		/// Transactions status can be saved as draft or submitted.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The user account who is creating the transactions
 		/// - project_id: The selected project id where the transactions will be created
@@ -801,9 +801,9 @@ pub mod pallet {
 		/// * 2: Documents associated to the transaction
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// - submit: If true, the transactions will be submitted. 
+		/// - submit: If true, the transactions will be submitted.
 		/// If false, the transactions will be saved as draft.
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by a builder role account
 		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time.
@@ -819,11 +819,11 @@ pub mod pallet {
 		/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not contain
 		/// any transaction, it will be returned an error.
 		/// - After a drawdown is submitted, it can not be updated or deleted.
-		/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions. 
+		/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn submit_drawdown(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
 			transactions: Option<BoundedVec<(
@@ -836,7 +836,7 @@ pub mod pallet {
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-			// Ensure builder permissions 
+			// Ensure builder permissions
 			Self::is_authorized(who, &project_id, ProxyPermission::SubmitDrawdown)?;
 
 			match submit{
@@ -867,13 +867,13 @@ pub mod pallet {
 		}
 
 		/// Approves a drawdown
-		/// 
+		///
 		/// # Parameters:
 		/// ### For EB5 drawdowns:
 		/// - origin: The administator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved
-		/// 
+		///
 		/// ### For Construction Loan & Developer Equity (bulk uploads) drawdowns:
 		/// - origin: The administator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
@@ -887,10 +887,10 @@ pub mod pallet {
 		/// * 2: Documents associated to the transaction
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
-		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time 
+		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time
 		/// (only for Construction Loan & Developer Equity drawdowns).
 		/// - Transaction parameters are optional because depends on the action to be performed:
 		/// * **Create**: Expenditure id, Amount, Documents & Action are required.
@@ -905,7 +905,7 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_drawdown(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
 			bulkupload: Option<bool>,
@@ -965,31 +965,31 @@ pub mod pallet {
 		}
 
 		/// Rejects a drawdown
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administator account who is rejecting the drawdown
 		/// - project_id: The selected project id where the drawdown will be rejected
 		/// - drawdown_id: The selected drawdown id to be rejected
-		/// 
+		///
 		/// Then the next two feedback parameters are optional because depends on the drawdown type:
 		/// #### EB5 drawdowns:
-		/// - transactions_feedback: Administrator will provide feedback for each transaction 
+		/// - transactions_feedback: Administrator will provide feedback for each transaction
 		/// that is wrong. This is a vector of tuples where each entry is composed by:
 		/// * 0: The transaction id
 		/// * 1: The transaction feedback
-		/// 
+		///
 		/// #### Construction Loan & Developer Equity drawdowns:
 		/// - drawdown_feedback: Administrator will provide feedback for the WHOLE drawdown.
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
-		/// - This extrinsic allows multiple transactions to be rejected at the same time 
+		/// - This extrinsic allows multiple transactions to be rejected at the same time
 		/// (only for EB5 drawdowns).
-		/// - For EB5 drawdowns, the administrator can provide feedback for each transaction 
+		/// - For EB5 drawdowns, the administrator can provide feedback for each transaction
 		/// that is wrong.
-		/// - For Construction Loan & Developer Equity drawdowns, the administrator can provide 
+		/// - For Construction Loan & Developer Equity drawdowns, the administrator can provide
 		/// feedback for the WHOLE drawdown.
-		/// - After a builder re-submits a drawdown, the administrator will have to review 
+		/// - After a builder re-submits a drawdown, the administrator will have to review
 		/// the drawdown again.
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
 		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
@@ -997,7 +997,7 @@ pub mod pallet {
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reject_drawdown(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
 			transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
@@ -1009,7 +1009,7 @@ pub mod pallet {
 		}
 
 		/// Bulk upload drawdowns.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administator account who is uploading the drawdowns
 		/// - project_id: The selected project id where the drawdowns will be uploaded
@@ -1017,7 +1017,7 @@ pub mod pallet {
 		/// - description: The description of the drawdown provided by the builder
 		/// - total_amount: The total amount of the drawdown
 		/// - documents: The documents provided by the builder for the drawdown
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by a builder account
 		/// - This extrinsic allows only one drawdown to be uploaded at the same time.
@@ -1025,13 +1025,13 @@ pub mod pallet {
 		/// - Only available for Construction Loan & Developer Equity drawdowns.
 		/// - After a builder uploads a drawdown, the administrator will have to review it.
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
-		/// - Bulkuploads does not allow individual transactions. 
-		/// - After a builder uploads a drawdown, the administrator will have to 
+		/// - Bulkuploads does not allow individual transactions.
+		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn up_bulkupload(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			project_id: [u8;32],
 			drawdown_id: [u8;32],
 			description: FieldDescription,
@@ -1044,7 +1044,7 @@ pub mod pallet {
 		}
 
 		/// Modifies the inflation rate of a project.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administator account who is modifying the inflation rate
 		/// - projects: The projects where the inflation rate will be modified.
@@ -1052,21 +1052,21 @@ pub mod pallet {
 		/// * 0: The project id
 		/// * 1: The inflation rate
 		/// * 2: The action to be performed (Create, Update or Delete)
-		/// 
+		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple projects to be modified at the same time.
-		/// - The inflation rate can be created, updated or deleted. 
+		/// - The inflation rate can be created, updated or deleted.
 		/// - The inflation rate is optional because depends on the CUDAction parameter:
 		/// * **Create**: The inflation rate will be created. Project id, inflation rate and action are required.
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
-		/// 
+		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn inflation_rate(
-			origin: OriginFor<T>, 
+			origin: OriginFor<T>,
 			projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -1075,13 +1075,13 @@ pub mod pallet {
 		}
 
 		/// Kill all the stored data.
-		/// 
+		///
 		/// This function is used to kill ALL the stored data.
 		/// Use it with caution!
-		/// 
+		///
 		/// ### Parameters:
-		/// - `origin`: The user who performs the action. 
-		/// 
+		/// - `origin`: The user who performs the action.
+		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]

@@ -9,6 +9,35 @@ pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
 pub type CID = BoundedVec<u8, ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
 
+// Projects
+pub type ProjectId = [u8; 32];
+pub type CreationDate = u64;
+pub type CompletionDate = u64;
+pub type UpdatedDate = u64;
+pub type RegistrationDate = u64;
+
+// Users
+pub type DateRegistered = u64;
+
+// Transactions
+pub type TransactionId = [u8; 32];
+
+// Drawdowns
+pub type DrawdownId = [u8; 32];
+pub type DrawdownNumber = u32;
+
+// Budget expenditures
+pub type BudgetExpenditureId = [u8; 32];
+pub type ExpenditureAmount = u64;
+pub type Balance = u64;
+pub type NAICSCode<T> = BoundedVec<FieldDescription, <T as Config>::MaxBoundedVecs>;
+pub type JobsMultiplier = u32;
+pub type InflationRate = u32;
+
+// Miscellaneous
+pub type CreatedDate = u64;
+pub type CloseDate = u64;
+pub type TotalAmount = u64;
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -21,13 +50,13 @@ pub struct ProjectData<T: Config> {
     pub title: FieldName,
     pub description: FieldDescription,
     pub image: CID,
-    pub address: FieldName, 
+    pub address: FieldName,
     pub status: ProjectStatus,
-    pub inflation_rate: Option<u32>,
-    pub creation_date: u64,
-    pub completion_date: u64,
-    pub registration_date: u64,
-    pub updated_date: u64,
+    pub inflation_rate: Option<InflationRate>,
+    pub creation_date: CreationDate,
+    pub completion_date: CompletionDate,
+    pub registration_date: RegistrationDate,
+    pub updated_date: UpdatedDate,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -49,7 +78,7 @@ pub struct UserData<T: Config> {
     pub name: FieldName,
     pub role: ProxyRole,
     pub image: CID,
-    pub date_registered: u64,
+    pub date_registered: DateRegistered,
     pub email: FieldName,
     pub documents: Option<Documents<T>>,
 }
@@ -66,19 +95,19 @@ pub enum ProxyRole {
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ExpenditureData {
-    pub project_id: [u8;32],
+    pub project_id: ProjectId,
     pub name: FieldName,
     pub expenditure_type: ExpenditureType,
-    pub expenditure_amount: u64,
+    pub expenditure_amount: ExpenditureAmount,
     pub naics_code: Option<FieldDescription>,
-    pub jobs_multiplier: Option<u32>,
+    pub jobs_multiplier: Option<JobsMultiplier>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ExpenditureType {
-    HardCost, 
+    HardCost,
     SoftCost,
-    Operational, 
+    Operational,
     Others,
 }
 
@@ -92,9 +121,9 @@ impl Default for ExpenditureType {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData {
     pub expenditure_id: [u8;32],
-    pub balance: u64,
-    pub created_date: u64,
-    pub updated_date: u64,
+    pub balance: Balance,
+    pub created_date: CreatedDate,
+    pub updated_date: UpdatedDate,
 }
 
 
@@ -103,20 +132,20 @@ pub struct BudgetData {
 #[codec(mel_bound())]
 pub struct DrawdownData<T: Config> {
     pub project_id: [u8;32],
-    pub drawdown_number: u32,
+    pub drawdown_number: DrawdownNumber,
     pub drawdown_type: DrawdownType,
-    pub total_amount: u64,
+    pub total_amount: TotalAmount,
     pub status: DrawdownStatus,
     pub documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
-    pub created_date: u64,
-    pub close_date: u64,
+    pub created_date: CreatedDate,
+    pub close_date: CloseDate,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownType {
-    EB5, 
+    EB5,
     ConstructionLoan,
     DeveloperEquity,
 }
@@ -129,7 +158,7 @@ impl Default for DrawdownType {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownStatus {
-    Draft, 
+    Draft,
     Submitted,
     Approved,
     Rejected,
@@ -145,21 +174,21 @@ impl Default for DrawdownStatus {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct TransactionData<T: Config> {
-    pub project_id: [u8;32],
-    pub drawdown_id: [u8;32],
-    pub expenditure_id: [u8;32],
-    pub created_date: u64,
-    pub updated_date: u64,
-    pub closed_date: u64,
+    pub project_id: ProjectId,
+    pub drawdown_id: DrawdownId,
+    pub expenditure_id: BudgetExpenditureId,
+    pub created_date: CreatedDate,
+    pub updated_date: UpdatedDate,
+    pub closed_date: CloseDate,
     pub feedback: Option<FieldDescription>,
-    pub amount: u64,
+    pub amount: ExpenditureAmount,
     pub status: TransactionStatus,
     pub documents: Option<Documents<T>>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum TransactionStatus {
-    Draft, 
+    Draft,
     Submitted,
     Approved,
     Rejected,
@@ -227,7 +256,7 @@ pub enum ProxyPermission {
     Inflation, // inflation
 }
 
-impl ProxyPermission { 
+impl ProxyPermission {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
             Self::RegisterUser => "RegisterUser".as_bytes().to_vec(),
@@ -252,7 +281,7 @@ impl ProxyPermission {
     pub fn administrator_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
         let administrator_permissions = [
-            RegisterUser.to_vec(), 
+            RegisterUser.to_vec(),
             EditUser.to_vec(),
             CreateProject.to_vec(),
             EditProject.to_vec(),
