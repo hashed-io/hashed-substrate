@@ -852,11 +852,17 @@ pub mod pallet {
 					// Check if there's transactions to execute
 					if let Some(transactions) = transactions {
 						// Do execute transactions
-						Self::do_execute_transactions(
-							project_id,
-							drawdown_id,
-							transactions,
-						)?;
+						if transactions.len() > 0 {
+							Self::do_execute_transactions(
+								project_id,
+								drawdown_id,
+								transactions)?;
+						}
+					// 	Self::do_execute_transactions(
+					// 		project_id,
+					// 		drawdown_id,
+					// 		transactions,
+					// 	)?;
 					}
 
 					// Do submit drawdown
