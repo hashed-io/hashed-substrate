@@ -21,6 +21,7 @@ pub type DateRegistered = u64;
 
 // Transactions
 pub type TransactionId = [u8; 32];
+pub type Amount = u64;
 
 // Drawdowns
 pub type DrawdownId = [u8; 32];
@@ -30,7 +31,7 @@ pub type DrawdownNumber = u32;
 pub type BudgetExpenditureId = [u8; 32];
 pub type ExpenditureAmount = u64;
 pub type Balance = u64;
-pub type NAICSCode<T> = BoundedVec<FieldDescription, <T as Config>::MaxBoundedVecs>;
+pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
 pub type InflationRate = u32;
 
@@ -49,7 +50,7 @@ pub struct ProjectData<T: Config> {
     pub regional_center: Option<BoundedVec<T::AccountId, T::MaxRegionalCenterPerProject>>,
     pub title: FieldName,
     pub description: FieldDescription,
-    pub image: CID,
+    pub image: Option<CID>,
     pub address: FieldName,
     pub status: ProjectStatus,
     pub inflation_rate: Option<InflationRate>,
@@ -120,7 +121,7 @@ impl Default for ExpenditureType {
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct BudgetData {
-    pub expenditure_id: [u8;32],
+    pub expenditure_id: BudgetExpenditureId,
     pub balance: Balance,
     pub created_date: CreatedDate,
     pub updated_date: UpdatedDate,
@@ -131,7 +132,7 @@ pub struct BudgetData {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct DrawdownData<T: Config> {
-    pub project_id: [u8;32],
+    pub project_id: ProjectId,
     pub drawdown_number: DrawdownNumber,
     pub drawdown_type: DrawdownType,
     pub total_amount: TotalAmount,

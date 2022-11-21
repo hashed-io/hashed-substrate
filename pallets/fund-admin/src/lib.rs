@@ -508,7 +508,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			users: BoundedVec<(
 				T::AccountId, // account id
-				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+				Option<FieldName>, // name
 				Option<ProxyRole>, // role
 				CUDAction, // action
 			), T::MaxRegistrationsAtTime>,
@@ -539,9 +539,9 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users_edit_user(
 			origin: OriginFor<T>,
-			name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-			email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			name: Option<FieldName>,
+			image: Option<CID>,
+			email: Option<FieldName>,
 			documents: Option<Documents<T>>
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -598,13 +598,13 @@ pub mod pallet {
 			creation_date: CreationDate,
 			completion_date: CompletionDate,
 			expenditures: BoundedVec<(
-				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+				Option<FieldName>,
 				Option<ExpenditureType>,
 				Option<ExpenditureAmount>,
-				Option<T::NAICSCode>,
+				Option<NAICSCode>,
 				Option<JobsMultiplier>,
 				CUDAction,
-				Option<BudgetExpenditureId>,
+				Option<BudgetExpenditureId>
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
 				T::AccountId,
@@ -646,10 +646,10 @@ pub mod pallet {
 		pub fn projects_edit_project(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
-			title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-			description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-			image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-			address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+			title: Option<FieldName>,
+			description: Option<FieldDescription>,
+			image: Option<CID>,
+			address: Option<FieldName>,
 			creation_date: Option<CreationDate>,
 			completion_date: Option<CompletionDate>,
 		) -> DispatchResult {
@@ -770,10 +770,10 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			expenditures: BoundedVec<(
-				Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+				Option<FieldName>, // name
 				Option<ExpenditureType>, // type
 				Option<ExpenditureAmount>, // amount
-				Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>, // naics code
+				Option<FieldDescription>, // naics code
 				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
 				Option<BudgetExpenditureId>, // expenditure_id
@@ -906,15 +906,15 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_drawdown(
 			origin: OriginFor<T>,
-			project_id: [u8;32],
-			drawdown_id: [u8;32],
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
 			bulkupload: Option<bool>,
 			transactions: Option<BoundedVec<(
-				Option<[u8;32]>, // expenditure_id
+				Option<BudgetExpenditureId>, // expenditure_id
 				Option<u64>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
-				Option<[u8;32]>, // transaction_id
+				Option<TransactionId>, // transaction_id
 			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -998,10 +998,10 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reject_drawdown(
 			origin: OriginFor<T>,
-			project_id: [u8;32],
-			drawdown_id: [u8;32],
-			transactions_feedback: Option<BoundedVec<([u8;32], FieldDescription), T::MaxRegistrationsAtTime>>,
-			drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
+			drawdown_feedback: Option<FieldDescription>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -1032,10 +1032,10 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn up_bulkupload(
 			origin: OriginFor<T>,
-			project_id: [u8;32],
-			drawdown_id: [u8;32],
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
 			description: FieldDescription,
-			total_amount: u64,
+			total_amount: TotalAmount,
 			documents: Documents<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be a builder
@@ -1067,7 +1067,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
-			projects: BoundedVec<([u8;32], Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
+			projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 

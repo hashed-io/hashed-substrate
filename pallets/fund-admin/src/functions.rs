@@ -79,15 +79,15 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         title: FieldName,
         description: FieldDescription,
-        image: CID,
+        image: Option<CID>,
         address: FieldName,
         creation_date: CreationDate,
         completion_date: CompletionDate,
         expenditures: BoundedVec<(
-            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+            Option<FieldName>,
             Option<ExpenditureType>,
             Option<ExpenditureAmount>,
-            Option<T::NAICSCode>,
+            Option<NAICSCode>,
             Option<JobsMultiplier>,
             CUDAction,
             Option<BudgetExpenditureId>,
@@ -156,13 +156,13 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_edit_project(
         admin: T::AccountId,
-        project_id: [u8;32],
-        title: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-        description: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
-        image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        address: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-        creation_date: Option<u64>,
-        completion_date: Option<u64>,
+        project_id: ProjectId,
+        title: Option<FieldName>,
+        description: Option<FieldDescription>,
+        image: Option<CID>,
+        address: Option<FieldName>,
+        creation_date: Option<CreationDate>,
+        completion_date: Option<CompletionDate>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::EditProject)?;
@@ -181,20 +181,13 @@ impl<T: Config> Pallet<T> {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
 
             if let Some(title) = title {
-                let mod_title = title.into_inner();
-                project.title = mod_title[0].clone();
+                project.title = title;
             }
             if let Some(description) = description {
-                let mod_description = description.into_inner();
-                project.description = mod_description[0].clone();
-            }
-            if let Some(image) = image {
-                let mod_image = image.into_inner();
-                project.image = mod_image[0].clone();
+                project.description = description;
             }
             if let Some(address) = address {
-                let mod_address = address.into_inner();
-                project.address = mod_address[0].clone();
+                project.address = address;
             }
             if let Some(creation_date) = creation_date {
                 project.creation_date = creation_date;
@@ -205,6 +198,7 @@ impl<T: Config> Pallet<T> {
                 project.completion_date = completion_date;
             }
             //TOREVIEW: Check if this is working
+            project.image = image;
             project.updated_date = current_timestamp;
 
             Ok(())
@@ -220,7 +214,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_delete_project(
         admin: T::AccountId,
-        project_id: [u8;32],
+        project_id: ProjectId,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::DeleteProject)?;
@@ -285,7 +279,7 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_execute_assign_users(
         admin: T::AccountId,
-        project_id: [u8;32],
+        project_id: ProjectId,
         users: BoundedVec<(
             T::AccountId,
             ProxyRole,
@@ -320,7 +314,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_assign_user(
-        project_id: [u8;32],
+        project_id: ProjectId,
         user: T::AccountId,
         role: ProxyRole,
     ) -> DispatchResult {
@@ -358,7 +352,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_unassign_user(
-        project_id: [u8;32],
+        project_id: ProjectId,
         user: T::AccountId,
         role: ProxyRole,
     ) -> DispatchResult {
@@ -399,7 +393,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         users: BoundedVec<(
             T::AccountId, // 0:account id
-            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+            Option<FieldName>, // name
             Option<ProxyRole>, // 2:role
             CUDAction, // 3:action
         ), T::MaxRegistrationsAtTime>,
@@ -445,7 +439,7 @@ impl<T: Config> Pallet<T> {
 
     fn do_create_user(
         user: T::AccountId,
-        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
+        name: FieldName,
         role: ProxyRole,
     ) -> DispatchResult {
         //Get current timestamp
@@ -459,12 +453,12 @@ impl<T: Config> Pallet<T> {
 
         match role {
             ProxyRole::Administrator => {
-                Self::do_sudo_add_administrator(user.clone(), name[0].clone())?;
+                Self::do_sudo_add_administrator(user.clone(), name.clone())?;
             },
             _ => {
                 // Create user data
                 let user_data = UserData::<T> {
-                    name: name[0].clone(),
+                    name: name.clone(),
                     role,
                     image: CID::default(),
                     date_registered: current_timestamp,
@@ -483,7 +477,7 @@ impl<T: Config> Pallet<T> {
 
     fn do_update_user(
         user: T::AccountId,
-        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // name
+        name: Option<FieldName>, // name
         role: Option<ProxyRole>,
     ) -> DispatchResult {
         // Ensure user is registered
@@ -494,7 +488,7 @@ impl<T: Config> Pallet<T> {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
             if let Some(mod_name) = name {
-                user_info.name = mod_name.into_inner()[0].clone();
+                user_info.name = mod_name.clone();
             }
             if let Some(mod_role) = role {
                 // If user has assigned projects cannot update role
@@ -548,9 +542,9 @@ impl<T: Config> Pallet<T> {
 
     pub fn do_edit_user(
         user: T::AccountId,
-        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
-        image: Option<BoundedVec<CID, T::MaxBoundedVecs>>,
-        email: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        name: Option<FieldName>,
+        image: Option<CID>,
+        email: Option<FieldName>,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
         //Ensure user is registered
@@ -562,16 +556,13 @@ impl<T: Config> Pallet<T> {
 
             //TODO: evaluate this inner method, optimize it
             if let Some(name) = name {
-                let mod_name = name.into_inner();
-                user_info.name = mod_name[0].clone();
+                user_info.name = name.clone();
             }
             if let Some(image) = image {
-                let mod_image = image.into_inner();
-                user_info.image = mod_image[0].clone();
+                user_info.image = image.clone();
             }
             if let Some(email) = email {
-                let mod_email = email.into_inner();
-                user_info.email = mod_email[0].clone();
+                user_info.email = email.clone();
             }
             if let Some(documents) = documents {
                 // Ensure user is an investor
@@ -594,10 +585,10 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         expenditures: BoundedVec<(
-            Option<BoundedVec<FieldName, T::MaxBoundedVecs>>, // 0: name
+            Option<FieldName>, // 0: name
             Option<ExpenditureType>, // 1: type
-            Option<u64>, // 2: amount
-            Option<T::NAICSCode>, // 3: naics code
+            Option<ExpenditureAmount>, // 2: amount
+            Option<NAICSCode>, // 3: naics code
             Option<JobsMultiplier>, // 4: jobs multiplier
             CUDAction, // 5: CUDAction
             Option<BudgetExpenditureId>, // 6: expenditure_id
@@ -667,10 +658,10 @@ impl<T: Config> Pallet<T> {
     /// * `jobs_multiplier` - The jobs multiplier of the budget expenditure
     fn do_create_expenditure(
         project_id: [u8;32],
-        name: BoundedVec<FieldName, T::MaxBoundedVecs>,
+        name: FieldName,
         expenditure_type: ExpenditureType,
         expenditure_amount: ExpenditureAmount,
-        naics_code: Option<T::NAICSCode>,
+        naics_code: Option<NAICSCode>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
         //Ensure project exists
@@ -691,7 +682,7 @@ impl<T: Config> Pallet<T> {
         // NAICS code
         let get_naics_code = match naics_code {
             Some(mod_naics_code) => {
-                Some(mod_naics_code.into_inner()[0].clone())
+                Some(mod_naics_code.clone())
             },
             None => None,
         };
@@ -699,7 +690,7 @@ impl<T: Config> Pallet<T> {
         // Create expenditurte data
         let expenditure_data = ExpenditureData {
             project_id,
-            name: name.into_inner()[0].clone(),
+            name: name.clone(),
             expenditure_type,
             expenditure_amount,
             naics_code: get_naics_code,
@@ -724,9 +715,9 @@ impl<T: Config> Pallet<T> {
     fn do_update_expenditure(
         project_id: ProjectId,
         expenditure_id: BudgetExpenditureId,
-        name: Option<BoundedVec<FieldName, T::MaxBoundedVecs>>,
+        name: Option<FieldName>,
         expenditure_amount: Option<ExpenditureAmount>,
-        naics_code: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+        naics_code: Option<FieldDescription>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
         //Ensure project exists
@@ -748,13 +739,13 @@ impl<T: Config> Pallet<T> {
             //TODO: ensure name is unique
 
             if let  Some(mod_name) = name {
-                expenditure.name = mod_name.into_inner()[0].clone();
+                expenditure.name = mod_name.clone();
             }
             if let Some(mod_expenditure_amount) = expenditure_amount {
                 expenditure.expenditure_amount = mod_expenditure_amount;
             }
             if let Some(mod_naics_code) = naics_code {
-                expenditure.naics_code = Some(mod_naics_code.into_inner()[0].clone());
+                expenditure.naics_code = Some(mod_naics_code.clone());
             }
             if let Some(mod_jobs_multiplier) = jobs_multiplier {
                 expenditure.jobs_multiplier = Some(mod_jobs_multiplier);
@@ -964,7 +955,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
-        drawdown_feedback: Option<BoundedVec<FieldDescription, T::MaxBoundedVecs>>,
+        drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
@@ -1043,7 +1034,7 @@ impl<T: Config> Pallet<T> {
                 // Update drawdown feedback
                 <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
                     let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-                    drawdown_data.feedback = Some(mod_drawdown_feedback[0].clone());
+                    drawdown_data.feedback = Some(mod_drawdown_feedback.clone());
                     Ok(())
                 })?;
             },
@@ -1131,7 +1122,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         expenditure_id: BudgetExpenditureId,
-        amount: u64,
+        amount: Amount,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
         // Ensure amount is valid
@@ -1226,7 +1217,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_delete_transaction(
-        transaction_id: [u8;32]
+        transaction_id: TransactionId
     ) -> DispatchResult {
         // Ensure transaction exists and get transaction data
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
@@ -1305,7 +1296,7 @@ impl<T: Config> Pallet<T> {
     // --------------------------------------------------------------------------------------------
     pub fn do_execute_inflation_adjustment(
         admin: T::AccountId,
-        projects: BoundedVec<(ProjectId, Option<u32>, CUDAction), T::MaxRegistrationsAtTime>,
+        projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
