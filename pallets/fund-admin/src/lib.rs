@@ -824,14 +824,14 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn submit_drawdown(
 			origin: OriginFor<T>,
-			project_id: [u8;32],
-			drawdown_id: [u8;32],
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
 			transactions: Option<BoundedVec<(
-				Option<[u8;32]>, // expenditure_id
-				Option<u64>, // amount
+				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureAmount>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
-				Option<[u8;32]>, // transaction_id
+				Option<TransactionId>, // transaction_id
 			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
