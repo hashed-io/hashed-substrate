@@ -266,7 +266,10 @@ impl<T: Config> Pallet<T> {
 		let user: T::AccountId = ensure_signed(origin.clone())?;
 		Self::is_authorized(user, collection, Permission::Mint)?;
 
-		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
+		// pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
+		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| {
+			Ok(())
+		})?;
 
 		pallet_uniques::Pallet::<T>::set_metadata(
 			origin.clone(),
@@ -296,7 +299,7 @@ impl<T: Config> Pallet<T> {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
 
-	fn insert_auth_in_frunique_collection(
+	pub fn insert_auth_in_frunique_collection(
 		user: T::AccountId,
 		class_id: T::CollectionId,
 		role: FruniqueRole,
