@@ -231,12 +231,106 @@
 <span id="231">231</span>
 <span id="232">232</span>
 <span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
-
+<span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
 <span class="kw">use</span> <span class="ident">frame_support::traits::tokens::nonfungibles::Inspect</span>;
+<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">scale_info::prelude::string::String</span>;
 
 <span class="kw">use</span> <span class="ident">pallet_rbac::types</span>::<span class="kw-2">*</span>;
@@ -315,7 +409,63 @@
 	}
 
 	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_initial_setup</span>() -&gt; <span class="ident">DispatchResult</span> {
-		<span class="kw">let</span> <span class="ident">_pallet_id</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::pallet_id</span>();
+
+		<span class="kw">let</span> <span class="ident">pallet</span>: <span class="ident">IdOrVec</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::pallet_id</span>();
+
+		<span class="kw">let</span> <span class="ident">owner_role_ids</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(
+			<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+			<span class="ident">FruniqueRole::get_owner_roles</span>())<span class="question-mark">?</span>;
+
+		<span class="kw">for</span> <span class="ident">owner_role</span> <span class="kw">in</span> <span class="ident">owner_role_ids</span> {
+			<span class="ident">T::Rbac::create_and_set_permissions</span>(
+				<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+				<span class="ident">owner_role</span>,
+				<span class="ident">Permission::owner_permissions</span>())<span class="question-mark">?</span>;
+		}
+
+		<span class="kw">let</span> <span class="ident">admin_role_ids</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(
+			<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+			<span class="ident">FruniqueRole::get_admin_roles</span>())<span class="question-mark">?</span>;
+
+		<span class="kw">for</span> <span class="ident">admin_role</span> <span class="kw">in</span> <span class="ident">admin_role_ids</span> {
+			<span class="ident">T::Rbac::create_and_set_permissions</span>(
+				<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+				<span class="ident">admin_role</span>,
+				<span class="ident">Permission::admin_permissions</span>())<span class="question-mark">?</span>;
+		}
+
+		<span class="kw">let</span> <span class="ident">collaborator_role_ids</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(
+			<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+			<span class="ident">FruniqueRole::get_collaborator_roles</span>())<span class="question-mark">?</span>;
+
+		<span class="kw">for</span> <span class="ident">collaborator_role</span> <span class="kw">in</span> <span class="ident">collaborator_role_ids</span> {
+			<span class="ident">T::Rbac::create_and_set_permissions</span>(
+				<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+				<span class="ident">collaborator_role</span>,
+				<span class="ident">Permission::collaborator_permissions</span>())<span class="question-mark">?</span>;
+		}
+
+		<span class="kw">let</span> <span class="ident">collector_role_ids</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(
+			<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+			<span class="ident">FruniqueRole::get_collector_roles</span>())<span class="question-mark">?</span>;
+
+		<span class="kw">for</span> <span class="ident">collector_role</span> <span class="kw">in</span> <span class="ident">collector_role_ids</span> {
+			<span class="ident">T::Rbac::create_and_set_permissions</span>(
+				<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+				<span class="ident">collector_role</span>,
+				<span class="ident">Permission::collector_permissions</span>())<span class="question-mark">?</span>;
+		}
+
+		<span class="kw">let</span> <span class="ident">holder_role_ids</span> <span class="op">=</span> <span class="ident">T::Rbac::create_and_set_roles</span>(
+			<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+			<span class="ident">FruniqueRole::get_holder_roles</span>())<span class="question-mark">?</span>;
+
+		<span class="kw">for</span> <span class="ident">holder_role</span> <span class="kw">in</span> <span class="ident">holder_role_ids</span> {
+			<span class="ident">T::Rbac::create_and_set_permissions</span>(
+				<span class="ident">pallet</span>.<span class="ident">clone</span>(),
+				<span class="ident">holder_role</span>,
+				<span class="ident">Permission::holder_permissions</span>())<span class="question-mark">?</span>;
+		}
 
 		<span class="prelude-val">Ok</span>(())
 	}
@@ -383,6 +533,11 @@
 	) -&gt; <span class="ident">DispatchResult</span> {
 		<span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">T::CreateOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">class_id</span>)<span class="question-mark">?</span>;
 
+		<span class="kw">let</span> <span class="ident">scope_id</span> <span class="op">=</span> <span class="ident">class_id</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
+		<span class="ident">T::Rbac::create_scope</span>(<span class="ident"><span class="self">Self</span>::pallet_id</span>(), <span class="ident">scope_id</span>)<span class="question-mark">?</span>;
+
+		<span class="ident"><span class="self">Self</span>::insert_auth_in_frunique_collection</span>(<span class="ident">owner</span>.<span class="ident">clone</span>(), <span class="ident">class_id</span>, <span class="ident">FruniqueRole::Owner</span>)<span class="question-mark">?</span>;
+
 		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::do_create_collection</span>(
 			<span class="ident">class_id</span>,
 			<span class="ident">owner</span>.<span class="ident">clone</span>(),
@@ -430,12 +585,15 @@
 		<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		<span class="ident">collection</span>: <span class="ident">T::CollectionId</span>,
 		<span class="ident">item</span>: <span class="ident">T::ItemId</span>,
-		<span class="ident">owner</span>: <span class="op">&lt;</span><span class="ident">T::Lookup</span> <span class="kw">as</span> <span class="ident">sp_runtime::traits::StaticLookup</span><span class="op">&gt;</span><span class="ident">::Source</span>,
+		<span class="ident">owner</span>: <span class="ident">T::AccountId</span>,
 		<span class="ident">metadata</span>: <span class="ident">CollectionDescription</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		<span class="ident">attributes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attributes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 	) -&gt; <span class="ident">DispatchResult</span> {
 		<span class="macro">ensure!</span>(<span class="ident"><span class="self">Self</span>::collection_exists</span>(<span class="kw-2">&amp;</span><span class="ident">collection</span>), <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::CollectionNotFound</span>);
-		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::mint</span>(<span class="ident">origin</span>.<span class="ident">clone</span>(), <span class="ident">collection</span>, <span class="ident">item</span>, <span class="ident">owner</span>)<span class="question-mark">?</span>;
+		<span class="kw">let</span> <span class="ident">user</span>: <span class="ident">T::AccountId</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+		<span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">user</span>, <span class="ident">collection</span>, <span class="ident">Permission::Mint</span>)<span class="question-mark">?</span>;
+
+		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::do_mint</span>(<span class="ident">collection</span>, <span class="ident">item</span>, <span class="ident">owner</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
 
 		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::set_metadata</span>(
 			<span class="ident">origin</span>.<span class="ident">clone</span>(),
@@ -460,8 +618,38 @@
 		<span class="prelude-val">Ok</span>(())
 	}
 
+	<span class="doccomment">/// Helper functions to interact with the RBAC module</span>
 	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pallet_id</span>() -&gt; <span class="ident">IdOrVec</span> {
 		<span class="ident">IdOrVec::Vec</span>(<span class="ident"><span class="self">Self</span>::module_name</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>())
+	}
+
+	<span class="kw">fn</span> <span class="ident">insert_auth_in_frunique_collection</span>(
+		<span class="ident">user</span>: <span class="ident">T::AccountId</span>,
+		<span class="ident">class_id</span>: <span class="ident">T::CollectionId</span>,
+		<span class="ident">role</span>: <span class="ident">FruniqueRole</span>,
+	) -&gt; <span class="ident">DispatchResult</span> {
+		<span class="ident">T::Rbac::assign_role_to_user</span>(
+			<span class="ident">user</span>,
+			<span class="ident"><span class="self">Self</span>::pallet_id</span>(),
+			<span class="kw-2">&amp;</span><span class="ident">class_id</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>),
+			<span class="ident">role</span>.<span class="ident">id</span>(),
+		)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn</span> <span class="ident">is_authorized</span>(
+		<span class="ident">user</span>: <span class="ident">T::AccountId</span>,
+		<span class="ident">collection_id</span>: <span class="ident">T::CollectionId</span>,
+		<span class="ident">permission</span>: <span class="ident">Permission</span>,
+	) -&gt; <span class="ident">DispatchResult</span> {
+		<span class="kw">let</span> <span class="ident">scope_id</span> <span class="op">=</span> <span class="ident">collection_id</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
+		<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet::Config</span><span class="op">&gt;</span><span class="ident">::Rbac::is_authorized</span>(
+			<span class="ident">user</span>,
+			<span class="ident"><span class="self">Self</span>::pallet_id</span>(),
+			<span class="kw-2">&amp;</span><span class="ident">scope_id</span>,
+			<span class="kw-2">&amp;</span><span class="ident">permission</span>.<span class="ident">id</span>(),
+		)
 	}
 }
 </code></pre></div>

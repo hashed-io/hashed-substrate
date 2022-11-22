@@ -80,14 +80,14 @@ the function will return the preexisting one.</p>
 <h6 id="parameters-5"><a href="#parameters-5">Parameters:</a></h6>
 <ul>
 <li><code>pallet_id</code>: The unique pallet identifier.</li>
-<li><code>role_id</code>: The unique role identifier. </li>
+<li><code>role_id</code>: The unique role identifier.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.set_multiple_pallet_roles" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_rbac/functions.rs.html#148-161">source</a></span><a href="#method.set_multiple_pallet_roles" class="anchor"></a><h4 class="code-header">fn <a href="../types/trait.RoleBasedAccessControl.html#tymethod.set_multiple_pallet_roles" class="fnname">set_multiple_pallet_roles</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;pallet: <a class="enum" href="../types/enum.IdOrVec.html" title="enum pallet_rbac::types::IdOrVec">IdOrVec</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;roles: <a class="struct" href="https://doc.rust-lang.org/1.64.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../types/type.RoleId.html" title="type pallet_rbac::types::RoleId">RoleId</a>&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Multiple role coupling with pallet.</p>
 <p>Assigns multiple, previously created roles to a pallet.</p>
 <h6 id="parameters-6"><a href="#parameters-6">Parameters:</a></h6>
 <ul>
 <li><code>pallet_id</code>: The unique pallet identifier.</li>
-<li><code>roles</code>: A list of unique role identifiers. </li>
+<li><code>roles</code>: A list of unique role identifiers.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.assign_role_to_user" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_rbac/functions.rs.html#171-186">source</a></span><a href="#method.assign_role_to_user" class="anchor"></a><h4 class="code-header">fn <a href="../types/trait.RoleBasedAccessControl.html#tymethod.assign_role_to_user" class="fnname">assign_role_to_user</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;user: T::AccountId,<br>&nbsp;&nbsp;&nbsp;&nbsp;pallet: <a class="enum" href="../types/enum.IdOrVec.html" title="enum pallet_rbac::types::IdOrVec">IdOrVec</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;scope_id: &amp;<a class="type" href="../types/type.ScopeId.html" title="type pallet_rbac::types::ScopeId">ScopeId</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;role_id: <a class="type" href="../types/type.RoleId.html" title="type pallet_rbac::types::RoleId">RoleId</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Role assignation to a user</p>
 <p>Assigns a role to a user in a scope context.</p>
@@ -115,7 +115,7 @@ be able to enforce the removed role and its permissions.</p>
 <li><code>pallet_id</code>: The unique pallet identifier.</li>
 <li><code>role_id</code>: The role identifier to which the permissions will
 be linked to.</li>
-<li><code>permissions</code>: A list of permissions to create and link, 
+<li><code>permissions</code>: A list of permissions to create and link,
 encoded in bytes.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.create_permission" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_rbac/functions.rs.html#249-260">source</a></span><a href="#method.create_permission" class="anchor"></a><h4 class="code-header">fn <a href="../types/trait.RoleBasedAccessControl.html#tymethod.create_permission" class="fnname">create_permission</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;pallet: <a class="enum" href="../types/enum.IdOrVec.html" title="enum pallet_rbac::types::IdOrVec">IdOrVec</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;permission: <a class="struct" href="https://doc.rust-lang.org/1.64.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.64.0/std/primitive.u8.html">u8</a>&gt;<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.64.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../types/type.PermissionId.html" title="type pallet_rbac::types::PermissionId">PermissionId</a>, DispatchError&gt;</h4></section></summary><div class="docblock"><p>Permission creation</p>
@@ -134,7 +134,7 @@ encoded in bytes.</li>
 <li><code>permission_id</code>: The permission to assign to the role.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.set_multiple_permissions_to_role" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_rbac/functions.rs.html#291-306">source</a></span><a href="#method.set_multiple_permissions_to_role" class="anchor"></a><h4 class="code-header">fn <a href="../types/trait.RoleBasedAccessControl.html#tymethod.set_multiple_permissions_to_role" class="fnname">set_multiple_permissions_to_role</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;pallet: <a class="enum" href="../types/enum.IdOrVec.html" title="enum pallet_rbac::types::IdOrVec">IdOrVec</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;role_id: <a class="type" href="../types/type.RoleId.html" title="type pallet_rbac::types::RoleId">RoleId</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;permissions: <a class="struct" href="https://doc.rust-lang.org/1.64.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../types/type.PermissionId.html" title="type pallet_rbac::types::PermissionId">PermissionId</a>&gt;<br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Multiple permissions assignation to a role</p>
-<p>Assigns multiple, previously created permissions 
+<p>Assigns multiple, previously created permissions
 to a role in a pallet context.</p>
 <h6 id="parameters-12"><a href="#parameters-12">Parameters:</a></h6>
 <ul>
@@ -168,7 +168,7 @@ to a role in a pallet context.</p>
 <li><code>scope_id</code>: The scope to validate.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.permission_exists" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/pallet_rbac/functions.rs.html#367-370">source</a></span><a href="#method.permission_exists" class="anchor"></a><h4 class="code-header">fn <a href="../types/trait.RoleBasedAccessControl.html#tymethod.permission_exists" class="fnname">permission_exists</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;pallet: <a class="enum" href="../types/enum.IdOrVec.html" title="enum pallet_rbac::types::IdOrVec">IdOrVec</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;permission_id: &amp;<a class="type" href="../types/type.PermissionId.html" title="type pallet_rbac::types::PermissionId">PermissionId</a><br>) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Permission validation.</p>
-<p>Checks if the permission exists in a pallet context. </p>
+<p>Checks if the permission exists in a pallet context.</p>
 <h6 id="parameters-16"><a href="#parameters-16">Parameters:</a></h6>
 <ul>
 <li><code>pallet_id</code>: The unique pallet identifier.</li>

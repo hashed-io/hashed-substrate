@@ -1108,6 +1108,12 @@
 <span id="1108">1108</span>
 <span id="1109">1109</span>
 <span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -1146,7 +1152,7 @@
 	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>: <span class="ident">frame_system::Config</span> {
 		<span class="comment">//TODO: change all accounts names for users</span>
 		<span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IsType</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::Event</span><span class="op">&gt;</span>;
-		
+
 		<span class="kw">type</span> <span class="ident">Moment</span>: <span class="ident">Parameter</span>
 		<span class="op">+</span> <span class="ident">Default</span>
 		<span class="op">+</span> <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::BlockNumber</span>, <span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Moment</span><span class="op">&gt;</span>
@@ -1159,7 +1165,7 @@
 
 		<span class="kw">type</span> <span class="ident">Rbac</span> : <span class="ident">RoleBasedAccessControl</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::AccountId</span><span class="op">&gt;</span>;
 
-		<span class="kw">type</span> <span class="ident">RemoveOrigin</span>: <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;		
+		<span class="kw">type</span> <span class="ident">RemoveOrigin</span>: <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;
 
 		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
 		<span class="kw">type</span> <span class="ident">MaxDocuments</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
@@ -1216,8 +1222,8 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">users_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">UsersInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::AccountId</span>, <span class="comment">// Key account_id</span>
 		<span class="ident">UserData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value UserData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
@@ -1226,9 +1232,9 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">projects_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ProjectsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">ProjectId</span>, <span class="comment">// Key project_id</span>
 		<span class="ident">ProjectData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value ProjectData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
 	<span class="op">&gt;</span>;
@@ -1236,9 +1242,9 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">users_by_project</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">UsersByProject</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">ProjectId</span>, <span class="comment">// Key project_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxUserPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value users</span>
 		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
@@ -1246,8 +1252,8 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">projects_by_user</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ProjectsByUser</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Blake2_128Concat</span>, 
+		<span class="kw">_</span>,
+		<span class="ident">Blake2_128Concat</span>,
 		<span class="ident">T::AccountId</span>, <span class="comment">// Key account_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxProjectsPerUser</span><span class="op">&gt;</span>,  <span class="comment">// Value projects</span>
 		<span class="ident">ValueQuery</span>,
@@ -1256,9 +1262,9 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">expenditures_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ExpendituresInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key expenditure_id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">BudgetExpenditureId</span>, <span class="comment">// Key expenditure_id</span>
 		<span class="ident">ExpenditureData</span>,  <span class="comment">// Value ExpenditureData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
 	<span class="op">&gt;</span>;
@@ -1266,9 +1272,9 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">expenditures_by_project</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ExpendituresByProject</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">ProjectId</span>, <span class="comment">// Key project_id</span>
 		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxExpendituresPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value expenditures</span>
 		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
@@ -1276,29 +1282,29 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">drawdowns_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">DrawdownsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key drawdown id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">DrawdownId</span>, <span class="comment">// Key drawdown id</span>
 		<span class="ident">DrawdownData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value DrawdownData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
 	<span class="op">&gt;</span>;
-	
+
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">drawdowns_by_project</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">DrawdownsByProject</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key project_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxDrawdownsPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value Drawdowns</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">ProjectId</span>, <span class="comment">// Key project_id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">DrawdownId</span>, <span class="ident">T::MaxDrawdownsPerProject</span><span class="op">&gt;</span>,  <span class="comment">// Value Drawdowns</span>
 		<span class="ident">ValueQuery</span>,
 	<span class="op">&gt;</span>;
 
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions_info</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">TransactionsInfo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">// Key transaction id</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">TransactionId</span>, <span class="comment">// Key transaction id</span>
 		<span class="ident">TransactionData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,  <span class="comment">// Value TransactionData&lt;T&gt;</span>
 		<span class="ident">OptionQuery</span>,
 	<span class="op">&gt;</span>;
@@ -1306,14 +1312,14 @@
 	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
 	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">transactions_by_drawdown</span>)]</span>
 	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">TransactionsByDrawdown</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K1: project id</span>
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>;<span class="number">32</span>], <span class="comment">//K2: drawdown id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">T::MaxTransactionsPerDrawdown</span><span class="op">&gt;</span>, <span class="comment">// Value transactions</span>
+		<span class="kw">_</span>,
+		<span class="ident">Identity</span>,
+		<span class="ident">ProjectId</span>, <span class="comment">//K1: project id</span>
+		<span class="ident">Identity</span>,
+		<span class="ident">DrawdownId</span>, <span class="comment">//K2: drawdown id</span>
+		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">TransactionId</span>, <span class="ident">T::MaxTransactionsPerDrawdown</span><span class="op">&gt;</span>, <span class="comment">// Value transactions</span>
 		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>; 
+	<span class="op">&gt;</span>;
 
 	<span class="comment">// E V E N T S</span>
 	<span class="comment">// ------------------------------------------------------------------------------------------------------------</span>
@@ -1322,15 +1328,15 @@
 	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
 	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
 		<span class="doccomment">/// Project was created successfully</span>
-		<span class="ident">ProjectCreated</span>(<span class="ident">T::AccountId</span>, [<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">ProjectCreated</span>(<span class="ident">T::AccountId</span>, <span class="ident">ProjectId</span>),
 		<span class="doccomment">/// Proxy initial setup completed</span>
 		<span class="ident">ProxySetupCompleted</span>,
 		<span class="doccomment">/// User registered successfully</span>
 		<span class="ident">UserAdded</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// Project was edited</span>
-		<span class="ident">ProjectEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">ProjectEdited</span>(<span class="ident">ProjectId</span>),
 		<span class="doccomment">/// Project was deleted</span>
-		<span class="ident">ProjectDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">ProjectDeleted</span>(<span class="ident">ProjectId</span>),
 		<span class="doccomment">/// Administrator added</span>
 		<span class="ident">AdministratorAssigned</span>(<span class="ident">T::AccountId</span>),
 		<span class="doccomment">/// Administrator removed</span>
@@ -1346,17 +1352,17 @@
 		<span class="doccomment">/// Expenditure was created successfully</span>
 		<span class="ident">ExpenditureCreated</span>,
 		<span class="doccomment">/// Expenditure was edited successfully</span>
-		<span class="ident">ExpenditureEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">ExpenditureEdited</span>(<span class="ident">BudgetExpenditureId</span>),
 		<span class="doccomment">/// Expenditure was deleted successfully</span>
-		<span class="ident">ExpenditureDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">ExpenditureDeleted</span>(<span class="ident">BudgetExpenditureId</span>),
 		<span class="doccomment">/// Trasactions was completed successfully</span>
 		<span class="ident">TransactionsCompleted</span>,
 		<span class="doccomment">/// Transaction was created successfully</span>
-		<span class="ident">TransactionCreated</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">TransactionCreated</span>(<span class="ident">TransactionId</span>),
 		<span class="doccomment">/// Transaction was edited successfully</span>
-		<span class="ident">TransactionEdited</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">TransactionEdited</span>(<span class="ident">TransactionId</span>),
 		<span class="doccomment">/// Transaction was deleted successfully</span>
-		<span class="ident">TransactionDeleted</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
+		<span class="ident">TransactionDeleted</span>(<span class="ident">TransactionId</span>),
 		<span class="doccomment">/// Users extrinsic was completed successfully</span>
 		<span class="ident">UsersExecuted</span>,
 		<span class="doccomment">/// Assign users extrinsic was completed successfully</span>
@@ -1399,7 +1405,7 @@
 		<span class="ident">MaxProjectsPerUserReached</span>,
 		<span class="doccomment">/// User is not assigned to the project</span>
 		<span class="ident">UserNotAssignedToProject</span>,
-		<span class="doccomment">/// Can not register administrator role </span>
+		<span class="doccomment">/// Can not register administrator role</span>
 		<span class="ident">CannotRegisterAdminRole</span>,
 		<span class="doccomment">/// Max number of builders per project reached</span>
 		<span class="ident">MaxBuildersPerProjectReached</span>,
@@ -1428,7 +1434,7 @@
 		<span class="doccomment">/// Drowdown id is not found</span>
 		<span class="ident">DrawdownNotFound</span>,
 		<span class="doccomment">/// Invalid amount</span>
-		<span class="ident">InvalidAmount</span>, 
+		<span class="ident">InvalidAmount</span>,
 		<span class="doccomment">/// Documents field is empty</span>
 		<span class="ident">DocumentsIsEmpty</span>,
 		<span class="doccomment">/// Transaction id is not found</span>
@@ -1452,7 +1458,7 @@
 		<span class="doccomment">/// User does not have the specified role</span>
 		<span class="ident">UserDoesNotHaveRole</span>,
 		<span class="doccomment">/// Transactions vector is empty</span>
-		<span class="ident">EmptyTransactions</span>, 
+		<span class="ident">EmptyTransactions</span>,
 		<span class="doccomment">/// Transaction ID was not found in do_execute_transaction</span>
 		<span class="ident">TransactionIdNotFound</span>,
 		<span class="doccomment">/// Drawdown can not be submitted if does not has any transactions</span>
@@ -1512,12 +1518,12 @@
 	<span class="comment">// ------------------------------------------------------------------------------------------------------------</span>
 	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
 	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="comment">// I N I T I A L </span>
+		<span class="comment">// I N I T I A L</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
 		<span class="doccomment">/// Initialize the pallet by setting the permissions for each role</span>
-		<span class="doccomment">/// &amp; the global scope </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// # Considerations: </span>
+		<span class="doccomment">/// &amp; the global scope</span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called once</span>
 		<span class="doccomment">/// - This function can only be called usinf the sudo pallet</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -1531,17 +1537,17 @@
 		}
 
 		<span class="doccomment">/// Adds an administrator account to the site</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The sudo account</span>
 		<span class="doccomment">/// - admin: The administrator account to be added</span>
 		<span class="doccomment">/// - name: The name of the administrator account</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called using the sudo pallet</span>
 		<span class="doccomment">/// - This function is used to add the first administrator to the site</span>
 		<span class="doccomment">/// - If the user is already registered, the function will return an error: UserAlreadyRegistered</span>
-		<span class="doccomment">/// - This function grants administator permissions to the user from the rbac pallet </span>
+		<span class="doccomment">/// - This function grants administator permissions to the user from the rbac pallet</span>
 		<span class="doccomment">/// - Administator role have global scope permissions</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
@@ -1556,19 +1562,19 @@
 		}
 
 		<span class="doccomment">/// Removes an administrator account from the site</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The sudo account</span>
 		<span class="doccomment">/// - admin: The administrator account to be removed</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called using the sudo pallet</span>
 		<span class="doccomment">/// - This function is used to remove any administrator from the site</span>
 		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
 		<span class="doccomment">/// - This function removes administator permissions of the user from the rbac pallet</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Note:</span>
-		<span class="doccomment">/// WARNING: Administrators can remove themselves from the site, </span>
+		<span class="doccomment">/// WARNING: Administrators can remove themselves from the site,</span>
 		<span class="doccomment">/// but they can add themselves back</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
@@ -1584,41 +1590,41 @@
 
 		<span class="comment">// U S E R S</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
-		<span class="doccomment">/// This extrinsic is used to create, update, or delete a user account </span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">/// This extrinsic is used to create, update, or delete a user account</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
-		<span class="doccomment">/// - user: The target user account to be registered, updated, or deleted. </span>
+		<span class="doccomment">/// - user: The target user account to be registered, updated, or deleted.</span>
 		<span class="doccomment">/// It is an array of user accounts where each entry it should be a tuple of the following:</span>
 		<span class="doccomment">/// - 0: The user account</span>
 		<span class="doccomment">/// - 1: The user name</span>
 		<span class="doccomment">/// - 2: The user role</span>
 		<span class="doccomment">/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - Users parameters are optional because depends on the CUD action as follows:</span>
 		<span class="doccomment">/// * **Create**: The user account, user name, user role &amp; CUD action are required</span>
 		<span class="doccomment">/// * **Update**: The user account &amp; CUD action are required. The user name &amp; user role are optionals.</span>
-		<span class="doccomment">/// * **Delete**: The user account &amp; CUD action are required. </span>
+		<span class="doccomment">/// * **Delete**: The user account &amp; CUD action are required.</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
-		<span class="doccomment">/// - Multiple users can be registered, updated, or deleted at the same time, but </span>
+		<span class="doccomment">/// - Multiple users can be registered, updated, or deleted at the same time, but</span>
 		<span class="doccomment">/// the user account must be unique. Multiple actions over the same user account</span>
 		<span class="doccomment">/// in the same call, it could result in an unexpected behavior.</span>
 		<span class="doccomment">/// - If the user is already registered, the function will return an error: UserAlreadyRegistered</span>
 		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Note:</span>
 		<span class="doccomment">/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,</span>
 		<span class="doccomment">/// but administrators can not delete themselves.</span>
-		<span class="doccomment">/// WARNING: This function only registers, updates, or deletes users from the site. </span>
+		<span class="doccomment">/// WARNING: This function only registers, updates, or deletes users from the site.</span>
 		<span class="doccomment">/// DOESN&#39;T grant or remove permissions from the rbac pallet.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
 				<span class="ident">T::AccountId</span>, <span class="comment">// account id</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">// name</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>, <span class="comment">// name</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ProxyRole</span><span class="op">&gt;</span>, <span class="comment">// role</span>
 				<span class="ident">CUDAction</span>, <span class="comment">// action</span>
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
@@ -1629,16 +1635,16 @@
 		}
 
 		<span class="doccomment">/// Edits an user account</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The user account which is being edited</span>
 		<span class="doccomment">/// - name: The name of the user account which is being edited</span>
 		<span class="doccomment">/// - image: The image of the user account which is being edited</span>
 		<span class="doccomment">/// - email: The email of the user account which is being edited</span>
 		<span class="doccomment">/// - documents: The documents of the user account which is being edited.</span>
-		<span class="doccomment">/// ONLY available for the investor role. </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">/// ONLY available for the investor role.</span>
+		<span class="doccomment">///</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - If the user is not registered, the function will return an error: UserNotFound</span>
 		<span class="doccomment">/// - This function can only be called by a registered user account</span>
@@ -1648,21 +1654,21 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">users_edit_user</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">email</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>,
+			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CID</span><span class="op">&gt;</span>,
+			<span class="ident">email</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>,
+			<span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::do_edit_user</span>(<span class="ident">who</span>, <span class="ident">name</span>, <span class="ident">image</span>, <span class="ident">email</span>, <span class="ident">documents</span>)
-		}	
+		}
 
 		<span class="comment">// P R O J E C T S</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
 		<span class="doccomment">/// Registers a new project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
 		<span class="doccomment">/// - title: The title of the project</span>
@@ -1685,7 +1691,7 @@
 		<span class="doccomment">/// * 0: The user account</span>
 		<span class="doccomment">/// * 1: The user role</span>
 		<span class="doccomment">/// * 2: The AssignAction to be performed on the user.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
 		<span class="doccomment">/// - For users assignation, the user account must be registered. If the user is not registered,</span>
@@ -1694,30 +1700,30 @@
 		<span class="doccomment">/// flow, the expenditures are always created. The naics code &amp; the jobs multiplier</span>
 		<span class="doccomment">/// can be added later by the administrator.</span>
 		<span class="doccomment">/// - Creating a project will automatically create a scope for the project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Note:</span>
 		<span class="doccomment">/// WARNING: If users are provided, the function will assign the users to the project, granting them</span>
 		<span class="doccomment">/// permissions in the rbac pallet.</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_create_project</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">title</span>: <span class="ident">FieldName</span>, 
-			<span class="ident">description</span>: <span class="ident">FieldDescription</span>, 
-			<span class="ident">image</span>: <span class="ident">CID</span>, 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">title</span>: <span class="ident">FieldName</span>,
+			<span class="ident">description</span>: <span class="ident">FieldDescription</span>,
+			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CID</span><span class="op">&gt;</span>,
 			<span class="ident">address</span>: <span class="ident">FieldName</span>,
-			<span class="ident">creation_date</span>: <span class="ident">u64</span>,
-			<span class="ident">completion_date</span>: <span class="ident">u64</span>, 
+			<span class="ident">creation_date</span>: <span class="ident">CreationDate</span>,
+			<span class="ident">completion_date</span>: <span class="ident">CompletionDate</span>,
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>,
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureType</span><span class="op">&gt;</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureAmount</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NAICSCode</span><span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JobsMultiplier</span><span class="op">&gt;</span>,
 				<span class="ident">CUDAction</span>,
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>,
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BudgetExpenditureId</span><span class="op">&gt;</span>
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 			<span class="ident">users</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="ident">T::AccountId</span>, 
+				<span class="ident">T::AccountId</span>,
 				<span class="ident">ProxyRole</span>,
 				<span class="ident">AssignAction</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1728,7 +1734,7 @@
 		}
 
 		<span class="doccomment">/// Edits a project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
 		<span class="doccomment">/// - project_id: The selected project id that will be edited</span>
@@ -1738,14 +1744,14 @@
 		<span class="doccomment">/// - address: The address of the project to be edited</span>
 		<span class="doccomment">/// - creation_date: The creation date of the project to be edited</span>
 		<span class="doccomment">/// - completion_date: The completion date of the project to be edited</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
 		<span class="doccomment">/// - ALL parameters are optional because depends on what is being edited</span>
 		<span class="doccomment">/// - The project id is required because it is the only way to identify the project</span>
-		<span class="doccomment">/// - The project id must be registered. If the project is not registered, </span>
+		<span class="doccomment">/// - The project id must be registered. If the project is not registered,</span>
 		<span class="doccomment">/// the function will return an error: ProjectNotFound</span>
-		<span class="doccomment">/// - It is not possible to edit the expenditures or the users assigned to the project </span>
+		<span class="doccomment">/// - It is not possible to edit the expenditures or the users assigned to the project</span>
 		<span class="doccomment">/// through this function. For that, the administrator must use the extrinsics:</span>
 		<span class="doccomment">/// * expenditures</span>
 		<span class="doccomment">/// * projects_assign_user</span>
@@ -1754,14 +1760,14 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_edit_project</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
-			<span class="ident">title</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">creation_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-			<span class="ident">completion_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,  
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
+			<span class="ident">title</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>,
+			<span class="ident">description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
+			<span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CID</span><span class="op">&gt;</span>,
+			<span class="ident">address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>,
+			<span class="ident">creation_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CreationDate</span><span class="op">&gt;</span>,
+			<span class="ident">completion_date</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CompletionDate</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
@@ -1769,25 +1775,25 @@
 		}
 
 		<span class="doccomment">/// Deletes a project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
 		<span class="doccomment">/// - project_id: The selected project id that will be deleted</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
 		<span class="doccomment">/// - The project id is required because it is the only way to identify the project</span>
 		<span class="doccomment">/// - The project id must be registered. If the project is not registered,</span>
 		<span class="doccomment">/// the function will return an error: ProjectNotFound</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Note:</span>
 		<span class="doccomment">/// - WARNING: Deleting a project will delete ALL stored information associated with the project.</span>
 		<span class="doccomment">/// BE CAREFUL.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_delete_project</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],  
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
@@ -1795,34 +1801,34 @@
 		}
 
 		<span class="doccomment">/// Assigns a user to a project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
 		<span class="doccomment">/// - project_id: The selected project id where user will be assigned</span>
-		<span class="doccomment">/// - users: The users to be assigned to the project. This is a vector of tuples </span>
+		<span class="doccomment">/// - users: The users to be assigned to the project. This is a vector of tuples</span>
 		<span class="doccomment">/// where each entry is composed by:</span>
 		<span class="doccomment">/// * 0: The user account id</span>
 		<span class="doccomment">/// * 1: The user role</span>
 		<span class="doccomment">/// * 2: The AssignAction to be performed. (Assign or Unassign)</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
 		<span class="doccomment">/// - This extrinsic allows multiple users to be assigned/unassigned at the same time.</span>
 		<span class="doccomment">/// - The project id is required because it is the only way to identify the project</span>
 		<span class="doccomment">/// - This extrinsic is used for both assigning and unassigning users to a project</span>
-		<span class="doccomment">/// depending on the AssignAction. </span>
+		<span class="doccomment">/// depending on the AssignAction.</span>
 		<span class="doccomment">/// - After a user is assigned to a project, the user will be able to perform actions</span>
 		<span class="doccomment">/// in the project depending on the role assigned to the user.</span>
 		<span class="doccomment">/// - After a user is unassigned from a project, the user will not be able to perform actions</span>
 		<span class="doccomment">/// in the project anymore.</span>
 		<span class="doccomment">/// - If the user is already assigned to the project, the function will return an erro.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Note:</span>
 		<span class="doccomment">/// - WARNING: ALL provided users needs to be registered in the site. If any of the users</span>
 		<span class="doccomment">/// is not registered, the function will return an error.</span>
 		<span class="doccomment">/// - Assigning or unassigning a user to a project will add or remove permissions to the user</span>
-		<span class="doccomment">/// from the RBAC pallet.  </span>
-		<span class="doccomment">/// - Warning: Cannot assign a user to a project with a different role than the one they </span>
+		<span class="doccomment">/// from the RBAC pallet.</span>
+		<span class="doccomment">/// - Warning: Cannot assign a user to a project with a different role than the one they</span>
 		<span class="doccomment">/// have in UsersInfo. If the user has a different role, the function will return an error.</span>
 		<span class="doccomment">/// - Warning: Cannot unassign a user from a project with a different role than the one they</span>
 		<span class="doccomment">/// have in UsersInfo. If the user has a different role, the function will return an error.</span>
@@ -1831,10 +1837,10 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">projects_assign_user</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],  
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
 			<span class="ident">users</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="ident">T::AccountId</span>, 
+				<span class="ident">T::AccountId</span>,
 				<span class="ident">ProxyRole</span>,
 				<span class="ident">AssignAction</span>,
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
@@ -1844,10 +1850,10 @@
 			<span class="ident"><span class="self">Self</span>::do_execute_assign_users</span>(<span class="ident">who</span>, <span class="ident">project_id</span>, <span class="ident">users</span>)
 		}
 
-		<span class="comment">// B U D G E T  E X P E N D I T U R E </span>
+		<span class="comment">// B U D G E T  E X P E N D I T U R E</span>
 		<span class="comment">// --------------------------------------------------------------------------------------------</span>
 		<span class="doccomment">/// This extrinsic is used to create, update or delete expenditures.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administrator account</span>
 		<span class="doccomment">/// - project_id: The selected project id where the expenditures will be created/updated/deleted</span>
@@ -1860,7 +1866,7 @@
 		<span class="doccomment">/// * 4: The jobs multiplier of the expenditure</span>
 		<span class="doccomment">/// * 5: The expenditure action to be performed. (Create, Update or Delete)</span>
 		<span class="doccomment">/// * 6: The expenditure id. This is only used when updating or deleting an expenditure.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - Naics code and jobs multiplier are always optional.</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
@@ -1877,17 +1883,17 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expenditures</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], 
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
 			<span class="ident">expenditures</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldName</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">// name</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldName</span><span class="op">&gt;</span>, <span class="comment">// name</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureType</span><span class="op">&gt;</span>, <span class="comment">// type</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">// naics code</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="comment">// jobs multiplier</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureAmount</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>, <span class="comment">// naics code</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JobsMultiplier</span><span class="op">&gt;</span>, <span class="comment">// jobs multiplier</span>
 				<span class="ident">CUDAction</span>, <span class="comment">// action</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
-			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,  
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BudgetExpenditureId</span><span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
+			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
@@ -1899,7 +1905,7 @@
 
 		<span class="doccomment">/// This extrinsic is used to create, update or delete transactions.</span>
 		<span class="doccomment">/// Transactions status can be saved as draft or submitted.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The user account who is creating the transactions</span>
 		<span class="doccomment">/// - project_id: The selected project id where the transactions will be created</span>
@@ -1911,9 +1917,9 @@
 		<span class="doccomment">/// * 2: Documents associated to the transaction</span>
 		<span class="doccomment">/// * 3: The transaction action to be performed. (Create, Update or Delete)</span>
 		<span class="doccomment">/// * 4: The transaction id. This is only used when updating or deleting a transaction.</span>
-		<span class="doccomment">/// - submit: If true, the transactions will be submitted. </span>
+		<span class="doccomment">/// - submit: If true, the transactions will be submitted.</span>
 		<span class="doccomment">/// If false, the transactions will be saved as draft.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by a builder role account</span>
 		<span class="doccomment">/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time.</span>
@@ -1929,24 +1935,24 @@
 		<span class="doccomment">/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not contain</span>
 		<span class="doccomment">/// any transaction, it will be returned an error.</span>
 		<span class="doccomment">/// - After a drawdown is submitted, it can not be updated or deleted.</span>
-		<span class="doccomment">/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions. </span>
+		<span class="doccomment">/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">submit_drawdown</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
+			<span class="ident">drawdown_id</span>: <span class="ident">DrawdownId</span>,
 			<span class="ident">transactions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BudgetExpenditureId</span><span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExpenditureAmount</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">//Documents</span>
 				<span class="ident">CUDAction</span>, <span class="comment">// Action</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionId</span><span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 			<span class="ident">submit</span>: <span class="ident">bool</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
-			<span class="comment">// Ensure builder permissions </span>
+			<span class="comment">// Ensure builder permissions</span>
 			<span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">who</span>, <span class="kw-2">&amp;</span><span class="ident">project_id</span>, <span class="ident">ProxyPermission::SubmitDrawdown</span>)<span class="question-mark">?</span>;
 
 			<span class="kw">match</span> <span class="ident">submit</span>{
@@ -1962,11 +1968,17 @@
 					<span class="comment">// Check if there&#39;s transactions to execute</span>
 					<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">transactions</span>) <span class="op">=</span> <span class="ident">transactions</span> {
 						<span class="comment">// Do execute transactions</span>
-						<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
-							<span class="ident">project_id</span>,
-							<span class="ident">drawdown_id</span>,
-							<span class="ident">transactions</span>,
-						)<span class="question-mark">?</span>;
+						<span class="kw">if</span> <span class="ident">transactions</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
+							<span class="ident"><span class="self">Self</span>::do_execute_transactions</span>(
+								<span class="ident">project_id</span>,
+								<span class="ident">drawdown_id</span>,
+								<span class="ident">transactions</span>)<span class="question-mark">?</span>;
+						}
+					<span class="comment">// 	Self::do_execute_transactions(</span>
+					<span class="comment">// 		project_id,</span>
+					<span class="comment">// 		drawdown_id,</span>
+					<span class="comment">// 		transactions,</span>
+					<span class="comment">// 	)?;</span>
 					}
 
 					<span class="comment">// Do submit drawdown</span>
@@ -1977,13 +1989,13 @@
 		}
 
 		<span class="doccomment">/// Approves a drawdown</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// ### For EB5 drawdowns:</span>
 		<span class="doccomment">/// - origin: The administator account who is approving the drawdown</span>
 		<span class="doccomment">/// - project_id: The selected project id where the drawdown will be approved</span>
 		<span class="doccomment">/// - drawdown_id: The selected drawdown id to be approved</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### For Construction Loan &amp; Developer Equity (bulk uploads) drawdowns:</span>
 		<span class="doccomment">/// - origin: The administator account who is approving the drawdown</span>
 		<span class="doccomment">/// - project_id: The selected project id where the drawdown will be approved</span>
@@ -1997,10 +2009,10 @@
 		<span class="doccomment">/// * 2: Documents associated to the transaction</span>
 		<span class="doccomment">/// * 3: The transaction action to be performed. (Create, Update or Delete)</span>
 		<span class="doccomment">/// * 4: The transaction id. This is only used when updating or deleting a transaction.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
-		<span class="doccomment">/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time </span>
+		<span class="doccomment">/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time</span>
 		<span class="doccomment">/// (only for Construction Loan &amp; Developer Equity drawdowns).</span>
 		<span class="doccomment">/// - Transaction parameters are optional because depends on the action to be performed:</span>
 		<span class="doccomment">/// * **Create**: Expenditure id, Amount, Documents &amp; Action are required.</span>
@@ -2015,16 +2027,16 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">approve_drawdown</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
+			<span class="ident">drawdown_id</span>: <span class="ident">DrawdownId</span>,
 			<span class="ident">bulkupload</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
 			<span class="ident">transactions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BudgetExpenditureId</span><span class="op">&gt;</span>, <span class="comment">// expenditure_id</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="comment">// amount</span>
 				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">//Documents</span>
 				<span class="ident">CUDAction</span>, <span class="comment">// Action</span>
-				<span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
+				<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionId</span><span class="op">&gt;</span>, <span class="comment">// transaction_id</span>
 			), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
@@ -2075,31 +2087,31 @@
 		}
 
 		<span class="doccomment">/// Rejects a drawdown</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administator account who is rejecting the drawdown</span>
 		<span class="doccomment">/// - project_id: The selected project id where the drawdown will be rejected</span>
 		<span class="doccomment">/// - drawdown_id: The selected drawdown id to be rejected</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// Then the next two feedback parameters are optional because depends on the drawdown type:</span>
 		<span class="doccomment">/// #### EB5 drawdowns:</span>
-		<span class="doccomment">/// - transactions_feedback: Administrator will provide feedback for each transaction </span>
+		<span class="doccomment">/// - transactions_feedback: Administrator will provide feedback for each transaction</span>
 		<span class="doccomment">/// that is wrong. This is a vector of tuples where each entry is composed by:</span>
 		<span class="doccomment">/// * 0: The transaction id</span>
 		<span class="doccomment">/// * 1: The transaction feedback</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// #### Construction Loan &amp; Developer Equity drawdowns:</span>
 		<span class="doccomment">/// - drawdown_feedback: Administrator will provide feedback for the WHOLE drawdown.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
-		<span class="doccomment">/// - This extrinsic allows multiple transactions to be rejected at the same time </span>
+		<span class="doccomment">/// - This extrinsic allows multiple transactions to be rejected at the same time</span>
 		<span class="doccomment">/// (only for EB5 drawdowns).</span>
-		<span class="doccomment">/// - For EB5 drawdowns, the administrator can provide feedback for each transaction </span>
+		<span class="doccomment">/// - For EB5 drawdowns, the administrator can provide feedback for each transaction</span>
 		<span class="doccomment">/// that is wrong.</span>
-		<span class="doccomment">/// - For Construction Loan &amp; Developer Equity drawdowns, the administrator can provide </span>
+		<span class="doccomment">/// - For Construction Loan &amp; Developer Equity drawdowns, the administrator can provide</span>
 		<span class="doccomment">/// feedback for the WHOLE drawdown.</span>
-		<span class="doccomment">/// - After a builder re-submits a drawdown, the administrator will have to review </span>
+		<span class="doccomment">/// - After a builder re-submits a drawdown, the administrator will have to review</span>
 		<span class="doccomment">/// the drawdown again.</span>
 		<span class="doccomment">/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.</span>
 		<span class="doccomment">/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.</span>
@@ -2107,11 +2119,11 @@
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reject_drawdown</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">transactions_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-			<span class="ident">drawdown_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">FieldDescription</span>, <span class="ident">T::MaxBoundedVecs</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
+			<span class="ident">drawdown_id</span>: <span class="ident">DrawdownId</span>,
+			<span class="ident">transactions_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span>(<span class="ident">TransactionId</span>, <span class="ident">FieldDescription</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+			<span class="ident">drawdown_feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin</span>
 
@@ -2119,7 +2131,7 @@
 		}
 
 		<span class="doccomment">/// Bulk upload drawdowns.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administator account who is uploading the drawdowns</span>
 		<span class="doccomment">/// - project_id: The selected project id where the drawdowns will be uploaded</span>
@@ -2127,7 +2139,7 @@
 		<span class="doccomment">/// - description: The description of the drawdown provided by the builder</span>
 		<span class="doccomment">/// - total_amount: The total amount of the drawdown</span>
 		<span class="doccomment">/// - documents: The documents provided by the builder for the drawdown</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by a builder account</span>
 		<span class="doccomment">/// - This extrinsic allows only one drawdown to be uploaded at the same time.</span>
@@ -2135,17 +2147,17 @@
 		<span class="doccomment">/// - Only available for Construction Loan &amp; Developer Equity drawdowns.</span>
 		<span class="doccomment">/// - After a builder uploads a drawdown, the administrator will have to review it.</span>
 		<span class="doccomment">/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.</span>
-		<span class="doccomment">/// - Bulkuploads does not allow individual transactions. </span>
-		<span class="doccomment">/// - After a builder uploads a drawdown, the administrator will have to </span>
+		<span class="doccomment">/// - Bulkuploads does not allow individual transactions.</span>
+		<span class="doccomment">/// - After a builder uploads a drawdown, the administrator will have to</span>
 		<span class="doccomment">/// insert each transaction manually.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">up_bulkupload</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">project_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
-			<span class="ident">drawdown_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>],
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
+			<span class="ident">drawdown_id</span>: <span class="ident">DrawdownId</span>,
 			<span class="ident">description</span>: <span class="ident">FieldDescription</span>,
-			<span class="ident">total_amount</span>: <span class="ident">u64</span>,
+			<span class="ident">total_amount</span>: <span class="ident">TotalAmount</span>,
 			<span class="ident">documents</span>: <span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>; <span class="comment">// origin need to be a builder</span>
@@ -2154,7 +2166,7 @@
 		}
 
 		<span class="doccomment">/// Modifies the inflation rate of a project.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Parameters:</span>
 		<span class="doccomment">/// - origin: The administator account who is modifying the inflation rate</span>
 		<span class="doccomment">/// - projects: The projects where the inflation rate will be modified.</span>
@@ -2162,22 +2174,22 @@
 		<span class="doccomment">/// * 0: The project id</span>
 		<span class="doccomment">/// * 1: The inflation rate</span>
 		<span class="doccomment">/// * 2: The action to be performed (Create, Update or Delete)</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// # Considerations:</span>
 		<span class="doccomment">/// - This function can only be called by an administrator account</span>
 		<span class="doccomment">/// - This extrinsic allows multiple projects to be modified at the same time.</span>
-		<span class="doccomment">/// - The inflation rate can be created, updated or deleted. </span>
+		<span class="doccomment">/// - The inflation rate can be created, updated or deleted.</span>
 		<span class="doccomment">/// - The inflation rate is optional because depends on the CUDAction parameter:</span>
 		<span class="doccomment">/// * **Create**: The inflation rate will be created. Project id, inflation rate and action are required.</span>
 		<span class="doccomment">/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.</span>
 		<span class="doccomment">/// * **Delete**: The inflation rate will be deleted. Project id and action are required.</span>
 		<span class="doccomment">/// - The inflation rate can only be modified if the project is in the &quot;started&quot; status.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inflation_rate</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, 
-			<span class="ident">projects</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>([<span class="ident">u8</span>;<span class="number">32</span>], <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">CUDAction</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
+			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+			<span class="ident">projects</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span>(<span class="ident">ProjectId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">InflationRate</span><span class="op">&gt;</span>, <span class="ident">CUDAction</span>), <span class="ident">T::MaxRegistrationsAtTime</span><span class="op">&gt;</span>,
 		) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
 
@@ -2185,13 +2197,13 @@
 		}
 
 		<span class="doccomment">/// Kill all the stored data.</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// This function is used to kill ALL the stored data.</span>
 		<span class="doccomment">/// Use it with caution!</span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user who performs the action. </span>
-		<span class="doccomment">/// </span>
+		<span class="doccomment">/// - `origin`: The user who performs the action.</span>
+		<span class="doccomment">///</span>
 		<span class="doccomment">/// ### Considerations:</span>
 		<span class="doccomment">/// - This function is only available to the `admin` with sudo access.</span>
 		<span class="attribute">#[<span class="ident">transactional</span>]</span>
@@ -2217,5 +2229,6 @@
 		}
 
 	}
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

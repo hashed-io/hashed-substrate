@@ -444,7 +444,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">RoleBasedAccessControl</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>{
     <span class="comment">/*---- Basic Insertion of individual storage maps ---*/</span>
     <span class="doccomment">/// Scope creation</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Creates a scope within a external pallet using the pallet index.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -459,7 +459,7 @@
     }
 
     <span class="doccomment">/// Scope removal</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Removes a scope within a external pallet using the pallet index.</span>
     <span class="doccomment">/// Executing this function will delete all registered role users.</span>
     <span class="doccomment">/// ### Parameters:</span>
@@ -487,14 +487,14 @@
         });
         <span class="comment">// remove on users by scope</span>
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">UsersByScope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear_prefix</span>((<span class="ident">pallet_id</span>, <span class="ident">scope_id</span>),<span class="number">1000</span> ,<span class="prelude-val">None</span>);
-        
+
         <span class="prelude-val">Ok</span>(())
     }
 
      <span class="doccomment">/// External pallet storage removal</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Removes all storage associated to a external pallet.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Executing this function will delete all role lists and permissions linked</span>
     <span class="doccomment">/// to that pallet.</span>
     <span class="doccomment">/// ### Parameters:</span>
@@ -524,13 +524,13 @@
     }
 
     <span class="doccomment">/// Role creation and coupling with pallet.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Creates the specified roles if needed and adds them to the pallet.</span>
     <span class="doccomment">/// Recommended first step to enable RBAC on a external pallet.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
     <span class="doccomment">/// - `roles`: A list of roles to create, encoded in bytes.</span>
-    <span class="kw">fn</span> <span class="ident">create_and_set_roles</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">roles</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; 
+    <span class="kw">fn</span> <span class="ident">create_and_set_roles</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">roles</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt;
         <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">RoleId</span>, <span class="ident">T::MaxRolesPerPallet</span><span class="op">&gt;</span>, <span class="ident">DispatchError</span><span class="op">&gt;</span>{
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">role_ids</span><span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
         <span class="kw">for</span> <span class="ident">role</span> <span class="kw">in</span> <span class="ident">roles</span>{
@@ -543,7 +543,7 @@
     }
 
     <span class="doccomment">/// Role creation.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Creates a role and returns its identifier, if its already created,</span>
     <span class="doccomment">/// the function will return the preexisting one.</span>
     <span class="doccomment">/// ### Parameters:</span>
@@ -558,12 +558,12 @@
     }
 
     <span class="doccomment">/// Role coupling with pallet.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Assigns a previously created role to a pallet.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
-    <span class="doccomment">/// - `role_id`: The unique role identifier. </span>
+    <span class="doccomment">/// - `role_id`: The unique role identifier.</span>
     <span class="kw">fn</span> <span class="ident">set_role_to_pallet</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">role_id</span>: <span class="ident">RoleId</span> )-&gt; <span class="ident">DispatchResult</span>{
         <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">Roles</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">role_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::RoleNotFound</span>);
         <span class="op">&lt;</span><span class="ident">PalletRoles</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">pallet</span>.<span class="ident">to_id</span>(), <span class="op">|</span><span class="ident">roles</span><span class="op">|</span>{
@@ -574,11 +574,11 @@
     }
 
     <span class="doccomment">/// Multiple role coupling with pallet.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Assigns multiple, previously created roles to a pallet.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
-    <span class="doccomment">/// - `roles`: A list of unique role identifiers. </span>
+    <span class="doccomment">/// - `roles`: A list of unique role identifiers.</span>
     <span class="kw">fn</span> <span class="ident">set_multiple_pallet_roles</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">roles</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RoleId</span><span class="op">&gt;</span>)-&gt;<span class="ident">DispatchResult</span>{
         <span class="kw">let</span> <span class="ident">pallet_id</span> <span class="op">=</span> <span class="ident">pallet</span>.<span class="ident">to_id</span>();
         <span class="comment">// checks for duplicates:</span>
@@ -595,7 +595,7 @@
     }
 
     <span class="doccomment">/// Role assignation to a user</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Assigns a role to a user in a scope context.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `user`: The account which the role will be granted.</span>
@@ -620,7 +620,7 @@
     }
 
     <span class="doccomment">/// Role removal from the user.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Removes the specified role from a user in a scope context. the user will no longer</span>
     <span class="doccomment">/// be able to enforce the removed role and its permissions.</span>
     <span class="doccomment">/// ### Parameters:</span>
@@ -652,13 +652,13 @@
     }
 
     <span class="doccomment">/// Permission creation and coupling with a role.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Creates the specified permissions if needed and assigns them to a role.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
     <span class="doccomment">/// - `role_id`: The role identifier to which the permissions will</span>
     <span class="doccomment">/// be linked to.</span>
-    <span class="doccomment">/// - `permissions`: A list of permissions to create and link, </span>
+    <span class="doccomment">/// - `permissions`: A list of permissions to create and link,</span>
     <span class="doccomment">/// encoded in bytes.</span>
     <span class="kw">fn</span> <span class="ident">create_and_set_permissions</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">role_id</span>: <span class="ident">RoleId</span>, <span class="ident">permissions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>)-&gt;
         <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">PermissionId</span>, <span class="ident"><span class="self">Self</span>::MaxPermissionsPerRole</span><span class="op">&gt;</span>, <span class="ident">DispatchError</span><span class="op">&gt;</span> {
@@ -675,7 +675,7 @@
     }
 
     <span class="doccomment">/// Permission creation</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Creates the specified permission in the specified pallet..</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -694,7 +694,7 @@
     }
 
     <span class="doccomment">/// Permission linking to role.</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Assigns a previously created permission to a role.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -715,8 +715,8 @@
     }
 
     <span class="doccomment">/// Multiple permissions assignation to a role</span>
-    <span class="doccomment">/// </span>
-    <span class="doccomment">/// Assigns multiple, previously created permissions </span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Assigns multiple, previously created permissions</span>
     <span class="doccomment">/// to a role in a pallet context.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -728,7 +728,7 @@
         <span class="kw">let</span> <span class="ident">pallet_id_enum</span> <span class="op">=</span> <span class="ident">pallet</span>.<span class="ident">to_id_enum</span>();
         <span class="kw">let</span> <span class="ident">pallet_id</span> <span class="op">=</span> <span class="ident">pallet_id_enum</span>.<span class="ident">to_id</span>();
         <span class="ident"><span class="self">Self</span>::is_role_linked_to_pallet</span>(<span class="ident">pallet_id_enum</span>, <span class="kw-2">&amp;</span><span class="ident">role_id</span> )<span class="question-mark">?</span>;
-        
+
         <span class="kw">let</span> <span class="ident">role_permissions</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">PermissionsByRole</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="kw-2">&amp;</span><span class="ident">pallet_id</span>, <span class="ident">role_id</span>);
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">permissions</span>.<span class="ident">clone</span>(){
             <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">role_permissions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::PermissionAlreadyLinkedToRole</span> );
@@ -742,7 +742,7 @@
     <span class="comment">/*---- Helper functions ----*/</span>
 
     <span class="doccomment">/// Authorization function</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Checks if the user has a role that includes the specified permission.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `user`: The account to validate.</span>
@@ -763,7 +763,7 @@
     }
 
     <span class="doccomment">/// User role validation function</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Checks if the user has at least one of the specified roles.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `user`: The account to validate.</span>
@@ -780,9 +780,9 @@
         );
         <span class="prelude-val">Ok</span>(())
     }
-    
+
     <span class="doccomment">/// Scope validation</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Checks if the scope exists in that pallet.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -793,18 +793,18 @@
     }
 
     <span class="doccomment">/// Permission validation.</span>
-    <span class="doccomment">/// </span>
-    <span class="doccomment">/// Checks if the permission exists in a pallet context. </span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Checks if the permission exists in a pallet context.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
     <span class="doccomment">/// - `permission_id`: The permission to validate.</span>
     <span class="kw">fn</span> <span class="ident">permission_exists</span>(<span class="ident">pallet</span>: <span class="ident">IdOrVec</span>, <span class="ident">permission_id</span>: <span class="kw-2">&amp;</span><span class="ident">PermissionId</span>)-&gt;<span class="ident">DispatchResult</span>{
         <span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">Permissions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">pallet</span>.<span class="ident">to_id</span>(), <span class="ident">permission_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::PermissionNotFound</span>);
-        <span class="prelude-val">Ok</span>(()) 
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Role validation</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Checks if the role is linked to the pallet.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -817,7 +817,7 @@
     }
 
     <span class="doccomment">/// Permission linking validation</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Checks if the permission is linked to the role in the pallet context.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -830,7 +830,7 @@
     }
 
     <span class="doccomment">/// Role list length</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the number of user that have the specified role in a scope context.</span>
     <span class="doccomment">/// ### Parameters:</span>
     <span class="doccomment">/// - `pallet_id`: The unique pallet identifier.</span>
@@ -865,5 +865,6 @@
         <span class="ident">filtered_vec</span>.<span class="ident">dedup</span>();
         <span class="ident">vec</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">filtered_vec</span>.<span class="ident">len</span>()
     }
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_rbac" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
