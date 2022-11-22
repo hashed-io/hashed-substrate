@@ -10,6 +10,8 @@
         "args": [
           "run",
           "--release",
+          "--bin",
+          "hashed",
           "--",
           "--dev"
         ],

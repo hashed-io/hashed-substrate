@@ -20,7 +20,7 @@ fn pallet_name()-> pallet_rbac::types::IdOrVec {
 fn return_field_name(name: &str) -> FieldName {
     let name: BoundedVec<u8, ConstU32<100>> = name.as_bytes().to_vec().try_into().unwrap_or_default();
     name
-} 
+}
 
 fn return_field_description(description: &str) -> FieldDescription {
     let description: BoundedVec<u8, ConstU32<400>> = description.as_bytes().to_vec().try_into().unwrap_or_default();
@@ -37,13 +37,13 @@ fn register_administrator() -> DispatchResult {
     Ok(())
 }
 
-fn return_user(user_account:u64, user_name: Option<&str>, user_role: Option<ProxyRole>, action: CUDAction) -> BoundedVec<(u64, Option<BoundedVec<FieldName, MaxBoundedVecs>>,
+fn return_user(user_account:u64, user_name: Option<&str>, user_role: Option<ProxyRole>, action: CUDAction) -> BoundedVec<(u64, Option<FieldName>,
     Option<ProxyRole>,
     CUDAction), MaxRegistrationsAtTime> {
-    let mut users: BoundedVec<(u64, Option<BoundedVec<FieldName, MaxBoundedVecs>>,
+    let mut users: BoundedVec<(u64, Option<FieldName>,
         Option<ProxyRole>,
         CUDAction), MaxRegistrationsAtTime> = bounded_vec![];
-    let field_name: BoundedVec<FieldName, MaxBoundedVecs> = BoundedVec::try_from(vec![return_field_name(user_name.unwrap_or_default())]).unwrap_or_default();
+    let field_name = return_field_name(user_name.unwrap_or_default());
     users.try_push((user_account, Some(field_name), user_role, action)).unwrap_or_default();
     users
 }
@@ -64,7 +64,7 @@ fn field_description_to_string(boundedvec: &BoundedVec<u8, ConstU32<400>>) -> St
 	s
 }
 
-// I N I T I A L 
+// I N I T I A L
 // -----------------------------------------------------------------------------------------
 #[test]
 fn cannon_initialize_pallet_twice_shouldnt_work() {

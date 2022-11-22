@@ -1,9 +1,9 @@
 use super::*;
 
 use crate::types::*;
-use frame_system::pallet_prelude::*;
-
+use frame_support::sp_io::hashing::blake2_256;
 use frame_support::traits::tokens::nonfungibles::Inspect;
+use frame_system::pallet_prelude::*;
 use scale_info::prelude::string::String;
 
 use pallet_rbac::types::*;
@@ -82,7 +82,63 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_initial_setup() -> DispatchResult {
-		let _pallet_id = Self::pallet_id();
+
+		let pallet: IdOrVec = Self::pallet_id();
+
+		let owner_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_owner_roles())?;
+
+		for owner_role in owner_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				owner_role,
+				Permission::owner_permissions())?;
+		}
+
+		let admin_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_admin_roles())?;
+
+		for admin_role in admin_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				admin_role,
+				Permission::admin_permissions())?;
+		}
+
+		let collaborator_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_collaborator_roles())?;
+
+		for collaborator_role in collaborator_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				collaborator_role,
+				Permission::collaborator_permissions())?;
+		}
+
+		let collector_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_collector_roles())?;
+
+		for collector_role in collector_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				collector_role,
+				Permission::collector_permissions())?;
+		}
+
+		let holder_role_ids = T::Rbac::create_and_set_roles(
+			pallet.clone(),
+			FruniqueRole::get_holder_roles())?;
+
+		for holder_role in holder_role_ids {
+			T::Rbac::create_and_set_permissions(
+				pallet.clone(),
+				holder_role,
+				Permission::holder_permissions())?;
+		}
 
 		Ok(())
 	}
@@ -150,6 +206,11 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		let owner = T::CreateOrigin::ensure_origin(origin.clone(), &class_id)?;
 
+		let scope_id = class_id.using_encoded(blake2_256);
+		T::Rbac::create_scope(Self::pallet_id(), scope_id)?;
+
+		Self::insert_auth_in_frunique_collection(owner.clone(), class_id, FruniqueRole::Owner)?;
+
 		pallet_uniques::Pallet::<T>::do_create_collection(
 			class_id,
 			owner.clone(),
@@ -197,12 +258,15 @@ impl<T: Config> Pallet<T> {
 		origin: OriginFor<T>,
 		collection: T::CollectionId,
 		item: T::ItemId,
-		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
+		owner: T::AccountId,
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
 		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
-		pallet_uniques::Pallet::<T>::mint(origin.clone(), collection, item, owner)?;
+		let user: T::AccountId = ensure_signed(origin.clone())?;
+		Self::is_authorized(user, collection, Permission::Mint)?;
+
+		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
 
 		pallet_uniques::Pallet::<T>::set_metadata(
 			origin.clone(),
@@ -227,7 +291,37 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	/// Helper functions to interact with the RBAC module
 	pub fn pallet_id() -> IdOrVec {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
+	}
+
+	fn insert_auth_in_frunique_collection(
+		user: T::AccountId,
+		class_id: T::CollectionId,
+		role: FruniqueRole,
+	) -> DispatchResult {
+		T::Rbac::assign_role_to_user(
+			user,
+			Self::pallet_id(),
+			&class_id.using_encoded(blake2_256),
+			role.id(),
+		)?;
+
+		Ok(())
+	}
+
+	fn is_authorized(
+		user: T::AccountId,
+		collection_id: T::CollectionId,
+		permission: Permission,
+	) -> DispatchResult {
+		let scope_id = collection_id.using_encoded(blake2_256);
+		<T as pallet::Config>::Rbac::is_authorized(
+			user,
+			Self::pallet_id(),
+			&scope_id,
+			&permission.id(),
+		)
 	}
 }

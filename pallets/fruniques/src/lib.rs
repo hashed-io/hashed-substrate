@@ -20,6 +20,8 @@ pub mod pallet {
 	use crate::types::*;
 	use frame_support::{pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
+
+	use pallet_rbac::types::RoleBasedAccessControl;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
@@ -30,6 +32,8 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
+
+		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -47,6 +51,8 @@ pub mod pallet {
 		FruniqueDivided(T::AccountId, T::AccountId, T::CollectionId, T::ItemId),
 		// A frunique has been verified.
 		FruniqueVerified(T::AccountId, CollectionId, ItemId),
+		// A user has been invited to collaborate on a collection.
+		InvitedToCollaborate(T::AccountId, T::AccountId, T::CollectionId),
 		// Counter should work?
 		NextFrunique(u32),
 	}
@@ -263,7 +269,6 @@ pub mod pallet {
 			}
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
-			let account_id = Self::account_id_to_lookup_source(&owner);
 
 			let instance_id: ItemId = <NextFrunique<T>>::try_get(class_id).unwrap_or(0);
 			<NextFrunique<T>>::insert(class_id, instance_id + 1);
@@ -282,7 +287,7 @@ pub mod pallet {
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
-			Self::do_spawn(origin, class_id, instance_id, account_id, metadata, attributes)?;
+			Self::do_spawn(origin, class_id, instance_id, owner.clone(), metadata, attributes)?;
 
 			Self::deposit_event(Event::FruniqueCreated(
 				owner.clone(),
@@ -314,6 +319,29 @@ pub mod pallet {
 
 			Self::deposit_event(Event::FruniqueVerified(owner, class_id, instance_id));
 
+			Ok(())
+		}
+
+		/// ## Invite a user to become a collaborator in a collection.
+		/// ### Parameters:
+		/// - `origin` must be signed by the owner of the frunique.
+		/// - `class_id` must be a valid class of the asset class.
+		/// - `invitee` must be a valid user.
+		/// ### Considerations:
+		/// This functions enables the owner of a collection to invite a user to become a collaborator.
+		/// The user will be able to create NFTs in the collection.
+		/// The user will be able to add attributes to the NFTs in the collection.
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn invite(
+			origin: OriginFor<T>,
+			class_id: CollectionId,
+			invitee: T::AccountId,
+		) -> DispatchResult {
+
+			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			Self::deposit_event(Event::InvitedToCollaborate(owner, invitee, class_id));
 			Ok(())
 		}
 
@@ -391,7 +419,7 @@ pub mod pallet {
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueParent<T>>::clear(1000, None);
 			let _ = <FruniqueChild<T>>::clear(1000, None);
-
+			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
 	}

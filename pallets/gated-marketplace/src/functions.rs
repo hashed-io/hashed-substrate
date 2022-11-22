@@ -16,17 +16,17 @@ impl<T: Config> Pallet<T> {
     pub fn do_initial_setup()->DispatchResult{
         let pallet_id = Self::pallet_id();
         let super_roles = vec![MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
-        let super_role_ids = T::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
+        let super_role_ids = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
         for super_role in super_role_ids{
-            T::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, Permission::admin_permissions())?;
+            <T as pallet::Config>::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, Permission::admin_permissions())?;
         }
         // participant role and permissions
-        let participant_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Participant.to_vec()].to_vec())?;
-        T::Rbac::create_and_set_permissions(pallet_id.clone(), participant_role_id[0], Permission::participant_permissions() )?;
+        let participant_role_id = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Participant.to_vec()].to_vec())?;
+        <T as pallet::Config>::Rbac::create_and_set_permissions(pallet_id.clone(), participant_role_id[0], Permission::participant_permissions() )?;
         // appraiser role and permissions
-        let _appraiser_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
+        let _appraiser_role_id = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())?;
         // redemption specialist role and permissions
-        let _redemption_role_id = T::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
+        let _redemption_role_id = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())?;
 
         Self::deposit_event(Event::MarketplaceSetupCompleted);
         Ok(())
@@ -38,7 +38,7 @@ impl<T: Config> Pallet<T> {
         // ensure the generated id is unique
         ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
         //Insert on marketplaces and marketplaces by auth
-        T::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
+        <T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
         Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
         Self::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)?;
         <Marketplaces<T>>::insert(marketplace_id, marketplace);
@@ -125,7 +125,7 @@ impl<T: Config> Pallet<T> {
         //Self::can_enroll(authority, marketplace_id)?;
         Self::is_authorized(authority, &marketplace_id,Permission::AddAuth)?;
         //ensure the account is not already an authority
-        // handled by T::Rbac::assign_role_to_user
+        // handled by <T as pallet::Config>::Rbac::assign_role_to_user
         //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
         match authority_type{
             MarketplaceRole::Owner => {
@@ -148,7 +148,7 @@ impl<T: Config> Pallet<T> {
         //Self::can_enroll(authority.clone(), marketplace_id)?;
         Self::is_authorized(authority.clone(), &marketplace_id,Permission::RemoveAuth)?;
         //ensure the account has the selected authority before to try to remove
-        // T::Rbac handles the if role doesnt hasnt been asigned to the user
+        // <T as pallet::Config>::Rbac handles the if role doesnt hasnt been asigned to the user
         //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AuthorityNotFoundForUser);
 
         match authority_type{
@@ -494,7 +494,7 @@ impl<T: Config> Pallet<T> {
 
     fn insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceRole, marketplace_id: [u8;32])->DispatchResult{
 
-        T::Rbac::assign_role_to_user(authority, Self::pallet_id(),
+        <T as pallet::Config>::Rbac::assign_role_to_user(authority, Self::pallet_id(),
              &marketplace_id, role.id())?;
 
         Ok(())
@@ -529,7 +529,7 @@ impl<T: Config> Pallet<T> {
 
     fn remove_from_market_lists(account: T::AccountId, author_type: MarketplaceRole , marketplace_id : [u8;32])->DispatchResult{
 
-        T::Rbac::remove_role_from_user(account, Self::pallet_id(),
+        <T as pallet::Config>::Rbac::remove_role_from_user(account, Self::pallet_id(),
             &marketplace_id, author_type.id())?;
         Ok(())
 
@@ -557,17 +557,17 @@ impl<T: Config> Pallet<T> {
         Self::insert_in_applicants_lists(applicant.clone(), next_status,marketplace_id)?;
 
         if prev_status == ApplicationStatus::Approved{
-            T::Rbac::remove_role_from_user(applicant.clone(), Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?;
+            <T as pallet::Config>::Rbac::remove_role_from_user(applicant.clone(), Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?;
         }
         if next_status == ApplicationStatus::Approved{
-            T::Rbac::assign_role_to_user(applicant, Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?
+            <T as pallet::Config>::Rbac::assign_role_to_user(applicant, Self::pallet_id(), &marketplace_id, MarketplaceRole::Participant.id())?
         }
 
         Ok(())
     }
 
     fn is_authorized( authority: T::AccountId, marketplace_id: &[u8;32], permission: Permission ) -> DispatchResult{
-        T::Rbac::is_authorized(
+        <T as pallet::Config>::Rbac::is_authorized(
             authority,
             Self::pallet_id(),
             marketplace_id,
@@ -579,7 +579,7 @@ impl<T: Config> Pallet<T> {
     ///Lets us know if the selected user is an admin.
     /// It returns true if the user is an admin, false otherwise.
     fn is_admin(account: T::AccountId, marketplace_id: [u8;32]) -> bool{
-        T::Rbac::has_role(account, Self::pallet_id(),
+        <T as pallet::Config>::Rbac::has_role(account, Self::pallet_id(),
             &marketplace_id, [MarketplaceRole::Admin.id()].to_vec()).is_ok()
     }
 
@@ -604,7 +604,7 @@ impl<T: Config> Pallet<T> {
         // };
 
         //owners.len() == 1
-        T::Rbac::get_role_users_len(Self::pallet_id(),
+        <T as pallet::Config>::Rbac::get_role_users_len(Self::pallet_id(),
             &marketplace_id, &MarketplaceRole::Owner.id()) == 1
     }
 
@@ -657,7 +657,7 @@ impl<T: Config> Pallet<T> {
         // remove from Marketplaces list
         <Marketplaces<T>>::remove(marketplace_id);
 
-        T::Rbac::remove_scope(Self::pallet_id(), marketplace_id)?;
+        <T as pallet::Config>::Rbac::remove_scope(Self::pallet_id(), marketplace_id)?;
 
         Ok(())
     }

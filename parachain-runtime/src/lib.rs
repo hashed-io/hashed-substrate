@@ -973,6 +973,7 @@ impl pallet_fruniques::Config for Runtime {
 	type Event = Event;
 	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	type ChildMaxLen = ChildMaxLen;
+	type Rbac = RBAC;
 }
 
 parameter_types! {

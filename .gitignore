@@ -32,3 +32,4 @@ gcloud-md5-ingress.yml
 collator-data
 relay-data
 .vscode/settings.json
+lcov.info
