@@ -325,6 +325,9 @@
 <span id="325">325</span>
 <span id="326">326</span>
 <span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
@@ -593,7 +596,10 @@
 		<span class="kw">let</span> <span class="ident">user</span>: <span class="ident">T::AccountId</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 		<span class="ident"><span class="self">Self</span>::is_authorized</span>(<span class="ident">user</span>, <span class="ident">collection</span>, <span class="ident">Permission::Mint</span>)<span class="question-mark">?</span>;
 
-		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::do_mint</span>(<span class="ident">collection</span>, <span class="ident">item</span>, <span class="ident">owner</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
+		<span class="comment">// pallet_uniques::Pallet::&lt;T&gt;::do_mint(collection, item, owner, |_| Ok(()))?;</span>
+		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::do_mint</span>(<span class="ident">collection</span>, <span class="ident">item</span>, <span class="ident">owner</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+			<span class="prelude-val">Ok</span>(())
+		})<span class="question-mark">?</span>;
 
 		<span class="ident">pallet_uniques::Pallet</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::set_metadata</span>(
 			<span class="ident">origin</span>.<span class="ident">clone</span>(),
@@ -623,7 +629,7 @@
 		<span class="ident">IdOrVec::Vec</span>(<span class="ident"><span class="self">Self</span>::module_name</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>())
 	}
 
-	<span class="kw">fn</span> <span class="ident">insert_auth_in_frunique_collection</span>(
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_auth_in_frunique_collection</span>(
 		<span class="ident">user</span>: <span class="ident">T::AccountId</span>,
 		<span class="ident">class_id</span>: <span class="ident">T::CollectionId</span>,
 		<span class="ident">role</span>: <span class="ident">FruniqueRole</span>,

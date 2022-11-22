@@ -424,6 +424,7 @@
 <span id="424">424</span>
 <span id="425">425</span>
 <span id="426">426</span>
+<span id="427">427</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
@@ -590,7 +591,7 @@
 		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">10</span>))]</span>
 		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initial_setup</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
 			<span class="ident">T::RemoveOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="comment">// Self::do_initial_setup()?;</span>
+			<span class="ident"><span class="self">Self</span>::do_initial_setup</span>()<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
 
@@ -766,6 +767,7 @@
 		) -&gt; <span class="ident">DispatchResult</span> {
 
 			<span class="kw">let</span> <span class="ident">owner</span>: <span class="ident">T::AccountId</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+			<span class="ident"><span class="self">Self</span>::insert_auth_in_frunique_collection</span>(<span class="ident">invitee</span>.<span class="ident">clone</span>(), <span class="ident">class_id</span>, <span class="ident">FruniqueRole::Collaborator</span>)<span class="question-mark">?</span>;
 
 			<span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::InvitedToCollaborate</span>(<span class="ident">owner</span>, <span class="ident">invitee</span>, <span class="ident">class_id</span>));
 			<span class="prelude-val">Ok</span>(())
