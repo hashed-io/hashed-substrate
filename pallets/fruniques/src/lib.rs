@@ -420,6 +420,7 @@ pub mod pallet {
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueParent<T>>::clear(1000, None);
 			let _ = <FruniqueChild<T>>::clear(1000, None);
+
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
