@@ -17,7 +17,7 @@ collator_args=(
 relay_args=(
     --execution wasm 
     --base-path ./relay-data/ 
-    --chain /var/www/hashed-substrate/resources/rococo-raw.json 
+    --chain /var/www/hashed-substrate/resources/polkadot.json 
     --port 30333
     --ws-port 9944 
     --ws-external 
@@ -26,7 +26,7 @@ relay_args=(
     --rpc-methods unsafe 
 )
 
-chain_spec="--chain /var/www/hashed-substrate/resources/md5-spec-raw.json"
+chain_spec="--chain hashed"
 collator_args+=($chain_spec)
 
 #/target/release/hashed key insert --base-path ./collator-data $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
