@@ -3,5 +3,6 @@
     "Frunique",
     "fruniques",
     "Permill"
-  ]
+  ],
+  "task.allowAutomaticTasks": "on"
 }
