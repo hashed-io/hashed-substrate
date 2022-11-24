@@ -24,6 +24,8 @@ relay_args=(
     --rpc-external 
     --rpc-cors all 
     --rpc-methods unsafe 
+    --wasm-execution Compiled
+    --pruning 10000
 )
 
 chain_spec="--chain hashed"

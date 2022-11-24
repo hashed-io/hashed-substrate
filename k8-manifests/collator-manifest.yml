@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: md5-collator
+  name: hashed-collator
   namespace: hashed-network
 spec:
   selector:
     matchLabels:
-      app: md5-collator
+      app: hashed-collator
   template:
     metadata:
       labels:
-        app: md5-collator
+        app: hashed-collator
     spec:
       containers:
-      - name: md5-collator
+      - name: hashed-collator
         imagePullPolicy: Always
         image: dappdever/hashed-substrate:latest
         volumeMounts:
-          - name: md5-db
-            mountPath:  /var/www/hashed/md5
+          - name: hashed-db
+            mountPath:  /var/www/hashed/hashed
         # env:
         #   - name: MNEMO
         #     valueFrom:
@@ -34,8 +34,8 @@ spec:
         #         optional: false
         resources:
           limits:
-            memory: "4G"
-            cpu: "1.5"
+            memory: "16G"
+            cpu: "2"
         ports:
         - containerPort: 9933
         - containerPort: 9944
@@ -43,14 +43,14 @@ spec:
         - containerPort: 30333
         - containerPort: 40333
       volumes:
-        - name: md5-db
+        - name: hashed-db
           persistentVolumeClaim:
-            claimName: md5collator-persistentvolumeclaim
+            claimName: hashedcollator-persistentvolumeclaim
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: md5collator-persistentvolumeclaim
+    name: hashedcollator-persistentvolumeclaim
     namespace: hashed-network
 spec:
   volumeMode: Filesystem
@@ -63,11 +63,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name:  md5-collator
+  name:  hashed-collator
   namespace: hashed-network
 spec:
   selector:
-    app:  md5-collator
+    app:  hashed-collator
   type:  NodePort
   ports:
   - name:  collator-p2p-port
