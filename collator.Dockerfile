@@ -9,7 +9,7 @@ RUN git clone https://github.com/hashed-io/hashed-substrate.git
 
 WORKDIR /var/www/hashed-substrate
 # change to main or develop
-RUN git checkout develop && cargo build --release
+RUN git checkout feature/hashed-chain-spec && cargo build --release
 
 EXPOSE 30333 40333 9933 9944 9946
 

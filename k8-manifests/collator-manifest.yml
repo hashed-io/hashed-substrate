@@ -34,8 +34,8 @@ spec:
         #         optional: false
         resources:
           limits:
-            memory: "16G"
-            cpu: "2"
+            memory: "3G"
+            cpu: "1.5"
         ports:
         - containerPort: 9933
         - containerPort: 9944
@@ -58,7 +58,6 @@ spec:
   resources:
     requests:
       storage: 50Gi
-  storageClassName: standard
 ---
 apiVersion: v1
 kind: Service
@@ -85,28 +84,3 @@ spec:
   - name:  rpc-port
     port:  9933
     targetPort:  9933
----
-# Uncomment if a persistent volume needs to be created manually
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: md5-persistent-volume
-#   namespace: hashed-network
-# spec:
-#   capacity:
-#     storage: 20Gi
-#   volumeMode: Filesystem
-#   accessModes:
-#     - ReadWriteOnce
-#   persistentVolumeReclaimPolicy: Retain
-#   storageClassName: local-storage
-#   local:
-#     path: /var/www/hashed/
-#   nodeAffinity:
-#     required:
-#       nodeSelectorTerms:
-#         - matchExpressions:
-#             - key: minikube.k8s.io/hostname
-#               operator: In
-#               values:
-#               - minikube

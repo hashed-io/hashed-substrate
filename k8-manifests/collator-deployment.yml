@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hashed-collator
+  namespace: hashed-network
+spec:
+  selector:
+    matchLabels:
+      app: hashed-collator
+  template:
+    metadata:
+      labels:
+        app: hashed-collator
+    spec:
+      containers:
+      - name: hashed-collator
+        imagePullPolicy: Always
+        image: dappdever/hashed-substrate:latest
+        volumeMounts:
+          - name: hashed-db
+            mountPath:  /var/www/hashed/hashed
+        resources:
+          limits:
+            memory: "3G"
+            cpu: "1.5"
+        ports:
+        - containerPort: 9933
+        - containerPort: 9944
+        - containerPort: 9946
+        - containerPort: 30333
+        - containerPort: 40333
+      volumes:
+        - name: hashed-db
+          persistentVolumeClaim:
+            claimName: hashedcollator-persistentvolumeclaim
