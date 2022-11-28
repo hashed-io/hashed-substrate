@@ -53,13 +53,7 @@ fn spawn<T: Config>(
 	let caller: T::AccountId = whitelisted_caller();
 	let caller_lookup = T::Lookup::unlookup(caller.clone());
 	let collection_description = dummy_description();
-
-	assert!(Fruniques::<T>::create_collection(
-		SystemOrigin::Signed(caller.clone()).into(),
-		collection_description.clone(),
-	)
-	.is_ok());
-	(caller, caller_lookup, collection_description)
+	let attributes = dummy_attributes();
 }
 
 benchmarks! {
