@@ -181,8 +181,8 @@ impl_opaque_keys! {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("luhn"),
-	impl_name: create_runtime_str!("luhn"),
+	spec_name: create_runtime_str!("hashed"),
+	impl_name: create_runtime_str!("hashed"),
 	authoring_version: 2,
 	spec_version: 2,
 	impl_version: 2,
