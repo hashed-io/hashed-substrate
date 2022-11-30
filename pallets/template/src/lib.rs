@@ -4,7 +4,8 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
-
+pub mod weights;
+pub use weights::*;
 #[cfg(test)]
 mod mock;
 
@@ -17,6 +18,8 @@ mod benchmarking;
 #[frame_support::pallet]
 pub mod pallet {
 
+	use super::*;
+
 use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
@@ -25,6 +28,7 @@ use frame_support::pallet_prelude::*;
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -72,7 +76,7 @@ use frame_support::pallet_prelude::*;
 	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight((T::WeightInfo::do_something(100), DispatchClass::Operational))]
 		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
