@@ -699,24 +699,24 @@ pub mod pallet {
 		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple users to be assigned/unassigned at the same time.
 		/// - The project id is required because it is the only way to identify the project
-		/// - This extrinsic is used for both assigning and unassigning users to a project
+		/// - This extrinsic is used for both assigning and unassign users to a project
 		/// depending on the AssignAction.
 		/// - After a user is assigned to a project, the user will be able to perform actions
 		/// in the project depending on the role assigned to the user.
 		/// - After a user is unassigned from a project, the user will not be able to perform actions
 		/// in the project anymore.
-		/// - If the user is already assigned to the project, the function will return an erro.
+		/// - If the user is already assigned to the project, the function will return an error.
 		///
 		/// # Note:
 		/// - WARNING: ALL provided users needs to be registered in the site. If any of the users
 		/// is not registered, the function will return an error.
-		/// - Assigning or unassigning a user to a project will add or remove permissions to the user
+		/// - Assigning or unassign a user to a project will add or remove permissions to the user
 		/// from the RBAC pallet.
 		/// - Warning: Cannot assign a user to a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Cannot unassign a user from a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
-		/// - Warning: Do not perfom multiple actions over the same user in the same call, it could
+		/// - Warning: Do not perform multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -756,7 +756,7 @@ pub mod pallet {
 		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple expenditures to be created/updated/deleted at the same time.
 		/// - The project id is required because it is the only way to identify the project
-		/// - Expentiture parameters are optional because depends on the action to be performed:
+		/// - Expenditure parameters are optional because depends on the action to be performed:
 		/// * **Create**: Name, Type & Amount are required. Nacis code & Jobs multiplier are optional.
 		/// * **Update**: Except for the expenditure id & action, all parameters are optional.
 		/// * **Delete**: Only the expenditure id & action is required.
@@ -876,12 +876,12 @@ pub mod pallet {
 		///
 		/// # Parameters:
 		/// ### For EB5 drawdowns:
-		/// - origin: The administator account who is approving the drawdown
+		/// - origin: The administrator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved
 		///
 		/// ### For Construction Loan & Developer Equity (bulk uploads) drawdowns:
-		/// - origin: The administator account who is approving the drawdown
+		/// - origin: The administrator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved.
 		/// - bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a pseudo
@@ -973,7 +973,7 @@ pub mod pallet {
 		/// Rejects a drawdown
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is rejecting the drawdown
+		/// - origin: The administrator account who is rejecting the drawdown
 		/// - project_id: The selected project id where the drawdown will be rejected
 		/// - drawdown_id: The selected drawdown id to be rejected
 		///
@@ -1017,7 +1017,7 @@ pub mod pallet {
 		/// Bulk upload drawdowns.
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is uploading the drawdowns
+		/// - origin: The administrator account who is uploading the drawdowns
 		/// - project_id: The selected project id where the drawdowns will be uploaded
 		/// - drawdown_id: The drawdowns to be uploaded
 		/// - description: The description of the drawdown provided by the builder
@@ -1052,7 +1052,7 @@ pub mod pallet {
 		/// Modifies the inflation rate of a project.
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is modifying the inflation rate
+		/// - origin: The administrator account who is modifying the inflation rate
 		/// - projects: The projects where the inflation rate will be modified.
 		/// This is a vector of tuples where each entry is composed by:
 		/// * 0: The project id

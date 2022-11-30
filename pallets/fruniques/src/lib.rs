@@ -1,5 +1,4 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
 pub use pallet::*;
 
 #[cfg(test)]
@@ -18,7 +17,7 @@ pub mod types;
 pub mod pallet {
 	use super::*;
 	use crate::types::*;
-	use frame_support::{pallet_prelude::*, transactional};
+	use frame_support::{pallet_prelude::*, transactional, PalletId};
 	use frame_system::pallet_prelude::*;
 
 	use pallet_rbac::types::RoleBasedAccessControl;
@@ -32,6 +31,9 @@ pub mod pallet {
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
+
+		#[pallet::constant]
+		type PalletId: Get<PalletId>;
 
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
@@ -155,6 +157,43 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	// #[pallet::genesis_config]
+	// pub struct GenesisConfig;
+
+	// #[cfg(feature = "std")]
+	// impl Default for GenesisConfig {
+	// 	fn default() -> Self {
+	// 		Self
+	// 	}
+	// }
+
+	// #[cfg(feature = "std")]
+	// impl GenesisConfig {
+	// 	/// Direct implementation of `GenesisBuild::assimilate_storage`.
+	// 	#[deprecated(
+	// 		note = "use `<GensisConfig<T, I> as GenesisBuild<T, I>>::assimilate_storage` instead"
+	// 	)]
+	// 	pub fn assimilate_storage<T: Config<I>, I: 'static>(
+	// 		&self,
+	// 		storage: &mut sp_runtime::Storage,
+	// 	) -> Result<(), String> {
+	// 		<Self as GenesisBuild<T, I>>::assimilate_storage(self, storage)
+	// 	}
+	// }
+
+
+	// #[pallet::genesis_build]
+	// impl<T: Config<I>, I: 'static> GenesisBuild<T, I> for GenesisConfig {
+	// 	fn build(&self) {
+	// 		// Create Treasury account
+	// 		let account_id = <Pallet<T, I>>::account_id();
+	// 		let min = T::Currency::minimum_balance();
+	// 		if T::Currency::free_balance(&account_id) < min {
+	// 			let _ = T::Currency::make_free_balance_be(&account_id, min);
+	// 		}
+	// 	}
+	// }
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
 	where
@@ -195,22 +234,6 @@ pub mod pallet {
 
 			<NextCollection<T>>::put(Self::next_collection() + 1);
 
-			Ok(())
-		}
-
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
-		pub fn instance_exists(
-			_origin: OriginFor<T>,
-			_class_id: T::CollectionId,
-			_instance_id: T::ItemId,
-		) -> DispatchResult {
-			// Always returns an empty iterator?
-			//let instances = pallet_uniques::Pallet::<T>::;
-			//println!("Instances found in class {:?}",instances.count());
-			//log::info!("Instances found in class {:?}", instances.count());
-			//println!("\tIterator? {}",instances.count());
-			//Self::deposit_event(Event::NextFrunique(instances.count().try_into().unwrap()  ));
-			//instances.into_iter().for_each(|f| println!("\tInstance:{:?}",f));
 			Ok(())
 		}
 

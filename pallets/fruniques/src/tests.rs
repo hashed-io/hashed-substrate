@@ -53,14 +53,15 @@ fn dummy_empty_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, Val
 
 #[test]
 fn create_collection_works() {
-	ExtBuilder::default().build().execute_with(|| {
+
+	new_test_ext().execute_with(|| {
 		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 	})
 }
 
 #[test]
 fn spawn_extrinsic_works() {
-	ExtBuilder::default().build().execute_with(|| {
+	new_test_ext().execute_with(|| {
 		// A collection must be created before spawning an NFT
 		assert_noop!(
 			Fruniques::spawn(Origin::signed(1), 0, None, dummy_description(), None),
@@ -110,7 +111,7 @@ fn spawn_extrinsic_works() {
 
 #[test]
 fn set_attributes_works() {
-	ExtBuilder::default().build().execute_with(|| {
+	new_test_ext().execute_with(|| {
 		// A collection must be created before spawning an NFT
 		assert_noop!(
 			Fruniques::spawn(Origin::signed(1), 0, None, dummy_description(), None),
@@ -144,5 +145,8 @@ fn invite_collaborator_works() {
 			0,
 			2
 		));
+
+		// A NFT can be created with empty data
+		assert_ok!(Fruniques::spawn(Origin::signed(2), 0, None, dummy_description(), None));
 	});
 }

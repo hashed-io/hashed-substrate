@@ -1,7 +1,6 @@
 use crate as pallet_fruniques;
-use frame_support::{construct_runtime, parameter_types, traits::AsEnsureOriginWithArg};
-use frame_system::EnsureSigned;
-use frame_system::EnsureRoot;
+use frame_support::{construct_runtime, parameter_types, traits::AsEnsureOriginWithArg, PalletId};
+use frame_system::{EnsureRoot, EnsureSigned};
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
@@ -28,6 +27,7 @@ construct_runtime!(
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const ChildMaxLen: u32 = 10;
+	pub const FRUNIQUES_PALLET_ID: PalletId = PalletId(*b"frunique");
 }
 
 impl frame_system::Config for Test {
@@ -55,9 +55,11 @@ impl frame_system::Config for Test {
 	type SS58Prefix = ();
 	type OnSetCode = ();
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
+	type PalletId = FRUNIQUES_PALLET_ID;
 }
 
 impl pallet_fruniques::Config for Test {
+	type PalletId = FRUNIQUES_PALLET_ID;
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
@@ -94,7 +96,6 @@ impl pallet_uniques::Config for Test {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
 	type Locker = ();
-
 }
 
 parameter_types! {
@@ -139,13 +140,19 @@ impl pallet_rbac::Config for Test {
 // }
 // Build genesis storage according to the mock runtime.
 
-
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let balance_amount = 1_000_000 as u64;
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, balance_amount), (2, balance_amount), (3, balance_amount)],
-	}.assimilate_storage(&mut t).expect("assimilate_storage failed");
+		balances: vec![
+			(1, balance_amount),
+			(2, balance_amount),
+			(3, balance_amount),
+			(Self::account_id(), balance_amount),
+		],
+	}
+	.assimilate_storage(&mut t)
+	.expect("assimilate_storage failed");
 	let mut t: sp_io::TestExternalities = t.into();
 	t.execute_with(|| Fruniques::do_initial_setup().expect("Error on configuring initial setup"));
 	t

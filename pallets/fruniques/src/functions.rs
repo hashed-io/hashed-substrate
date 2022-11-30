@@ -10,6 +10,9 @@ use pallet_rbac::types::*;
 
 use frame_support::pallet_prelude::*;
 use frame_support::traits::EnsureOriginWithArg;
+use frame_system::RawOrigin;
+
+use sp_runtime::traits::AccountIdConversion;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
@@ -82,62 +85,61 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_initial_setup() -> DispatchResult {
-
 		let pallet: IdOrVec = Self::pallet_id();
 
-		let owner_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_owner_roles())?;
+		let owner_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_owner_roles())?;
 
 		for owner_role in owner_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				owner_role,
-				Permission::owner_permissions())?;
+				Permission::owner_permissions(),
+			)?;
 		}
 
-		let admin_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_admin_roles())?;
+		let admin_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_admin_roles())?;
 
 		for admin_role in admin_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				admin_role,
-				Permission::admin_permissions())?;
+				Permission::admin_permissions(),
+			)?;
 		}
 
-		let collaborator_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_collaborator_roles())?;
+		let collaborator_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collaborator_roles())?;
 
 		for collaborator_role in collaborator_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				collaborator_role,
-				Permission::collaborator_permissions())?;
+				Permission::collaborator_permissions(),
+			)?;
 		}
 
-		let collector_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_collector_roles())?;
+		let collector_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collector_roles())?;
 
 		for collector_role in collector_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				collector_role,
-				Permission::collector_permissions())?;
+				Permission::collector_permissions(),
+			)?;
 		}
 
-		let holder_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_holder_roles())?;
+		let holder_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_holder_roles())?;
 
 		for holder_role in holder_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				holder_role,
-				Permission::holder_permissions())?;
+				Permission::holder_permissions(),
+			)?;
 		}
 
 		Ok(())
@@ -213,14 +215,22 @@ impl<T: Config> Pallet<T> {
 
 		pallet_uniques::Pallet::<T>::do_create_collection(
 			class_id,
-			owner.clone(),
-			admin.clone(),
+			Self::account_id(),
+			Self::account_id(),
 			T::CollectionDeposit::get(),
 			false,
 			pallet_uniques::Event::Created { collection: class_id, creator: admin, owner },
 		)?;
 
-		pallet_uniques::Pallet::<T>::set_collection_metadata(origin, class_id, metadata, false)?;
+		pallet_uniques::Pallet::<T>::set_collection_metadata(origin.clone(), class_id, metadata, false)?;
+
+		pallet_uniques::Pallet::<T>::set_team(
+			origin,
+			class_id,
+			Self::account_id_to_lookup_source(&Self::account_id()),
+			Self::account_id_to_lookup_source(&Self::account_id()),
+			Self::account_id_to_lookup_source(&Self::account_id()),
+		)?;
 
 		Ok(())
 	}
@@ -233,7 +243,8 @@ impl<T: Config> Pallet<T> {
 		numeric_value: Option<Permill>,
 		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
 	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id, admin.clone())?;
+
+		pallet_uniques::Pallet::<T>::create(RawOrigin::Signed(Self::account_id()).into(), class_id, admin.clone())?;
 
 		Self::mint(origin.clone(), &class_id, instance_id, admin)?;
 
@@ -267,12 +278,17 @@ impl<T: Config> Pallet<T> {
 		Self::is_authorized(user, collection, Permission::Mint)?;
 
 		// pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
-		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| {
-			Ok(())
-		})?;
+		pallet_uniques::Pallet::<T>::do_mint(collection, item, Self::account_id(), |_| Ok(()))?;
+
+		pallet_uniques::Pallet::<T>::do_transfer(
+			collection,
+			item,
+			owner,
+			|_collection_details, _details| Ok(()),
+		)?;
 
 		pallet_uniques::Pallet::<T>::set_metadata(
-			origin.clone(),
+			RawOrigin::Signed(Self::account_id()).into(),
 			collection,
 			item,
 			metadata,
@@ -282,7 +298,7 @@ impl<T: Config> Pallet<T> {
 		if let Some(attributes) = attributes {
 			for (key, value) in attributes {
 				pallet_uniques::Pallet::<T>::set_attribute(
-					origin.clone(),
+					RawOrigin::Signed(Self::account_id()).into(),
 					collection,
 					Some(item),
 					key,
@@ -293,6 +309,27 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
+	/// Helper functions to sign as the pallet
+
+	/// The account ID of the treasury pot.
+	///
+	/// This actually does computation. If you need to keep using it, then make sure you cache the
+	/// value and only call this once.
+	pub fn account_id() -> T::AccountId {
+		T::PalletId.into_account_truncating()
+	}
+
+	/// Convert into an account ID. This is infallible.
+	// fn into_account(&self) -> T::AccountId {
+	// 	self.into_sub_account(&())
+	// }
+
+	// fn into_sub_account<S: Encode>(&self, sub: S) -> T {
+	// 	(Id::TYPE_ID, self, sub)
+	// 		.using_encoded(|b| T::decode(&mut TrailingZeroInput(b)))
+	// 		.expect("`AccountId` type is never greater than 32 bytes; qed")
+	// }
 
 	/// Helper functions to interact with the RBAC module
 	pub fn pallet_id() -> IdOrVec {
