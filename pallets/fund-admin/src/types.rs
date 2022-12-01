@@ -57,9 +57,9 @@ pub struct ProjectData<T: Config> {
     pub completion_date: CompletionDate,
     pub registration_date: RegistrationDate,
     pub updated_date: UpdatedDate,
-	pub eb5_drawdown_status: DrawdownStatus,
-	pub construction_loan_drawdown_status: DrawdownStatus,
-	pub developer_equity_drawdown_status: DrawdownStatus,
+	pub eb5_drawdown_status: Option<DrawdownStatus>,
+	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
+	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]

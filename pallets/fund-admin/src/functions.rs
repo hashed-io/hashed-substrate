@@ -127,9 +127,9 @@ impl<T: Config> Pallet<T> {
             creation_date,
             completion_date,
             updated_date: timestamp,
-			construction_loan_drawdown_status: DrawdownStatus::default(),
-			developer_equity_drawdown_status: DrawdownStatus::default(),
-			eb5_drawdown_status: DrawdownStatus::default(),
+			construction_loan_drawdown_status: None,
+			developer_equity_drawdown_status: None,
+			eb5_drawdown_status: None,
         };
 
         // create scope for project_id
@@ -1803,7 +1803,7 @@ impl<T: Config> Pallet<T> {
 				// Update EB5 drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.eb5_drawdown_status = drawdown_status;
+					project_data.eb5_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
@@ -1812,7 +1812,7 @@ impl<T: Config> Pallet<T> {
 				// Update Construction Loan drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.construction_loan_drawdown_status = drawdown_status;
+					project_data.construction_loan_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
@@ -1821,7 +1821,7 @@ impl<T: Config> Pallet<T> {
 				// Update Developer Equity drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.developer_equity_drawdown_status = drawdown_status;
+					project_data.developer_equity_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
