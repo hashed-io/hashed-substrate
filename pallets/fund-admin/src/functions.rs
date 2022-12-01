@@ -1596,7 +1596,28 @@ impl<T: Config> Pallet<T> {
         if role == ProxyRole::Administrator {
             return Err(Error::<T>::CannotAddAdminRole.into());
         }
+        
+        // Ensure how many projects the user is assigned to
+        let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
 
+        match user_data.role {
+            ProxyRole::Builder => {
+                ensure!(projects_count < T::MaxProjectsPerBuilder::get() as usize, Error::<T>::MaxProjectsPerBuilderReached);
+            },
+            ProxyRole::Investor => {
+                ensure!(projects_count < T::MaxProjectsPerInvestor::get() as usize, Error::<T>::MaxProjectsPerInvestorReached);
+            },
+            ProxyRole::Issuer => {
+                ensure!(projects_count < T::MaxProjectsPerIssuer::get() as usize, Error::<T>::MaxProjectsPerIssuerReached);
+            },
+            ProxyRole::RegionalCenter => {
+                ensure!(projects_count < T::MaxProjectsPerRegionalCenter::get() as usize, Error::<T>::MaxProjectsPerRegionalCenterReached);
+            },
+            ProxyRole::Administrator => {
+                // This should never happen
+                return Err(Error::<T>::CannotAddAdminRole.into());
+            },
+        }
         Ok(())
     }
 

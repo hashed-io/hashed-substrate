@@ -406,6 +406,14 @@ pub mod pallet {
 		DrawdownStatusNotSupportedForBulkUpload,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
+		/// Max number of projects per builder has been reached
+		MaxProjectsPerBuilderReached,
+		/// Max number of projects per investor has been reached
+		MaxProjectsPerInvestorReached,
+		/// Max number of projects per issuer has been reached
+		MaxProjectsPerIssuerReached,
+		/// Max number of projects per regional center has been reached
+		MaxProjectsPerRegionalCenterReached,
 
 	}
 
