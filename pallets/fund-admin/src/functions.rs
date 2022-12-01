@@ -127,9 +127,9 @@ impl<T: Config> Pallet<T> {
             creation_date,
             completion_date,
             updated_date: timestamp,
-			construction_loan_drawdown_status: DrawdownStatus::None,
-			developer_equity_drawdown_status: DrawdownStatus::None,
-			eb5_drawdown_status: DrawdownStatus::None,
+			construction_loan_drawdown_status: DrawdownStatus::default(),
+			developer_equity_drawdown_status: DrawdownStatus::default(),
+			eb5_drawdown_status: DrawdownStatus::default(),
         };
 
         // create scope for project_id
@@ -1419,15 +1419,11 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
             ProxyRole::Builder => {
-                //TODO: Fix internal validations
-                //TODO: move logic to a helper function to avoid boilerplate
-
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.builder.as_mut() {
                         Some(builder) => {
-                            //builder.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             builder.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         },
                         None => {
@@ -1444,7 +1440,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.investor.as_mut() {
                         Some(investor) => {
-                            //investor.iter().find(|&u| *u == user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             investor.try_push(user.clone()).map_err(|_| Error::<T>::MaxInvestorsPerProjectReached)?;
                         },
                         None => {
@@ -1461,7 +1456,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.issuer.as_mut() {
                         Some(issuer) => {
-                            //issuer.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             issuer.try_push(user.clone()).map_err(|_| Error::<T>::MaxIssuersPerProjectReached)?;
                         },
                         None => {
@@ -1478,7 +1472,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.regional_center.as_mut() {
                         Some(regional_center) => {
-                            //regional_center.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             regional_center.try_push(user.clone()).map_err(|_| Error::<T>::MaxRegionalCenterPerProjectReached)?;
                         },
                         None => {
@@ -1596,7 +1589,7 @@ impl<T: Config> Pallet<T> {
         if role == ProxyRole::Administrator {
             return Err(Error::<T>::CannotAddAdminRole.into());
         }
-        
+
         // Ensure how many projects the user is assigned to
         let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
 

@@ -161,7 +161,6 @@ impl Default for DrawdownType {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownStatus {
-	None,
     Draft,
     Submitted,
     Approved,
