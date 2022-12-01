@@ -14,6 +14,8 @@ pub type CreationDate = u64;
 pub type CompletionDate = u64;
 pub type UpdatedDate = u64;
 pub type RegistrationDate = u64;
+pub type BankName = BoundedVec<u8, ConstU32<100>>;
+pub type BankAddress = BoundedVec<u8, ConstU32<100>>;
 
 // Users
 pub type DateRegistered = u64;
@@ -53,6 +55,7 @@ pub struct ProjectData<T: Config> {
     pub address: FieldName,
     pub status: ProjectStatus,
     pub inflation_rate: Option<InflationRate>,
+    pub banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
     pub creation_date: CreationDate,
     pub completion_date: CompletionDate,
     pub registration_date: RegistrationDate,

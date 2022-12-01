@@ -572,6 +572,7 @@ parameter_types! {
 	pub const MaxProjectsPerInvestor:u32 = 1;
 	pub const MaxProjectsPerIssuer:u32 = 1000;
 	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
+	pub const MaxBanksPerProject:u32 = 200;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -600,6 +601,7 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxProjectsPerInvestor = MaxProjectsPerInvestor;
 	type MaxProjectsPerIssuer = MaxProjectsPerIssuer;
 	type MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
+	type MaxBanksPerProject = MaxBanksPerProject;
 
 }
 

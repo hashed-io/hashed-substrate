@@ -81,6 +81,7 @@ impl<T: Config> Pallet<T> {
         description: FieldDescription,
         image: Option<CID>,
         address: FieldName,
+        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
         creation_date: CreationDate,
         completion_date: CompletionDate,
         expenditures: BoundedVec<(
@@ -123,6 +124,7 @@ impl<T: Config> Pallet<T> {
             address,
             status: ProjectStatus::default(),
             inflation_rate: None,
+            banks: None,
             registration_date: timestamp,
             creation_date,
             completion_date,
@@ -164,6 +166,7 @@ impl<T: Config> Pallet<T> {
         description: Option<FieldDescription>,
         image: Option<CID>,
         address: Option<FieldName>,
+        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
         creation_date: Option<CreationDate>,
         completion_date: Option<CompletionDate>,
     ) -> DispatchResult {
@@ -194,6 +197,9 @@ impl<T: Config> Pallet<T> {
             }
             if let Some(address) = address {
                 project.address = address;
+            }
+            if let Some(banks) = banks {
+                project.banks = Some(banks);
             }
             if let Some(creation_date) = creation_date {
                 project.creation_date = creation_date;

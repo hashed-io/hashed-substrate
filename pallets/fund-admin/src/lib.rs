@@ -98,6 +98,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxProjectsPerRegionalCenter: Get<u32>;
 
+		#[pallet::constant]
+		type MaxBanksPerProject: Get<u32>;
+
 	}
 
 	#[pallet::pallet]
@@ -614,6 +617,7 @@ pub mod pallet {
 			description: FieldDescription,
 			image: Option<CID>,
 			address: FieldName,
+			banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
 			creation_date: CreationDate,
 			completion_date: CompletionDate,
 			expenditures: BoundedVec<(
@@ -633,7 +637,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, creation_date, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, users)
 		}
 
 		/// Edits a project.
@@ -669,12 +673,13 @@ pub mod pallet {
 			description: Option<FieldDescription>,
 			image: Option<CID>,
 			address: Option<FieldName>,
+			banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
 			creation_date: Option<CreationDate>,
 			completion_date: Option<CompletionDate>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_project(who, project_id, title, description, image, address, creation_date, completion_date)
+			Self::do_edit_project(who, project_id, title, description, image, address, banks, creation_date, completion_date)
 		}
 
 		/// Deletes a project.

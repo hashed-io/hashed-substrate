@@ -74,6 +74,7 @@ parameter_types! {
 	pub const MaxProjectsPerInvestor:u32 = 1;
 	pub const MaxProjectsPerIssuer:u32 = 1000;
 	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
+	pub const MaxBanksPerProject:u32 = 200;
 }
 
 impl pallet_fund_admin::Config for Test {
@@ -95,6 +96,7 @@ impl pallet_fund_admin::Config for Test {
 	type MaxProjectsPerInvestor = MaxProjectsPerInvestor;
 	type MaxProjectsPerIssuer = MaxProjectsPerIssuer;
 	type MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
+	type MaxBanksPerProject = MaxBanksPerProject;
 
 	type Timestamp = Timestamp;
 	type Moment = u64;
