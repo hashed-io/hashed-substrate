@@ -189,6 +189,9 @@ impl<T: Config> Pallet<T> {
             if let Some(description) = description {
                 project.description = description;
             }
+            if let Some(image) = image {
+                project.image = Some(image);
+            }
             if let Some(address) = address {
                 project.address = address;
             }
@@ -200,8 +203,7 @@ impl<T: Config> Pallet<T> {
                 //ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
                 project.completion_date = completion_date;
             }
-            //TOREVIEW: Check if this is working
-            project.image = image;
+            // Update modified date
             project.updated_date = current_timestamp;
 
             Ok(())
@@ -557,7 +559,6 @@ impl<T: Config> Pallet<T> {
         <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
-            //TODO: evaluate this inner method, optimize it
             if let Some(name) = name {
                 user_info.name = name.clone();
             }
