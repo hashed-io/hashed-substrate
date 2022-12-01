@@ -13,10 +13,9 @@ mod benchmarking;
 
 mod functions;
 mod types;
-//TODO: Remobe unused parameters, types, etc used for development
+//TODO: Remove unused parameters, types, etc
 // - Change extrinsic names
 // - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
-// - Add internal documentation for each extrinsic
 // - Add external documentation for each extrinsic
 // - Fix typos
 
