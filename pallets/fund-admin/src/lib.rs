@@ -86,6 +86,18 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxExpendituresPerProject: Get<u32>;
 
+		#[pallet::constant]
+		type MaxProjectsPerBuilder: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerInvestor: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerIssuer: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerRegionalCenter: Get<u32>;
+
 	}
 
 	#[pallet::pallet]
