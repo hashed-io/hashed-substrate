@@ -107,7 +107,7 @@ impl<T: Config> Pallet<T> {
 
         //Create project_id
         //TOREVIEW: We could use only name as project_id or use a method/storagemap to check if the name is already in use
-        let project_id: ProjectId = (title.clone()).using_encoded(blake2_256);
+        let project_id: ProjectId = (title.clone(), timestamp).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
