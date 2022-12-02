@@ -124,7 +124,7 @@ impl<T: Config> Pallet<T> {
             address,
             status: ProjectStatus::default(),
             inflation_rate: None,
-            banks: None,
+            banks,
             registration_date: timestamp,
             creation_date,
             completion_date,
