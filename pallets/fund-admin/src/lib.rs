@@ -71,6 +71,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxRegionalCenterPerProject: Get<u32>;
 
+		//todo:remove MaxBoundedVecs
 		#[pallet::constant]
 		type MaxBoundedVecs: Get<u32>;
 
@@ -489,6 +490,15 @@ pub mod pallet {
 		MaxProjectsPerIssuerReached,
 		/// Max number of projects per regional center has been reached
 		MaxProjectsPerRegionalCenterReached,
+		/// Jobs eligibles array is empty
+		JobEligiblesIsEmpty,
+		/// JOb eligible name is required
+		JobEligiblesNameIsRequired,
+		/// Job eligible id already exists
+		JobEligibleIdAlreadyExists,
+		/// Max number of job eligibles per project reached
+		MaxJobEligiblesPerProjectReached,
+
 
 	}
 
@@ -869,7 +879,7 @@ pub mod pallet {
 				Option<FieldName>, // name
 				Option<ExpenditureType>, // type
 				Option<ExpenditureAmount>, // amount
-				Option<FieldDescription>, // naics code
+				Option<NAICSCode>, // naics code
 				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
 				Option<ExpenditureId>, // expenditure_id
@@ -1175,6 +1185,25 @@ pub mod pallet {
 
 			Self::do_execute_inflation_adjustment(who, projects)
 		}
+
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn job_eligibles(
+		// 	origin: OriginFor<T>,
+		// 	project_id: ProjectId,
+		// 	job_eligibles: BoundedVec<(
+		// 		Option<FieldName>, // name
+		// 		Option<JobEligibleAmount>, // amount
+		// 		Option<FieldDescription>, // naics code
+		// 		Option<JobsMultiplier>, // jobs multiplier
+		// 		CUDAction, // action
+		// 		Option<JobEligibleId>, // job_eligible_id
+		// 	), T::MaxRegistrationsAtTime>,
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; // origin need to be an admin
+
+		// 	Self::do_execute_job_eligibles(who, project_id, job_eligibles)
+		// }
 
 		/// Kill all the stored data.
 		///
