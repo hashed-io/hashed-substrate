@@ -81,6 +81,7 @@ impl<T: Config> Pallet<T> {
         description: FieldDescription,
         image: Option<CID>,
         address: FieldName,
+        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
         creation_date: CreationDate,
         completion_date: CompletionDate,
         expenditures: BoundedVec<(
@@ -106,7 +107,7 @@ impl<T: Config> Pallet<T> {
 
         //Create project_id
         //TOREVIEW: We could use only name as project_id or use a method/storagemap to check if the name is already in use
-        let project_id: ProjectId = (title.clone()).using_encoded(blake2_256);
+        let project_id: ProjectId = (title.clone(), timestamp).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
@@ -123,13 +124,14 @@ impl<T: Config> Pallet<T> {
             address,
             status: ProjectStatus::default(),
             inflation_rate: None,
+            banks,
             registration_date: timestamp,
             creation_date,
             completion_date,
             updated_date: timestamp,
-			construction_loan_drawdown_status: DrawdownStatus::None,
-			developer_equity_drawdown_status: DrawdownStatus::None,
-			eb5_drawdown_status: DrawdownStatus::None,
+			construction_loan_drawdown_status: None,
+			developer_equity_drawdown_status: None,
+			eb5_drawdown_status: None,
         };
 
         // create scope for project_id
@@ -164,6 +166,7 @@ impl<T: Config> Pallet<T> {
         description: Option<FieldDescription>,
         image: Option<CID>,
         address: Option<FieldName>,
+        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
         creation_date: Option<CreationDate>,
         completion_date: Option<CompletionDate>,
     ) -> DispatchResult {
@@ -189,8 +192,14 @@ impl<T: Config> Pallet<T> {
             if let Some(description) = description {
                 project.description = description;
             }
+            if let Some(image) = image {
+                project.image = Some(image);
+            }
             if let Some(address) = address {
                 project.address = address;
+            }
+            if let Some(banks) = banks {
+                project.banks = Some(banks);
             }
             if let Some(creation_date) = creation_date {
                 project.creation_date = creation_date;
@@ -200,8 +209,7 @@ impl<T: Config> Pallet<T> {
                 //ensure!(completion_date > current_timestamp, Error::<T>::CompletionDateMustBeLater);
                 project.completion_date = completion_date;
             }
-            //TOREVIEW: Check if this is working
-            project.image = image;
+            // Update modified date
             project.updated_date = current_timestamp;
 
             Ok(())
@@ -557,7 +565,6 @@ impl<T: Config> Pallet<T> {
         <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
-            //TODO: evaluate this inner method, optimize it
             if let Some(name) = name {
                 user_info.name = name.clone();
             }
@@ -1418,15 +1425,11 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
             ProxyRole::Builder => {
-                //TODO: Fix internal validations
-                //TODO: move logic to a helper function to avoid boilerplate
-
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.builder.as_mut() {
                         Some(builder) => {
-                            //builder.iter().find(|&u| *u != user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             builder.try_push(user.clone()).map_err(|_| Error::<T>::MaxBuildersPerProjectReached)?;
                         },
                         None => {
@@ -1443,7 +1446,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.investor.as_mut() {
                         Some(investor) => {
-                            //investor.iter().find(|&u| *u == user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             investor.try_push(user.clone()).map_err(|_| Error::<T>::MaxInvestorsPerProjectReached)?;
                         },
                         None => {
@@ -1460,7 +1462,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.issuer.as_mut() {
                         Some(issuer) => {
-                            //issuer.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             issuer.try_push(user.clone()).map_err(|_| Error::<T>::MaxIssuersPerProjectReached)?;
                         },
                         None => {
@@ -1477,7 +1478,6 @@ impl<T: Config> Pallet<T> {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.regional_center.as_mut() {
                         Some(regional_center) => {
-                            //regional_center.iter().find(|&u| u != &user).ok_or(Error::<T>::UserAlreadyAssignedToProject)?;
                             regional_center.try_push(user.clone()).map_err(|_| Error::<T>::MaxRegionalCenterPerProjectReached)?;
                         },
                         None => {
@@ -1596,6 +1596,27 @@ impl<T: Config> Pallet<T> {
             return Err(Error::<T>::CannotAddAdminRole.into());
         }
 
+        // Ensure how many projects the user is assigned to
+        let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
+
+        match user_data.role {
+            ProxyRole::Builder => {
+                ensure!(projects_count < T::MaxProjectsPerBuilder::get() as usize, Error::<T>::MaxProjectsPerBuilderReached);
+            },
+            ProxyRole::Investor => {
+                ensure!(projects_count < T::MaxProjectsPerInvestor::get() as usize, Error::<T>::MaxProjectsPerInvestorReached);
+            },
+            ProxyRole::Issuer => {
+                ensure!(projects_count < T::MaxProjectsPerIssuer::get() as usize, Error::<T>::MaxProjectsPerIssuerReached);
+            },
+            ProxyRole::RegionalCenter => {
+                ensure!(projects_count < T::MaxProjectsPerRegionalCenter::get() as usize, Error::<T>::MaxProjectsPerRegionalCenterReached);
+            },
+            ProxyRole::Administrator => {
+                // This should never happen
+                return Err(Error::<T>::CannotAddAdminRole.into());
+            },
+        }
         Ok(())
     }
 
@@ -1788,7 +1809,7 @@ impl<T: Config> Pallet<T> {
 				// Update EB5 drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.eb5_drawdown_status = drawdown_status;
+					project_data.eb5_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
@@ -1797,7 +1818,7 @@ impl<T: Config> Pallet<T> {
 				// Update Construction Loan drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.construction_loan_drawdown_status = drawdown_status;
+					project_data.construction_loan_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
@@ -1806,7 +1827,7 @@ impl<T: Config> Pallet<T> {
 				// Update Developer Equity drawdown status in project info
 				<ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
 					let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-					project_data.developer_equity_drawdown_status = drawdown_status;
+					project_data.developer_equity_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
                 Ok(())
