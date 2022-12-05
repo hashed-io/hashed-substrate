@@ -91,7 +91,7 @@ impl<T: Config> Pallet<T> {
             Option<NAICSCode>,
             Option<JobsMultiplier>,
             CUDAction,
-            Option<BudgetExpenditureId>,
+            Option<ExpenditureId>,
         ), T::MaxRegistrationsAtTime>,
         users: Option<BoundedVec<(
             T::AccountId,
@@ -601,7 +601,7 @@ impl<T: Config> Pallet<T> {
             Option<NAICSCode>, // 3: naics code
             Option<JobsMultiplier>, // 4: jobs multiplier
             CUDAction, // 5: CUDAction
-            Option<BudgetExpenditureId>, // 6: expenditure_id
+            Option<ExpenditureId>, // 6: expenditure_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
@@ -687,7 +687,7 @@ impl<T: Config> Pallet<T> {
         ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
         // Create expenditure id
-        let expenditure_id: BudgetExpenditureId = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
+        let expenditure_id: ExpenditureId = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
         // NAICS code
         let get_naics_code = match naics_code {
@@ -724,7 +724,7 @@ impl<T: Config> Pallet<T> {
 
     fn do_update_expenditure(
         project_id: ProjectId,
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
         name: Option<FieldName>,
         expenditure_amount: Option<ExpenditureAmount>,
         naics_code: Option<FieldDescription>,
@@ -769,7 +769,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_delete_expenditure(
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
     ) -> DispatchResult {
         // Ensure expenditure_id exists & get expenditure data
         let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
@@ -1078,7 +1078,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions: BoundedVec<(
-            Option<BudgetExpenditureId>, // expenditure_id
+            Option<ExpenditureId>, // expenditure_id
             Option<ExpenditureAmount>, // amount
             Option<Documents<T>>, //Documents
             CUDAction, // Action
@@ -1138,7 +1138,7 @@ impl<T: Config> Pallet<T> {
     fn do_create_transaction(
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
         amount: Amount,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
