@@ -101,6 +101,15 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxBanksPerProject: Get<u32>;
 
+		#[pallet::constant]
+		type MaxJobEligiblesByProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxRevenuesByProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxTransactionsPerRevenue: Get<u32>;
+
 	}
 
 	#[pallet::pallet]
@@ -162,7 +171,7 @@ pub mod pallet {
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		BudgetExpenditureId, // Key expenditure_id
+		ExpenditureId, // Key expenditure_id
 		ExpenditureData,  // Value ExpenditureData<T>
 		OptionQuery,
 	>;
@@ -219,6 +228,69 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn job_eligibles_info)]
+	pub(super) type JobEligiblesInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		JobEligibleId, // Key transaction id
+		JobEligibleData,  // Value JobEligibleData
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn job_eligibles_by_project)]
+	pub(super) type JobEligiblesByProject<T: Config> = StorageMap<
+		_,
+		Identity,
+		ProjectId, // Key project_id
+		BoundedVec<JobEligibleId, T::MaxJobEligiblesByProject>,  // Value job eligibles
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenues_info)]
+	pub(super) type RevenuesInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		RevenueId, // Key revenue id
+		RevenueData<T>,  // Value RevenueData<T>
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenues_by_project)]
+	pub(super) type RevenuesByProject<T: Config> = StorageMap<
+		_,
+		Identity,
+		ProjectId, // Key project_id
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenue_transactions_info)]
+	pub(super) type RevenueTransactionsInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		RevenueTransactionId, // Key revenue transaction id
+		RevenueTransactionData<T>,  // Value RevenueTransactionData<T>
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn transactions_by_revenue)]
+	pub(super) type TransactionsByRevenue<T: Config> = StorageDoubleMap<
+		_,
+		Identity,
+		ProjectId, //K1: project id
+		Identity,
+		RevenueId, //K2: revenue id
+		BoundedVec<RevenueTransactionId, T::MaxTransactionsPerRevenue>, // Value revenue transactions
+		ValueQuery
+	>;
+
+
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
 
@@ -250,9 +322,9 @@ pub mod pallet {
 		/// Expenditure was created successfully
 		ExpenditureCreated,
 		/// Expenditure was edited successfully
-		ExpenditureEdited(BudgetExpenditureId),
+		ExpenditureEdited(ExpenditureId),
 		/// Expenditure was deleted successfully
-		ExpenditureDeleted(BudgetExpenditureId),
+		ExpenditureDeleted(ExpenditureId),
 		/// Trasactions was completed successfully
 		TransactionsCompleted,
 		/// Transaction was created successfully
@@ -627,7 +699,7 @@ pub mod pallet {
 				Option<NAICSCode>,
 				Option<JobsMultiplier>,
 				CUDAction,
-				Option<BudgetExpenditureId>
+				Option<ExpenditureId>
 			), T::MaxRegistrationsAtTime>,
 			users: Option<BoundedVec<(
 				T::AccountId,
@@ -800,7 +872,7 @@ pub mod pallet {
 				Option<FieldDescription>, // naics code
 				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
-				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureId>, // expenditure_id
 			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -851,7 +923,7 @@ pub mod pallet {
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			transactions: Option<BoundedVec<(
-				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureId>, // expenditure_id
 				Option<ExpenditureAmount>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
@@ -940,7 +1012,7 @@ pub mod pallet {
 			drawdown_id: DrawdownId,
 			bulkupload: Option<bool>,
 			transactions: Option<BoundedVec<(
-				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureId>, // expenditure_id
 				Option<u64>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
