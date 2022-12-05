@@ -208,7 +208,7 @@ impl Default for TransactionStatus {
 pub struct JobEligibleData {
     pub project_id: ProjectId,
     pub name: FieldName,
-    pub amount: JobEligibleAmount,
+    pub job_eligible_amount: JobEligibleAmount,
     pub naics_code: Option<FieldDescription>,
     pub jobs_multiplier: Option<JobsMultiplier>,
 }
