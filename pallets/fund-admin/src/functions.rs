@@ -300,10 +300,7 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
 
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        //Ensure project is not completed
+        // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
         //Assign users
@@ -644,7 +641,6 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
             }
-
         }
 
 
@@ -674,36 +670,25 @@ impl<T: Config> Pallet<T> {
         naics_code: Option<NAICSCode>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
-        //Ensure project exists
-        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
-        //Ejnsure expenditure name is not empty
+        //Ensure expenditure name is not empty
         ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
         // Create expenditure id
         let expenditure_id: ExpenditureId = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
-        // NAICS code
-        let get_naics_code = match naics_code {
-            Some(mod_naics_code) => {
-                Some(mod_naics_code.clone())
-            },
-            None => None,
-        };
-
-        // Create expenditurte data
+        // Create expenditure data
         let expenditure_data = ExpenditureData {
             project_id,
             name: name.clone(),
             expenditure_type,
             expenditure_amount,
-            naics_code: get_naics_code,
+            naics_code,
             jobs_multiplier,
         };
 
@@ -727,13 +712,10 @@ impl<T: Config> Pallet<T> {
         expenditure_id: ExpenditureId,
         name: Option<FieldName>,
         expenditure_amount: Option<ExpenditureAmount>,
-        naics_code: Option<FieldDescription>,
+        naics_code: Option<NAICSCode>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
+        // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
         // Ensure expenditure_id exists
@@ -1085,7 +1067,6 @@ impl<T: Config> Pallet<T> {
             Option<TransactionId>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-
         // Ensure project exists & is not completed so helper private functions doesn't need to check it
         Self::is_project_completed(project_id)?;
 
@@ -1355,6 +1336,111 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
+    // J O B  E L I G I B L E S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_job_eligibles(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        job_eligibles: BoundedVec<(
+            Option<FieldName>, // name
+            Option<JobEligibleAmount>, // amount
+            Option<FieldDescription>, // naics code
+            Option<JobsMultiplier>, // jobs multiplier
+            CUDAction, // action
+            Option<JobEligibleId>, // job_eligible_id
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::JobEligible)?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure job eligibles is not empty
+        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
+
+        // for job_eligible in job_eligibles {
+        //     match job_eligible.4 {
+        //         CUDAction::Create => {
+        //             // Create job eligible only needs: name, amount, naics code, jobs multiplier
+        //             Self::do_create_job_eligible(
+        //                 admin.clone(),
+        //                 project_id,
+        //                 job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
+        //                 job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
+        //                 job_eligible.2.ok_or(Error::<T>::JobEligibleNaicsCodeRequired)?,
+        //                 job_eligible.3.ok_or(Error::<T>::JobEligibleJobsMultiplierRequired)?,
+        //             )?;
+        //         },
+        //         CUDAction::Update => {
+        //             // Update job eligible needs: job_eligible_id, name, amount, naics code, jobs multiplier
+        //             Self::do_update_job_eligible(
+        //                 admin.clone(),
+        //                 project_id,
+        //                 job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+        //                 job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
+        //                 job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
+        //                 job_eligible.2.ok_or(Error::<T>::JobEligibleNaicsCodeRequired)?,
+        //                 job_eligible.3.ok_or(Error::<T>::JobEligibleJobsMultiplierRequired)?,
+        //             )?;
+        //         },
+        //         CUDAction::Delete => {
+        //             // Delete job eligible needs: job_eligible_id
+        //             Self::do_delete_job_eligible(
+        //                 admin.clone(),
+        //                 project_id,
+        //                 job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+        //             )?;
+        //         },
+        //     }
+        // }
+
+        Ok(())
+    }
+
+    fn do_create_job_eligible(
+        project_id: [u8;32],
+        name: FieldName,
+        job_eligible_amount: JobEligibleAmount,
+        naics_code: Option<NAICSCode>,
+        jobs_multiplier: Option<JobsMultiplier>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Ensure job eligible name is not empty
+        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameIsRequired);
+
+        // Create job eligible id
+        let job_eligible_id: JobEligibleId = (project_id, name.clone(), timestamp).using_encoded(blake2_256);
+
+        // Create job eligible data
+        let job_eligible_data = JobEligibleData {
+            project_id,
+            name,
+            job_eligible_amount,
+            naics_code,
+            jobs_multiplier,
+        };
+
+        // Insert job eligible data into JobEligiblesInfo
+        // Ensure job eligible id does not exist
+        ensure!(!JobEligiblesInfo::<T>::contains_key(job_eligible_id), Error::<T>::JobEligibleIdAlreadyExists);
+        <JobEligiblesInfo<T>>::insert(job_eligible_id, job_eligible_data);
+
+        // Insert job eligible id into JobEligiblesByProject
+        <JobEligiblesByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |job_eligibles| {
+            job_eligibles.try_push(job_eligible_id).map_err(|_| Error::<T>::MaxJobEligiblesPerProjectReached)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
