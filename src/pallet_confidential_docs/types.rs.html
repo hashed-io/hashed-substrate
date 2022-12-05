@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/confidential-docs/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_confidential_docs/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/confidential-docs/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_confidential_docs/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -56,62 +56,62 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Defines the types required by the confidential docs pallet</span>
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="doccomment">//! Defines the types required by the confidential docs pallet
+</span><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Defines the type used by fields that store an IPFS CID</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CID</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">100</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="doccomment">/// Defines the type used by fields that store a public key</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PublicKey</span> <span class="op">=</span> [<span class="ident">u8</span>;<span class="number">32</span>];
-<span class="doccomment">/// Defines the type used by fields that store a UserId</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UserId</span> <span class="op">=</span> [<span class="ident">u8</span>;<span class="number">32</span>];
-<span class="doccomment">/// Defines the type used by fields that store a document name</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DocName</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>,<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::DocNameMaxLen</span><span class="op">&gt;</span>;
-<span class="doccomment">/// Defines the type used by fields that store a document description</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DocDesc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>,<span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::DocDescMaxLen</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Defines the type used by fields that store an IPFS CID
+</span><span class="kw">pub type </span>CID = BoundedVec&lt;u8,ConstU32&lt;<span class="number">100</span>&gt;&gt;;
+<span class="doccomment">/// Defines the type used by fields that store a public key
+</span><span class="kw">pub type </span>PublicKey = [u8;<span class="number">32</span>];
+<span class="doccomment">/// Defines the type used by fields that store a UserId
+</span><span class="kw">pub type </span>UserId = [u8;<span class="number">32</span>];
+<span class="doccomment">/// Defines the type used by fields that store a document name
+</span><span class="kw">pub type </span>DocName&lt;T&gt; = BoundedVec&lt;u8,&lt;T <span class="kw">as </span>Config&gt;::DocNameMaxLen&gt;;
+<span class="doccomment">/// Defines the type used by fields that store a document description
+</span><span class="kw">pub type </span>DocDesc&lt;T&gt; = BoundedVec&lt;u8,&lt;T <span class="kw">as </span>Config&gt;::DocDescMaxLen&gt;;
 
-<span class="doccomment">/// User vault, the vault stores the cipher private key used to cipher the user documents.</span>
-<span class="doccomment">/// The way the user vault is ciphered depends on the login method used by the user</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>,<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Vault</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
-    <span class="doccomment">/// IPFS CID where the vault data is stored </span>
-    <span class="kw">pub</span> <span class="ident">cid</span>: <span class="ident">CID</span>,
-    <span class="doccomment">/// Owner of the vault</span>
-    <span class="kw">pub</span> <span class="ident">owner</span>: <span class="ident">T::AccountId</span>,
+<span class="doccomment">/// User vault, the vault stores the cipher private key used to cipher the user documents.
+/// The way the user vault is ciphered depends on the login method used by the user
+</span><span class="attribute">#[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>Vault&lt;T: Config&gt;{
+    <span class="doccomment">/// IPFS CID where the vault data is stored 
+    </span><span class="kw">pub </span>cid: CID,
+    <span class="doccomment">/// Owner of the vault
+    </span><span class="kw">pub </span>owner: T::AccountId,
 }
 
-<span class="doccomment">/// Owned confidential document</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>,<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OwnedDoc</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
-    <span class="doccomment">/// IPFS CID where the document data is stored </span>
-    <span class="kw">pub</span> <span class="ident">cid</span>: <span class="ident">CID</span>,
-    <span class="doccomment">/// User provided name for the document</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">DocName</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// User provided description for the document</span>
-    <span class="kw">pub</span> <span class="ident">description</span>: <span class="ident">DocDesc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Owner of the document</span>
-    <span class="kw">pub</span> <span class="ident">owner</span>: <span class="ident">T::AccountId</span>,
+<span class="doccomment">/// Owned confidential document
+</span><span class="attribute">#[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>OwnedDoc&lt;T: Config&gt;{
+    <span class="doccomment">/// IPFS CID where the document data is stored 
+    </span><span class="kw">pub </span>cid: CID,
+    <span class="doccomment">/// User provided name for the document
+    </span><span class="kw">pub </span>name: DocName&lt;T&gt;,
+    <span class="doccomment">/// User provided description for the document
+    </span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
+    <span class="doccomment">/// Owner of the document
+    </span><span class="kw">pub </span>owner: T::AccountId,
 }
 
-<span class="doccomment">/// Shared confidential document</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>,<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span>{
-    <span class="doccomment">/// IPFS CID where the document data is stored </span>
-    <span class="kw">pub</span> <span class="ident">cid</span>: <span class="ident">CID</span>,
-    <span class="doccomment">/// User provided name for the document</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">DocName</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// User provided description for the document</span>
-    <span class="kw">pub</span> <span class="ident">description</span>: <span class="ident">DocDesc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// User that shared the document</span>
-    <span class="kw">pub</span> <span class="ident">from</span>: <span class="ident">T::AccountId</span>,
-    <span class="doccomment">/// User to which the document was shared</span>
-    <span class="kw">pub</span> <span class="ident">to</span>: <span class="ident">T::AccountId</span>,
+<span class="doccomment">/// Shared confidential document
+</span><span class="attribute">#[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>SharedDoc&lt;T: Config&gt;{
+    <span class="doccomment">/// IPFS CID where the document data is stored 
+    </span><span class="kw">pub </span>cid: CID,
+    <span class="doccomment">/// User provided name for the document
+    </span><span class="kw">pub </span>name: DocName&lt;T&gt;,
+    <span class="doccomment">/// User provided description for the document
+    </span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
+    <span class="doccomment">/// User that shared the document
+    </span><span class="kw">pub </span>from: T::AccountId,
+    <span class="doccomment">/// User to which the document was shared
+    </span><span class="kw">pub </span>to: T::AccountId,
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_confidential_docs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_confidential_docs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

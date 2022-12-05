@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/confidential-docs/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_confidential_docs/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/confidential-docs/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_confidential_docs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_confidential_docs/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -320,326 +320,326 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
-</pre><pre class="rust"><code><span class="doccomment">//! The confidential docs pallet provides the backend services and metadata</span>
-<span class="doccomment">//! storage for the confidential docs solution</span>
+</pre><pre class="rust"><code><span class="doccomment">//! The confidential docs pallet provides the backend services and metadata
+//! storage for the confidential docs solution
 
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+</span><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
+</span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">mock</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>mock;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests;
 
-<span class="comment">// #[cfg(feature = &quot;runtime-benchmarks&quot;)]</span>
-<span class="comment">// mod benchmarking;</span>
+<span class="comment">// #[cfg(feature = &quot;runtime-benchmarks&quot;)]
+// mod benchmarking;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
-<span class="kw">mod</span> <span class="ident">functions</span>;
+</span><span class="kw">pub mod </span>types;
+<span class="kw">mod </span>functions;
 
-<span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pallet</span> {
-	<span class="doccomment">//! Provides the backend services and metadata storage for the confidential docs solution</span>
-	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>, <span class="ident">transactional</span>};
-	<span class="kw">use</span> <span class="ident">frame_system::pallet_prelude</span>::<span class="kw-2">*</span>;
-	<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[frame_support::pallet]
+</span><span class="kw">pub mod </span>pallet {
+	<span class="doccomment">//! Provides the backend services and metadata storage for the confidential docs solution
+	</span><span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, transactional};
+	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
-	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
-	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>: <span class="ident">frame_system::Config</span> {
+	<span class="attribute">#[pallet::config]
+	</span><span class="kw">pub trait </span>Config: frame_system::Config {
 		
-		<span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IsType</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::Event</span><span class="op">&gt;</span>;
+		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
 
-		<span class="kw">type</span> <span class="ident">RemoveOrigin</span>: <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;
+		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::Origin&gt;;
 
-		<span class="doccomment">/// Maximum number of confidential documents that a user can own</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxOwnedDocs</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Maximum number of confidential documents that a user can share</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxSharedFromDocs</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Maximum number of confidential documents that can be shared to a user</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxSharedToDocs</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Minimum length for a document name</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">DocNameMinLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Maximum length for a document name</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">DocNameMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Minimum length for a document description</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">DocDescMinLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Maximum length for a document description</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">DocDescMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="doccomment">/// Maximum number of confidential documents that a user can own
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxOwnedDocs: Get&lt;u32&gt;;
+		<span class="doccomment">/// Maximum number of confidential documents that a user can share
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxSharedFromDocs: Get&lt;u32&gt;;
+		<span class="doccomment">/// Maximum number of confidential documents that can be shared to a user
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxSharedToDocs: Get&lt;u32&gt;;
+		<span class="doccomment">/// Minimum length for a document name
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>DocNameMinLen: Get&lt;u32&gt;;
+		<span class="doccomment">/// Maximum length for a document name
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>DocNameMaxLen: Get&lt;u32&gt;;
+		<span class="doccomment">/// Minimum length for a document description
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>DocDescMinLen: Get&lt;u32&gt;;
+		<span class="doccomment">/// Maximum length for a document description
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>DocDescMaxLen: Get&lt;u32&gt;;
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_store</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait</span> <span class="ident">Store</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">_</span>);
+	<span class="attribute">#[pallet::pallet]
+	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
 	
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">vaults</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>vaults)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">UserId</span>, <span class="comment">//user identifier</span>
-		<span class="ident">Vault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		UserId, <span class="comment">//user identifier
+		</span>Vault&lt;T&gt;,
+		OptionQuery
+	&gt;;
 
-  <span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">public_keys</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PublicKeys</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+  <span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>public_keys)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PublicKeys&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">T::AccountId</span>,
-		<span class="ident">PublicKey</span>,
-		<span class="ident">OptionQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		T::AccountId,
+		PublicKey,
+		OptionQuery
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">users_ids</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">UserIds</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>users_ids)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserIds&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		[<span class="ident">u8</span>; <span class="number">32</span>], 
-		<span class="ident">UserId</span>,
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		[u8; <span class="number">32</span>], 
+		UserId,
+		OptionQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">owned_docs</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OwnedDocs</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>owned_docs)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocs&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>, 
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">CID</span>,
-		<span class="ident">OwnedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		CID,
+		OwnedDoc&lt;T&gt;,
+		OptionQuery
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">owned_docs_by_owner</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">OwnedDocsByOwner</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>owned_docs_by_owner)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocsByOwner&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">T::AccountId</span>,
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxOwnedDocs</span><span class="op">&gt;</span>,
-		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		T::AccountId,
+		BoundedVec&lt;CID, T::MaxOwnedDocs&gt;,
+		ValueQuery
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">shared_docs</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">SharedDocs</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>shared_docs)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocs&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>, 
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">CID</span>,
-		<span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		CID,
+		SharedDoc&lt;T&gt;,
+		OptionQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">shared_docs_by_to</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">SharedDocsByTo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>shared_docs_by_to)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByTo&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">T::AccountId</span>,
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxSharedToDocs</span><span class="op">&gt;</span>,
-		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		T::AccountId,
+		BoundedVec&lt;CID, T::MaxSharedToDocs&gt;,
+		ValueQuery
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">shared_docs_by_from</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">SharedDocsByFrom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>shared_docs_by_from)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByFrom&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Blake2_256</span>,
-		<span class="ident">T::AccountId</span>,
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">CID</span>, <span class="ident">T::MaxSharedFromDocs</span><span class="op">&gt;</span>,
-		<span class="ident">ValueQuery</span>
-	<span class="op">&gt;</span>;
+		Blake2_256,
+		T::AccountId,
+		BoundedVec&lt;CID, T::MaxSharedFromDocs&gt;,
+		ValueQuery
+	&gt;;
 
 
-	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Vault stored </span>
-		<span class="ident">VaultStored</span>(<span class="ident">UserId</span>, <span class="ident">PublicKey</span>, <span class="ident">Vault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Owned confidential document stored</span>
-		<span class="ident">OwnedDocStored</span>(<span class="ident">OwnedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Owned confidential document removed</span>
-		<span class="ident">OwnedDocRemoved</span>(<span class="ident">OwnedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Shared confidential document stored</span>
-		<span class="ident">SharedDocStored</span>(<span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Shared confidential document metadata updated</span>
-		<span class="ident">SharedDocUpdated</span>(<span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-		<span class="doccomment">/// Shared confidential document removed</span>
-		<span class="ident">SharedDocRemoved</span>(<span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
+	<span class="attribute">#[pallet::event]
+	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+		<span class="doccomment">/// Vault stored 
+		</span>VaultStored(UserId, PublicKey, Vault&lt;T&gt;),
+		<span class="doccomment">/// Owned confidential document stored
+		</span>OwnedDocStored(OwnedDoc&lt;T&gt;),
+		<span class="doccomment">/// Owned confidential document removed
+		</span>OwnedDocRemoved(OwnedDoc&lt;T&gt;),
+		<span class="doccomment">/// Shared confidential document stored
+		</span>SharedDocStored(SharedDoc&lt;T&gt;),
+		<span class="doccomment">/// Shared confidential document metadata updated
+		</span>SharedDocUpdated(SharedDoc&lt;T&gt;),
+		<span class="doccomment">/// Shared confidential document removed
+		</span>SharedDocRemoved(SharedDoc&lt;T&gt;),
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Empty CID</span>
-		<span class="ident">CIDNoneValue</span>,
-		<span class="doccomment">/// Document Name is too short</span>
-		<span class="ident">DocNameTooShort</span>,
-		<span class="doccomment">/// Document Desc is too short</span>
-		<span class="ident">DocDescTooShort</span>,
-		<span class="doccomment">/// Errors should have helpful documentation associated with them.</span>
-		<span class="ident">StorageOverflow</span>,
-		<span class="doccomment">/// Origin is not the owner of the user id</span>
-		<span class="ident">NotOwnerOfUserId</span>,
-		<span class="doccomment">/// Origin is not the owner of the vault</span>
-		<span class="ident">NotOwnerOfVault</span>,
-		<span class="doccomment">/// The user already has a vault</span>
-		<span class="ident">UserAlreadyHasVault</span>,
-		<span class="doccomment">/// The user already has a public key</span>
-		<span class="ident">AccountAlreadyHasPublicKey</span>,
-		<span class="doccomment">/// User is not document owner</span>
-		<span class="ident">NotDocOwner</span>,
-		<span class="doccomment">/// User is not document whom with the document was shared</span>
-		<span class="ident">NotDocSharee</span>,
-		<span class="doccomment">/// CID not found</span>
-		<span class="ident">CIDNotFound</span>,
-		<span class="doccomment">/// Document not found</span>
-		<span class="ident">DocNotFound</span>,
-		<span class="doccomment">/// The document has already been shared</span>
-		<span class="ident">DocAlreadyShared</span>,
-		<span class="doccomment">/// Shared with self</span>
-		<span class="ident">DocSharedWithSelf</span>,
-		<span class="doccomment">/// Account has no public key</span>
-		<span class="ident">AccountHasNoPublicKey</span>,
-		<span class="doccomment">/// Max owned documents has been exceeded</span>
-		<span class="ident">ExceedMaxOwnedDocs</span>,
-		<span class="doccomment">/// Max documents shared with the &quot;to&quot; account has been exceeded</span>
-		<span class="ident">ExceedMaxSharedToDocs</span>,
-		<span class="doccomment">/// Max documents shared with the &quot;from&quot; account has been exceeded</span>
-		<span class="ident">ExceedMaxSharedFromDocs</span>,
+	<span class="attribute">#[pallet::error]
+	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
+		<span class="doccomment">/// Empty CID
+		</span>CIDNoneValue,
+		<span class="doccomment">/// Document Name is too short
+		</span>DocNameTooShort,
+		<span class="doccomment">/// Document Desc is too short
+		</span>DocDescTooShort,
+		<span class="doccomment">/// Errors should have helpful documentation associated with them.
+		</span>StorageOverflow,
+		<span class="doccomment">/// Origin is not the owner of the user id
+		</span>NotOwnerOfUserId,
+		<span class="doccomment">/// Origin is not the owner of the vault
+		</span>NotOwnerOfVault,
+		<span class="doccomment">/// The user already has a vault
+		</span>UserAlreadyHasVault,
+		<span class="doccomment">/// The user already has a public key
+		</span>AccountAlreadyHasPublicKey,
+		<span class="doccomment">/// User is not document owner
+		</span>NotDocOwner,
+		<span class="doccomment">/// User is not document whom with the document was shared
+		</span>NotDocSharee,
+		<span class="doccomment">/// CID not found
+		</span>CIDNotFound,
+		<span class="doccomment">/// Document not found
+		</span>DocNotFound,
+		<span class="doccomment">/// The document has already been shared
+		</span>DocAlreadyShared,
+		<span class="doccomment">/// Shared with self
+		</span>DocSharedWithSelf,
+		<span class="doccomment">/// Account has no public key
+		</span>AccountHasNoPublicKey,
+		<span class="doccomment">/// Max owned documents has been exceeded
+		</span>ExceedMaxOwnedDocs,
+		<span class="doccomment">/// Max documents shared with the &quot;to&quot; account has been exceeded
+		</span>ExceedMaxSharedToDocs,
+		<span class="doccomment">/// Max documents shared with the &quot;from&quot; account has been exceeded
+		</span>ExceedMaxSharedFromDocs,
 
 		
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="attribute">#[pallet::call]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 		
-		<span class="doccomment">/// Create/Update a vault</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Creates/Updates the calling user&#39;s vault and sets their public cipher key</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user that is configuring their vault</span>
-		<span class="doccomment">/// - `user_id`: User identifier generated from their login method, their address if using </span>
-		<span class="doccomment">/// native login or user id if using SSO</span>
-		<span class="doccomment">/// - `public key`: The users cipher public key</span>
-		<span class="doccomment">/// - `cid`: The IPFS CID that contains the vaults data</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_vault</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">user_id</span>: <span class="ident">UserId</span>, <span class="ident">public_key</span>: <span class="ident">PublicKey</span>, <span class="ident">cid</span>: <span class="ident">CID</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_set_vault</span>(<span class="ident">who</span>, <span class="ident">user_id</span>, <span class="ident">public_key</span>, <span class="ident">cid</span>)
+		<span class="doccomment">/// Create/Update a vault
+		/// 
+		/// Creates/Updates the calling user&#39;s vault and sets their public cipher key
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is configuring their vault
+		/// - `user_id`: User identifier generated from their login method, their address if using 
+		/// native login or user id if using SSO
+		/// - `public key`: The users cipher public key
+		/// - `cid`: The IPFS CID that contains the vaults data
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>set_vault(origin: OriginFor&lt;T&gt;, user_id: UserId, public_key: PublicKey, cid: CID) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_set_vault(who, user_id, public_key, cid)
 		}
 
-		<span class="doccomment">/// Create/Update an owned document</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Creates a new owned document or updates an existing owned document&#39;s metadata</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user that is creating/updating an owned document</span>
-		<span class="doccomment">/// - `owned_doc`: Metadata related to the owned document</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_owned_document</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">owned_doc</span>: <span class="ident">OwnedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_set_owned_document</span>(<span class="ident">who</span>, <span class="ident">owned_doc</span>)
+		<span class="doccomment">/// Create/Update an owned document
+		/// 
+		/// Creates a new owned document or updates an existing owned document&#39;s metadata
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating/updating an owned document
+		/// - `owned_doc`: Metadata related to the owned document
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>set_owned_document(origin: OriginFor&lt;T&gt;, owned_doc: OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_set_owned_document(who, owned_doc)
 		}
 
-		<span class="doccomment">/// Remove an owned document</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Removes an owned document</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The owner of the document</span>
-		<span class="doccomment">/// - `cid`: of the document to be removed</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_owned_document</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">cid</span>: <span class="ident">CID</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_remove_owned_document</span>(<span class="ident">who</span>, <span class="ident">cid</span>)
+		<span class="doccomment">/// Remove an owned document
+		/// 
+		/// Removes an owned document
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The owner of the document
+		/// - `cid`: of the document to be removed
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>remove_owned_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_remove_owned_document(who, cid)
 		}
 
-		<span class="doccomment">/// Share a document</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Creates a shared document</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user that is creating the shared document</span>
-		<span class="doccomment">/// - `shared_doc`: Metadata related to the shared document</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">share_document</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">shared_doc</span>: <span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_share_document</span>(<span class="ident">who</span>, <span class="ident">shared_doc</span>)
+		<span class="doccomment">/// Share a document
+		/// 
+		/// Creates a shared document
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating the shared document
+		/// - `shared_doc`: Metadata related to the shared document
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>share_document(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_share_document(who, shared_doc)
 		}
 
-		<span class="doccomment">/// Update share document metadata</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Updates share document metadata, only the user with which the document</span>
-		<span class="doccomment">/// was shared can update it</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The &quot;to&quot; user of the shared document</span>
-		<span class="doccomment">/// - `shared_doc`: Metadata related to the shared document</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_shared_document_metadata</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">shared_doc</span>: <span class="ident">SharedDoc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_update_shared_document_metadata</span>(<span class="ident">who</span>, <span class="ident">shared_doc</span>)
-		}
-
-
-		<span class="doccomment">/// Remove a shared document</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Removes a shared document, only the user with whom the document was</span>
-		<span class="doccomment">/// is able to remove it</span>
-		<span class="doccomment">/// .</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The &quot;to&quot; user of the shared document</span>
-		<span class="doccomment">/// - `cid`: of the document to be removed</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_shared_document</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">cid</span>: <span class="ident">CID</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>)<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_remove_shared_document</span>(<span class="ident">who</span>, <span class="ident">cid</span>)
+		<span class="doccomment">/// Update share document metadata
+		/// 
+		/// Updates share document metadata, only the user with which the document
+		/// was shared can update it
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The &quot;to&quot; user of the shared document
+		/// - `shared_doc`: Metadata related to the shared document
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>update_shared_document_metadata(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_update_shared_document_metadata(who, shared_doc)
 		}
 
 
-		<span class="doccomment">/// Kill all the stored data.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// This function is used to kill ALL the stored data.</span>
-		<span class="doccomment">/// Use with caution!</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `origin`: The user who performs the action. </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Considerations:</span>
-		<span class="doccomment">/// - This function is only available to the `admin` with sudo access.</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kill_storage</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span>{
-			<span class="ident">T::RemoveOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">PublicKeys</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OwnedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">OwnedDocsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocsByTo</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">SharedDocsByFrom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+		<span class="doccomment">/// Remove a shared document
+		/// 
+		/// Removes a shared document, only the user with whom the document was
+		/// is able to remove it
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The &quot;to&quot; user of the shared document
+		/// - `cid`: of the document to be removed
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>remove_shared_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_remove_shared_document(who, cid)
+		}
+
+
+		<span class="doccomment">/// Kill all the stored data.
+		/// 
+		/// This function is used to kill ALL the stored data.
+		/// Use with caution!
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action. 
+		/// 
+		/// ### Considerations:
+		/// - This function is only available to the `admin` with sudo access.
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>kill_storage(
+			origin: OriginFor&lt;T&gt;,
+		) -&gt; DispatchResult{
+			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+			<span class="kw">let _ </span>= &lt;Vaults&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;PublicKeys&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;OwnedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;OwnedDocsByOwner&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;SharedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;SharedDocsByTo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;SharedDocsByFrom&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="prelude-val">Ok</span>(())
 		}
 	}
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_confidential_docs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_confidential_docs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

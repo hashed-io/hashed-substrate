@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["pallet_bitcoin_vaults"] = [{"text":"impl Derive for <a class=\"struct\" href=\"pallet_bitcoin_vaults/types/crypto/struct.Public.html\" title=\"struct pallet_bitcoin_vaults::types::crypto::Public\">Public</a>","synthetic":false,"types":["pallet_bitcoin_vaults::types::crypto::Public"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"pallet_bitcoin_vaults":[["impl Derive for <a class=\"struct\" href=\"pallet_bitcoin_vaults/types/crypto/struct.Public.html\" title=\"struct pallet_bitcoin_vaults::types::crypto::Public\">Public</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

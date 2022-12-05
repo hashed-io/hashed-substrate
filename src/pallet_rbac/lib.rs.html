@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/rbac/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_rbac/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/rbac/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_rbac/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_rbac/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -197,203 +197,203 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+</pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
-<span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.</span>
-<span class="doccomment">/// Learn more about FRAME and the core library of Substrate FRAME pallets:</span>
-<span class="doccomment">/// &lt;https://docs.substrate.io/v3/runtime/frame&gt;</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
+</span><span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.
+/// Learn more about FRAME and the core library of Substrate FRAME pallets:
+/// &lt;https://docs.substrate.io/v3/runtime/frame&gt;
+</span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">mock</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>mock;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-benchmarks&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">benchmarking</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
+</span><span class="kw">mod </span>benchmarking;
 
 
-<span class="kw">mod</span> <span class="ident">functions</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
+<span class="kw">mod </span>functions;
+<span class="kw">pub mod </span>types;
 
-<span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pallet</span> {
-	<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::{<span class="kw-2">*</span>, <span class="ident">ValueQuery</span>};
-	<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[frame_support::pallet]
+</span><span class="kw">pub mod </span>pallet {
+	<span class="kw">use </span>frame_support::pallet_prelude::{<span class="kw-2">*</span>, ValueQuery};
+	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
-	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
-	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>: <span class="ident">frame_system::Config</span> {
-		<span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IsType</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::Event</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxScopesPerPallet</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxRolesPerPallet</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">RoleMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">PermissionMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxPermissionsPerRole</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxRolesPerUser</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxUsersPerRole</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;	
+	<span class="attribute">#[pallet::config]
+	</span><span class="kw">pub trait </span>Config: frame_system::Config {
+		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxScopesPerPallet: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxRolesPerPallet: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>RoleMaxLen: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>PermissionMaxLen: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxPermissionsPerRole: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxRolesPerUser: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxUsersPerRole: Get&lt;u32&gt;;	
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_store</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait</span> <span class="ident">Store</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">_</span>);
+	<span class="attribute">#[pallet::pallet]
+	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="comment">/*--- Onchain storage section ---*/</span>
+	<span class="comment">/*--- Onchain storage section ---*/
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">scopes</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Scopes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	</span><span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>scopes)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Scopes&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>, 
-		<span class="ident">Identity</span>, 
-		<span class="ident">PalletId</span>, <span class="comment">// pallet_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">ScopeId</span>, <span class="ident">T::MaxScopesPerPallet</span><span class="op">&gt;</span>,  <span class="comment">// scopes_id</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		PalletId, <span class="comment">// pallet_id
+		</span>BoundedVec&lt;ScopeId, T::MaxScopesPerPallet&gt;,  <span class="comment">// scopes_id
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">roles</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Roles</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>roles)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Roles&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>, 
-		<span class="ident">RoleId</span>, <span class="comment">// role_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::RoleMaxLen</span> <span class="op">&gt;</span>,  <span class="comment">// role</span>
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		RoleId, <span class="comment">// role_id
+		</span>BoundedVec&lt;u8, T::RoleMaxLen &gt;,  <span class="comment">// role
+		</span>OptionQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">pallet_roles</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PalletRoles</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>pallet_roles)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PalletRoles&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>, 
-		<span class="ident">PalletId</span>, <span class="comment">// pallet_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">RoleId</span>, <span class="ident">T::MaxRolesPerPallet</span> <span class="op">&gt;</span>, <span class="comment">// role_id</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		PalletId, <span class="comment">// pallet_id
+		</span>BoundedVec&lt;RoleId, T::MaxRolesPerPallet &gt;, <span class="comment">// role_id
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">permissions</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Permissions</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>permissions)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Permissions&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>, 
-		<span class="ident">PalletId</span>, 			<span class="comment">// pallet_id</span>
-		<span class="ident">Identity</span>, 
-		<span class="ident">PermissionId</span>,		<span class="comment">// permission_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PermissionMaxLen</span> <span class="op">&gt;</span>,	<span class="comment">// permission str</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		PalletId, 			<span class="comment">// pallet_id
+		</span>Identity, 
+		PermissionId,		<span class="comment">// permission_id
+		</span>BoundedVec&lt;u8, T::PermissionMaxLen &gt;,	<span class="comment">// permission str
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">permissions_by_role</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">PermissionsByRole</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageDoubleMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>permissions_by_role)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PermissionsByRole&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>, 
-		<span class="ident">PalletId</span>, 			<span class="comment">// pallet_id</span>
-		<span class="ident">Identity</span>, 
-		<span class="ident">RoleId</span>,		<span class="comment">// role_id</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">PermissionId</span>, <span class="ident">T::MaxPermissionsPerRole</span> <span class="op">&gt;</span>,	<span class="comment">// permission_ids</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity, 
+		PalletId, 			<span class="comment">// pallet_id
+		</span>Identity, 
+		RoleId,		<span class="comment">// role_id
+		</span>BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole &gt;,	<span class="comment">// permission_ids
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">roles_by_user</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">RolesByUser</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageNMap</span><span class="op">&lt;</span>
-		<span class="kw">_</span>,
-		(
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Blake2_128Concat</span>, <span class="ident">T::AccountId</span><span class="op">&gt;</span>,<span class="comment">// user</span>
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">PalletId</span><span class="op">&gt;</span>,			<span class="comment">// pallet_id</span>
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">ScopeId</span><span class="op">&gt;</span>,		<span class="comment">// scope_id</span>
-		),
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">RoleId</span>, <span class="ident">T::MaxRolesPerUser</span><span class="op">&gt;</span>,	<span class="comment">// roles (ids)</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
-
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">users_by_scope</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">UsersByScope</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageNMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>roles_by_user)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>RolesByUser&lt;T: Config&gt; = StorageNMap&lt;
 		<span class="kw">_</span>,
 		(
-			<span class="comment">// getting &quot;the trait bound `usize: scale_info::TypeInfo` is not satisfied&quot; errors</span>
-			<span class="comment">//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.</span>
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">PalletId</span><span class="op">&gt;</span>,		<span class="comment">// pallet_id</span>
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">ScopeId</span><span class="op">&gt;</span>,		<span class="comment">// scope_id</span>
-			<span class="ident">NMapKey</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">RoleId</span><span class="op">&gt;</span>,	<span class="comment">// role_id</span>
-		),
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxUsersPerRole</span><span class="op">&gt;</span>,	<span class="comment">// users</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+			NMapKey&lt;Blake2_128Concat, T::AccountId&gt;,<span class="comment">// user
+			</span>NMapKey&lt;Identity, PalletId&gt;,			<span class="comment">// pallet_id
+			</span>NMapKey&lt;Identity, ScopeId&gt;,		<span class="comment">// scope_id
+		</span>),
+		BoundedVec&lt;RoleId, T::MaxRolesPerUser&gt;,	<span class="comment">// roles (ids)
+		</span>ValueQuery,
+	&gt;;
+
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>users_by_scope)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UsersByScope&lt;T: Config&gt; = StorageNMap&lt;
+		<span class="kw">_</span>,
+		(
+			<span class="comment">// getting &quot;the trait bound `usize: scale_info::TypeInfo` is not satisfied&quot; errors
+			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
+			</span>NMapKey&lt;Identity, PalletId&gt;,		<span class="comment">// pallet_id
+			</span>NMapKey&lt;Identity, ScopeId&gt;,		<span class="comment">// scope_id
+			</span>NMapKey&lt;Identity, RoleId&gt;,	<span class="comment">// role_id
+		</span>),
+		BoundedVec&lt;T::AccountId, T::MaxUsersPerRole&gt;,	<span class="comment">// users
+		</span>ValueQuery,
+	&gt;;
 
 
 
 
-	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// An initial roles config was stored [pallet_id]</span>
-		<span class="ident">RolesStored</span>(<span class="ident">PalletId</span>),
+	<span class="attribute">#[pallet::event]
+	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+		<span class="doccomment">/// An initial roles config was stored [pallet_id]
+		</span>RolesStored(PalletId),
 	}
 
-	<span class="comment">// Errors inform users that something went wrong.</span>
-	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Error names should be descriptive.</span>
-		<span class="ident">NoneValue</span>,
-		<span class="doccomment">/// The specified scope doesn&#39;t exists</span>
-		<span class="ident">ScopeNotFound</span>,
-		<span class="doccomment">/// The scope is already linked with the pallet</span>
-		<span class="ident">ScopeAlreadyExists</span>,
-		<span class="doccomment">/// The specified role doesn&#39;t exist or it hasn&#39;t been set to the user</span>
-		<span class="ident">RoleNotFound</span>,
-		<span class="doccomment">/// The permission doesn&#39;t exist in the pallet</span>
-		<span class="ident">PermissionNotFound</span>,
-		<span class="doccomment">/// The specified user hasn&#39;t been asigned to this scope</span>
-		<span class="ident">UserNotFound</span>,
-		<span class="doccomment">/// The provided role list must have unique elements</span>
-		<span class="ident">DuplicateRole</span>,
-		<span class="doccomment">/// The provided permission list must have unique elements</span>
-		<span class="ident">DuplicatePermission</span>,
-		<span class="doccomment">/// The user has that role asigned in that scope</span>
-		<span class="ident">UserAlreadyHasRole</span>,
-		<span class="doccomment">/// The role is already linked in the pallet</span>
-		<span class="ident">RoleAlreadyLinkedToPallet</span>,
-		<span class="doccomment">/// The role exists but it hasn&#39;t been linked to the pallet</span>
-		<span class="ident">RoleNotLinkedToPallet</span>,
-		<span class="doccomment">/// The permission is already linked to that role in that scope</span>
-		<span class="ident">PermissionAlreadyLinkedToRole</span>,
-		<span class="doccomment">/// The permission wasn&#39;t found in the roles capabilities</span>
-		<span class="ident">PermissionNotLinkedToRole</span>,
-		<span class="doccomment">/// The user doesn&#39;t have any roles in this pallet</span>
-		<span class="ident">UserHasNoRoles</span>,
-		<span class="doccomment">/// The role doesn&#39;t have any users assigned to it</span>
-		<span class="ident">RoleHasNoUsers</span>,
-		<span class="doccomment">/// The pallet name is too long</span>
-		<span class="ident">ExceedPalletNameMaxLen</span>,
-		<span class="doccomment">/// The pallet has too many scopes</span>
-		<span class="ident">ExceedMaxScopesPerPallet</span>,
-		<span class="doccomment">/// The pallet cannot have more roles</span>
-		<span class="ident">ExceedMaxRolesPerPallet</span>,
-		<span class="doccomment">/// The specified role cannot have more permission in this scope</span>
-		<span class="ident">ExceedMaxPermissionsPerRole</span>,
-		<span class="doccomment">/// The user cannot have more roles in this scope</span>
-		<span class="ident">ExceedMaxRolesPerUser</span>,
-		<span class="doccomment">/// This role cannot have assigned to more users in this scope</span>
-		<span class="ident">ExceedMaxUsersPerRole</span>,
-		<span class="doccomment">/// The role string is too long</span>
-		<span class="ident">ExceedRoleMaxLen</span>,
-		<span class="doccomment">/// The permission string is too long</span>
-		<span class="ident">ExceedPermissionMaxLen</span>,
-		<span class="doccomment">/// The user does not have the specified role </span>
-		<span class="ident">NotAuthorized</span>,
+	<span class="comment">// Errors inform users that something went wrong.
+	</span><span class="attribute">#[pallet::error]
+	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
+		<span class="doccomment">/// Error names should be descriptive.
+		</span>NoneValue,
+		<span class="doccomment">/// The specified scope doesn&#39;t exists
+		</span>ScopeNotFound,
+		<span class="doccomment">/// The scope is already linked with the pallet
+		</span>ScopeAlreadyExists,
+		<span class="doccomment">/// The specified role doesn&#39;t exist or it hasn&#39;t been set to the user
+		</span>RoleNotFound,
+		<span class="doccomment">/// The permission doesn&#39;t exist in the pallet
+		</span>PermissionNotFound,
+		<span class="doccomment">/// The specified user hasn&#39;t been asigned to this scope
+		</span>UserNotFound,
+		<span class="doccomment">/// The provided role list must have unique elements
+		</span>DuplicateRole,
+		<span class="doccomment">/// The provided permission list must have unique elements
+		</span>DuplicatePermission,
+		<span class="doccomment">/// The user has that role asigned in that scope
+		</span>UserAlreadyHasRole,
+		<span class="doccomment">/// The role is already linked in the pallet
+		</span>RoleAlreadyLinkedToPallet,
+		<span class="doccomment">/// The role exists but it hasn&#39;t been linked to the pallet
+		</span>RoleNotLinkedToPallet,
+		<span class="doccomment">/// The permission is already linked to that role in that scope
+		</span>PermissionAlreadyLinkedToRole,
+		<span class="doccomment">/// The permission wasn&#39;t found in the roles capabilities
+		</span>PermissionNotLinkedToRole,
+		<span class="doccomment">/// The user doesn&#39;t have any roles in this pallet
+		</span>UserHasNoRoles,
+		<span class="doccomment">/// The role doesn&#39;t have any users assigned to it
+		</span>RoleHasNoUsers,
+		<span class="doccomment">/// The pallet name is too long
+		</span>ExceedPalletNameMaxLen,
+		<span class="doccomment">/// The pallet has too many scopes
+		</span>ExceedMaxScopesPerPallet,
+		<span class="doccomment">/// The pallet cannot have more roles
+		</span>ExceedMaxRolesPerPallet,
+		<span class="doccomment">/// The specified role cannot have more permission in this scope
+		</span>ExceedMaxPermissionsPerRole,
+		<span class="doccomment">/// The user cannot have more roles in this scope
+		</span>ExceedMaxRolesPerUser,
+		<span class="doccomment">/// This role cannot have assigned to more users in this scope
+		</span>ExceedMaxUsersPerRole,
+		<span class="doccomment">/// The role string is too long
+		</span>ExceedRoleMaxLen,
+		<span class="doccomment">/// The permission string is too long
+		</span>ExceedPermissionMaxLen,
+		<span class="doccomment">/// The user does not have the specified role 
+		</span>NotAuthorized,
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="attribute">#[pallet::call]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 	}
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_rbac" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_rbac" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

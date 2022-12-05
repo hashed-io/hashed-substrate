@@ -1,4 +1,4 @@
-(function() {var implementors = {};
-implementors["hashed_parachain_runtime"] = [{"text":"impl&lt;Block:&nbsp;BlockT, C:&nbsp;CallApiAt&lt;Block&gt;&gt; ApiExt&lt;Block&gt; for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.RuntimeApiImpl.html\" title=\"struct hashed_parachain_runtime::RuntimeApiImpl\">RuntimeApiImpl</a>&lt;Block, C&gt;","synthetic":false,"types":["hashed_parachain_runtime::RuntimeApiImpl"]}];
-implementors["hashed_runtime"] = [{"text":"impl&lt;Block:&nbsp;BlockT, C:&nbsp;CallApiAt&lt;Block&gt;&gt; ApiExt&lt;Block&gt; for <a class=\"struct\" href=\"hashed_runtime/struct.RuntimeApiImpl.html\" title=\"struct hashed_runtime::RuntimeApiImpl\">RuntimeApiImpl</a>&lt;Block, C&gt;","synthetic":false,"types":["hashed_runtime::RuntimeApiImpl"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"hashed_parachain_runtime":[["impl&lt;Block:&nbsp;BlockT, C:&nbsp;CallApiAt&lt;Block&gt;&gt; ApiExt&lt;Block&gt; for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.RuntimeApiImpl.html\" title=\"struct hashed_parachain_runtime::RuntimeApiImpl\">RuntimeApiImpl</a>&lt;Block, C&gt;"]],
+"hashed_runtime":[["impl&lt;Block:&nbsp;BlockT, C:&nbsp;CallApiAt&lt;Block&gt;&gt; ApiExt&lt;Block&gt; for <a class=\"struct\" href=\"hashed_runtime/struct.RuntimeApiImpl.html\" title=\"struct hashed_runtime::RuntimeApiImpl\">RuntimeApiImpl</a>&lt;Block, C&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

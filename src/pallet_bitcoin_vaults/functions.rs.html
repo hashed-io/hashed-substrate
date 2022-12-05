@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/functions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/functions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -642,649 +642,649 @@
 <span id="642">642</span>
 <span id="643">643</span>
 <span id="644">644</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">sp_io::hashing::blake2_256</span>};
-<span class="kw">use</span> <span class="ident">frame_system::offchain</span>::{<span class="ident">Signer</span>, <span class="ident">SendUnsignedTransaction</span>};
-<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::str</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime::traits::BlockNumberProvider</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime</span>::{
-    <span class="ident">offchain</span>::{
-        <span class="ident">http</span>,
-        <span class="ident">Duration</span>,
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::{sp_io::hashing::blake2_256};
+<span class="kw">use </span>frame_system::offchain::{Signer, SendUnsignedTransaction};
+<span class="kw">use </span>sp_runtime::sp_std::str;
+<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
+<span class="kw">use </span>sp_runtime::traits::BlockNumberProvider;
+<span class="kw">use </span>sp_runtime::{
+    offchain::{
+        http,
+        Duration,
     },
 };
-<span class="kw">use</span> <span class="ident">lite_json::json</span>::{<span class="ident">JsonValue</span>, <span class="ident">NumberValue</span>};
-<span class="kw">use</span> <span class="ident">lite_json::parse_json</span>;
-<span class="kw">use</span> <span class="ident">lite_json::Serialize</span> <span class="kw">as</span> <span class="ident">jsonSerialize</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>lite_json::json::{JsonValue, NumberValue};
+<span class="kw">use </span>lite_json::parse_json;
+<span class="kw">use </span>lite_json::Serialize <span class="kw">as </span>jsonSerialize;
+<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="comment">/*---- Extrinsics  ----*/</span>
-    <span class="doccomment">/// Use with caution</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_remove_xpub</span>(<span class="ident">who</span>: <span class="ident">T::AccountId</span>) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="kw">let</span> <span class="ident">old_hash</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::take</span>(<span class="ident">who</span>.<span class="ident">clone</span>()).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XPubNotFound</span>)<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::remove</span>(<span class="ident">old_hash</span>);
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::XPubRemoved</span>(<span class="ident">who</span>));
+<span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+    <span class="comment">/*---- Extrinsics  ----*/
+    </span><span class="doccomment">/// Use with caution
+    </span><span class="kw">pub fn </span>do_remove_xpub(who: T::AccountId) -&gt; DispatchResult {
+        <span class="kw">let </span>old_hash = &lt;XpubsByOwner&lt;T&gt;&gt;::take(who.clone()).ok_or(Error::&lt;T&gt;::XPubNotFound)<span class="question-mark">?</span>;
+        &lt;Xpubs&lt;T&gt;&gt;::remove(old_hash);
+        <span class="self">Self</span>::deposit_event(Event::XPubRemoved(who));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_insert_vault</span>(<span class="ident">vault</span>: <span class="ident">Vault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="comment">//TODO vault_id exist?</span>
-        <span class="comment">// generate vault id</span>
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">signers_are_unique</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::DuplicateVaultMembers</span>);
-        <span class="kw">let</span> <span class="ident">vault_id</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
-        <span class="comment">// build a vector containing owner + signers</span>
-        <span class="kw">let</span> <span class="ident">vault_members</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">cosigners</span>.<span class="ident">to_vec</span>();
-        <span class="comment">// iterate over that vector and add the vault id to the list of each user (signer)</span>
-        <span class="ident">vault_members</span>.<span class="ident">clone</span>().<span class="ident">into_iter</span>().<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">acc</span><span class="op">|</span> {
-            <span class="comment">// check if all users have an xpub</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">acc</span>.<span class="ident">clone</span>()) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XPubNotFound</span>);
+    <span class="kw">pub fn </span>do_insert_vault(vault: Vault&lt;T&gt;) -&gt; DispatchResult {
+        <span class="comment">//TODO vault_id exist?
+        // generate vault id
+        </span><span class="macro">ensure!</span>(vault.signers_are_unique(), Error::&lt;T&gt;::DuplicateVaultMembers);
+        <span class="kw">let </span>vault_id = vault.using_encoded(blake2_256);
+        <span class="comment">// build a vector containing owner + signers
+        </span><span class="kw">let </span>vault_members = vault.cosigners.to_vec();
+        <span class="comment">// iterate over that vector and add the vault id to the list of each user (signer)
+        </span>vault_members.clone().into_iter().try_for_each(|acc| {
+            <span class="comment">// check if all users have an xpub
+            </span><span class="kw">if </span>!&lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(acc.clone()) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::XPubNotFound);
             }
-            <span class="op">&lt;</span><span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">acc</span>, <span class="op">|</span><span class="ident">vault_vec</span><span class="op">|</span> {
-                <span class="ident">vault_vec</span>.<span class="ident">try_push</span>(<span class="ident">vault_id</span>.<span class="ident">clone</span>())
+            &lt;VaultsBySigner&lt;T&gt;&gt;::try_mutate(acc, |vault_vec| {
+                vault_vec.try_push(vault_id.clone())
             })
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerVaultLimit</span>)
+            .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::SignerVaultLimit)
         })<span class="question-mark">?</span>;
 
-        <span class="comment">// insert owner in case it isn&#39;t on the cosigners list</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">vault_members</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vault</span>.<span class="ident">owner</span>) {
-            <span class="op">&lt;</span><span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="kw-2">&amp;</span><span class="ident">vault</span>.<span class="ident">owner</span>, <span class="op">|</span><span class="ident">vault_vec</span><span class="op">|</span> {
-                <span class="ident">vault_vec</span>.<span class="ident">try_push</span>(<span class="ident">vault_id</span>.<span class="ident">clone</span>())
+        <span class="comment">// insert owner in case it isn&#39;t on the cosigners list
+        </span><span class="kw">if </span>!vault_members.contains(<span class="kw-2">&amp;</span>vault.owner) {
+            &lt;VaultsBySigner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>vault.owner, |vault_vec| {
+                vault_vec.try_push(vault_id.clone())
             })
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerVaultLimit</span>)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::SignerVaultLimit)<span class="question-mark">?</span>;
         }
-        <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">vault_id</span>.<span class="ident">clone</span>(), <span class="ident">vault</span>.<span class="ident">clone</span>());
+        &lt;Vaults&lt;T&gt;&gt;::insert(vault_id.clone(), vault.clone());
 
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::VaultStored</span>(<span class="ident">vault_id</span>, <span class="ident">vault</span>.<span class="ident">owner</span>));
+        <span class="self">Self</span>::deposit_event(Event::VaultStored(vault_id, vault.owner));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_remove_vault</span>(<span class="ident">owner</span>: <span class="ident">T::AccountId</span>, <span class="ident">vault_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="comment">// This removes the vault while retrieving its values</span>
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::take</span>(<span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">owner</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultOwnerPermissionsNeeded</span>);
-        <span class="kw">let</span> <span class="ident">vault_members</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">get_vault_members</span>();
-        <span class="comment">// Removes the vault from user-&gt;vault vector</span>
-        <span class="ident">vault_members</span>.<span class="ident">iter</span>().<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">signer</span><span class="op">|</span>{
-            <span class="op">&lt;</span><span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,(),<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">signer</span>, <span class="op">|</span><span class="ident">vault_list</span><span class="op">|</span>{
-                <span class="kw">let</span> <span class="ident">vault_index</span> <span class="op">=</span> <span class="ident">vault_list</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">v</span><span class="op">==</span><span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
-                <span class="ident">vault_list</span>.<span class="ident">remove</span>(<span class="ident">vault_index</span>);
+    <span class="kw">pub fn </span>do_remove_vault(owner: T::AccountId, vault_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult{
+        <span class="comment">// This removes the vault while retrieving its values
+        </span><span class="kw">let </span>vault =  &lt;Vaults&lt;T&gt;&gt;::take(vault_id).ok_or(Error::&lt;T&gt;::VaultNotFound)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(vault.owner.eq(<span class="kw-2">&amp;</span>owner), Error::&lt;T&gt;::VaultOwnerPermissionsNeeded);
+        <span class="kw">let </span>vault_members = vault.get_vault_members();
+        <span class="comment">// Removes the vault from user-&gt;vault vector
+        </span>vault_members.iter().try_for_each(|signer|{
+            &lt;VaultsBySigner&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,(),DispatchError,<span class="kw">_</span>&gt;(signer, |vault_list|{
+                <span class="kw">let </span>vault_index = vault_list.iter().position(|v| <span class="kw-2">*</span>v==vault_id).ok_or(Error::&lt;T&gt;::VaultNotFound)<span class="question-mark">?</span>;
+                vault_list.remove(vault_index);
                 <span class="prelude-val">Ok</span>(())
             })
         })<span class="question-mark">?</span>;
-        <span class="comment">// Removes all vault proposals</span>
-        <span class="kw">let</span> <span class="ident">vault_proposals</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ProposalsByVault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">vault_id</span>);
-        <span class="ident">vault_proposals</span>.<span class="ident">iter</span>().<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">proposal_id</span><span class="op">|</span>{
-            <span class="ident"><span class="self">Self</span>::do_remove_proposal</span>(<span class="kw-2">*</span><span class="ident">proposal_id</span>)
+        <span class="comment">// Removes all vault proposals
+        </span><span class="kw">let </span>vault_proposals = &lt;ProposalsByVault&lt;T&gt;&gt;::get(vault_id);
+        vault_proposals.iter().try_for_each(|proposal_id|{
+            <span class="self">Self</span>::do_remove_proposal(<span class="kw-2">*</span>proposal_id)
         })<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::VaultRemoved</span>(<span class="ident">vault_id</span>, <span class="ident">vault</span>.<span class="ident">owner</span>));
+        <span class="self">Self</span>::deposit_event(Event::VaultRemoved(vault_id, vault.owner));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_remove_proposal</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>]) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::take</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="ident">ProposalsByVault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,<span class="kw">_</span>,<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>, <span class="op">|</span><span class="ident">proposal_list</span><span class="op">|</span>{
-            <span class="kw">let</span> <span class="ident">proposal_index</span><span class="op">=</span> <span class="ident">proposal_list</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span><span class="op">==</span><span class="kw-2">&amp;</span><span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-            <span class="ident">proposal_list</span>.<span class="ident">remove</span>(<span class="ident">proposal_index</span>);
+    <span class="kw">pub fn </span>do_remove_proposal(proposal_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult{
+        <span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::take(proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+        &lt;ProposalsByVault&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(proposal.vault_id, |proposal_list|{
+            <span class="kw">let </span>proposal_index= proposal_list.iter().position(|p| p==<span class="kw-2">&amp;</span>proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+            proposal_list.remove(proposal_index);
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProposalRemoved</span>(<span class="ident">proposal_id</span>, <span class="ident">proposal</span>.<span class="ident">proposer</span>));
+        <span class="self">Self</span>::deposit_event(Event::ProposalRemoved(proposal_id, proposal.proposer));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_propose</span>(<span class="ident">proposal</span>: <span class="ident">Proposal</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>)-&gt;<span class="ident">DispatchResult</span>{
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_vault_member</span>(<span class="kw-2">&amp;</span><span class="ident">proposal</span>.<span class="ident">proposer</span>),<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerPermissionsNeeded</span>);
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_valid</span>(), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidVault</span>);
-        <span class="kw">let</span> <span class="ident">proposal_id</span> <span class="op">=</span> <span class="ident">proposal</span>.<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
-        <span class="macro">ensure!</span>(<span class="op">!</span><span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">proposal_id</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::AlreadyProposed</span>);
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">proposal_id</span>, <span class="ident">proposal</span>.<span class="ident">clone</span>());
-        <span class="op">&lt;</span><span class="ident">ProposalsByVault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>,<span class="op">|</span><span class="ident">proposals</span><span class="op">|</span>{
-            <span class="ident">proposals</span>.<span class="ident">try_push</span>(<span class="ident">proposal_id</span>)
-        }).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ExceedMaxProposalsPerVault</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>do_propose(proposal: Proposal&lt;T&gt;)-&gt;DispatchResult{
+        <span class="kw">let </span>vault =  &lt;Vaults&lt;T&gt;&gt;::get(proposal.vault_id).ok_or(Error::&lt;T&gt;::VaultNotFound)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(vault.is_vault_member(<span class="kw-2">&amp;</span>proposal.proposer),Error::&lt;T&gt;::SignerPermissionsNeeded);
+        <span class="macro">ensure!</span>(vault.is_valid(), Error::&lt;T&gt;::InvalidVault);
+        <span class="kw">let </span>proposal_id = proposal.using_encoded(blake2_256);
+        <span class="macro">ensure!</span>(!&lt;Proposals&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>proposal_id), Error::&lt;T&gt;::AlreadyProposed);
+        &lt;Proposals&lt;T&gt;&gt;::insert(proposal_id, proposal.clone());
+        &lt;ProposalsByVault&lt;T&gt;&gt;::try_mutate(proposal.vault_id,|proposals|{
+            proposals.try_push(proposal_id)
+        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxProposalsPerVault)<span class="question-mark">?</span>;
 
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProposalStored</span>(<span class="ident">proposal_id</span>, <span class="ident">proposal</span>.<span class="ident">proposer</span>));
+        <span class="self">Self</span>::deposit_event(Event::ProposalStored(proposal_id, proposal.proposer));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_save_psbt</span>(<span class="ident">signer</span>: <span class="ident">T::AccountId</span>, <span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">signature_payload</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="comment">// validations: proposal exists, signer is member of vault, proposal is pending,</span>
-        <span class="kw">let</span> <span class="ident">vault_id</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>.<span class="ident">vault_id</span>;
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span>  <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_vault_member</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerPermissionsNeeded</span>);
-        <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">ProposalSignatures</span>{
-            <span class="ident">signer</span>: <span class="ident">signer</span>.<span class="ident">clone</span>(),
-            <span class="ident">signature</span>: <span class="ident">signature_payload</span>,
+    <span class="kw">pub fn </span>do_save_psbt(signer: T::AccountId, proposal_id: [u8;<span class="number">32</span>], signature_payload: BoundedVec&lt;u8, T::PSBTMaxLen&gt;) -&gt; DispatchResult{
+        <span class="comment">// validations: proposal exists, signer is member of vault, proposal is pending,
+        </span><span class="kw">let </span>vault_id = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>.vault_id;
+        <span class="kw">let </span>vault =  &lt;Vaults&lt;T&gt;&gt;::get(vault_id).ok_or(Error::&lt;T&gt;::VaultNotFound)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(vault.is_vault_member(<span class="kw-2">&amp;</span>signer), Error::&lt;T&gt;::SignerPermissionsNeeded);
+        <span class="kw">let </span>signature = ProposalSignatures{
+            signer: signer.clone(),
+            signature: signature_payload,
         };
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,(),<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proposal_id</span>, <span class="op">|</span><span class="ident">proposal</span><span class="op">|</span> {
-            <span class="ident">proposal</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span> <span class="ident">proposal</span> {
-                <span class="kw">let</span> <span class="ident">signed_already</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">signature</span><span class="op">|</span>{ <span class="ident">signature</span>.<span class="ident">signer</span> <span class="op">==</span><span class="ident">signer</span> }).<span class="ident">is_some</span>();
-                <span class="macro">ensure!</span>(<span class="op">!</span><span class="ident">signed_already</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::AlreadySigned</span>);
-                <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">try_push</span>(<span class="ident">signature</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ExceedMaxCosignersPerVault</span>)<span class="question-mark">?</span>;
-				<span class="kw">if</span> <span class="ident">p</span>.<span class="ident">signed_psbts</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">vault</span>.<span class="ident">threshold</span> {
-					<span class="ident">p</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::ReadyToFinalize</span>(<span class="bool-val">false</span>));
+        &lt;Proposals&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,(),DispatchError,<span class="kw">_</span>&gt;(proposal_id, |proposal| {
+            proposal.as_ref().ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = proposal {
+                <span class="kw">let </span>signed_already = p.signed_psbts.iter().find(|<span class="kw-2">&amp;</span>signature|{ signature.signer ==signer }).is_some();
+                <span class="macro">ensure!</span>(!signed_already, Error::&lt;T&gt;::AlreadySigned);
+                p.signed_psbts.try_push(signature).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxCosignersPerVault)<span class="question-mark">?</span>;
+				<span class="kw">if </span>p.signed_psbts.len() <span class="kw">as </span>u32 == vault.threshold {
+					p.status.clone_from(<span class="kw-2">&amp;</span>ProposalStatus::ReadyToFinalize(<span class="bool-val">false</span>));
 				}
             }
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProposalSigned</span>(<span class="ident">proposal_id</span>, <span class="ident">signer</span>));
+        <span class="self">Self</span>::deposit_event(Event::ProposalSigned(proposal_id, signer));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_finalize_psbt</span>(<span class="ident">signer</span>: <span class="ident">T::AccountId</span>, <span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">broadcast</span>: <span class="ident">bool</span>) -&gt; <span class="ident">DispatchResult</span>{
-        <span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>)<span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus::Valid</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidProposal</span> );
-        <span class="comment">// can be called by any vault signer</span>
-        <span class="macro">ensure!</span>(<span class="ident">vault</span>.<span class="ident">is_vault_member</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::SignerPermissionsNeeded</span>);
-        <span class="comment">// if its finalized then fire error &quot;already finalized&quot; or &quot;already broadcasted&quot;</span>
-        <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Pending</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::Finalized</span>),
-            <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::PendingProposalRequired</span> );
-        <span class="comment">// signs must be greater or equal than threshold</span>
-        <span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">signed_psbts</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vault</span>.<span class="ident">threshold</span>, <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NotEnoughSignatures</span>);
-        <span class="comment">// set status to: ready to be finalized</span>
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>::<span class="op">&lt;</span><span class="kw">_</span>,(),<span class="ident">DispatchError</span>,<span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proposal_id</span>, <span class="op">|</span><span class="ident">proposal</span><span class="op">|</span>{
-            <span class="ident">proposal</span>.<span class="ident">as_ref</span>().<span class="ident">ok_or</span>( <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span> <span class="ident">proposal</span>{
-                <span class="ident">p</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">ProposalStatus::ReadyToFinalize</span>(<span class="ident">broadcast</span>) )
+    <span class="kw">pub fn </span>do_finalize_psbt(signer: T::AccountId, proposal_id: [u8;<span class="number">32</span>], broadcast: bool) -&gt; DispatchResult{
+        <span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+        <span class="kw">let </span>vault = &lt;Vaults&lt;T&gt;&gt;::get(proposal.vault_id).ok_or(Error::&lt;T&gt;::VaultNotFound)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(proposal.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::Valid), Error::&lt;T&gt;::InvalidProposal );
+        <span class="comment">// can be called by any vault signer
+        </span><span class="macro">ensure!</span>(vault.is_vault_member(<span class="kw-2">&amp;</span>signer), Error::&lt;T&gt;::SignerPermissionsNeeded);
+        <span class="comment">// if its finalized then fire error &quot;already finalized&quot; or &quot;already broadcasted&quot;
+        </span><span class="macro">ensure!</span>(proposal.status.eq(<span class="kw-2">&amp;</span>ProposalStatus::Pending) || proposal.status.eq(<span class="kw-2">&amp;</span>ProposalStatus::Finalized),
+            Error::&lt;T&gt;::PendingProposalRequired );
+        <span class="comment">// signs must be greater or equal than threshold
+        </span><span class="macro">ensure!</span>(proposal.signed_psbts.len() <span class="kw">as </span>u32 &gt;= vault.threshold, Error::&lt;T&gt;::NotEnoughSignatures);
+        <span class="comment">// set status to: ready to be finalized
+        </span>&lt;Proposals&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,(),DispatchError,<span class="kw">_</span>&gt;(proposal_id, |proposal|{
+            proposal.as_ref().ok_or( Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = proposal{
+                p.status.clone_from(<span class="kw-2">&amp;</span>ProposalStatus::ReadyToFinalize(broadcast) )
             }
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProposalFinalized</span>(<span class="ident">proposal_id</span>, <span class="ident">signer</span>));
+        <span class="self">Self</span>::deposit_event(Event::ProposalFinalized(proposal_id, signer));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">/*---- Utilities ----*/</span>
+    <span class="comment">/*---- Utilities ----*/
 
-    <span class="comment">// check if the xpub is free to take/update or if its owned by the account</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_xpub_status</span>(<span class="ident">who</span>: <span class="ident">T::AccountId</span>, <span class="ident">xpub_hash</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="ident">XpubStatus</span> {
-        <span class="kw">if</span> <span class="op">&lt;</span><span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">xpub_hash</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">owned_hash</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">who</span>.<span class="ident">clone</span>()) {
-                <span class="kw">match</span> <span class="ident">xpub_hash</span> <span class="op">==</span> <span class="ident">owned_hash</span> {
-                    <span class="bool-val">true</span> =&gt; <span class="kw">return</span> <span class="ident">XpubStatus::Owned</span>,
-                    <span class="bool-val">false</span> =&gt; <span class="kw">return</span> <span class="ident">XpubStatus::Taken</span>,
+    // check if the xpub is free to take/update or if its owned by the account
+    </span><span class="kw">pub fn </span>get_xpub_status(who: T::AccountId, xpub_hash: [u8; <span class="number">32</span>]) -&gt; XpubStatus {
+        <span class="kw">if </span>&lt;Xpubs&lt;T&gt;&gt;::contains_key(xpub_hash) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(owned_hash) = &lt;XpubsByOwner&lt;T&gt;&gt;::get(who.clone()) {
+                <span class="kw">match </span>xpub_hash == owned_hash {
+                    <span class="bool-val">true </span>=&gt; <span class="kw">return </span>XpubStatus::Owned,
+                    <span class="bool-val">false </span>=&gt; <span class="kw">return </span>XpubStatus::Taken,
                 }
-            } <span class="kw">else</span> {
-                <span class="comment">// xpub registered and the account doesnt own it: unavailable</span>
-                <span class="kw">return</span> <span class="ident">XpubStatus::Taken</span>;
+            } <span class="kw">else </span>{
+                <span class="comment">// xpub registered and the account doesnt own it: unavailable
+                </span><span class="kw">return </span>XpubStatus::Taken;
             }
-            <span class="comment">// Does the user owns the registered xpub? if yes, available</span>
-        }
-        <span class="comment">// new xpub registry: available</span>
-        <span class="ident">XpubStatus::Free</span>
+            <span class="comment">// Does the user owns the registered xpub? if yes, available
+        </span>}
+        <span class="comment">// new xpub registry: available
+        </span>XpubStatus::Free
     }
 
-    <span class="comment">/*---- Offchain extrinsics ----*/</span>
+    <span class="comment">/*---- Offchain extrinsics ----*/
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_insert_descriptors</span>(<span class="ident">vault_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">descriptors</span>: <span class="ident">Descriptors</span><span class="op">&lt;</span><span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span>, <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">vault_id</span>, <span class="op">|</span> <span class="ident">v</span> <span class="op">|</span>{
-            <span class="kw">match</span> <span class="ident">v</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">vault</span>) =&gt;{
-                    <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">descriptors</span>);
-                    <span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>);
+    </span><span class="kw">pub fn </span>do_insert_descriptors(vault_id: [u8;<span class="number">32</span>], descriptors: Descriptors&lt;T::OutputDescriptorMaxLen&gt;, status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;) -&gt; DispatchResult {
+        &lt;Vaults&lt;T&gt;&gt;::try_mutate(vault_id, | v |{
+            <span class="kw">match </span>v {
+                <span class="prelude-val">Some</span>(vault) =&gt;{
+                    vault.descriptors.clone_from(<span class="kw-2">&amp;</span>descriptors);
+                    vault.offchain_status.clone_from(<span class="kw-2">&amp;</span>status);
                     <span class="prelude-val">Ok</span>(())
                 },
-                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::VaultNotFound</span>),
+                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(Error::&lt;T&gt;::VaultNotFound),
             }
         })<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::DescriptorsStored</span>(<span class="ident">vault_id</span>));
+        <span class="self">Self</span>::deposit_event(Event::DescriptorsStored(vault_id));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_insert_psbt</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">psbt</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span>, <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>) -&gt;<span class="ident">DispatchResult</span>{
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">proposal_id</span>,<span class="op">|</span><span class="ident">p</span><span class="op">|</span>{
-            <span class="kw">match</span> <span class="ident">p</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">proposal</span>) =&gt;{
-                    <span class="ident">proposal</span>.<span class="ident">psbt</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">psbt</span>);
-                    <span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>);
+    <span class="kw">pub fn </span>do_insert_psbt(proposal_id: [u8;<span class="number">32</span>], psbt: BoundedVec&lt;u8, T::PSBTMaxLen&gt;, status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;) -&gt;DispatchResult{
+        &lt;Proposals&lt;T&gt;&gt;::try_mutate(proposal_id,|p|{
+            <span class="kw">match </span>p {
+                <span class="prelude-val">Some</span>(proposal) =&gt;{
+                    proposal.psbt.clone_from(<span class="kw-2">&amp;</span>psbt);
+                    proposal.offchain_status.clone_from(<span class="kw-2">&amp;</span>status);
                     <span class="prelude-val">Ok</span>(())
                 },
-                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>),
+                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(Error::&lt;T&gt;::ProposalNotFound),
             }
         })<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::PSBTStored</span>(<span class="ident">proposal_id</span>));
+        <span class="self">Self</span>::deposit_event(Event::PSBTStored(proposal_id));
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_insert_tx_id</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">tx_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_mutate</span>(<span class="ident">proposal_id</span>,<span class="op">|</span><span class="ident">p</span><span class="op">|</span>{
-            <span class="kw">match</span> <span class="ident">p</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">proposal</span>) =&gt;{
-                    <span class="ident">proposal</span>.<span class="ident">tx_id</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">tx_id</span>);
-                    <span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>);
-                    <span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">proposal</span>.<span class="ident">status</span>.<span class="ident">next_status</span>() );
+    <span class="kw">pub fn </span>do_insert_tx_id(proposal_id: [u8;<span class="number">32</span>], tx_id: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;&gt;, status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;) -&gt; DispatchResult {
+        &lt;Proposals&lt;T&gt;&gt;::try_mutate(proposal_id,|p|{
+            <span class="kw">match </span>p {
+                <span class="prelude-val">Some</span>(proposal) =&gt;{
+                    proposal.tx_id.clone_from(<span class="kw-2">&amp;</span>tx_id);
+                    proposal.offchain_status.clone_from(<span class="kw-2">&amp;</span>status);
+                    proposal.status.clone_from(<span class="kw-2">&amp;</span>proposal.status.next_status() );
                     <span class="prelude-val">Ok</span>(())
                 },
-                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>),
+                <span class="prelude-val">None</span>=&gt; <span class="prelude-val">Err</span>(Error::&lt;T&gt;::ProposalNotFound),
             }
         })<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::ProposalTxIdStored</span>(<span class="ident">proposal_id</span>));
+        <span class="self">Self</span>::deposit_event(Event::ProposalTxIdStored(proposal_id));
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="comment">/*---- Offchain utilities ----*/</span>
+    <span class="comment">/*---- Offchain utilities ----*/
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pending_vaults</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> {
-        <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>()
-            .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">entry</span>, <span class="ident">vault</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">output_descriptor</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span>
-                (<span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span>
-                 <span class="ident">vault</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::RecoverableError</span>(
-                    <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::default</span>() )) )  {
-                    <span class="prelude-val">Some</span>(<span class="ident">entry</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
+    </span><span class="kw">pub fn </span>get_pending_vaults() -&gt; Vec&lt;[u8; <span class="number">32</span>]&gt; {
+        &lt;Vaults&lt;T&gt;&gt;::iter()
+            .filter_map(|(entry, vault)| {
+                <span class="kw">if </span>vault.descriptors.output_descriptor.is_empty() &amp;&amp;
+                (vault.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::&lt;T::VaultDescriptionMaxLen&gt;::Pending) ||
+                 vault.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::&lt;T::VaultDescriptionMaxLen&gt;::RecoverableError(
+                    BoundedVec::&lt;u8,T::VaultDescriptionMaxLen&gt;::default() )) )  {
+                    <span class="prelude-val">Some</span>(entry)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
             })
-            .<span class="ident">collect</span>()
+            .collect()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pending_proposals</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>{
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>()
-            .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">proposal</span>)<span class="op">|</span>{
-                <span class="kw">if</span> <span class="ident">proposal</span>.<span class="ident">psbt</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span>
-                (<span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::Pending</span>) <span class="op">|</span><span class="op">|</span>
-                <span class="ident">proposal</span>.<span class="ident">offchain_status</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">BDKStatus</span>::<span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::RecoverableError</span>(
-                    <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::default</span>() )) ){
-                    <span class="prelude-val">Some</span>(<span class="ident">id</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
+    <span class="kw">pub fn </span>get_pending_proposals() -&gt; Vec&lt;[u8; <span class="number">32</span>]&gt;{
+        &lt;Proposals&lt;T&gt;&gt;::iter()
+            .filter_map(|(id, proposal)|{
+                <span class="kw">if </span>proposal.psbt.is_empty() &amp;&amp;
+                (proposal.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::&lt;T::VaultDescriptionMaxLen&gt;::Pending) ||
+                proposal.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::&lt;T::VaultDescriptionMaxLen&gt;::RecoverableError(
+                    BoundedVec::&lt;u8,T::VaultDescriptionMaxLen&gt;::default() )) ){
+                    <span class="prelude-val">Some</span>(id)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
             })
-        .<span class="ident">collect</span>()
+        .collect()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_accounts_xpubs</span>(<span class="ident">accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,<span class="ident">DispatchError</span><span class="op">&gt;</span> {
-        <span class="comment">// rely on pallet storage (just in case the identity gets reseted by user error)</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">xpub_vec</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="ident">accounts</span>.<span class="ident">iter</span>().<span class="ident">try_for_each</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">DispatchResult</span><span class="op">&gt;</span>(<span class="op">|</span><span class="ident">account</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">xpub_id</span> <span class="op">=</span>
-                <span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">account</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XPubNotFound</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">xpub</span> <span class="op">=</span>
-                <span class="op">&lt;</span><span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">xpub_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XPubNotFound</span>)<span class="question-mark">?</span>;
-            <span class="ident">xpub_vec</span>.<span class="ident">push</span>(
-                <span class="comment">// format the xpub to string</span>
-                <span class="ident">xpub</span>.<span class="ident">to_vec</span>(),
+    <span class="kw">pub fn </span>get_accounts_xpubs(accounts: Vec&lt;T::AccountId&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;u8&gt;&gt;,DispatchError&gt; {
+        <span class="comment">// rely on pallet storage (just in case the identity gets reseted by user error)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>xpub_vec = Vec::&lt;Vec&lt;u8&gt;&gt;::default();
+        accounts.iter().try_for_each::&lt;<span class="kw">_</span>, DispatchResult&gt;(|account| {
+            <span class="kw">let </span>xpub_id =
+                &lt;XpubsByOwner&lt;T&gt;&gt;::get(account).ok_or(Error::&lt;T&gt;::XPubNotFound)<span class="question-mark">?</span>;
+            <span class="kw">let </span>xpub =
+                &lt;Xpubs&lt;T&gt;&gt;::get(xpub_id).ok_or(Error::&lt;T&gt;::XPubNotFound)<span class="question-mark">?</span>;
+            xpub_vec.push(
+                <span class="comment">// format the xpub to string
+                </span>xpub.to_vec(),
             );
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">xpub_vec</span>)
+        <span class="prelude-val">Ok</span>(xpub_vec)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_proposals_to_finalize</span>()-&gt; <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>{
-        <span class="comment">// offchain status == valid and proposal status ReadyToFinalize</span>
-        <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span> (<span class="ident">id</span>,<span class="ident">p</span>) <span class="op">|</span>{
-            <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">can_be_finalized</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>)
+    <span class="kw">pub fn </span>get_proposals_to_finalize()-&gt; Vec&lt;[u8;<span class="number">32</span>]&gt;{
+        <span class="comment">// offchain status == valid and proposal status ReadyToFinalize
+        </span>&lt;Proposals&lt;T&gt;&gt;::iter().filter_map(| (id,p) |{
+            <span class="kw">if </span>p.can_be_finalized() {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(id)
             }
-            <span class="prelude-val">None</span>
-        })
-        .<span class="ident">collect</span>()
+            <span class="prelude-val">None
+        </span>})
+        .collect()
     }
 
-    <span class="comment">// pub fn get_proposals_to_broadcast()-&gt;  Vec&lt;[u8;32]&gt;{</span>
-    <span class="comment">//     // offchain status == valid and proposal status ready to ReadyToBroadcast</span>
-    <span class="comment">//     &lt;Proposals&lt;T&gt;&gt;::iter().filter_map(| (id,p) |{</span>
-    <span class="comment">//         if p.can_be_broadcasted() {</span>
-    <span class="comment">//             return Some(id)</span>
-    <span class="comment">//         }</span>
-    <span class="comment">//         None</span>
-    <span class="comment">//     })</span>
-    <span class="comment">//     .collect()</span>
+    <span class="comment">// pub fn get_proposals_to_broadcast()-&gt;  Vec&lt;[u8;32]&gt;{
+    //     // offchain status == valid and proposal status ready to ReadyToBroadcast
+    //     &lt;Proposals&lt;T&gt;&gt;::iter().filter_map(| (id,p) |{
+    //         if p.can_be_broadcasted() {
+    //             return Some(id)
+    //         }
+    //         None
+    //     })
+    //     .collect()
 
-    <span class="comment">// }</span>
+    // }
 
-    <span class="kw">fn</span> <span class="ident">http_post</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">request_body</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>)-&gt;<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">OffchainStatus</span> <span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="ident">deadline</span> <span class="op">=</span> <span class="ident">sp_io::offchain::timestamp</span>().<span class="ident">add</span>(<span class="ident">Duration::from_millis</span>(<span class="number">6_000</span>));
+    </span><span class="kw">fn </span>http_post(url: <span class="kw-2">&amp;</span>str, request_body: <span class="kw-2">&amp;</span>str)-&gt;<span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, OffchainStatus &gt;{
+        <span class="kw">let </span>deadline = sp_io::offchain::timestamp().add(Duration::from_millis(<span class="number">6_000</span>));
 
-        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">http::Request::post</span>(
-            <span class="kw-2">&amp;</span><span class="ident">url</span>,
-            [<span class="ident">request_body</span>.<span class="ident">clone</span>()].<span class="ident">to_vec</span>(),
+        <span class="kw">let </span>request = http::Request::post(
+            <span class="kw-2">&amp;</span>url,
+            [request_body.clone()].to_vec(),
         )
-        .<span class="ident">add_header</span>(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)
-        .<span class="ident">add_header</span>(<span class="string">&quot;Accept&quot;</span>, <span class="string">&quot;application/json&quot;</span>);
+        .add_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)
+        .add_header(<span class="string">&quot;Accept&quot;</span>, <span class="string">&quot;application/json&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">pending</span> <span class="op">=</span> <span class="ident">request</span>
-            .<span class="ident">body</span>([<span class="ident">request_body</span>.<span class="ident">clone</span>()].<span class="ident">to_vec</span>())
-            .<span class="ident">deadline</span>(<span class="ident">deadline</span>)
-            .<span class="ident">send</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span>
-                <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">true</span>, <span class="string">&quot;I/O error&quot;</span>)
+        <span class="kw">let </span>pending = request
+            .body([request_body.clone()].to_vec())
+            .deadline(deadline)
+            .send()
+            .map_err(|<span class="kw">_</span>|
+                <span class="self">Self</span>::build_offchain_err(<span class="bool-val">true</span>, <span class="string">&quot;I/O error&quot;</span>)
             )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
-            <span class="ident">pending</span>.<span class="ident">try_wait</span>(<span class="ident">deadline</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">true</span>, <span class="string">&quot;Request to bdk timed out&quot;</span>))<span class="question-mark">?</span>.
-            <span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span><span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;Unknown error on server&#39;s side&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">match</span> <span class="ident">response</span>.<span class="ident">code</span>{
-            <span class="number">200</span>..<span class="op">=</span><span class="number">299</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">response</span>.<span class="ident">body</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()),
-            <span class="number">400</span>..<span class="op">=</span><span class="number">499</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">vec_body</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">body</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">let</span> <span class="ident">msj_str</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="ident">vec_body</span>.<span class="ident">as_slice</span>()).<span class="ident">unwrap_or</span>(<span class="string">&quot;Error 400: Bad request&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="ident">msj_str</span> ))
+        <span class="kw">let </span>response =
+            pending.try_wait(deadline).map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">true</span>, <span class="string">&quot;Request to bdk timed out&quot;</span>))<span class="question-mark">?</span>.
+            map_err(|<span class="kw">_</span>|<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;Unknown error on server&#39;s side&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">match </span>response.code{
+            <span class="number">200</span>..=<span class="number">299 </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(response.body().collect::&lt;Vec&lt;u8&gt;&gt;()),
+            <span class="number">400</span>..=<span class="number">499 </span>=&gt; {
+                <span class="kw">let </span>vec_body = response.body().collect::&lt;Vec&lt;u8&gt;&gt;();
+                <span class="kw">let </span>msj_str = str::from_utf8(vec_body.as_slice()).unwrap_or(<span class="string">&quot;Error 400: Bad request&quot;</span>);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, msj_str ))
             },
-            <span class="number">500</span>..<span class="op">=</span><span class="number">599</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">vec_body</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">body</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">let</span> <span class="ident">msj_str</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="ident">vec_body</span>.<span class="ident">as_slice</span>()).<span class="ident">unwrap_or</span>(<span class="string">&quot;Error 500: Server error&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="ident">msj_str</span> ))
+            <span class="number">500</span>..=<span class="number">599 </span>=&gt; {
+                <span class="kw">let </span>vec_body = response.body().collect::&lt;Vec&lt;u8&gt;&gt;();
+                <span class="kw">let </span>msj_str = str::from_utf8(vec_body.as_slice()).unwrap_or(<span class="string">&quot;Error 500: Server error&quot;</span>);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, msj_str ))
             }
-            <span class="kw">_</span> =&gt;<span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">true</span>, <span class="string">&quot;Unknown error&quot;</span>))
+            <span class="kw">_ </span>=&gt;<span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">true</span>, <span class="string">&quot;Unknown error&quot;</span>))
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract_json_str_by_name</span>( <span class="ident">tuple</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span>, <span class="ident">JsonValue</span>)<span class="op">&gt;</span>,<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">filtered</span> <span class="op">=</span> <span class="ident">tuple</span>.<span class="ident">into_iter</span>().<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">key</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">eq</span>(<span class="ident">s</span>.<span class="ident">chars</span>()));
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fields</span>) <span class="op">=</span> <span class="ident">filtered</span> {
-            <span class="kw">match</span> <span class="ident">fields</span>.<span class="number">1</span> {
-                <span class="ident">JsonValue::String</span>(<span class="ident">chars</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="self">Self</span>::chars_to_bytes</span>(<span class="ident">chars</span>)),
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+    <span class="kw">pub fn </span>extract_json_str_by_name( tuple: Vec&lt;(Vec&lt;char&gt;, JsonValue)&gt;,s: <span class="kw-2">&amp;</span>str,) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+        <span class="kw">let </span>filtered = tuple.into_iter().find(|(key, <span class="kw">_</span>)| key.iter().copied().eq(s.chars()));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(fields) = filtered {
+            <span class="kw">match </span>fields.<span class="number">1 </span>{
+                JsonValue::String(chars) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">Self</span>::chars_to_bytes(chars)),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
             }
         }
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">generate_vault_json_body</span>(<span class="ident">vault_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">OffchainStatus</span> <span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">fn </span>generate_vault_json_body(vault_id: [u8; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, OffchainStatus &gt;{
+        <span class="kw">let </span><span class="kw-2">mut </span>body = Vec::new();
 
-        <span class="comment">//Get vault properties</span>
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="kw-2">&amp;</span><span class="ident">vault_id</span>).<span class="ident">ok_or</span>(
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">threshold</span> <span class="op">=</span> <span class="ident">NumberValue</span> {
-            <span class="ident">integer</span>: <span class="ident">vault</span>.<span class="ident">threshold</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">fraction</span>: <span class="number">0</span>,
-            <span class="ident">fraction_length</span>: <span class="number">0</span>,
-            <span class="ident">exponent</span>: <span class="number">0</span>,
+        <span class="comment">//Get vault properties
+        </span><span class="kw">let </span>vault = &lt;Vaults&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>vault_id).ok_or(
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>threshold = NumberValue {
+            integer: vault.threshold.clone().into(),
+            fraction: <span class="number">0</span>,
+            fraction_length: <span class="number">0</span>,
+            exponent: <span class="number">0</span>,
         };
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;threshold&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Number</span>(<span class="ident">threshold</span>)));
-        <span class="kw">let</span> <span class="ident">vault_signers</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">cosigners</span>.<span class="ident">clone</span>().<span class="ident">to_vec</span>();
+        body.push((<span class="string">&quot;threshold&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Number(threshold)));
+        <span class="kw">let </span>vault_signers = vault.cosigners.clone().to_vec();
 
-        <span class="comment">//get the xpub for each cosigner</span>
-        <span class="kw">let</span> <span class="ident">xpubs</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_accounts_xpubs</span>(<span class="ident">vault_signers</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span>
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;One of the cosigner xpubs wasn&#39;t found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">mapped_xpubs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">JsonValue</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">xpubs</span>.<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">xpub</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">xpub_field</span> <span class="op">=</span>
-                    <span class="ident">JsonValue::String</span>(<span class="ident">str::from_utf8</span>(<span class="ident">xpub</span>).<span class="ident">unwrap</span>().<span class="ident">chars</span>().<span class="ident">collect</span>());
-                <span class="ident">JsonValue::Object</span>([(<span class="string">&quot;xpub&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>(), <span class="ident">xpub_field</span>)].<span class="ident">to_vec</span>())
+        <span class="comment">//get the xpub for each cosigner
+        </span><span class="kw">let </span>xpubs = <span class="self">Self</span>::get_accounts_xpubs(vault_signers).map_err(|<span class="kw">_</span>|
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;One of the cosigner xpubs wasn&#39;t found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>mapped_xpubs: Vec&lt;JsonValue&gt; = xpubs.iter()
+            .map(|xpub| {
+                <span class="kw">let </span>xpub_field =
+                    JsonValue::String(str::from_utf8(xpub).unwrap().chars().collect());
+                JsonValue::Object([(<span class="string">&quot;xpub&quot;</span>.chars().collect(), xpub_field)].to_vec())
             })
-            .<span class="ident">collect</span>();
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;cosigners&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Array</span>(<span class="ident">mapped_xpubs</span>)));
-        <span class="kw">let</span> <span class="ident">json_object</span> <span class="op">=</span> <span class="ident">JsonValue::Object</span>(<span class="ident">body</span>);
+            .collect();
+        body.push((<span class="string">&quot;cosigners&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Array(mapped_xpubs)));
+        <span class="kw">let </span>json_object = JsonValue::Object(body);
 
-        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">jsonSerialize::format</span>(<span class="kw-2">&amp;</span><span class="ident">json_object</span>, <span class="number">4</span>))
+        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.
+        </span><span class="prelude-val">Ok</span>(jsonSerialize::format(<span class="kw-2">&amp;</span>json_object, <span class="number">4</span>))
     }
 
-    <span class="doccomment">/// Parse the descriptors from the given JSON string using `lite-json`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.</span>
-    <span class="kw">fn</span> <span class="ident">parse_vault_descriptors</span>(<span class="ident">body_str</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>), <span class="ident">OffchainStatus</span> <span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">parse_json</span>(<span class="ident">body_str</span>);
-        <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">ok</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">JsonValue::Object</span>(<span class="ident">obj</span>) )=&gt; {
-                <span class="kw">let</span> <span class="ident">descriptor</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::extract_json_str_by_name</span>(<span class="ident">obj</span>.<span class="ident">clone</span>(), <span class="string">&quot;descriptor&quot;</span>)
-                    .<span class="ident">ok_or</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Descriptor not found in bdk response&quot;</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">change_descriptor</span> <span class="op">=</span>
-                    <span class="ident"><span class="self">Self</span>::extract_json_str_by_name</span>(<span class="ident">obj</span>.<span class="ident">clone</span>(), <span class="string">&quot;change_descriptor&quot;</span>)
-                        .<span class="ident">ok_or</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor not found in bdk response&quot;</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>((<span class="ident">descriptor</span>, <span class="ident">change_descriptor</span>))
+    <span class="doccomment">/// Parse the descriptors from the given JSON string using `lite-json`.
+    ///
+    /// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.
+    </span><span class="kw">fn </span>parse_vault_descriptors(body_str: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;u8&gt;, Vec&lt;u8&gt;), OffchainStatus &gt; {
+        <span class="kw">let </span>val = parse_json(body_str);
+        <span class="kw">match </span>val.ok() {
+            <span class="prelude-val">Some</span>(JsonValue::Object(obj) )=&gt; {
+                <span class="kw">let </span>descriptor = <span class="self">Self</span>::extract_json_str_by_name(obj.clone(), <span class="string">&quot;descriptor&quot;</span>)
+                    .ok_or(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Descriptor not found in bdk response&quot;</span>))<span class="question-mark">?</span>;
+                <span class="kw">let </span>change_descriptor =
+                    <span class="self">Self</span>::extract_json_str_by_name(obj.clone(), <span class="string">&quot;change_descriptor&quot;</span>)
+                        .ok_or(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor not found in bdk response&quot;</span>))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((descriptor, change_descriptor))
             },
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Error parsing response json&quot;</span>))
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Error parsing response json&quot;</span>))
             },
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bdk_gen_vault</span>(<span class="ident">vault_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>), <span class="ident">OffchainStatus</span> <span class="op">&gt;</span> {
-        <span class="comment">// We will create a bunch of elements that we will put into a JSON Object.</span>
-        <span class="kw">let</span> <span class="ident">raw_json</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::generate_vault_json_body</span>(<span class="ident">vault_id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">request_body</span> <span class="op">=</span>
-        <span class="ident">str::from_utf8</span>(<span class="ident">raw_json</span>.<span class="ident">as_slice</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;Vault json is not utf-8&quot;</span>) )<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>bdk_gen_vault(vault_id: [u8; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;u8&gt;, Vec&lt;u8&gt;), OffchainStatus &gt; {
+        <span class="comment">// We will create a bunch of elements that we will put into a JSON Object.
+        </span><span class="kw">let </span>raw_json = <span class="self">Self</span>::generate_vault_json_body(vault_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>request_body =
+        str::from_utf8(raw_json.as_slice()).map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;Vault json is not utf-8&quot;</span>) )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="ident">BDKServicesURL</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>().<span class="ident">to_vec</span>(), <span class="string">b&quot;/gen_output_descriptor&quot;</span>.<span class="ident">encode</span>()].<span class="ident">concat</span>();
-        <span class="kw">let</span> <span class="ident">response_body</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::http_post</span>(
-            <span class="ident">str::from_utf8</span>(<span class="ident">url</span>.<span class="ident">as_slice</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;URL is not utf-8&quot;</span>) )<span class="question-mark">?</span>,
-            <span class="ident">request_body</span>
+        <span class="kw">let </span>url = [&lt;BDKServicesURL&lt;T&gt;&gt;::get().to_vec(), <span class="string">b&quot;/gen_output_descriptor&quot;</span>.encode()].concat();
+        <span class="kw">let </span>response_body = <span class="self">Self</span>::http_post(
+            str::from_utf8(url.as_slice()).map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;URL is not utf-8&quot;</span>) )<span class="question-mark">?</span>,
+            request_body
         )<span class="question-mark">?</span>;
-        <span class="comment">// Create a str slice from the body.</span>
-        <span class="kw">let</span> <span class="ident">body_str</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">response_body</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+        <span class="comment">// Create a str slice from the body.
+        </span><span class="kw">let </span>body_str = str::from_utf8(<span class="kw-2">&amp;</span>response_body).map_err(|<span class="kw">_</span>| {
             <span class="macro">log::warn!</span>(<span class="string">&quot;No UTF8 body&quot;</span>);
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;No UTF8 body&quot;</span>)
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;No UTF8 body&quot;</span>)
         })<span class="question-mark">?</span>;
 
-        <span class="ident"><span class="self">Self</span>::parse_vault_descriptors</span>(<span class="ident">body_str</span>)
+        <span class="self">Self</span>::parse_vault_descriptors(body_str)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_vaults_payload_by_bulk</span>(<span class="ident">pending_vaults</span> : <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleVaultPayload</span> <span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">generated_vaults</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">SingleVaultPayload</span> <span class="op">&gt;</span><span class="ident">::new</span>();
-        <span class="ident">pending_vaults</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">vault_to_complete</span><span class="op">|</span> {
-            <span class="comment">// Contact bdk services and get descriptors</span>
-            <span class="kw">let</span> <span class="ident">vault_result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::bdk_gen_vault</span>(<span class="ident">vault_to_complete</span>.<span class="ident">clone</span>());
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vault_payload</span> <span class="op">=</span> <span class="ident">SingleVaultPayload</span>{
-                <span class="ident">vault_id</span>: <span class="ident">vault_to_complete</span>.<span class="ident">clone</span>(),
-                <span class="ident">output_descriptor</span>: <span class="ident">Vec::default</span>(),
-                <span class="ident">change_descriptor</span>: <span class="ident">Vec::default</span>(),
-                <span class="ident">status</span>: <span class="ident">OffchainStatus::Valid</span>,
+    <span class="kw">pub fn </span>gen_vaults_payload_by_bulk(pending_vaults : Vec&lt;[u8;<span class="number">32</span>]&gt;) -&gt; Vec&lt;SingleVaultPayload &gt;{
+        <span class="kw">let </span><span class="kw-2">mut </span>generated_vaults = Vec::&lt;SingleVaultPayload &gt;::new();
+        pending_vaults.iter().for_each(|vault_to_complete| {
+            <span class="comment">// Contact bdk services and get descriptors
+            </span><span class="kw">let </span>vault_result = <span class="self">Self</span>::bdk_gen_vault(vault_to_complete.clone());
+            <span class="kw">let </span><span class="kw-2">mut </span>vault_payload = SingleVaultPayload{
+                vault_id: vault_to_complete.clone(),
+                output_descriptor: Vec::default(),
+                change_descriptor: Vec::default(),
+                status: OffchainStatus::Valid,
             };
-            <span class="kw">match</span> <span class="ident">vault_result</span>{
-                <span class="prelude-val">Ok</span>(<span class="ident">descriptors</span>) =&gt; {
-                    <span class="ident">vault_payload</span>.<span class="ident">output_descriptor</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">descriptors</span>.<span class="number">0</span>);
-                    <span class="ident">vault_payload</span>.<span class="ident">change_descriptor</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">descriptors</span>.<span class="number">1</span>);
+            <span class="kw">match </span>vault_result{
+                <span class="prelude-val">Ok</span>(descriptors) =&gt; {
+                    vault_payload.output_descriptor.clone_from(<span class="kw-2">&amp;</span>descriptors.<span class="number">0</span>);
+                    vault_payload.change_descriptor.clone_from(<span class="kw-2">&amp;</span>descriptors.<span class="number">1</span>);
                 },
-                <span class="prelude-val">Err</span>(<span class="ident">status</span>) =&gt; {<span class="ident">vault_payload</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>)},
+                <span class="prelude-val">Err</span>(status) =&gt; {vault_payload.status.clone_from(<span class="kw-2">&amp;</span>status)},
             };
-            <span class="comment">// Build offchain vaults struct and push it to a Vec</span>
-            <span class="ident">generated_vaults</span>.<span class="ident">push</span>(<span class="ident">vault_payload</span>);
+            <span class="comment">// Build offchain vaults struct and push it to a Vec
+            </span>generated_vaults.push(vault_payload);
         });
-        <span class="ident">generated_vaults</span>
+        generated_vaults
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_proposal_json_body</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,<span class="ident">OffchainStatus</span><span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Proposal not found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>.<span class="ident">clone</span>()).<span class="ident">ok_or</span>(
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">amount</span> <span class="op">=</span> <span class="ident">NumberValue</span> {
-            <span class="ident">integer</span>: <span class="ident">proposal</span>.<span class="ident">amount</span>.<span class="ident">clone</span>() <span class="kw">as</span> <span class="ident">i64</span>,
-            <span class="ident">fraction</span>: <span class="number">0</span>,
-            <span class="ident">fraction_length</span>: <span class="number">0</span>,
-            <span class="ident">exponent</span>: <span class="number">0</span>,
+    <span class="kw">pub fn </span>gen_proposal_json_body(proposal_id: [u8;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;,OffchainStatus&gt;{
+        <span class="kw">let </span><span class="kw-2">mut </span>body = Vec::new();
+        <span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Proposal not found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>vault = &lt;Vaults&lt;T&gt;&gt;::get(proposal.vault_id.clone()).ok_or(
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>amount = NumberValue {
+            integer: proposal.amount.clone() <span class="kw">as </span>i64,
+            fraction: <span class="number">0</span>,
+            fraction_length: <span class="number">0</span>,
+            exponent: <span class="number">0</span>,
         };
-        <span class="kw">let</span> <span class="ident">fee</span> <span class="op">=</span> <span class="ident">NumberValue</span> {
-            <span class="ident">integer</span>: <span class="ident">proposal</span>.<span class="ident">fee_sat_per_vb</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-            <span class="ident">fraction</span>: <span class="number">0</span>,
-            <span class="ident">fraction_length</span>: <span class="number">0</span>,
-            <span class="ident">exponent</span>: <span class="number">0</span>,
+        <span class="kw">let </span>fee = NumberValue {
+            integer: proposal.fee_sat_per_vb.clone().into(),
+            fraction: <span class="number">0</span>,
+            fraction_length: <span class="number">0</span>,
+            exponent: <span class="number">0</span>,
         };
-        <span class="kw">let</span> <span class="ident">to_address</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="ident">proposal</span>.<span class="ident">to_address</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Error converting the recipiend addres to utf-8&quot;</span>))<span class="question-mark">?</span>.<span class="ident">chars</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">output_descriptor</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(
-            <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">output_descriptor</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Output descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.<span class="ident">chars</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">change_descriptor</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(
-            <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">change_descriptor</span>.<span class="ident">unwrap_or_default</span>().<span class="ident">as_slice</span>() )
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.<span class="ident">chars</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">descriptors_body</span> <span class="op">=</span> [
-            (<span class="string">&quot;descriptor&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::String</span>(<span class="ident">output_descriptor</span>)),
-            (<span class="string">&quot;change_descriptor&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::String</span>(<span class="ident">change_descriptor</span>)),
-        ].<span class="ident">to_vec</span>();
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;amount&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Number</span>(<span class="ident">amount</span>) ));
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;fee_sat_per_vb&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Number</span>(<span class="ident">fee</span>) ));
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;to_address&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::String</span>(<span class="ident">to_address</span>) ));
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;descriptors&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Object</span>(<span class="ident">descriptors_body</span>) ));
-        <span class="kw">let</span> <span class="ident">json_object</span> <span class="op">=</span> <span class="ident">JsonValue::Object</span>(<span class="ident">body</span>);
+        <span class="kw">let </span>to_address = str::from_utf8(proposal.to_address.as_slice())
+            .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Error converting the recipiend addres to utf-8&quot;</span>))<span class="question-mark">?</span>.chars().collect();
+        <span class="kw">let </span>output_descriptor: Vec&lt;char&gt; = str::from_utf8(
+            vault.descriptors.output_descriptor.as_slice())
+            .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Output descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.chars().collect();
+        <span class="kw">let </span>change_descriptor: Vec&lt;char&gt; = str::from_utf8(
+            vault.descriptors.change_descriptor.unwrap_or_default().as_slice() )
+            .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.chars().collect();
+        <span class="kw">let </span>descriptors_body = [
+            (<span class="string">&quot;descriptor&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::String(output_descriptor)),
+            (<span class="string">&quot;change_descriptor&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::String(change_descriptor)),
+        ].to_vec();
+        body.push((<span class="string">&quot;amount&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Number(amount) ));
+        body.push((<span class="string">&quot;fee_sat_per_vb&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Number(fee) ));
+        body.push((<span class="string">&quot;to_address&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::String(to_address) ));
+        body.push((<span class="string">&quot;descriptors&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Object(descriptors_body) ));
+        <span class="kw">let </span>json_object = JsonValue::Object(body);
 
-        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">jsonSerialize::format</span>(<span class="kw-2">&amp;</span><span class="ident">json_object</span>, <span class="number">4</span>) )
+        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.
+        </span><span class="prelude-val">Ok</span>(jsonSerialize::format(<span class="kw-2">&amp;</span>json_object, <span class="number">4</span>) )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bdk_gen_proposal</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>], <span class="ident">api_endpoint</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-        <span class="ident">json_builder</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>([<span class="ident">u8</span>;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,<span class="ident">OffchainStatus</span><span class="op">&gt;</span>
-    )-&gt;<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">OffchainStatus</span> <span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="ident">raw_json</span> <span class="op">=</span> <span class="ident">json_builder</span>(<span class="ident">proposal_id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">request_body</span> <span class="op">=</span>
-            <span class="ident">str::from_utf8</span>(<span class="ident">raw_json</span>.<span class="ident">as_slice</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;Request body is not UTF-8&quot;</span>) )<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>bdk_gen_proposal(proposal_id: [u8;<span class="number">32</span>], api_endpoint: Vec&lt;u8&gt;,
+        json_builder: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn([u8;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;,OffchainStatus&gt;
+    )-&gt;<span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, OffchainStatus &gt;{
+        <span class="kw">let </span>raw_json = json_builder(proposal_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>request_body =
+            str::from_utf8(raw_json.as_slice()).map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;Request body is not UTF-8&quot;</span>) )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="ident">BDKServicesURL</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>().<span class="ident">to_vec</span>(), <span class="ident">api_endpoint</span>].<span class="ident">concat</span>();
+        <span class="kw">let </span>url = [&lt;BDKServicesURL&lt;T&gt;&gt;::get().to_vec(), api_endpoint].concat();
 
-        <span class="kw">let</span> <span class="ident">response_body</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::http_post</span>(
-            <span class="ident">str::from_utf8</span>(<span class="ident">url</span>.<span class="ident">as_slice</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>, <span class="string">&quot;URL is not UTF-8&quot;</span>) )<span class="question-mark">?</span>,
-            <span class="ident">request_body</span>
+        <span class="kw">let </span>response_body = <span class="self">Self</span>::http_post(
+            str::from_utf8(url.as_slice()).map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>, <span class="string">&quot;URL is not UTF-8&quot;</span>) )<span class="question-mark">?</span>,
+            request_body
         )<span class="question-mark">?</span>;
-        <span class="comment">// The psbt is not a json object, its a byte blob</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">response_body</span>)
+        <span class="comment">// The psbt is not a json object, its a byte blob
+        </span><span class="prelude-val">Ok</span>(response_body)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_proposals_payload_by_bulk</span>(<span class="ident">pending_proposals</span> : <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span>, <span class="ident">api_endpoint</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-        <span class="ident">json_builder</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Fn</span>([<span class="ident">u8</span>;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,<span class="ident">OffchainStatus</span><span class="op">&gt;</span>
-    ) -&gt;  <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">generated_proposals</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span><span class="ident">::new</span>();
-        <span class="ident">pending_proposals</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">proposal_to_complete</span><span class="op">|</span>{
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">proposal_payload</span> <span class="op">=</span> <span class="ident">SingleProposalPayload</span>{
-                <span class="ident">proposal_id</span>:<span class="ident">proposal_to_complete</span>.<span class="ident">clone</span>(),
-                <span class="ident">psbt</span> : <span class="ident">Vec::default</span>(),
-                <span class="ident">status</span>: <span class="ident">OffchainStatus::Valid</span>,
+    <span class="kw">pub fn </span>gen_proposals_payload_by_bulk(pending_proposals : Vec&lt;[u8;<span class="number">32</span>]&gt;, api_endpoint: Vec&lt;u8&gt;,
+        json_builder: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn([u8;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;,OffchainStatus&gt;
+    ) -&gt;  Vec&lt;SingleProposalPayload&gt;{
+        <span class="kw">let </span><span class="kw-2">mut </span>generated_proposals = Vec::&lt;SingleProposalPayload&gt;::new();
+        pending_proposals.iter().for_each(|proposal_to_complete|{
+            <span class="kw">let </span><span class="kw-2">mut </span>proposal_payload = SingleProposalPayload{
+                proposal_id:proposal_to_complete.clone(),
+                psbt : Vec::default(),
+                status: OffchainStatus::Valid,
             };
-            <span class="kw">let</span> <span class="ident">psbt_result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::bdk_gen_proposal</span>(<span class="ident">proposal_to_complete</span>.<span class="ident">clone</span>(), <span class="ident">api_endpoint</span>.<span class="ident">clone</span>(),
-                <span class="ident">json_builder</span>);
-            <span class="kw">match</span> <span class="ident">psbt_result</span>{
-                <span class="prelude-val">Ok</span>(<span class="ident">psbt</span>) =&gt; {<span class="ident">proposal_payload</span>.<span class="ident">psbt</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">psbt</span>)},
-                <span class="prelude-val">Err</span>(<span class="ident">status</span>) =&gt; {<span class="ident">proposal_payload</span>.<span class="ident">status</span>.<span class="ident">clone_from</span>(<span class="kw-2">&amp;</span><span class="ident">status</span>)},
+            <span class="kw">let </span>psbt_result = <span class="self">Self</span>::bdk_gen_proposal(proposal_to_complete.clone(), api_endpoint.clone(),
+                json_builder);
+            <span class="kw">match </span>psbt_result{
+                <span class="prelude-val">Ok</span>(psbt) =&gt; {proposal_payload.psbt.clone_from(<span class="kw-2">&amp;</span>psbt)},
+                <span class="prelude-val">Err</span>(status) =&gt; {proposal_payload.status.clone_from(<span class="kw-2">&amp;</span>status)},
             };
-            <span class="ident">generated_proposals</span>.<span class="ident">push</span>(<span class="ident">proposal_payload</span>);
+            generated_proposals.push(proposal_payload);
         });
-        <span class="ident">generated_proposals</span>
+        generated_proposals
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_finalize_json_body</span>(<span class="ident">proposal_id</span>: [<span class="ident">u8</span>;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,<span class="ident">OffchainStatus</span><span class="op">&gt;</span>{
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Proposal not found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal</span>.<span class="ident">vault_id</span>.<span class="ident">clone</span>()).<span class="ident">ok_or</span>(
-            <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">output_descriptor</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(
-            <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">output_descriptor</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Output descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.<span class="ident">chars</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">change_descriptor</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(
-            <span class="ident">vault</span>.<span class="ident">descriptors</span>.<span class="ident">change_descriptor</span>.<span class="ident">unwrap_or_default</span>().<span class="ident">as_slice</span>() )
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::build_offchain_err</span>(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.<span class="ident">chars</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">descriptors_body</span> <span class="op">=</span> [
-            (<span class="string">&quot;descriptor&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::String</span>(<span class="ident">output_descriptor</span>)),
-            (<span class="string">&quot;change_descriptor&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::String</span>(<span class="ident">change_descriptor</span>)),].<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">mapped_signatures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">JsonValue</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proposal</span>.<span class="ident">signed_psbts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">psbt</span><span class="op">|</span>{
-            <span class="ident">JsonValue::String</span>(<span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">psbt</span>.<span class="ident">signature</span>).<span class="ident">unwrap_or_default</span>().<span class="ident">chars</span>().<span class="ident">collect</span>())
-        }).<span class="ident">collect</span>();
+    <span class="kw">pub fn </span>gen_finalize_json_body(proposal_id: [u8;<span class="number">32</span>])-&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;,OffchainStatus&gt;{
+        <span class="kw">let </span><span class="kw-2">mut </span>body = Vec::new();
+        <span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Proposal not found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>vault = &lt;Vaults&lt;T&gt;&gt;::get(proposal.vault_id.clone()).ok_or(
+            <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Vault not found&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>output_descriptor: Vec&lt;char&gt; = str::from_utf8(
+            vault.descriptors.output_descriptor.as_slice())
+            .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Output descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.chars().collect();
+        <span class="kw">let </span>change_descriptor: Vec&lt;char&gt; = str::from_utf8(
+            vault.descriptors.change_descriptor.unwrap_or_default().as_slice() )
+            .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::build_offchain_err(<span class="bool-val">false</span>,<span class="string">&quot;Change descriptor is not utf-8&quot;</span>))<span class="question-mark">?</span>.chars().collect();
+        <span class="kw">let </span>descriptors_body = [
+            (<span class="string">&quot;descriptor&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::String(output_descriptor)),
+            (<span class="string">&quot;change_descriptor&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::String(change_descriptor)),].to_vec();
+        <span class="kw">let </span>mapped_signatures: Vec&lt;JsonValue&gt; = proposal.signed_psbts.iter().map(|psbt|{
+            JsonValue::String(str::from_utf8(<span class="kw-2">&amp;</span>psbt.signature).unwrap_or_default().chars().collect())
+        }).collect();
 
-        <span class="kw">let</span> <span class="ident">broadcast</span><span class="op">=</span> <span class="kw">match</span> <span class="ident">proposal</span>.<span class="ident">status</span>{
-            <span class="ident">ProposalStatus::ReadyToFinalize</span>(<span class="ident">flag</span>) =&gt; <span class="ident">flag</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+        <span class="kw">let </span>broadcast= <span class="kw">match </span>proposal.status{
+            ProposalStatus::ReadyToFinalize(flag) =&gt; flag,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;psbts&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Array</span>(<span class="ident">mapped_signatures</span>)));
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;descriptors&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Object</span>(<span class="ident">descriptors_body</span>) ));
-        <span class="ident">body</span>.<span class="ident">push</span>((<span class="string">&quot;broadcast&quot;</span>.<span class="ident">chars</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>(), <span class="ident">JsonValue::Boolean</span>(<span class="ident">broadcast</span>) ));
-        <span class="kw">let</span> <span class="ident">json_object</span> <span class="op">=</span> <span class="ident">JsonValue::Object</span>(<span class="ident">body</span>);
+        body.push((<span class="string">&quot;psbts&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Array(mapped_signatures)));
+        body.push((<span class="string">&quot;descriptors&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Object(descriptors_body) ));
+        body.push((<span class="string">&quot;broadcast&quot;</span>.chars().collect::&lt;Vec&lt;char&gt;&gt;(), JsonValue::Boolean(broadcast) ));
+        <span class="kw">let </span>json_object = JsonValue::Object(body);
 
-        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">jsonSerialize::format</span>(<span class="kw-2">&amp;</span><span class="ident">json_object</span>, <span class="number">4</span>) )
+        <span class="comment">// // Parse the JSON and print the resulting lite-json structure.
+        </span><span class="prelude-val">Ok</span>(jsonSerialize::format(<span class="kw-2">&amp;</span>json_object, <span class="number">4</span>) )
     }
 
-    <span class="comment">// pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-&gt; Result&lt;Vec&lt;u8&gt;,OffchainStatus &gt;{</span>
-    <span class="comment">//     let raw_json = Self::gen_finalize_json_body(proposal_id)?;</span>
-    <span class="comment">//     let request_body =</span>
-    <span class="comment">//         str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, &quot;Request body is not UTF-8&quot;) )?;</span>
+    <span class="comment">// pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-&gt; Result&lt;Vec&lt;u8&gt;,OffchainStatus &gt;{
+    //     let raw_json = Self::gen_finalize_json_body(proposal_id)?;
+    //     let request_body =
+    //         str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, &quot;Request body is not UTF-8&quot;) )?;
 
-    <span class="comment">//     let url = [&lt;BDKServicesURL&lt;T&gt;&gt;::get().to_vec(), b&quot;/finalize_trx&quot;.encode()].concat();</span>
+    //     let url = [&lt;BDKServicesURL&lt;T&gt;&gt;::get().to_vec(), b&quot;/finalize_trx&quot;.encode()].concat();
 
-    <span class="comment">//     let response_body = Self::http_post(</span>
-    <span class="comment">//         str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, &quot;URL is not UTF-8&quot;) )?,</span>
-    <span class="comment">//         request_body</span>
-    <span class="comment">//     )?;</span>
-    <span class="comment">//     // The psbt is not a json object, its a byte blob</span>
-    <span class="comment">//     Ok(response_body)</span>
-    <span class="comment">// }</span>
+    //     let response_body = Self::http_post(
+    //         str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, &quot;URL is not UTF-8&quot;) )?,
+    //         request_body
+    //     )?;
+    //     // The psbt is not a json object, its a byte blob
+    //     Ok(response_body)
+    // }
 
-    <span class="comment">// pub fn gen_finalized_proposals_by_bulk(proposals_to_finalize : Vec&lt;[u8;32]&gt;) -&gt; Vec&lt;u8&gt;{</span>
-    <span class="comment">//     let mut finalized_proposals = Vec::&lt;SingleProposalPayload&gt;::new();</span>
-    <span class="comment">//     finalized_proposals</span>
-    <span class="comment">// }</span>
+    // pub fn gen_finalized_proposals_by_bulk(proposals_to_finalize : Vec&lt;[u8;32]&gt;) -&gt; Vec&lt;u8&gt;{
+    //     let mut finalized_proposals = Vec::&lt;SingleProposalPayload&gt;::new();
+    //     finalized_proposals
+    // }
 
-    <span class="kw">fn</span> <span class="ident">build_offchain_err</span>(<span class="ident">recoverable</span>: <span class="ident">bool</span>, <span class="ident">msj</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> )-&gt; <span class="ident">OffchainStatus</span>{
-        <span class="kw">let</span> <span class="ident">bounded_msj</span> <span class="op">=</span> <span class="ident">msj</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
-        <span class="kw">match</span> <span class="ident">recoverable</span>{
-            <span class="bool-val">true</span> =&gt; <span class="ident">OffchainStatus::RecoverableError</span>(<span class="ident">bounded_msj</span>),
-            <span class="bool-val">false</span> =&gt; <span class="ident">OffchainStatus::IrrecoverableError</span>(<span class="ident">bounded_msj</span>),
+    </span><span class="kw">fn </span>build_offchain_err(recoverable: bool, msj: <span class="kw-2">&amp;</span>str )-&gt; OffchainStatus{
+        <span class="kw">let </span>bounded_msj = msj.as_bytes().to_vec();
+        <span class="kw">match </span>recoverable{
+            <span class="bool-val">true </span>=&gt; OffchainStatus::RecoverableError(bounded_msj),
+            <span class="bool-val">false </span>=&gt; OffchainStatus::IrrecoverableError(bounded_msj),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_ocw_insert_descriptors</span>( <span class="ident">generated_vaults</span> : <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleVaultPayload</span><span class="op">&gt;</span>, <span class="ident">signer</span>: <span class="kw-2">&amp;</span><span class="ident">Signer</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">T::AuthorityId</span><span class="op">&gt;</span>){
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">res</span>)) <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">send_unsigned_transaction</span>(
-            <span class="comment">// this line is to prepare and return payload</span>
-            <span class="op">|</span><span class="ident">acct</span><span class="op">|</span> <span class="ident">VaultsPayload</span> {
-                <span class="ident">vaults_payload</span>: <span class="ident">generated_vaults</span>.<span class="ident">clone</span>(),
-                <span class="ident">public</span>: <span class="ident">acct</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+    <span class="kw">pub fn </span>send_ocw_insert_descriptors( generated_vaults : Vec&lt;SingleVaultPayload&gt;, signer: <span class="kw-2">&amp;</span>Signer&lt;T, T::AuthorityId&gt;){
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, res)) = signer.send_unsigned_transaction(
+            <span class="comment">// this line is to prepare and return payload
+            </span>|acct| VaultsPayload {
+                vaults_payload: generated_vaults.clone(),
+                public: acct.public.clone(),
             },
-            <span class="op">|</span><span class="ident">payload</span>, <span class="ident">signature</span><span class="op">|</span> <span class="ident">Call::ocw_insert_descriptors</span> { <span class="ident">payload</span>, <span class="ident">signature</span> },
+            |payload, signature| Call::ocw_insert_descriptors { payload, signature },
         ) {
-            <span class="kw">match</span> <span class="ident">res</span> {
+            <span class="kw">match </span>res {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Insert Descriptors: unsigned tx with signed vault payload successfully sent.&quot;</span>),
                 <span class="prelude-val">Err</span>(()) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;Insert Descriptors: sending unsigned tx with signed vault payload failed.&quot;</span>),
             };
         }
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_ocw_insert_psbts</span>( <span class="ident">generated_proposals</span> : <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span>, <span class="ident">signer</span>: <span class="kw-2">&amp;</span><span class="ident">Signer</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">T::AuthorityId</span><span class="op">&gt;</span>){
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">res</span>)) <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">send_unsigned_transaction</span>(
-            <span class="comment">// this line is to prepare and return payload</span>
-            <span class="op">|</span><span class="ident">acct</span><span class="op">|</span> <span class="ident">ProposalsPayload</span> {
-                <span class="ident">proposals_payload</span>: <span class="ident">generated_proposals</span>.<span class="ident">clone</span>(),
-                <span class="ident">public</span>: <span class="ident">acct</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+    <span class="kw">pub fn </span>send_ocw_insert_psbts( generated_proposals : Vec&lt;SingleProposalPayload&gt;, signer: <span class="kw-2">&amp;</span>Signer&lt;T, T::AuthorityId&gt;){
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, res)) = signer.send_unsigned_transaction(
+            <span class="comment">// this line is to prepare and return payload
+            </span>|acct| ProposalsPayload {
+                proposals_payload: generated_proposals.clone(),
+                public: acct.public.clone(),
             },
-            <span class="op">|</span><span class="ident">payload</span>, <span class="ident">signature</span><span class="op">|</span> <span class="ident">Call::ocw_insert_psbts</span> { <span class="ident">payload</span>, <span class="ident">signature</span> },
+            |payload, signature| Call::ocw_insert_psbts { payload, signature },
         ) {
-            <span class="kw">match</span> <span class="ident">res</span> {
+            <span class="kw">match </span>res {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Insert PSBTS: unsigned tx with signed payload successfully sent.&quot;</span>),
                 <span class="prelude-val">Err</span>(()) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;Insert PSBTS: sending unsigned tx with signed payload failed.&quot;</span>),
             };
-        } <span class="kw">else</span> {
-            <span class="comment">// The case of `None`: no account is available for sending</span>
-            <span class="macro">log::error!</span>(<span class="string">&quot;No local account available&quot;</span>);
+        } <span class="kw">else </span>{
+            <span class="comment">// The case of `None`: no account is available for sending
+            </span><span class="macro">log::error!</span>(<span class="string">&quot;No local account available&quot;</span>);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_ocw_finalize_psbts</span>( <span class="ident">generated_proposals</span> : <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SingleProposalPayload</span><span class="op">&gt;</span>, <span class="ident">signer</span>: <span class="kw-2">&amp;</span><span class="ident">Signer</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">T::AuthorityId</span><span class="op">&gt;</span>){
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">res</span>)) <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">send_unsigned_transaction</span>(
-            <span class="comment">// this line is to prepare and return payload</span>
-            <span class="op">|</span><span class="ident">acct</span><span class="op">|</span> <span class="ident">ProposalsPayload</span> {
-                <span class="ident">proposals_payload</span>: <span class="ident">generated_proposals</span>.<span class="ident">clone</span>(),
-                <span class="ident">public</span>: <span class="ident">acct</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+    <span class="kw">pub fn </span>send_ocw_finalize_psbts( generated_proposals : Vec&lt;SingleProposalPayload&gt;, signer: <span class="kw-2">&amp;</span>Signer&lt;T, T::AuthorityId&gt;){
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, res)) = signer.send_unsigned_transaction(
+            <span class="comment">// this line is to prepare and return payload
+            </span>|acct| ProposalsPayload {
+                proposals_payload: generated_proposals.clone(),
+                public: acct.public.clone(),
             },
-            <span class="op">|</span><span class="ident">payload</span>, <span class="ident">signature</span><span class="op">|</span> <span class="ident">Call::ocw_finalize_psbts</span> { <span class="ident">payload</span>, <span class="ident">signature</span> },
+            |payload, signature| Call::ocw_finalize_psbts { payload, signature },
         ) {
-            <span class="kw">match</span> <span class="ident">res</span> {
+            <span class="kw">match </span>res {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Finalize PSBTS: unsigned tx with signed payload successfully sent.&quot;</span>),
                 <span class="prelude-val">Err</span>(()) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;Finalize PSBTS: sending unsigned tx with signed payload failed.&quot;</span>),
             };
-        } <span class="kw">else</span> {
-            <span class="comment">// The case of `None`: no account is available for sending</span>
-            <span class="macro">log::error!</span>(<span class="string">&quot;No local account available&quot;</span>);
+        } <span class="kw">else </span>{
+            <span class="comment">// The case of `None`: no account is available for sending
+            </span><span class="macro">log::error!</span>(<span class="string">&quot;No local account available&quot;</span>);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chars_to_bytes</span>(<span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">u8</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="kw">pub fn </span>chars_to_bytes(v: Vec&lt;char&gt;) -&gt; Vec&lt;u8&gt; {
+        v.iter().map(|c| <span class="kw-2">*</span>c <span class="kw">as </span>u8).collect::&lt;Vec&lt;u8&gt;&gt;()
     }
 }
 
-<span class="comment">/*--- Block Number provider section. Needed to implement locks on offchain storage*/</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">BlockNumberProvider</span> <span class="kw">for</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="ident">T::BlockNumber</span>;
+<span class="comment">/*--- Block Number provider section. Needed to implement locks on offchain storage*/
+</span><span class="kw">impl</span>&lt;T: Config&gt; BlockNumberProvider <span class="kw">for </span>Pallet&lt;T&gt; {
+    <span class="kw">type </span>BlockNumber = T::BlockNumber;
 
-    <span class="kw">fn</span> <span class="ident">current_block_number</span>() -&gt; <span class="ident"><span class="self">Self</span>::BlockNumber</span> {
-        <span class="op">&lt;</span><span class="ident">frame_system::Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::block_number</span>()
+    <span class="kw">fn </span>current_block_number() -&gt; <span class="self">Self</span>::BlockNumber {
+        &lt;frame_system::Pallet&lt;T&gt;&gt;::block_number()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

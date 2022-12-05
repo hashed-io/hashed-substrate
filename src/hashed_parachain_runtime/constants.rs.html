@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `parachain-runtime/src/constants.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constants.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../hashed_parachain_runtime/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../hashed_parachain_runtime/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hashed_parachain_runtime/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `parachain-runtime/src/constants.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constants.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../hashed_parachain_runtime/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../hashed_parachain_runtime/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hashed_parachain_runtime/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -82,89 +82,89 @@
 <span id="82">82</span>
 <span id="83">83</span>
 <span id="84">84</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2019-2020 Parity Technologies (UK) Ltd.</span>
-<span class="comment">// This file is part of Polkadot.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2019-2020 Parity Technologies (UK) Ltd.
+// This file is part of Polkadot.
 
-<span class="comment">// Polkadot is free software: you can redistribute it and/or modify</span>
-<span class="comment">// it under the terms of the GNU General Public License as published by</span>
-<span class="comment">// the Free Software Foundation, either version 3 of the License, or</span>
-<span class="comment">// (at your option) any later version.</span>
+// Polkadot is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-<span class="comment">// Polkadot is distributed in the hope that it will be useful,</span>
-<span class="comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-<span class="comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
-<span class="comment">// GNU General Public License for more details.</span>
+// Polkadot is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-<span class="comment">// You should have received a copy of the GNU General Public License</span>
-<span class="comment">// along with Polkadot.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Balance</span> <span class="op">=</span> <span class="ident">u128</span>;
-<span class="doccomment">/// The block number type used by Polkadot.</span>
-<span class="doccomment">/// 32-bits will allow for 136 years of blocks assuming 1 block per second.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="ident">u32</span>;
+// You should have received a copy of the GNU General Public License
+// along with Polkadot.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+</span><span class="kw">pub type </span>Balance = u128;
+<span class="doccomment">/// The block number type used by Polkadot.
+/// 32-bits will allow for 136 years of blocks assuming 1 block per second.
+</span><span class="kw">pub type </span>BlockNumber = u32;
 
-<span class="doccomment">/// An instant or duration in time.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Moment</span> <span class="op">=</span> <span class="ident">u64</span>;
+<span class="doccomment">/// An instant or duration in time.
+</span><span class="kw">pub type </span>Moment = u64;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXISTENTIAL_DEPOSIT</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="number">1</span> <span class="op">*</span> <span class="ident">CENTS</span>;
+<span class="kw">pub const </span>EXISTENTIAL_DEPOSIT: Balance = <span class="number">1 </span>* CENTS;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UNITS</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="number">1_000_000_000_000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CENTS</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="ident">UNITS</span> <span class="op">/</span> <span class="number">30_000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GRAND</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="ident">CENTS</span> <span class="op">*</span> <span class="number">100_000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MILLICENTS</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="ident">CENTS</span> <span class="op">/</span> <span class="number">1_000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DOLLARS</span>: <span class="ident">Balance</span> <span class="op">=</span> <span class="number">100</span> <span class="op">*</span> <span class="ident">CENTS</span>; <span class="comment">// 0x0000_0000_0000_0000_0000_5af3_107a_4000u128</span>
+<span class="kw">pub const </span>UNITS: Balance = <span class="number">1_000_000_000_000</span>;
+<span class="kw">pub const </span>CENTS: Balance = UNITS / <span class="number">30_000</span>;
+<span class="kw">pub const </span>GRAND: Balance = CENTS * <span class="number">100_000</span>;
+<span class="kw">pub const </span>MILLICENTS: Balance = CENTS / <span class="number">1_000</span>;
+<span class="kw">pub const </span>DOLLARS: Balance = <span class="number">100 </span>* CENTS; <span class="comment">// 0x0000_0000_0000_0000_0000_5af3_107a_4000u128
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">deposit</span>(<span class="ident">items</span>: <span class="ident">u32</span>, <span class="ident">bytes</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Balance</span> {
-	<span class="ident">items</span> <span class="kw">as</span> <span class="ident">Balance</span> <span class="op">*</span> <span class="number">2_000</span> <span class="op">*</span> <span class="ident">CENTS</span> <span class="op">+</span> (<span class="ident">bytes</span> <span class="kw">as</span> <span class="ident">Balance</span>) <span class="op">*</span> <span class="number">100</span> <span class="op">*</span> <span class="ident">MILLICENTS</span>
+</span><span class="kw">pub const fn </span>deposit(items: u32, bytes: u32) -&gt; Balance {
+	items <span class="kw">as </span>Balance * <span class="number">2_000 </span>* CENTS + (bytes <span class="kw">as </span>Balance) * <span class="number">100 </span>* MILLICENTS
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MILLISECS_PER_BLOCK</span>: <span class="ident">Moment</span> <span class="op">=</span> <span class="number">6000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SLOT_DURATION</span>: <span class="ident">Moment</span> <span class="op">=</span> <span class="ident">MILLISECS_PER_BLOCK</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EPOCH_DURATION_IN_SLOTS</span>: <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="number">1</span> <span class="op">*</span> <span class="ident">HOURS</span>;
+<span class="kw">pub const </span>MILLISECS_PER_BLOCK: Moment = <span class="number">6000</span>;
+<span class="kw">pub const </span>SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
+<span class="kw">pub const </span>EPOCH_DURATION_IN_SLOTS: BlockNumber = <span class="number">1 </span>* HOURS;
 
-<span class="comment">// These time units are defined in number of blocks.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MINUTES</span>: <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="number">60_000</span> <span class="op">/</span> (<span class="ident">MILLISECS_PER_BLOCK</span> <span class="kw">as</span> <span class="ident">BlockNumber</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HOURS</span>: <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="ident">MINUTES</span> <span class="op">*</span> <span class="number">60</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAYS</span>: <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="ident">HOURS</span> <span class="op">*</span> <span class="number">24</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WEEKS</span>: <span class="ident">BlockNumber</span> <span class="op">=</span> <span class="ident">DAYS</span> <span class="op">*</span> <span class="number">7</span>;
+<span class="comment">// These time units are defined in number of blocks.
+</span><span class="kw">pub const </span>MINUTES: BlockNumber = <span class="number">60_000 </span>/ (MILLISECS_PER_BLOCK <span class="kw">as </span>BlockNumber);
+<span class="kw">pub const </span>HOURS: BlockNumber = MINUTES * <span class="number">60</span>;
+<span class="kw">pub const </span>DAYS: BlockNumber = HOURS * <span class="number">24</span>;
+<span class="kw">pub const </span>WEEKS: BlockNumber = DAYS * <span class="number">7</span>;
 
-<span class="comment">// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PRIMARY_PROBABILITY</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>) <span class="op">=</span> (<span class="number">1</span>, <span class="number">4</span>);
+<span class="comment">// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
+</span><span class="kw">pub const </span>PRIMARY_PROBABILITY: (u64, u64) = (<span class="number">1</span>, <span class="number">4</span>);
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">XPUB_LEN</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">166</span>;
-<span class="comment">// #![cfg_attr(not(feature = &quot;std&quot;), no_std)]</span>
-<span class="comment">// Money matters.</span>
-<span class="comment">// pub mod currency {</span>
-<span class="comment">// 	// use primitives::v0::Balance;</span>
+<span class="kw">pub const </span>XPUB_LEN: u32 = <span class="number">166</span>;
+<span class="comment">// #![cfg_attr(not(feature = &quot;std&quot;), no_std)]
+// Money matters.
+// pub mod currency {
+// 	// use primitives::v0::Balance;
 
-<span class="comment">// 	/// The existential deposit.</span>
-<span class="comment">// 	pub const EXISTENTIAL_DEPOSIT: Balance = 1 * CENTS;</span>
+// 	/// The existential deposit.
+// 	pub const EXISTENTIAL_DEPOSIT: Balance = 1 * CENTS;
 
-<span class="comment">// 	pub const UNITS: Balance = 1_000_000_000_000;</span>
-<span class="comment">// 	pub const CENTS: Balance = UNITS / 30_000;</span>
-<span class="comment">// 	pub const GRAND: Balance = CENTS * 100_000;</span>
-<span class="comment">// 	pub const MILLICENTS: Balance = CENTS / 1_000;</span>
-<span class="comment">// 	pub const DOLLARS: Balance = 100 * CENTS; // 0x0000_0000_0000_0000_0000_5af3_107a_4000u128</span>
+// 	pub const UNITS: Balance = 1_000_000_000_000;
+// 	pub const CENTS: Balance = UNITS / 30_000;
+// 	pub const GRAND: Balance = CENTS * 100_000;
+// 	pub const MILLICENTS: Balance = CENTS / 1_000;
+// 	pub const DOLLARS: Balance = 100 * CENTS; // 0x0000_0000_0000_0000_0000_5af3_107a_4000u128
 
-<span class="comment">// 	pub const fn deposit(items: u32, bytes: u32) -&gt; Balance {</span>
-<span class="comment">// 		items as Balance * 2_000 * CENTS + (bytes as Balance) * 100 * MILLICENTS</span>
-<span class="comment">// 	}</span>
-<span class="comment">// }</span>
+// 	pub const fn deposit(items: u32, bytes: u32) -&gt; Balance {
+// 		items as Balance * 2_000 * CENTS + (bytes as Balance) * 100 * MILLICENTS
+// 	}
+// }
 
-<span class="comment">// Time and blocks.</span>
-<span class="comment">// pub mod time {</span>
-<span class="comment">// 	// use primitives::v0::{BlockNumber, Moment};</span>
-<span class="comment">// 	pub const MILLISECS_PER_BLOCK: Moment = 6000;</span>
-<span class="comment">// 	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;</span>
-<span class="comment">// 	pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 1 * HOURS;</span>
+// Time and blocks.
+// pub mod time {
+// 	// use primitives::v0::{BlockNumber, Moment};
+// 	pub const MILLISECS_PER_BLOCK: Moment = 6000;
+// 	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
+// 	pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = 1 * HOURS;
 
-<span class="comment">// 	// These time units are defined in number of blocks.</span>
-<span class="comment">// 	pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);</span>
-<span class="comment">// 	pub const HOURS: BlockNumber = MINUTES * 60;</span>
-<span class="comment">// 	pub const DAYS: BlockNumber = HOURS * 24;</span>
-<span class="comment">// 	pub const WEEKS: BlockNumber = DAYS * 7;</span>
+// 	// These time units are defined in number of blocks.
+// 	pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
+// 	pub const HOURS: BlockNumber = MINUTES * 60;
+// 	pub const DAYS: BlockNumber = HOURS * 24;
+// 	pub const WEEKS: BlockNumber = DAYS * 7;
 
-<span class="comment">// 	// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.</span>
-<span class="comment">// 	pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);</span>
-<span class="comment">// }</span>
-</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashed_parachain_runtime" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+// 	// 1 in 4 blocks (on average, not counting collisions) will be primary babe blocks.
+// 	pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
+// }
+</span></code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashed_parachain_runtime" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

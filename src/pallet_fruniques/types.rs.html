@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fruniques/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_fruniques/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fruniques/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_fruniques/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -163,170 +163,170 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Defines the types required by the fruniques pallet</span>
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="doccomment">//! Defines the types required by the fruniques pallet
+</span><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime::Permill</span>;
+<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
+<span class="kw">use </span>sp_runtime::Permill;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttributeKey</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet_uniques::Config</span><span class="op">&gt;</span><span class="ident">::KeyLimit</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttributeValue</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet_uniques::Config</span><span class="op">&gt;</span><span class="ident">::ValueLimit</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Attributes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">AttributeKey</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">AttributeValue</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>)<span class="op">&gt;</span>;
+<span class="kw">pub type </span>AttributeKey&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::KeyLimit&gt;;
+<span class="kw">pub type </span>AttributeValue&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ValueLimit&gt;;
+<span class="kw">pub type </span>Attributes&lt;T&gt; = Vec&lt;(AttributeKey&lt;T&gt;, AttributeValue&lt;T&gt;)&gt;;
 
-<span class="comment">// pub type CollectionDescription = [u8; 32];</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">StringLimit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">pallet_uniques::Config</span><span class="op">&gt;</span><span class="ident">::StringLimit</span><span class="op">&gt;</span>;
+<span class="comment">// pub type CollectionDescription = [u8; 32];
+</span><span class="kw">pub type </span>StringLimit&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::StringLimit&gt;;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CollectionId</span> <span class="op">=</span> <span class="ident">u32</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ItemId</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="kw">pub type </span>CollectionId = u32;
+<span class="kw">pub type </span>ItemId = u32;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CollectionDescription</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StringLimit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
-<span class="comment">// (ParentId, Hierarchical, Percentage)</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">HierarchicalInfo</span> <span class="op">=</span> (<span class="ident">ItemId</span>, <span class="ident">bool</span>, <span class="ident">u8</span>);
+<span class="kw">pub type </span>CollectionDescription&lt;T&gt; = StringLimit&lt;T&gt;;
+<span class="comment">// (ParentId, Hierarchical, Percentage)
+</span><span class="kw">pub type </span>HierarchicalInfo = (ItemId, bool, u8);
 
-<span class="comment">// pub type RoleId&lt;T&gt; =</span>
+<span class="comment">// pub type RoleId&lt;T&gt; =
 
-<span class="comment">// pub type RoleIds&lt;T&gt; = BoundedVec&lt;[u8; 32], &lt;&lt;T as Config&gt;::Rbac as RoleBasedAccessControl&lt;&lt;T as Config&gt;::AccountId&gt;&gt;::MaxRolesPerPallet&gt;;</span>
+// pub type RoleIds&lt;T&gt; = BoundedVec&lt;[u8; 32], &lt;&lt;T as Config&gt;::Rbac as RoleBasedAccessControl&lt;&lt;T as Config&gt;::AccountId&gt;&gt;::MaxRolesPerPallet&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChildInfo</span> {
-	<span class="kw">pub</span> <span class="ident">collection_id</span>: <span class="ident">CollectionId</span>,
-	<span class="kw">pub</span> <span class="ident">child_id</span>: <span class="ident">ItemId</span>,
-	<span class="kw">pub</span> <span class="ident">is_hierarchical</span>: <span class="ident">bool</span>,
-	<span class="kw">pub</span> <span class="ident">weight</span>: <span class="ident">Permill</span>,
+</span><span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+</span><span class="kw">pub struct </span>ChildInfo {
+	<span class="kw">pub </span>collection_id: CollectionId,
+	<span class="kw">pub </span>child_id: ItemId,
+	<span class="kw">pub </span>is_hierarchical: bool,
+	<span class="kw">pub </span>weight: Permill,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FruniqueInheritance</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-	<span class="kw">pub</span> <span class="ident">parent</span>: (<span class="ident">CollectionId</span>, <span class="ident">ItemId</span>),
-	<span class="kw">pub</span> <span class="ident">children</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">ChildInfo</span>, <span class="ident">T::ChildMaxLen</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>FruniqueInheritance&lt;T: Config&gt; {
+	<span class="kw">pub </span>parent: (CollectionId, ItemId),
+	<span class="kw">pub </span>children: BoundedVec&lt;ChildInfo, T::ChildMaxLen&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(
-	<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>,
-)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FruniqueRole</span> {
-	<span class="ident">Owner</span>,
-	<span class="ident">Admin</span>,
-	<span class="ident">Collaborator</span>,
-	<span class="ident">Collector</span>,
-	<span class="ident">Holder</span>,
+<span class="attribute">#[derive(
+	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
+</span><span class="kw">pub enum </span>FruniqueRole {
+	Owner,
+	Admin,
+	Collaborator,
+	Collector,
+	Holder,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FruniqueRole</span> {
-	<span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-		<span class="ident">FruniqueRole::Collector</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>FruniqueRole {
+	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+		FruniqueRole::Collector
 	}
 }
 
-<span class="kw">impl</span> <span class="ident">FruniqueRole</span> {
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-		<span class="kw">match</span> <span class="self">self</span> {
-			<span class="ident"><span class="self">Self</span>::Owner</span> =&gt; <span class="string">&quot;Owner&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Admin</span> =&gt; <span class="string">&quot;Admin&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Collaborator</span> =&gt; <span class="string">&quot;Collaborator&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Collector</span> =&gt; <span class="string">&quot;Collector&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Holder</span> =&gt; <span class="string">&quot;Holder&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+<span class="kw">impl </span>FruniqueRole {
+	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+		<span class="kw">match </span><span class="self">self </span>{
+			<span class="self">Self</span>::Owner =&gt; <span class="string">&quot;Owner&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Admin =&gt; <span class="string">&quot;Admin&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Collaborator =&gt; <span class="string">&quot;Collaborator&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Collector =&gt; <span class="string">&quot;Collector&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Holder =&gt; <span class="string">&quot;Holder&quot;</span>.as_bytes().to_vec(),
 		}
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
-		<span class="self">self</span>.<span class="ident">to_vec</span>().<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>)
+	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_owner_roles</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		[<span class="ident"><span class="self">Self</span>::Owner</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_owner_roles() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		[<span class="self">Self</span>::Owner.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_admin_roles</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		[<span class="ident"><span class="self">Self</span>::Admin</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_admin_roles() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		[<span class="self">Self</span>::Admin.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_collaborator_roles</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		[<span class="ident"><span class="self">Self</span>::Collaborator</span>.<span class="ident">to_vec</span>()]
-			.<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_collaborator_roles() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		[<span class="self">Self</span>::Collaborator.to_vec()]
+			.to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_collector_roles</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		[<span class="ident"><span class="self">Self</span>::Collector</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_collector_roles() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		[<span class="self">Self</span>::Collector.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_holder_roles</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		[<span class="ident"><span class="self">Self</span>::Holder</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_holder_roles() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		[<span class="self">Self</span>::Holder.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enum_to_vec</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::FruniqueRole</span>::<span class="kw-2">*</span>;
-		[<span class="ident">Owner</span>.<span class="ident">to_vec</span>(), <span class="ident">Admin</span>.<span class="ident">to_vec</span>(), <span class="ident">Collaborator</span>.<span class="ident">to_vec</span>(), <span class="ident">Collector</span>.<span class="ident">to_vec</span>(), <span class="ident">Holder</span>.<span class="ident">to_vec</span>()]
-			.<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::FruniqueRole::<span class="kw-2">*</span>;
+		[Owner.to_vec(), Admin.to_vec(), Collaborator.to_vec(), Collector.to_vec(), Holder.to_vec()]
+			.to_vec()
 	}
 }
 
-<span class="doccomment">/// Extrinsics which require previous authorization to call them</span>
-<span class="attribute">#[<span class="ident">derive</span>(
-	<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>,
-)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Permission</span> {
-	<span class="doccomment">/// Not a permission</span>
-	<span class="prelude-val">None</span>,
-	<span class="doccomment">/// Authorization required and must be approved by the owner</span>
-	<span class="ident">Mint</span>,
-	<span class="doccomment">/// Authorization required and must be approved by a holder / collector</span>
-	<span class="ident">Transfer</span>,
-	<span class="doccomment">/// Allow a user to collaborate on a collection</span>
-	<span class="ident">InviteCollaborator</span>,
+<span class="doccomment">/// Extrinsics which require previous authorization to call them
+</span><span class="attribute">#[derive(
+	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
+</span><span class="kw">pub enum </span>Permission {
+	<span class="doccomment">/// Not a permission
+	</span><span class="prelude-val">None</span>,
+	<span class="doccomment">/// Authorization required and must be approved by the owner
+	</span>Mint,
+	<span class="doccomment">/// Authorization required and must be approved by a holder / collector
+	</span>Transfer,
+	<span class="doccomment">/// Allow a user to collaborate on a collection
+	</span>InviteCollaborator,
 }
 
-<span class="kw">impl</span> <span class="ident">Permission</span> {
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-		<span class="kw">match</span> <span class="self">self</span> {
-			<span class="ident"><span class="self">Self</span>::None</span> =&gt; <span class="string">&quot;None&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Mint</span> =&gt; <span class="string">&quot;Mint&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::Transfer</span> =&gt; <span class="string">&quot;Transfer&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-			<span class="ident"><span class="self">Self</span>::InviteCollaborator</span> =&gt; <span class="string">&quot;InviteCollaborator&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+<span class="kw">impl </span>Permission {
+	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+		<span class="kw">match </span><span class="self">self </span>{
+			<span class="self">Self</span>::None =&gt; <span class="string">&quot;None&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Mint =&gt; <span class="string">&quot;Mint&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::Transfer =&gt; <span class="string">&quot;Transfer&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::InviteCollaborator =&gt; <span class="string">&quot;InviteCollaborator&quot;</span>.as_bytes().to_vec(),
 		}
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
-		<span class="self">self</span>.<span class="ident">to_vec</span>().<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>)
+	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		[<span class="prelude-val">None</span>.<span class="ident">to_vec</span>(), <span class="ident">Mint</span>.<span class="ident">to_vec</span>(), <span class="ident">Transfer</span>.<span class="ident">to_vec</span>(), <span class="ident">InviteCollaborator</span>.<span class="ident">to_vec</span>()]
-			.<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>get_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		[<span class="prelude-val">None</span>.to_vec(), Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()]
+			.to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">owner_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		[<span class="ident">Mint</span>.<span class="ident">to_vec</span>(), <span class="ident">Transfer</span>.<span class="ident">to_vec</span>(), <span class="ident">InviteCollaborator</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>owner_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		[Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">admin_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">admin_permissions</span> <span class="op">=</span>
-			[<span class="ident">Mint</span>.<span class="ident">to_vec</span>(), <span class="ident">InviteCollaborator</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>();
-		<span class="ident">admin_permissions</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">Permission::holder_permissions</span>());
-		<span class="ident">admin_permissions</span>
+	<span class="kw">pub fn </span>admin_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		<span class="kw">let </span><span class="kw-2">mut </span>admin_permissions =
+			[Mint.to_vec(), InviteCollaborator.to_vec()].to_vec();
+		admin_permissions.append(<span class="kw-2">&amp;mut </span>Permission::holder_permissions());
+		admin_permissions
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collaborator_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		[<span class="ident">Mint</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>collaborator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		[Mint.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">collector_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		[<span class="prelude-val">None</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>collector_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		[<span class="prelude-val">None</span>.to_vec()].to_vec()
 	}
 
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">holder_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-		<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Permission</span>::<span class="kw-2">*</span>;
-		[<span class="ident">Transfer</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+	<span class="kw">pub fn </span>holder_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+		[Transfer.to_vec()].to_vec()
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fruniques" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fruniques" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

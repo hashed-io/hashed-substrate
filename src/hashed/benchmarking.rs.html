@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `node/src/benchmarking.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>benchmarking.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../hashed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../hashed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hashed/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `node/src/benchmarking.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>benchmarking.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../hashed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../hashed/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hashed/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -181,188 +181,188 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
-</pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.</span>
+</pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
-<span class="comment">// Copyright (C) 2022 Parity Technologies (UK) Ltd.</span>
-<span class="comment">// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0</span>
+// Copyright (C) 2022 Parity Technologies (UK) Ltd.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
-<span class="comment">// This program is free software: you can redistribute it and/or modify</span>
-<span class="comment">// it under the terms of the GNU General Public License as published by</span>
-<span class="comment">// the Free Software Foundation, either version 3 of the License, or</span>
-<span class="comment">// (at your option) any later version.</span>
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-<span class="comment">// This program is distributed in the hope that it will be useful,</span>
-<span class="comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
-<span class="comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
-<span class="comment">// GNU General Public License for more details.</span>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
 
-<span class="comment">// You should have received a copy of the GNU General Public License</span>
-<span class="comment">// along with this program. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see &lt;https://www.gnu.org/licenses/&gt;.
 
-<span class="doccomment">//! Setup code for [`super::command`] which would otherwise bloat that module.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Should only be used for benchmarking as it may break in other contexts.</span>
+</span><span class="doccomment">//! Setup code for [`super::command`] which would otherwise bloat that module.
+//!
+//! Should only be used for benchmarking as it may break in other contexts.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::service::FullClient</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::service::FullClient;
 
-<span class="kw">use</span> <span class="ident">hashed_runtime</span> <span class="kw">as</span> <span class="ident">runtime</span>;
-<span class="kw">use</span> <span class="ident">runtime</span>::{<span class="ident">AccountId</span>, <span class="ident">Balance</span>, <span class="ident">BalancesCall</span>, <span class="ident">SystemCall</span>};
-<span class="kw">use</span> <span class="ident">sc_cli::Result</span>;
-<span class="kw">use</span> <span class="ident">sc_client_api::BlockBackend</span>;
-<span class="kw">use</span> <span class="ident">sp_core</span>::{<span class="ident">Encode</span>, <span class="ident">Pair</span>};
-<span class="kw">use</span> <span class="ident">sp_inherents</span>::{<span class="ident">InherentData</span>, <span class="ident">InherentDataProvider</span>};
-<span class="kw">use</span> <span class="ident">sp_keyring::Sr25519Keyring</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime</span>::{<span class="ident">OpaqueExtrinsic</span>, <span class="ident">SaturatedConversion</span>};
+<span class="kw">use </span>hashed_runtime <span class="kw">as </span>runtime;
+<span class="kw">use </span>runtime::{AccountId, Balance, BalancesCall, SystemCall};
+<span class="kw">use </span>sc_cli::Result;
+<span class="kw">use </span>sc_client_api::BlockBackend;
+<span class="kw">use </span>sp_core::{Encode, Pair};
+<span class="kw">use </span>sp_inherents::{InherentData, InherentDataProvider};
+<span class="kw">use </span>sp_keyring::Sr25519Keyring;
+<span class="kw">use </span>sp_runtime::{OpaqueExtrinsic, SaturatedConversion};
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">sync::Arc</span>, <span class="ident">time::Duration</span>};
+<span class="kw">use </span>std::{sync::Arc, time::Duration};
 
-<span class="doccomment">/// Generates extrinsics for the `benchmark overhead` command.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note: Should only be used for benchmarking.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RemarkBuilder</span> {
-	<span class="ident">client</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">FullClient</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Generates extrinsics for the `benchmark overhead` command.
+///
+/// Note: Should only be used for benchmarking.
+</span><span class="kw">pub struct </span>RemarkBuilder {
+	client: Arc&lt;FullClient&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RemarkBuilder</span> {
-	<span class="doccomment">/// Creates a new [`Self`] from the given client.</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">client</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">FullClient</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-		<span class="self">Self</span> { <span class="ident">client</span> }
+<span class="kw">impl </span>RemarkBuilder {
+	<span class="doccomment">/// Creates a new [`Self`] from the given client.
+	</span><span class="kw">pub fn </span>new(client: Arc&lt;FullClient&gt;) -&gt; <span class="self">Self </span>{
+		<span class="self">Self </span>{ client }
 	}
 }
 
-<span class="kw">impl</span> <span class="ident">frame_benchmarking_cli::ExtrinsicBuilder</span> <span class="kw">for</span> <span class="ident">RemarkBuilder</span> {
-	<span class="kw">fn</span> <span class="ident">pallet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-		<span class="string">&quot;system&quot;</span>
-	}
+<span class="kw">impl </span>frame_benchmarking_cli::ExtrinsicBuilder <span class="kw">for </span>RemarkBuilder {
+	<span class="kw">fn </span>pallet(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+		<span class="string">&quot;system&quot;
+	</span>}
 
-	<span class="kw">fn</span> <span class="ident">extrinsic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-		<span class="string">&quot;remark&quot;</span>
-	}
+	<span class="kw">fn </span>extrinsic(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+		<span class="string">&quot;remark&quot;
+	</span>}
 
-	<span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">nonce</span>: <span class="ident">u32</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">OpaqueExtrinsic</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-		<span class="kw">let</span> <span class="ident">acc</span> <span class="op">=</span> <span class="ident">Sr25519Keyring::Bob</span>.<span class="ident">pair</span>();
-		<span class="kw">let</span> <span class="ident">extrinsic</span>: <span class="ident">OpaqueExtrinsic</span> <span class="op">=</span> <span class="ident">create_benchmark_extrinsic</span>(
-			<span class="self">self</span>.<span class="ident">client</span>.<span class="ident">as_ref</span>(),
-			<span class="ident">acc</span>,
-			<span class="ident">SystemCall::remark</span> { <span class="ident">remark</span>: <span class="macro">vec!</span>[] }.<span class="ident">into</span>(),
-			<span class="ident">nonce</span>,
+	<span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>, nonce: u32) -&gt; std::result::Result&lt;OpaqueExtrinsic, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+		<span class="kw">let </span>acc = Sr25519Keyring::Bob.pair();
+		<span class="kw">let </span>extrinsic: OpaqueExtrinsic = create_benchmark_extrinsic(
+			<span class="self">self</span>.client.as_ref(),
+			acc,
+			SystemCall::remark { remark: <span class="macro">vec!</span>[] }.into(),
+			nonce,
 		)
-		.<span class="ident">into</span>();
+		.into();
 
-		<span class="prelude-val">Ok</span>(<span class="ident">extrinsic</span>)
+		<span class="prelude-val">Ok</span>(extrinsic)
 	}
 }
 
-<span class="doccomment">/// Generates `Balances::TransferKeepAlive` extrinsics for the benchmarks.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note: Should only be used for benchmarking.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransferKeepAliveBuilder</span> {
-	<span class="ident">client</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">FullClient</span><span class="op">&gt;</span>,
-	<span class="ident">dest</span>: <span class="ident">AccountId</span>,
-	<span class="ident">value</span>: <span class="ident">Balance</span>,
+<span class="doccomment">/// Generates `Balances::TransferKeepAlive` extrinsics for the benchmarks.
+///
+/// Note: Should only be used for benchmarking.
+</span><span class="kw">pub struct </span>TransferKeepAliveBuilder {
+	client: Arc&lt;FullClient&gt;,
+	dest: AccountId,
+	value: Balance,
 }
 
-<span class="kw">impl</span> <span class="ident">TransferKeepAliveBuilder</span> {
-	<span class="comment">// Creates a new [`Self`] from the given client.</span>
-	<span class="comment">// pub fn new(client: Arc&lt;FullClient&gt;, dest: AccountId, value: Balance) -&gt; Self {</span>
-	<span class="comment">// 	Self { client, dest, value }</span>
-	<span class="comment">// }</span>
-}
+<span class="kw">impl </span>TransferKeepAliveBuilder {
+	<span class="comment">// Creates a new [`Self`] from the given client.
+	// pub fn new(client: Arc&lt;FullClient&gt;, dest: AccountId, value: Balance) -&gt; Self {
+	// 	Self { client, dest, value }
+	// }
+</span>}
 
-<span class="kw">impl</span> <span class="ident">frame_benchmarking_cli::ExtrinsicBuilder</span> <span class="kw">for</span> <span class="ident">TransferKeepAliveBuilder</span> {
-	<span class="kw">fn</span> <span class="ident">pallet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-		<span class="string">&quot;balances&quot;</span>
-	}
+<span class="kw">impl </span>frame_benchmarking_cli::ExtrinsicBuilder <span class="kw">for </span>TransferKeepAliveBuilder {
+	<span class="kw">fn </span>pallet(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+		<span class="string">&quot;balances&quot;
+	</span>}
 
-	<span class="kw">fn</span> <span class="ident">extrinsic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-		<span class="string">&quot;transfer_keep_alive&quot;</span>
-	}
+	<span class="kw">fn </span>extrinsic(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+		<span class="string">&quot;transfer_keep_alive&quot;
+	</span>}
 
-	<span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">nonce</span>: <span class="ident">u32</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">OpaqueExtrinsic</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-		<span class="kw">let</span> <span class="ident">acc</span> <span class="op">=</span> <span class="ident">Sr25519Keyring::Bob</span>.<span class="ident">pair</span>();
-		<span class="kw">let</span> <span class="ident">extrinsic</span>: <span class="ident">OpaqueExtrinsic</span> <span class="op">=</span> <span class="ident">create_benchmark_extrinsic</span>(
-			<span class="self">self</span>.<span class="ident">client</span>.<span class="ident">as_ref</span>(),
-			<span class="ident">acc</span>,
-			<span class="ident">BalancesCall::transfer_keep_alive</span> {
-				<span class="ident">dest</span>: <span class="self">self</span>.<span class="ident">dest</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-				<span class="ident">value</span>: <span class="self">self</span>.<span class="ident">value</span>.<span class="ident">into</span>(),
+	<span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>, nonce: u32) -&gt; std::result::Result&lt;OpaqueExtrinsic, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+		<span class="kw">let </span>acc = Sr25519Keyring::Bob.pair();
+		<span class="kw">let </span>extrinsic: OpaqueExtrinsic = create_benchmark_extrinsic(
+			<span class="self">self</span>.client.as_ref(),
+			acc,
+			BalancesCall::transfer_keep_alive {
+				dest: <span class="self">self</span>.dest.clone().into(),
+				value: <span class="self">self</span>.value.into(),
 			}
-			.<span class="ident">into</span>(),
-			<span class="ident">nonce</span>,
+			.into(),
+			nonce,
 		)
-		.<span class="ident">into</span>();
+		.into();
 
-		<span class="prelude-val">Ok</span>(<span class="ident">extrinsic</span>)
+		<span class="prelude-val">Ok</span>(extrinsic)
 	}
 }
 
-<span class="doccomment">/// Create a transaction using the given `call`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note: Should only be used for benchmarking.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_benchmark_extrinsic</span>(
-	<span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">FullClient</span>,
-	<span class="ident">sender</span>: <span class="ident">sp_core::sr25519::Pair</span>,
-	<span class="ident">call</span>: <span class="ident">runtime::Call</span>,
-	<span class="ident">nonce</span>: <span class="ident">u32</span>,
-) -&gt; <span class="ident">runtime::UncheckedExtrinsic</span> {
-	<span class="kw">let</span> <span class="ident">genesis_hash</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">block_hash</span>(<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">flatten</span>().<span class="ident">expect</span>(<span class="string">&quot;Genesis block exists; qed&quot;</span>);
-	<span class="kw">let</span> <span class="ident">best_hash</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">chain_info</span>().<span class="ident">best_hash</span>;
-	<span class="kw">let</span> <span class="ident">best_block</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">chain_info</span>().<span class="ident">best_number</span>;
+<span class="doccomment">/// Create a transaction using the given `call`.
+///
+/// Note: Should only be used for benchmarking.
+</span><span class="kw">pub fn </span>create_benchmark_extrinsic(
+	client: <span class="kw-2">&amp;</span>FullClient,
+	sender: sp_core::sr25519::Pair,
+	call: runtime::Call,
+	nonce: u32,
+) -&gt; runtime::UncheckedExtrinsic {
+	<span class="kw">let </span>genesis_hash = client.block_hash(<span class="number">0</span>).ok().flatten().expect(<span class="string">&quot;Genesis block exists; qed&quot;</span>);
+	<span class="kw">let </span>best_hash = client.chain_info().best_hash;
+	<span class="kw">let </span>best_block = client.chain_info().best_number;
 
-	<span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">runtime::BlockHashCount::get</span>()
-		.<span class="ident">checked_next_power_of_two</span>()
-		.<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">/</span> <span class="number">2</span>)
-		.<span class="ident">unwrap_or</span>(<span class="number">2</span>) <span class="kw">as</span> <span class="ident">u64</span>;
-	<span class="kw">let</span> <span class="ident">extra</span>: <span class="ident">runtime::SignedExtra</span> <span class="op">=</span> (
-		<span class="ident">frame_system::CheckNonZeroSender</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::new</span>(),
-		<span class="ident">frame_system::CheckSpecVersion</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::new</span>(),
-		<span class="ident">frame_system::CheckTxVersion</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::new</span>(),
-		<span class="ident">frame_system::CheckGenesis</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::new</span>(),
-		<span class="ident">frame_system::CheckEra</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">sp_runtime::generic::Era::mortal</span>(
-			<span class="ident">period</span>,
-			<span class="ident">best_block</span>.<span class="ident">saturated_into</span>(),
+	<span class="kw">let </span>period = runtime::BlockHashCount::get()
+		.checked_next_power_of_two()
+		.map(|c| c / <span class="number">2</span>)
+		.unwrap_or(<span class="number">2</span>) <span class="kw">as </span>u64;
+	<span class="kw">let </span>extra: runtime::SignedExtra = (
+		frame_system::CheckNonZeroSender::&lt;runtime::Runtime&gt;::new(),
+		frame_system::CheckSpecVersion::&lt;runtime::Runtime&gt;::new(),
+		frame_system::CheckTxVersion::&lt;runtime::Runtime&gt;::new(),
+		frame_system::CheckGenesis::&lt;runtime::Runtime&gt;::new(),
+		frame_system::CheckEra::&lt;runtime::Runtime&gt;::from(sp_runtime::generic::Era::mortal(
+			period,
+			best_block.saturated_into(),
 		)),
-		<span class="ident">frame_system::CheckNonce</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">nonce</span>),
-		<span class="ident">frame_system::CheckWeight</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::new</span>(),
-		<span class="ident">pallet_transaction_payment::ChargeTransactionPayment</span>::<span class="op">&lt;</span><span class="ident">runtime::Runtime</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="number">0</span>),
+		frame_system::CheckNonce::&lt;runtime::Runtime&gt;::from(nonce),
+		frame_system::CheckWeight::&lt;runtime::Runtime&gt;::new(),
+		pallet_transaction_payment::ChargeTransactionPayment::&lt;runtime::Runtime&gt;::from(<span class="number">0</span>),
 	);
 
-	<span class="kw">let</span> <span class="ident">raw_payload</span> <span class="op">=</span> <span class="ident">runtime::SignedPayload::from_raw</span>(
-		<span class="ident">call</span>.<span class="ident">clone</span>(),
-		<span class="ident">extra</span>.<span class="ident">clone</span>(),
+	<span class="kw">let </span>raw_payload = runtime::SignedPayload::from_raw(
+		call.clone(),
+		extra.clone(),
 		(
 			(),
-			<span class="ident">runtime::VERSION</span>.<span class="ident">spec_version</span>,
-			<span class="ident">runtime::VERSION</span>.<span class="ident">transaction_version</span>,
-			<span class="ident">genesis_hash</span>,
-			<span class="ident">best_hash</span>,
+			runtime::VERSION.spec_version,
+			runtime::VERSION.transaction_version,
+			genesis_hash,
+			best_hash,
 			(),
 			(),
 			(),
 		),
 	);
-	<span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">raw_payload</span>.<span class="ident">using_encoded</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">sender</span>.<span class="ident">sign</span>(<span class="ident">e</span>));
+	<span class="kw">let </span>signature = raw_payload.using_encoded(|e| sender.sign(e));
 
-	<span class="ident">runtime::UncheckedExtrinsic::new_signed</span>(
-		<span class="ident">call</span>.<span class="ident">clone</span>(),
-		<span class="ident">sp_runtime::AccountId32::from</span>(<span class="ident">sender</span>.<span class="ident">public</span>()).<span class="ident">into</span>(),
-		<span class="ident">runtime::Signature::Sr25519</span>(<span class="ident">signature</span>.<span class="ident">clone</span>()),
-		<span class="ident">extra</span>.<span class="ident">clone</span>(),
+	runtime::UncheckedExtrinsic::new_signed(
+		call.clone(),
+		sp_runtime::AccountId32::from(sender.public()).into(),
+		runtime::Signature::Sr25519(signature.clone()),
+		extra.clone(),
 	)
 }
 
-<span class="doccomment">/// Generates inherent data for the `benchmark overhead` command.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note: Should only be used for benchmarking.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inherent_benchmark_data</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InherentData</span><span class="op">&gt;</span> {
-	<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inherent_data</span> <span class="op">=</span> <span class="ident">InherentData::new</span>();
-	<span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">Duration::from_millis</span>(<span class="number">0</span>);
-	<span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">sp_timestamp::InherentDataProvider::new</span>(<span class="ident">d</span>.<span class="ident">into</span>());
+<span class="doccomment">/// Generates inherent data for the `benchmark overhead` command.
+///
+/// Note: Should only be used for benchmarking.
+</span><span class="kw">pub fn </span>inherent_benchmark_data() -&gt; <span class="prelude-ty">Result</span>&lt;InherentData&gt; {
+	<span class="kw">let </span><span class="kw-2">mut </span>inherent_data = InherentData::new();
+	<span class="kw">let </span>d = Duration::from_millis(<span class="number">0</span>);
+	<span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::new(d.into());
 
-	<span class="ident">timestamp</span>
-		.<span class="ident">provide_inherent_data</span>(<span class="kw-2">&amp;mut</span> <span class="ident">inherent_data</span>)
-		.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;creating inherent data: {:?}&quot;</span>, <span class="ident">e</span>))<span class="question-mark">?</span>;
-	<span class="prelude-val">Ok</span>(<span class="ident">inherent_data</span>)
+	timestamp
+		.provide_inherent_data(<span class="kw-2">&amp;mut </span>inherent_data)
+		.map_err(|e| <span class="macro">format!</span>(<span class="string">&quot;creating inherent data: {:?}&quot;</span>, e))<span class="question-mark">?</span>;
+	<span class="prelude-val">Ok</span>(inherent_data)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

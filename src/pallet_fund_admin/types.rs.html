@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fund-admin/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_fund_admin/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_fund_admin/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_fund_admin/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fund-admin/src/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_fund_admin/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_fund_admin/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_fund_admin/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -328,335 +328,337 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support::pallet_prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">frame_support::sp_io::hashing::blake2_256</span>;
-<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::vec::Vec</span>;
+<span id="331">331</span>
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
-<span class="comment">//TODO: Fix types when using an Option, i.e: Option&lt;CID&gt;</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FieldName</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">100</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FieldDescription</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">400</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CID</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">100</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span>(<span class="ident">FieldName</span>,<span class="ident">CID</span>), <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Config</span><span class="op">&gt;</span><span class="ident">::MaxDocuments</span><span class="op">&gt;</span>;
+<span class="kw">pub type </span>FieldName = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
+<span class="kw">pub type </span>FieldDescription = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
+<span class="kw">pub type </span>CID = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
+<span class="kw">pub type </span>Documents&lt;T&gt; = BoundedVec&lt;(FieldName,CID), &lt;T <span class="kw">as </span>Config&gt;::MaxDocuments&gt;;
 
-<span class="comment">// Projects</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ProjectId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CreationDate</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CompletionDate</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UpdatedDate</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RegistrationDate</span> <span class="op">=</span> <span class="ident">u64</span>;
+<span class="comment">// Projects
+</span><span class="kw">pub type </span>ProjectId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>CreationDate = u64;
+<span class="kw">pub type </span>CompletionDate = u64;
+<span class="kw">pub type </span>UpdatedDate = u64;
+<span class="kw">pub type </span>RegistrationDate = u64;
+<span class="kw">pub type </span>BankName = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
+<span class="kw">pub type </span>BankAddress = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 
-<span class="comment">// Users</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DateRegistered</span> <span class="op">=</span> <span class="ident">u64</span>;
+<span class="comment">// Users
+</span><span class="kw">pub type </span>DateRegistered = u64;
 
-<span class="comment">// Transactions</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TransactionId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Amount</span> <span class="op">=</span> <span class="ident">u64</span>;
+<span class="comment">// Transactions
+</span><span class="kw">pub type </span>TransactionId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>Amount = u64;
 
-<span class="comment">// Drawdowns</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DrawdownId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DrawdownNumber</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="comment">// Drawdowns
+</span><span class="kw">pub type </span>DrawdownId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>DrawdownNumber = u32;
 
-<span class="comment">// Budget expenditures</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BudgetExpenditureId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExpenditureAmount</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Balance</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">NAICSCode</span> <span class="op">=</span> <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">400</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">JobsMultiplier</span> <span class="op">=</span> <span class="ident">u32</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InflationRate</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="comment">// Budget expenditures
+</span><span class="kw">pub type </span>BudgetExpenditureId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>ExpenditureAmount = u64;
+<span class="kw">pub type </span>Balance = u64;
+<span class="kw">pub type </span>NAICSCode = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
+<span class="kw">pub type </span>JobsMultiplier = u32;
+<span class="kw">pub type </span>InflationRate = u32;
 
-<span class="comment">// Miscellaneous</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CreatedDate</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CloseDate</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TotalAmount</span> <span class="op">=</span> <span class="ident">u64</span>;
+<span class="comment">// Miscellaneous
+</span><span class="kw">pub type </span>CreatedDate = u64;
+<span class="kw">pub type </span>CloseDate = u64;
+<span class="kw">pub type </span>TotalAmount = u64;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProjectData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">builder</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxBuildersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">investor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxInvestorsPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">issuer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxIssuersPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">regional_center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxRegionalCenterPerProject</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">title</span>: <span class="ident">FieldName</span>,
-    <span class="kw">pub</span> <span class="ident">description</span>: <span class="ident">FieldDescription</span>,
-    <span class="kw">pub</span> <span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CID</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">FieldName</span>,
-    <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">ProjectStatus</span>,
-    <span class="kw">pub</span> <span class="ident">inflation_rate</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">InflationRate</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">creation_date</span>: <span class="ident">CreationDate</span>,
-    <span class="kw">pub</span> <span class="ident">completion_date</span>: <span class="ident">CompletionDate</span>,
-    <span class="kw">pub</span> <span class="ident">registration_date</span>: <span class="ident">RegistrationDate</span>,
-    <span class="kw">pub</span> <span class="ident">updated_date</span>: <span class="ident">UpdatedDate</span>,
-	<span class="kw">pub</span> <span class="ident">eb5_drawdown_status</span>: <span class="ident">DrawdownStatus</span>,
-	<span class="kw">pub</span> <span class="ident">construction_loan_drawdown_status</span>: <span class="ident">DrawdownStatus</span>,
-	<span class="kw">pub</span> <span class="ident">developer_equity_drawdown_status</span>: <span class="ident">DrawdownStatus</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>ProjectData&lt;T: Config&gt; {
+    <span class="kw">pub </span>builder: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxBuildersPerProject&gt;&gt;,
+    <span class="kw">pub </span>investor: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxInvestorsPerProject&gt;&gt;,
+    <span class="kw">pub </span>issuer: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxIssuersPerProject&gt;&gt;,
+    <span class="kw">pub </span>regional_center: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxRegionalCenterPerProject&gt;&gt;,
+    <span class="kw">pub </span>title: FieldName,
+    <span class="kw">pub </span>description: FieldDescription,
+    <span class="kw">pub </span>image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
+    <span class="kw">pub </span>address: FieldName,
+    <span class="kw">pub </span>status: ProjectStatus,
+    <span class="kw">pub </span>inflation_rate: <span class="prelude-ty">Option</span>&lt;InflationRate&gt;,
+    <span class="kw">pub </span>banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
+    <span class="kw">pub </span>creation_date: CreationDate,
+    <span class="kw">pub </span>completion_date: CompletionDate,
+    <span class="kw">pub </span>registration_date: RegistrationDate,
+    <span class="kw">pub </span>updated_date: UpdatedDate,
+	<span class="kw">pub </span>eb5_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProjectStatus</span> {
-    <span class="ident">Started</span>,
-    <span class="ident">Completed</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>ProjectStatus {
+    Started,
+    Completed,
 }
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ProjectStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">ProjectStatus::Started</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>ProjectStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        ProjectStatus::Started
     }
 }
 
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UserData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">FieldName</span>,
-    <span class="kw">pub</span> <span class="ident">role</span>: <span class="ident">ProxyRole</span>,
-    <span class="kw">pub</span> <span class="ident">image</span>: <span class="ident">CID</span>,
-    <span class="kw">pub</span> <span class="ident">date_registered</span>: <span class="ident">DateRegistered</span>,
-    <span class="kw">pub</span> <span class="ident">email</span>: <span class="ident">FieldName</span>,
-    <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>UserData&lt;T: Config&gt; {
+    <span class="kw">pub </span>name: FieldName,
+    <span class="kw">pub </span>role: ProxyRole,
+    <span class="kw">pub </span>image: CID,
+    <span class="kw">pub </span>date_registered: DateRegistered,
+    <span class="kw">pub </span>email: FieldName,
+    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyRole</span> {
-    <span class="ident">Administrator</span>,
-    <span class="ident">Builder</span>,
-    <span class="ident">Investor</span>,
-    <span class="ident">Issuer</span>,
-    <span class="ident">RegionalCenter</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>ProxyRole {
+    Administrator,
+    Builder,
+    Investor,
+    Issuer,
+    RegionalCenter,
 }
 
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExpenditureData</span> {
-    <span class="kw">pub</span> <span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">FieldName</span>,
-    <span class="kw">pub</span> <span class="ident">expenditure_type</span>: <span class="ident">ExpenditureType</span>,
-    <span class="kw">pub</span> <span class="ident">expenditure_amount</span>: <span class="ident">ExpenditureAmount</span>,
-    <span class="kw">pub</span> <span class="ident">naics_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">jobs_multiplier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JobsMultiplier</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+</span><span class="kw">pub struct </span>ExpenditureData {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>name: FieldName,
+    <span class="kw">pub </span>expenditure_type: ExpenditureType,
+    <span class="kw">pub </span>expenditure_amount: ExpenditureAmount,
+    <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExpenditureType</span> {
-    <span class="ident">HardCost</span>,
-    <span class="ident">SoftCost</span>,
-    <span class="ident">Operational</span>,
-    <span class="ident">Others</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>ExpenditureType {
+    HardCost,
+    SoftCost,
+    Operational,
+    Others,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ExpenditureType</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">ExpenditureType::HardCost</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>ExpenditureType {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        ExpenditureType::HardCost
     }
 }
 
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">Default</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BudgetData</span> {
-    <span class="kw">pub</span> <span class="ident">expenditure_id</span>: <span class="ident">BudgetExpenditureId</span>,
-    <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">Balance</span>,
-    <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">CreatedDate</span>,
-    <span class="kw">pub</span> <span class="ident">updated_date</span>: <span class="ident">UpdatedDate</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+</span><span class="kw">pub struct </span>BudgetData {
+    <span class="kw">pub </span>expenditure_id: BudgetExpenditureId,
+    <span class="kw">pub </span>balance: Balance,
+    <span class="kw">pub </span>created_date: CreatedDate,
+    <span class="kw">pub </span>updated_date: UpdatedDate,
 }
 
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrawdownData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
-    <span class="kw">pub</span> <span class="ident">drawdown_number</span>: <span class="ident">DrawdownNumber</span>,
-    <span class="kw">pub</span> <span class="ident">drawdown_type</span>: <span class="ident">DrawdownType</span>,
-    <span class="kw">pub</span> <span class="ident">total_amount</span>: <span class="ident">TotalAmount</span>,
-    <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">DrawdownStatus</span>,
-    <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">CreatedDate</span>,
-    <span class="kw">pub</span> <span class="ident">close_date</span>: <span class="ident">CloseDate</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>DrawdownData&lt;T: Config&gt; {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>drawdown_number: DrawdownNumber,
+    <span class="kw">pub </span>drawdown_type: DrawdownType,
+    <span class="kw">pub </span>total_amount: TotalAmount,
+    <span class="kw">pub </span>status: DrawdownStatus,
+    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>created_date: CreatedDate,
+    <span class="kw">pub </span>close_date: CloseDate,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownType</span> {
-    <span class="ident">EB5</span>,
-    <span class="ident">ConstructionLoan</span>,
-    <span class="ident">DeveloperEquity</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>DrawdownType {
+    EB5,
+    ConstructionLoan,
+    DeveloperEquity,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DrawdownType</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">DrawdownType::EB5</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>DrawdownType {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        DrawdownType::EB5
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrawdownStatus</span> {
-	<span class="prelude-val">None</span>,
-    <span class="ident">Draft</span>,
-    <span class="ident">Submitted</span>,
-    <span class="ident">Approved</span>,
-    <span class="ident">Rejected</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>DrawdownStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DrawdownStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">DrawdownStatus::Draft</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>DrawdownStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        DrawdownStatus::Draft
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CloneNoBound</span>, <span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">TypeInfo</span>, <span class="ident">MaxEncodedLen</span>,)]</span>
-<span class="attribute">#[<span class="ident">scale_info</span>(<span class="ident">skip_type_params</span>(<span class="ident">T</span>))]</span>
-<span class="attribute">#[<span class="ident">codec</span>(<span class="ident">mel_bound</span>())]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionData</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">project_id</span>: <span class="ident">ProjectId</span>,
-    <span class="kw">pub</span> <span class="ident">drawdown_id</span>: <span class="ident">DrawdownId</span>,
-    <span class="kw">pub</span> <span class="ident">expenditure_id</span>: <span class="ident">BudgetExpenditureId</span>,
-    <span class="kw">pub</span> <span class="ident">created_date</span>: <span class="ident">CreatedDate</span>,
-    <span class="kw">pub</span> <span class="ident">updated_date</span>: <span class="ident">UpdatedDate</span>,
-    <span class="kw">pub</span> <span class="ident">closed_date</span>: <span class="ident">CloseDate</span>,
-    <span class="kw">pub</span> <span class="ident">feedback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FieldDescription</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">ExpenditureAmount</span>,
-    <span class="kw">pub</span> <span class="ident">status</span>: <span class="ident">TransactionStatus</span>,
-    <span class="kw">pub</span> <span class="ident">documents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Documents</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>TransactionData&lt;T: Config&gt; {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>drawdown_id: DrawdownId,
+    <span class="kw">pub </span>expenditure_id: BudgetExpenditureId,
+    <span class="kw">pub </span>created_date: CreatedDate,
+    <span class="kw">pub </span>updated_date: UpdatedDate,
+    <span class="kw">pub </span>closed_date: CloseDate,
+    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>amount: ExpenditureAmount,
+    <span class="kw">pub </span>status: TransactionStatus,
+    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionStatus</span> {
-    <span class="ident">Draft</span>,
-    <span class="ident">Submitted</span>,
-    <span class="ident">Approved</span>,
-    <span class="ident">Rejected</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>TransactionStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TransactionStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">TransactionStatus::Draft</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>TransactionStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        TransactionStatus::Draft
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CUDAction</span> {
-    <span class="ident">Create</span>,
-    <span class="ident">Update</span>,
-    <span class="ident">Delete</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>CUDAction {
+    Create,
+    Update,
+    Delete,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AssignAction</span> {
-    <span class="ident">Assign</span>,
-    <span class="ident">Unassign</span>,
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>AssignAction {
+    Assign,
+    Unassign,
 }
 
-<span class="kw">impl</span> <span class="ident">ProxyRole</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>{
-        <span class="kw">match</span> <span class="self">self</span>{
-            <span class="comment">//TOREVIEW: optimization (?)</span>
-            <span class="comment">//Self::Administrator =&gt; b&quot;Administrator&quot;.to_vec(),</span>
-            <span class="ident"><span class="self">Self</span>::Administrator</span> =&gt; <span class="string">&quot;Administrator&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Builder</span> =&gt; <span class="string">&quot;Builder&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Investor</span> =&gt; <span class="string">&quot;Investor&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Issuer</span> =&gt; <span class="string">&quot;Issuer&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::RegionalCenter</span> =&gt; <span class="string">&quot;RegionalCenter&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+<span class="kw">impl </span>ProxyRole {
+    <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
+        <span class="kw">match </span><span class="self">self</span>{
+            <span class="comment">//TOREVIEW: optimization (?)
+            //Self::Administrator =&gt; b&quot;Administrator&quot;.to_vec(),
+            </span><span class="self">Self</span>::Administrator =&gt; <span class="string">&quot;Administrator&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Builder =&gt; <span class="string">&quot;Builder&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Investor =&gt; <span class="string">&quot;Investor&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Issuer =&gt; <span class="string">&quot;Issuer&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::RegionalCenter =&gt; <span class="string">&quot;RegionalCenter&quot;</span>.as_bytes().to_vec(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>;<span class="number">32</span>]{
-        <span class="self">self</span>.<span class="ident">to_vec</span>().<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>)
+    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8;<span class="number">32</span>]{
+        <span class="self">self</span>.to_vec().using_encoded(blake2_256)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enum_to_vec</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyRole</span>::<span class="kw-2">*</span>;
-        [<span class="ident">Administrator</span>.<span class="ident">to_vec</span>(), <span class="ident">Builder</span>.<span class="ident">to_vec</span>(), <span class="ident">Investor</span>.<span class="ident">to_vec</span>(), <span class="ident">Issuer</span>.<span class="ident">to_vec</span>(), <span class="ident">RegionalCenter</span>.<span class="ident">to_vec</span>()].<span class="ident">to_vec</span>()
+    <span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyRole::<span class="kw-2">*</span>;
+        [Administrator.to_vec(), Builder.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
     }
 
 }
 
 
 
-<span class="doccomment">/// Extrinsics which require previous authorization to call them</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Encode</span>, <span class="ident">Decode</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">RuntimeDebugNoBound</span>, <span class="ident">MaxEncodedLen</span>, <span class="ident">TypeInfo</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProxyPermission</span> {
-    <span class="ident">RegisterUser</span>, <span class="comment">// users</span>
-    <span class="ident">EditUser</span>, <span class="comment">// users_edit_user</span>
-    <span class="ident">CreateProject</span>, <span class="comment">// projects_create_project</span>
-    <span class="ident">EditProject</span>, <span class="comment">// projects_edit_project</span>
-    <span class="ident">DeleteProject</span>, <span class="comment">// projects_delete_project</span>
-    <span class="ident">AssignUser</span>, <span class="comment">// projects_assign_user</span>
-    <span class="ident">Expenditures</span>, <span class="comment">// expenditures</span>
-    <span class="ident">SubmitDrawdown</span>, <span class="comment">// submit_drawdown</span>
-    <span class="ident">ApproveDrawdown</span>, <span class="comment">// approve_drawdown</span>
-    <span class="ident">RejectDrawdown</span>, <span class="comment">// reject_drawdown</span>
-    <span class="ident">UpBulkupload</span>, <span class="comment">// up_bulkupload</span>
-    <span class="ident">Inflation</span>, <span class="comment">// inflation</span>
-}
+<span class="doccomment">/// Extrinsics which require previous authorization to call them
+</span><span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>ProxyPermission {
+    RegisterUser, <span class="comment">// users
+    </span>EditUser, <span class="comment">// users_edit_user
+    </span>CreateProject, <span class="comment">// projects_create_project
+    </span>EditProject, <span class="comment">// projects_edit_project
+    </span>DeleteProject, <span class="comment">// projects_delete_project
+    </span>AssignUser, <span class="comment">// projects_assign_user
+    </span>Expenditures, <span class="comment">// expenditures
+    </span>SubmitDrawdown, <span class="comment">// submit_drawdown
+    </span>ApproveDrawdown, <span class="comment">// approve_drawdown
+    </span>RejectDrawdown, <span class="comment">// reject_drawdown
+    </span>UpBulkupload, <span class="comment">// up_bulkupload
+    </span>Inflation, <span class="comment">// inflation
+</span>}
 
-<span class="kw">impl</span> <span class="ident">ProxyPermission</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>{
-        <span class="kw">match</span> <span class="self">self</span>{
-            <span class="ident"><span class="self">Self</span>::RegisterUser</span> =&gt; <span class="string">&quot;RegisterUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::EditUser</span> =&gt; <span class="string">&quot;EditUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::CreateProject</span> =&gt; <span class="string">&quot;CreateProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::EditProject</span> =&gt; <span class="string">&quot;EditProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::DeleteProject</span> =&gt; <span class="string">&quot;DeleteProject&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::AssignUser</span> =&gt; <span class="string">&quot;AssignUser&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Expenditures</span> =&gt; <span class="string">&quot;Expenditures&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::SubmitDrawdown</span> =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::ApproveDrawdown</span> =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::RejectDrawdown</span> =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::UpBulkupload</span> =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-            <span class="ident"><span class="self">Self</span>::Inflation</span> =&gt; <span class="string">&quot;Inflation&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+<span class="kw">impl </span>ProxyPermission {
+    <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
+        <span class="kw">match </span><span class="self">self</span>{
+            <span class="self">Self</span>::RegisterUser =&gt; <span class="string">&quot;RegisterUser&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;EditUser&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::CreateProject =&gt; <span class="string">&quot;CreateProject&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::EditProject =&gt; <span class="string">&quot;EditProject&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::DeleteProject =&gt; <span class="string">&quot;DeleteProject&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::AssignUser =&gt; <span class="string">&quot;AssignUser&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Expenditures =&gt; <span class="string">&quot;Expenditures&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::SubmitDrawdown =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::ApproveDrawdown =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::RejectDrawdown =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::UpBulkupload =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Inflation =&gt; <span class="string">&quot;Inflation&quot;</span>.as_bytes().to_vec(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>;<span class="number">32</span>]{
-        <span class="self">self</span>.<span class="ident">to_vec</span>().<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>)
+    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8;<span class="number">32</span>]{
+        <span class="self">self</span>.to_vec().using_encoded(blake2_256)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">administrator_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
-        <span class="kw">let</span> <span class="ident">administrator_permissions</span> <span class="op">=</span> [
-            <span class="ident">RegisterUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">CreateProject</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">EditProject</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">DeleteProject</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">AssignUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">Expenditures</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">SubmitDrawdown</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">ApproveDrawdown</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">RejectDrawdown</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">UpBulkupload</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">Inflation</span>.<span class="ident">to_vec</span>(),
-        ].<span class="ident">to_vec</span>();
-        <span class="ident">administrator_permissions</span>
+    <span class="kw">pub fn </span>administrator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+        <span class="kw">let </span>administrator_permissions = [
+            RegisterUser.to_vec(),
+            EditUser.to_vec(),
+            CreateProject.to_vec(),
+            EditProject.to_vec(),
+            DeleteProject.to_vec(),
+            AssignUser.to_vec(),
+            Expenditures.to_vec(),
+            SubmitDrawdown.to_vec(),
+            ApproveDrawdown.to_vec(),
+            RejectDrawdown.to_vec(),
+            UpBulkupload.to_vec(),
+            Inflation.to_vec(),
+        ].to_vec();
+        administrator_permissions
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub fn </span>builder_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
         [
-            <span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">SubmitDrawdown</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">UpBulkupload</span>.<span class="ident">to_vec</span>(),
-        ].<span class="ident">to_vec</span>()
+            EditUser.to_vec(),
+            SubmitDrawdown.to_vec(),
+            UpBulkupload.to_vec(),
+        ].to_vec()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">investor_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
-        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    <span class="kw">pub fn </span>investor_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+        [EditUser.to_vec(),].to_vec()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">issuer_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
-        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    <span class="kw">pub fn </span>issuer_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+        [EditUser.to_vec(),].to_vec()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regional_center_permissions</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>{
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ProxyPermission</span>::<span class="kw-2">*</span>;
-        [<span class="ident">EditUser</span>.<span class="ident">to_vec</span>(),].<span class="ident">to_vec</span>()
+    <span class="kw">pub fn </span>regional_center_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
+        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+        [EditUser.to_vec(),].to_vec()
     }
 
 
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

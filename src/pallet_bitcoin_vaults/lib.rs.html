@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_bitcoin_vaults/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -751,757 +751,757 @@
 <span id="751">751</span>
 <span id="752">752</span>
 <span id="753">753</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+</pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pallet</span>::<span class="kw-2">*</span>;
+</span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">mock</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>mock;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-benchmarks&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">benchmarking</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
+</span><span class="kw">mod </span>benchmarking;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
-<span class="kw">mod</span> <span class="ident">functions</span>;
+<span class="kw">pub mod </span>types;
+<span class="kw">mod </span>functions;
 
-<span class="attribute">#[<span class="ident">frame_support::pallet</span>]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pallet</span> {
-	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>};
-	<span class="comment">//#[cfg(feature = &quot;std&quot;)]</span>
-	<span class="comment">//use frame_support::serde::{Deserialize, Serialize};</span>
-	<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::<span class="kw-2">*</span>;
-	<span class="kw">use</span> <span class="ident">frame_support</span>::{
-		<span class="ident">pallet_prelude</span>::{<span class="ident">BoundedVec</span>},
-		<span class="ident">traits::Get</span>,
+<span class="attribute">#[frame_support::pallet]
+</span><span class="kw">pub mod </span>pallet {
+	<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
+	<span class="comment">//#[cfg(feature = &quot;std&quot;)]
+	//use frame_support::serde::{Deserialize, Serialize};
+	</span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+	<span class="kw">use </span>frame_support::{
+		pallet_prelude::{BoundedVec},
+		traits::Get,
 	};
-	<span class="kw">use</span> <span class="ident">frame_support</span>::{<span class="ident">sp_io::hashing::blake2_256</span>, <span class="ident">transactional</span>};
-	<span class="kw">use</span> <span class="ident">frame_system</span>::{
-		<span class="ident">offchain</span>::{
-			<span class="ident">AppCrypto</span>, <span class="ident">CreateSignedTransaction</span>,
-			<span class="ident">SignedPayload</span>, <span class="ident">Signer</span>,
+	<span class="kw">use </span>frame_support::{sp_io::hashing::blake2_256, transactional};
+	<span class="kw">use </span>frame_system::{
+		offchain::{
+			AppCrypto, CreateSignedTransaction,
+			SignedPayload, Signer,
 		},
-		<span class="ident">pallet_prelude</span>::<span class="kw-2">*</span>,
+		pallet_prelude::<span class="kw-2">*</span>,
 	};
-	<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::str</span>;
-	<span class="kw">use</span> <span class="ident">sp_runtime::sp_std::vec::Vec</span>;
-	<span class="kw">use</span> <span class="ident">sp_runtime</span>::{
-		<span class="ident">transaction_validity</span>::{<span class="ident">InvalidTransaction</span>, <span class="ident">TransactionValidity</span>, <span class="ident">ValidTransaction</span>},
-		<span class="ident">offchain</span>::{<span class="ident">Duration</span>, <span class="ident">storage_lock</span>::{<span class="ident">StorageLock</span>,<span class="ident">BlockAndTime</span>}},
+	<span class="kw">use </span>sp_runtime::sp_std::str;
+	<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
+	<span class="kw">use </span>sp_runtime::{
+		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
+		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 	};
 
-	<span class="comment">/*--- Genesis Structs Section ---*/</span>
+	<span class="comment">/*--- Genesis Structs Section ---*/
 
-	<span class="attribute">#[<span class="ident">pallet::genesis_config</span>]</span>
-	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenesisConfig</span>{
-		<span class="kw">pub</span> <span class="ident">bdk_services_url</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+	</span><span class="attribute">#[pallet::genesis_config]
+	</span><span class="kw">pub struct </span>GenesisConfig{
+		<span class="kw">pub </span>bdk_services_url: Vec&lt;u8&gt;,
 	}
 
-	<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-	<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">GenesisConfig</span> {
-		<span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-			<span class="self">Self</span> { <span class="ident">bdk_services_url</span>: <span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.<span class="ident">encode</span>() }
+	<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+	</span><span class="kw">impl </span>Default <span class="kw">for </span>GenesisConfig {
+		<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+			<span class="self">Self </span>{ bdk_services_url: <span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.encode() }
 		}
 	}
 	
-	<span class="attribute">#[<span class="ident">pallet::genesis_build</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">GenesisBuild</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">GenesisConfig</span> {
-		<span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-			<span class="op">&lt;</span><span class="ident">BDKServicesURL</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::put</span>(
-				<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>,<span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="self">self</span>.<span class="ident">bdk_services_url</span>.<span class="ident">clone</span>()).<span class="ident">unwrap_or_default</span>()
+	<span class="attribute">#[pallet::genesis_build]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; GenesisBuild&lt;T&gt; <span class="kw">for </span>GenesisConfig {
+		<span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+			&lt;BDKServicesURL&lt;T&gt;&gt;::put(
+				BoundedVec::&lt;u8,ConstU32&lt;<span class="number">32</span>&gt;&gt;::try_from(<span class="self">self</span>.bdk_services_url.clone()).unwrap_or_default()
 			);
 		}
 	}
 
-	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.</span>
-	<span class="attribute">#[<span class="ident">pallet::config</span>]</span>
-	<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Config</span>:
-		<span class="ident">frame_system::Config</span> <span class="op">+</span> <span class="ident">CreateSignedTransaction</span><span class="op">&lt;</span><span class="ident">Call</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>
+	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
+	</span><span class="attribute">#[pallet::config]
+	</span><span class="kw">pub trait </span>Config:
+		frame_system::Config + CreateSignedTransaction&lt;Call&lt;<span class="self">Self</span>&gt;&gt;
 	{
-		<span class="doccomment">/// The identifier type for an offchain worker.</span>
-		<span class="kw">type</span> <span class="ident">AuthorityId</span>: <span class="ident">AppCrypto</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Public</span>, <span class="ident"><span class="self">Self</span>::Signature</span><span class="op">&gt;</span>;
-		<span class="doccomment">/// Because this pallet emits events, it depends on the runtime&#39;s definition of an event.</span>
-		<span class="kw">type</span> <span class="ident">Event</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IsType</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">frame_system::Config</span><span class="op">&gt;</span><span class="ident">::Event</span><span class="op">&gt;</span>;
-		<span class="kw">type</span> <span class="ident">ChangeBDKOrigin</span> : <span class="ident">EnsureOrigin</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Origin</span><span class="op">&gt;</span>;
-		<span class="comment">/*--- PSBT params ---*/</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">XPubLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">PSBTMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="comment">/*--- Vault params ---*/</span>
-		<span class="doccomment">/// It counts both owned vaults and vaults where the user is a cosigner</span>
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxVaultsPerUser</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxCosignersPerVault</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">VaultDescriptionMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">OutputDescriptorMaxLen</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
-		<span class="attribute">#[<span class="ident">pallet::constant</span>]</span>
-		<span class="kw">type</span> <span class="ident">MaxProposalsPerVault</span>: <span class="ident">Get</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
+		<span class="doccomment">/// The identifier type for an offchain worker.
+		</span><span class="kw">type </span>AuthorityId: AppCrypto&lt;<span class="self">Self</span>::Public, <span class="self">Self</span>::Signature&gt;;
+		<span class="doccomment">/// Because this pallet emits events, it depends on the runtime&#39;s definition of an event.
+		</span><span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="kw">type </span>ChangeBDKOrigin : EnsureOrigin&lt;<span class="self">Self</span>::Origin&gt;;
+		<span class="comment">/*--- PSBT params ---*/
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>XPubLen: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>PSBTMaxLen: Get&lt;u32&gt;;
+		<span class="comment">/*--- Vault params ---*/
+		</span><span class="doccomment">/// It counts both owned vaults and vaults where the user is a cosigner
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxVaultsPerUser: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxCosignersPerVault: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>VaultDescriptionMaxLen: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>OutputDescriptorMaxLen: Get&lt;u32&gt;;
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxProposalsPerVault: Get&lt;u32&gt;;
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::pallet</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_store</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait</span> <span class="ident">Store</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">_</span>);
+	<span class="attribute">#[pallet::pallet]
+	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="attribute">#[<span class="ident">pallet::event</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::generate_deposit</span>(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deposit_event</span>)]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Xpub and hash stored</span>
-		<span class="ident">XPubStored</span>([<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// Removed Xpub previously linked to the account</span>
-		<span class="ident">XPubRemoved</span>(<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// The PBST was succesfully inserted by an OCW</span>
-		<span class="ident">PSBTStored</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
-		<span class="doccomment">/// The vault was succesfully inserted and linked to the account as owner</span>
-		<span class="ident">VaultStored</span>([<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// The vault was succesfully removed by its owner</span>
-		<span class="ident">VaultRemoved</span>([<span class="ident">u8</span>; <span class="number">32</span>],<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// An offchain worker inserted a vault&#39;s descriptor </span>
-		<span class="ident">DescriptorsStored</span>([<span class="ident">u8</span>;<span class="number">32</span>]),
-		<span class="doccomment">/// A proposal has been inserted. </span>
-		<span class="ident">ProposalStored</span>([<span class="ident">u8</span>;<span class="number">32</span>],<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// A proposal has been removed.</span>
-		<span class="ident">ProposalRemoved</span>([<span class="ident">u8</span>;<span class="number">32</span>],<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// The user has uploaded its own PSBT</span>
-		<span class="ident">ProposalSigned</span>([<span class="ident">u8</span>;<span class="number">32</span>],<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// A proposal has been set to be finalized</span>
-		<span class="ident">ProposalFinalized</span>([<span class="ident">u8</span>;<span class="number">32</span>],<span class="ident">T::AccountId</span>),
-		<span class="doccomment">/// A proposal tx has been inserted by an OCW</span>
-		<span class="ident">ProposalTxIdStored</span>([<span class="ident">u8</span>;<span class="number">32</span>])
+	<span class="attribute">#[pallet::event]
+	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+		<span class="doccomment">/// Xpub and hash stored
+		</span>XPubStored([u8; <span class="number">32</span>], T::AccountId),
+		<span class="doccomment">/// Removed Xpub previously linked to the account
+		</span>XPubRemoved(T::AccountId),
+		<span class="doccomment">/// The PBST was succesfully inserted by an OCW
+		</span>PSBTStored([u8;<span class="number">32</span>]),
+		<span class="doccomment">/// The vault was succesfully inserted and linked to the account as owner
+		</span>VaultStored([u8; <span class="number">32</span>], T::AccountId),
+		<span class="doccomment">/// The vault was succesfully removed by its owner
+		</span>VaultRemoved([u8; <span class="number">32</span>],T::AccountId),
+		<span class="doccomment">/// An offchain worker inserted a vault&#39;s descriptor 
+		</span>DescriptorsStored([u8;<span class="number">32</span>]),
+		<span class="doccomment">/// A proposal has been inserted. 
+		</span>ProposalStored([u8;<span class="number">32</span>],T::AccountId),
+		<span class="doccomment">/// A proposal has been removed.
+		</span>ProposalRemoved([u8;<span class="number">32</span>],T::AccountId),
+		<span class="doccomment">/// The user has uploaded its own PSBT
+		</span>ProposalSigned([u8;<span class="number">32</span>],T::AccountId),
+		<span class="doccomment">/// A proposal has been set to be finalized
+		</span>ProposalFinalized([u8;<span class="number">32</span>],T::AccountId),
+		<span class="doccomment">/// A proposal tx has been inserted by an OCW
+		</span>ProposalTxIdStored([u8;<span class="number">32</span>])
 	}
 
-	<span class="comment">// Errors inform users that something went wrong.</span>
-	<span class="attribute">#[<span class="ident">pallet::error</span>]</span>
-	<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Work in progress!</span>
-		<span class="ident">NotYetImplemented</span>,
-		<span class="doccomment">/// Xpub shouldn&#39;t be empty</span>
-		<span class="ident">NoneValue</span>,
-		<span class="comment">// The xpub has already been uploaded and taken by an account</span>
-		<span class="ident">XPubAlreadyTaken</span>,
-		<span class="doccomment">/// The Account doesn&#39;t have an xpub</span>
-		<span class="ident">XPubNotFound</span>,
-		<span class="doccomment">/// The user already has an xpub, try to remove it first</span>
-		<span class="ident">UserAlreadyHasXpub</span>,
-		<span class="doccomment">/// The Xpub cant be removed/changed because a vault needs it</span>
-		<span class="ident">XpubLinkedToVault</span>,
-		<span class="doccomment">/// The generated Hashes aren&#39;t the same</span>
-		<span class="ident">HashingError</span>,
-		<span class="doccomment">/// Found Invalid name on an additional field</span>
-		<span class="ident">InvalidAdditionalField</span>,
-		<span class="doccomment">/// The vault threshold cannot be greater than the number of vault participants</span>
-		<span class="ident">InvalidVaultThreshold</span>,
-		<span class="doccomment">/// A defined cosigner reached its vault limit</span>
-		<span class="ident">SignerVaultLimit</span>,
-		<span class="doccomment">/// Too many cosigners</span>
-		<span class="ident">ExceedMaxCosignersPerVault</span>,
-		<span class="doccomment">/// Vault not found</span>
-		<span class="ident">VaultNotFound</span>,
-		<span class="doccomment">/// A vault needs at least 1 cosigner</span>
-		<span class="ident">NotEnoughCosigners</span>,
-		<span class="doccomment">/// Only the owner of this vault can do this transaction</span>
-		<span class="ident">VaultOwnerPermissionsNeeded</span>,
-		<span class="doccomment">/// Vault members cannot be duplicate</span>
-		<span class="ident">DuplicateVaultMembers</span>,
-		<span class="doccomment">/// The account must participate in the vault to make a proposal or sign</span>
-		<span class="ident">SignerPermissionsNeeded</span>,
-		<span class="doccomment">/// The vault has too many proposals </span>
-		<span class="ident">ExceedMaxProposalsPerVault</span>,
-		<span class="doccomment">/// Proposal not found (id)</span>
-		<span class="ident">ProposalNotFound</span>,
-		<span class="doccomment">/// The account must be the proposer to remove it</span>
-		<span class="ident">ProposerPermissionsNeeded</span>,
-		<span class="doccomment">/// An identical proposal exists in storage </span>
-		<span class="ident">AlreadyProposed</span>,
-		<span class="doccomment">/// The proposal was already signed by the user</span>
-		<span class="ident">AlreadySigned</span>,
-		<span class="doccomment">/// The proposal is already finalized or broadcasted</span>
-		<span class="ident">PendingProposalRequired</span>,
-		<span class="doccomment">/// The proposal signatures need to surpass the vault&#39;s threshold </span>
-		<span class="ident">NotEnoughSignatures</span>,
-		<span class="doccomment">/// The proposal has structural failures</span>
-		<span class="ident">InvalidProposal</span>,
-		<span class="doccomment">/// This vault cant take proposals due to structural failures</span>
-		<span class="ident">InvalidVault</span>,
+	<span class="comment">// Errors inform users that something went wrong.
+	</span><span class="attribute">#[pallet::error]
+	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
+		<span class="doccomment">/// Work in progress!
+		</span>NotYetImplemented,
+		<span class="doccomment">/// Xpub shouldn&#39;t be empty
+		</span>NoneValue,
+		<span class="comment">// The xpub has already been uploaded and taken by an account
+		</span>XPubAlreadyTaken,
+		<span class="doccomment">/// The Account doesn&#39;t have an xpub
+		</span>XPubNotFound,
+		<span class="doccomment">/// The user already has an xpub, try to remove it first
+		</span>UserAlreadyHasXpub,
+		<span class="doccomment">/// The Xpub cant be removed/changed because a vault needs it
+		</span>XpubLinkedToVault,
+		<span class="doccomment">/// The generated Hashes aren&#39;t the same
+		</span>HashingError,
+		<span class="doccomment">/// Found Invalid name on an additional field
+		</span>InvalidAdditionalField,
+		<span class="doccomment">/// The vault threshold cannot be greater than the number of vault participants
+		</span>InvalidVaultThreshold,
+		<span class="doccomment">/// A defined cosigner reached its vault limit
+		</span>SignerVaultLimit,
+		<span class="doccomment">/// Too many cosigners
+		</span>ExceedMaxCosignersPerVault,
+		<span class="doccomment">/// Vault not found
+		</span>VaultNotFound,
+		<span class="doccomment">/// A vault needs at least 1 cosigner
+		</span>NotEnoughCosigners,
+		<span class="doccomment">/// Only the owner of this vault can do this transaction
+		</span>VaultOwnerPermissionsNeeded,
+		<span class="doccomment">/// Vault members cannot be duplicate
+		</span>DuplicateVaultMembers,
+		<span class="doccomment">/// The account must participate in the vault to make a proposal or sign
+		</span>SignerPermissionsNeeded,
+		<span class="doccomment">/// The vault has too many proposals 
+		</span>ExceedMaxProposalsPerVault,
+		<span class="doccomment">/// Proposal not found (id)
+		</span>ProposalNotFound,
+		<span class="doccomment">/// The account must be the proposer to remove it
+		</span>ProposerPermissionsNeeded,
+		<span class="doccomment">/// An identical proposal exists in storage 
+		</span>AlreadyProposed,
+		<span class="doccomment">/// The proposal was already signed by the user
+		</span>AlreadySigned,
+		<span class="doccomment">/// The proposal is already finalized or broadcasted
+		</span>PendingProposalRequired,
+		<span class="doccomment">/// The proposal signatures need to surpass the vault&#39;s threshold 
+		</span>NotEnoughSignatures,
+		<span class="doccomment">/// The proposal has structural failures
+		</span>InvalidProposal,
+		<span class="doccomment">/// This vault cant take proposals due to structural failures
+		</span>InvalidVault,
 	}
 
-	<span class="comment">/*--- Onchain storage section ---*/</span>
-	<span class="doccomment">/// Stores hash-xpub pairs</span>
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">xpubs</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="comment">/*--- Onchain storage section ---*/
+	</span><span class="doccomment">/// Stores hash-xpub pairs
+	</span><span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>xpubs)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Xpubs&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>,
-		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">//that&#39;s the blake 2 hash result</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::XPubLen</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity,
+		[u8; <span class="number">32</span>], <span class="comment">//that&#39;s the blake 2 hash result
+		</span>BoundedVec&lt;u8, T::XPubLen&gt;,
+		OptionQuery,
+	&gt;;
 
-	<span class="doccomment">/// Keeps track of what accounts own what xpub.</span>
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">xpubs_by_owner</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span>
-		<span class="ident">StorageMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Blake2_256</span>, <span class="ident">T::AccountId</span>, [<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">OptionQuery</span><span class="op">&gt;</span>;
+	<span class="doccomment">/// Keeps track of what accounts own what xpub.
+	</span><span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>xpubs_by_owner)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>XpubsByOwner&lt;T: Config&gt; =
+		StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, [u8; <span class="number">32</span>], OptionQuery&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">proposals</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>proposals)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Proposals&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>,
-		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">//proposalid</span>
-		<span class="ident">Proposal</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity,
+		[u8; <span class="number">32</span>], <span class="comment">//proposalid
+		</span>Proposal&lt;T&gt;,
+		OptionQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">proposals_by_vault</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">ProposalsByVault</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>proposals_by_vault)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ProposalsByVault&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>,
-		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">//vaultId</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>],<span class="ident">T::MaxProposalsPerVault</span><span class="op">&gt;</span>, <span class="comment">//proposalId</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Identity,
+		[u8; <span class="number">32</span>], <span class="comment">//vaultId
+		</span>BoundedVec&lt;[u8; <span class="number">32</span>],T::MaxProposalsPerVault&gt;, <span class="comment">//proposalId
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">vaults</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>vaults)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Identity</span>,
-		[<span class="ident">u8</span>; <span class="number">32</span>], <span class="comment">//hash</span>
-		<span class="ident">Vault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		<span class="ident">OptionQuery</span>,
-	<span class="op">&gt;</span>;
-	<span class="doccomment">/// Keeps track of what accounts own what xpub.</span>
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="attribute">#[<span class="ident">pallet::getter</span>(<span class="kw">fn</span> <span class="ident">vaults_by_signer</span>)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageMap</span><span class="op">&lt;</span>
+		Identity,
+		[u8; <span class="number">32</span>], <span class="comment">//hash
+		</span>Vault&lt;T&gt;,
+		OptionQuery,
+	&gt;;
+	<span class="doccomment">/// Keeps track of what accounts own what xpub.
+	</span><span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>vaults_by_signer)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>VaultsBySigner&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		<span class="ident">Twox64Concat</span>,
-		<span class="ident">T::AccountId</span>,                                  <span class="comment">// signer</span>
-		<span class="ident">BoundedVec</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">T::MaxVaultsPerUser</span><span class="op">&gt;</span>, <span class="comment">// vault ids</span>
-		<span class="ident">ValueQuery</span>,
-	<span class="op">&gt;</span>;
+		Twox64Concat,
+		T::AccountId,                                  <span class="comment">// signer
+		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxVaultsPerUser&gt;, <span class="comment">// vault ids
+		</span>ValueQuery,
+	&gt;;
 
-	<span class="attribute">#[<span class="ident">pallet::type_value</span>]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">DefaultURL</span>() -&gt; <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">32</span><span class="op">&gt;</span><span class="op">&gt;</span> { 
-		<span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.<span class="ident">encode</span>()).<span class="ident">unwrap_or_default</span>()
+	<span class="attribute">#[pallet::type_value]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>DefaultURL() -&gt; BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt; { 
+		BoundedVec::&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt;::try_from(<span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.encode()).unwrap_or_default()
 	}
-	<span class="attribute">#[<span class="ident">pallet::storage</span>]</span>
-	<span class="comment">//#[pallet::getter(fn dummy)]</span>
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type</span> <span class="ident">BDKServicesURL</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">StorageValue</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">32</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">ValueQuery</span>, <span class="ident">DefaultURL</span><span class="op">&gt;</span>;
+	<span class="attribute">#[pallet::storage]
+	</span><span class="comment">//#[pallet::getter(fn dummy)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>BDKServicesURL&lt;T: Config&gt; = StorageValue&lt;<span class="kw">_</span>, BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt;, ValueQuery, DefaultURL&gt;;
 
 
-	<span class="attribute">#[<span class="ident">pallet::hooks</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Hooks</span><span class="op">&lt;</span><span class="ident">BlockNumberFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// Offchain Worker entry point.</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// By implementing `fn offchain_worker` you declare a new offchain worker.</span>
-		<span class="doccomment">/// This function will be called when the node is fully synced and a new best block is</span>
-		<span class="doccomment">/// successfully imported.</span>
-		<span class="doccomment">/// Note that it&#39;s not guaranteed for offchain workers to run on EVERY block, there might</span>
-		<span class="doccomment">/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),</span>
-		<span class="doccomment">/// so the code should be able to handle that.</span>
-		<span class="kw">fn</span> <span class="ident">offchain_worker</span>(<span class="ident">_block_number</span>: <span class="ident">T::BlockNumber</span>) {
-			<span class="comment">// check if the node has an account available, the offchain worker can&#39;t submit</span>
-			<span class="comment">// transactions without it</span>
-			<span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">Signer</span>::<span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">T::AuthorityId</span><span class="op">&gt;</span><span class="ident">::any_account</span>();
-			<span class="kw">if</span> <span class="op">!</span><span class="ident">signer</span>.<span class="ident">can_sign</span>(){
+	<span class="attribute">#[pallet::hooks]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; Hooks&lt;BlockNumberFor&lt;T&gt;&gt; <span class="kw">for </span>Pallet&lt;T&gt; {
+		<span class="doccomment">/// Offchain Worker entry point.
+		///
+		/// By implementing `fn offchain_worker` you declare a new offchain worker.
+		/// This function will be called when the node is fully synced and a new best block is
+		/// successfully imported.
+		/// Note that it&#39;s not guaranteed for offchain workers to run on EVERY block, there might
+		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
+		/// so the code should be able to handle that.
+		</span><span class="kw">fn </span>offchain_worker(_block_number: T::BlockNumber) {
+			<span class="comment">// check if the node has an account available, the offchain worker can&#39;t submit
+			// transactions without it
+			</span><span class="kw">let </span>signer = Signer::&lt;T, T::AuthorityId&gt;::any_account();
+			<span class="kw">if </span>!signer.can_sign(){
 				<span class="kw">return</span>;	
 			}
 
-			<span class="comment">// Check if this OCW can modify the vaults</span>
-			<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">StorageLock</span>::<span class="op">&lt;</span><span class="ident">BlockAndTime</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::with_block_and_time_deadline</span>(
+			<span class="comment">// Check if this OCW can modify the vaults
+			</span><span class="kw">let </span><span class="kw-2">mut </span>lock = StorageLock::&lt;BlockAndTime&lt;<span class="self">Self</span>&gt;&gt;::with_block_and_time_deadline(
 				<span class="string">b&quot;nbv::vault-storage-lock&quot;</span>,
-				<span class="ident">LOCK_BLOCK_EXPIRATION</span>,
-				<span class="ident">Duration::from_millis</span>(<span class="ident">LOCK_TIMEOUT_EXPIRATION</span>)
+				LOCK_BLOCK_EXPIRATION,
+				Duration::from_millis(LOCK_TIMEOUT_EXPIRATION)
 			);
-			<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">_guard</span>) <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">try_lock</span>() {
-				<span class="comment">// check for pending vaults to insert</span>
-				<span class="kw">let</span> <span class="ident">pending_vaults</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_pending_vaults</span>();
-				<span class="kw">let</span> <span class="ident">pending_proposals</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_pending_proposals</span>();
-				<span class="kw">let</span> <span class="ident">proposals_to_finalize</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_proposals_to_finalize</span>();
-				<span class="comment">//let proposals_to_broadcast = Self::get_proposals_to_finalize();</span>
-				<span class="macro">log::info!</span>(<span class="string">&quot;Pending vaults {:?}&quot;</span>, <span class="ident">pending_vaults</span>.<span class="ident">len</span>());
-				<span class="comment">// This validation needs to be done after the lock: </span>
-				<span class="kw">if</span> <span class="op">!</span><span class="ident">pending_vaults</span>.<span class="ident">is_empty</span>() {
-					<span class="kw">let</span> <span class="ident">generated_vaults</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::gen_vaults_payload_by_bulk</span>(<span class="ident">pending_vaults</span>);
-					<span class="ident"><span class="self">Self</span>::send_ocw_insert_descriptors</span>(<span class="ident">generated_vaults</span>, <span class="kw-2">&amp;</span><span class="ident">signer</span>);
+			<span class="kw">if let </span><span class="prelude-val">Ok</span>(_guard) = lock.try_lock() {
+				<span class="comment">// check for pending vaults to insert
+				</span><span class="kw">let </span>pending_vaults = <span class="self">Self</span>::get_pending_vaults();
+				<span class="kw">let </span>pending_proposals = <span class="self">Self</span>::get_pending_proposals();
+				<span class="kw">let </span>proposals_to_finalize = <span class="self">Self</span>::get_proposals_to_finalize();
+				<span class="comment">//let proposals_to_broadcast = Self::get_proposals_to_finalize();
+				</span><span class="macro">log::info!</span>(<span class="string">&quot;Pending vaults {:?}&quot;</span>, pending_vaults.len());
+				<span class="comment">// This validation needs to be done after the lock: 
+				</span><span class="kw">if </span>!pending_vaults.is_empty() {
+					<span class="kw">let </span>generated_vaults = <span class="self">Self</span>::gen_vaults_payload_by_bulk(pending_vaults);
+					<span class="self">Self</span>::send_ocw_insert_descriptors(generated_vaults, <span class="kw-2">&amp;</span>signer);
 				}
-				<span class="kw">if</span> <span class="op">!</span><span class="ident">pending_proposals</span>.<span class="ident">is_empty</span>(){
-					<span class="macro">log::info!</span>(<span class="string">&quot;Pending proposals {:?}&quot;</span>, <span class="ident">pending_proposals</span>.<span class="ident">len</span>());
-					<span class="kw">let</span> <span class="ident">generated_proposals_payload</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::gen_proposals_payload_by_bulk</span>(<span class="ident">pending_proposals</span>, 
-						<span class="string">b&quot;/gen_psbt&quot;</span>.<span class="ident">to_vec</span>(),
-					<span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::gen_proposal_json_body</span>);
-					<span class="ident"><span class="self">Self</span>::send_ocw_insert_psbts</span>(<span class="ident">generated_proposals_payload</span>, <span class="kw-2">&amp;</span><span class="ident">signer</span>);
+				<span class="kw">if </span>!pending_proposals.is_empty(){
+					<span class="macro">log::info!</span>(<span class="string">&quot;Pending proposals {:?}&quot;</span>, pending_proposals.len());
+					<span class="kw">let </span>generated_proposals_payload = <span class="self">Self</span>::gen_proposals_payload_by_bulk(pending_proposals, 
+						<span class="string">b&quot;/gen_psbt&quot;</span>.to_vec(),
+					<span class="kw-2">&amp;</span><span class="self">Self</span>::gen_proposal_json_body);
+					<span class="self">Self</span>::send_ocw_insert_psbts(generated_proposals_payload, <span class="kw-2">&amp;</span>signer);
 				}
-				<span class="kw">if</span> <span class="op">!</span><span class="ident">proposals_to_finalize</span>.<span class="ident">is_empty</span>(){
-					<span class="comment">// generate proposal payloads:</span>
-					<span class="kw">let</span> <span class="ident">finalized_proposals</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_proposals_to_finalize</span>();
-					<span class="comment">//Send unsigned tx:</span>
-					<span class="kw">let</span> <span class="ident">generated_finalized_tx</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::gen_proposals_payload_by_bulk</span>(
-						<span class="ident">finalized_proposals</span>, <span class="string">b&quot;/finalize_trx&quot;</span>.<span class="ident">to_vec</span>(),
-					<span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::gen_finalize_json_body</span>);
+				<span class="kw">if </span>!proposals_to_finalize.is_empty(){
+					<span class="comment">// generate proposal payloads:
+					</span><span class="kw">let </span>finalized_proposals = <span class="self">Self</span>::get_proposals_to_finalize();
+					<span class="comment">//Send unsigned tx:
+					</span><span class="kw">let </span>generated_finalized_tx = <span class="self">Self</span>::gen_proposals_payload_by_bulk(
+						finalized_proposals, <span class="string">b&quot;/finalize_trx&quot;</span>.to_vec(),
+					<span class="kw-2">&amp;</span><span class="self">Self</span>::gen_finalize_json_body);
 
-					<span class="ident"><span class="self">Self</span>::send_ocw_finalize_psbts</span>(<span class="ident">generated_finalized_tx</span>, <span class="kw-2">&amp;</span><span class="ident">signer</span>);
+					<span class="self">Self</span>::send_ocw_finalize_psbts(generated_finalized_tx, <span class="kw-2">&amp;</span>signer);
 
 				}
-			}<span class="kw">else</span> {
+			}<span class="kw">else </span>{
 				<span class="macro">log::error!</span>(<span class="string">&quot;This OCW couln&#39;t get the lock&quot;</span>);
 			};
 		}
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::call</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="doccomment">/// ## XPub insertion</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// This extrinsic inserts a user-defined xpub</span>
-		<span class="doccomment">/// as well as in the pallet storage.</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `xpub`: Extended public key, it can be sent with or without fingerprint/derivation path</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.</span>
-		<span class="doccomment">/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the</span>
-		<span class="doccomment">///  fees will be applied nonetheless).</span>
-		<span class="doccomment">/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert</span>
-		<span class="doccomment">/// a new one.</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">2</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_xpub</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">xpub</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::XPubLen</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="comment">// Check that the extrinsic was signed and get the signer.</span>
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(<span class="ident">xpub</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>, <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::NoneValue</span>);
-			<span class="macro">ensure!</span>(<span class="op">!</span><span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">who</span>.<span class="ident">clone</span>()) , <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::UserAlreadyHasXpub</span>);
-			<span class="kw">let</span> <span class="ident">manual_hash</span> <span class="op">=</span> <span class="ident">xpub</span>.<span class="ident">clone</span>().<span class="ident">using_encoded</span>(<span class="ident">blake2_256</span>);
-			<span class="comment">// Assert if the input xpub is free to take (or if the user owns it)</span>
-			<span class="kw">match</span> <span class="ident"><span class="self">Self</span>::get_xpub_status</span>(<span class="ident">who</span>.<span class="ident">clone</span>(), <span class="ident">manual_hash</span>.<span class="ident">clone</span>()) {
-				<span class="ident">XpubStatus::Owned</span> =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Xpub owned, nothing to insert&quot;</span>),
-				<span class="ident">XpubStatus::Taken</span> =&gt; <span class="prelude-val">Err</span>(<span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::XPubAlreadyTaken</span>)<span class="question-mark">?</span>, <span class="comment">//xpub taken: abort tx</span>
-				<span class="ident">XpubStatus::Free</span> =&gt; {
-					<span class="comment">// xpub free: erase unused xpub and insert on maps</span>
-					<span class="comment">// if &lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) {</span>
-					<span class="comment">// 	Self::remove_xpub_from_pallet_storage(who.clone())?;</span>
-					<span class="comment">// }</span>
-					<span class="op">&lt;</span><span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">manual_hash</span>, <span class="ident">xpub</span>.<span class="ident">clone</span>());
-					<span class="comment">// Confirm the xpub was inserted</span>
-					<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inserted_hash</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Xpubs</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::hashed_key_for</span>(<span class="ident">manual_hash</span>);
-					<span class="comment">// the 2nd half of the inserted_hash is the real key hash.</span>
-					<span class="kw">let</span> <span class="ident">partial_hash</span> <span class="op">=</span> <span class="ident">inserted_hash</span>.<span class="ident">split_off</span>(<span class="number">32</span>);
-					<span class="comment">// The manually calculated hash should always be equal to the StorageMap hash</span>
-					<span class="macro">ensure!</span>(<span class="ident">partial_hash</span>.<span class="ident">as_slice</span>() <span class="op">==</span> <span class="ident">manual_hash</span>, <span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::HashingError</span>);
-					<span class="comment">// If everything is ok, insert the xpub in the owner-&gt;hash map</span>
-					<span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::insert</span>(<span class="ident">who</span>.<span class="ident">clone</span>(), <span class="ident">manual_hash</span>);
+	<span class="attribute">#[pallet::call]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+		<span class="doccomment">/// ## XPub insertion
+		///
+		/// This extrinsic inserts a user-defined xpub
+		/// as well as in the pallet storage.
+		///
+		/// ### Parameters:
+		/// - `xpub`: Extended public key, it can be sent with or without fingerprint/derivation path
+		///
+		/// ### Considerations
+		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
+		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
+		///  fees will be applied nonetheless).
+		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
+		/// a new one.
+		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">2</span>))]
+		</span><span class="kw">pub fn </span>set_xpub(
+			origin: OriginFor&lt;T&gt;,
+			xpub: BoundedVec&lt;u8, T::XPubLen&gt;,
+		) -&gt; DispatchResult {
+			<span class="comment">// Check that the extrinsic was signed and get the signer.
+			</span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="macro">ensure!</span>(xpub.len() &gt; <span class="number">0</span>, &lt;Error&lt;T&gt;&gt;::NoneValue);
+			<span class="macro">ensure!</span>(!&lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) , &lt;Error&lt;T&gt;&gt;::UserAlreadyHasXpub);
+			<span class="kw">let </span>manual_hash = xpub.clone().using_encoded(blake2_256);
+			<span class="comment">// Assert if the input xpub is free to take (or if the user owns it)
+			</span><span class="kw">match </span><span class="self">Self</span>::get_xpub_status(who.clone(), manual_hash.clone()) {
+				XpubStatus::Owned =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Xpub owned, nothing to insert&quot;</span>),
+				XpubStatus::Taken =&gt; <span class="prelude-val">Err</span>(&lt;Error&lt;T&gt;&gt;::XPubAlreadyTaken)<span class="question-mark">?</span>, <span class="comment">//xpub taken: abort tx
+				</span>XpubStatus::Free =&gt; {
+					<span class="comment">// xpub free: erase unused xpub and insert on maps
+					// if &lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) {
+					// 	Self::remove_xpub_from_pallet_storage(who.clone())?;
+					// }
+					</span>&lt;Xpubs&lt;T&gt;&gt;::insert(manual_hash, xpub.clone());
+					<span class="comment">// Confirm the xpub was inserted
+					</span><span class="kw">let </span><span class="kw-2">mut </span>inserted_hash = &lt;Xpubs&lt;T&gt;&gt;::hashed_key_for(manual_hash);
+					<span class="comment">// the 2nd half of the inserted_hash is the real key hash.
+					</span><span class="kw">let </span>partial_hash = inserted_hash.split_off(<span class="number">32</span>);
+					<span class="comment">// The manually calculated hash should always be equal to the StorageMap hash
+					</span><span class="macro">ensure!</span>(partial_hash.as_slice() == manual_hash, &lt;Error&lt;T&gt;&gt;::HashingError);
+					<span class="comment">// If everything is ok, insert the xpub in the owner-&gt;hash map
+					</span>&lt;XpubsByOwner&lt;T&gt;&gt;::insert(who.clone(), manual_hash);
 				},
 			}
-			<span class="comment">// Emit a success event.</span>
-			<span class="ident"><span class="self">Self</span>::deposit_event</span>(<span class="ident">Event::XPubStored</span>(<span class="ident">manual_hash</span>, <span class="ident">who</span>));
+			<span class="comment">// Emit a success event.
+			</span><span class="self">Self</span>::deposit_event(Event::XPubStored(manual_hash, who));
 
-			<span class="comment">// Return a successful DispatchResult</span>
-			<span class="prelude-val">Ok</span>(())
+			<span class="comment">// Return a successful DispatchResult
+			</span><span class="prelude-val">Ok</span>(())
 		}
 
-		<span class="doccomment">/// ## Xpub removal</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// Removes the linked xpub from the account which signs the transaction.</span>
-		<span class="doccomment">/// The xpub will be removed from both the pallet storage and identity registration.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// This tx does not takes any parameters.</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">2</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_xpub</span>(<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="comment">// The xpub must exists</span>
-			<span class="macro">ensure!</span>(<span class="op">&lt;</span><span class="ident">XpubsByOwner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::contains_key</span>(<span class="ident">who</span>.<span class="ident">clone</span>()), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XPubNotFound</span>);
-			<span class="comment">// The xpub must not be used on a vault</span>
-			<span class="kw">let</span> <span class="ident">vaults</span>: <span class="ident">Vec</span><span class="op">&lt;</span>[<span class="ident">u8</span>;<span class="number">32</span>]<span class="op">&gt;</span><span class="op">=</span> <span class="op">&lt;</span><span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">who</span>.<span class="ident">clone</span>()).<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span>{
-				<span class="kw">match</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">id</span>){
-					<span class="prelude-val">Some</span>(<span class="ident">vault</span>) =&gt;{
-						<span class="kw">let</span> <span class="ident">vault_members</span> <span class="op">=</span> <span class="ident">vault</span>.<span class="ident">get_vault_members</span>();
-						<span class="ident">vault_members</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>.<span class="ident">clone</span>())
+		<span class="doccomment">/// ## Xpub removal
+		///
+		/// Removes the linked xpub from the account which signs the transaction.
+		/// The xpub will be removed from both the pallet storage and identity registration.
+		/// 
+		/// This tx does not takes any parameters.
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">2</span>))]
+		</span><span class="kw">pub fn </span>remove_xpub(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="comment">// The xpub must exists
+			</span><span class="macro">ensure!</span>(&lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()), Error::&lt;T&gt;::XPubNotFound);
+			<span class="comment">// The xpub must not be used on a vault
+			</span><span class="kw">let </span>vaults: Vec&lt;[u8;<span class="number">32</span>]&gt;= &lt;VaultsBySigner&lt;T&gt;&gt;::get(who.clone()).iter().filter(|id|{
+				<span class="kw">match </span>&lt;Vaults&lt;T&gt;&gt;::get(id){
+					<span class="prelude-val">Some</span>(vault) =&gt;{
+						<span class="kw">let </span>vault_members = vault.get_vault_members();
+						vault_members.contains(<span class="kw-2">&amp;</span>who.clone())
 					},
-					<span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+					<span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
 				}
-			}).<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-			<span class="macro">ensure!</span>(<span class="ident">vaults</span>.<span class="ident">is_empty</span>(),  <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::XpubLinkedToVault</span>);
+			}).cloned().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+			<span class="macro">ensure!</span>(vaults.is_empty(),  Error::&lt;T&gt;::XpubLinkedToVault);
 			
-			<span class="ident"><span class="self">Self</span>::do_remove_xpub</span>(<span class="ident">who</span>.<span class="ident">clone</span>())
+			<span class="self">Self</span>::do_remove_xpub(who.clone())
 		}
 
-		<span class="doccomment">/// Vault insertion</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// Inserts the vault on chain. Meant to be used by an offchain worker.</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized</span>
-		<span class="doccomment">/// - `description`: A small definition. What will the vault be used for?</span>
-		<span class="doccomment">/// - `include_owner_as_cosigner`: Add automatically the owner as cosigner</span>
-		<span class="doccomment">/// - `cosigners`: The other accounts that will participate in vault proposals.</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - Do not include the vault owner on the `cosigners` list.</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_vault</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">threshold</span>: <span class="ident">u32</span>,
-			<span class="ident">description</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>,
-			<span class="ident">include_owner_as_cosigner</span> : <span class="ident">bool</span>,
-			<span class="kw-2">mut</span> <span class="ident">cosigners</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">T::AccountId</span>, <span class="ident">T::MaxCosignersPerVault</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="kw">if</span> <span class="ident">include_owner_as_cosigner</span> {
-				<span class="ident">cosigners</span>.<span class="ident">try_push</span>(<span class="ident">who</span>.<span class="ident">clone</span>())
-				.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ExceedMaxCosignersPerVault</span> )<span class="question-mark">?</span>;
+		<span class="doccomment">/// Vault insertion
+		///
+		/// Inserts the vault on chain. Meant to be used by an offchain worker.
+		///
+		/// ### Parameters:
+		/// - `threshold`: The number of signatures needed for a proposal to be approved/finalized
+		/// - `description`: A small definition. What will the vault be used for?
+		/// - `include_owner_as_cosigner`: Add automatically the owner as cosigner
+		/// - `cosigners`: The other accounts that will participate in vault proposals.
+		///
+		/// ### Considerations
+		/// - Do not include the vault owner on the `cosigners` list.
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>create_vault(
+			origin: OriginFor&lt;T&gt;,
+			threshold: u32,
+			description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
+			include_owner_as_cosigner : bool,
+			<span class="kw-2">mut </span>cosigners: BoundedVec&lt;T::AccountId, T::MaxCosignersPerVault&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="kw">if </span>include_owner_as_cosigner {
+				cosigners.try_push(who.clone())
+				.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxCosignersPerVault )<span class="question-mark">?</span>;
 			}
-			<span class="comment">//  Cosigners are already bounded, only is necessary to check if its not empty</span>
-			<span class="macro">ensure!</span>( <span class="ident">cosigners</span>.<span class="ident">len</span>()<span class="op">&gt;</span><span class="number">1</span> , <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::NotEnoughCosigners</span>);
-			<span class="comment">// Threshold needs to be greater than 0 and less than the current cosigners number</span>
-			<span class="macro">ensure!</span>( <span class="ident">threshold</span><span class="op">&gt;</span><span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">threshold</span> <span class="op">&lt;</span><span class="op">=</span> (<span class="ident">cosigners</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::InvalidVaultThreshold</span>);
-			<span class="kw">let</span> <span class="ident">vault</span> <span class="op">=</span> <span class="ident">Vault</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-				<span class="ident">owner</span>: <span class="ident">who</span>.<span class="ident">clone</span>(),
-				<span class="ident">threshold</span>,
-				<span class="ident">description</span>,
-				<span class="ident">cosigners</span>,
-				<span class="ident">descriptors</span>: <span class="ident">Descriptors</span>::<span class="op">&lt;</span><span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span> {
-					<span class="ident">output_descriptor</span>: <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span><span class="ident">::try_from</span>(
-						<span class="string">b&quot;&quot;</span>.<span class="ident">to_vec</span>(),
+			<span class="comment">//  Cosigners are already bounded, only is necessary to check if its not empty
+			</span><span class="macro">ensure!</span>( cosigners.len()&gt;<span class="number">1 </span>, Error::&lt;T&gt;::NotEnoughCosigners);
+			<span class="comment">// Threshold needs to be greater than 0 and less than the current cosigners number
+			</span><span class="macro">ensure!</span>( threshold&gt;<span class="number">0 </span>&amp;&amp; threshold &lt;= (cosigners.len() <span class="kw">as </span>u32), Error::&lt;T&gt;::InvalidVaultThreshold);
+			<span class="kw">let </span>vault = Vault::&lt;T&gt; {
+				owner: who.clone(),
+				threshold,
+				description,
+				cosigners,
+				descriptors: Descriptors::&lt;T::OutputDescriptorMaxLen&gt; {
+					output_descriptor: BoundedVec::&lt;u8, T::OutputDescriptorMaxLen&gt;::try_from(
+						<span class="string">b&quot;&quot;</span>.to_vec(),
 					)
-					.<span class="ident">expect</span>(<span class="string">&quot;Error on encoding the descriptor to BoundedVec&quot;</span>),
-					<span class="ident">change_descriptor</span>: <span class="prelude-val">None</span>,
+					.expect(<span class="string">&quot;Error on encoding the descriptor to BoundedVec&quot;</span>),
+					change_descriptor: <span class="prelude-val">None</span>,
 				},
-				<span class="ident">offchain_status</span>: <span class="ident">BDKStatus::default</span>(),
+				offchain_status: BDKStatus::default(),
 			};
 
-			<span class="ident"><span class="self">Self</span>::do_insert_vault</span>(<span class="ident">vault</span>)
+			<span class="self">Self</span>::do_insert_vault(vault)
 		}
 
-		<span class="doccomment">/// Vault removal</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `vault_id`: the vault to be removed with all its proposals</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Considerations:</span>
-		<span class="doccomment">/// - Only the vault owner can perform this extrinsic</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_vault</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">vault_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+		<span class="doccomment">/// Vault removal
+		/// 
+		/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault to be removed with all its proposals
+		/// 
+		/// ### Considerations:
+		/// - Only the vault owner can perform this extrinsic
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>remove_vault(
+			origin: OriginFor&lt;T&gt;,
+			vault_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-			<span class="ident"><span class="self">Self</span>::do_remove_vault</span>(<span class="ident">who</span>, <span class="ident">vault_id</span>)
+			<span class="self">Self</span>::do_remove_vault(who, vault_id)
 		}
 
-		<span class="doccomment">/// Vault transaction proposal</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Inserts a proposal on the specified vault.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `vault_id`: the vault identifier in which the proposal will be inserted</span>
-		<span class="doccomment">/// - `recipient_address`: Mainnet address to which the funds will be send</span>
-		<span class="doccomment">/// - `amount_in_sats`: Amount to send in satoshis.</span>
-		<span class="doccomment">/// - `description`: The reason for the proposal, why do you are proposing this?.</span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - Please ensure the recipient address is a valid mainnet address.</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">propose</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">vault_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-			<span class="ident">recipient_address</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::XPubLen</span><span class="op">&gt;</span>,
-			<span class="ident">amount_in_sats</span>: <span class="ident">u64</span>,
-			<span class="ident">description</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="comment">// ensure user is in the vault</span>
-			<span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="ident">Proposal</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>{
-				<span class="ident">proposer</span>: <span class="ident">who</span>.<span class="ident">clone</span>(),
-				<span class="ident">vault_id</span>,
-				<span class="ident">status</span>: <span class="ident">ProposalStatus::Pending</span>,
-				<span class="ident">offchain_status</span>: <span class="ident">BDKStatus::default</span>(),
-				<span class="ident">to_address</span>: <span class="ident">recipient_address</span>,
-				<span class="ident">amount</span>: <span class="ident">amount_in_sats</span>,
-				<span class="ident">fee_sat_per_vb</span>: <span class="number">1</span>,
-				<span class="ident">description</span>,
-				<span class="ident">tx_id</span>: <span class="prelude-val">None</span>,
-				<span class="ident">psbt</span>: <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span><span class="ident">::default</span>(),
-				<span class="ident">signed_psbts</span>: <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">ProposalSignatures</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T::MaxCosignersPerVault</span><span class="op">&gt;</span><span class="ident">::default</span>(),
+		<span class="doccomment">/// Vault transaction proposal
+		/// 
+		/// Inserts a proposal on the specified vault.
+		/// 
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proposal will be inserted
+		/// - `recipient_address`: Mainnet address to which the funds will be send
+		/// - `amount_in_sats`: Amount to send in satoshis.
+		/// - `description`: The reason for the proposal, why do you are proposing this?.
+		///
+		/// ### Considerations
+		/// - Please ensure the recipient address is a valid mainnet address.
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>propose(
+			origin: OriginFor&lt;T&gt;,
+			vault_id: [u8; <span class="number">32</span>],
+			recipient_address: BoundedVec&lt;u8, T::XPubLen&gt;,
+			amount_in_sats: u64,
+			description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="comment">// ensure user is in the vault
+			</span><span class="kw">let </span>proposal = Proposal::&lt;T&gt;{
+				proposer: who.clone(),
+				vault_id,
+				status: ProposalStatus::Pending,
+				offchain_status: BDKStatus::default(),
+				to_address: recipient_address,
+				amount: amount_in_sats,
+				fee_sat_per_vb: <span class="number">1</span>,
+				description,
+				tx_id: <span class="prelude-val">None</span>,
+				psbt: BoundedVec::&lt;u8, T::PSBTMaxLen&gt;::default(),
+				signed_psbts: BoundedVec::&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;::default(),
 			};
-			<span class="ident"><span class="self">Self</span>::do_propose</span>(<span class="ident">proposal</span>)
+			<span class="self">Self</span>::do_propose(proposal)
 		}
 
 
-		<span class="doccomment">/// Proposal removal</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `proposal_id`: the proposal identifier</span>
-		<span class="doccomment">///</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_proposal</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">proposal_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-		) -&gt; <span class="ident">DispatchResult</span>{
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="kw">let</span> <span class="ident">proposal</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::get</span>(<span class="ident">proposal_id</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposalNotFound</span>)<span class="question-mark">?</span>;
-			<span class="comment">// Only vault proposer can remove</span>
-			<span class="comment">// validation before do_remove_proposal because the user is not needed anymore</span>
-			<span class="comment">//TODO: proposal cannot be erased if readyToBroadcast() finalized or broadcasted</span>
-        	<span class="comment">// -&gt; erase only pending</span>
-			<span class="macro">ensure!</span>(<span class="ident">proposal</span>.<span class="ident">proposer</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">who</span>), <span class="ident">Error</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::ProposerPermissionsNeeded</span>);
-			<span class="ident"><span class="self">Self</span>::do_remove_proposal</span>(<span class="ident">proposal_id</span>)
+		<span class="doccomment">/// Proposal removal
+		/// 
+		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		///
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>remove_proposal(
+			origin: OriginFor&lt;T&gt;,
+			proposal_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult{
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
+			<span class="comment">// Only vault proposer can remove
+			// validation before do_remove_proposal because the user is not needed anymore
+			//TODO: proposal cannot be erased if readyToBroadcast() finalized or broadcasted
+        	// -&gt; erase only pending
+			</span><span class="macro">ensure!</span>(proposal.proposer.eq(<span class="kw-2">&amp;</span>who), Error::&lt;T&gt;::ProposerPermissionsNeeded);
+			<span class="self">Self</span>::do_remove_proposal(proposal_id)
 		}
 
-		<span class="doccomment">/// BDK URL insertion</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  </span>
-		<span class="doccomment">///</span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - Ensure the new url is valid.</span>
-		<span class="doccomment">/// - The url has a maximum length of 32 bytes</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_bdk_url</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">new_url</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">ConstU32</span><span class="op">&lt;</span><span class="number">32</span><span class="op">&gt;</span> <span class="op">&gt;</span>
-		) -&gt; <span class="ident">DispatchResult</span>{
-			<span class="ident">T::ChangeBDKOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="op">&lt;</span><span class="ident">BDKServicesURL</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::put</span>(<span class="ident">new_url</span>);
+		<span class="doccomment">/// BDK URL insertion
+		/// 
+		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
+		/// 
+		/// ### Parameters:
+		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  
+		///
+		/// ### Considerations
+		/// - Ensure the new url is valid.
+		/// - The url has a maximum length of 32 bytes
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>set_bdk_url(
+			origin: OriginFor&lt;T&gt;,
+			new_url: BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt; &gt;
+		) -&gt; DispatchResult{
+			T::ChangeBDKOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+			&lt;BDKServicesURL&lt;T&gt;&gt;::put(new_url);
 			<span class="prelude-val">Ok</span>(())
 		}
 
-		<span class="doccomment">/// PSBT signature insertion</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Stores the signature for a PSBT proposal </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `proposal_id`: the proposal identifier</span>
-		<span class="doccomment">/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - If successful, this process cannot be undone</span>
-		<span class="doccomment">/// - A user can only sign a proposal once </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">save_psbt</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">proposal_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-			<span class="ident">signature_payload</span>: <span class="ident">BoundedVec</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_save_psbt</span>(<span class="ident">who</span>, <span class="ident">proposal_id</span>, <span class="ident">signature_payload</span>)
+		<span class="doccomment">/// PSBT signature insertion
+		/// 
+		/// Stores the signature for a PSBT proposal 
+		/// 
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - A user can only sign a proposal once 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>save_psbt(
+			origin: OriginFor&lt;T&gt;,
+			proposal_id: [u8; <span class="number">32</span>],
+			signature_payload: BoundedVec&lt;u8, T::PSBTMaxLen&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_save_psbt(who, proposal_id, signature_payload)
 		}
 
-		<span class="doccomment">/// Finalize PSBT</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `proposal_id`: the proposal identifier</span>
-		<span class="doccomment">/// - `broadcast`: A boolean flag </span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - If successful, this process cannot be undone</span>
-		<span class="doccomment">/// - The proposal must have a valid PSBT</span>
-		<span class="doccomment">/// - Any vault member can perform this extrinsic</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize_psbt</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">proposal_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-			<span class="ident">broadcast</span>: <span class="ident">bool</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_finalize_psbt</span>(<span class="ident">who</span>, <span class="ident">proposal_id</span>, <span class="ident">broadcast</span>)
+		<span class="doccomment">/// Finalize PSBT
+		/// 
+		/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the proposal identifier
+		/// - `broadcast`: A boolean flag 
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must have a valid PSBT
+		/// - Any vault member can perform this extrinsic
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>finalize_psbt(
+			origin: OriginFor&lt;T&gt;,
+			proposal_id: [u8; <span class="number">32</span>],
+			broadcast: bool,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_finalize_psbt(who, proposal_id, broadcast)
 		}
 
 
-		<span class="doccomment">/// Broadcast PSBT</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Queries a proposal to be broadcasted in case it wasn&#39;t on the finalization step.</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Parameters:</span>
-		<span class="doccomment">/// - `proposal_id`: the vault identifier in which the proposal will be inserted</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// ### Considerations</span>
-		<span class="doccomment">/// - If successful, this process cannot be undone</span>
-		<span class="doccomment">/// - The proposal must be finalized already</span>
-		<span class="doccomment">/// - Any vault member can perform this extrinsic</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">broadcast_psbt</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">proposal_id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="kw">let</span> <span class="ident">who</span> <span class="op">=</span> <span class="ident">ensure_signed</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="ident"><span class="self">Self</span>::do_finalize_psbt</span>(<span class="ident">who</span>, <span class="ident">proposal_id</span>, <span class="bool-val">true</span>)
+		<span class="doccomment">/// Broadcast PSBT
+		/// 
+		/// Queries a proposal to be broadcasted in case it wasn&#39;t on the finalization step.
+		/// 
+		/// ### Parameters:
+		/// - `proposal_id`: the vault identifier in which the proposal will be inserted
+		/// 
+		/// ### Considerations
+		/// - If successful, this process cannot be undone
+		/// - The proposal must be finalized already
+		/// - Any vault member can perform this extrinsic
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>broadcast_psbt(
+			origin: OriginFor&lt;T&gt;,
+			proposal_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_finalize_psbt(who, proposal_id, <span class="bool-val">true</span>)
 		}
 
-		<span class="doccomment">/// Kill almost all storage</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Use with caution!</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Can only be called by root and removes All vaults and proposals</span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">10_000</span> <span class="op">+</span> <span class="ident">T::DbWeight::get</span>().<span class="ident">writes</span>(<span class="number">1</span>))]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kill_storage</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-		) -&gt; <span class="ident">DispatchResult</span>{
-			<span class="ident">T::ChangeBDKOrigin::ensure_origin</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Vaults</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">VaultsBySigner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Proposals</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ProposalsByVault</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::clear</span>(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+		<span class="doccomment">/// Kill almost all storage
+		/// 
+		/// Use with caution!
+		/// 
+		/// Can only be called by root and removes All vaults and proposals
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>kill_storage(
+			origin: OriginFor&lt;T&gt;,
+		) -&gt; DispatchResult{
+			T::ChangeBDKOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+			<span class="kw">let _ </span>= &lt;Vaults&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;VaultsBySigner&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;Proposals&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;Proposals&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;ProposalsByVault&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="prelude-val">Ok</span>(())
 		}
 
-		<span class="doccomment">/// Extrinsic to insert a valid vault descriptor</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Meant to be unsigned with signed payload and used by an offchain worker</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">0</span>)]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ocw_insert_descriptors</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">payload</span>: <span class="ident">VaultsPayload</span><span class="op">&lt;</span><span class="ident">T::Public</span><span class="op">&gt;</span>,
-			<span class="ident">_signature</span>: <span class="ident">T::Signature</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="comment">// This ensures that the function can only be called via unsigned transaction.</span>
-			<span class="ident">ensure_none</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="ident">payload</span>.<span class="ident">vaults_payload</span>.<span class="ident">iter</span>().<span class="ident">find_map</span>(
-				<span class="op">|</span><span class="ident">vault_payload</span><span class="op">|</span>{
-					<span class="kw">let</span> <span class="ident">output_descriptor</span> <span class="op">=</span> <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span>::
-						<span class="ident">try_from</span>(<span class="ident">vault_payload</span>.<span class="ident">output_descriptor</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;Error trying to convert desc to bounded vec&quot;</span>);
-					<span class="kw">let</span> <span class="ident">change_descriptor</span> <span class="op">=</span> <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span>::
-						<span class="ident">try_from</span>(<span class="ident">vault_payload</span>.<span class="ident">change_descriptor</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;Error trying to convert change desc to bounded vec&quot;</span>);
-					<span class="kw">let</span> <span class="ident">descriptors</span> <span class="op">=</span> <span class="ident">Descriptors</span>::<span class="op">&lt;</span><span class="ident">T::OutputDescriptorMaxLen</span><span class="op">&gt;</span>{
-						<span class="ident">output_descriptor</span> : <span class="ident">output_descriptor</span>,
-						<span class="ident">change_descriptor</span> : <span class="prelude-val">Some</span>(<span class="ident">change_descriptor</span>),
+		<span class="doccomment">/// Extrinsic to insert a valid vault descriptor
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="kw">pub fn </span>ocw_insert_descriptors(
+			origin: OriginFor&lt;T&gt;,
+			payload: VaultsPayload&lt;T::Public&gt;,
+			_signature: T::Signature,
+		) -&gt; DispatchResult {
+			<span class="comment">// This ensures that the function can only be called via unsigned transaction.
+			</span>ensure_none(origin.clone())<span class="question-mark">?</span>;
+			payload.vaults_payload.iter().find_map(
+				|vault_payload|{
+					<span class="kw">let </span>output_descriptor = BoundedVec::&lt;u8, T::OutputDescriptorMaxLen&gt;::
+						try_from(vault_payload.output_descriptor.clone()).expect(<span class="string">&quot;Error trying to convert desc to bounded vec&quot;</span>);
+					<span class="kw">let </span>change_descriptor = BoundedVec::&lt;u8, T::OutputDescriptorMaxLen&gt;::
+						try_from(vault_payload.change_descriptor.clone()).expect(<span class="string">&quot;Error trying to convert change desc to bounded vec&quot;</span>);
+					<span class="kw">let </span>descriptors = Descriptors::&lt;T::OutputDescriptorMaxLen&gt;{
+						output_descriptor : output_descriptor,
+						change_descriptor : <span class="prelude-val">Some</span>(change_descriptor),
 					};
-					<span class="kw">let</span> <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">vault_payload</span>.<span class="ident">clone</span>().<span class="ident">status</span>.<span class="ident">into</span>();
-					<span class="comment">//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());</span>
-					<span class="kw">let</span> <span class="ident">tx_res</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::do_insert_descriptors</span>(<span class="ident">vault_payload</span>.<span class="ident">vault_id</span>,<span class="ident">descriptors</span>, <span class="ident">status</span>);
-					<span class="kw">if</span> <span class="ident">tx_res</span>.<span class="ident">is_err</span>(){
-						<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">tx_res</span>);
+					<span class="kw">let </span>status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt; = vault_payload.clone().status.into();
+					<span class="comment">//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());
+					</span><span class="kw">let </span>tx_res = <span class="self">Self</span>::do_insert_descriptors(vault_payload.vault_id,descriptors, status);
+					<span class="kw">if </span>tx_res.is_err(){
+						<span class="kw">return </span><span class="prelude-val">Some</span>(tx_res);
 					}
-					<span class="prelude-val">None</span>
+					<span class="prelude-val">None
 
-				}
-			).<span class="ident">unwrap_or</span>(<span class="prelude-val">Ok</span>(()))
+				</span>}
+			).unwrap_or(<span class="prelude-val">Ok</span>(()))
 		}
 
-		<span class="doccomment">/// Extrinsic to insert a valid proposal PSBT</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Meant to be unsigned with signed payload and used by an offchain worker</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">0</span>)]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ocw_insert_psbts</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">payload</span>: <span class="ident">ProposalsPayload</span><span class="op">&lt;</span><span class="ident">T::Public</span><span class="op">&gt;</span>,
-			<span class="ident">_signature</span>: <span class="ident">T::Signature</span>,
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="ident">ensure_none</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="ident">payload</span>.<span class="ident">proposals_payload</span>.<span class="ident">iter</span>().<span class="ident">find_map</span>(
-				<span class="op">|</span><span class="ident">proposal_psbt</span><span class="op">|</span>{
-					<span class="kw">let</span> <span class="ident">bounded_psbt</span> <span class="op">=</span> <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::PSBTMaxLen</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">proposal_psbt</span>.<span class="ident">psbt</span>.<span class="ident">clone</span>())
-						.<span class="ident">expect</span>(<span class="string">&quot;Error trying to bound the psbt&quot;</span>);
-					<span class="kw">let</span> <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proposal_psbt</span>.<span class="ident">status</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
-					<span class="kw">let</span> <span class="ident">tx_res</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::do_insert_psbt</span>(<span class="ident">proposal_psbt</span>.<span class="ident">proposal_id</span>, <span class="ident">bounded_psbt</span>, <span class="ident">status</span>);
-					<span class="kw">if</span> <span class="ident">tx_res</span>.<span class="ident">is_err</span>(){
-						<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">tx_res</span>);
+		<span class="doccomment">/// Extrinsic to insert a valid proposal PSBT
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="kw">pub fn </span>ocw_insert_psbts(
+			origin: OriginFor&lt;T&gt;,
+			payload: ProposalsPayload&lt;T::Public&gt;,
+			_signature: T::Signature,
+		) -&gt; DispatchResult {
+			ensure_none(origin.clone())<span class="question-mark">?</span>;
+			payload.proposals_payload.iter().find_map(
+				|proposal_psbt|{
+					<span class="kw">let </span>bounded_psbt = BoundedVec::&lt;u8, T::PSBTMaxLen&gt;::try_from(proposal_psbt.psbt.clone())
+						.expect(<span class="string">&quot;Error trying to bound the psbt&quot;</span>);
+					<span class="kw">let </span>status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt; = proposal_psbt.status.clone().into();
+					<span class="kw">let </span>tx_res = <span class="self">Self</span>::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt, status);
+					<span class="kw">if </span>tx_res.is_err(){
+						<span class="kw">return </span><span class="prelude-val">Some</span>(tx_res);
 					}
-					<span class="prelude-val">None</span>
-				}
+					<span class="prelude-val">None
+				</span>}
 			)
-			.<span class="ident">unwrap_or</span>(<span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
+			.unwrap_or(<span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
 
-		<span class="doccomment">/// Extrinsic to insert a valid proposal TX_ID</span>
-		<span class="doccomment">/// </span>
-		<span class="doccomment">/// Meant to be unsigned with signed payload and used by an offchain worker</span>
-		<span class="doccomment">/// </span>
-		<span class="attribute">#[<span class="ident">transactional</span>]</span>
-		<span class="attribute">#[<span class="ident">pallet::weight</span>(<span class="number">0</span>)]</span>
-		<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ocw_finalize_psbts</span>(
-			<span class="ident">origin</span>: <span class="ident">OriginFor</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-			<span class="ident">payload</span>: <span class="ident">ProposalsPayload</span><span class="op">&lt;</span><span class="ident">T::Public</span><span class="op">&gt;</span>, <span class="comment">// here the payload</span>
-			<span class="ident">_signature</span>: <span class="ident">T::Signature</span>,<span class="comment">// we don&#39;t need to verify the signature here because it has been verified in</span>
-			<span class="comment">//   `validate_unsigned` function when sending out the unsigned tx.</span>
-		) -&gt; <span class="ident">DispatchResult</span> {
-			<span class="ident">ensure_none</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-			<span class="macro">log::info!</span>(<span class="string">&quot;Extrinsic recibido payload de: {:?}&quot;</span>,<span class="ident">payload</span>);
-			<span class="ident">payload</span>.<span class="ident">proposals_payload</span>.<span class="ident">iter</span>().<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">proposal_tx</span><span class="op">|</span>{
-				<span class="kw">let</span> <span class="ident">bounded_tx_id</span> <span class="op">=</span> <span class="ident">BoundedVec</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">proposal_tx</span>.<span class="ident">psbt</span>.<span class="ident">clone</span>() );
-				<span class="kw">let</span> <span class="ident">status</span>: <span class="ident">BDKStatus</span><span class="op">&lt;</span><span class="ident">T::VaultDescriptionMaxLen</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proposal_tx</span>.<span class="ident">status</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
-				<span class="ident"><span class="self">Self</span>::do_insert_tx_id</span>(<span class="ident">proposal_tx</span>.<span class="ident">proposal_id</span>, <span class="ident">bounded_tx_id</span>.<span class="ident">ok</span>(), <span class="ident">status</span>)
+		<span class="doccomment">/// Extrinsic to insert a valid proposal TX_ID
+		/// 
+		/// Meant to be unsigned with signed payload and used by an offchain worker
+		/// 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="kw">pub fn </span>ocw_finalize_psbts(
+			origin: OriginFor&lt;T&gt;,
+			payload: ProposalsPayload&lt;T::Public&gt;, <span class="comment">// here the payload
+			</span>_signature: T::Signature,<span class="comment">// we don&#39;t need to verify the signature here because it has been verified in
+			//   `validate_unsigned` function when sending out the unsigned tx.
+		</span>) -&gt; DispatchResult {
+			ensure_none(origin.clone())<span class="question-mark">?</span>;
+			<span class="macro">log::info!</span>(<span class="string">&quot;Extrinsic recibido payload de: {:?}&quot;</span>,payload);
+			payload.proposals_payload.iter().try_for_each(|proposal_tx|{
+				<span class="kw">let </span>bounded_tx_id = BoundedVec::&lt;u8, T::VaultDescriptionMaxLen&gt;::try_from(proposal_tx.psbt.clone() );
+				<span class="kw">let </span>status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt; = proposal_tx.status.clone().into();
+				<span class="self">Self</span>::do_insert_tx_id(proposal_tx.proposal_id, bounded_tx_id.ok(), status)
 			})<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
 	}
 
-	<span class="attribute">#[<span class="ident">pallet::validate_unsigned</span>]</span>
-	<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Config</span><span class="op">&gt;</span> <span class="ident">ValidateUnsigned</span> <span class="kw">for</span> <span class="ident">Pallet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="attribute">#[pallet::validate_unsigned]
+	</span><span class="kw">impl</span>&lt;T: Config&gt; ValidateUnsigned <span class="kw">for </span>Pallet&lt;T&gt; {
 
-		<span class="kw">type</span> <span class="ident">Call</span> <span class="op">=</span> <span class="ident">Call</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+		<span class="kw">type </span>Call = Call&lt;T&gt;;
 
-		<span class="kw">fn</span> <span class="ident">validate_unsigned</span>(<span class="ident">_source</span>: <span class="ident">TransactionSource</span>, <span class="ident">call</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Call</span>) -&gt; <span class="ident">TransactionValidity</span> {
-			<span class="kw">let</span> <span class="ident">valid_tx</span> <span class="op">=</span> <span class="op">|</span><span class="ident">provide</span><span class="op">|</span> {
-				<span class="ident">ValidTransaction::with_tag_prefix</span>(<span class="string">&quot;bdks&quot;</span>)
-					.<span class="ident">priority</span>(<span class="ident">UNSIGNED_TXS_PRIORITY</span>)
-					.<span class="ident">and_provides</span>([<span class="kw-2">&amp;</span><span class="ident">provide</span>])
-					.<span class="ident">longevity</span>(<span class="number">3</span>)
-					.<span class="ident">propagate</span>(<span class="bool-val">true</span>)
-					.<span class="ident">build</span>()
+		<span class="kw">fn </span>validate_unsigned(_source: TransactionSource, call: <span class="kw-2">&amp;</span><span class="self">Self</span>::Call) -&gt; TransactionValidity {
+			<span class="kw">let </span>valid_tx = |provide| {
+				ValidTransaction::with_tag_prefix(<span class="string">&quot;bdks&quot;</span>)
+					.priority(UNSIGNED_TXS_PRIORITY)
+					.and_provides([<span class="kw-2">&amp;</span>provide])
+					.longevity(<span class="number">3</span>)
+					.propagate(<span class="bool-val">true</span>)
+					.build()
 			};
 
-			<span class="kw">match</span> <span class="ident">call</span> {
-				<span class="ident">Call::ocw_insert_descriptors</span> { <span class="kw-2">ref</span> <span class="ident">payload</span>, <span class="kw-2">ref</span> <span class="ident">signature</span> } =&gt; {
-					<span class="kw">if</span> <span class="op">!</span><span class="ident">SignedPayload</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::verify</span>::<span class="op">&lt;</span><span class="ident">T::AuthorityId</span><span class="op">&gt;</span>(<span class="ident">payload</span>, <span class="ident">signature</span>.<span class="ident">clone</span>()) {
-						<span class="kw">return</span> <span class="ident">InvalidTransaction::BadProof</span>.<span class="ident">into</span>();
+			<span class="kw">match </span>call {
+				Call::ocw_insert_descriptors { <span class="kw-2">ref </span>payload, <span class="kw-2">ref </span>signature } =&gt; {
+					<span class="kw">if </span>!SignedPayload::&lt;T&gt;::verify::&lt;T::AuthorityId&gt;(payload, signature.clone()) {
+						<span class="kw">return </span>InvalidTransaction::BadProof.into();
 					}
-					<span class="ident">valid_tx</span>(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.<span class="ident">to_vec</span>())
-				}, <span class="comment">// compiler complains if they aren&#39;t on different match arms</span>
-				<span class="ident">Call::ocw_insert_psbts</span> { <span class="kw-2">ref</span> <span class="ident">payload</span>, <span class="kw-2">ref</span> <span class="ident">signature</span> } =&gt; {
-					<span class="kw">if</span> <span class="op">!</span><span class="ident">SignedPayload</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::verify</span>::<span class="op">&lt;</span><span class="ident">T::AuthorityId</span><span class="op">&gt;</span>(<span class="ident">payload</span>, <span class="ident">signature</span>.<span class="ident">clone</span>()) {
-						<span class="kw">return</span> <span class="ident">InvalidTransaction::BadProof</span>.<span class="ident">into</span>();
+					valid_tx(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.to_vec())
+				}, <span class="comment">// compiler complains if they aren&#39;t on different match arms
+				</span>Call::ocw_insert_psbts { <span class="kw-2">ref </span>payload, <span class="kw-2">ref </span>signature } =&gt; {
+					<span class="kw">if </span>!SignedPayload::&lt;T&gt;::verify::&lt;T::AuthorityId&gt;(payload, signature.clone()) {
+						<span class="kw">return </span>InvalidTransaction::BadProof.into();
 					}
-					<span class="ident">valid_tx</span>(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.<span class="ident">to_vec</span>())
+					valid_tx(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.to_vec())
 				},
-				<span class="ident">Call::ocw_finalize_psbts</span> { <span class="kw-2">ref</span> <span class="ident">payload</span>, <span class="kw-2">ref</span> <span class="ident">signature</span> } =&gt; {
-					<span class="kw">if</span> <span class="op">!</span><span class="ident">SignedPayload</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::verify</span>::<span class="op">&lt;</span><span class="ident">T::AuthorityId</span><span class="op">&gt;</span>(<span class="ident">payload</span>, <span class="ident">signature</span>.<span class="ident">clone</span>()) {
-						<span class="kw">return</span> <span class="ident">InvalidTransaction::BadProof</span>.<span class="ident">into</span>();
+				Call::ocw_finalize_psbts { <span class="kw-2">ref </span>payload, <span class="kw-2">ref </span>signature } =&gt; {
+					<span class="kw">if </span>!SignedPayload::&lt;T&gt;::verify::&lt;T::AuthorityId&gt;(payload, signature.clone()) {
+						<span class="kw">return </span>InvalidTransaction::BadProof.into();
 					}
-					<span class="ident">valid_tx</span>(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.<span class="ident">to_vec</span>())
+					valid_tx(<span class="string">b&quot;unsigned_extrinsic_with_signed_payload&quot;</span>.to_vec())
 				},
-				<span class="kw">_</span> =&gt; <span class="ident">InvalidTransaction::Call</span>.<span class="ident">into</span>(),
+				<span class="kw">_ </span>=&gt; InvalidTransaction::Call.into(),
 			}
 		}
 	}
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
