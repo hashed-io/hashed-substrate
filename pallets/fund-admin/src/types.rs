@@ -43,6 +43,7 @@ pub type TotalAmount = u64;
 // Revenues
 pub type RevenueAmount = u128;
 pub type JobEligibleId = [u8; 32];
+pub type JobEligibleAmount = u128;
 pub type RevenueId = [u8; 32];
 pub type RevenueNumber = u32;
 pub type RevenueTransactionId = [u8; 32];
@@ -207,7 +208,7 @@ impl Default for TransactionStatus {
 pub struct JobEligibleData {
     pub project_id: ProjectId,
     pub name: FieldName,
-    pub amount: RevenueAmount,
+    pub amount: JobEligibleAmount,
     pub naics_code: Option<FieldDescription>,
     pub jobs_multiplier: Option<JobsMultiplier>,
 }
@@ -218,7 +219,7 @@ pub struct JobEligibleData {
 pub struct RevenueData <T: Config> {
     pub project_id: ProjectId,
     pub revenue_number: RevenueNumber,
-    pub total_amount: TotalAmount,
+    pub revenue_amount: RevenueAmount,
     pub status: RevenueStatus,
     pub documents: Option<Documents<T>>,
     pub created_date: CreatedDate,
@@ -301,6 +302,7 @@ pub enum ProxyPermission {
     RejectDrawdown, // reject_drawdown
     UpBulkupload, // up_bulkupload
     Inflation, // inflation
+    JobEligible, // job_eligible
 }
 
 impl ProxyPermission {
@@ -318,6 +320,7 @@ impl ProxyPermission {
             Self::RejectDrawdown => "RejectDrawdown".as_bytes().to_vec(),
             Self::UpBulkupload => "UpBulkupload".as_bytes().to_vec(),
             Self::Inflation => "Inflation".as_bytes().to_vec(),
+            Self::JobEligible => "JobEligible".as_bytes().to_vec(),
         }
     }
 
@@ -340,6 +343,7 @@ impl ProxyPermission {
             RejectDrawdown.to_vec(),
             UpBulkupload.to_vec(),
             Inflation.to_vec(),
+            JobEligible.to_vec(),
         ].to_vec();
         administrator_permissions
     }
