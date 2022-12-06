@@ -1343,7 +1343,7 @@ impl<T: Config> Pallet<T> {
         job_eligibles: BoundedVec<(
             Option<FieldName>, // name
             Option<JobEligibleAmount>, // amount
-            Option<FieldDescription>, // naics code
+            Option<NAICSCode>, // naics code
             Option<JobsMultiplier>, // jobs multiplier
             CUDAction, // action
             Option<JobEligibleId>, // job_eligible_id
@@ -1358,41 +1358,37 @@ impl<T: Config> Pallet<T> {
         // Ensure job eligibles is not empty
         ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
 
-        // for job_eligible in job_eligibles {
-        //     match job_eligible.4 {
-        //         CUDAction::Create => {
-        //             // Create job eligible only needs: name, amount, naics code, jobs multiplier
-        //             Self::do_create_job_eligible(
-        //                 admin.clone(),
-        //                 project_id,
-        //                 job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
-        //                 job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
-        //                 job_eligible.2.ok_or(Error::<T>::JobEligibleNaicsCodeRequired)?,
-        //                 job_eligible.3.ok_or(Error::<T>::JobEligibleJobsMultiplierRequired)?,
-        //             )?;
-        //         },
-        //         CUDAction::Update => {
-        //             // Update job eligible needs: job_eligible_id, name, amount, naics code, jobs multiplier
-        //             Self::do_update_job_eligible(
-        //                 admin.clone(),
-        //                 project_id,
-        //                 job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
-        //                 job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
-        //                 job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
-        //                 job_eligible.2.ok_or(Error::<T>::JobEligibleNaicsCodeRequired)?,
-        //                 job_eligible.3.ok_or(Error::<T>::JobEligibleJobsMultiplierRequired)?,
-        //             )?;
-        //         },
-        //         CUDAction::Delete => {
-        //             // Delete job eligible needs: job_eligible_id
-        //             Self::do_delete_job_eligible(
-        //                 admin.clone(),
-        //                 project_id,
-        //                 job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
-        //             )?;
-        //         },
-        //     }
-        // }
+        for job_eligible in job_eligibles {
+            match job_eligible.4 {
+                CUDAction::Create => {
+                    // Create job eligible only needs: name, amount, naics code, jobs multiplier
+                    Self::do_create_job_eligible(
+                        project_id,
+                        job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
+                        job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
+                        job_eligible.2,
+                        job_eligible.3,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update job eligible needs: job_eligible_id, name, amount, naics code, jobs multiplier
+                    Self::do_update_job_eligible(
+                        project_id,
+                        job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                        job_eligible.0,
+                        job_eligible.1,
+                        job_eligible.2,
+                        job_eligible.3,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete job eligible needs: job_eligible_id
+                    Self::do_delete_job_eligible(
+                        job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                    )?;
+                },
+            }
+        }
 
         Ok(())
     }

@@ -508,6 +508,12 @@ pub mod pallet {
 		JobEligibleNotFound,
 		/// Jopb eligible does not belong to the project
 		JobEligibleDoesNotBelongToProject,
+		/// Job eligible name is required
+		JobEligibleNameRequired,
+		/// Job eligible amount is required
+		JobEligibleAmountRequired,
+		/// Job eligible id is required
+		JobEligibleIdRequired,
 
 
 	}
