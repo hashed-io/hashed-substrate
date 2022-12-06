@@ -514,8 +514,6 @@ pub mod pallet {
 		JobEligibleAmountRequired,
 		/// Job eligible id is required
 		JobEligibleIdRequired,
-
-
 	}
 
 	// E X T R I N S I C S
@@ -888,10 +886,10 @@ pub mod pallet {
 		/// result in an unexpected behavior.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures(
+		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
-			expenditures: BoundedVec<(
+			expenditures: Option<BoundedVec<(
 				Option<FieldName>, // name
 				Option<ExpenditureType>, // type
 				Option<ExpenditureAmount>, // amount
@@ -899,11 +897,27 @@ pub mod pallet {
 				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
 				Option<ExpenditureId>, // expenditure_id
-			), T::MaxRegistrationsAtTime>,
+			), T::MaxRegistrationsAtTime>>,
+			job_eligibles: Option<BoundedVec<(
+				Option<FieldName>, // name
+				Option<JobEligibleAmount>, // amount
+				Option<NAICSCode>, // naics code
+				Option<JobsMultiplier>, // jobs multiplier
+				CUDAction, // action
+				Option<JobEligibleId>, // job_eligible_id
+			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_execute_expenditures(who, project_id, expenditures)
+			if let Some(mod_expenditures) = expenditures {
+				Self::do_execute_expenditures(who.clone(), project_id, mod_expenditures)?;
+			}
+
+			if let Some(mod_job_eligibles) = job_eligibles {
+				Self::do_execute_job_eligibles(who.clone(), project_id, mod_job_eligibles)?;
+			}
+
+			Ok(())
 		}
 
 		// T R A N S A C T I O N S   &  D R A W D O W N S
