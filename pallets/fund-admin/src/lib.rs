@@ -725,6 +725,14 @@ pub mod pallet {
 				CUDAction,
 				Option<ExpenditureId>
 			), T::MaxRegistrationsAtTime>,
+			job_eligibles: Option<BoundedVec<(
+				Option<FieldName>, // name
+				Option<JobEligibleAmount>, // amount
+				Option<NAICSCode>, // naics code
+				Option<JobsMultiplier>, // jobs multiplier
+				CUDAction, // action
+				Option<JobEligibleId>, // job_eligible_id
+			), T::MaxRegistrationsAtTime>>,
 			users: Option<BoundedVec<(
 				T::AccountId,
 				ProxyRole,
@@ -733,7 +741,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
 		}
 
 		/// Edits a project.

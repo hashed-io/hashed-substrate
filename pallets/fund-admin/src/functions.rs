@@ -93,6 +93,14 @@ impl<T: Config> Pallet<T> {
             CUDAction,
             Option<ExpenditureId>,
         ), T::MaxRegistrationsAtTime>,
+        job_eligibles: Option<BoundedVec<(
+            Option<FieldName>, // name
+            Option<JobEligibleAmount>, // amount
+            Option<NAICSCode>, // naics code
+            Option<JobsMultiplier>, // jobs multiplier
+            CUDAction, // action
+            Option<JobEligibleId>, // job_eligible_id
+        ), T::MaxRegistrationsAtTime>>,
         users: Option<BoundedVec<(
             T::AccountId,
             ProxyRole,
@@ -145,6 +153,11 @@ impl<T: Config> Pallet<T> {
         //Add expenditures
         Self::do_execute_expenditures(admin.clone(), project_id, expenditures)?;
 
+        //Add job_eligibles
+        if let Some(mod_job_eligibles) = job_eligibles {
+            Self::do_execute_job_eligibles(admin.clone(), project_id, mod_job_eligibles)?;
+        }
+        
         // Add users
         if let Some(mod_users) = users {
             Self::do_execute_assign_users(admin.clone(), project_id, mod_users)?;
