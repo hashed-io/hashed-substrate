@@ -13,10 +13,9 @@ mod benchmarking;
 
 mod functions;
 mod types;
-//TODO: Remobe unused parameters, types, etc used for development
+//TODO: Remove unused parameters, types, etc
 // - Change extrinsic names
 // - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
-// - Add internal documentation for each extrinsic
 // - Add external documentation for each extrinsic
 // - Fix typos
 
@@ -86,6 +85,21 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxExpendituresPerProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerBuilder: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerInvestor: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerIssuer: Get<u32>;
+
+		#[pallet::constant]
+		type MaxProjectsPerRegionalCenter: Get<u32>;
+
+		#[pallet::constant]
+		type MaxBanksPerProject: Get<u32>;
 
 	}
 
@@ -395,6 +409,14 @@ pub mod pallet {
 		DrawdownStatusNotSupportedForBulkUpload,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
+		/// Max number of projects per builder has been reached
+		MaxProjectsPerBuilderReached,
+		/// Max number of projects per investor has been reached
+		MaxProjectsPerInvestorReached,
+		/// Max number of projects per issuer has been reached
+		MaxProjectsPerIssuerReached,
+		/// Max number of projects per regional center has been reached
+		MaxProjectsPerRegionalCenterReached,
 
 	}
 
@@ -595,6 +617,7 @@ pub mod pallet {
 			description: FieldDescription,
 			image: Option<CID>,
 			address: FieldName,
+			banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
 			creation_date: CreationDate,
 			completion_date: CompletionDate,
 			expenditures: BoundedVec<(
@@ -614,7 +637,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, creation_date, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, users)
 		}
 
 		/// Edits a project.
@@ -650,12 +673,13 @@ pub mod pallet {
 			description: Option<FieldDescription>,
 			image: Option<CID>,
 			address: Option<FieldName>,
+			banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
 			creation_date: Option<CreationDate>,
 			completion_date: Option<CompletionDate>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_project(who, project_id, title, description, image, address, creation_date, completion_date)
+			Self::do_edit_project(who, project_id, title, description, image, address, banks, creation_date, completion_date)
 		}
 
 		/// Deletes a project.

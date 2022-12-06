@@ -3,7 +3,6 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
-//TODO: Fix types when using an Option, i.e: Option<CID>
 pub type FieldName = BoundedVec<u8, ConstU32<100>>;
 pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
 pub type CID = BoundedVec<u8, ConstU32<100>>;
@@ -15,6 +14,8 @@ pub type CreationDate = u64;
 pub type CompletionDate = u64;
 pub type UpdatedDate = u64;
 pub type RegistrationDate = u64;
+pub type BankName = BoundedVec<u8, ConstU32<100>>;
+pub type BankAddress = BoundedVec<u8, ConstU32<100>>;
 
 // Users
 pub type DateRegistered = u64;
@@ -54,13 +55,14 @@ pub struct ProjectData<T: Config> {
     pub address: FieldName,
     pub status: ProjectStatus,
     pub inflation_rate: Option<InflationRate>,
+    pub banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
     pub creation_date: CreationDate,
     pub completion_date: CompletionDate,
     pub registration_date: RegistrationDate,
     pub updated_date: UpdatedDate,
-	pub eb5_drawdown_status: DrawdownStatus,
-	pub construction_loan_drawdown_status: DrawdownStatus,
-	pub developer_equity_drawdown_status: DrawdownStatus,
+	pub eb5_drawdown_status: Option<DrawdownStatus>,
+	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
+	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -162,7 +164,6 @@ impl Default for DrawdownType {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum DrawdownStatus {
-	None,
     Draft,
     Submitted,
     Approved,
