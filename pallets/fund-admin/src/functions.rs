@@ -754,7 +754,7 @@ impl<T: Config> Pallet<T> {
         // Ensure expenditure_id exists & get expenditure data
         let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
-        // Delete expenditure data
+        // Delete expenditure data from ExpendituresInfo
         <ExpendituresInfo<T>>::remove(expenditure_id);
 
         // Delete expenditure_id from ExpendituresByProject
@@ -1477,6 +1477,26 @@ impl<T: Config> Pallet<T> {
         })?;
 
         Self::deposit_event(Event::JobEligibleUpdated(project_id, job_eligible_id));
+        Ok(())
+    }
+
+    fn do_delete_job_eligible(
+        job_eligible_id: JobEligibleId,     
+    ) -> DispatchResult {
+        // Ensure job eligible exists & get job eligible data
+        let job_eligible_data = JobEligiblesInfo::<T>::get(job_eligible_id).ok_or(Error::<T>::JobEligibleNotFound)?;
+
+        // Delete job eligible data from JobEligiblesInfo
+        <JobEligiblesInfo<T>>::remove(job_eligible_id);
+
+        // Delete job eligible id from JobEligiblesByProject
+        <JobEligiblesByProject<T>>::try_mutate::<_,_,DispatchError,_>(job_eligible_data.project_id, |job_eligibles| {
+            job_eligibles.retain(|job_eligible| job_eligible != &job_eligible_id);
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::JobEligibleDeleted(job_eligible_data.project_id, job_eligible_id));
+
         Ok(())
     }
 

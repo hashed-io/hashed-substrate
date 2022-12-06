@@ -348,6 +348,8 @@ pub mod pallet {
 		JobEligibleCreated(ProjectId, JobEligibleId),
 		/// Job eligible was updated successfully
 		JobEligibleUpdated(ProjectId, JobEligibleId),
+		/// Job eligible was deleted successfully
+		JobEligibleDeleted(ProjectId, JobEligibleId),
 	}
 
 	// E R R O R S
