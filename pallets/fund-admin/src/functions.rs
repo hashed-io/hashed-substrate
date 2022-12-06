@@ -725,13 +725,11 @@ impl<T: Config> Pallet<T> {
         <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError, _>(expenditure_id, |expenditure_data| {
             let expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
 
-            // Ensure expenditure belongs to project
+            // Ensure expenditure belongs to the project
             ensure!(expenditure.project_id == project_id, Error::<T>::ExpenditureDoesNotBelongToProject);
 
-            //TODO: ensure name is unique
-
-            if let  Some(mod_name) = name {
-                expenditure.name = mod_name.clone();
+            if let Some(mod_name) = name {
+                expenditure.name = mod_name;
             }
             if let Some(mod_expenditure_amount) = expenditure_amount {
                 expenditure.expenditure_amount = mod_expenditure_amount;
@@ -746,7 +744,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        Self::deposit_event(Event::ExpenditureEdited(expenditure_id));
+        Self::deposit_event(Event::ExpenditureUpdated(expenditure_id));
         Ok(())
     }
 
@@ -1442,7 +1440,46 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    //fn do_update_job_eligible
+    fn do_update_job_eligible(
+        project_id: ProjectId,
+        job_eligible_id: JobEligibleId,
+        name: Option<FieldName>,
+        job_eligible_amount: Option<JobEligibleAmount>,
+        naics_code: Option<NAICSCode>,
+        jobs_multiplier: Option<JobsMultiplier>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Ensure job eligible exists
+        ensure!(JobEligiblesInfo::<T>::contains_key(job_eligible_id), Error::<T>::JobEligibleNotFound);
+
+        // Mutate job eligible data
+        <JobEligiblesInfo<T>>::try_mutate::<_,_,DispatchError,_>(job_eligible_id, |job_eligible_data| {
+            let job_eligible = job_eligible_data.as_mut().ok_or(Error::<T>::JobEligibleNotFound)?;
+
+            // Ensure job eligible belongs to the project
+            ensure!(job_eligible.project_id == project_id, Error::<T>::JobEligibleDoesNotBelongToProject);
+
+            if let Some(mod_name) = name {
+                job_eligible.name = mod_name;
+            }
+            if let Some(mod_job_eligible_amount) = job_eligible_amount {
+                job_eligible.job_eligible_amount = mod_job_eligible_amount;
+            }
+            if let Some(mod_naics_code) = naics_code {
+                job_eligible.naics_code = Some(mod_naics_code);
+            }
+            if let Some(mod_jobs_multiplier) = jobs_multiplier {
+                job_eligible.jobs_multiplier = Some(mod_jobs_multiplier);
+            }
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::JobEligibleUpdated(project_id, job_eligible_id));
+        Ok(())
+    }
+
 
 
     // H E L P E R S

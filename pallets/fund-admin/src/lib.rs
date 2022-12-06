@@ -323,7 +323,7 @@ pub mod pallet {
 		/// Expenditure was created successfully
 		ExpenditureCreated,
 		/// Expenditure was edited successfully
-		ExpenditureEdited(ExpenditureId),
+		ExpenditureUpdated(ExpenditureId),
 		/// Expenditure was deleted successfully
 		ExpenditureDeleted(ExpenditureId),
 		/// Trasactions was completed successfully
@@ -346,6 +346,8 @@ pub mod pallet {
 		DrawdownRejected([u8;32]),
 		/// Job eligible was created successfully
 		JobEligibleCreated(ProjectId, JobEligibleId),
+		/// Job eligible was updated successfully
+		JobEligibleUpdated(ProjectId, JobEligibleId),
 	}
 
 	// E R R O R S
@@ -500,6 +502,10 @@ pub mod pallet {
 		JobEligibleIdAlreadyExists,
 		/// Max number of job eligibles per project reached
 		MaxJobEligiblesPerProjectReached,
+		/// Job eligible id not found
+		JobEligibleNotFound,
+		/// Jopb eligible does not belong to the project
+		JobEligibleDoesNotBelongToProject,
 
 
 	}
