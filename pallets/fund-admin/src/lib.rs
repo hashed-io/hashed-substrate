@@ -344,6 +344,8 @@ pub mod pallet {
 		DrawdownApproved([u8;32]),
 		/// Drawdown was rejected successfully
 		DrawdownRejected([u8;32]),
+		/// Job eligible was created successfully
+		JobEligibleCreated(ProjectId, JobEligibleId),
 	}
 
 	// E R R O R S

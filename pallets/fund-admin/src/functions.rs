@@ -685,7 +685,7 @@ impl<T: Config> Pallet<T> {
         // Create expenditure data
         let expenditure_data = ExpenditureData {
             project_id,
-            name: name.clone(),
+            name,
             expenditure_type,
             expenditure_amount,
             naics_code,
@@ -1438,8 +1438,11 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        Self::deposit_event(Event::JobEligibleCreated(project_id, job_eligible_id));
         Ok(())
     }
+
+    //fn do_update_job_eligible
 
 
     // H E L P E R S
@@ -1712,7 +1715,7 @@ impl<T: Config> Pallet<T> {
         // Get project data & ensure project exists
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
-        // Ensure project is completed
+        // Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
 
         Ok(())
