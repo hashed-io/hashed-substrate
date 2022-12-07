@@ -29,7 +29,7 @@ spec:
       - name: inova-n1-network
         imagePullPolicy: IfNotPresent
         image: sebastianmontero/hashed-substrate-node:f63b64a02fa97ffd31e497797841f8db35a1d315
-        command: ["scripts/run-node.sh"]
+        command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
           - name: inova-n1-db
