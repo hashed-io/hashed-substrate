@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-usage="./start-collator.sh [hashed|luhn] <base-data-path>"
+usage="./start_collator.sh [hashed|luhn] <base-data-path>"
 if [ $# -ne 2 ]; then
     echo $usage
     exit 1
