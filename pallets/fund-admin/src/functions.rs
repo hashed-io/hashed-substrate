@@ -1136,7 +1136,6 @@ impl<T: Config> Pallet<T> {
         Self::is_amount_valid(amount)?;
 
         //TOREVIEW: If documents are mandatory, we need to check if they are provided
-        // TODO: Ensure documents is not empty
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -1144,7 +1143,7 @@ impl<T: Config> Pallet<T> {
         // Create transaction id
         let transaction_id = (drawdown_id, amount, expenditure_id, timestamp, project_id).using_encoded(blake2_256);
 
-        // Ensure expenditure id exists
+        // Ensure expenditure id does not exist
         ensure!(ExpendituresInfo::<T>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
 
         // Create transaction data
@@ -1172,7 +1171,6 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionCreated(transaction_id));
         Ok(())
 
@@ -1574,12 +1572,45 @@ impl<T: Config> Pallet<T> {
         revenue_amount: RevenueAmount,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
-        // TOREVIEW: If documents are required, then we need to check if they are empty
+        // TOREVIEW: If documents are mandatory, then we need to check if they are empty
 
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create revenue transaction id
+        let revenue_transaction_id = (revenue_id, job_eligible_id, project_id, timestamp).using_encoded(blake2_256);
         
+        //Ensure revenue transaction id doesn't exist
+        ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
+
+        // Create revenue transaction data
+        let revenue_transaction_data = RevenueTransactionData {
+            project_id,
+            revenue_id,
+            job_eligible_id,
+            created_date: timestamp,
+            updated_date: timestamp,
+            closed_date: 0,
+            feedback: None,
+            amount: revenue_amount,
+            status: RevenueTransactionStatus::default(),
+            documents,
+        };
+
+        // Insert revenue transaction data into RevenueTransactionsInfo
+        // Ensure revenue transaction id doesn't exist
+        ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
+        <RevenueTransactionsInfo<T>>::insert(revenue_transaction_id, revenue_transaction_data);
+
+        // Insert revenue transaction id into TransactionsByRevenue
+        <TransactionsByRevenue<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, revenue_id, |revenue_transactions| {
+            revenue_transactions.try_push(revenue_transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerRevenueReached)?;
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::RevenueTransactionCreated(evenue_transaction_id));
 
         Ok(())
-
     }
 
 

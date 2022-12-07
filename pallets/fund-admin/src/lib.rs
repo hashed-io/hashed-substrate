@@ -350,6 +350,8 @@ pub mod pallet {
 		JobEligibleUpdated(ProjectId, JobEligibleId),
 		/// Job eligible was deleted successfully
 		JobEligibleDeleted(ProjectId, JobEligibleId),
+		/// Revenue transaction was created successfully
+		RevenueTransactionCreated(RevenueTransactionId),
 	}
 
 	// E R R O R S
@@ -520,6 +522,10 @@ pub mod pallet {
 		RevenueTransactionsAreEmpty,
 		/// Revenue can not be edited 
 		CannotEditRevenue,
+		/// Revenue transaction id already exists
+		RevenueTransactionIdAlreadyExists,
+		/// Max number of transactions per revenue reached
+		MaxTransactionsPerRevenueReached,
 
 	}
 
