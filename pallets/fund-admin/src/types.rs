@@ -245,7 +245,7 @@ pub struct RevenueTransactionData<T: Config> {
     pub updated_date: UpdatedDate,
     pub closed_date: CloseDate,
     pub feedback: Option<FieldDescription>,
-    pub amount: ExpenditureAmount,
+    pub amount: RevenueAmount,
     pub status: TransactionStatus,
     pub documents: Option<Documents<T>>,
 }
