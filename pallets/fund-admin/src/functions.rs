@@ -296,6 +296,8 @@ impl<T: Config> Pallet<T> {
         // Deletes all drawdowns from DrawdownsByProject storagemap
         <DrawdownsByProject<T>>::remove(project_id);
 
+        //TODO: Delete revenue storagemaps
+
         //Event
         Self::deposit_event(Event::ProjectDeleted(project_id));
         Ok(())
@@ -1217,11 +1219,11 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction exists and get transaction data
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-        // Ensure drawdown is not completed
-        ensure!(Self::is_drawdown_editable(transaction_data.drawdown_id).is_ok(), Error::<T>::DrawdownIsAlreadyCompleted);
+        // Ensure drawdown is deletable
+        Self::is_drawdown_editable(transaction_data.drawdown_id)?;
 
-        // Ensure transaction is not completed
-        ensure!(Self::is_transaction_editable(transaction_id).is_ok(), Error::<T>::TransactionIsAlreadyCompleted);
+        // Ensure transaction is deletable
+        Self::is_transaction_editable(transaction_id)?;
 
         // Remove transaction from TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.drawdown_id, |transactions| {
@@ -1232,7 +1234,6 @@ impl<T: Config> Pallet<T> {
         // Remove transaction from TransactionsInfo
         <TransactionsInfo<T>>::remove(transaction_id);
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionDeleted(transaction_id));
 
         Ok(())
@@ -1638,7 +1639,32 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    
+    fn do_delete_revenue_transaction(
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Ensure revenue transaction exists & get revenue transaction data
+        let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+        // Ensure revenue is deletable
+        Self::is_revenue_editable(revenue_transaction_data.revenue_id)?;
+
+        // Ensure revenue transaction is deletable
+        Self::is_revenue_transaction_editable(revenue_transaction_id)?;
+
+        // Remove revenue transaction from TransactionsByRevenue
+        <TransactionsByRevenue<T>>::try_mutate::<_,_,_,DispatchError,_>(revenue_transaction_data.project_id, revenue_transaction_data.revenue_id, |revenue_transactions| {
+            revenue_transactions.retain(|revenue_transaction| revenue_transaction != &revenue_transaction_id);
+            Ok(())
+        })?;
+       
+        // Remove revenue transaction from RevenueTransactionsInfo
+        <RevenueTransactionsInfo<T>>::remove(revenue_transaction_id);
+
+        Self::deposit_event(Event::RevenueTransactionDeleted(revenue_transaction_id));
+
+        Ok(())
+    }
+
 
 
 
@@ -1924,6 +1950,9 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+
+        //TODO: Merge all drawdown types in the next match, 
+        // we no longer need to do a distinction between EB5 and other drawdown types
         // Match drawdown type
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
@@ -1936,9 +1965,12 @@ impl<T: Config> Pallet<T> {
                     DrawdownStatus::Rejected => {
                         return Ok(())
                     },
-                    _ => {
-                        return Err(Error::<T>::CannotEditDrawdown.into());
-                    }
+                    DrawdownStatus::Submitted => {
+                        return Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into());
+                    },
+                    DrawdownStatus::Approved => {
+                        return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
+                    },
                 }
             },
             _ => {
@@ -1958,18 +1990,24 @@ impl<T: Config> Pallet<T> {
     fn is_transaction_editable(
         transaction_id: TransactionId,
     ) -> DispatchResult {
-        // Get transaction data
+        // Get transaction data & ensure transaction exists
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
         // Ensure transaction is in draft or rejected status
         // Match transaction status
         match transaction_data.status {
-            TransactionStatus::Approved => {
-                return Err(Error::<T>::CannotEditTransaction.into());
-            },
-            _ => {
+            TransactionStatus::Draft => {
                 return Ok(())
-            }
+            },
+            TransactionStatus::Rejected => {
+                return Ok(())
+            },
+            TransactionStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into());
+            },
+            TransactionStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into());
+            },
         }
     }
 
@@ -2127,9 +2165,36 @@ impl<T: Config> Pallet<T> {
             RevenueStatus::Rejected => {
                 return Ok(())
             },
-            _ => {
-                return Err(Error::<T>::CannotEditRevenue.into());
-            }
+            RevenueStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into());
+            },
+            RevenueStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into());
+            },
+        }
+    }
+
+    fn is_revenue_transaction_editable(
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Get revenue transaction data & ensure revenue transaction exists
+        let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+        //Ensure transaction is in draft or rejected status
+        // Match revenue transaction status
+        match revenue_transaction_data.status {
+            RevenueTransactionStatus::Draft => {
+                return Ok(())
+            },
+            RevenueTransactionStatus::Rejected => {
+                return Ok(())
+            },
+            RevenueTransactionStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into());
+            },
+            RevenueTransactionStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into());
+            },
         }
     }
 

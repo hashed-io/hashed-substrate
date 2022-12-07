@@ -354,6 +354,8 @@ pub mod pallet {
 		RevenueTransactionCreated(RevenueTransactionId),
 		/// Revenue transaction was updated successfully
 		RevenueTransactionUpdated(RevenueTransactionId),
+		/// Revenue transaction was deleted successfully
+		RevenueTransactionDeleted(RevenueTransactionId),
 	}
 
 	// E R R O R S
@@ -430,10 +432,14 @@ pub mod pallet {
 		MaxDrawdownsPerProjectReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
-		/// Can not modify a transaction at this moment
-		CannotEditTransaction,
-		/// Drawdown is already completed
-		DrawdownIsAlreadyCompleted,
+		/// Can not perform any action on a submitted transaction
+		CannotPerformActionOnSubmittedTransaction,
+		/// Can not perform any action on a approved transaction
+		CannotPerformActionOnApprovedTransaction,
+		/// Can not perform any action on a submitted drawdown
+		CannotPerformActionOnSubmittedDrawdown,
+		/// Can not perform any action on a approved drawdown
+		CannotPerformActionOnApprovedDrawdown,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
 		/// User does not have the specified role
@@ -530,7 +536,16 @@ pub mod pallet {
 		MaxTransactionsPerRevenueReached,
 		/// Revenue transaction id not found
 		RevenueTransactionNotFound,
-
+		/// Revenue transaction can not be edited
+		CannotEditRevenueTransaction,
+		/// Can not perform any action on a submitted revenue
+		CannotPerformActionOnSubmittedRevenue,
+		/// Can not perform any action on a approved revenue
+		CannotPerformActionOnApprovedRevenue,
+		/// Can not perform any action on a submitted revenue transaction
+		CannotPerformActionOnApprovedRevenueTransaction,
+		/// Can not perform any action on a approved revenue transaction
+		CannotPerformActionOnSubmittedRevenueTransaction,
 	}
 
 	// E X T R I N S I C S
@@ -1303,6 +1318,8 @@ pub mod pallet {
 			let _ = <DrawdownsByProject<T>>::clear(1000, None);
 			let _ = <TransactionsInfo<T>>::clear(1000, None);
 			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
+
+			//TODO: Remove Revenues storages
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
