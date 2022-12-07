@@ -688,6 +688,14 @@ pub mod pallet {
 		/// * 4: The expenditure jobs multiplier
 		/// * 5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.
 		/// * 6: The expenditure id. It is optional because it is only required when updating or deleting
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// where each entry is composed by:
+		/// * 0: The job eligible name
+		/// * 1: The amount of the job eligible
+		/// * 2: The NAICS code of the job eligible
+		/// * 3: The jobs multiplier of the job eligible
+		/// * 4: The job eligible action to be performed. (Create, Update or Delete)
+		/// * 5: The job eligible id. This is only used when updating or deleting a job eligible.
 		/// - users: The users who will be assigned to the project. It is an array of tuples where each entry
 		/// is a tuple of the following:
 		/// * 0: The user account
@@ -878,6 +886,14 @@ pub mod pallet {
 		/// * 4: The jobs multiplier of the expenditure
 		/// * 5: The expenditure action to be performed. (Create, Update or Delete)
 		/// * 6: The expenditure id. This is only used when updating or deleting an expenditure.
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// where each entry is composed by:
+		/// * 0: The job eligible name
+		/// * 1: The amount of the job eligible
+		/// * 2: The NAICS code of the job eligible
+		/// * 3: The jobs multiplier of the job eligible
+		/// * 4: The job eligible action to be performed. (Create, Update or Delete)
+		/// * 5: The job eligible id. This is only used when updating or deleting a job eligible.
 		///
 		/// # Considerations:
 		/// - Naics code and jobs multiplier are always optional.

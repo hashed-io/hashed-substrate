@@ -157,7 +157,7 @@ impl<T: Config> Pallet<T> {
         if let Some(mod_job_eligibles) = job_eligibles {
             Self::do_execute_job_eligibles(admin.clone(), project_id, mod_job_eligibles)?;
         }
-        
+
         // Add users
         if let Some(mod_users) = users {
             Self::do_execute_assign_users(admin.clone(), project_id, mod_users)?;
@@ -1320,7 +1320,7 @@ impl<T: Config> Pallet<T> {
             // Ensure project exists
             ensure!(ProjectsInfo::<T>::contains_key(project.0), Error::<T>::ProjectNotFound);
             match project.2 {
-                // Delete need: project_id
+                // Delete needs: project_id
                 CUDAction::Delete => {
                     // Mutate project data
                     <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
@@ -1329,7 +1329,7 @@ impl<T: Config> Pallet<T> {
                         Ok(())
                     })?;
                 },
-                // Creation & Update need: project_id, inflation_rate
+                // Creation & Update needs: project_id, inflation_rate
                 _ => {
                     // Mutate project data
 
