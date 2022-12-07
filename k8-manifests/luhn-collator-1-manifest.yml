@@ -30,7 +30,7 @@ spec:
         imagePullPolicy: Always
         image: sebastianmontero/hashed-substrate:2b25e70f2a16d23a15f8128868afeb160fd456a6
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
-        args: ["--chain", "luhn"]
+        args: ["luhn", "/var/www/hashed/hashed"]
         volumeMounts:
           - name: hashed-db
             mountPath:  /var/www/hashed/hashed
