@@ -246,8 +246,17 @@ pub struct RevenueTransactionData<T: Config> {
     pub closed_date: CloseDate,
     pub feedback: Option<FieldDescription>,
     pub amount: RevenueAmount,
-    pub status: TransactionStatus,
+    pub status: RevenueTransactionStatus,
     pub documents: Option<Documents<T>>,
+}
+
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum RevenueTransactionStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
