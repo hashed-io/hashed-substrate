@@ -8,7 +8,7 @@ spec:
   accessModes: [ "ReadWriteOnce" ]
   resources:
     requests:
-      storage: 20Gi
+      storage: 50Gi
   storageClassName: standard
 ---
 apiVersion: apps/v1
@@ -28,7 +28,7 @@ spec:
       containers:
       - name: inova-n1-network
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-node:f63b64a02fa97ffd31e497797841f8db35a1d315
+        image: sebastianmontero/hashed-substrate-node:0d78ca09a7cd54b67b2241c334ca9a5b83e0bf39
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
@@ -70,7 +70,7 @@ metadata:
 spec:
   selector:
     app:  inova-n1-network
-  type:  NodePort
+  type:  ClusterIP
   ports:
   - name:  p2p-port
     port:  30334
