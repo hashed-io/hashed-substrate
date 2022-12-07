@@ -1093,7 +1093,7 @@ impl<T: Config> Pallet<T> {
         for transaction in transactions {
             match transaction.3 {
                 CUDAction::Create => {
-                    // Create transaction only needs (expenditure_id, amount, documents)
+                    // Create transaction needs: expenditure_id, amount, documents
                     Self::do_create_transaction(
                         project_id,
                         drawdown_id,
@@ -1103,7 +1103,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Update => {
-                    // Update transaction needs (amount, documents, transaction_id)
+                    // Update transaction needs: amount, documents, transaction_id
                     Self::do_update_transaction(
                         transaction.1,
                         transaction.2,
@@ -1111,7 +1111,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
-                    // Delete transaction needs (transaction_id)
+                    // Delete transaction needs: transaction_id
                     Self::do_delete_transaction(
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
@@ -1240,7 +1240,7 @@ impl<T: Config> Pallet<T> {
     }
 
     // B U L K   U P L O A D   T R A N S A C T I O N S
-
+    // --------------------------------------------------------------------------------------------
     pub fn do_up_bulk_upload(
         user: T::AccountId,
         project_id: ProjectId,
@@ -1518,37 +1518,39 @@ impl<T: Config> Pallet<T> {
         // Ensure if the selected revenue is editable
         Self::is_revenue_editable(revenue_id)?;
 
-        // for transaction in revenue_transactions {
-        //     match transaction.3 {
-        //         CUDAction::Create => {
-        //             // Create transaction only needs (expenditure_id, amount, documents)
-        //             Self::do_create_revenue_transaction(
-        //                 project_id,
-        //                 revenue_id,
-        //                 transaction.0,
-        //                 transaction.1,
-        //                 transaction.2,
-        //             )?;
-        //         },
-        //         CUDAction::Update => {
-        //             Self::do_update_revenue_transaction(
-        //                 project_id,
-        //                 revenue_id,
-        //                 transaction.0,
-        //                 transaction.1,
-        //                 transaction.2,
-        //                 transaction.4.ok_or(Error::<T>::RevenueTransactionIdNotFound)?,
-        //             )?;
-        //         },
-        //         CUDAction::Delete => {
-        //             Self::do_delete_revenue_transaction(
-        //                 project_id,
-        //                 revenue_id,
-        //                 transaction.4.ok_or(Error::<T>::RevenueTransactionIdNotFound)?,
-        //             )?;
-        //         },
-        //     }
-        // }
+        for transaction in revenue_transactions {
+            match transaction.3 {
+                CUDAction::Create => {
+                    // Create renevue transaction needs: job_eligible_id, revenue_amount, documents
+                    Self::do_create_revenue_transaction(
+                        project_id,
+                        revenue_id,
+                        transaction.0.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                        transaction.1.ok_or(Error::<T>::RevenueAmountRequired)?,
+                        transaction.2,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update revenue transaction needs: amount, documents, transaction_id
+                    Self::do_update_revenue_transaction(
+                        transaction.1,
+                        transaction.2,
+                        transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete revenue transaction needs: transaction_id
+                    Self::do_delete_revenue_transaction(
+                        transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?,
+                    )?;
+                },
+            }
+        }
+
+        //Update total amount for the given revenue
+        Self::do_calculate_revenue_total_amount(project_id, revenue_id)?;
+
+        Self::deposit_event(Event::RevenueTransactionsExecuted(project_id, revenue_id));
 
         Ok(())
     }
@@ -2099,7 +2101,7 @@ impl<T: Config> Pallet<T> {
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
             // Add transaction amount to drawdown total amount
-            drawdown_total_amount = drawdown_total_amount + transaction_data.amount;
+            drawdown_total_amount += transaction_data.amount;
         }
 
         // Update drawdown total amount
@@ -2198,7 +2200,36 @@ impl<T: Config> Pallet<T> {
         }
     }
 
+    fn do_calculate_revenue_total_amount(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Ensure revenue exists
+        ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
 
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+        
+        // Calculate revenue total amount
+        let mut revenue_total_amount: u128 = 0;
+
+        for transaction_id in revenue_transactions {
+            // Get revenue transaction data
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+            // Add transaction amount to revenue total amount
+            revenue_total_amount += revenue_transaction_data.amount;
+        }
+
+        // Update revenue total amount
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.total_amount = revenue_total_amount;
+            Ok(())
+        })?;
+
+        Ok(())
+    }    
 
 
 

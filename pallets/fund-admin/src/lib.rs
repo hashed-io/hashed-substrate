@@ -356,6 +356,8 @@ pub mod pallet {
 		RevenueTransactionUpdated(RevenueTransactionId),
 		/// Revenue transaction was deleted successfully
 		RevenueTransactionDeleted(RevenueTransactionId),
+		/// Revenue transactions were executed successfully
+		RevenueTransactionsExecuted(ProjectId, RevenueId),
 	}
 
 	// E R R O R S
@@ -546,6 +548,10 @@ pub mod pallet {
 		CannotPerformActionOnApprovedRevenueTransaction,
 		/// Can not perform any action on a approved revenue transaction
 		CannotPerformActionOnSubmittedRevenueTransaction,
+		/// Revenue amoun is required
+		RevenueAmountRequired,
+		/// Revenue transaction id is required
+		RevenueTransactionIdRequired,
 	}
 
 	// E X T R I N S I C S

@@ -219,7 +219,7 @@ pub struct JobEligibleData {
 pub struct RevenueData <T: Config> {
     pub project_id: ProjectId,
     pub revenue_number: RevenueNumber,
-    pub revenue_amount: RevenueAmount,
+    pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
     pub documents: Option<Documents<T>>,
     pub created_date: CreatedDate,
