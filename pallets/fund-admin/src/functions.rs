@@ -1066,7 +1066,6 @@ impl<T: Config> Pallet<T> {
 
     // T R A N S A C T I O N S
     // --------------------------------------------------------------------------------------------
-    // For now transactions functions are private, but in the future they may be public
     pub fn do_execute_transactions(
         project_id: ProjectId,
         drawdown_id: DrawdownId,
@@ -1078,16 +1077,15 @@ impl<T: Config> Pallet<T> {
             Option<TransactionId>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Ensure project exists & is not completed so helper private functions doesn't need to check it
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
-        //Ensure drawdown exists so helper private functions doesn't need to check it
+        //Ensure drawdown exists so helper private functions doesn't need to check it again
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
-
         // Ensure transactions are not empty
         ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
 
-        // Ensure if drawdown is editable
+        // Ensure if the selected drawdown is editable
         Self::is_drawdown_editable(drawdown_id)?;
 
         for transaction in transactions {
@@ -1138,7 +1136,7 @@ impl<T: Config> Pallet<T> {
         Self::is_amount_valid(amount)?;
 
         //TOREVIEW: If documents are mandatory, we need to check if they are provided
-        // TOOD: Ensure documents is not empty
+        // TODO: Ensure documents is not empty
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -1348,7 +1346,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // J O B  E L I G I B L E S
+    // J O B    E L I G I B L E S
     // --------------------------------------------------------------------------------------------
     pub fn do_execute_job_eligibles(
         admin: T::AccountId,
@@ -1507,6 +1505,81 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::JobEligibleDeleted(job_eligible_data.project_id, job_eligible_id));
 
         Ok(())
+    }
+
+    // R E V E N U E S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_revenue_transactions(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_transactions: BoundedVec<(
+            Option<JobEligibleId>, // job_eligible_id
+            Option<RevenueAmount>, // revenue_amount
+            Option<Documents<T>>, // documents
+            CUDAction, // action
+            Option<RevenueTransactionId>, // revenue_transaction_id
+        ), T::MaxTransactionsPerRevenue>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
+        Self::is_project_completed(project_id)?;
+
+        // Ensure revenue exists so helper private functions doesn't need to check it again
+        ensure!(RevenuesInfo::<T>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+        //Ensure revenue transactions are not empty
+        ensure!(!revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsAreEmpty);
+
+        // Ensure if the selected revenue is editable
+        Self::is_revenue_editable(revenue_id)?;
+
+        // for transaction in revenue_transactions {
+        //     match transaction.3 {
+        //         CUDAction::Create => {
+        //             // Create transaction only needs (expenditure_id, amount, documents)
+        //             Self::do_create_revenue_transaction(
+        //                 project_id,
+        //                 revenue_id,
+        //                 transaction.0,
+        //                 transaction.1,
+        //                 transaction.2,
+        //             )?;
+        //         },
+        //         CUDAction::Update => {
+        //             Self::do_update_revenue_transaction(
+        //                 project_id,
+        //                 revenue_id,
+        //                 transaction.0,
+        //                 transaction.1,
+        //                 transaction.2,
+        //                 transaction.4.ok_or(Error::<T>::RevenueTransactionIdNotFound)?,
+        //             )?;
+        //         },
+        //         CUDAction::Delete => {
+        //             Self::do_delete_revenue_transaction(
+        //                 project_id,
+        //                 revenue_id,
+        //                 transaction.4.ok_or(Error::<T>::RevenueTransactionIdNotFound)?,
+        //             )?;
+        //         },
+        //     }
+        // }
+
+        Ok(())
+    }
+
+    fn do_create_revenue_transaction(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        job_eligible_id: JobEligibleId,
+        revenue_amount: RevenueAmount,
+        documents: Option<Documents<T>>,
+    ) -> DispatchResult {
+        // TOREVIEW: If documents are required, then we need to check if they are empty
+
+        
+
+        Ok(())
+
     }
 
 
@@ -1787,7 +1860,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    #[allow(dead_code)]
     fn is_drawdown_editable(
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
@@ -1914,6 +1986,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    //TODO: Remove this function
     #[allow(dead_code)]
     fn is_amount_valid(amount: u64,) -> DispatchResult {
         let minimun_amount: u64 = 0;
@@ -1990,4 +2063,30 @@ impl<T: Config> Pallet<T> {
         }
 	}
 
+    fn is_revenue_editable(
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Get revenue data & ensure revenue exists
+        let revenue_data = RevenuesInfo::<T>::get(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+        // Match revenue status
+        match revenue_data.status {
+            RevenueStatus::Draft => {
+                return Ok(())
+            },
+            RevenueStatus::Rejected => {
+                return Ok(())
+            },
+            _ => {
+                return Err(Error::<T>::CannotEditRevenue.into());
+            }
+        }
+    }
+
+
+
+
+
+
+// Do not code beyond this line
 }

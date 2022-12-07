@@ -514,6 +514,13 @@ pub mod pallet {
 		JobEligibleAmountRequired,
 		/// Job eligible id is required
 		JobEligibleIdRequired,
+		/// Revenue id was not found
+		RevenueNotFound,
+		/// Transactions revenue array is empty
+		RevenueTransactionsAreEmpty,
+		/// Revenue can not be edited 
+		CannotEditRevenue,
+
 	}
 
 	// E X T R I N S I C S
@@ -962,7 +969,7 @@ pub mod pallet {
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
 		/// - submit: If true, the transactions will be submitted.
-		/// If false, the transactions will be saved as draft.
+		/// If false, the transactions array will be saved as draft.
 		///
 		/// # Considerations:
 		/// - This function can only be called by a builder role account
@@ -1009,7 +1016,7 @@ pub mod pallet {
 					)
 				},
 				true => {
-					// Check if there's transactions to execute
+					// Check if there are transactions to execute
 					if let Some(transactions) = transactions {
 						// Do execute transactions
 						if transactions.len() > 0 {
