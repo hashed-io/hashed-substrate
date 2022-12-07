@@ -1132,9 +1132,6 @@ impl<T: Config> Pallet<T> {
         amount: Amount,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
-        // Ensure amount is valid
-        Self::is_amount_valid(amount)?;
-
         //TOREVIEW: If documents are mandatory, we need to check if they are provided
 
         // Get timestamp
@@ -1184,16 +1181,6 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction exists
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
-        // Ensure amount is valid.
-        if let Some(amount) = amount {
-            Self::is_amount_valid(amount)?;
-        }
-
-        // Ensure documents is not empty
-        if let Some(mod_documents) = documents.clone() {
-            ensure!(mod_documents.len() > 0, Error::<T>::DocumentsIsEmpty);
-        }
-
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -1204,18 +1191,21 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
 
+            // Update amount
             if let Some(mod_amount) = amount {
                 mod_transaction_data.amount = mod_amount;
             }
 
-            if let Some(documents) = documents.clone() {
-                mod_transaction_data.documents = Some(documents);
+            // Update documents
+            if let Some(mod_documents) = documents {
+                mod_transaction_data.documents = Some(mod_documents);
             }
+
+            // Update updated date
             mod_transaction_data.updated_date = timestamp;
             Ok(())
         })?;
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionEdited(transaction_id));
 
         Ok(())
@@ -1266,9 +1256,6 @@ impl<T: Config> Pallet<T> {
 
         // Ensure drawdown is not completed
         Self::is_drawdown_editable(drawdown_id)?;
-
-        // Ensure amount is valid
-        Self::is_amount_valid(total_amount)?;
 
         //Ensure only Construction loan & developer equity drawdowns can call bulk uploaded
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -1608,10 +1595,50 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        Self::deposit_event(Event::RevenueTransactionCreated(evenue_transaction_id));
+        Self::deposit_event(Event::RevenueTransactionCreated(revenue_transaction_id));
 
         Ok(())
     }
+
+    fn do_update_revenue_transaction(
+        amount: Option<RevenueAmount>,
+        documents: Option<Documents<T>>,
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Ensure revenue transaction exists
+        ensure!(RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionNotFound);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Try mutate revenue transaction data
+        <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_transaction_id, |revenue_transaction_data| {
+            let mod_revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+            
+            // Ensure job eligible exists
+            ensure!(JobEligiblesInfo::<T>::contains_key(mod_revenue_transaction_data.job_eligible_id), Error::<T>::JobEligibleNotFound);
+            
+            // Update amount
+            if let Some(mod_amount) = amount {
+                mod_revenue_transaction_data.amount = mod_amount;
+            }
+
+            // Update documents
+            if let Some(mod_documents) = documents {
+                mod_revenue_transaction_data.documents = Some(mod_documents);
+            }
+
+            // Update updated_date
+            mod_revenue_transaction_data.updated_date = timestamp;
+            Ok(())
+
+        })?;
+        Self::deposit_event(Event::RevenueTransactionUpdated(revenue_transaction_id));
+
+        Ok(())
+    }
+
+    
 
 
 
@@ -2014,14 +2041,6 @@ impl<T: Config> Pallet<T> {
             ProxyRole::Administrator.id()
         )?;
 
-        Ok(())
-    }
-
-    //TODO: Remove this function
-    #[allow(dead_code)]
-    fn is_amount_valid(amount: u64,) -> DispatchResult {
-        let minimun_amount: u64 = 0;
-        ensure!(amount >= minimun_amount, Error::<T>::InvalidAmount);
         Ok(())
     }
 
