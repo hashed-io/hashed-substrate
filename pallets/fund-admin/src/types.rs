@@ -250,13 +250,18 @@ pub struct RevenueTransactionData<T: Config> {
     pub documents: Option<Documents<T>>,
 }
 
-
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum RevenueTransactionStatus {
     Draft,
     Submitted,
     Approved,
     Rejected,
+}
+
+impl Default for RevenueTransactionStatus {
+    fn default() -> Self {
+        RevenueTransactionStatus::Draft
+    }
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
