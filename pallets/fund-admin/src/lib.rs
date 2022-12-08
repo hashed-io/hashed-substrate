@@ -361,6 +361,8 @@ pub mod pallet {
 		RevenueCreated(RevenueId),
 		/// Revenue was submitted successfully
 		RevenueSubmitted(RevenueId),
+		/// Revenue was approved successfully
+		RevenueApproved(RevenueId),
 	}
 
 	// E R R O R S
@@ -561,6 +563,10 @@ pub mod pallet {
 		MaxRevenuesPerProjectReached,
 		/// Can not send a revenue to submitted status if it has no transactions
 		RevenueHasNoTransactions,
+		/// Revenue is not in submitted status
+		RevenueIsNotInSubmittedStatus,
+		/// Revenue transaction is not in submitted status
+		RevenueTransactionIsNotInSubmittedStatus,
 	}
 
 	// E X T R I N S I C S
@@ -1135,6 +1141,11 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
+			//TODO: REVIEW BULK UPLOAD APPROVAL FLOW
+			// is_drawdown_editable & is_transaction_editable should do
+			// a distinction between bulkupload and non-bulkupload drawdowns
+			// review those function in each step of the flow (approve, reject, submit)
+			
 			// Match bulkupdate
 			match bulkupload {
 				Some(approval) => {
@@ -1307,7 +1318,8 @@ pub mod pallet {
 			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
+			//TODO: Remove underscore when permissions are updated
+			let _who = ensure_signed(origin)?;
 			
 			//TODO: Ensure builder permissions
 			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
@@ -1342,6 +1354,20 @@ pub mod pallet {
 			}
 			
 		}
+
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn approve_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_approve_revenue(who, project_id, revenue_id)
+		}
+
 
 
 		// #[transactional]
