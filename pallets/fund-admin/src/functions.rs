@@ -973,9 +973,13 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
+        transactions_feedback: Option<BoundedVec<(
+            TransactionId,
+            FieldDescription
+        ), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
+        //TODO: update permissions
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
@@ -1063,13 +1067,14 @@ impl<T: Config> Pallet<T> {
             },
         }
 
-        // Update drawdown status
+        // Update drawdown status to rejected
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Rejected;
             Ok(())
         })?;
 
+        // Update drawdown status in project info
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
 
         //Event
@@ -2433,6 +2438,73 @@ impl<T: Config> Pallet<T> {
 
         // Event
         Self::deposit_event(Event::RevenueApproved(revenue_id));
+
+        Ok(())
+    }
+
+    pub fn do_reject_revenue(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_transactions_feedback: BoundedVec<(
+            TransactionId,
+            FieldDescription
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        //TODO: update permissions
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
+        // Get revenue data & ensure revenue exists
+        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+        // Ensure revenue is in Submitted status
+        ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueIsNotInSubmittedStatus);
+
+        // Ensure revenue has transactions
+        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+
+        // Update each revenue transaction status to Rejected
+        for transaction_id in revenue_transactions {
+            // Get revenue transaction data & ensure revenue transaction exists
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+            // Ensure revenue transaction is in Submitted status
+            ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionIsNotInSubmittedStatus);
+
+            // Update revenue transaction status to Rejected
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.status = RevenueTransactionStatus::Rejected;
+                Ok(())
+            })?;
+        }
+
+        // Update revenue transactions feedback
+        for (transaction_id, feedback) in revenue_transactions_feedback {
+            // Update revenue transaction feedback
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.feedback = Some(feedback);
+                Ok(())
+            })?;
+        }
+
+        // Update revenue status to Rejected
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status = RevenueStatus::Rejected;
+            Ok(())
+        })?;
+
+        // Update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::Rejected)?;
+
+        // Event
+        Self::deposit_event(Event::RevenueRejected(revenue_id));
 
         Ok(())
     }
