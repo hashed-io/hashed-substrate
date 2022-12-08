@@ -114,7 +114,6 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Create project_id
-        //TOREVIEW: We could use only name as project_id or use a method/storagemap to check if the name is already in use
         let project_id: ProjectId = (title.clone(), timestamp).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
@@ -140,7 +139,7 @@ impl<T: Config> Pallet<T> {
 			construction_loan_drawdown_status: None,
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
-            //TODO: Track revenue status
+            revenue_status: None,
         };
 
         // create scope for project_id
@@ -831,7 +830,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
         //TOREVIEW: Check if an event is needed
         Ok(())
     }
@@ -898,7 +897,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         //Event
         Self::deposit_event(Event::DrawdownSubmitted(drawdown_id));
@@ -953,7 +952,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
 
         // Generate the next drawdown
         Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
@@ -1061,7 +1060,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
 
         //Event
         Self::deposit_event(Event::DrawdownRejected(drawdown_id));
@@ -1286,7 +1285,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         Ok(())
     }
@@ -2118,11 +2117,15 @@ impl<T: Config> Pallet<T> {
        Ok(())
     }
 
-	fn do_edit_drawdown_status_in_project_info(
+	fn do_update_drawdown_status_in_project_info(
 		project_id: ProjectId,
 		drawdown_id: DrawdownId,
 		drawdown_status: DrawdownStatus
 	) -> DispatchResult {
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        
+        // Get drawdown data & ensure drawdown exists
 		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Match drawdown type
@@ -2288,9 +2291,30 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        // TODO: update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())?;
 
         Self::deposit_event(Event::RevenueCreated(revenue_id));
+
+        Ok(())
+    }
+
+    fn do_update_revenue_status_in_project_info(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_status: RevenueStatus,
+    ) -> DispatchResult {
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure revenue exists
+        ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+        // Update revenue status in project info
+        <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
+            let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            project_data.revenue_status = Some(revenue_status);
+            Ok(())
+        })?;
 
         Ok(())
     }
