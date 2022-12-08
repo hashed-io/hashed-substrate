@@ -213,10 +213,8 @@ pub struct JobEligibleData {
     pub jobs_multiplier: Option<JobsMultiplier>,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub struct RevenueData <T: Config> {
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct RevenueData {
     pub project_id: ProjectId,
     pub revenue_number: RevenueNumber,
     pub total_amount: RevenueAmount,
