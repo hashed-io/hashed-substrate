@@ -26,7 +26,6 @@ pub mod pallet {
 	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
-
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
@@ -360,6 +359,8 @@ pub mod pallet {
 		RevenueTransactionsExecuted(ProjectId, RevenueId),
 		/// Revenue was created successfully
 		RevenueCreated(RevenueId),
+		/// Revenue was submitted successfully
+		RevenueSubmitted(RevenueId),
 	}
 
 	// E R R O R S
@@ -558,6 +559,8 @@ pub mod pallet {
 		RevenueIdAlreadyExists,
 		/// Maximun number of revenues per project reached
 		MaxRevenuesPerProjectReached,
+		/// Can not send a revenue to submitted status if it has no transactions
+		RevenueHasNoTransactions,
 	}
 
 	// E X T R I N S I C S
@@ -1043,7 +1046,8 @@ pub mod pallet {
 			// Ensure builder permissions
 			Self::is_authorized(who, &project_id, ProxyPermission::SubmitDrawdown)?;
 
-			match submit{
+			match submit {
+				// Save transactions as draft
 				false => {
 					// Do execute transactions
 					Self::do_execute_transactions(
@@ -1052,15 +1056,17 @@ pub mod pallet {
 						transactions.ok_or(Error::<T>::EmptyTransactions)?,
 					)
 				},
+				// Submit transactions
 				true => {
 					// Check if there are transactions to execute
-					if let Some(transactions) = transactions {
+					if let Some(mod_transactions) = transactions {
 						// Do execute transactions
-						if transactions.len() > 0 {
+						//TODO: Review if this len check is needed
+						if mod_transactions.len() > 0 {
 							Self::do_execute_transactions(
 								project_id,
 								drawdown_id,
-								transactions)?;
+								mod_transactions)?;
 						}
 					// 	Self::do_execute_transactions(
 					// 		project_id,
@@ -1272,7 +1278,6 @@ pub mod pallet {
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
-		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn inflation_rate(
@@ -1283,6 +1288,61 @@ pub mod pallet {
 
 			Self::do_execute_inflation_adjustment(who, projects)
 		}
+
+		// R E V E N U E S
+		// --------------------------------------------------------------------------------------------
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn submit_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			revenue_transactions: Option<BoundedVec<(
+				Option<JobEligibleId>, // job eligible id
+				Option<RevenueAmount>, // amount
+				Option<Documents<T>>, // documents
+				CUDAction, // action
+				Option<RevenueTransactionId>, // revenue transaction id
+			), T::MaxRegistrationsAtTime>>,
+			submit: bool,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			
+			//TODO: Ensure builder permissions
+			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
+
+			match submit { 
+				// Save revenue transactions as draft
+				false => {
+					// Do execute transactions 
+					Self::do_execute_revenue_transactions(
+						project_id,
+						revenue_id,
+						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsAreEmpty)?,
+					)
+				},
+				// Submit revenue transactions
+				true => {
+					// Check if there are transactions to execute
+					if let Some(mod_revenue_transactions) = revenue_transactions {
+						// Do execute transactions 
+						//TODO: Review if this len check is needed
+						if mod_revenue_transactions.len() > 0 {
+							Self::do_execute_revenue_transactions(
+								project_id,
+								revenue_id,
+								mod_revenue_transactions)?;
+						}
+					}
+
+					// Do submit revenue
+					Self::do_submit_revenue(project_id, revenue_id)
+				},
+			}
+			
+		}
+
 
 		// #[transactional]
 		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
