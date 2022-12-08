@@ -891,6 +891,7 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Submitted;
+            drawdown_data.feedback = None;        
             Ok(())
         })?;
 
@@ -1016,6 +1017,9 @@ impl<T: Config> Pallet<T> {
 
             },
             _ => {
+                // TOREVIEW: Bulkupload drawdowns are only rejected 
+                // when a builder uploads the wrong file. So, I think rejecting individual
+                // bulkupload transactions is not necessary. 
                 // Construction Loan & Developer Equity drawdowns
                 // If drawdown has transactions, update each transaction status to rejected
                 if <TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id) {
