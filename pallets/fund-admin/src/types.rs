@@ -234,6 +234,12 @@ pub enum RevenueStatus {
     Rejected,
 }
 
+impl Default for RevenueStatus {
+    fn default() -> Self {
+        RevenueStatus::Draft
+    }
+}
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
