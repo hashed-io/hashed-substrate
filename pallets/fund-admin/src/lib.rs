@@ -255,7 +255,7 @@ pub mod pallet {
 		_,
 		Identity,
 		RevenueId, // Key revenue id
-		RevenueData<T>,  // Value RevenueData<T>
+		RevenueData,  // Value RevenueData<T>
 		OptionQuery,
 	>;
 
@@ -358,6 +358,8 @@ pub mod pallet {
 		RevenueTransactionDeleted(RevenueTransactionId),
 		/// Revenue transactions were executed successfully
 		RevenueTransactionsExecuted(ProjectId, RevenueId),
+		/// Revenue was created successfully
+		RevenueCreated(RevenueId),
 	}
 
 	// E R R O R S
@@ -552,6 +554,10 @@ pub mod pallet {
 		RevenueAmountRequired,
 		/// Revenue transaction id is required
 		RevenueTransactionIdRequired,
+		/// Revenue Id already exists
+		RevenueIdAlreadyExists,
+		/// Maximun number of revenues per project reached
+		MaxRevenuesPerProjectReached,
 	}
 
 	// E X T R I N S I C S

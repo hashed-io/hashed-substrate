@@ -140,6 +140,7 @@ impl<T: Config> Pallet<T> {
 			construction_loan_drawdown_status: None,
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
+            //TODO: Track revenue status
         };
 
         // create scope for project_id
@@ -165,6 +166,9 @@ impl<T: Config> Pallet<T> {
 
         //Initialize drawdowns
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
+
+        //Initialize revenue
+        Self::do_initialize_revenue(admin.clone(), project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -790,7 +794,7 @@ impl<T: Config> Pallet<T> {
         drawdown_type: DrawdownType,
         drawdown_number: DrawdownNumber,
     ) -> DispatchResult {
-        // TOOD: Ensure builder permissions
+        // TODO: Ensure admin permissions
         //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // Ensure project exists
@@ -842,13 +846,13 @@ impl<T: Config> Pallet<T> {
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //Create a EB5 drawdown
+        // Create a EB5 drawdown
         Self::do_create_drawdown(project_id, DrawdownType::EB5, 1)?;
 
-        //Create a Construction Loan drawdown
+        // Create a Construction Loan drawdown
         Self::do_create_drawdown(project_id, DrawdownType::ConstructionLoan, 1)?;
 
-        //Create a Developer Equity drawdown
+        // Create a Developer Equity drawdown
         Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
         Ok(())
@@ -2153,6 +2157,7 @@ impl<T: Config> Pallet<T> {
         }
 	}
 
+    //TODO: move revenue helper functions to its own section
     fn is_revenue_editable(
         revenue_id: RevenueId,
     ) -> DispatchResult {
@@ -2231,6 +2236,64 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }    
 
+    fn do_initialize_revenue(
+        admin: T::AccountId,
+        project_id: ProjectId,
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Create revenue
+        Self::do_create_revenue(project_id, 1)?;
+        
+        Ok(())
+    }
+
+    fn do_create_revenue(
+        project_id: ProjectId,
+        revenue_number: RevenueNumber,
+    ) -> DispatchResult {
+        //TODO: Ensure admin permissions
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create revenue id
+        let revenue_id = (project_id, revenue_number, timestamp).using_encoded(blake2_256);
+
+        // Create revenue data
+        let revenue_data = RevenueData {
+            project_id,
+            revenue_number,
+            total_amount: 0,
+            status: RevenueStatus::default(),
+            created_date: timestamp,
+            close_date: 0,  
+        };
+
+        // Insert revenue data
+        // Ensure revenue id is unique
+        ensure!(!<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueIdAlreadyExists);
+        <RevenuesInfo<T>>::insert(revenue_id, revenue_data);
+
+        // Insert revenue id into RevenuesByProject
+        <RevenuesByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |revenues| {
+            revenues.try_push(revenue_id).map_err(|_| Error::<T>::MaxRevenuesPerProjectReached)?;
+            Ok(())
+        })?;
+
+        // TODO: update revenue status in project info
+
+        Self::deposit_event(Event::RevenueCreated(revenue_id));
+
+        Ok(())
+    }
 
 
 
