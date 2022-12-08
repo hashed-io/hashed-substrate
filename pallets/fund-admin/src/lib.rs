@@ -363,6 +363,8 @@ pub mod pallet {
 		RevenueSubmitted(RevenueId),
 		/// Revenue was approved successfully
 		RevenueApproved(RevenueId),
+		/// Revenue was rejected successfully
+		RevenueRejected(RevenueId),
 	}
 
 	// E R R O R S
@@ -1227,7 +1229,10 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<BoundedVec<(
+				TransactionId,
+				FieldDescription
+			), T::MaxRegistrationsAtTime>>,
 			drawdown_feedback: Option<FieldDescription>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1368,10 +1373,27 @@ pub mod pallet {
 			Self::do_approve_revenue(who, project_id, revenue_id)
 		}
 
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reject_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			revenue_transactions_feedback: BoundedVec<(
+				TransactionId,
+				FieldDescription
+			), T::MaxRegistrationsAtTime>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
+		}
+
 
 
 		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// #[pallet::weight(10_000 + T::a new extrinsic to handle the revenue approvalDbWeight::get().writes(1))]
 		// pub fn job_eligibles(
 		// 	origin: OriginFor<T>,
 		// 	project_id: ProjectId,
