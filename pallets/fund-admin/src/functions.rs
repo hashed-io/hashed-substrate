@@ -875,11 +875,8 @@ impl<T: Config> Pallet<T> {
 
         // Update each transaction status to submitted
         for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in draft or rejected status
-            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
+            // Ensure transaction is editable
+            Self::is_transaction_editable(transaction_id)?;
 
             // Update transaction status to submitted
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -897,6 +894,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update drawdown status in project info
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         //Event
@@ -1507,7 +1505,7 @@ impl<T: Config> Pallet<T> {
             Option<Documents<T>>, // documents
             CUDAction, // action
             Option<RevenueTransactionId>, // revenue_transaction_id
-        ), T::MaxTransactionsPerRevenue>,
+        ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
@@ -2315,6 +2313,52 @@ impl<T: Config> Pallet<T> {
             project_data.revenue_status = Some(revenue_status);
             Ok(())
         })?;
+
+        Ok(())
+    }
+
+    pub fn do_submit_revenue(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Check if revenue exists & is editable
+        Self::is_revenue_editable(revenue_id)?;
+
+        // Ensure revenue has transactions
+        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+
+        // Update each revenue transaction status to Submitted
+        for transaction_id in revenue_transactions {
+            // Ensure revenue transaction is editable
+            Self::is_revenue_transaction_editable(transaction_id)?;
+
+            // Update revenue transaction status
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.status = RevenueTransactionStatus::Submitted;
+                revenue_transaction_data.feedback = None;
+                Ok(())
+            })?;
+        }
+
+        // Update revenue status
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status = RevenueStatus::Submitted;
+            Ok(())
+        })?;
+
+        // Update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::Submitted)?;
+
+        // Event
+        Self::deposit_event(Event::RevenueSubmitted(revenue_id));
 
         Ok(())
     }
