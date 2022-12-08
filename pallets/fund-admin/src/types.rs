@@ -221,7 +221,7 @@ pub struct RevenueData {
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
     pub created_date: CreatedDate,
-    pub close_date: CloseDate,
+    pub closed_date: CloseDate,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
