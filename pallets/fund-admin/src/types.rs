@@ -221,7 +221,6 @@ pub struct RevenueData <T: Config> {
     pub revenue_number: RevenueNumber,
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
-    pub documents: Option<Documents<T>>,
     pub created_date: CreatedDate,
     pub close_date: CloseDate,
 }
