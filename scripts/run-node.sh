@@ -26,6 +26,8 @@ echo "Inserting keys..."
 
 echo "${node_args[@]}"
 
+echo "${MNEMO}"
+
 ./target/release/hashed key insert --base-path $2 $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
 
 ./target/release/hashed key insert --base-path $2 $chain_spec --scheme ed25519 --suri "${MNEMO}" --key-type gran
