@@ -28,7 +28,7 @@ spec:
       containers:
       - name: hashed-collator-1
         imagePullPolicy: Always
-        image: sebastianmontero/hashed-substrate-collator:04b2ae3acbfbfcfa453da8163b0cc1c069e1b642
+        image: sebastianmontero/hashed-substrate-collator:db3f834438fd2daf59e3969af37ecc8cc46cf9be
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["hashed", "/var/www/hashed/hashed"]
         volumeMounts:

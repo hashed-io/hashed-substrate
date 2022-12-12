@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: luhn-collator-1-pvc
+    name: hashed-collator-2-pvc
     namespace: hashed-network
 spec:
   volumeMode: Filesystem
@@ -14,23 +14,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: luhn-collator-1
+  name: hashed-collator-2
   namespace: hashed-network
 spec:
   selector:
     matchLabels:
-      app: luhn-collator-1
+      app: hashed-collator-2
   template:
     metadata:
       labels:
-        app: luhn-collator-1
+        app: hashed-collator-2
     spec:
       containers:
-      - name: luhn-collator-1
+      - name: hashed-collator-2
         imagePullPolicy: Always
         image: sebastianmontero/hashed-substrate-collator:db3f834438fd2daf59e3969af37ecc8cc46cf9be
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
-        args: ["luhn", "/var/www/hashed/hashed"]
+        args: ["hashed", "/var/www/hashed/hashed"]
         volumeMounts:
           - name: hashed-db
             mountPath:  /var/www/hashed/hashed
@@ -60,16 +60,16 @@ spec:
       volumes:
         - name: hashed-db
           persistentVolumeClaim:
-            claimName: luhn-collator-1-pvc
+            claimName: hashed-collator-2-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name:  luhn-collator-1
+  name:  hashed-collator-2
   namespace: hashed-network
 spec:
   selector:
-    app:  luhn-collator-1
+    app:  hashed-collator-2
   type:  NodePort
   ports:
   - name:  collator-p2p-port
