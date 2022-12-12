@@ -36,7 +36,6 @@ pub use frame_support::{
 	},
 	PalletId, StorageValue,
 };
-pub use frame_support::traits::EqualPrivilegeOnly;
 
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
@@ -517,25 +516,6 @@ impl pallet_assets::Config for Runtime {
 }
 
 parameter_types! {
- pub MaximumSchedulerWeight: Weight = 10_000_000;
- pub const MaxScheduledPerBlock: u32 = 50;
-}
-
-impl pallet_scheduler::Config for Runtime {
- type RuntimeEvent = RuntimeEvent;
- type RuntimeOrigin = RuntimeOrigin;
- type PalletsOrigin = OriginCaller;
- type RuntimeCall = RuntimeCall;
- type MaximumWeight = MaximumSchedulerWeight;
- type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
- type MaxScheduledPerBlock = MaxScheduledPerBlock;
- type WeightInfo = ();
- type OriginPrivilegeCmp = EqualPrivilegeOnly;
- type PreimageProvider = ();
- type NoPreimagePostponement = ();
-}
-
-parameter_types! {
 	pub const CollectionDeposit: Balance = 100 * DOLLARS;
 	pub const ItemDeposit: Balance = 1 * DOLLARS;
 	pub const KeyLimit: u32 = 32;
@@ -816,7 +796,6 @@ construct_runtime!(
 		NodeAuthorization: pallet_node_authorization,
 		Society: pallet_society,
 		Bounties: pallet_bounties,
-		Scheduler: pallet_scheduler,
 		Uniques: pallet_uniques,
 		Fruniques: pallet_fruniques,
 		GatedMarketplace: pallet_gated_marketplace,

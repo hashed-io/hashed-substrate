@@ -7,8 +7,6 @@ use frame_support::{
 };
 use sp_std::prelude::*;
 
-
-
 /// Trait to implement to give information about types used for migration
 pub trait V1ToV2 {
 	/// System config account id
@@ -19,8 +17,4 @@ pub trait V1ToV2 {
 }
 
 #[frame_support::storage_alias]
-type MyBytesVal<T: Config> = MyBytesVal<
-	Pallet<T>,
-	ValueQuery,
->;
-
+type MyBytesVal<T: Config> = MyBytesVal<Pallet<T>, ValueQuery>;
