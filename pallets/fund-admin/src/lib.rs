@@ -537,7 +537,7 @@ pub mod pallet {
 		RevenueNotFound,
 		/// Transactions revenue array is empty
 		RevenueTransactionsAreEmpty,
-		/// Revenue can not be edited 
+		/// Revenue can not be edited
 		CannotEditRevenue,
 		/// Revenue transaction id already exists
 		RevenueTransactionIdAlreadyExists,
@@ -1147,7 +1147,7 @@ pub mod pallet {
 			// is_drawdown_editable & is_transaction_editable should do
 			// a distinction between bulkupload and non-bulkupload drawdowns
 			// review those function in each step of the flow (approve, reject, submit)
-			
+
 			// Match bulkupdate
 			match bulkupload {
 				Some(approval) => {
@@ -1325,14 +1325,14 @@ pub mod pallet {
 		) -> DispatchResult {
 			//TODO: Remove underscore when permissions are updated
 			let _who = ensure_signed(origin)?;
-			
+
 			//TODO: Ensure builder permissions
 			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
 
-			match submit { 
+			match submit {
 				// Save revenue transactions as draft
 				false => {
-					// Do execute transactions 
+					// Do execute transactions
 					Self::do_execute_revenue_transactions(
 						project_id,
 						revenue_id,
@@ -1343,7 +1343,7 @@ pub mod pallet {
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
-						// Do execute transactions 
+						// Do execute transactions
 						//TODO: Review if this len check is needed
 						if mod_revenue_transactions.len() > 0 {
 							Self::do_execute_revenue_transactions(
@@ -1357,7 +1357,7 @@ pub mod pallet {
 					Self::do_submit_revenue(project_id, revenue_id)
 				},
 			}
-			
+
 		}
 
 		//TODO: Add documentation
@@ -1438,8 +1438,12 @@ pub mod pallet {
 			let _ = <DrawdownsByProject<T>>::clear(1000, None);
 			let _ = <TransactionsInfo<T>>::clear(1000, None);
 			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
-
-			//TODO: Remove Revenues storages
+			let _ = <JobEligiblesInfo<T>>::clear(1000, None);
+			let _ = <JobEligiblesByProject<T>>::clear(1000, None);
+			let _ = <RevenuesInfo<T>>::clear(1000, None);
+			let _ = <RevenuesByProject<T>>::clear(1000, None);
+		    let _ = <RevenueTransactionsInfo<T>>::clear(1000, None);
+			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
