@@ -392,6 +392,7 @@
 <span id="392">392</span>
 <span id="393">393</span>
 <span id="394">394</span>
+<span id="395">395</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -465,6 +466,7 @@
 	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
     <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
+
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
