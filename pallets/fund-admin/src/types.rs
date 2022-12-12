@@ -166,6 +166,7 @@ pub enum DrawdownStatus {
     Submitted,
     Approved,
     Rejected,
+    Confirmed,
 }
 
 impl Default for DrawdownStatus {
