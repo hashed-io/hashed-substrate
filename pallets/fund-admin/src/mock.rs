@@ -75,11 +75,18 @@ parameter_types! {
 	pub const MaxProjectsPerIssuer:u32 = 1000;
 	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
 	pub const MaxBanksPerProject:u32 = 200;
+	pub const MaxJobEligiblesByProject:u32 = 1000;
+	pub const MaxRevenuesByProject:u32 = 1000;
+	pub const MaxTransactionsPerRevenue:u32 = 500;
 }
 
 impl pallet_fund_admin::Config for Test {
 	type Event = Event;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
+	type Timestamp = Timestamp;
+	type Moment = u64;
+	type Rbac = RBAC;
+
 	type MaxDocuments = MaxDocuments;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
 	type MaxUserPerProject = MaxUserPerProject;
@@ -97,10 +104,9 @@ impl pallet_fund_admin::Config for Test {
 	type MaxProjectsPerIssuer = MaxProjectsPerIssuer;
 	type MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
 	type MaxBanksPerProject = MaxBanksPerProject;
-
-	type Timestamp = Timestamp;
-	type Moment = u64;
-	type Rbac = RBAC;
+	type MaxJobEligiblesByProject = MaxJobEligiblesByProject;       
+	type MaxRevenuesByProject = MaxRevenuesByProject;        
+	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;  
 }
 
 
