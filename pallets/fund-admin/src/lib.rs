@@ -110,6 +110,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxTransactionsPerRevenue: Get<u32>;
 
+
 	}
 
 	#[pallet::pallet]
@@ -569,6 +570,7 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+
 	}
 
 	// E X T R I N S I C S
@@ -805,6 +807,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
+
 		}
 
 		/// Edits a project.

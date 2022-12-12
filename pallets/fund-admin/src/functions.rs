@@ -140,6 +140,7 @@ impl<T: Config> Pallet<T> {
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
             revenue_status: None,
+
         };
 
         // create scope for project_id

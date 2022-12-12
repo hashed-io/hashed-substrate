@@ -71,6 +71,7 @@ pub struct ProjectData<T: Config> {
 	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
 	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
     pub revenue_status: Option<RevenueStatus>,
+
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
