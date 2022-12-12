@@ -26,7 +26,6 @@ pub mod pallet {
 	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
-
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
@@ -71,6 +70,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxRegionalCenterPerProject: Get<u32>;
 
+		//todo:remove MaxBoundedVecs
 		#[pallet::constant]
 		type MaxBoundedVecs: Get<u32>;
 
@@ -100,6 +100,16 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxBanksPerProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxJobEligiblesByProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxRevenuesByProject: Get<u32>;
+
+		#[pallet::constant]
+		type MaxTransactionsPerRevenue: Get<u32>;
+
 
 	}
 
@@ -162,7 +172,7 @@ pub mod pallet {
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		BudgetExpenditureId, // Key expenditure_id
+		ExpenditureId, // Key expenditure_id
 		ExpenditureData,  // Value ExpenditureData<T>
 		OptionQuery,
 	>;
@@ -219,6 +229,69 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn job_eligibles_info)]
+	pub(super) type JobEligiblesInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		JobEligibleId, // Key transaction id
+		JobEligibleData,  // Value JobEligibleData
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn job_eligibles_by_project)]
+	pub(super) type JobEligiblesByProject<T: Config> = StorageMap<
+		_,
+		Identity,
+		ProjectId, // Key project_id
+		BoundedVec<JobEligibleId, T::MaxJobEligiblesByProject>,  // Value job eligibles
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenues_info)]
+	pub(super) type RevenuesInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		RevenueId, // Key revenue id
+		RevenueData,  // Value RevenueData<T>
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenues_by_project)]
+	pub(super) type RevenuesByProject<T: Config> = StorageMap<
+		_,
+		Identity,
+		ProjectId, // Key project_id
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn revenue_transactions_info)]
+	pub(super) type RevenueTransactionsInfo<T: Config> = StorageMap<
+		_,
+		Identity,
+		RevenueTransactionId, // Key revenue transaction id
+		RevenueTransactionData<T>,  // Value RevenueTransactionData<T>
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn transactions_by_revenue)]
+	pub(super) type TransactionsByRevenue<T: Config> = StorageDoubleMap<
+		_,
+		Identity,
+		ProjectId, //K1: project id
+		Identity,
+		RevenueId, //K2: revenue id
+		BoundedVec<RevenueTransactionId, T::MaxTransactionsPerRevenue>, // Value revenue transactions
+		ValueQuery
+	>;
+
+
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
 
@@ -250,9 +323,9 @@ pub mod pallet {
 		/// Expenditure was created successfully
 		ExpenditureCreated,
 		/// Expenditure was edited successfully
-		ExpenditureEdited(BudgetExpenditureId),
+		ExpenditureUpdated(ExpenditureId),
 		/// Expenditure was deleted successfully
-		ExpenditureDeleted(BudgetExpenditureId),
+		ExpenditureDeleted(ExpenditureId),
 		/// Trasactions was completed successfully
 		TransactionsCompleted,
 		/// Transaction was created successfully
@@ -271,6 +344,28 @@ pub mod pallet {
 		DrawdownApproved([u8;32]),
 		/// Drawdown was rejected successfully
 		DrawdownRejected([u8;32]),
+		/// Job eligible was created successfully
+		JobEligibleCreated(ProjectId, JobEligibleId),
+		/// Job eligible was updated successfully
+		JobEligibleUpdated(ProjectId, JobEligibleId),
+		/// Job eligible was deleted successfully
+		JobEligibleDeleted(ProjectId, JobEligibleId),
+		/// Revenue transaction was created successfully
+		RevenueTransactionCreated(RevenueTransactionId),
+		/// Revenue transaction was updated successfully
+		RevenueTransactionUpdated(RevenueTransactionId),
+		/// Revenue transaction was deleted successfully
+		RevenueTransactionDeleted(RevenueTransactionId),
+		/// Revenue transactions were executed successfully
+		RevenueTransactionsExecuted(ProjectId, RevenueId),
+		/// Revenue was created successfully
+		RevenueCreated(RevenueId),
+		/// Revenue was submitted successfully
+		RevenueSubmitted(RevenueId),
+		/// Revenue was approved successfully
+		RevenueApproved(RevenueId),
+		/// Revenue was rejected successfully
+		RevenueRejected(RevenueId),
 	}
 
 	// E R R O R S
@@ -347,10 +442,14 @@ pub mod pallet {
 		MaxDrawdownsPerProjectReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
-		/// Can not modify a transaction at this moment
-		CannotEditTransaction,
-		/// Drawdown is already completed
-		DrawdownIsAlreadyCompleted,
+		/// Can not perform any action on a submitted transaction
+		CannotPerformActionOnSubmittedTransaction,
+		/// Can not perform any action on a approved transaction
+		CannotPerformActionOnApprovedTransaction,
+		/// Can not perform any action on a submitted drawdown
+		CannotPerformActionOnSubmittedDrawdown,
+		/// Can not perform any action on a approved drawdown
+		CannotPerformActionOnApprovedDrawdown,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
 		/// User does not have the specified role
@@ -417,6 +516,60 @@ pub mod pallet {
 		MaxProjectsPerIssuerReached,
 		/// Max number of projects per regional center has been reached
 		MaxProjectsPerRegionalCenterReached,
+		/// Jobs eligibles array is empty
+		JobEligiblesIsEmpty,
+		/// JOb eligible name is required
+		JobEligiblesNameIsRequired,
+		/// Job eligible id already exists
+		JobEligibleIdAlreadyExists,
+		/// Max number of job eligibles per project reached
+		MaxJobEligiblesPerProjectReached,
+		/// Job eligible id not found
+		JobEligibleNotFound,
+		/// Jopb eligible does not belong to the project
+		JobEligibleDoesNotBelongToProject,
+		/// Job eligible name is required
+		JobEligibleNameRequired,
+		/// Job eligible amount is required
+		JobEligibleAmountRequired,
+		/// Job eligible id is required
+		JobEligibleIdRequired,
+		/// Revenue id was not found
+		RevenueNotFound,
+		/// Transactions revenue array is empty
+		RevenueTransactionsAreEmpty,
+		/// Revenue can not be edited
+		CannotEditRevenue,
+		/// Revenue transaction id already exists
+		RevenueTransactionIdAlreadyExists,
+		/// Max number of transactions per revenue reached
+		MaxTransactionsPerRevenueReached,
+		/// Revenue transaction id not found
+		RevenueTransactionNotFound,
+		/// Revenue transaction can not be edited
+		CannotEditRevenueTransaction,
+		/// Can not perform any action on a submitted revenue
+		CannotPerformActionOnSubmittedRevenue,
+		/// Can not perform any action on a approved revenue
+		CannotPerformActionOnApprovedRevenue,
+		/// Can not perform any action on a submitted revenue transaction
+		CannotPerformActionOnApprovedRevenueTransaction,
+		/// Can not perform any action on a approved revenue transaction
+		CannotPerformActionOnSubmittedRevenueTransaction,
+		/// Revenue amoun is required
+		RevenueAmountRequired,
+		/// Revenue transaction id is required
+		RevenueTransactionIdRequired,
+		/// Revenue Id already exists
+		RevenueIdAlreadyExists,
+		/// Maximun number of revenues per project reached
+		MaxRevenuesPerProjectReached,
+		/// Can not send a revenue to submitted status if it has no transactions
+		RevenueHasNoTransactions,
+		/// Revenue is not in submitted status
+		RevenueIsNotInSubmittedStatus,
+		/// Revenue transaction is not in submitted status
+		RevenueTransactionIsNotInSubmittedStatus,
 
 	}
 
@@ -592,6 +745,14 @@ pub mod pallet {
 		/// * 4: The expenditure jobs multiplier
 		/// * 5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.
 		/// * 6: The expenditure id. It is optional because it is only required when updating or deleting
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// where each entry is composed by:
+		/// * 0: The job eligible name
+		/// * 1: The amount of the job eligible
+		/// * 2: The NAICS code of the job eligible
+		/// * 3: The jobs multiplier of the job eligible
+		/// * 4: The job eligible action to be performed. (Create, Update or Delete)
+		/// * 5: The job eligible id. This is only used when updating or deleting a job eligible.
 		/// - users: The users who will be assigned to the project. It is an array of tuples where each entry
 		/// is a tuple of the following:
 		/// * 0: The user account
@@ -627,8 +788,16 @@ pub mod pallet {
 				Option<NAICSCode>,
 				Option<JobsMultiplier>,
 				CUDAction,
-				Option<BudgetExpenditureId>
+				Option<ExpenditureId>
 			), T::MaxRegistrationsAtTime>,
+			job_eligibles: Option<BoundedVec<(
+				Option<FieldName>, // name
+				Option<JobEligibleAmount>, // amount
+				Option<NAICSCode>, // naics code
+				Option<JobsMultiplier>, // jobs multiplier
+				CUDAction, // action
+				Option<JobEligibleId>, // job_eligible_id
+			), T::MaxRegistrationsAtTime>>,
 			users: Option<BoundedVec<(
 				T::AccountId,
 				ProxyRole,
@@ -637,7 +806,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
+
 		}
 
 		/// Edits a project.
@@ -774,6 +944,14 @@ pub mod pallet {
 		/// * 4: The jobs multiplier of the expenditure
 		/// * 5: The expenditure action to be performed. (Create, Update or Delete)
 		/// * 6: The expenditure id. This is only used when updating or deleting an expenditure.
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// where each entry is composed by:
+		/// * 0: The job eligible name
+		/// * 1: The amount of the job eligible
+		/// * 2: The NAICS code of the job eligible
+		/// * 3: The jobs multiplier of the job eligible
+		/// * 4: The job eligible action to be performed. (Create, Update or Delete)
+		/// * 5: The job eligible id. This is only used when updating or deleting a job eligible.
 		///
 		/// # Considerations:
 		/// - Naics code and jobs multiplier are always optional.
@@ -790,22 +968,38 @@ pub mod pallet {
 		/// result in an unexpected behavior.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn expenditures(
+		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
-			expenditures: BoundedVec<(
+			expenditures: Option<BoundedVec<(
 				Option<FieldName>, // name
 				Option<ExpenditureType>, // type
 				Option<ExpenditureAmount>, // amount
-				Option<FieldDescription>, // naics code
+				Option<NAICSCode>, // naics code
 				Option<JobsMultiplier>, // jobs multiplier
 				CUDAction, // action
-				Option<BudgetExpenditureId>, // expenditure_id
-			), T::MaxRegistrationsAtTime>,
+				Option<ExpenditureId>, // expenditure_id
+			), T::MaxRegistrationsAtTime>>,
+			job_eligibles: Option<BoundedVec<(
+				Option<FieldName>, // name
+				Option<JobEligibleAmount>, // amount
+				Option<NAICSCode>, // naics code
+				Option<JobsMultiplier>, // jobs multiplier
+				CUDAction, // action
+				Option<JobEligibleId>, // job_eligible_id
+			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_execute_expenditures(who, project_id, expenditures)
+			if let Some(mod_expenditures) = expenditures {
+				Self::do_execute_expenditures(who.clone(), project_id, mod_expenditures)?;
+			}
+
+			if let Some(mod_job_eligibles) = job_eligibles {
+				Self::do_execute_job_eligibles(who.clone(), project_id, mod_job_eligibles)?;
+			}
+
+			Ok(())
 		}
 
 		// T R A N S A C T I O N S   &  D R A W D O W N S
@@ -826,7 +1020,7 @@ pub mod pallet {
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
 		/// - submit: If true, the transactions will be submitted.
-		/// If false, the transactions will be saved as draft.
+		/// If false, the transactions array will be saved as draft.
 		///
 		/// # Considerations:
 		/// - This function can only be called by a builder role account
@@ -851,7 +1045,7 @@ pub mod pallet {
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			transactions: Option<BoundedVec<(
-				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureId>, // expenditure_id
 				Option<ExpenditureAmount>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
@@ -863,7 +1057,8 @@ pub mod pallet {
 			// Ensure builder permissions
 			Self::is_authorized(who, &project_id, ProxyPermission::SubmitDrawdown)?;
 
-			match submit{
+			match submit {
+				// Save transactions as draft
 				false => {
 					// Do execute transactions
 					Self::do_execute_transactions(
@@ -872,15 +1067,17 @@ pub mod pallet {
 						transactions.ok_or(Error::<T>::EmptyTransactions)?,
 					)
 				},
+				// Submit transactions
 				true => {
-					// Check if there's transactions to execute
-					if let Some(transactions) = transactions {
+					// Check if there are transactions to execute
+					if let Some(mod_transactions) = transactions {
 						// Do execute transactions
-						if transactions.len() > 0 {
+						//TODO: Review if this len check is needed
+						if mod_transactions.len() > 0 {
 							Self::do_execute_transactions(
 								project_id,
 								drawdown_id,
-								transactions)?;
+								mod_transactions)?;
 						}
 					// 	Self::do_execute_transactions(
 					// 		project_id,
@@ -940,7 +1137,7 @@ pub mod pallet {
 			drawdown_id: DrawdownId,
 			bulkupload: Option<bool>,
 			transactions: Option<BoundedVec<(
-				Option<BudgetExpenditureId>, // expenditure_id
+				Option<ExpenditureId>, // expenditure_id
 				Option<u64>, // amount
 				Option<Documents<T>>, //Documents
 				CUDAction, // Action
@@ -948,6 +1145,11 @@ pub mod pallet {
 			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			//TODO: REVIEW BULK UPLOAD APPROVAL FLOW
+			// is_drawdown_editable & is_transaction_editable should do
+			// a distinction between bulkupload and non-bulkupload drawdowns
+			// review those function in each step of the flow (approve, reject, submit)
 
 			// Match bulkupdate
 			match bulkupload {
@@ -1030,7 +1232,10 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<BoundedVec<(
+				TransactionId,
+				FieldDescription
+			), T::MaxRegistrationsAtTime>>,
 			drawdown_feedback: Option<FieldDescription>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1092,7 +1297,6 @@ pub mod pallet {
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
-		///
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn inflation_rate(
@@ -1103,6 +1307,112 @@ pub mod pallet {
 
 			Self::do_execute_inflation_adjustment(who, projects)
 		}
+
+		// R E V E N U E S
+		// --------------------------------------------------------------------------------------------
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn submit_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			revenue_transactions: Option<BoundedVec<(
+				Option<JobEligibleId>, // job eligible id
+				Option<RevenueAmount>, // amount
+				Option<Documents<T>>, // documents
+				CUDAction, // action
+				Option<RevenueTransactionId>, // revenue transaction id
+			), T::MaxRegistrationsAtTime>>,
+			submit: bool,
+		) -> DispatchResult {
+			//TODO: Remove underscore when permissions are updated
+			let _who = ensure_signed(origin)?;
+
+			//TODO: Ensure builder permissions
+			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
+
+			match submit {
+				// Save revenue transactions as draft
+				false => {
+					// Do execute transactions
+					Self::do_execute_revenue_transactions(
+						project_id,
+						revenue_id,
+						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsAreEmpty)?,
+					)
+				},
+				// Submit revenue transactions
+				true => {
+					// Check if there are transactions to execute
+					if let Some(mod_revenue_transactions) = revenue_transactions {
+						// Do execute transactions
+						//TODO: Review if this len check is needed
+						if mod_revenue_transactions.len() > 0 {
+							Self::do_execute_revenue_transactions(
+								project_id,
+								revenue_id,
+								mod_revenue_transactions)?;
+						}
+					}
+
+					// Do submit revenue
+					Self::do_submit_revenue(project_id, revenue_id)
+				},
+			}
+
+		}
+
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn approve_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_approve_revenue(who, project_id, revenue_id)
+		}
+
+		//TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reject_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			revenue_transactions_feedback: BoundedVec<(
+				TransactionId,
+				FieldDescription
+			), T::MaxRegistrationsAtTime>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
+		}
+
+
+
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::a new extrinsic to handle the revenue approvalDbWeight::get().writes(1))]
+		// pub fn job_eligibles(
+		// 	origin: OriginFor<T>,
+		// 	project_id: ProjectId,
+		// 	job_eligibles: BoundedVec<(
+		// 		Option<FieldName>, // name
+		// 		Option<JobEligibleAmount>, // amount
+		// 		Option<FieldDescription>, // naics code
+		// 		Option<JobsMultiplier>, // jobs multiplier
+		// 		CUDAction, // action
+		// 		Option<JobEligibleId>, // job_eligible_id
+		// 	), T::MaxRegistrationsAtTime>,
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?; // origin need to be an admin
+
+		// 	Self::do_execute_job_eligibles(who, project_id, job_eligibles)
+		// }
 
 		/// Kill all the stored data.
 		///
@@ -1131,6 +1441,12 @@ pub mod pallet {
 			let _ = <DrawdownsByProject<T>>::clear(1000, None);
 			let _ = <TransactionsInfo<T>>::clear(1000, None);
 			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
+			let _ = <JobEligiblesInfo<T>>::clear(1000, None);
+			let _ = <JobEligiblesByProject<T>>::clear(1000, None);
+			let _ = <RevenuesInfo<T>>::clear(1000, None);
+			let _ = <RevenuesByProject<T>>::clear(1000, None);
+		    let _ = <RevenueTransactionsInfo<T>>::clear(1000, None);
+			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
