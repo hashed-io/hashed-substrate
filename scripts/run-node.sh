@@ -24,12 +24,12 @@ fi
 
 echo "Inserting keys..."
 
-echo "${node_args[@]}"
+# echo "${node_args[@]}"
 
-echo "${MNEMO}"
+# echo "${MNEMO}"
 
-./target/release/hashed key insert --base-path $2 $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
+./target/release/hashed key insert --base-path $2 --chain $1 --scheme sr25519 --suri "${MNEMO}" --key-type aura
 
-./target/release/hashed key insert --base-path $2 $chain_spec --scheme ed25519 --suri "${MNEMO}" --key-type gran
+./target/release/hashed key insert --base-path $2 --chain $1 --scheme ed25519 --suri "${MNEMO}" --key-type gran
 
 ./target/release/hashed "${node_args[@]}"
