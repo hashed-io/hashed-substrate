@@ -329,6 +329,69 @@
 <span id="329">329</span>
 <span id="330">330</span>
 <span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -360,9 +423,8 @@
 <span class="kw">pub type </span>DrawdownNumber = u32;
 
 <span class="comment">// Budget expenditures
-</span><span class="kw">pub type </span>BudgetExpenditureId = [u8; <span class="number">32</span>];
+</span><span class="kw">pub type </span>ExpenditureId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>ExpenditureAmount = u64;
-<span class="kw">pub type </span>Balance = u64;
 <span class="kw">pub type </span>NAICSCode = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>JobsMultiplier = u32;
 <span class="kw">pub type </span>InflationRate = u32;
@@ -371,6 +433,14 @@
 </span><span class="kw">pub type </span>CreatedDate = u64;
 <span class="kw">pub type </span>CloseDate = u64;
 <span class="kw">pub type </span>TotalAmount = u64;
+
+<span class="comment">// Revenues
+</span><span class="kw">pub type </span>RevenueAmount = u128;
+<span class="kw">pub type </span>JobEligibleId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>JobEligibleAmount = u128;
+<span class="kw">pub type </span>RevenueId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>RevenueNumber = u32;
+<span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
 
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -394,6 +464,7 @@
 	<span class="kw">pub </span>eb5_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+    <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -454,16 +525,6 @@
     }
 }
 
-
-<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-</span><span class="kw">pub struct </span>BudgetData {
-    <span class="kw">pub </span>expenditure_id: BudgetExpenditureId,
-    <span class="kw">pub </span>balance: Balance,
-    <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>updated_date: UpdatedDate,
-}
-
-
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -513,7 +574,7 @@
 </span><span class="kw">pub struct </span>TransactionData&lt;T: Config&gt; {
     <span class="kw">pub </span>project_id: ProjectId,
     <span class="kw">pub </span>drawdown_id: DrawdownId,
-    <span class="kw">pub </span>expenditure_id: BudgetExpenditureId,
+    <span class="kw">pub </span>expenditure_id: ExpenditureId,
     <span class="kw">pub </span>created_date: CreatedDate,
     <span class="kw">pub </span>updated_date: UpdatedDate,
     <span class="kw">pub </span>closed_date: CloseDate,
@@ -537,6 +598,70 @@
     }
 }
 
+<span class="comment">// Possibles names: JobEligibleRenevueData, BudgetRevenueData, JobEligibleData
+</span><span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+</span><span class="kw">pub struct </span>JobEligibleData {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>name: FieldName,
+    <span class="kw">pub </span>job_eligible_amount: JobEligibleAmount,
+    <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+}
+
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+</span><span class="kw">pub struct </span>RevenueData {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>revenue_number: RevenueNumber,
+    <span class="kw">pub </span>total_amount: RevenueAmount,
+    <span class="kw">pub </span>status: RevenueStatus,
+    <span class="kw">pub </span>created_date: CreatedDate,
+    <span class="kw">pub </span>closed_date: CloseDate,
+}
+
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>RevenueStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>RevenueStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        RevenueStatus::Draft
+    }
+}
+
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>RevenueTransactionData&lt;T: Config&gt; {
+    <span class="kw">pub </span>project_id: ProjectId,
+    <span class="kw">pub </span>revenue_id: RevenueId,
+    <span class="kw">pub </span>job_eligible_id: JobEligibleId,
+    <span class="kw">pub </span>created_date: CreatedDate,
+    <span class="kw">pub </span>updated_date: UpdatedDate,
+    <span class="kw">pub </span>closed_date: CloseDate,
+    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>amount: RevenueAmount,
+    <span class="kw">pub </span>status: RevenueTransactionStatus,
+    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+}
+
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>RevenueTransactionStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>RevenueTransactionStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        RevenueTransactionStatus::Draft
+    }
+}
+
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 </span><span class="kw">pub enum </span>CUDAction {
     Create,
@@ -553,9 +678,7 @@
 <span class="kw">impl </span>ProxyRole {
     <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
         <span class="kw">match </span><span class="self">self</span>{
-            <span class="comment">//TOREVIEW: optimization (?)
-            //Self::Administrator =&gt; b&quot;Administrator&quot;.to_vec(),
-            </span><span class="self">Self</span>::Administrator =&gt; <span class="string">&quot;Administrator&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::Administrator =&gt; <span class="string">&quot;Administrator&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::Builder =&gt; <span class="string">&quot;Builder&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::Investor =&gt; <span class="string">&quot;Investor&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::Issuer =&gt; <span class="string">&quot;Issuer&quot;</span>.as_bytes().to_vec(),
@@ -591,6 +714,7 @@
     </span>RejectDrawdown, <span class="comment">// reject_drawdown
     </span>UpBulkupload, <span class="comment">// up_bulkupload
     </span>Inflation, <span class="comment">// inflation
+    </span>JobEligible, <span class="comment">// job_eligible
 </span>}
 
 <span class="kw">impl </span>ProxyPermission {
@@ -608,6 +732,7 @@
             <span class="self">Self</span>::RejectDrawdown =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::UpBulkupload =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::Inflation =&gt; <span class="string">&quot;Inflation&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::JobEligible =&gt; <span class="string">&quot;JobEligible&quot;</span>.as_bytes().to_vec(),
         }
     }
 
@@ -630,6 +755,7 @@
             RejectDrawdown.to_vec(),
             UpBulkupload.to_vec(),
             Inflation.to_vec(),
+            JobEligible.to_vec(),
         ].to_vec();
         administrator_permissions
     }

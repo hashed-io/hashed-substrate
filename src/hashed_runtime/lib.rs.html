@@ -1028,6 +1028,12 @@
 <span id="1028">1028</span>
 <span id="1029">1029</span>
 <span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attribute">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1603,6 +1609,9 @@
 	<span class="kw">pub const </span>MaxProjectsPerIssuer:u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxProjectsPerRegionalCenter:u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxBanksPerProject:u32 = <span class="number">200</span>;
+	<span class="kw">pub const </span>MaxJobEligiblesByProject:u32 = <span class="number">1000</span>;
+	<span class="kw">pub const </span>MaxRevenuesByProject:u32 = <span class="number">1000</span>;
+	<span class="kw">pub const </span>MaxTransactionsPerRevenue:u32 = <span class="number">500</span>;
 }
 
 <span class="kw">impl </span>pallet_fund_admin::Config <span class="kw">for </span>Runtime {
@@ -1632,6 +1641,9 @@
 	<span class="kw">type </span>MaxProjectsPerIssuer = MaxProjectsPerIssuer;
 	<span class="kw">type </span>MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
 	<span class="kw">type </span>MaxBanksPerProject = MaxBanksPerProject;
+	<span class="kw">type </span>MaxJobEligiblesByProject = MaxJobEligiblesByProject;
+	<span class="kw">type </span>MaxRevenuesByProject = MaxRevenuesByProject;
+	<span class="kw">type </span>MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 
 }
 
