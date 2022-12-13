@@ -813,6 +813,7 @@ impl<T: Config> Pallet<T> {
             total_amount: 0,
             status: DrawdownStatus::default(),
             bulkupload_documents: None,
+            bank_documents: None,
             description: None,
             feedback: None,
             created_date: timestamp,

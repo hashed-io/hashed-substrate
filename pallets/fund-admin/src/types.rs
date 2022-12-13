@@ -141,6 +141,7 @@ pub struct DrawdownData<T: Config> {
     pub total_amount: TotalAmount,
     pub status: DrawdownStatus,
     pub bulkupload_documents: Option<Documents<T>>,
+    pub bank_documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
     pub created_date: CreatedDate,
