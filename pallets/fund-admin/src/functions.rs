@@ -875,6 +875,9 @@ impl<T: Config> Pallet<T> {
 
         // Update each transaction status to submitted
         for transaction_id in drawdown_transactions {
+            // Ensure transaction exists
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
             // Update transaction status to submitted
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                 let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
@@ -910,11 +913,11 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        // Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+        // Ensure drawdown is editable & ensure drawdown exists
+        Self::is_drawdown_editable(drawdown_id)?;
 
-        // Ensure drawdown is in submitted status
-        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+        // Get drawdown data
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown has transactions
         ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
@@ -927,14 +930,8 @@ impl<T: Config> Pallet<T> {
 
         // Update each transaction status to approved
         for transaction_id in drawdown_transactions {
-            //TOREVIEW: Check if transaction data existence & status can be checked in a better way
-            // i.e inside the try_mutate function,
-
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in submitted status
-            ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+            // Ensure transaction exits
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
             // Update transaction status to approved
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -979,11 +976,11 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        //  Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+        // Ensure drawdown is editable & ensure drawdown exists
+        Self::is_drawdown_editable(drawdown_id)?;
 
-        // Ensure drawdown is in submitted status
-        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownIsNotInSubmittedStatus);
+        // Get drawdown data
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Match drawdown type in order to update transactions status
         match drawdown_data.drawdown_type {
@@ -996,11 +993,8 @@ impl<T: Config> Pallet<T> {
 
                 // Update each transaction status to rejected
                 for transaction_id in drawdown_transactions {
-                    // Get transaction data
-                    let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-                    // Ensure transaction is in submitted status
-                    ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
+                    // Ensure transaction exits
+                    ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
                     // Update transaction status to rejected
                     <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -1024,33 +1018,6 @@ impl<T: Config> Pallet<T> {
 
             },
             _ => {
-                // TOREVIEW: Bulkupload drawdowns are only rejected 
-                // when a builder uploads the wrong file. So, I think rejecting individual
-                // bulkupload transactions is not necessary. 
-
-                // Construction Loan & Developer Equity drawdowns
-                // If drawdown has transactions, update each transaction status to rejected
-                if <TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id) {
-                    // Get drawdown transactions
-                    let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-                    // Update each transaction status to rejected
-                    for transaction_id in drawdown_transactions {
-                        // Get transaction data
-                        let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-                        // Ensure transaction is in submitted status
-                        ensure!(transaction_data.status == TransactionStatus::Submitted, Error::<T>::TransactionIsNotInSubmittedStatus);
-
-                        // Update transaction status to rejected
-                        <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                            let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                            transaction_data.status = TransactionStatus::Rejected;
-                            Ok(())
-                        })?;
-                    }
-                }
-
                 // Ensure drawdown feedback is provided
                 let mod_drawdown_feedback = drawdown_feedback.ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
 
