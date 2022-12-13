@@ -491,6 +491,8 @@ pub mod pallet {
 		NoTransactionsToSubmit,
 		/// Bulk upload description is required
 		BulkUploadDescriptionRequired,
+		/// Bulk upload documents are required
+		BulkUploadDocumentsRequired,
 		/// Administrator can not delete themselves
 		AdministratorsCannotDeleteThemselves,
 		/// No feedback was provided for bulk upload

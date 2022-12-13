@@ -812,7 +812,7 @@ impl<T: Config> Pallet<T> {
             drawdown_type,
             total_amount: 0,
             status: DrawdownStatus::default(),
-            documents: None,
+            bulkupload_documents: None,
             description: None,
             feedback: None,
             created_date: timestamp,
@@ -1239,15 +1239,12 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is not completed
         Self::is_drawdown_editable(drawdown_id)?;
 
-        //Ensure only Construction loan & developer equity drawdowns can call bulk uploaded
+        //Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
         ensure!(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::<T>::DrawdownTypeNotSupportedForBulkUpload);
 
-        //Ensure drawdown status is draft or rejected
-        ensure!(drawdown_data.status == DrawdownStatus::Draft || drawdown_data.status == DrawdownStatus::Rejected, Error::<T>::DrawdownStatusNotSupportedForBulkUpload);
-
         // Ensure documents is not empty
-        ensure!(!documents.is_empty(), Error::<T>::DocumentsIsEmpty);
+        ensure!(!documents.is_empty(), Error::<T>::BulkUploadDocumentsRequired);
 
         // Ensure description is not empty
         ensure!(!description.is_empty(), Error::<T>::BulkUploadDescriptionRequired);
@@ -1257,13 +1254,16 @@ impl<T: Config> Pallet<T> {
             let mod_drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             mod_drawdown_data.total_amount = total_amount;
             mod_drawdown_data.description = Some(description);
-            mod_drawdown_data.documents = Some(documents);
+            mod_drawdown_data.bulkupload_documents = Some(documents);
             mod_drawdown_data.status = DrawdownStatus::Submitted;
             mod_drawdown_data.feedback = None;
             Ok(())
         })?;
 
+        // Update drawdown status in project info
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+
+        //TODO: Emit event
 
         Ok(())
     }
