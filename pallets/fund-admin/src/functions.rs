@@ -2275,8 +2275,10 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update revenue status in project info
         Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())?;
 
+        // Emit event
         Self::deposit_event(Event::RevenueCreated(revenue_id));
 
         Ok(())
@@ -2358,11 +2360,11 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        // Get revenue data & ensure revenue exists
-        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+        // Ensure revenue is editable & ensure revenue exists
+        Self::is_revenue_editable(revenue_id)?;
 
-        // Ensure revenue is in Submitted status
-        ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueIsNotInSubmittedStatus);
+        // Get revenue data
+        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
 
         // Ensure revenue has transactions
         ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
@@ -2376,11 +2378,8 @@ impl<T: Config> Pallet<T> {
 
         // Update each revenue transaction status to Approved
         for transaction_id in revenue_transactions {
-            // Get revenue transaction data & ensure revenue transaction exists
-            let revenue_transaction_data = Self::revenue_transactions_info(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
-
-            // Ensure revenue transaction is in Submitted status
-            ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionIsNotInSubmittedStatus);
+            // Ensure revenue transaction is editable
+            Self::is_revenue_transaction_editable(transaction_id)?;
 
             // Update revenue transaction status to Approved & update closed date
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
@@ -2424,11 +2423,8 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        // Get revenue data & ensure revenue exists
-        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
-
-        // Ensure revenue is in Submitted status
-        ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueIsNotInSubmittedStatus);
+        // Ensure revenue is editable & ensure revenue exists
+        Self::is_revenue_editable(revenue_id)?;
 
         // Ensure revenue has transactions
         ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
@@ -2438,11 +2434,8 @@ impl<T: Config> Pallet<T> {
 
         // Update each revenue transaction status to Rejected
         for transaction_id in revenue_transactions {
-            // Get revenue transaction data & ensure revenue transaction exists
-            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
-
-            // Ensure revenue transaction is in Submitted status
-            ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionIsNotInSubmittedStatus);
+            // Ensure revenue transaction is editable
+            Self::is_revenue_transaction_editable(transaction_id)?;
 
             // Update revenue transaction status to Rejected
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
