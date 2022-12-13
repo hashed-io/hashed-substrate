@@ -28,7 +28,7 @@ spec:
       containers:
       - name: inova-n2-network
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-node:e87f6d47b2fa295649a894f236b8ddffa688a10e
+        image: sebastianmontero/hashed-substrate-node:0e83482bfce70e5392aaa9101a16bd1b8c9ef1bd
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
@@ -38,7 +38,7 @@ spec:
           - name: BOOTNODES
             value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
           - name: RUST_LOG
-            value: "debug"
+            value: "runtime=debug"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
