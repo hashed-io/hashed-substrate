@@ -445,10 +445,14 @@ pub mod pallet {
 		CannotPerformActionOnSubmittedTransaction,
 		/// Can not perform any action on a approved transaction
 		CannotPerformActionOnApprovedTransaction,
+		/// Can not perform any action on a confirmed transaction
+		CannotPerformActionOnConfirmedTransaction,
 		/// Can not perform any action on a submitted drawdown
 		CannotPerformActionOnSubmittedDrawdown,
 		/// Can not perform any action on a approved drawdown
 		CannotPerformActionOnApprovedDrawdown,
+		/// Can not perform any action on a confirmed drawdown
+		CannotPerformActionOnConfirmedDrawdown,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
 		/// User does not have the specified role
@@ -505,6 +509,8 @@ pub mod pallet {
 		UserHasAssignedProjectsCannotDelete,
 		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
 		DrawdownStatusNotSupportedForBulkUpload,
+		/// Cannot submit a drawdown if the drawdown status isn't in draft or rejected
+		DrawdownIsNotInDraftOrRejectedStatus,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
 		/// Max number of projects per builder has been reached
@@ -1069,18 +1075,12 @@ pub mod pallet {
 					// Check if there are transactions to execute
 					if let Some(mod_transactions) = transactions {
 						// Do execute transactions
-						//TODO: Review if this len check is needed
 						if mod_transactions.len() > 0 {
 							Self::do_execute_transactions(
 								project_id,
 								drawdown_id,
 								mod_transactions)?;
 						}
-					// 	Self::do_execute_transactions(
-					// 		project_id,
-					// 		drawdown_id,
-					// 		transactions,
-					// 	)?;
 					}
 
 					// Do submit drawdown
@@ -1167,13 +1167,14 @@ pub mod pallet {
 						},
 						true  => {
 							// 1.Execute transactions if provided
-							if let Some(transactions) = transactions {
+							if let Some(mod_transactions) = transactions {
 								// Do execute transactions
-								Self::do_execute_transactions(
-									project_id,
-									drawdown_id,
-									transactions,
-								)?;
+								if mod_transactions.len() > 0 {
+									Self::do_execute_transactions(
+										project_id,
+										drawdown_id,
+										mod_transactions)?;
+								}
 
 								// 2. Submit drawdown
 								Self::do_submit_drawdown(project_id, drawdown_id)?;

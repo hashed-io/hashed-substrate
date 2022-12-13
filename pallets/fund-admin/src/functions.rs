@@ -875,10 +875,6 @@ impl<T: Config> Pallet<T> {
 
         // Update each transaction status to submitted
         for transaction_id in drawdown_transactions {
-            //TOREVIEW: Maybe get back to the old validation way
-            // Ensure transaction is editable
-            Self::is_transaction_editable(transaction_id)?;
-
             // Update transaction status to submitted
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                 let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
@@ -1970,9 +1966,6 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-
-        //TODO: Merge all drawdown types in the next match, 
-        // we no longer need to do a distinction between EB5 and other drawdown types
         // Match drawdown type
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
@@ -1991,13 +1984,19 @@ impl<T: Config> Pallet<T> {
                     DrawdownStatus::Approved => {
                         return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
                     },
+                    DrawdownStatus::Confirmed => {
+                        return Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into());
+                    },
                 }
             },
             _ => {
                 // Match drawdown status
                 match drawdown_data.status {
                     DrawdownStatus::Approved => {
-                        return Err(Error::<T>::CannotEditDrawdown.into());
+                        return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
+                    },
+                    DrawdownStatus::Confirmed => {
+                        return Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into());
                     },
                     _ => {
                         return Ok(())
@@ -2027,6 +2026,9 @@ impl<T: Config> Pallet<T> {
             },
             TransactionStatus::Approved => {
                 return Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into());
+            },
+            TransactionStatus::Confirmed => {
+                return Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into());
             },
         }
     }
@@ -2234,7 +2236,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
         
         // Calculate revenue total amount
-        let mut revenue_total_amount: u128 = 0;
+        let mut revenue_total_amount: Amount = 0;
 
         for transaction_id in revenue_transactions {
             // Get revenue transaction data
