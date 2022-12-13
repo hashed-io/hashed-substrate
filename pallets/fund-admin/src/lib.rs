@@ -365,6 +365,12 @@ pub mod pallet {
 		RevenueApproved(RevenueId),
 		/// Revenue was rejected successfully
 		RevenueRejected(RevenueId),
+		/// Bank's confirming documents were uploaded successfully
+		BankDocumentsUploaded(DrawdownId),
+		/// Bank's confirming documents were deleted successfully
+		BankDocumentsDeleted(DrawdownId),
+		/// Bank's confirming documents were updated successfully
+		BankDocumentsUpdated(DrawdownId),
 	}
 
 	// E R R O R S
@@ -577,6 +583,14 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+		/// Can not upload bank confirming documents if the drawdown is not in Approved status
+		DrawdownNotApproved,
+		/// Drawdown is not in Confirmed status
+		DrawdownNotConfirmed,
+		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
+		DrawdownHasAlreadyBankConfirmingDocuments,
+		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
+		DrawdownHasNoBankConfirmingDocuments,
 	}
 
 	// E X T R I N S I C S
@@ -1392,6 +1406,20 @@ pub mod pallet {
 
 			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
 		}
+
+		//TODO: Add documentation
+		// #[transactional]
+		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		// pub fn bank_confirming_documents(
+		// 	origin: OriginFor<T>,
+		// 	project_id: ProjectId,
+		// 	drawdown_id: DrawdownId,
+		// 	confirming_documents: Documents<T>,
+		// ) -> DispatchResult {
+		// 	let who = ensure_signed(origin)?;
+
+		// 	Self::do_upload_bank_confirming_documents(who, project_id, revenue_id, revenue_transactions_feedback)
+		// }
 
 		/// Kill all the stored data.
 		///
