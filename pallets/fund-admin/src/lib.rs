@@ -1554,8 +1554,12 @@ pub mod pallet {
 			let _ = <DrawdownsByProject<T>>::clear(1000, None);
 			let _ = <TransactionsInfo<T>>::clear(1000, None);
 			let _ = <TransactionsByDrawdown<T>>::clear(1000, None);
-
-			//TODO: Remove Revenues storages
+			let _ = <JobEligiblesInfo<T>>::clear(1000, None);
+			let _ = <JobEligiblesByProject<T>>::clear(1000, None);
+			let _ = <RevenuesInfo<T>>::clear(1000, None);
+			let _ = <RevenuesByProject<T>>::clear(1000, None);
+			let _ = <RevenueTransactionsInfo<T>>::clear(1000, None);
+			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
