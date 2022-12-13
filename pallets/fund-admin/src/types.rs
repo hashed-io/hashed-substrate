@@ -30,7 +30,7 @@ pub type DrawdownNumber = u32;
 
 // Budget expenditures
 pub type ExpenditureId = [u8; 32];
-pub type ExpenditureAmount = u64;
+pub type ExpenditureAmount = Amount;
 pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
 pub type InflationRate = u32;
@@ -38,12 +38,12 @@ pub type InflationRate = u32;
 // Miscellaneous
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
-pub type TotalAmount = u64;
+pub type TotalAmount = Amount;
 
 // Revenues
-pub type RevenueAmount = u128;
+pub type RevenueAmount = Amount;
 pub type JobEligibleId = [u8; 32];
-pub type JobEligibleAmount = u128;
+pub type JobEligibleAmount = Amount;
 pub type RevenueId = [u8; 32];
 pub type RevenueNumber = u32;
 pub type RevenueTransactionId = [u8; 32];
