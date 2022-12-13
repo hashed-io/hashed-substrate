@@ -955,6 +955,8 @@ impl<T: Config> Pallet<T> {
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
 
         // Generate the next drawdown
+        // TOREVIEW: After a project is completed, there is no need to generate the next drawdown
+        // Add a validation to check project status before generating the next drawdown
         Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
 
         // Event
@@ -1495,7 +1497,7 @@ impl<T: Config> Pallet<T> {
         ensure!(RevenuesInfo::<T>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
 
         //Ensure revenue transactions are not empty
-        ensure!(!revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsAreEmpty);
+        ensure!(!revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsEmpty);
 
         // Ensure if the selected revenue is editable
         Self::is_revenue_editable(revenue_id)?;
@@ -2374,7 +2376,6 @@ impl<T: Config> Pallet<T> {
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
