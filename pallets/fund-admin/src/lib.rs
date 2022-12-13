@@ -591,6 +591,10 @@ pub mod pallet {
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
 		DrawdownHasNoBankConfirmingDocuments,
+		/// Bank confirming documents are required
+		BankConfirmingDocumentsNotProvided,
+		/// Banck confirming documents array is empty
+		BankConfirmingDocumentsAreEmpty,
 	}
 
 	// E X T R I N S I C S
@@ -1407,19 +1411,20 @@ pub mod pallet {
 			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
 		}
 
-		//TODO: Add documentation
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn bank_confirming_documents(
-		// 	origin: OriginFor<T>,
-		// 	project_id: ProjectId,
-		// 	drawdown_id: DrawdownId,
-		// 	confirming_documents: Documents<T>,
-		// ) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?;
+		// TODO: Add documentation
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn bank_confirming_documents(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			confirming_documents: Option<Documents<T>>,
+			action: CUDAction,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
-		// 	Self::do_upload_bank_confirming_documents(who, project_id, revenue_id, revenue_transactions_feedback)
-		// }
+			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
+		}
 
 		/// Kill all the stored data.
 		///

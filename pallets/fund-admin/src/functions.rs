@@ -2478,7 +2478,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        confirming_documents: Documents<T>,
+        confirming_documents: Option<Documents<T>>,
         action: CUDAction,
     ) -> DispatchResult {
         // TODO: update permissions
@@ -2488,103 +2488,149 @@ impl<T: Config> Pallet<T> {
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+        // Ensure drawdown exists
+        ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
         match action {
             CUDAction::Create => {
-                // Ensure drawdown has no bank confirming documents
-                ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
+                // Ensure bank confirming documents are provided
+                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
-                // Ensure drawdown status is Approved
-                ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
+                // Ensure confirming documents are not empty
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
 
-                // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
-                <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-                    let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-                    drawdown_data.bank_documents =  Some(confirming_documents);
-                    drawdown_data.status = DrawdownStatus::Confirmed;
-                    Ok(())
-                })?;
-
-                // Get drawdown transactions
-                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-                // Mutate individual drawdown transactions status to Confirmed
-                for transaction_id in drawdown_transactions {
-                    // Ensure transaction exists
-                    ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
-
-                    // Update drawdown transaction status to Confirmed
-                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                        transaction_data.status = TransactionStatus::Confirmed;
-                        Ok(())
-                    })?;
-                }
-
-                // Event
-                Self::deposit_event(Event::BankDocumentsUploaded(drawdown_id));
-
-                Ok(())
+                // Create drawdown bank confirming documents
+                Self::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
             },
             CUDAction::Update => {
-                // Ensure drawdown has bank confirming documents
-                ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
+                // Ensure bank confirming documents are provided
+                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
-                // Ensure drawdown status is Confirmed
-                ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
+                // Ensure confirming documents are not empty
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
 
-                // Mutate drawdown data: Update bank documents
-                <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-                    let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-                    drawdown_data.bank_documents =  Some(confirming_documents);
-                    Ok(())
-                })?;
-
-                // Event
-                Self::deposit_event(Event::BankDocumentsUpdated(drawdown_id));
-
-                Ok(())
+                // Update drawdown bank confirming documents
+                Self::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
             },
             CUDAction::Delete => {
-                // Ensure drawdown has bank confirming documents
-                ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-                // Ensure drawdown status is Confirmed
-                ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
-
-                // Rollback drawdown status to Approved & remove bank confirming documents
-                <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-                    let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-                    drawdown_data.bank_documents = None;
-                    drawdown_data.status = DrawdownStatus::Approved;
-                    Ok(())
-                })?;
-
-                // Get drawdown transactions
-                let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-                // Mutate individual drawdown transactions status to Approved
-                for transaction_id in drawdown_transactions {
-                    // Ensure transaction exists
-                    ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
-
-                    // Update drawdown transaction status to Approved
-                    <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                        let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                        transaction_data.status = TransactionStatus::Approved;
-                        Ok(())
-                    })?;
-                }
-
-                // Event
-                Self::deposit_event(Event::BankDocumentsDeleted(drawdown_id));
-
-                Ok(())
+                // Delete drawdown bank confirming documents
+                Self::do_delete_bank_confirming_documents(project_id, drawdown_id)
             },
         }
 
+    }
+
+    fn do_create_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents<T>,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has no bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
+
+        // Ensure drawdown status is Approved
+        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
+
+        // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents =  Some(confirming_documents);
+            drawdown_data.status = DrawdownStatus::Confirmed;
+            Ok(())
+        })?;
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Mutate individual drawdown transactions status to Confirmed
+        for transaction_id in drawdown_transactions {
+            // Ensure transaction exists
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+            // Update drawdown transaction status to Confirmed
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Confirmed;
+                Ok(())
+            })?;
+        }
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsUploaded(drawdown_id));
+
+        Ok(())
+    }
+
+    fn do_update_bank_confirming_documents(
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents<T>,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
+
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
+
+        // Mutate drawdown data: Update bank documents
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents =  Some(confirming_documents);
+            Ok(())
+        })?;
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsUpdated(drawdown_id));
+
+        Ok(())
+    }
+
+    fn do_delete_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
+
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
+
+        // Rollback drawdown status to Approved & remove bank confirming documents
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents = None;
+            drawdown_data.status = DrawdownStatus::Approved;
+            Ok(())
+        })?;
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Mutate individual drawdown transactions status to Approved
+        for transaction_id in drawdown_transactions {
+            // Ensure transaction exists
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+            // Update drawdown transaction status to Approved
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Approved;
+                Ok(())
+            })?;
+        }
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsDeleted(drawdown_id));
+
+        Ok(())
     }
 
 
