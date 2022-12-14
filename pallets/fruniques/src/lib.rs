@@ -25,9 +25,9 @@ pub mod pallet {
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_uniques::Config {
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
@@ -161,7 +161,7 @@ pub mod pallet {
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_initial_setup()?;
@@ -175,7 +175,7 @@ pub mod pallet {
 		/// ## Parameters
 		/// - `origin`: The origin of the transaction.
 		/// - `metadata`: The title of the collection.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_collection(
 			origin: OriginFor<T>,
 			metadata: CollectionDescription<T>,
@@ -198,7 +198,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(4))]
 		pub fn instance_exists(
 			_origin: OriginFor<T>,
 			_class_id: T::CollectionId,
@@ -219,7 +219,7 @@ pub mod pallet {
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_attributes(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
@@ -254,7 +254,7 @@ pub mod pallet {
 		/// - `parent_info` Optional value needed for the NFT division.
 		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(4))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
@@ -304,7 +304,7 @@ pub mod pallet {
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn verify(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
@@ -332,7 +332,7 @@ pub mod pallet {
 		/// The user will be able to create NFTs in the collection.
 		/// The user will be able to add attributes to the NFTs in the collection.
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn invite(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
@@ -355,7 +355,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it's not expected to be used in production as it can lead to unexpected results.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn force_set_counter(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
@@ -383,7 +383,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it's not expected to be used in production as it can lead to unexpected results.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn force_destroy_collection(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
@@ -412,7 +412,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			<FruniqueCnt<T>>::put(0);

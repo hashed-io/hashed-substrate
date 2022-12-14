@@ -106,7 +106,7 @@ use pallet_rbac::types::RoleBasedAccessControl;
 	
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		// ...
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 	}
@@ -116,7 +116,7 @@ Then the RBAC pallet can safely be imported as a parameter within another pallet
 
 ```rust
 impl pallet_gated_marketplace::Config for Runtime {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
   // ...
 	type Rbac = RBAC;
 }

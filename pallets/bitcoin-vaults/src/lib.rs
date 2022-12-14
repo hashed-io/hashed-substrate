@@ -70,8 +70,8 @@ pub mod pallet {
 		/// The identifier type for an offchain worker.
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type ChangeBDKOrigin : EnsureOrigin<Self::Origin>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type ChangeBDKOrigin : EnsureOrigin<Self::RuntimeOrigin>;
 		/*--- PSBT params ---*/
 		#[pallet::constant]
 		type XPubLen: Get<u32>;
@@ -320,7 +320,7 @@ pub mod pallet {
 		///  fees will be applied nonetheless).
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn set_xpub(
 			origin: OriginFor<T>,
 			xpub: BoundedVec<u8, T::XPubLen>,
@@ -365,7 +365,7 @@ pub mod pallet {
 		/// This tx does not takes any parameters.
 		/// 
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			// The xpub must exists
@@ -399,7 +399,7 @@ pub mod pallet {
 		/// - Do not include the vault owner on the `cosigners` list.
 		/// 
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_vault(
 			origin: OriginFor<T>,
 			threshold: u32,
@@ -445,7 +445,7 @@ pub mod pallet {
 		/// - Only the vault owner can perform this extrinsic
 		/// 
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_vault(
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
@@ -468,7 +468,7 @@ pub mod pallet {
 		/// ### Considerations
 		/// - Please ensure the recipient address is a valid mainnet address.
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn propose(
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
@@ -503,7 +503,7 @@ pub mod pallet {
 		/// - `proposal_id`: the proposal identifier
 		///
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -529,7 +529,7 @@ pub mod pallet {
 		/// - Ensure the new url is valid.
 		/// - The url has a maximum length of 32 bytes
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
 			origin: OriginFor<T>,
 			new_url: BoundedVec<u8, ConstU32<32> >
@@ -552,7 +552,7 @@ pub mod pallet {
 		/// - If successful, this process cannot be undone
 		/// - A user can only sign a proposal once 
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn save_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -575,7 +575,7 @@ pub mod pallet {
 		/// - The proposal must have a valid PSBT
 		/// - Any vault member can perform this extrinsic
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn finalize_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -598,7 +598,7 @@ pub mod pallet {
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -613,7 +613,7 @@ pub mod pallet {
 		/// 
 		/// Can only be called by root and removes All vaults and proposals
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
 		) -> DispatchResult{

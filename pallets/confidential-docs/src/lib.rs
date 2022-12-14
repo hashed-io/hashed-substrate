@@ -27,9 +27,9 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		/// Maximum number of confidential documents that a user can own
 		#[pallet::constant]
@@ -213,7 +213,7 @@ pub mod pallet {
 		/// - `public key`: The users cipher public key
 		/// - `cid`: The IPFS CID that contains the vaults data
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_vault(origin: OriginFor<T>, user_id: UserId, public_key: PublicKey, cid: CID) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_set_vault(who, user_id, public_key, cid)
@@ -227,7 +227,7 @@ pub mod pallet {
 		/// - `origin`: The user that is creating/updating an owned document
 		/// - `owned_doc`: Metadata related to the owned document
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_owned_document(origin: OriginFor<T>, owned_doc: OwnedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_set_owned_document(who, owned_doc)
@@ -241,7 +241,7 @@ pub mod pallet {
 		/// - `origin`: The owner of the document
 		/// - `cid`: of the document to be removed
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_owned_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_remove_owned_document(who, cid)
@@ -255,7 +255,7 @@ pub mod pallet {
 		/// - `origin`: The user that is creating the shared document
 		/// - `shared_doc`: Metadata related to the shared document
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn share_document(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_share_document(who, shared_doc)
@@ -270,7 +270,7 @@ pub mod pallet {
 		/// - `origin`: The "to" user of the shared document
 		/// - `shared_doc`: Metadata related to the shared document
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn update_shared_document_metadata(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_update_shared_document_metadata(who, shared_doc)
@@ -286,7 +286,7 @@ pub mod pallet {
 		/// - `origin`: The "to" user of the shared document
 		/// - `cid`: of the document to be removed
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_shared_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_remove_shared_document(who, cid)
@@ -304,7 +304,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
 		) -> DispatchResult{
