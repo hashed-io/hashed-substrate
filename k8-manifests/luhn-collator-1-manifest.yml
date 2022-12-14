@@ -34,6 +34,9 @@ spec:
         volumeMounts:
           - name: hashed-db
             mountPath:  /var/www/hashed/hashed
+        env:
+          - name: RUST_LOG
+            value: "db=trace,sync=trace"
         # env:
         #   - name: MNEMO
         #     valueFrom:
