@@ -2628,9 +2628,6 @@
 <span id="2628">2628</span>
 <span id="2629">2629</span>
 <span id="2630">2630</span>
-<span id="2631">2631</span>
-<span id="2632">2632</span>
-<span id="2633">2633</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="kw">use </span>frame_support::traits::Time;
@@ -3541,14 +3538,11 @@
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
-        <span class="comment">//TODO: update permissions
+        <span class="comment">// TODO: update permissions
         // Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
 
-        <span class="comment">// Ensure drawdown is editable &amp; ensure drawdown exists
-        </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
-
-        <span class="comment">// Get drawdown data
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure drawdown has transactions
