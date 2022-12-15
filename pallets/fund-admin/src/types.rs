@@ -30,7 +30,7 @@ pub type DrawdownNumber = u32;
 
 // Budget expenditures
 pub type ExpenditureId = [u8; 32];
-pub type ExpenditureAmount = u64;
+pub type ExpenditureAmount = Amount;
 pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
 pub type InflationRate = u32;
@@ -38,12 +38,12 @@ pub type InflationRate = u32;
 // Miscellaneous
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
-pub type TotalAmount = u64;
+pub type TotalAmount = Amount;
 
 // Revenues
-pub type RevenueAmount = u128;
+pub type RevenueAmount = Amount;
 pub type JobEligibleId = [u8; 32];
-pub type JobEligibleAmount = u128;
+pub type JobEligibleAmount = Amount;
 pub type RevenueId = [u8; 32];
 pub type RevenueNumber = u32;
 pub type RevenueTransactionId = [u8; 32];
@@ -71,7 +71,6 @@ pub struct ProjectData<T: Config> {
 	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
 	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
     pub revenue_status: Option<RevenueStatus>,
-
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -141,7 +140,8 @@ pub struct DrawdownData<T: Config> {
     pub drawdown_type: DrawdownType,
     pub total_amount: TotalAmount,
     pub status: DrawdownStatus,
-    pub documents: Option<Documents<T>>,
+    pub bulkupload_documents: Option<Documents<T>>,
+    pub bank_documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
     pub created_date: CreatedDate,
@@ -167,6 +167,7 @@ pub enum DrawdownStatus {
     Submitted,
     Approved,
     Rejected,
+    Confirmed,
 }
 
 impl Default for DrawdownStatus {
@@ -197,6 +198,7 @@ pub enum TransactionStatus {
     Submitted,
     Approved,
     Rejected,
+    Confirmed
 }
 
 impl Default for TransactionStatus {
