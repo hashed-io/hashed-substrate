@@ -110,7 +110,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxTransactionsPerRevenue: Get<u32>;
 
-
 	}
 
 	#[pallet::pallet]
@@ -298,52 +297,64 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// Proxy initial setup completed using the sudo pallet
+		ProxySetupCompleted,
 		/// Project was created successfully
 		ProjectCreated(T::AccountId, ProjectId),
-		/// Proxy initial setup completed
-		ProxySetupCompleted,
-		/// User registered successfully
-		UserAdded(T::AccountId),
-		/// Project was edited
-		ProjectEdited(ProjectId),
-		/// Project was deleted
-		ProjectDeleted(ProjectId),
-		/// Administrator added
+		/// The selected roject was edited successfully
+		ProjectEdited(T::AccountId, ProjectId),
+		/// The selected project was deleted successfully
+		ProjectDeleted(T::AccountId, ProjectId),
+		/// Administrator was registered successfully using the sudo pallet
 		AdministratorAssigned(T::AccountId),
-		/// Administrator removed
+		/// Administrator was removed successfully using the sudo pallet
 		AdministratorRemoved(T::AccountId),
-		/// Users has been assigned from the selected project
-		UsersAssignationCompleted([u8;32]),
-		/// Users has been removed from the selected project
-		UsersUnassignationCompleted([u8;32]),
-		/// User info updated
+		/// The user was assigned to the selected project
+		UserAssignmentCompleted(T::AccountId, ProjectId),
+		/// The user was unassigned to the selected project
+		UserUnassignmentCompleted(T::AccountId, ProjectId),
+		/// Users extrinsic was executed, individual CUDActions were applied
+		UsersExecuted(T::AccountId),
+		/// A new user account was created successfully
+		UserCreated(T::AccountId),
+		/// The selected user was edited successfully
 		UserUpdated(T::AccountId),
-		/// User removed
+		/// The selected user was deleted successfully
 		UserDeleted(T::AccountId),
+		/// An array of expenditures was executed depending on the CUDAction
+		ExpendituresExecuted(T::AccountId, ProjectId),
 		/// Expenditure was created successfully
-		ExpenditureCreated,
-		/// Expenditure was edited successfully
-		ExpenditureUpdated(ExpenditureId),
+		ExpenditureCreated(ProjectId, ExpenditureId),
+		/// Expenditure was updated successfully
+		ExpenditureUpdated(ProjectId, ExpenditureId),
 		/// Expenditure was deleted successfully
-		ExpenditureDeleted(ExpenditureId),
-		/// Trasactions was completed successfully
-		TransactionsCompleted,
+		ExpenditureDeleted(ProjectId, ExpenditureId),
+		/// An array of transactions was executed depending on the CUDAction
+		TransactionsExecuted(ProjectId, DrawdownId),
 		/// Transaction was created successfully
-		TransactionCreated(TransactionId),
+		TransactionCreated(ProjectId, DrawdownId, TransactionId),
 		/// Transaction was edited successfully
-		TransactionEdited(TransactionId),
+		TransactionEdited(ProjectId, DrawdownId, TransactionId),
 		/// Transaction was deleted successfully
-		TransactionDeleted(TransactionId),
-		/// Users extrinsic was completed successfully
-		UsersExecuted,
+		TransactionDeleted(ProjectId, DrawdownId, TransactionId),
 		/// Assign users extrinsic was completed successfully
-		UsersAssignationExecuted([u8;32]),
+		UsersAssignationExecuted(T::AccountId, ProjectId),
+		/// Drawdowns were initialized successfully at the beginning of the project
+		DrawdownsInitialized(T::AccountId, ProjectId),
+		/// Drawdown was created successfully
+		DrawdownCreated(ProjectId, DrawdownId),
 		/// Drawdown was submitted successfully
-		DrawdownSubmitted([u8;32]),
+		DrawdownSubmitted(ProjectId, DrawdownId),
 		/// Drawdown was approved successfully
-		DrawdownApproved([u8;32]),
+		DrawdownApproved(ProjectId, DrawdownId),
 		/// Drawdown was rejected successfully
-		DrawdownRejected([u8;32]),
+		DrawdownRejected(ProjectId, DrawdownId),
+		/// Bulkupload drawdown was submitted successfully
+		BulkUploadSubmitted(ProjectId, DrawdownId),
+		/// Inflation rate extrinsic was executed successfully
+		InflationRateAdjusted(T::AccountId),
+		/// An array of job eligibles was executed depending on the CUDAction
+		JobEligiblesExecuted(T::AccountId, ProjectId),
 		/// Job eligible was created successfully
 		JobEligibleCreated(ProjectId, JobEligibleId),
 		/// Job eligible was updated successfully
@@ -351,21 +362,27 @@ pub mod pallet {
 		/// Job eligible was deleted successfully
 		JobEligibleDeleted(ProjectId, JobEligibleId),
 		/// Revenue transaction was created successfully
-		RevenueTransactionCreated(RevenueTransactionId),
+		RevenueTransactionCreated(ProjectId, RevenueId, RevenueTransactionId),
 		/// Revenue transaction was updated successfully
-		RevenueTransactionUpdated(RevenueTransactionId),
+		RevenueTransactionUpdated(ProjectId, RevenueId, RevenueTransactionId),
 		/// Revenue transaction was deleted successfully
-		RevenueTransactionDeleted(RevenueTransactionId),
-		/// Revenue transactions were executed successfully
+		RevenueTransactionDeleted(ProjectId, RevenueId, RevenueTransactionId),
+		/// An array of revenue transactions was executed depending on the CUDAction
 		RevenueTransactionsExecuted(ProjectId, RevenueId),
 		/// Revenue was created successfully
-		RevenueCreated(RevenueId),
+		RevenueCreated(ProjectId, RevenueId),
 		/// Revenue was submitted successfully
-		RevenueSubmitted(RevenueId),
+		RevenueSubmitted(ProjectId, RevenueId),
 		/// Revenue was approved successfully
-		RevenueApproved(RevenueId),
+		RevenueApproved(ProjectId, RevenueId),
 		/// Revenue was rejected successfully
-		RevenueRejected(RevenueId),
+		RevenueRejected(ProjectId, RevenueId),
+		/// Bank's confirming documents were uploaded successfully
+		BankDocumentsUploaded(ProjectId, DrawdownId),
+		/// Bank's confirming documents were updated successfully
+		BankDocumentsUpdated(ProjectId, DrawdownId),
+		/// Bank's confirming documents were deleted successfully
+		BankDocumentsDeleted(ProjectId, DrawdownId),
 	}
 
 	// E R R O R S
@@ -446,10 +463,14 @@ pub mod pallet {
 		CannotPerformActionOnSubmittedTransaction,
 		/// Can not perform any action on a approved transaction
 		CannotPerformActionOnApprovedTransaction,
+		/// Can not perform any action on a confirmed transaction
+		CannotPerformActionOnConfirmedTransaction,
 		/// Can not perform any action on a submitted drawdown
 		CannotPerformActionOnSubmittedDrawdown,
 		/// Can not perform any action on a approved drawdown
 		CannotPerformActionOnApprovedDrawdown,
+		/// Can not perform any action on a confirmed drawdown
+		CannotPerformActionOnConfirmedDrawdown,
 		/// Transaction is already completed
 		TransactionIsAlreadyCompleted,
 		/// User does not have the specified role
@@ -488,6 +509,8 @@ pub mod pallet {
 		NoTransactionsToSubmit,
 		/// Bulk upload description is required
 		BulkUploadDescriptionRequired,
+		/// Bulk upload documents are required
+		BulkUploadDocumentsRequired,
 		/// Administrator can not delete themselves
 		AdministratorsCannotDeleteThemselves,
 		/// No feedback was provided for bulk upload
@@ -506,6 +529,8 @@ pub mod pallet {
 		UserHasAssignedProjectsCannotDelete,
 		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
 		DrawdownStatusNotSupportedForBulkUpload,
+		/// Cannot submit a drawdown if the drawdown status isn't in draft or rejected
+		DrawdownIsNotInDraftOrRejectedStatus,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
 		/// Max number of projects per builder has been reached
@@ -537,8 +562,8 @@ pub mod pallet {
 		/// Revenue id was not found
 		RevenueNotFound,
 		/// Transactions revenue array is empty
-		RevenueTransactionsAreEmpty,
-		/// Revenue can not be edited
+		RevenueTransactionsEmpty,
+		/// Revenue can not be edited 
 		CannotEditRevenue,
 		/// Revenue transaction id already exists
 		RevenueTransactionIdAlreadyExists,
@@ -570,7 +595,18 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
-
+		/// Can not upload bank confirming documents if the drawdown is not in Approved status
+		DrawdownNotApproved,
+		/// Drawdown is not in Confirmed status
+		DrawdownNotConfirmed,
+		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
+		DrawdownHasAlreadyBankConfirmingDocuments,
+		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
+		DrawdownHasNoBankConfirmingDocuments,
+		/// Bank confirming documents are required
+		BankConfirmingDocumentsNotProvided,
+		/// Banck confirming documents array is empty
+		BankConfirmingDocumentsAreEmpty,
 	}
 
 	// E X T R I N S I C S
@@ -703,7 +739,6 @@ pub mod pallet {
 		/// - documents: The documents of the user account which is being edited.
 		/// ONLY available for the investor role.
 		///
-		///
 		/// # Considerations:
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		/// - This function can only be called by a registered user account
@@ -807,7 +842,6 @@ pub mod pallet {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
-
 		}
 
 		/// Edits a project.
@@ -1005,39 +1039,43 @@ pub mod pallet {
 		// T R A N S A C T I O N S   &  D R A W D O W N S
 		// --------------------------------------------------------------------------------------------
 
+		/// Submit a drawdown
 		/// This extrinsic is used to create, update or delete transactions.
-		/// Transactions status can be saved as draft or submitted.
+		/// It also allows that an array of transactions to be saved as a draft or as submitted.
 		///
 		/// # Parameters:
 		/// - origin: The user account who is creating the transactions
 		/// - project_id: The selected project id where the transactions will be created
 		/// - drawdown_id: The selected drawdown id where the transactions will be created
-		/// - transactions: The transactions to be created/updated/deleted. This is a vector of tuples
+		/// - transactions: The transactions to be created/updated/deleted. This entry is a vector of tuples
 		/// where each entry is composed by:
 		/// * 0: The expenditure id where the transaction will be created
-		/// * 1: The transaction amount
+		/// * 1: The amount of the transaction
 		/// * 2: Documents associated to the transaction
-		/// * 3: The transaction action to be performed. (Create, Update or Delete)
+		/// * 3: The action to be performed on the transaction. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// - submit: If true, the transactions will be submitted.
-		/// If false, the transactions array will be saved as draft.
+		/// - submit: If true, transactions associated to the selected 
+		/// drawdown will be submitted to the administator.
+		/// If false, the array of transactions will be saved as a draft.
 		///
 		/// # Considerations:
-		/// - This function can only be called by a builder role account
+		/// - This function is only callable by a builder role account
 		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time.
-		/// - The project id and drawdown id are required because are required for the reports.
+		/// - The project id and drawdown id are required for the reports.
 		/// - Transaction parameters are optional because depends on the action to be performed:
-		/// * **Create**: Expenditure id, Amount, Documents & Action are required.
-		/// * **Update**: Except for the transaction id & action, all parameters are optional.
-		/// * **Delete**: Only the transaction id & action is required.
-		/// - Multiple actions can be performed at the same time. For example, you can create a new
+		/// * **Create**: Expenditure id, Amount, Documents & action are required.
+		/// * **Update**: Except for the transaction id & action, all other parameters are optional.
+		/// * **Delete**: Only the transaction id & action are required.
+		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// a different transaction. For example, you can create a new
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
 		/// result in an unexpected behavior.
 		/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not contain
-		/// any transaction, it will be returned an error.
+		/// any transaction, it will return an error.
 		/// - After a drawdown is submitted, it can not be updated or deleted.
-		/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions.
+		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
+		/// transactions associated to a given drawdown.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn submit_drawdown(
@@ -1072,18 +1110,12 @@ pub mod pallet {
 					// Check if there are transactions to execute
 					if let Some(mod_transactions) = transactions {
 						// Do execute transactions
-						//TODO: Review if this len check is needed
 						if mod_transactions.len() > 0 {
 							Self::do_execute_transactions(
 								project_id,
 								drawdown_id,
 								mod_transactions)?;
 						}
-					// 	Self::do_execute_transactions(
-					// 		project_id,
-					// 		drawdown_id,
-					// 		transactions,
-					// 	)?;
 					}
 
 					// Do submit drawdown
@@ -1093,7 +1125,7 @@ pub mod pallet {
 
 		}
 
-		/// Approves a drawdown
+		/// Approve a drawdown
 		///
 		/// # Parameters:
 		/// ### For EB5 drawdowns:
@@ -1114,21 +1146,26 @@ pub mod pallet {
 		/// * 2: Documents associated to the transaction
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		///
-		/// # Considerations:
-		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time
 		/// (only for Construction Loan & Developer Equity drawdowns).
 		/// - Transaction parameters are optional because depends on the action to be performed:
-		/// * **Create**: Expenditure id, Amount, Documents & Action are required.
+		/// * **Create**: Expenditure id, Amount, Documents & action are required.
 		/// * **Update**: Except for the transaction id & action, all parameters are optional.
-		/// * **Delete**: Only the transaction id & action is required.
+		/// * **Delete**: Only the transaction id & action are required.
 		/// - Multiple actions can be performed at the same time. For example, you can create a new
-		/// transaction and update another one at the same time.
+		/// transaction and update another one at the same time (only for Construction Loan & Developer Equity drawdowns).
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
-		/// result in an unexpected behavior.
+		/// result in an unexpected behavior (only for Construction Loan & Developer Equity drawdowns).
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator account
+		/// - All transactions associated to the drawdown will be approved too. It's 
+		/// not possible to approve a drawdown without approving all of its transactions.
 		/// - After a drawdown is approved, it can not be updated or deleted.
 		/// - After a drawdown is approved, the next drawdown will be automatically created.
+		/// - The drawdown status will be updated to "Approved" after the extrinsic is executed.
+		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
+		/// new drawdown version uploaded by the builder.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_drawdown(
@@ -1150,7 +1187,7 @@ pub mod pallet {
 			// is_drawdown_editable & is_transaction_editable should do
 			// a distinction between bulkupload and non-bulkupload drawdowns
 			// review those function in each step of the flow (approve, reject, submit)
-
+			
 			// Match bulkupdate
 			match bulkupload {
 				Some(approval) => {
@@ -1170,13 +1207,14 @@ pub mod pallet {
 						},
 						true  => {
 							// 1.Execute transactions if provided
-							if let Some(transactions) = transactions {
+							if let Some(mod_transactions) = transactions {
 								// Do execute transactions
-								Self::do_execute_transactions(
-									project_id,
-									drawdown_id,
-									transactions,
-								)?;
+								if mod_transactions.len() > 0 {
+									Self::do_execute_transactions(
+										project_id,
+										drawdown_id,
+										mod_transactions)?;
+								}
 
 								// 2. Submit drawdown
 								Self::do_submit_drawdown(project_id, drawdown_id)?;
@@ -1196,7 +1234,7 @@ pub mod pallet {
 
 		}
 
-		/// Rejects a drawdown
+		/// Reject a drawdown
 		///
 		/// # Parameters:
 		/// - origin: The administator account who is rejecting the drawdown
@@ -1205,8 +1243,8 @@ pub mod pallet {
 		///
 		/// Then the next two feedback parameters are optional because depends on the drawdown type:
 		/// #### EB5 drawdowns:
-		/// - transactions_feedback: Administrator will provide feedback for each transaction
-		/// that is wrong. This is a vector of tuples where each entry is composed by:
+		/// - transactions_feedback: Administrator will provide feedback for each rejected
+		/// transacion. This is a vector of tuples where each entry is composed by:
 		/// * 0: The transaction id
 		/// * 1: The transaction feedback
 		///
@@ -1215,10 +1253,11 @@ pub mod pallet {
 		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
-		/// - This extrinsic allows multiple transactions to be rejected at the same time
+		/// - All transactions associated to the drawdown will be rejected too. It's
+		/// not possible to reject a drawdown without rejecting all of its transactions.
 		/// (only for EB5 drawdowns).
-		/// - For EB5 drawdowns, the administrator can provide feedback for each transaction
-		/// that is wrong.
+		/// - For EB5 drawdowns, the administrator needs to provide feedback for
+		/// each rejected transaction.
 		/// - For Construction Loan & Developer Equity drawdowns, the administrator can provide
 		/// feedback for the WHOLE drawdown.
 		/// - After a builder re-submits a drawdown, the administrator will have to review
@@ -1310,7 +1349,43 @@ pub mod pallet {
 
 		// R E V E N U E S
 		// --------------------------------------------------------------------------------------------
-		//TODO: Add documentation
+
+		/// This extrinsic is used to create, update or delete revenue transactions.
+		/// It also allows that an array of revenue transactions 
+		/// to be saved as a draft or as submitted.
+		///
+		/// # Parameters:
+		/// */ - origin: The user account who is creating the revenue transactions
+		/// - project_id: The selected project id where the revenue transactions will be created
+		/// - revenue_id: The selected revenue id where the revenue transactions will be created
+		/// - revenue_transactions: The revenue transactions to be created/updated/deleted. 
+		/// This entry is a vector of tuples where each entry is composed by:
+		/// * 0: The job eligible id where the revenue transaction will be created
+		/// * 1: The amount of the revenue transaction
+		/// * 2: Documents associated to the revenue transaction
+		/// * 3: The action to be performed on the revenue transaction (Create, Update or Delete)
+		/// * 4: The revenue transaction id. This is required only if the action is being updated or deleted.
+		/// - submit: If true, the array of revenue transactions will be submitted to the administrator. 
+		/// If false, the array of revenue transactions will be saved as a draft.
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by a builder role account
+		/// - This extrinsic allows multiple revenue transactions to be created/updated/deleted at the same time.
+		/// - The project id and revenue id are required for the reports.
+		/// - revenue_transactions parameters are optional because depends on the action to be performed:
+		/// * **Create**: Job eligible id, Amount, Documents & action are required.
+		/// * **Update**: Except for the revenue transaction id & action, all other parameters are optional.
+		/// * **Delete**: Only the revenue transaction id & action are required.
+		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// a different transaction. For example, you can create a new
+		/// transaction and update another one at the same time.
+		/// - Do not perform multiple actions over the same transaction in the same call, it could
+		/// result in an unexpected behavior.
+		/// - If a revenue is submitted, all transactions must be submitted too. If the revenue do not contain
+		/// any transaction, it will return an error.
+		/// - After a revenue is submitted, it can not be updated or deleted.
+		/// - After a revenue is rejected, builders will use again this extrinsic to update the
+		/// transactions associated to a given revenue.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn submit_revenue(
@@ -1328,26 +1403,25 @@ pub mod pallet {
 		) -> DispatchResult {
 			//TODO: Remove underscore when permissions are updated
 			let _who = ensure_signed(origin)?;
-
+			
 			//TODO: Ensure builder permissions
 			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
 
-			match submit {
+			match submit { 
 				// Save revenue transactions as draft
 				false => {
-					// Do execute transactions
+					// Do execute transactions 
 					Self::do_execute_revenue_transactions(
 						project_id,
 						revenue_id,
-						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsAreEmpty)?,
+						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsEmpty)?,
 					)
 				},
 				// Submit revenue transactions
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
-						// Do execute transactions
-						//TODO: Review if this len check is needed
+						// Do execute transactions 
 						if mod_revenue_transactions.len() > 0 {
 							Self::do_execute_revenue_transactions(
 								project_id,
@@ -1360,10 +1434,25 @@ pub mod pallet {
 					Self::do_submit_revenue(project_id, revenue_id)
 				},
 			}
-
+			
 		}
 
-		//TODO: Add documentation
+		/// Approve a revenue
+		/// 
+		/// # Parameters:
+		/// - origin: The administator account who is approving the revenue
+		/// - project_id: The selected project id where the revenue will be approved
+		/// - revenue_id: The selected revenue id to be approved
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - All transactions associated to the revenue will be approved too. It's 
+		/// not possible to approve a revenue without approving all of its transactions.
+		/// - After a revenue is approved, it can not be updated or deleted.
+		/// - After a revenue is approved, the next revenue will be created automatically.
+		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
+		/// new revenue version uploaded by the builder.
+		/// - The revenue status will be updated to Approved.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_revenue(
@@ -1376,7 +1465,25 @@ pub mod pallet {
 			Self::do_approve_revenue(who, project_id, revenue_id)
 		}
 
-		//TODO: Add documentation
+		/// Reject a revenue
+		/// 
+		/// # Parameters:
+		/// - origin: The administator account who is rejecting the revenue
+		/// - project_id: The selected project id where the revenue will be rejected
+		/// - revenue_id: The selected revenue id to be rejected
+		/// - revenue_transactions_feedback: Administrator will provide feedback for each rejected
+		/// transacion. This is a vector of tuples where each entry is composed by:
+		/// * 0: The revenue transaction id
+		/// * 1: The revenue transaction feedback
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - All transactions associated to the revenue will be rejected too. It's
+		/// not possible to reject a revenue without rejecting all of its transactions.
+		/// - Administrator needs to provide a feedback for each rejected transaction.
+		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
+		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
+		/// There is no way to reject a single revenue transaction.
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reject_revenue(
@@ -1393,26 +1500,43 @@ pub mod pallet {
 			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
 		}
 
+		/// The following extrinsic is used to upload the bank confirming documents
+		/// for a given drawdown.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account who is uploading the confirming documents
+		/// - project_id: The selected project id where the drawdown exists
+		/// - drawdown_id: The selected drawdown id where the confirming documents will be uploaded
+		/// - confirming_documents: The confirming documents to be uploaded. This field is optional
+		/// because are required only when the action is Create or Update.
+		/// - action: The action to be performed. It can be Create, Update or Delete
+		/// 	* Create: project_id, drawdown_id and confirming_documents are required
+		/// 	* Update: project_id, drawdown_id and confirming_documents are required
+		/// 	* Delete: project_id and drawdown_id are required
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The confirming documents are required only when the action is Create or Update.
+		/// - The confirming documents are optional when the action is Delete.
+		/// - After the confirming documents are uploaded, the drawdown status will be updated to
+		/// "Confirmed". It will also update the status of all of its transactions to "Confirmed".
+		/// - Update action will replace the existing confirming documents with the new ones.
+		/// - Delete action will remove the existing confirming documents. It will also update the
+		/// drawdown status to "Approved" and the status of all of its transactions to "Approved".
+		/// It does a rollback of the drawdown. 
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn bank_confirming_documents(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			confirming_documents: Option<Documents<T>>,
+			action: CUDAction,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
-
-		// #[transactional]
-		// #[pallet::weight(10_000 + T::a new extrinsic to handle the revenue approvalDbWeight::get().writes(1))]
-		// pub fn job_eligibles(
-		// 	origin: OriginFor<T>,
-		// 	project_id: ProjectId,
-		// 	job_eligibles: BoundedVec<(
-		// 		Option<FieldName>, // name
-		// 		Option<JobEligibleAmount>, // amount
-		// 		Option<FieldDescription>, // naics code
-		// 		Option<JobsMultiplier>, // jobs multiplier
-		// 		CUDAction, // action
-		// 		Option<JobEligibleId>, // job_eligible_id
-		// 	), T::MaxRegistrationsAtTime>,
-		// ) -> DispatchResult {
-		// 	let who = ensure_signed(origin)?; // origin need to be an admin
-
-		// 	Self::do_execute_job_eligibles(who, project_id, job_eligibles)
-		// }
+			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
+		}
 
 		/// Kill all the stored data.
 		///
@@ -1445,7 +1569,7 @@ pub mod pallet {
 			let _ = <JobEligiblesByProject<T>>::clear(1000, None);
 			let _ = <RevenuesInfo<T>>::clear(1000, None);
 			let _ = <RevenuesByProject<T>>::clear(1000, None);
-		    let _ = <RevenueTransactionsInfo<T>>::clear(1000, None);
+			let _ = <RevenueTransactionsInfo<T>>::clear(1000, None);
 			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
