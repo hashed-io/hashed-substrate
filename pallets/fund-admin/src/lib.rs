@@ -351,7 +351,7 @@ pub mod pallet {
 		DrawdownRejected(ProjectId, DrawdownId),
 		/// Bulkupload drawdown was submitted successfully
 		BulkUploadSubmitted(ProjectId, DrawdownId),
-		/// Inflation rate extrinsic was executed successfully
+		/// An array of adjustments was executed depending on the CUDAction
 		InflationRateAdjusted(T::AccountId),
 		/// An array of job eligibles was executed depending on the CUDAction
 		JobEligiblesExecuted(T::AccountId, ProjectId),
@@ -521,6 +521,10 @@ pub mod pallet {
 		InflationRateMissingProjectIds,
 		/// Inflation rate was not provided
 		InflationRateRequired,
+		/// Inflation rate has been already set for the selected project
+		InflationRateAlreadySet,
+		/// Inflation rate was not set for the selected project
+		InflationRateNotSet,
 		/// Bulkupload drawdowns are only allowed for Construction Loan & Developer Equity
 		DrawdownTypeNotSupportedForBulkUpload,
 		/// Cannot edit user role if the user is assigned to a project
