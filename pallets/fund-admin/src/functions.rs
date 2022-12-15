@@ -1588,9 +1588,9 @@ impl<T: Config> Pallet<T> {
         documents: Option<Documents<T>>,
         revenue_transaction_id: RevenueTransactionId,
     ) -> DispatchResult {
-        // Ensure revenue transaction exists
-        ensure!(RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionNotFound);
-
+        // Get revenue transaction data & ensure revenue transaction exists
+        let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+        
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -1618,7 +1618,7 @@ impl<T: Config> Pallet<T> {
         })?;
 
         // Event
-        Self::deposit_event(Event::RevenueTransactionUpdated(project_id, revenue_id, revenue_transaction_id));
+        Self::deposit_event(Event::RevenueTransactionUpdated(revenue_transaction_data.project_id, revenue_transaction_data.revenue_id, revenue_transaction_id));
         Ok(())
     }
 
@@ -1935,7 +1935,7 @@ impl<T: Config> Pallet<T> {
                     }
                     Ok(())
                 })?;
-     remove_project_role       },
+            },
             ProxyRole::RegionalCenter => {
                 //Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
