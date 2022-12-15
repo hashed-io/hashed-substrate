@@ -393,6 +393,8 @@
 <span id="393">393</span>
 <span id="394">394</span>
 <span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -425,7 +427,7 @@
 
 <span class="comment">// Budget expenditures
 </span><span class="kw">pub type </span>ExpenditureId = [u8; <span class="number">32</span>];
-<span class="kw">pub type </span>ExpenditureAmount = u64;
+<span class="kw">pub type </span>ExpenditureAmount = Amount;
 <span class="kw">pub type </span>NAICSCode = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>JobsMultiplier = u32;
 <span class="kw">pub type </span>InflationRate = u32;
@@ -433,12 +435,12 @@
 <span class="comment">// Miscellaneous
 </span><span class="kw">pub type </span>CreatedDate = u64;
 <span class="kw">pub type </span>CloseDate = u64;
-<span class="kw">pub type </span>TotalAmount = u64;
+<span class="kw">pub type </span>TotalAmount = Amount;
 
 <span class="comment">// Revenues
-</span><span class="kw">pub type </span>RevenueAmount = u128;
+</span><span class="kw">pub type </span>RevenueAmount = Amount;
 <span class="kw">pub type </span>JobEligibleId = [u8; <span class="number">32</span>];
-<span class="kw">pub type </span>JobEligibleAmount = u128;
+<span class="kw">pub type </span>JobEligibleAmount = Amount;
 <span class="kw">pub type </span>RevenueId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueNumber = u32;
 <span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
@@ -466,7 +468,6 @@
 	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
     <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
-
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -536,7 +537,8 @@
     <span class="kw">pub </span>drawdown_type: DrawdownType,
     <span class="kw">pub </span>total_amount: TotalAmount,
     <span class="kw">pub </span>status: DrawdownStatus,
-    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+    <span class="kw">pub </span>bulkupload_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+    <span class="kw">pub </span>bank_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
     <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     <span class="kw">pub </span>created_date: CreatedDate,
@@ -562,6 +564,7 @@
     Submitted,
     Approved,
     Rejected,
+    Confirmed,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>DrawdownStatus {
@@ -592,6 +595,7 @@
     Submitted,
     Approved,
     Rejected,
+    Confirmed
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>TransactionStatus {

@@ -1600,7 +1600,7 @@
                 buy_offer_ids.try_push(offer_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::LimitExceeded)<span class="question-mark">?</span>;
             }
         }
-        <span class="comment">//ensure we already took the entry from the storage map, so we can insert it again.
+        <span class="comment">//ensure we already took the entry from the storagemap, so we can insert it again.
         </span><span class="macro">ensure!</span>(!&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id), Error::&lt;T&gt;::OfferNotFound);
         &lt;OffersByItem&lt;T&gt;&gt;::insert(collection_id, item_id, buy_offer_ids);
 

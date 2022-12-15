@@ -1454,6 +1454,130 @@
 <span id="1454">1454</span>
 <span id="1455">1455</span>
 <span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1565,7 +1689,6 @@
 
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxTransactionsPerRevenue: Get&lt;u32&gt;;
-
 
 	}
 
@@ -1754,52 +1877,64 @@
 	</span><span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+		<span class="doccomment">/// Proxy initial setup completed using the sudo pallet
+		</span>ProxySetupCompleted,
 		<span class="doccomment">/// Project was created successfully
 		</span>ProjectCreated(T::AccountId, ProjectId),
-		<span class="doccomment">/// Proxy initial setup completed
-		</span>ProxySetupCompleted,
-		<span class="doccomment">/// User registered successfully
-		</span>UserAdded(T::AccountId),
-		<span class="doccomment">/// Project was edited
-		</span>ProjectEdited(ProjectId),
-		<span class="doccomment">/// Project was deleted
-		</span>ProjectDeleted(ProjectId),
-		<span class="doccomment">/// Administrator added
+		<span class="doccomment">/// The selected roject was edited successfully
+		</span>ProjectEdited(T::AccountId, ProjectId),
+		<span class="doccomment">/// The selected project was deleted successfully
+		</span>ProjectDeleted(T::AccountId, ProjectId),
+		<span class="doccomment">/// Administrator was registered successfully using the sudo pallet
 		</span>AdministratorAssigned(T::AccountId),
-		<span class="doccomment">/// Administrator removed
+		<span class="doccomment">/// Administrator was removed successfully using the sudo pallet
 		</span>AdministratorRemoved(T::AccountId),
-		<span class="doccomment">/// Users has been assigned from the selected project
-		</span>UsersAssignationCompleted([u8;<span class="number">32</span>]),
-		<span class="doccomment">/// Users has been removed from the selected project
-		</span>UsersUnassignationCompleted([u8;<span class="number">32</span>]),
-		<span class="doccomment">/// User info updated
+		<span class="doccomment">/// The user was assigned to the selected project
+		</span>UserAssignmentCompleted(T::AccountId, ProjectId),
+		<span class="doccomment">/// The user was unassigned to the selected project
+		</span>UserUnassignmentCompleted(T::AccountId, ProjectId),
+		<span class="doccomment">/// Users extrinsic was executed, individual CUDActions were applied
+		</span>UsersExecuted(T::AccountId),
+		<span class="doccomment">/// A new user account was created successfully
+		</span>UserCreated(T::AccountId),
+		<span class="doccomment">/// The selected user was edited successfully
 		</span>UserUpdated(T::AccountId),
-		<span class="doccomment">/// User removed
+		<span class="doccomment">/// The selected user was deleted successfully
 		</span>UserDeleted(T::AccountId),
+		<span class="doccomment">/// An array of expenditures was executed depending on the CUDAction
+		</span>ExpendituresExecuted(T::AccountId, ProjectId),
 		<span class="doccomment">/// Expenditure was created successfully
-		</span>ExpenditureCreated,
-		<span class="doccomment">/// Expenditure was edited successfully
-		</span>ExpenditureUpdated(ExpenditureId),
+		</span>ExpenditureCreated(ProjectId, ExpenditureId),
+		<span class="doccomment">/// Expenditure was updated successfully
+		</span>ExpenditureUpdated(ProjectId, ExpenditureId),
 		<span class="doccomment">/// Expenditure was deleted successfully
-		</span>ExpenditureDeleted(ExpenditureId),
-		<span class="doccomment">/// Trasactions was completed successfully
-		</span>TransactionsCompleted,
+		</span>ExpenditureDeleted(ProjectId, ExpenditureId),
+		<span class="doccomment">/// An array of transactions was executed depending on the CUDAction
+		</span>TransactionsExecuted(ProjectId, DrawdownId),
 		<span class="doccomment">/// Transaction was created successfully
-		</span>TransactionCreated(TransactionId),
+		</span>TransactionCreated(ProjectId, DrawdownId, TransactionId),
 		<span class="doccomment">/// Transaction was edited successfully
-		</span>TransactionEdited(TransactionId),
+		</span>TransactionEdited(ProjectId, DrawdownId, TransactionId),
 		<span class="doccomment">/// Transaction was deleted successfully
-		</span>TransactionDeleted(TransactionId),
-		<span class="doccomment">/// Users extrinsic was completed successfully
-		</span>UsersExecuted,
+		</span>TransactionDeleted(ProjectId, DrawdownId, TransactionId),
 		<span class="doccomment">/// Assign users extrinsic was completed successfully
-		</span>UsersAssignationExecuted([u8;<span class="number">32</span>]),
+		</span>UsersAssignationExecuted(T::AccountId, ProjectId),
+		<span class="doccomment">/// Drawdowns were initialized successfully at the beginning of the project
+		</span>DrawdownsInitialized(T::AccountId, ProjectId),
+		<span class="doccomment">/// Drawdown was created successfully
+		</span>DrawdownCreated(ProjectId, DrawdownId),
 		<span class="doccomment">/// Drawdown was submitted successfully
-		</span>DrawdownSubmitted([u8;<span class="number">32</span>]),
+		</span>DrawdownSubmitted(ProjectId, DrawdownId),
 		<span class="doccomment">/// Drawdown was approved successfully
-		</span>DrawdownApproved([u8;<span class="number">32</span>]),
+		</span>DrawdownApproved(ProjectId, DrawdownId),
 		<span class="doccomment">/// Drawdown was rejected successfully
-		</span>DrawdownRejected([u8;<span class="number">32</span>]),
+		</span>DrawdownRejected(ProjectId, DrawdownId),
+		<span class="doccomment">/// Bulkupload drawdown was submitted successfully
+		</span>BulkUploadSubmitted(ProjectId, DrawdownId),
+		<span class="doccomment">/// Inflation rate extrinsic was executed successfully
+		</span>InflationRateAdjusted(T::AccountId),
+		<span class="doccomment">/// An array of job eligibles was executed depending on the CUDAction
+		</span>JobEligiblesExecuted(T::AccountId, ProjectId),
 		<span class="doccomment">/// Job eligible was created successfully
 		</span>JobEligibleCreated(ProjectId, JobEligibleId),
 		<span class="doccomment">/// Job eligible was updated successfully
@@ -1807,21 +1942,27 @@
 		<span class="doccomment">/// Job eligible was deleted successfully
 		</span>JobEligibleDeleted(ProjectId, JobEligibleId),
 		<span class="doccomment">/// Revenue transaction was created successfully
-		</span>RevenueTransactionCreated(RevenueTransactionId),
+		</span>RevenueTransactionCreated(ProjectId, RevenueId, RevenueTransactionId),
 		<span class="doccomment">/// Revenue transaction was updated successfully
-		</span>RevenueTransactionUpdated(RevenueTransactionId),
+		</span>RevenueTransactionUpdated(ProjectId, RevenueId, RevenueTransactionId),
 		<span class="doccomment">/// Revenue transaction was deleted successfully
-		</span>RevenueTransactionDeleted(RevenueTransactionId),
-		<span class="doccomment">/// Revenue transactions were executed successfully
+		</span>RevenueTransactionDeleted(ProjectId, RevenueId, RevenueTransactionId),
+		<span class="doccomment">/// An array of revenue transactions was executed depending on the CUDAction
 		</span>RevenueTransactionsExecuted(ProjectId, RevenueId),
 		<span class="doccomment">/// Revenue was created successfully
-		</span>RevenueCreated(RevenueId),
+		</span>RevenueCreated(ProjectId, RevenueId),
 		<span class="doccomment">/// Revenue was submitted successfully
-		</span>RevenueSubmitted(RevenueId),
+		</span>RevenueSubmitted(ProjectId, RevenueId),
 		<span class="doccomment">/// Revenue was approved successfully
-		</span>RevenueApproved(RevenueId),
+		</span>RevenueApproved(ProjectId, RevenueId),
 		<span class="doccomment">/// Revenue was rejected successfully
-		</span>RevenueRejected(RevenueId),
+		</span>RevenueRejected(ProjectId, RevenueId),
+		<span class="doccomment">/// Bank&#39;s confirming documents were uploaded successfully
+		</span>BankDocumentsUploaded(ProjectId, DrawdownId),
+		<span class="doccomment">/// Bank&#39;s confirming documents were updated successfully
+		</span>BankDocumentsUpdated(ProjectId, DrawdownId),
+		<span class="doccomment">/// Bank&#39;s confirming documents were deleted successfully
+		</span>BankDocumentsDeleted(ProjectId, DrawdownId),
 	}
 
 	<span class="comment">// E R R O R S
@@ -1902,10 +2043,14 @@
 		</span>CannotPerformActionOnSubmittedTransaction,
 		<span class="doccomment">/// Can not perform any action on a approved transaction
 		</span>CannotPerformActionOnApprovedTransaction,
+		<span class="doccomment">/// Can not perform any action on a confirmed transaction
+		</span>CannotPerformActionOnConfirmedTransaction,
 		<span class="doccomment">/// Can not perform any action on a submitted drawdown
 		</span>CannotPerformActionOnSubmittedDrawdown,
 		<span class="doccomment">/// Can not perform any action on a approved drawdown
 		</span>CannotPerformActionOnApprovedDrawdown,
+		<span class="doccomment">/// Can not perform any action on a confirmed drawdown
+		</span>CannotPerformActionOnConfirmedDrawdown,
 		<span class="doccomment">/// Transaction is already completed
 		</span>TransactionIsAlreadyCompleted,
 		<span class="doccomment">/// User does not have the specified role
@@ -1944,6 +2089,8 @@
 		</span>NoTransactionsToSubmit,
 		<span class="doccomment">/// Bulk upload description is required
 		</span>BulkUploadDescriptionRequired,
+		<span class="doccomment">/// Bulk upload documents are required
+		</span>BulkUploadDocumentsRequired,
 		<span class="doccomment">/// Administrator can not delete themselves
 		</span>AdministratorsCannotDeleteThemselves,
 		<span class="doccomment">/// No feedback was provided for bulk upload
@@ -1962,6 +2109,8 @@
 		</span>UserHasAssignedProjectsCannotDelete,
 		<span class="doccomment">/// Cannot send a bulkupload drawdown if the drawdown status isn&#39;t in draft or rejected
 		</span>DrawdownStatusNotSupportedForBulkUpload,
+		<span class="doccomment">/// Cannot submit a drawdown if the drawdown status isn&#39;t in draft or rejected
+		</span>DrawdownIsNotInDraftOrRejectedStatus,
 		<span class="doccomment">/// Only investors can update/edit their documents
 		</span>UserIsNotAnInvestor,
 		<span class="doccomment">/// Max number of projects per builder has been reached
@@ -1993,8 +2142,8 @@
 		<span class="doccomment">/// Revenue id was not found
 		</span>RevenueNotFound,
 		<span class="doccomment">/// Transactions revenue array is empty
-		</span>RevenueTransactionsAreEmpty,
-		<span class="doccomment">/// Revenue can not be edited
+		</span>RevenueTransactionsEmpty,
+		<span class="doccomment">/// Revenue can not be edited 
 		</span>CannotEditRevenue,
 		<span class="doccomment">/// Revenue transaction id already exists
 		</span>RevenueTransactionIdAlreadyExists,
@@ -2026,7 +2175,18 @@
 		</span>RevenueIsNotInSubmittedStatus,
 		<span class="doccomment">/// Revenue transaction is not in submitted status
 		</span>RevenueTransactionIsNotInSubmittedStatus,
-
+		<span class="doccomment">/// Can not upload bank confirming documents if the drawdown is not in Approved status
+		</span>DrawdownNotApproved,
+		<span class="doccomment">/// Drawdown is not in Confirmed status
+		</span>DrawdownNotConfirmed,
+		<span class="doccomment">/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
+		</span>DrawdownHasAlreadyBankConfirmingDocuments,
+		<span class="doccomment">/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
+		</span>DrawdownHasNoBankConfirmingDocuments,
+		<span class="doccomment">/// Bank confirming documents are required
+		</span>BankConfirmingDocumentsNotProvided,
+		<span class="doccomment">/// Banck confirming documents array is empty
+		</span>BankConfirmingDocumentsAreEmpty,
 	}
 
 	<span class="comment">// E X T R I N S I C S
@@ -2159,7 +2319,6 @@
 		/// - documents: The documents of the user account which is being edited.
 		/// ONLY available for the investor role.
 		///
-		///
 		/// # Considerations:
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		/// - This function can only be called by a registered user account
@@ -2263,7 +2422,6 @@
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
 			</span><span class="self">Self</span>::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
-
 		}
 
 		<span class="doccomment">/// Edits a project.
@@ -2461,39 +2619,43 @@
 		<span class="comment">// T R A N S A C T I O N S   &amp;  D R A W D O W N S
 		// --------------------------------------------------------------------------------------------
 
-		</span><span class="doccomment">/// This extrinsic is used to create, update or delete transactions.
-		/// Transactions status can be saved as draft or submitted.
+		</span><span class="doccomment">/// Submit a drawdown
+		/// This extrinsic is used to create, update or delete transactions.
+		/// It also allows that an array of transactions to be saved as a draft or as submitted.
 		///
 		/// # Parameters:
 		/// - origin: The user account who is creating the transactions
 		/// - project_id: The selected project id where the transactions will be created
 		/// - drawdown_id: The selected drawdown id where the transactions will be created
-		/// - transactions: The transactions to be created/updated/deleted. This is a vector of tuples
+		/// - transactions: The transactions to be created/updated/deleted. This entry is a vector of tuples
 		/// where each entry is composed by:
 		/// * 0: The expenditure id where the transaction will be created
-		/// * 1: The transaction amount
+		/// * 1: The amount of the transaction
 		/// * 2: Documents associated to the transaction
-		/// * 3: The transaction action to be performed. (Create, Update or Delete)
+		/// * 3: The action to be performed on the transaction. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// - submit: If true, the transactions will be submitted.
-		/// If false, the transactions array will be saved as draft.
+		/// - submit: If true, transactions associated to the selected 
+		/// drawdown will be submitted to the administator.
+		/// If false, the array of transactions will be saved as a draft.
 		///
 		/// # Considerations:
-		/// - This function can only be called by a builder role account
+		/// - This function is only callable by a builder role account
 		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time.
-		/// - The project id and drawdown id are required because are required for the reports.
+		/// - The project id and drawdown id are required for the reports.
 		/// - Transaction parameters are optional because depends on the action to be performed:
-		/// * **Create**: Expenditure id, Amount, Documents &amp; Action are required.
-		/// * **Update**: Except for the transaction id &amp; action, all parameters are optional.
-		/// * **Delete**: Only the transaction id &amp; action is required.
-		/// - Multiple actions can be performed at the same time. For example, you can create a new
+		/// * **Create**: Expenditure id, Amount, Documents &amp; action are required.
+		/// * **Update**: Except for the transaction id &amp; action, all other parameters are optional.
+		/// * **Delete**: Only the transaction id &amp; action are required.
+		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// a different transaction. For example, you can create a new
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
 		/// result in an unexpected behavior.
 		/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not contain
-		/// any transaction, it will be returned an error.
+		/// any transaction, it will return an error.
 		/// - After a drawdown is submitted, it can not be updated or deleted.
-		/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions.
+		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
+		/// transactions associated to a given drawdown.
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>submit_drawdown(
@@ -2528,19 +2690,13 @@
 					<span class="comment">// Check if there are transactions to execute
 					</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_transactions) = transactions {
 						<span class="comment">// Do execute transactions
-						//TODO: Review if this len check is needed
 						</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
 							<span class="self">Self</span>::do_execute_transactions(
 								project_id,
 								drawdown_id,
 								mod_transactions)<span class="question-mark">?</span>;
 						}
-					<span class="comment">// 	Self::do_execute_transactions(
-					// 		project_id,
-					// 		drawdown_id,
-					// 		transactions,
-					// 	)?;
-					</span>}
+					}
 
 					<span class="comment">// Do submit drawdown
 					</span><span class="self">Self</span>::do_submit_drawdown(project_id, drawdown_id)
@@ -2549,7 +2705,7 @@
 
 		}
 
-		<span class="doccomment">/// Approves a drawdown
+		<span class="doccomment">/// Approve a drawdown
 		///
 		/// # Parameters:
 		/// ### For EB5 drawdowns:
@@ -2570,21 +2726,26 @@
 		/// * 2: Documents associated to the transaction
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		///
-		/// # Considerations:
-		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time
 		/// (only for Construction Loan &amp; Developer Equity drawdowns).
 		/// - Transaction parameters are optional because depends on the action to be performed:
-		/// * **Create**: Expenditure id, Amount, Documents &amp; Action are required.
+		/// * **Create**: Expenditure id, Amount, Documents &amp; action are required.
 		/// * **Update**: Except for the transaction id &amp; action, all parameters are optional.
-		/// * **Delete**: Only the transaction id &amp; action is required.
+		/// * **Delete**: Only the transaction id &amp; action are required.
 		/// - Multiple actions can be performed at the same time. For example, you can create a new
-		/// transaction and update another one at the same time.
+		/// transaction and update another one at the same time (only for Construction Loan &amp; Developer Equity drawdowns).
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
-		/// result in an unexpected behavior.
+		/// result in an unexpected behavior (only for Construction Loan &amp; Developer Equity drawdowns).
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator account
+		/// - All transactions associated to the drawdown will be approved too. It&#39;s 
+		/// not possible to approve a drawdown without approving all of its transactions.
 		/// - After a drawdown is approved, it can not be updated or deleted.
 		/// - After a drawdown is approved, the next drawdown will be automatically created.
+		/// - The drawdown status will be updated to &quot;Approved&quot; after the extrinsic is executed.
+		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
+		/// new drawdown version uploaded by the builder.
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>approve_drawdown(
@@ -2606,7 +2767,7 @@
 			// is_drawdown_editable &amp; is_transaction_editable should do
 			// a distinction between bulkupload and non-bulkupload drawdowns
 			// review those function in each step of the flow (approve, reject, submit)
-
+			
 			// Match bulkupdate
 			</span><span class="kw">match </span>bulkupload {
 				<span class="prelude-val">Some</span>(approval) =&gt; {
@@ -2626,13 +2787,14 @@
 						},
 						<span class="bool-val">true  </span>=&gt; {
 							<span class="comment">// 1.Execute transactions if provided
-							</span><span class="kw">if let </span><span class="prelude-val">Some</span>(transactions) = transactions {
+							</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_transactions) = transactions {
 								<span class="comment">// Do execute transactions
-								</span><span class="self">Self</span>::do_execute_transactions(
-									project_id,
-									drawdown_id,
-									transactions,
-								)<span class="question-mark">?</span>;
+								</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
+									<span class="self">Self</span>::do_execute_transactions(
+										project_id,
+										drawdown_id,
+										mod_transactions)<span class="question-mark">?</span>;
+								}
 
 								<span class="comment">// 2. Submit drawdown
 								</span><span class="self">Self</span>::do_submit_drawdown(project_id, drawdown_id)<span class="question-mark">?</span>;
@@ -2652,7 +2814,7 @@
 
 		}
 
-		<span class="doccomment">/// Rejects a drawdown
+		<span class="doccomment">/// Reject a drawdown
 		///
 		/// # Parameters:
 		/// - origin: The administator account who is rejecting the drawdown
@@ -2661,8 +2823,8 @@
 		///
 		/// Then the next two feedback parameters are optional because depends on the drawdown type:
 		/// #### EB5 drawdowns:
-		/// - transactions_feedback: Administrator will provide feedback for each transaction
-		/// that is wrong. This is a vector of tuples where each entry is composed by:
+		/// - transactions_feedback: Administrator will provide feedback for each rejected
+		/// transacion. This is a vector of tuples where each entry is composed by:
 		/// * 0: The transaction id
 		/// * 1: The transaction feedback
 		///
@@ -2671,10 +2833,11 @@
 		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
-		/// - This extrinsic allows multiple transactions to be rejected at the same time
+		/// - All transactions associated to the drawdown will be rejected too. It&#39;s
+		/// not possible to reject a drawdown without rejecting all of its transactions.
 		/// (only for EB5 drawdowns).
-		/// - For EB5 drawdowns, the administrator can provide feedback for each transaction
-		/// that is wrong.
+		/// - For EB5 drawdowns, the administrator needs to provide feedback for
+		/// each rejected transaction.
 		/// - For Construction Loan &amp; Developer Equity drawdowns, the administrator can provide
 		/// feedback for the WHOLE drawdown.
 		/// - After a builder re-submits a drawdown, the administrator will have to review
@@ -2766,7 +2929,43 @@
 
 		<span class="comment">// R E V E N U E S
 		// --------------------------------------------------------------------------------------------
-		//TODO: Add documentation
+
+		</span><span class="doccomment">/// This extrinsic is used to create, update or delete revenue transactions.
+		/// It also allows that an array of revenue transactions 
+		/// to be saved as a draft or as submitted.
+		///
+		/// # Parameters:
+		/// */ - origin: The user account who is creating the revenue transactions
+		/// - project_id: The selected project id where the revenue transactions will be created
+		/// - revenue_id: The selected revenue id where the revenue transactions will be created
+		/// - revenue_transactions: The revenue transactions to be created/updated/deleted. 
+		/// This entry is a vector of tuples where each entry is composed by:
+		/// * 0: The job eligible id where the revenue transaction will be created
+		/// * 1: The amount of the revenue transaction
+		/// * 2: Documents associated to the revenue transaction
+		/// * 3: The action to be performed on the revenue transaction (Create, Update or Delete)
+		/// * 4: The revenue transaction id. This is required only if the action is being updated or deleted.
+		/// - submit: If true, the array of revenue transactions will be submitted to the administrator. 
+		/// If false, the array of revenue transactions will be saved as a draft.
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by a builder role account
+		/// - This extrinsic allows multiple revenue transactions to be created/updated/deleted at the same time.
+		/// - The project id and revenue id are required for the reports.
+		/// - revenue_transactions parameters are optional because depends on the action to be performed:
+		/// * **Create**: Job eligible id, Amount, Documents &amp; action are required.
+		/// * **Update**: Except for the revenue transaction id &amp; action, all other parameters are optional.
+		/// * **Delete**: Only the revenue transaction id &amp; action are required.
+		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// a different transaction. For example, you can create a new
+		/// transaction and update another one at the same time.
+		/// - Do not perform multiple actions over the same transaction in the same call, it could
+		/// result in an unexpected behavior.
+		/// - If a revenue is submitted, all transactions must be submitted too. If the revenue do not contain
+		/// any transaction, it will return an error.
+		/// - After a revenue is submitted, it can not be updated or deleted.
+		/// - After a revenue is rejected, builders will use again this extrinsic to update the
+		/// transactions associated to a given revenue.
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>submit_revenue(
@@ -2784,26 +2983,25 @@
 		) -&gt; DispatchResult {
 			<span class="comment">//TODO: Remove underscore when permissions are updated
 			</span><span class="kw">let </span>_who = ensure_signed(origin)<span class="question-mark">?</span>;
-
+			
 			<span class="comment">//TODO: Ensure builder permissions
 			//Self::is_authorized(who, &amp;project_id, ProxyPermission::SubmitRevenue)?;
 
-			</span><span class="kw">match </span>submit {
+			</span><span class="kw">match </span>submit { 
 				<span class="comment">// Save revenue transactions as draft
 				</span><span class="bool-val">false </span>=&gt; {
-					<span class="comment">// Do execute transactions
+					<span class="comment">// Do execute transactions 
 					</span><span class="self">Self</span>::do_execute_revenue_transactions(
 						project_id,
 						revenue_id,
-						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsAreEmpty)<span class="question-mark">?</span>,
+						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsEmpty)<span class="question-mark">?</span>,
 					)
 				},
 				<span class="comment">// Submit revenue transactions
 				</span><span class="bool-val">true </span>=&gt; {
 					<span class="comment">// Check if there are transactions to execute
 					</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_revenue_transactions) = revenue_transactions {
-						<span class="comment">// Do execute transactions
-						//TODO: Review if this len check is needed
+						<span class="comment">// Do execute transactions 
 						</span><span class="kw">if </span>mod_revenue_transactions.len() &gt; <span class="number">0 </span>{
 							<span class="self">Self</span>::do_execute_revenue_transactions(
 								project_id,
@@ -2816,10 +3014,25 @@
 					</span><span class="self">Self</span>::do_submit_revenue(project_id, revenue_id)
 				},
 			}
-
+			
 		}
 
-		<span class="comment">//TODO: Add documentation
+		<span class="doccomment">/// Approve a revenue
+		/// 
+		/// # Parameters:
+		/// - origin: The administator account who is approving the revenue
+		/// - project_id: The selected project id where the revenue will be approved
+		/// - revenue_id: The selected revenue id to be approved
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - All transactions associated to the revenue will be approved too. It&#39;s 
+		/// not possible to approve a revenue without approving all of its transactions.
+		/// - After a revenue is approved, it can not be updated or deleted.
+		/// - After a revenue is approved, the next revenue will be created automatically.
+		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
+		/// new revenue version uploaded by the builder.
+		/// - The revenue status will be updated to Approved.
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>approve_revenue(
@@ -2832,7 +3045,25 @@
 			<span class="self">Self</span>::do_approve_revenue(who, project_id, revenue_id)
 		}
 
-		<span class="comment">//TODO: Add documentation
+		<span class="doccomment">/// Reject a revenue
+		/// 
+		/// # Parameters:
+		/// - origin: The administator account who is rejecting the revenue
+		/// - project_id: The selected project id where the revenue will be rejected
+		/// - revenue_id: The selected revenue id to be rejected
+		/// - revenue_transactions_feedback: Administrator will provide feedback for each rejected
+		/// transacion. This is a vector of tuples where each entry is composed by:
+		/// * 0: The revenue transaction id
+		/// * 1: The revenue transaction feedback
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - All transactions associated to the revenue will be rejected too. It&#39;s
+		/// not possible to reject a revenue without rejecting all of its transactions.
+		/// - Administrator needs to provide a feedback for each rejected transaction.
+		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
+		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
+		/// There is no way to reject a single revenue transaction.
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>reject_revenue(
@@ -2849,28 +3080,45 @@
 			<span class="self">Self</span>::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
 		}
 
+		<span class="doccomment">/// The following extrinsic is used to upload the bank confirming documents
+		/// for a given drawdown.
+		/// 
+		/// # Parameters:
+		/// - origin: The administrator account who is uploading the confirming documents
+		/// - project_id: The selected project id where the drawdown exists
+		/// - drawdown_id: The selected drawdown id where the confirming documents will be uploaded
+		/// - confirming_documents: The confirming documents to be uploaded. This field is optional
+		/// because are required only when the action is Create or Update.
+		/// - action: The action to be performed. It can be Create, Update or Delete
+		/// 	* Create: project_id, drawdown_id and confirming_documents are required
+		/// 	* Update: project_id, drawdown_id and confirming_documents are required
+		/// 	* Delete: project_id and drawdown_id are required
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The confirming documents are required only when the action is Create or Update.
+		/// - The confirming documents are optional when the action is Delete.
+		/// - After the confirming documents are uploaded, the drawdown status will be updated to
+		/// &quot;Confirmed&quot;. It will also update the status of all of its transactions to &quot;Confirmed&quot;.
+		/// - Update action will replace the existing confirming documents with the new ones.
+		/// - Delete action will remove the existing confirming documents. It will also update the
+		/// drawdown status to &quot;Approved&quot; and the status of all of its transactions to &quot;Approved&quot;.
+		/// It does a rollback of the drawdown. 
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>bank_confirming_documents(
+			origin: OriginFor&lt;T&gt;,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			confirming_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+			action: CUDAction,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
+			<span class="self">Self</span>::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
+		}
 
-		<span class="comment">// #[transactional]
-		// #[pallet::weight(10_000 + T::a new extrinsic to handle the revenue approvalDbWeight::get().writes(1))]
-		// pub fn job_eligibles(
-		// 	origin: OriginFor&lt;T&gt;,
-		// 	project_id: ProjectId,
-		// 	job_eligibles: BoundedVec&lt;(
-		// 		Option&lt;FieldName&gt;, // name
-		// 		Option&lt;JobEligibleAmount&gt;, // amount
-		// 		Option&lt;FieldDescription&gt;, // naics code
-		// 		Option&lt;JobsMultiplier&gt;, // jobs multiplier
-		// 		CUDAction, // action
-		// 		Option&lt;JobEligibleId&gt;, // job_eligible_id
-		// 	), T::MaxRegistrationsAtTime&gt;,
-		// ) -&gt; DispatchResult {
-		// 	let who = ensure_signed(origin)?; // origin need to be an admin
-
-		// 	Self::do_execute_job_eligibles(who, project_id, job_eligibles)
-		// }
-
-		</span><span class="doccomment">/// Kill all the stored data.
+		<span class="doccomment">/// Kill all the stored data.
 		///
 		/// This function is used to kill ALL the stored data.
 		/// Use it with caution!
@@ -2901,7 +3149,7 @@
 			<span class="kw">let _ </span>= &lt;JobEligiblesByProject&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;RevenuesInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;RevenuesByProject&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-		    <span class="kw">let _ </span>= &lt;RevenueTransactionsInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;RevenueTransactionsInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;TransactionsByRevenue&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 
 			T::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
