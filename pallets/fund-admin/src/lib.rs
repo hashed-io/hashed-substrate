@@ -297,52 +297,64 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// Proxy initial setup completed using the sudo pallet
+		ProxySetupCompleted,
 		/// Project was created successfully
 		ProjectCreated(T::AccountId, ProjectId),
-		/// Proxy initial setup completed
-		ProxySetupCompleted,
-		/// User registered successfully
-		UserAdded(T::AccountId),
-		/// Project was edited
-		ProjectEdited(ProjectId),
-		/// Project was deleted
-		ProjectDeleted(ProjectId),
-		/// Administrator added
+		/// The selected roject was edited successfully
+		ProjectEdited(T::AccountId, ProjectId),
+		/// The selected project was deleted successfully
+		ProjectDeleted(T::AccountId, ProjectId),
+		/// Administrator was registered successfully using the sudo pallet
 		AdministratorAssigned(T::AccountId),
-		/// Administrator removed
+		/// Administrator was removed successfully using the sudo pallet
 		AdministratorRemoved(T::AccountId),
-		/// Users has been assigned from the selected project
-		UsersAssignationCompleted([u8;32]),
-		/// Users has been removed from the selected project
-		UsersUnassignationCompleted([u8;32]),
-		/// User info updated
+		/// The user was assigned to the selected project
+		UserAssignmentCompleted(T::AccountId, ProjectId),
+		/// The user was unassigned to the selected project
+		UserUnassignmentCompleted(T::AccountId, ProjectId),
+		/// Users extrinsic was executed, individual CUDActions were applied
+		UsersExecuted(T::AccountId),
+		/// A new user account was created successfully
+		UserCreated(T::AccountId),
+		/// The selected user was edited successfully
 		UserUpdated(T::AccountId),
-		/// User removed
+		/// The selected user was deleted successfully
 		UserDeleted(T::AccountId),
+		/// An array of expenditures was executed depending on the CUDAction
+		ExpendituresExecuted(T::AccountId, ProjectId),
 		/// Expenditure was created successfully
-		ExpenditureCreated,
-		/// Expenditure was edited successfully
-		ExpenditureUpdated(ExpenditureId),
+		ExpenditureCreated(ProjectId, ExpenditureId),
+		/// Expenditure was updated successfully
+		ExpenditureUpdated(ProjectId, ExpenditureId),
 		/// Expenditure was deleted successfully
-		ExpenditureDeleted(ExpenditureId),
-		/// Trasactions was completed successfully
-		TransactionsCompleted,
+		ExpenditureDeleted(ProjectId, ExpenditureId),
+		/// An array of transactions was executed depending on the CUDAction
+		TransactionsExecuted(ProjectId, DrawdownId),
 		/// Transaction was created successfully
-		TransactionCreated(TransactionId),
+		TransactionCreated(ProjectId, DrawdownId, TransactionId),
 		/// Transaction was edited successfully
-		TransactionEdited(TransactionId),
+		TransactionEdited(ProjectId, DrawdownId, TransactionId),
 		/// Transaction was deleted successfully
-		TransactionDeleted(TransactionId),
-		/// Users extrinsic was completed successfully
-		UsersExecuted,
+		TransactionDeleted(ProjectId, DrawdownId, TransactionId),
 		/// Assign users extrinsic was completed successfully
-		UsersAssignationExecuted([u8;32]),
+		UsersAssignationExecuted(T::AccountId, ProjectId),
+		/// Drawdowns were initialized successfully at the beginning of the project
+		DrawdownsInitialized(T::AccountId, ProjectId),
+		/// Drawdown was created successfully
+		DrawdownCreated(ProjectId, DrawdownId),
 		/// Drawdown was submitted successfully
-		DrawdownSubmitted([u8;32]),
+		DrawdownSubmitted(ProjectId, DrawdownId),
 		/// Drawdown was approved successfully
-		DrawdownApproved([u8;32]),
+		DrawdownApproved(ProjectId, DrawdownId),
 		/// Drawdown was rejected successfully
-		DrawdownRejected([u8;32]),
+		DrawdownRejected(ProjectId, DrawdownId),
+		/// Bulkupload drawdown was submitted successfully
+		BulkUploadSubmitted(ProjectId, DrawdownId),
+		/// Inflation rate extrinsic was executed successfully
+		InflationRateAdjusted(T::AccountId),
+		/// An array of job eligibles was executed depending on the CUDAction
+		JobEligiblesExecuted(T::AccountId, ProjectId),
 		/// Job eligible was created successfully
 		JobEligibleCreated(ProjectId, JobEligibleId),
 		/// Job eligible was updated successfully
@@ -350,27 +362,27 @@ pub mod pallet {
 		/// Job eligible was deleted successfully
 		JobEligibleDeleted(ProjectId, JobEligibleId),
 		/// Revenue transaction was created successfully
-		RevenueTransactionCreated(RevenueTransactionId),
+		RevenueTransactionCreated(ProjectId, RevenueId, RevenueTransactionId),
 		/// Revenue transaction was updated successfully
-		RevenueTransactionUpdated(RevenueTransactionId),
+		RevenueTransactionUpdated(ProjectId, RevenueId, RevenueTransactionId),
 		/// Revenue transaction was deleted successfully
-		RevenueTransactionDeleted(RevenueTransactionId),
-		/// Revenue transactions were executed successfully
+		RevenueTransactionDeleted(ProjectId, RevenueId, RevenueTransactionId),
+		/// An array of revenue transactions was executed depending on the CUDAction
 		RevenueTransactionsExecuted(ProjectId, RevenueId),
 		/// Revenue was created successfully
-		RevenueCreated(RevenueId),
+		RevenueCreated(ProjectId, RevenueId),
 		/// Revenue was submitted successfully
-		RevenueSubmitted(RevenueId),
+		RevenueSubmitted(ProjectId, RevenueId),
 		/// Revenue was approved successfully
-		RevenueApproved(RevenueId),
+		RevenueApproved(ProjectId, RevenueId),
 		/// Revenue was rejected successfully
-		RevenueRejected(RevenueId),
+		RevenueRejected(ProjectId, RevenueId),
 		/// Bank's confirming documents were uploaded successfully
-		BankDocumentsUploaded(DrawdownId),
-		/// Bank's confirming documents were deleted successfully
-		BankDocumentsDeleted(DrawdownId),
+		BankDocumentsUploaded(ProjectId, DrawdownId),
 		/// Bank's confirming documents were updated successfully
-		BankDocumentsUpdated(DrawdownId),
+		BankDocumentsUpdated(ProjectId, DrawdownId),
+		/// Bank's confirming documents were deleted successfully
+		BankDocumentsDeleted(ProjectId, DrawdownId),
 	}
 
 	// E R R O R S
@@ -726,7 +738,6 @@ pub mod pallet {
 		/// - email: The email of the user account which is being edited
 		/// - documents: The documents of the user account which is being edited.
 		/// ONLY available for the investor role.
-		///
 		///
 		/// # Considerations:
 		/// - If the user is not registered, the function will return an error: UserNotFound
