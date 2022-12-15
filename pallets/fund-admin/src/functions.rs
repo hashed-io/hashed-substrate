@@ -1587,7 +1587,7 @@ impl<T: Config> Pallet<T> {
             job_eligible_id,
             created_date: timestamp,
             updated_date: timestamp,
-            closed_date: 0,º
+            closed_date: 0,
             feedback: None,
             amount: revenue_amount,
             status: RevenueTransactionStatus::default(),
