@@ -259,7 +259,7 @@ impl<T: Config> Pallet<T> {
         // we could use get method (<UsersByProject<T>>::get()) instead getter function
         // Delete project from ProjectsByUser storage
         let users_by_project = Self::users_by_project(project_id).iter().cloned().collect::<Vec<T::AccountId>>();
-        for user in users_by_project {
+        for user in users_by_project.iter().cloned() {
             <ProjectsByUser<T>>::mutate(user, |projects| {
                 projects.retain(|project| *project != project_id);
             });
@@ -273,7 +273,7 @@ impl<T: Config> Pallet<T> {
 
         // Delete expenditures from ExpendituresInfo storagemap
         let expenditures_by_project = Self::expenditures_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
-        for expenditure_id in expenditures_by_project {
+        for expenditure_id in expenditures_by_project.iter().cloned() {
             <ExpendituresInfo<T>>::remove(expenditure_id);
         }
 
@@ -281,10 +281,10 @@ impl<T: Config> Pallet<T> {
         <ExpendituresByProject<T>>::remove(project_id);
 
         let drawdowns_by_project = Self::drawdowns_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
-        for drawdown_id in drawdowns_by_project {
+        for drawdown_id in drawdowns_by_project.iter().cloned() {
             // Delete transactions from TransactionsInfo storagemap
             let transactions_by_drawdown = Self::transactions_by_drawdown(project_id, drawdown_id).iter().cloned().collect::<Vec<[u8;32]>>();
-            for transaction_id in transactions_by_drawdown {
+            for transaction_id in transactions_by_drawdown.iter().cloned() {
                 <TransactionsInfo<T>>::remove(transaction_id);
             }
 
@@ -322,7 +322,7 @@ impl<T: Config> Pallet<T> {
         Self::is_project_completed(project_id)?;
 
         // Assign users
-        for user in users {
+        for user in users.iter().cloned() {
             match user.2 {
                 AssignAction::Assign => {
                     Self::do_assign_user(project_id, user.0, user.1)?;
@@ -428,7 +428,7 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::RegisterUser)?;
 
-        for user in users{
+        for user in users.iter().cloned() {
             match user.3 {
                 CUDAction::Create => {
                     Self::do_create_user(
@@ -549,7 +549,7 @@ impl<T: Config> Pallet<T> {
                 <ProjectsByUser<T>>::remove(user.clone());
 
                 // Remove user from UsersByProject storagemap
-                for project in projects_by_user {
+                for project in projects_by_user.iter().cloned() {
                     <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project, |users| {
                         users.retain(|u| u != &user);
                         Ok(())
@@ -627,7 +627,7 @@ impl<T: Config> Pallet<T> {
         // Ensure expenditures are not empty
         ensure!(!expenditures.is_empty(), Error::<T>::EmptyExpenditures);
 
-        for expenditure in expenditures {
+        for expenditure in expenditures.iter().cloned() {
             match expenditure.5 {
                 CUDAction::Create => {
                     Self::do_create_expenditure(
@@ -874,7 +874,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Update each transaction status to submitted
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exists
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -928,7 +928,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Update each transaction status to approved
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exits
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -993,7 +993,7 @@ impl<T: Config> Pallet<T> {
                 let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
                 // Update each transaction status to rejected
-                for transaction_id in drawdown_transactions {
+                for transaction_id in drawdown_transactions.iter().cloned() {
                     // Ensure transaction exits
                     ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -1008,7 +1008,7 @@ impl<T: Config> Pallet<T> {
                 // Ensure transactions feedback is provided
                 let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
-                for (transaction_id, feedback) in mod_transactions_feedback {
+                for (transaction_id, feedback) in mod_transactions_feedback.iter().cloned() {
                     // Update transaction feedback
                     <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                         let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
@@ -1072,7 +1072,7 @@ impl<T: Config> Pallet<T> {
         // Ensure if the selected drawdown is editable
         Self::is_drawdown_editable(drawdown_id)?;
 
-        for transaction in transactions {
+        for transaction in transactions.iter().cloned() {
             match transaction.3 {
                 CUDAction::Create => {
                     Self::do_create_transaction(
@@ -1364,7 +1364,7 @@ impl<T: Config> Pallet<T> {
         // Ensure job eligibles is not empty
         ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
 
-        for job_eligible in job_eligibles {
+        for job_eligible in job_eligibles.iter().cloned() {
             match job_eligible.4 {
                 CUDAction::Create => {
                     Self::do_create_job_eligible(
@@ -1528,7 +1528,7 @@ impl<T: Config> Pallet<T> {
         // Ensure if the selected revenue is editable
         Self::is_revenue_editable(revenue_id)?;
 
-        for transaction in revenue_transactions {
+        for transaction in revenue_transactions.iter().cloned() {
             match transaction.3 {
                 CUDAction::Create => {
                     Self::do_create_revenue_transaction(
@@ -1692,7 +1692,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Submitted
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1746,7 +1746,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Approved
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1802,7 +1802,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Rejected
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1815,7 +1815,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Update revenue transactions feedback
-        for (transaction_id, feedback) in revenue_transactions_feedback {
+        for (transaction_id, feedback) in revenue_transactions_feedback.iter().cloned() {
             // Update revenue transaction feedback
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
                 let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
@@ -1916,7 +1916,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Mutate individual drawdown transactions status to Confirmed
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exists
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -1983,7 +1983,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Mutate individual drawdown transactions status to Approved
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exists
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -2431,7 +2431,7 @@ impl<T: Config> Pallet<T> {
         // Calculate drawdown total amount
         let mut drawdown_total_amount: u64 = 0;
 
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Get transaction data
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
@@ -2552,7 +2552,7 @@ impl<T: Config> Pallet<T> {
         // Calculate revenue total amount
         let mut revenue_total_amount: Amount = 0;
 
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Get revenue transaction data
             let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
 
