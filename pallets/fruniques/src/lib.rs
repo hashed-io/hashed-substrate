@@ -18,7 +18,7 @@ pub mod types;
 pub mod pallet {
 	use super::*;
 	use crate::types::*;
-	use frame_support::{pallet_prelude::*, transactional};
+	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
 	use pallet_rbac::types::RoleBasedAccessControl;
@@ -160,7 +160,6 @@ pub mod pallet {
 	where
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
@@ -226,13 +225,13 @@ pub mod pallet {
 			instance_id: T::ItemId,
 			attributes: Attributes<T>,
 		) -> DispatchResult {
-			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
+			ensure!(Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			// ! Ensure the admin is the one who can add attributes to the frunique.
 			let admin = Self::admin_of(&class_id, &instance_id);
 			let signer = core::prelude::v1::Some(ensure_signed(origin.clone())?);
 
-			ensure!(signer == admin, <Error<T>>::NotAdmin);
+			ensure!(signer == admin, Error::<T>::NotAdmin);
 
 			ensure!(!attributes.is_empty(), Error::<T>::AttributesEmpty);
 			for attribute in &attributes {
@@ -262,10 +261,10 @@ pub mod pallet {
 			metadata: CollectionDescription<T>,
 			attributes: Option<Attributes<T>>,
 		) -> DispatchResult {
-			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
+			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 
 			if let Some(parent_info) = parent_info {
-				ensure!(Self::item_exists(&class_id, &parent_info.0), <Error<T>>::ParentNotFound);
+				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
 			}
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
@@ -274,7 +273,7 @@ pub mod pallet {
 			<NextFrunique<T>>::insert(class_id, instance_id + 1);
 
 			if let Some(parent_info) = parent_info {
-				ensure!(Self::item_exists(&class_id, &parent_info.0), <Error<T>>::ParentNotFound);
+				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
 				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
 
 				let child_info = ChildInfo {
@@ -311,7 +310,7 @@ pub mod pallet {
 			instance_id: ItemId,
 		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			ensure!(Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueNotFound);
+			ensure!(Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 
@@ -331,7 +330,6 @@ pub mod pallet {
 		/// This functions enables the owner of a collection to invite a user to become a collaborator.
 		/// The user will be able to create NFTs in the collection.
 		/// The user will be able to add attributes to the NFTs in the collection.
-
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn invite(
 			origin: OriginFor<T>,
@@ -364,10 +362,10 @@ pub mod pallet {
 			T::RemoveOrigin::ensure_origin(origin)?;
 
 			if let Some(instance_id) = instance_id {
-				ensure!(!Self::item_exists(&class_id, &instance_id), <Error<T>>::FruniqueAlreadyExists);
+				ensure!(!Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueAlreadyExists);
 				<NextFrunique<T>>::insert(class_id, instance_id);
 			} else {
-				ensure!(!Self::collection_exists(&class_id), <Error<T>>::CollectionAlreadyExists);
+				ensure!(!Self::collection_exists(&class_id), Error::<T>::CollectionAlreadyExists);
 				<NextCollection<T>>::set(class_id);
 			}
 
@@ -392,7 +390,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin)?;
 
-			ensure!(Self::collection_exists(&class_id), <Error<T>>::CollectionNotFound);
+			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			pallet_uniques::Pallet::<T>::do_destroy_collection(
 				class_id,
 				witness,
@@ -411,7 +409,6 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;

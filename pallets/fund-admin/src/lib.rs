@@ -23,7 +23,6 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
 	use frame_system::pallet_prelude::*;
-	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
 	use crate::types::*;
@@ -585,7 +584,6 @@ pub mod pallet {
 		/// # Considerations:
 		/// - This function can only be called once
 		/// - This function can only be called usinf the sudo pallet
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(
 			origin: OriginFor<T>,
@@ -608,7 +606,6 @@ pub mod pallet {
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - This function grants administator permissions to the user from the rbac pallet
 		/// - Administator role have global scope permissions
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
 			origin: OriginFor<T>,
@@ -635,7 +632,6 @@ pub mod pallet {
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site,
 		/// but they can add themselves back
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_remove_administrator(
 			origin: OriginFor<T>,
@@ -677,7 +673,6 @@ pub mod pallet {
 		/// but administrators can not delete themselves.
 		/// WARNING: This function only registers, updates, or deletes users from the site.
 		/// DOESN'T grant or remove permissions from the rbac pallet.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn users(
 			origin: OriginFor<T>,
@@ -710,7 +705,6 @@ pub mod pallet {
 		/// - This function will be called by the user account itself
 		/// - ALL parameters are optional because depends on what is being edited
 		/// - ONLY the investor role can edit or update the documents
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn users_edit_user(
 			origin: OriginFor<T>,
@@ -834,7 +828,6 @@ pub mod pallet {
 		/// * projects_assign_user
 		/// - Project can only be edited in the Started status
 		/// - Completion date must be greater than creation date
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn projects_edit_project(
 			origin: OriginFor<T>,
@@ -867,7 +860,6 @@ pub mod pallet {
 		/// # Note:
 		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
 		/// BE CAREFUL.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn projects_delete_project(
 			origin: OriginFor<T>,
@@ -912,7 +904,6 @@ pub mod pallet {
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Do not perfom multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>,
@@ -966,7 +957,6 @@ pub mod pallet {
 		/// expenditure and update another one at the same time.
 		/// - Do not perform multiple actions over the same expenditure in the same call, it could
 		/// result in an unexpected behavior.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
@@ -1038,7 +1028,6 @@ pub mod pallet {
 		/// any transaction, it will be returned an error.
 		/// - After a drawdown is submitted, it can not be updated or deleted.
 		/// - After a drawdown is rejected, builders will use this extrinsic to update the transactions.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn submit_drawdown(
 			origin: OriginFor<T>,
@@ -1129,7 +1118,6 @@ pub mod pallet {
 		/// result in an unexpected behavior.
 		/// - After a drawdown is approved, it can not be updated or deleted.
 		/// - After a drawdown is approved, the next drawdown will be automatically created.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn approve_drawdown(
 			origin: OriginFor<T>,
@@ -1226,7 +1214,6 @@ pub mod pallet {
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
 		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
 		/// There is no way to reject a single transaction.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn reject_drawdown(
 			origin: OriginFor<T>,
@@ -1263,7 +1250,6 @@ pub mod pallet {
 		/// - Bulkuploads does not allow individual transactions.
 		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn up_bulkupload(
 			origin: OriginFor<T>,
@@ -1297,7 +1283,6 @@ pub mod pallet {
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
@@ -1311,7 +1296,6 @@ pub mod pallet {
 		// R E V E N U E S
 		// --------------------------------------------------------------------------------------------
 		//TODO: Add documentation
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn submit_revenue(
 			origin: OriginFor<T>,
@@ -1364,7 +1348,6 @@ pub mod pallet {
 		}
 
 		//TODO: Add documentation
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn approve_revenue(
 			origin: OriginFor<T>,
@@ -1377,7 +1360,6 @@ pub mod pallet {
 		}
 
 		//TODO: Add documentation
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn reject_revenue(
 			origin: OriginFor<T>,
@@ -1393,9 +1375,6 @@ pub mod pallet {
 			Self::do_reject_revenue(who, project_id, revenue_id, revenue_transactions_feedback)
 		}
 
-
-
-		// #[transactional]
 		// #[pallet::weight(Weight::from_ref_time(10_000) + T::a new extrinsic to handle the revenue approvalDbWeight::get().writes(1))]
 		// pub fn job_eligibles(
 		// 	origin: OriginFor<T>,
@@ -1424,7 +1403,6 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[transactional]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
