@@ -112,7 +112,7 @@ use frame_support::pallet_prelude::*;
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
-			let who = ensure_signed(origin)?;
+			let _ = ensure_signed(origin)?;
 
 			// Update storage.
 			let s = optional_bytes.unwrap_or_default();
