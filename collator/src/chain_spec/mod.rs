@@ -51,7 +51,7 @@ fn _get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Publi
 		.public()
 }
 
-type AccountPublic = <Signature as Verify>::Signer;
+type AccountPublic = <Signature as sp_runtime::traits::Verify>::Signer;
 
 /// Generate collator keys from seed.
 ///
@@ -125,7 +125,7 @@ pub fn development_config() -> ChainSpec {
 		None,
 		Some(properties),
 		Extensions {
-			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
+			relay_chain: "rococo-local-testnet".into(), // You MUST set this to the correct network!
 			para_id: 1000,
 		},
 	)
