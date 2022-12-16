@@ -10,10 +10,10 @@ use crate::types::*;
 
 impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     // I N I T I A L   S E T U P
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     pub fn do_initial_setup() -> DispatchResult{
         // Create a global scope for the administrator role
@@ -72,12 +72,7 @@ impl<T: Config> Pallet<T> {
 
 
     // P R O J E C T S
-    // --------------------------------------------------------------------------------------------
-
-    /// Create a new project
-    /// - only administrator can create a new project
-    /// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
-    /// users = (accountid, role)
+    // ================================================================================================
     pub fn do_create_project(
         admin: T::AccountId,
         title: FieldName,
@@ -111,7 +106,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::CreateProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::CreateProject)?;
 
         // Add timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -170,7 +165,7 @@ impl<T: Config> Pallet<T> {
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
 
         // Initialize revenue
-        Self::do_initialize_revenue(admin.clone(), project_id)?;
+        Self::do_initialize_revenue(project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -189,7 +184,7 @@ impl<T: Config> Pallet<T> {
         completion_date: Option<CompletionDate>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::EditProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::EditProject)?;
 
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -244,7 +239,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::DeleteProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::DeleteProject)?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -316,7 +311,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::AssignUsers)?;
 
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
@@ -415,7 +410,7 @@ impl<T: Config> Pallet<T> {
 
 
     // U S E R S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_users(
         admin: T::AccountId,
         users: BoundedVec<(
@@ -426,7 +421,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::RegisterUser)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ExecuteUsers)?;
 
         for user in users{
             match user.3 {
@@ -564,7 +559,15 @@ impl<T: Config> Pallet<T> {
         Ok(())
 
     }
+    // E D I T   U S E R
+    // ================================================================================================
 
+    /// Editing your own user data does not require any kind of RBAC permissions, it only requires
+    /// that the user is registered. This is because permissions are granted to the 
+    /// user's account when the user is assigned to a project.
+    /// 
+    /// WARNING: Editing your own user data does not allow you to change your role. If you want to
+    /// change your role. Only the administrator can do it usign the `users` extrinsic.
     pub fn do_edit_user(
         user: T::AccountId,
         name: Option<FieldName>,
@@ -603,8 +606,7 @@ impl<T: Config> Pallet<T> {
     }
 
     // B U D G E T  E X P E N D I T U R E S
-    // --------------------------------------------------------------------------------------------
-
+    // ================================================================================================
     pub fn do_execute_expenditures(
         admin: T::AccountId,
         project_id: ProjectId,
@@ -619,7 +621,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -661,7 +663,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::ExpendituresExecuted(admin, project_id));
         Ok(())
     }
-
 
     /// Create a new budget expenditure
     ///
@@ -782,15 +783,12 @@ impl<T: Config> Pallet<T> {
     }
 
     // D R A W D O W N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     fn do_create_drawdown(
         project_id: ProjectId,
         drawdown_type: DrawdownType,
         drawdown_number: DrawdownNumber,
     ) -> DispatchResult {
-        // TODO: Ensure admin permissions
-        //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -826,9 +824,10 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update project drawdown status
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::DrawdownCreated(project_id, drawdown_id));
         Ok(())
     }
@@ -838,7 +837,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -852,15 +851,19 @@ impl<T: Config> Pallet<T> {
         // Create a Developer Equity drawdown
         Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::DrawdownsInitialized(admin, project_id));
         Ok(())
     }
 
     pub fn do_submit_drawdown(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
+        // Ensure user permissions
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::SubmitDrawdown)?;
+
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -908,9 +911,8 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
-        // TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveDrawdown)?;
 
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -970,9 +972,8 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectDrawdown)?;
 
         // Ensure drawdown is editable & ensure drawdown exists
         Self::is_drawdown_editable(drawdown_id)?;
@@ -1045,8 +1046,9 @@ impl<T: Config> Pallet<T> {
 
 
     // T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions: BoundedVec<(
@@ -1057,6 +1059,9 @@ impl<T: Config> Pallet<T> {
             Option<TransactionId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
+        // Ensure admin or builder permissions
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::ExecuteTransactions)?;
+
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
@@ -1218,7 +1223,7 @@ impl<T: Config> Pallet<T> {
     }
 
     // B U L K   U P L O A D   T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_up_bulk_upload(
         user: T::AccountId,
         project_id: ProjectId,
@@ -1228,7 +1233,7 @@ impl<T: Config> Pallet<T> {
         documents: Documents<T>,
     ) -> DispatchResult {
         // Ensure builder permissions
-        Self::is_authorized(user, &project_id, ProxyPermission::UpBulkupload)?;
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::UpBulkupload)?;
 
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
@@ -1266,13 +1271,13 @@ impl<T: Config> Pallet<T> {
     }
 
     // I N F L A T I O N   A D J U S T M E N T
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_inflation_adjustment(
         admin: T::AccountId,
         projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::InflationRate)?;
 
         // Ensure projects is not empty
         ensure!(!projects.is_empty(), Error::<T>::InflationRateMissingProjectIds);
@@ -1312,21 +1317,21 @@ impl<T: Config> Pallet<T> {
     }
 
     // J O B    E L I G I B L E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_job_eligibles(
         admin: T::AccountId,
         project_id: ProjectId,
         job_eligibles: BoundedVec<(
-            Option<FieldName>, // name
-            Option<JobEligibleAmount>, // amount
-            Option<NAICSCode>, // naics code
-            Option<JobsMultiplier>, // jobs multiplier
-            CUDAction, // action
-            Option<JobEligibleId>, // job_eligible_id
+            Option<FieldName>,
+            Option<JobEligibleAmount>,
+            Option<NAICSCode>,
+            Option<JobsMultiplier>,
+            CUDAction,
+            Option<JobEligibleId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions 
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::JobEligible)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::JobEligible)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -1474,8 +1479,9 @@ impl<T: Config> Pallet<T> {
     }
 
     // R E V E N U E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_revenue_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
         revenue_transactions: BoundedVec<(
@@ -1486,6 +1492,9 @@ impl<T: Config> Pallet<T> {
             Option<RevenueTransactionId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
+        // Ensure builder permission
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::RevenueTransaction)?;
+
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
@@ -1646,9 +1655,13 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_submit_revenue(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -> DispatchResult {
+        // Ensure builder permissions
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::SubmitRevenue)?;
+
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -1696,9 +1709,8 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1758,9 +1770,8 @@ impl<T: Config> Pallet<T> {
             FieldDescription
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1817,7 +1828,7 @@ impl<T: Config> Pallet<T> {
 
 
     // H E L P E R S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     /// Get the current timestamp in milliseconds
     fn get_timestamp_in_milliseconds() -> Option<u64> {
@@ -2161,14 +2172,39 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-
-    pub fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
-        T::Rbac::is_authorized(
-            authority,
+    /// # Checks if the caller has the permission to perform an action
+    /// 
+    /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
+    /// otherwise it checks the project scope
+    /// - This is useful for functions that are called by both administrators and project users
+    /// - In workflows where the caller is an administrator, the scope is not needed
+    /// because we can get it from the helper private function get_global_scope()
+    pub fn is_authorized( authority: T::AccountId, scope: Option<&[u8;32]>, permission: ProxyPermission ) -> DispatchResult{
+        match T::Rbac::has_role(
+            authority.clone(),
             Self::pallet_id(),
-            project_id,
-            &permission.id(),
-        )
+            &Self::get_global_scope(),
+            [ProxyRole::Administrator.id()].to_vec()
+        ).is_ok() {
+            // Check global scope
+            true => {
+                T::Rbac::is_authorized(
+                    authority,
+                    Self::pallet_id(),
+                    &Self::get_global_scope(),
+                    &permission.id(),
+                )
+            }, 
+            // Check project scope
+            false => {
+                T::Rbac::is_authorized(
+                    authority,
+                    Self::pallet_id(),
+                    scope.ok_or(Error::<T>::NoScopeProvided)?,
+                    &permission.id(),
+                )
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -2385,12 +2421,8 @@ impl<T: Config> Pallet<T> {
     }    
 
     fn do_initialize_revenue(
-        admin: T::AccountId,
         project_id: ProjectId,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
-
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -2404,8 +2436,6 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         revenue_number: RevenueNumber,
     ) -> DispatchResult {
-        //TODO: Ensure admin permissions
-
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -2439,7 +2469,7 @@ impl<T: Config> Pallet<T> {
         // Update revenue status in project info
         Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::RevenueCreated(project_id, revenue_id));
 
         Ok(())
@@ -2473,9 +2503,8 @@ impl<T: Config> Pallet<T> {
         confirming_documents: Option<Documents<T>>,
         action: CUDAction,
     ) -> DispatchResult {
-        // TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);

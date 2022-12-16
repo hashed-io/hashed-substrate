@@ -97,16 +97,6 @@ pub struct UserData<T: Config> {
     pub documents: Option<Documents<T>>,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-pub enum ProxyRole {
-    Administrator,
-    Builder,
-    Investor,
-    Issuer,
-    RegionalCenter,
-}
-
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ExpenditureData {
     pub project_id: ProjectId,
@@ -284,6 +274,15 @@ pub enum AssignAction {
     Unassign,
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum ProxyRole {
+    Administrator,
+    Builder,
+    Investor,
+    Issuer,
+    RegionalCenter,
+}
+
 impl ProxyRole {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
@@ -308,40 +307,51 @@ impl ProxyRole {
 
 
 
-/// Extrinsics which require previous authorization to call them
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum ProxyPermission {
-    RegisterUser, // users
-    EditUser, // users_edit_user
-    CreateProject, // projects_create_project
-    EditProject, // projects_edit_project
-    DeleteProject, // projects_delete_project
-    AssignUser, // projects_assign_user
-    Expenditures, // expenditures
-    SubmitDrawdown, // submit_drawdown
-    ApproveDrawdown, // approve_drawdown
-    RejectDrawdown, // reject_drawdown
-    UpBulkupload, // up_bulkupload
-    Inflation, // inflation
-    JobEligible, // job_eligible
+    CreateProject, // projects_create_project: admin
+    EditProject, // projects_edit_project: admin
+    DeleteProject, // projects_delete_project: admin
+    AssignUsers, // projects_assign_user: admin 
+    ExecuteUsers, // users: admin
+    EditUser, // users_edit_user: all
+    Expenditures, // expenditures: admin
+    SubmitDrawdown, // submit_drawdown: admin, builder
+    ApproveDrawdown, // approve_drawdown: admin
+    RejectDrawdown, // reject_drawdown: admin
+    ExecuteTransactions, // transactions: admin, builder
+    UpBulkupload, // up_bulkupload: builder
+    InflationRate, // inflation: admin
+    JobEligible, // job_eligible: admin
+    RevenueTransaction, // revenue_transaction: builder
+    SubmitRevenue, // submit_revenue: builder
+    ApproveRevenue, // approve_revenue: admin
+    RejectRevenue, // reject_revenue: admin
+    BanckConfirming, // bank_confirming: admin
 }
 
 impl ProxyPermission {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
-            Self::RegisterUser => "RegisterUser".as_bytes().to_vec(),
-            Self::EditUser => "EditUser".as_bytes().to_vec(),
             Self::CreateProject => "CreateProject".as_bytes().to_vec(),
             Self::EditProject => "EditProject".as_bytes().to_vec(),
             Self::DeleteProject => "DeleteProject".as_bytes().to_vec(),
-            Self::AssignUser => "AssignUser".as_bytes().to_vec(),
+            Self::AssignUsers => "AssignUsers".as_bytes().to_vec(),
+            Self::ExecuteUsers => "ExecuteUsers".as_bytes().to_vec(),
+            Self::EditUser => "Edituser".as_bytes().to_vec(),
             Self::Expenditures => "Expenditures".as_bytes().to_vec(),
             Self::SubmitDrawdown => "SubmitDrawdown".as_bytes().to_vec(),
             Self::ApproveDrawdown => "ApproveDrawdown".as_bytes().to_vec(),
             Self::RejectDrawdown => "RejectDrawdown".as_bytes().to_vec(),
+            Self::ExecuteTransactions => "ExecuteTransactions".as_bytes().to_vec(),
             Self::UpBulkupload => "UpBulkupload".as_bytes().to_vec(),
-            Self::Inflation => "Inflation".as_bytes().to_vec(),
+            Self::InflationRate => "InflationRate".as_bytes().to_vec(),
             Self::JobEligible => "JobEligible".as_bytes().to_vec(),
+            Self::RevenueTransaction => "RevenueTransaction".as_bytes().to_vec(),
+            Self::SubmitRevenue => "SubmitRevenue".as_bytes().to_vec(),
+            Self::ApproveRevenue => "ApproveRevenue".as_bytes().to_vec(),
+            Self::RejectRevenue => "RejectRevenue".as_bytes().to_vec(),
+            Self::BanckConfirming => "BanckConfirming".as_bytes().to_vec(),
         }
     }
 
@@ -352,19 +362,22 @@ impl ProxyPermission {
     pub fn administrator_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
         let administrator_permissions = [
-            RegisterUser.to_vec(),
-            EditUser.to_vec(),
             CreateProject.to_vec(),
             EditProject.to_vec(),
             DeleteProject.to_vec(),
-            AssignUser.to_vec(),
+            AssignUsers.to_vec(),
+            ExecuteUsers.to_vec(),
+            EditUser.to_vec(),
             Expenditures.to_vec(),
             SubmitDrawdown.to_vec(),
             ApproveDrawdown.to_vec(),
             RejectDrawdown.to_vec(),
-            UpBulkupload.to_vec(),
-            Inflation.to_vec(),
+            ExecuteTransactions.to_vec(),
+            InflationRate.to_vec(),
             JobEligible.to_vec(),
+            ApproveRevenue.to_vec(),
+            RejectRevenue.to_vec(),
+            BanckConfirming.to_vec(),
         ].to_vec();
         administrator_permissions
     }
@@ -374,7 +387,10 @@ impl ProxyPermission {
         [
             EditUser.to_vec(),
             SubmitDrawdown.to_vec(),
+            ExecuteTransactions.to_vec(),
             UpBulkupload.to_vec(),
+            RevenueTransaction.to_vec(),
+            SubmitRevenue.to_vec(),
         ].to_vec()
     }
 
