@@ -611,6 +611,8 @@ pub mod pallet {
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
 		BankConfirmingDocumentsAreEmpty,
+		/// No scope was provided checking if the user has permissions. No applies for administrator users
+		NoScopeProvided,
 	}
 
 	// E X T R I N S I C S
@@ -713,19 +715,20 @@ pub mod pallet {
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		///
 		/// # Note:
-		/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
+		/// - WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
 		/// but administrators can not delete themselves.
-		/// WARNING: This function only registers, updates, or deletes users from the site.
-		/// DOESN'T grant or remove permissions from the rbac pallet.
+		/// - WARNING: This function only registers, updates, or deletes users from the site.
+		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
+		/// a user from a selected project. 
 		#[transactional]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users(
 			origin: OriginFor<T>,
 			users: BoundedVec<(
-				T::AccountId, // account id
-				Option<FieldName>, // name
-				Option<ProxyRole>, // role
-				CUDAction, // action
+				T::AccountId,
+				Option<FieldName>,
+				Option<ProxyRole>,
+				CUDAction,
 			), T::MaxRegistrationsAtTime>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -830,12 +833,12 @@ pub mod pallet {
 				Option<ExpenditureId>
 			), T::MaxRegistrationsAtTime>,
 			job_eligibles: Option<BoundedVec<(
-				Option<FieldName>, // name
-				Option<JobEligibleAmount>, // amount
-				Option<NAICSCode>, // naics code
-				Option<JobsMultiplier>, // jobs multiplier
-				CUDAction, // action
-				Option<JobEligibleId>, // job_eligible_id
+				Option<FieldName>,
+				Option<JobEligibleAmount>,
+				Option<NAICSCode>,
+				Option<JobsMultiplier>,
+				CUDAction,
+				Option<JobEligibleId>,
 			), T::MaxRegistrationsAtTime>>,
 			users: Option<BoundedVec<(
 				T::AccountId,
@@ -1010,21 +1013,21 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			expenditures: Option<BoundedVec<(
-				Option<FieldName>, // name
-				Option<ExpenditureType>, // type
-				Option<ExpenditureAmount>, // amount
-				Option<NAICSCode>, // naics code
-				Option<JobsMultiplier>, // jobs multiplier
-				CUDAction, // action
-				Option<ExpenditureId>, // expenditure_id
+				Option<FieldName>,
+				Option<ExpenditureType>,
+				Option<ExpenditureAmount>,
+				Option<NAICSCode>,
+				Option<JobsMultiplier>,
+				CUDAction,
+				Option<ExpenditureId>,
 			), T::MaxRegistrationsAtTime>>,
 			job_eligibles: Option<BoundedVec<(
-				Option<FieldName>, // name
-				Option<JobEligibleAmount>, // amount
-				Option<NAICSCode>, // naics code
-				Option<JobsMultiplier>, // jobs multiplier
-				CUDAction, // action
-				Option<JobEligibleId>, // job_eligible_id
+				Option<FieldName>, 
+				Option<JobEligibleAmount>,
+				Option<NAICSCode>, 
+				Option<JobsMultiplier>,
+				CUDAction,
+				Option<JobEligibleId>,
 			), T::MaxRegistrationsAtTime>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1087,23 +1090,22 @@ pub mod pallet {
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			transactions: Option<BoundedVec<(
-				Option<ExpenditureId>, // expenditure_id
-				Option<ExpenditureAmount>, // amount
-				Option<Documents<T>>, //Documents
-				CUDAction, // Action
-				Option<TransactionId>, // transaction_id
+				Option<ExpenditureId>,
+				Option<ExpenditureAmount>,
+				Option<Documents<T>>,
+				CUDAction,
+				Option<TransactionId>,
 			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
-			// Ensure builder permissions
-			Self::is_authorized(who, &project_id, ProxyPermission::SubmitDrawdown)?;
 
 			match submit {
 				// Save transactions as draft
 				false => {
 					// Do execute transactions
 					Self::do_execute_transactions(
+						who.clone(),
 						project_id,
 						drawdown_id,
 						transactions.ok_or(Error::<T>::EmptyTransactions)?,
@@ -1116,6 +1118,7 @@ pub mod pallet {
 						// Do execute transactions
 						if mod_transactions.len() > 0 {
 							Self::do_execute_transactions(
+								who.clone(),
 								project_id,
 								drawdown_id,
 								mod_transactions)?;
@@ -1123,7 +1126,7 @@ pub mod pallet {
 					}
 
 					// Do submit drawdown
-					Self::do_submit_drawdown(project_id, drawdown_id)
+					Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)
 				},
 			}
 
@@ -1192,7 +1195,7 @@ pub mod pallet {
 			// a distinction between bulkupload and non-bulkupload drawdowns
 			// review those function in each step of the flow (approve, reject, submit)
 			
-			// Match bulkupdate
+			// Match bulkupload parameter
 			match bulkupload {
 				Some(approval) => {
 					// Execute bulkupload flow (construction loan & developer equity)
@@ -1200,13 +1203,14 @@ pub mod pallet {
 						false => {
 							// 1. Do execute transactions
 							Self::do_execute_transactions(
+								who.clone(),
 								project_id,
 								drawdown_id,
 								transactions.ok_or(Error::<T>::EmptyTransactions)?,
 							)?;
 
 							// 2. Do submit drawdown
-							Self::do_submit_drawdown(project_id, drawdown_id)
+							Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)
 
 						},
 						true  => {
@@ -1215,24 +1219,25 @@ pub mod pallet {
 								// Do execute transactions
 								if mod_transactions.len() > 0 {
 									Self::do_execute_transactions(
+										who.clone(),
 										project_id,
 										drawdown_id,
 										mod_transactions)?;
 								}
 
 								// 2. Submit drawdown
-								Self::do_submit_drawdown(project_id, drawdown_id)?;
+								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;
 							}
 
 							// 3. Approve drawdown
-							Self::do_approve_drawdown(who, project_id, drawdown_id)
+							Self::do_approve_drawdown(who.clone(), project_id, drawdown_id)
 						},
 					}
 
 				},
 				None => {
 					// Execute normal flow (EB5)
-					Self::do_approve_drawdown(who, project_id, drawdown_id)
+					Self::do_approve_drawdown(who.clone(), project_id, drawdown_id)
 				}
 			}
 
@@ -1397,25 +1402,22 @@ pub mod pallet {
 			project_id: ProjectId,
 			revenue_id: RevenueId,
 			revenue_transactions: Option<BoundedVec<(
-				Option<JobEligibleId>, // job eligible id
-				Option<RevenueAmount>, // amount
-				Option<Documents<T>>, // documents
-				CUDAction, // action
-				Option<RevenueTransactionId>, // revenue transaction id
+				Option<JobEligibleId>,
+				Option<RevenueAmount>,
+				Option<Documents<T>>,
+				CUDAction,
+				Option<RevenueTransactionId>,
 			), T::MaxRegistrationsAtTime>>,
 			submit: bool,
 		) -> DispatchResult {
-			//TODO: Remove underscore when permissions are updated
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 			
-			//TODO: Ensure builder permissions
-			//Self::is_authorized(who, &project_id, ProxyPermission::SubmitRevenue)?;
-
 			match submit { 
 				// Save revenue transactions as draft
 				false => {
 					// Do execute transactions 
 					Self::do_execute_revenue_transactions(
+						who.clone(),
 						project_id,
 						revenue_id,
 						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsEmpty)?,
@@ -1428,6 +1430,7 @@ pub mod pallet {
 						// Do execute transactions 
 						if mod_revenue_transactions.len() > 0 {
 							Self::do_execute_revenue_transactions(
+								who.clone(),
 								project_id,
 								revenue_id,
 								mod_revenue_transactions)?;
@@ -1435,7 +1438,7 @@ pub mod pallet {
 					}
 
 					// Do submit revenue
-					Self::do_submit_revenue(project_id, revenue_id)
+					Self::do_submit_revenue(who.clone(), project_id, revenue_id)
 				},
 			}
 			
