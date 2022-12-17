@@ -908,14 +908,11 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
-        //TODO: update permissions
+        // TODO: update permissions
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        // Ensure drawdown is editable & ensure drawdown exists
-        Self::is_drawdown_editable(drawdown_id)?;
-
-        // Get drawdown data
+        // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown has transactions
@@ -1298,7 +1295,6 @@ impl<T: Config> Pallet<T> {
                     // Set inflation rate
                     <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
                         let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                        mod_project_data.inflation_rate = Some(inflation_rate);
                         Ok(())
                     })?;
                 },
