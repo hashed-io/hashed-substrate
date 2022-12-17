@@ -327,7 +327,7 @@ pub enum ProxyPermission {
     SubmitRevenue, // submit_revenue: builder
     ApproveRevenue, // approve_revenue: admin
     RejectRevenue, // reject_revenue: admin
-    BanckConfirming, // bank_confirming: admin
+    BankConfirming, // bank_confirming: admin
 }
 
 impl ProxyPermission {
@@ -351,7 +351,7 @@ impl ProxyPermission {
             Self::SubmitRevenue => "SubmitRevenue".as_bytes().to_vec(),
             Self::ApproveRevenue => "ApproveRevenue".as_bytes().to_vec(),
             Self::RejectRevenue => "RejectRevenue".as_bytes().to_vec(),
-            Self::BanckConfirming => "BanckConfirming".as_bytes().to_vec(),
+            Self::BankConfirming => "BankConfirming".as_bytes().to_vec(),
         }
     }
 
@@ -377,7 +377,7 @@ impl ProxyPermission {
             JobEligible.to_vec(),
             ApproveRevenue.to_vec(),
             RejectRevenue.to_vec(),
-            BanckConfirming.to_vec(),
+            BankConfirming.to_vec(),
         ].to_vec();
         administrator_permissions
     }

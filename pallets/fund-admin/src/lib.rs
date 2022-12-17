@@ -613,6 +613,8 @@ pub mod pallet {
 		BankConfirmingDocumentsAreEmpty,
 		/// No scope was provided checking if the user has permissions. No applies for administrator users
 		NoScopeProvided,
+		/// Only eb5 drawdowns are allowed to upload bank documentation
+		OnlyEB5DrawdownsCanUploadBankDocuments,
 	}
 
 	// E X T R I N S I C S
