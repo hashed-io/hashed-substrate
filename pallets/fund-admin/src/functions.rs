@@ -2363,6 +2363,9 @@ impl<T: Config> Pallet<T> {
     /// - In workflows where the caller is an administrator, the scope is not needed
     /// because we can get it from the helper private function get_global_scope()
     pub fn is_authorized( authority: T::AccountId, scope: Option<&[u8;32]>, permission: ProxyPermission ) -> DispatchResult{
+        // Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(authority.clone()), Error::<T>::UserNotRegistered);
+
         match T::Rbac::has_role(
             authority.clone(),
             Self::pallet_id(),
