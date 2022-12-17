@@ -2504,15 +2504,17 @@ impl<T: Config> Pallet<T> {
         action: CUDAction,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::BankConfirming)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        // Ensure drawdown exists
-        ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-        // TODO: ENSURE DRAWDOWN IS EB5 
+        // Ensure drawdown is EB5
+        ensure!(drawdown_data.drawdown_type == DrawdownType::EB5, Error::<T>::OnlyEB5DrawdownsCanUploadBankDocuments);
+
 
         match action {
             CUDAction::Create => {
