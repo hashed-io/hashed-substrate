@@ -1300,6 +1300,7 @@ impl<T: Config> Pallet<T> {
                     // Set inflation rate
                     <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
                         let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                        mod_project_data.inflation_rate = Some(inflation_rate);
                         Ok(())
                     })?;
                 },
