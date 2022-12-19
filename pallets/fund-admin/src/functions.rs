@@ -2528,7 +2528,7 @@ impl<T: Config> Pallet<T> {
 			},
         }
 
-        // Update drawdown status changes in drawdown info
+
 
         Ok(())
 	}

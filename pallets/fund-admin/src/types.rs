@@ -39,6 +39,7 @@ pub type InflationRate = u32;
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
 pub type TotalAmount = Amount;
+pub type RecordStatusChanges<T> = BoundedVec<(DrawdownStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerDrawdown>;
 
 // Revenues
 pub type RevenueAmount = Amount;
@@ -134,7 +135,7 @@ pub struct DrawdownData<T: Config> {
     pub bank_documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
-    pub status_changes: BoundedVec<(DrawdownStatus, UpdatedDate), T::MaxStatusChangesPerDrawdown>,
+    pub status_changes: RecordStatusChanges<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
