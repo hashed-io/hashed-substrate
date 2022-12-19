@@ -208,12 +208,15 @@ pub struct JobEligibleData {
     pub jobs_multiplier: Option<JobsMultiplier>,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct RevenueData {
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct RevenueData<T: Config> {
     pub project_id: ProjectId,
     pub revenue_number: RevenueNumber,
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
+    pub status_changes: Option<BoundedVec<RevenueStatus, T::MaxStatusChangesPerRevenue>>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }

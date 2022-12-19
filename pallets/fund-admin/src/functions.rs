@@ -2638,6 +2638,7 @@ impl<T: Config> Pallet<T> {
             revenue_number,
             total_amount: 0,
             status: RevenueStatus::default(),
+            status_changes: None,
             created_date: timestamp,
             closed_date: 0,  
         };

@@ -113,6 +113,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxStatusChangesPerDrawdown: Get<u32>;
 
+		#[pallet::constant]
+		type MaxStatusChangesPerRevenue: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -257,7 +259,7 @@ pub mod pallet {
 		_,
 		Identity,
 		RevenueId, // Key revenue id
-		RevenueData,  // Value RevenueData<T>
+		RevenueData<T>,  // Value RevenueData<T>
 		OptionQuery,
 	>;
 

@@ -577,6 +577,7 @@ parameter_types! {
 	pub const MaxRevenuesByProject:u32 = 1000;
 	pub const MaxTransactionsPerRevenue:u32 = 500;
 	pub const MaxStatusChangesPerDrawdown:u32 = 100;
+	pub const MaxStatusChangesPerRevenue:u32 = 100;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -610,6 +611,7 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxRevenuesByProject = MaxRevenuesByProject;
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
+	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
 
 }
 
