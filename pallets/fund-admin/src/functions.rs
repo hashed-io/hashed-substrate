@@ -2528,7 +2528,14 @@ impl<T: Config> Pallet<T> {
 			},
         }
 
-
+        // Update drawdown status changes in drawdown info
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status_changes.try_push(
+                (drawdown_status, timestamp)
+            ).map_err(|_| Error::<T>::MaxStatusChangesPerDrawdownReached)?;
+            Ok(())
+        })?;
 
         Ok(())
 	}

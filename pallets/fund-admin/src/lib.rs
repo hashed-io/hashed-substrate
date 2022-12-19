@@ -462,6 +462,8 @@ pub mod pallet {
 		DrawdownAlreadyExists,
 		/// Max number of drawdowns per project reached
 		MaxDrawdownsPerProjectReached,
+		/// Max number of status changes per drawdown reached
+		MaxStatusChangesPerDrawdownReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
 		/// Can not perform any action on a submitted transaction
