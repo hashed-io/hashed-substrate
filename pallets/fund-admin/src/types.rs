@@ -135,7 +135,7 @@ pub struct DrawdownData<T: Config> {
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
     pub created_date: CreatedDate,
-    pub close_date: CloseDate,
+    pub closed_date: CloseDate,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]

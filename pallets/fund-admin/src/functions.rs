@@ -810,7 +810,7 @@ impl<T: Config> Pallet<T> {
             description: None,
             feedback: None,
             created_date: timestamp,
-            close_date: 0,
+            closed_date: 0,
         };
 
         // Insert drawdown data
@@ -944,7 +944,7 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Approved;
-            drawdown_data.close_date = timestamp;
+            drawdown_data.closed_date = timestamp;
             Ok(())
         })?;
 
