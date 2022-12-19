@@ -27,6 +27,7 @@ pub type Amount = u64;
 // Drawdowns
 pub type DrawdownId = [u8; 32];
 pub type DrawdownNumber = u32;
+pub type DrawdownStatusChanges<T> = BoundedVec<(DrawdownStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerDrawdown>;
 
 // Budget expenditures
 pub type ExpenditureId = [u8; 32];
@@ -39,7 +40,6 @@ pub type InflationRate = u32;
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
 pub type TotalAmount = Amount;
-pub type RecordStatusChanges<T> = BoundedVec<(DrawdownStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerDrawdown>;
 
 // Revenues
 pub type RevenueAmount = Amount;
@@ -48,6 +48,7 @@ pub type JobEligibleAmount = Amount;
 pub type RevenueId = [u8; 32];
 pub type RevenueNumber = u32;
 pub type RevenueTransactionId = [u8; 32];
+pub type RevenueStatusChanges<T> = BoundedVec<(RevenueStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerRevenue>;
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -135,7 +136,7 @@ pub struct DrawdownData<T: Config> {
     pub bank_documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
-    pub status_changes: RecordStatusChanges<T>,
+    pub status_changes: DrawdownStatusChanges<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
@@ -217,7 +218,7 @@ pub struct RevenueData<T: Config> {
     pub revenue_number: RevenueNumber,
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
-    pub status_changes: Option<BoundedVec<RevenueStatus, T::MaxStatusChangesPerRevenue>>,
+    pub status_changes: RevenueStatusChanges<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
