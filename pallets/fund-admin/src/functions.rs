@@ -809,7 +809,7 @@ impl<T: Config> Pallet<T> {
             bank_documents: None,
             description: None,
             feedback: None,
-            status_changes: None,
+            status_changes: BoundedVec::<(DrawdownStatus, UpdatedDate), T::MaxStatusChangesPerDrawdown>::default(),
             created_date: timestamp,
             closed_date: 0,
         };
@@ -2497,6 +2497,9 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
 		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
         // Match drawdown type
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
@@ -2506,7 +2509,6 @@ impl<T: Config> Pallet<T> {
 					project_data.eb5_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
 			DrawdownType::ConstructionLoan => {
 				// Update Construction Loan drawdown status in project info
@@ -2515,7 +2517,6 @@ impl<T: Config> Pallet<T> {
 					project_data.construction_loan_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
 			DrawdownType::DeveloperEquity => {
 				// Update Developer Equity drawdown status in project info
@@ -2524,9 +2525,12 @@ impl<T: Config> Pallet<T> {
 					project_data.developer_equity_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
         }
+
+        // Update drawdown status changes in drawdown info
+
+        Ok(())
 	}
 
     fn is_revenue_editable(
