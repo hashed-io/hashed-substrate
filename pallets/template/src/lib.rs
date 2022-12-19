@@ -14,13 +14,14 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-// pub mod migrations;
+/// All migrations.
+pub mod migrations;
 
 #[frame_support::pallet]
 pub mod pallet {
 
 use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
+use frame_system::pallet_prelude::*;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
