@@ -13,7 +13,7 @@ use frame_support::traits::ExistenceRequirement::KeepAlive;
 
 impl<T: Config> Pallet<T> {
 
-    pub fn do_initial_setup()->DispatchResult{
+    pub fn do_initial_setup() -> DispatchResult {
         let pallet_id = Self::pallet_id();
         let super_roles = vec![MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
         let super_role_ids = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;

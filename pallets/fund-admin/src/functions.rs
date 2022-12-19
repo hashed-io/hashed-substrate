@@ -10,10 +10,10 @@ use crate::types::*;
 
 impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     // I N I T I A L   S E T U P
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     pub fn do_initial_setup() -> DispatchResult{
         // Create a global scope for the administrator role
@@ -72,12 +72,7 @@ impl<T: Config> Pallet<T> {
 
 
     // P R O J E C T S
-    // --------------------------------------------------------------------------------------------
-
-    /// Create a new project
-    /// - only administrator can create a new project
-    /// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
-    /// users = (accountid, role)
+    // ================================================================================================
     pub fn do_create_project(
         admin: T::AccountId,
         title: FieldName,
@@ -111,7 +106,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::CreateProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::CreateProject)?;
 
         // Add timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -170,7 +165,7 @@ impl<T: Config> Pallet<T> {
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
 
         // Initialize revenue
-        Self::do_initialize_revenue(admin.clone(), project_id)?;
+        Self::do_initialize_revenue(project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -189,7 +184,7 @@ impl<T: Config> Pallet<T> {
         completion_date: Option<CompletionDate>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::EditProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::EditProject)?;
 
         //Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -244,7 +239,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::DeleteProject)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::DeleteProject)?;
 
         //Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
@@ -259,7 +254,7 @@ impl<T: Config> Pallet<T> {
         // we could use get method (<UsersByProject<T>>::get()) instead getter function
         // Delete project from ProjectsByUser storage
         let users_by_project = Self::users_by_project(project_id).iter().cloned().collect::<Vec<T::AccountId>>();
-        for user in users_by_project {
+        for user in users_by_project.iter().cloned() {
             <ProjectsByUser<T>>::mutate(user, |projects| {
                 projects.retain(|project| *project != project_id);
             });
@@ -273,7 +268,7 @@ impl<T: Config> Pallet<T> {
 
         // Delete expenditures from ExpendituresInfo storagemap
         let expenditures_by_project = Self::expenditures_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
-        for expenditure_id in expenditures_by_project {
+        for expenditure_id in expenditures_by_project.iter().cloned() {
             <ExpendituresInfo<T>>::remove(expenditure_id);
         }
 
@@ -281,10 +276,10 @@ impl<T: Config> Pallet<T> {
         <ExpendituresByProject<T>>::remove(project_id);
 
         let drawdowns_by_project = Self::drawdowns_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
-        for drawdown_id in drawdowns_by_project {
+        for drawdown_id in drawdowns_by_project.iter().cloned() {
             // Delete transactions from TransactionsInfo storagemap
             let transactions_by_drawdown = Self::transactions_by_drawdown(project_id, drawdown_id).iter().cloned().collect::<Vec<[u8;32]>>();
-            for transaction_id in transactions_by_drawdown {
+            for transaction_id in transactions_by_drawdown.iter().cloned() {
                 <TransactionsInfo<T>>::remove(transaction_id);
             }
 
@@ -316,13 +311,13 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::AssignUsers)?;
 
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
         // Assign users
-        for user in users {
+        for user in users.iter().cloned() {
             match user.2 {
                 AssignAction::Assign => {
                     Self::do_assign_user(project_id, user.0, user.1)?;
@@ -415,7 +410,7 @@ impl<T: Config> Pallet<T> {
 
 
     // U S E R S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_users(
         admin: T::AccountId,
         users: BoundedVec<(
@@ -426,9 +421,9 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::RegisterUser)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ExecuteUsers)?;
 
-        for user in users{
+        for user in users.iter().cloned() {
             match user.3 {
                 CUDAction::Create => {
                     Self::do_create_user(
@@ -549,7 +544,7 @@ impl<T: Config> Pallet<T> {
                 <ProjectsByUser<T>>::remove(user.clone());
 
                 // Remove user from UsersByProject storagemap
-                for project in projects_by_user {
+                for project in projects_by_user.iter().cloned() {
                     <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project, |users| {
                         users.retain(|u| u != &user);
                         Ok(())
@@ -564,7 +559,15 @@ impl<T: Config> Pallet<T> {
         Ok(())
 
     }
+    // E D I T   U S E R
+    // ================================================================================================
 
+    /// Editing your own user data does not require any kind of RBAC permissions, it only requires
+    /// that the user is registered. This is because permissions are granted to the 
+    /// user's account when the user is assigned to a project.
+    /// 
+    /// WARNING: Editing your own user data does not allow you to change your role. If you want to
+    /// change your role. Only the administrator can do it usign the `users` extrinsic.
     pub fn do_edit_user(
         user: T::AccountId,
         name: Option<FieldName>,
@@ -603,8 +606,7 @@ impl<T: Config> Pallet<T> {
     }
 
     // B U D G E T  E X P E N D I T U R E S
-    // --------------------------------------------------------------------------------------------
-
+    // ================================================================================================
     pub fn do_execute_expenditures(
         admin: T::AccountId,
         project_id: ProjectId,
@@ -619,7 +621,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -627,7 +629,7 @@ impl<T: Config> Pallet<T> {
         // Ensure expenditures are not empty
         ensure!(!expenditures.is_empty(), Error::<T>::EmptyExpenditures);
 
-        for expenditure in expenditures {
+        for expenditure in expenditures.iter().cloned() {
             match expenditure.5 {
                 CUDAction::Create => {
                     Self::do_create_expenditure(
@@ -661,7 +663,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::ExpendituresExecuted(admin, project_id));
         Ok(())
     }
-
 
     /// Create a new budget expenditure
     ///
@@ -782,15 +783,12 @@ impl<T: Config> Pallet<T> {
     }
 
     // D R A W D O W N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     fn do_create_drawdown(
         project_id: ProjectId,
         drawdown_type: DrawdownType,
         drawdown_number: DrawdownNumber,
     ) -> DispatchResult {
-        // TODO: Ensure admin permissions
-        //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -811,8 +809,9 @@ impl<T: Config> Pallet<T> {
             bank_documents: None,
             description: None,
             feedback: None,
+            status_changes: DrawdownStatusChanges::<T>::default(),
             created_date: timestamp,
-            close_date: 0,
+            closed_date: 0,
         };
 
         // Insert drawdown data
@@ -826,9 +825,10 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update project drawdown status
 		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::DrawdownCreated(project_id, drawdown_id));
         Ok(())
     }
@@ -838,7 +838,7 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -852,15 +852,19 @@ impl<T: Config> Pallet<T> {
         // Create a Developer Equity drawdown
         Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::DrawdownsInitialized(admin, project_id));
         Ok(())
     }
 
     pub fn do_submit_drawdown(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
+        // Ensure user permissions
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::SubmitDrawdown)?;
+
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -874,7 +878,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Update each transaction status to submitted
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exists
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -908,9 +912,8 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
-        // TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveDrawdown)?;
 
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -925,7 +928,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
         // Update each transaction status to approved
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Ensure transaction exits
             ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -942,7 +945,7 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Approved;
-            drawdown_data.close_date = timestamp;
+            drawdown_data.closed_date = timestamp;
             Ok(())
         })?;
 
@@ -970,9 +973,8 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectDrawdown)?;
 
         // Ensure drawdown is editable & ensure drawdown exists
         Self::is_drawdown_editable(drawdown_id)?;
@@ -990,7 +992,7 @@ impl<T: Config> Pallet<T> {
                 let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
                 // Update each transaction status to rejected
-                for transaction_id in drawdown_transactions {
+                for transaction_id in drawdown_transactions.iter().cloned() {
                     // Ensure transaction exits
                     ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
@@ -1005,7 +1007,7 @@ impl<T: Config> Pallet<T> {
                 // Ensure transactions feedback is provided
                 let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
-                for (transaction_id, feedback) in mod_transactions_feedback {
+                for (transaction_id, feedback) in mod_transactions_feedback.iter().cloned() {
                     // Update transaction feedback
                     <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
                         let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
@@ -1045,8 +1047,9 @@ impl<T: Config> Pallet<T> {
 
 
     // T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions: BoundedVec<(
@@ -1057,6 +1060,9 @@ impl<T: Config> Pallet<T> {
             Option<TransactionId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
+        // Ensure admin or builder permissions
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::ExecuteTransactions)?;
+
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
@@ -1069,7 +1075,7 @@ impl<T: Config> Pallet<T> {
         // Ensure if the selected drawdown is editable
         Self::is_drawdown_editable(drawdown_id)?;
 
-        for transaction in transactions {
+        for transaction in transactions.iter().cloned() {
             match transaction.3 {
                 CUDAction::Create => {
                     Self::do_create_transaction(
@@ -1218,7 +1224,7 @@ impl<T: Config> Pallet<T> {
     }
 
     // B U L K   U P L O A D   T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_up_bulk_upload(
         user: T::AccountId,
         project_id: ProjectId,
@@ -1228,7 +1234,7 @@ impl<T: Config> Pallet<T> {
         documents: Documents<T>,
     ) -> DispatchResult {
         // Ensure builder permissions
-        Self::is_authorized(user, &project_id, ProxyPermission::UpBulkupload)?;
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::UpBulkupload)?;
 
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
@@ -1266,40 +1272,67 @@ impl<T: Config> Pallet<T> {
     }
 
     // I N F L A T I O N   A D J U S T M E N T
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_inflation_adjustment(
         admin: T::AccountId,
         projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::InflationRate)?;
 
-        // Ensure projects is not empty
+        // Ensure projects array is not empty
         ensure!(!projects.is_empty(), Error::<T>::InflationRateMissingProjectIds);
 
         // Match each CUD action
-        for project in projects {
+        for project in projects.iter().cloned() {
             // Ensure project exists
             ensure!(ProjectsInfo::<T>::contains_key(project.0), Error::<T>::ProjectNotFound);
             match project.2 {
-                CUDAction::Delete => {
-                    // Mutate project data
-                    <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
-                        let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
-                        mod_project_data.inflation_rate = None;
-                        Ok(())
-                    })?;
-                },
-                // TODO: Split into Create & Update like the bank confirming documents flow
-                // Create & Update
-                _ => {
+                CUDAction::Create => {
                     // Ensure inflation rate is provided
                     let inflation_rate = project.1.ok_or(Error::<T>::InflationRateRequired)?;
-                    
-                    // Mutate project data
+                        
+                    // Get project data
+                    let project_data = ProjectsInfo::<T>::get(project.0).ok_or(Error::<T>::ProjectNotFound)?;
+
+                    // Ensure project has no inflation rate
+                    ensure!(project_data.inflation_rate.is_none(), Error::<T>::InflationRateAlreadySet);
+
+                    // Set inflation rate
                     <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
                         let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                         mod_project_data.inflation_rate = Some(inflation_rate);
+                        Ok(())
+                    })?;
+                },
+                CUDAction::Update => {
+                    // Ensure inflation rate is provided
+                    let inflation_rate = project.1.ok_or(Error::<T>::InflationRateRequired)?;
+
+                    // Get project data
+                    let project_data = ProjectsInfo::<T>::get(project.0).ok_or(Error::<T>::ProjectNotFound)?;
+
+                    // Ensure project has inflation rate
+                    ensure!(project_data.inflation_rate.is_some(), Error::<T>::InflationRateNotSet);
+
+                    // Set inflation rate
+                    <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
+                        let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                        mod_project_data.inflation_rate = Some(inflation_rate);
+                        Ok(())
+                    })?;
+                },
+                CUDAction::Delete => {
+                    // Get project data
+                    let project_data = ProjectsInfo::<T>::get(project.0).ok_or(Error::<T>::ProjectNotFound)?;
+
+                    // Ensure project has inflation rate
+                    ensure!(project_data.inflation_rate.is_some(), Error::<T>::InflationRateNotSet);
+
+                    // Delete inflation rate
+                    <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
+                        let mod_project_data = project_info.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+                        mod_project_data.inflation_rate = None;
                         Ok(())
                     })?;
                 },
@@ -1312,21 +1345,21 @@ impl<T: Config> Pallet<T> {
     }
 
     // J O B    E L I G I B L E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_job_eligibles(
         admin: T::AccountId,
         project_id: ProjectId,
         job_eligibles: BoundedVec<(
-            Option<FieldName>, // name
-            Option<JobEligibleAmount>, // amount
-            Option<NAICSCode>, // naics code
-            Option<JobsMultiplier>, // jobs multiplier
-            CUDAction, // action
-            Option<JobEligibleId>, // job_eligible_id
+            Option<FieldName>,
+            Option<JobEligibleAmount>,
+            Option<NAICSCode>,
+            Option<JobsMultiplier>,
+            CUDAction,
+            Option<JobEligibleId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions 
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::JobEligible)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::JobEligible)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -1334,7 +1367,7 @@ impl<T: Config> Pallet<T> {
         // Ensure job eligibles is not empty
         ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
 
-        for job_eligible in job_eligibles {
+        for job_eligible in job_eligibles.iter().cloned() {
             match job_eligible.4 {
                 CUDAction::Create => {
                     Self::do_create_job_eligible(
@@ -1474,8 +1507,9 @@ impl<T: Config> Pallet<T> {
     }
 
     // R E V E N U E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     pub fn do_execute_revenue_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
         revenue_transactions: BoundedVec<(
@@ -1486,6 +1520,9 @@ impl<T: Config> Pallet<T> {
             Option<RevenueTransactionId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
+        // Ensure builder permission
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::RevenueTransaction)?;
+
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
@@ -1498,7 +1535,7 @@ impl<T: Config> Pallet<T> {
         // Ensure if the selected revenue is editable
         Self::is_revenue_editable(revenue_id)?;
 
-        for transaction in revenue_transactions {
+        for transaction in revenue_transactions.iter().cloned() {
             match transaction.3 {
                 CUDAction::Create => {
                     Self::do_create_revenue_transaction(
@@ -1646,9 +1683,13 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_submit_revenue(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -> DispatchResult {
+        // Ensure builder permissions
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::SubmitRevenue)?;
+
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
@@ -1662,7 +1703,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Submitted
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1696,9 +1737,8 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1716,7 +1756,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Approved
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1758,9 +1798,8 @@ impl<T: Config> Pallet<T> {
             FieldDescription
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        //TODO: update permissions
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1772,7 +1811,7 @@ impl<T: Config> Pallet<T> {
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
 
         // Update each revenue transaction status to Rejected
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
             Self::is_revenue_transaction_editable(transaction_id)?;
 
@@ -1785,7 +1824,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Update revenue transactions feedback
-        for (transaction_id, feedback) in revenue_transactions_feedback {
+        for (transaction_id, feedback) in revenue_transactions_feedback.iter().cloned() {
             // Update revenue transaction feedback
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
                 let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
@@ -1811,13 +1850,175 @@ impl<T: Config> Pallet<T> {
     }
 
     // B A N K   C O N F I R M I N G   D O C U M E N T S
+    // ------------------------------------------------------------------------
+    pub fn do_bank_confirming_documents(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+        confirming_documents: Option<Documents<T>>,
+        action: CUDAction,
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), None, ProxyPermission::BankConfirming)?;
 
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is EB5
+        ensure!(drawdown_data.drawdown_type == DrawdownType::EB5, Error::<T>::OnlyEB5DrawdownsCanUploadBankDocuments);
+
+        match action {
+            CUDAction::Create => {
+                // Ensure bank confirming documents are provided
+                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
+
+                // Ensure confirming documents are not empty
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+
+                // Create drawdown bank confirming documents
+                Self::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
+            },
+            CUDAction::Update => {
+                // Ensure bank confirming documents are provided
+                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
+
+                // Ensure confirming documents are not empty
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+
+                // Update drawdown bank confirming documents
+                Self::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
+            },
+            CUDAction::Delete => {
+                // Delete drawdown bank confirming documents
+                Self::do_delete_bank_confirming_documents(project_id, drawdown_id)
+            },
+        }
+
+    }
+
+    fn do_create_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents<T>,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has no bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
+
+        // Ensure drawdown status is Approved
+        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
+
+        // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents =  Some(confirming_documents);
+            drawdown_data.status = DrawdownStatus::Confirmed;
+            Ok(())
+        })?;
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Mutate individual drawdown transactions status to Confirmed
+        for transaction_id in drawdown_transactions.iter().cloned() {
+            // Ensure transaction exists
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+            // Update drawdown transaction status to Confirmed
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Confirmed;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status changes in drawdown info
+        Self::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Confirmed)?;
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsUploaded(project_id, drawdown_id));
+        Ok(())
+    }
+
+    fn do_update_bank_confirming_documents(
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents<T>,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
+
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
+
+        // Mutate drawdown data: Update bank documents
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents =  Some(confirming_documents);
+            Ok(())
+        })?;
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsUpdated(drawdown_data.project_id, drawdown_id));
+        Ok(())
+    }
+
+    fn do_delete_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+    ) -> DispatchResult {
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown has bank confirming documents
+        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
+
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
+
+        // Rollback drawdown status to Approved & remove bank confirming documents
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.bank_documents = None;
+            drawdown_data.status = DrawdownStatus::Approved;
+            Ok(())
+        })?;
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Mutate individual drawdown transactions status to Approved
+        for transaction_id in drawdown_transactions.iter().cloned() {
+            // Ensure transaction exists
+            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+            // Update drawdown transaction status to Approved
+            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
+                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+                transaction_data.status = TransactionStatus::Approved;
+                Ok(())
+            })?;
+        }
+
+        // Update drawdown status changes in drawdown info
+        Self::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Approved)?;
+
+        // Event
+        Self::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
+        Ok(())
+    }
 
 
 
     // H E L P E R S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     /// Get the current timestamp in milliseconds
     fn get_timestamp_in_milliseconds() -> Option<u64> {
@@ -1854,7 +2055,7 @@ impl<T: Config> Pallet<T> {
         // Check project status is not completed
         Self::is_project_completed(project_id)?;
 
-        //Mutate project data
+        // Mutate project data
         <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
             project.status = status;
@@ -1886,7 +2087,7 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRegisterAdminRole.into());
             },
             ProxyRole::Builder => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.builder.as_mut() {
@@ -1902,7 +2103,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::Investor => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.investor.as_mut() {
@@ -1918,7 +2119,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::Issuer => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.issuer.as_mut() {
@@ -1934,7 +2135,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::RegionalCenter => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.regional_center.as_mut() {
@@ -1965,7 +2166,7 @@ impl<T: Config> Pallet<T> {
                 return Err(Error::<T>::CannotRemoveAdminRole.into());
             },
             ProxyRole::Builder => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.builder.as_mut() {
@@ -1980,7 +2181,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::Investor => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.investor.as_mut() {
@@ -1995,7 +2196,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::Issuer => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.issuer.as_mut() {
@@ -2010,7 +2211,7 @@ impl<T: Config> Pallet<T> {
                 })?;
             },
             ProxyRole::RegionalCenter => {
-                //Mutate project data
+                // Mutate project data
                 <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
                     let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
                     match project.regional_center.as_mut() {
@@ -2161,14 +2362,42 @@ impl<T: Config> Pallet<T> {
         }
     }
 
+    /// # Checks if the caller has the permission to perform an action
+    /// 
+    /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
+    /// otherwise it checks the project scope
+    /// - This is useful for functions that are called by both administrators and project users
+    /// - In workflows where the caller is an administrator, the scope is not needed
+    /// because we can get it from the helper private function get_global_scope()
+    pub fn is_authorized( authority: T::AccountId, scope: Option<&[u8;32]>, permission: ProxyPermission ) -> DispatchResult{
+        // Ensure user is registered
+        ensure!(<UsersInfo<T>>::contains_key(authority.clone()), Error::<T>::UserNotRegistered);
 
-    pub fn is_authorized( authority: T::AccountId, project_id: &[u8;32], permission: ProxyPermission ) -> DispatchResult{
-        T::Rbac::is_authorized(
-            authority,
+        match T::Rbac::has_role(
+            authority.clone(),
             Self::pallet_id(),
-            project_id,
-            &permission.id(),
-        )
+            &Self::get_global_scope(),
+            [ProxyRole::Administrator.id()].to_vec()
+        ).is_ok() {
+            // Check global scope
+            true => {
+                T::Rbac::is_authorized(
+                    authority,
+                    Self::pallet_id(),
+                    &Self::get_global_scope(),
+                    &permission.id(),
+                )
+            }, 
+            // Check project scope
+            false => {
+                T::Rbac::is_authorized(
+                    authority,
+                    Self::pallet_id(),
+                    scope.ok_or(Error::<T>::NoScopeProvided)?,
+                    &permission.id(),
+                )
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -2245,7 +2474,7 @@ impl<T: Config> Pallet<T> {
         // Calculate drawdown total amount
         let mut drawdown_total_amount: u64 = 0;
 
-        for transaction_id in drawdown_transactions {
+        for transaction_id in drawdown_transactions.iter().cloned() {
             // Get transaction data
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
@@ -2283,7 +2512,6 @@ impl<T: Config> Pallet<T> {
 					project_data.eb5_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
 			DrawdownType::ConstructionLoan => {
 				// Update Construction Loan drawdown status in project info
@@ -2292,7 +2520,6 @@ impl<T: Config> Pallet<T> {
 					project_data.construction_loan_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
 			DrawdownType::DeveloperEquity => {
 				// Update Developer Equity drawdown status in project info
@@ -2301,9 +2528,12 @@ impl<T: Config> Pallet<T> {
 					project_data.developer_equity_drawdown_status = Some(drawdown_status);
 					Ok(())
 				})?;
-                Ok(())
 			},
         }
+
+        // Update drawdown status changes in drawdown info
+        Self::do_create_drawdown_status_change_record(drawdown_id, drawdown_status)?;
+        Ok(())
 	}
 
     fn is_revenue_editable(
@@ -2366,7 +2596,7 @@ impl<T: Config> Pallet<T> {
         // Calculate revenue total amount
         let mut revenue_total_amount: Amount = 0;
 
-        for transaction_id in revenue_transactions {
+        for transaction_id in revenue_transactions.iter().cloned() {
             // Get revenue transaction data
             let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
 
@@ -2385,12 +2615,8 @@ impl<T: Config> Pallet<T> {
     }    
 
     fn do_initialize_revenue(
-        admin: T::AccountId,
         project_id: ProjectId,
     ) -> DispatchResult {
-        // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
-
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -2404,8 +2630,6 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         revenue_number: RevenueNumber,
     ) -> DispatchResult {
-        //TODO: Ensure admin permissions
-
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
@@ -2416,11 +2640,12 @@ impl<T: Config> Pallet<T> {
         let revenue_id = (project_id, revenue_number, timestamp).using_encoded(blake2_256);
 
         // Create revenue data
-        let revenue_data = RevenueData {
+        let revenue_data = RevenueData::<T> {
             project_id,
             revenue_number,
             total_amount: 0,
             status: RevenueStatus::default(),
+            status_changes: RevenueStatusChanges::<T>::default(),
             created_date: timestamp,
             closed_date: 0,  
         };
@@ -2439,7 +2664,7 @@ impl<T: Config> Pallet<T> {
         // Update revenue status in project info
         Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())?;
 
-        // Emit event
+        // Event
         Self::deposit_event(Event::RevenueCreated(project_id, revenue_id));
 
         Ok(())
@@ -2463,168 +2688,49 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update revenue status changes in revenue info
+        Self::do_create_revenue_status_change_record(revenue_id, revenue_status)?;
         Ok(())
     }
 
-    pub fn do_bank_confirming_documents(
-        admin: T::AccountId,
-        project_id: ProjectId,
+    fn do_create_drawdown_status_change_record(
         drawdown_id: DrawdownId,
-        confirming_documents: Option<Documents<T>>,
-        action: CUDAction,
+        drawdown_status: DrawdownStatus,
     ) -> DispatchResult {
-        // TODO: update permissions
-        // Ensure admin permissions
-        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        // Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure drawdown exists
-        ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
-
-        // TODO: ENSURE DRAWDOWN IS EB5 
-
-        match action {
-            CUDAction::Create => {
-                // Ensure bank confirming documents are provided
-                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
-
-                // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
-
-                // Create drawdown bank confirming documents
-                Self::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
-            },
-            CUDAction::Update => {
-                // Ensure bank confirming documents are provided
-                let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
-
-                // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
-
-                // Update drawdown bank confirming documents
-                Self::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
-            },
-            CUDAction::Delete => {
-                // Delete drawdown bank confirming documents
-                Self::do_delete_bank_confirming_documents(project_id, drawdown_id)
-            },
-        }
-
-    }
-
-    fn do_create_bank_confirming_documents(
-        project_id: ProjectId,
-        drawdown_id: DrawdownId,
-        confirming_documents: Documents<T>,
-    ) -> DispatchResult {
-        // Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
-
-        // Ensure drawdown has no bank confirming documents
-        ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
-
-        // Ensure drawdown status is Approved
-        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
-
-        // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
+        // Update drawdown status changes in drawdown info
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.bank_documents =  Some(confirming_documents);
-            drawdown_data.status = DrawdownStatus::Confirmed;
+            drawdown_data.status_changes.try_push(
+                (drawdown_status, timestamp)
+            ).map_err(|_| Error::<T>::MaxStatusChangesPerDrawdownReached)?;
             Ok(())
         })?;
 
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Mutate individual drawdown transactions status to Confirmed
-        for transaction_id in drawdown_transactions {
-            // Ensure transaction exists
-            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
-
-            // Update drawdown transaction status to Confirmed
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Confirmed;
-                Ok(())
-            })?;
-        }
-
-        // Event
-        Self::deposit_event(Event::BankDocumentsUploaded(project_id, drawdown_id));
         Ok(())
+
     }
 
-    fn do_update_bank_confirming_documents(
-        drawdown_id: DrawdownId,
-        confirming_documents: Documents<T>,
+    fn do_create_revenue_status_change_record(
+        revenue_id: RevenueId,
+        revenue_status: RevenueStatus,
     ) -> DispatchResult {
-        // Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        // Ensure drawdown has bank confirming documents
-        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
-
-        // Mutate drawdown data: Update bank documents
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.bank_documents =  Some(confirming_documents);
+        // Update revenue status changes in revenue info
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status_changes.try_push(
+                (revenue_status, timestamp)
+            ).map_err(|_| Error::<T>::MaxStatusChangesPerRevenueReached)?;
             Ok(())
         })?;
 
-        // Event
-        Self::deposit_event(Event::BankDocumentsUpdated(drawdown_data.project_id, drawdown_id));
         Ok(())
     }
-
-    fn do_delete_bank_confirming_documents(
-        project_id: ProjectId,
-        drawdown_id: DrawdownId,
-    ) -> DispatchResult {
-        // Get drawdown data & ensure drawdown exists
-        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
-
-        // Ensure drawdown has bank confirming documents
-        ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
-
-        // Rollback drawdown status to Approved & remove bank confirming documents
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.bank_documents = None;
-            drawdown_data.status = DrawdownStatus::Approved;
-            Ok(())
-        })?;
-
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-
-        // Mutate individual drawdown transactions status to Approved
-        for transaction_id in drawdown_transactions {
-            // Ensure transaction exists
-            ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
-
-            // Update drawdown transaction status to Approved
-            <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
-                let transaction_data = transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
-                transaction_data.status = TransactionStatus::Approved;
-                Ok(())
-            })?;
-        }
-
-        // Event
-        Self::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
-        Ok(())
-    }
-
-
 
 // Do not code beyond this line
 }

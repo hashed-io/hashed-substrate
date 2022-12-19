@@ -268,7 +268,7 @@ fn users_a_non_registered_admin_tries_to_register_an_account_shouldnt_work() {
                 Origin::signed(1),
                 return_user(2, Some("Alice Regional Center"), Some(ProxyRole::RegionalCenter), CUDAction::Create)
             ),
-            RbacErr::NotAuthorized
+            Error::<Test>::UserNotRegistered
         );
     });
 }
