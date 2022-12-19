@@ -395,6 +395,28 @@
 <span id="395">395</span>
 <span id="396">396</span>
 <span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -424,6 +446,7 @@
 <span class="comment">// Drawdowns
 </span><span class="kw">pub type </span>DrawdownId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>DrawdownNumber = u32;
+<span class="kw">pub type </span>DrawdownStatusChanges&lt;T&gt; = BoundedVec&lt;(DrawdownStatus, UpdatedDate),  &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerDrawdown&gt;;
 
 <span class="comment">// Budget expenditures
 </span><span class="kw">pub type </span>ExpenditureId = [u8; <span class="number">32</span>];
@@ -444,6 +467,7 @@
 <span class="kw">pub type </span>RevenueId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueNumber = u32;
 <span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>RevenueStatusChanges&lt;T&gt; = BoundedVec&lt;(RevenueStatus, UpdatedDate),  &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerRevenue&gt;;
 
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -494,16 +518,6 @@
     <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
-<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
-</span><span class="kw">pub enum </span>ProxyRole {
-    Administrator,
-    Builder,
-    Investor,
-    Issuer,
-    RegionalCenter,
-}
-
-
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 </span><span class="kw">pub struct </span>ExpenditureData {
     <span class="kw">pub </span>project_id: ProjectId,
@@ -541,8 +555,9 @@
     <span class="kw">pub </span>bank_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
     <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+    <span class="kw">pub </span>status_changes: DrawdownStatusChanges&lt;T&gt;,
     <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>close_date: CloseDate,
+    <span class="kw">pub </span>closed_date: CloseDate,
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -614,12 +629,15 @@
     <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
 }
 
-<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-</span><span class="kw">pub struct </span>RevenueData {
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>RevenueData&lt;T: Config&gt; {
     <span class="kw">pub </span>project_id: ProjectId,
     <span class="kw">pub </span>revenue_number: RevenueNumber,
     <span class="kw">pub </span>total_amount: RevenueAmount,
     <span class="kw">pub </span>status: RevenueStatus,
+    <span class="kw">pub </span>status_changes: RevenueStatusChanges&lt;T&gt;,
     <span class="kw">pub </span>created_date: CreatedDate,
     <span class="kw">pub </span>closed_date: CloseDate,
 }
@@ -681,6 +699,15 @@
     Unassign,
 }
 
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+</span><span class="kw">pub enum </span>ProxyRole {
+    Administrator,
+    Builder,
+    Investor,
+    Issuer,
+    RegionalCenter,
+}
+
 <span class="kw">impl </span>ProxyRole {
     <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
         <span class="kw">match </span><span class="self">self</span>{
@@ -705,40 +732,51 @@
 
 
 
-<span class="doccomment">/// Extrinsics which require previous authorization to call them
-</span><span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 </span><span class="kw">pub enum </span>ProxyPermission {
-    RegisterUser, <span class="comment">// users
-    </span>EditUser, <span class="comment">// users_edit_user
-    </span>CreateProject, <span class="comment">// projects_create_project
-    </span>EditProject, <span class="comment">// projects_edit_project
-    </span>DeleteProject, <span class="comment">// projects_delete_project
-    </span>AssignUser, <span class="comment">// projects_assign_user
-    </span>Expenditures, <span class="comment">// expenditures
-    </span>SubmitDrawdown, <span class="comment">// submit_drawdown
-    </span>ApproveDrawdown, <span class="comment">// approve_drawdown
-    </span>RejectDrawdown, <span class="comment">// reject_drawdown
-    </span>UpBulkupload, <span class="comment">// up_bulkupload
-    </span>Inflation, <span class="comment">// inflation
-    </span>JobEligible, <span class="comment">// job_eligible
+    CreateProject, <span class="comment">// projects_create_project: admin
+    </span>EditProject, <span class="comment">// projects_edit_project: admin
+    </span>DeleteProject, <span class="comment">// projects_delete_project: admin
+    </span>AssignUsers, <span class="comment">// projects_assign_user: admin 
+    </span>ExecuteUsers, <span class="comment">// users: admin
+    </span>EditUser, <span class="comment">// users_edit_user: all
+    </span>Expenditures, <span class="comment">// expenditures: admin
+    </span>SubmitDrawdown, <span class="comment">// submit_drawdown: admin, builder
+    </span>ApproveDrawdown, <span class="comment">// approve_drawdown: admin
+    </span>RejectDrawdown, <span class="comment">// reject_drawdown: admin
+    </span>ExecuteTransactions, <span class="comment">// transactions: admin, builder
+    </span>UpBulkupload, <span class="comment">// up_bulkupload: builder
+    </span>InflationRate, <span class="comment">// inflation: admin
+    </span>JobEligible, <span class="comment">// job_eligible: admin
+    </span>RevenueTransaction, <span class="comment">// revenue_transaction: builder
+    </span>SubmitRevenue, <span class="comment">// submit_revenue: builder
+    </span>ApproveRevenue, <span class="comment">// approve_revenue: admin
+    </span>RejectRevenue, <span class="comment">// reject_revenue: admin
+    </span>BankConfirming, <span class="comment">// bank_confirming: admin
 </span>}
 
 <span class="kw">impl </span>ProxyPermission {
     <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
         <span class="kw">match </span><span class="self">self</span>{
-            <span class="self">Self</span>::RegisterUser =&gt; <span class="string">&quot;RegisterUser&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;EditUser&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::CreateProject =&gt; <span class="string">&quot;CreateProject&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::EditProject =&gt; <span class="string">&quot;EditProject&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::DeleteProject =&gt; <span class="string">&quot;DeleteProject&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::AssignUser =&gt; <span class="string">&quot;AssignUser&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::AssignUsers =&gt; <span class="string">&quot;AssignUsers&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::ExecuteUsers =&gt; <span class="string">&quot;ExecuteUsers&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;Edituser&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::Expenditures =&gt; <span class="string">&quot;Expenditures&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::SubmitDrawdown =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::ApproveDrawdown =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::RejectDrawdown =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::ExecuteTransactions =&gt; <span class="string">&quot;ExecuteTransactions&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::UpBulkupload =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::Inflation =&gt; <span class="string">&quot;Inflation&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::InflationRate =&gt; <span class="string">&quot;InflationRate&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::JobEligible =&gt; <span class="string">&quot;JobEligible&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::RevenueTransaction =&gt; <span class="string">&quot;RevenueTransaction&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::SubmitRevenue =&gt; <span class="string">&quot;SubmitRevenue&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::ApproveRevenue =&gt; <span class="string">&quot;ApproveRevenue&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::RejectRevenue =&gt; <span class="string">&quot;RejectRevenue&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::BankConfirming =&gt; <span class="string">&quot;BankConfirming&quot;</span>.as_bytes().to_vec(),
         }
     }
 
@@ -749,19 +787,22 @@
     <span class="kw">pub fn </span>administrator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
         <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
         <span class="kw">let </span>administrator_permissions = [
-            RegisterUser.to_vec(),
-            EditUser.to_vec(),
             CreateProject.to_vec(),
             EditProject.to_vec(),
             DeleteProject.to_vec(),
-            AssignUser.to_vec(),
+            AssignUsers.to_vec(),
+            ExecuteUsers.to_vec(),
+            EditUser.to_vec(),
             Expenditures.to_vec(),
             SubmitDrawdown.to_vec(),
             ApproveDrawdown.to_vec(),
             RejectDrawdown.to_vec(),
-            UpBulkupload.to_vec(),
-            Inflation.to_vec(),
+            ExecuteTransactions.to_vec(),
+            InflationRate.to_vec(),
             JobEligible.to_vec(),
+            ApproveRevenue.to_vec(),
+            RejectRevenue.to_vec(),
+            BankConfirming.to_vec(),
         ].to_vec();
         administrator_permissions
     }
@@ -771,7 +812,10 @@
         [
             EditUser.to_vec(),
             SubmitDrawdown.to_vec(),
+            ExecuteTransactions.to_vec(),
             UpBulkupload.to_vec(),
+            RevenueTransaction.to_vec(),
+            SubmitRevenue.to_vec(),
         ].to_vec()
     }
 

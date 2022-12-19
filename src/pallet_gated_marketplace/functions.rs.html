@@ -825,7 +825,7 @@
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 
-    <span class="kw">pub fn </span>do_initial_setup()-&gt;DispatchResult{
+    <span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
         <span class="kw">let </span>pallet_id = <span class="self">Self</span>::pallet_id();
         <span class="kw">let </span>super_roles = <span class="macro">vec!</span>[MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
         <span class="kw">let </span>super_role_ids = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)<span class="question-mark">?</span>;

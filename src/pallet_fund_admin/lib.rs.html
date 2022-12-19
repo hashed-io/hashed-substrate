@@ -1578,6 +1578,24 @@
 <span id="1578">1578</span>
 <span id="1579">1579</span>
 <span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
+<span id="1593">1593</span>
+<span id="1594">1594</span>
+<span id="1595">1595</span>
+<span id="1596">1596</span>
+<span id="1597">1597</span>
+<span id="1598">1598</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1690,6 +1708,11 @@
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxTransactionsPerRevenue: Get&lt;u32&gt;;
 
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxStatusChangesPerDrawdown: Get&lt;u32&gt;;
+
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxStatusChangesPerRevenue: Get&lt;u32&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
@@ -1834,7 +1857,7 @@
 		<span class="kw">_</span>,
 		Identity,
 		RevenueId, <span class="comment">// Key revenue id
-		</span>RevenueData,  <span class="comment">// Value RevenueData&lt;T&gt;
+		</span>RevenueData&lt;T&gt;,  <span class="comment">// Value RevenueData&lt;T&gt;
 		</span>OptionQuery,
 	&gt;;
 
@@ -1931,7 +1954,7 @@
 		</span>DrawdownRejected(ProjectId, DrawdownId),
 		<span class="doccomment">/// Bulkupload drawdown was submitted successfully
 		</span>BulkUploadSubmitted(ProjectId, DrawdownId),
-		<span class="doccomment">/// Inflation rate extrinsic was executed successfully
+		<span class="doccomment">/// An array of adjustments was executed depending on the CUDAction
 		</span>InflationRateAdjusted(T::AccountId),
 		<span class="doccomment">/// An array of job eligibles was executed depending on the CUDAction
 		</span>JobEligiblesExecuted(T::AccountId, ProjectId),
@@ -2037,6 +2060,8 @@
 		</span>DrawdownAlreadyExists,
 		<span class="doccomment">/// Max number of drawdowns per project reached
 		</span>MaxDrawdownsPerProjectReached,
+		<span class="doccomment">/// Max number of status changes per drawdown reached
+		</span>MaxStatusChangesPerDrawdownReached,
 		<span class="doccomment">/// Can not modify a completed drawdown
 		</span>CannotEditDrawdown,
 		<span class="doccomment">/// Can not perform any action on a submitted transaction
@@ -2101,6 +2126,10 @@
 		</span>InflationRateMissingProjectIds,
 		<span class="doccomment">/// Inflation rate was not provided
 		</span>InflationRateRequired,
+		<span class="doccomment">/// Inflation rate has been already set for the selected project
+		</span>InflationRateAlreadySet,
+		<span class="doccomment">/// Inflation rate was not set for the selected project
+		</span>InflationRateNotSet,
 		<span class="doccomment">/// Bulkupload drawdowns are only allowed for Construction Loan &amp; Developer Equity
 		</span>DrawdownTypeNotSupportedForBulkUpload,
 		<span class="doccomment">/// Cannot edit user role if the user is assigned to a project
@@ -2153,6 +2182,8 @@
 		</span>RevenueTransactionNotFound,
 		<span class="doccomment">/// Revenue transaction can not be edited
 		</span>CannotEditRevenueTransaction,
+		<span class="doccomment">/// Max number of status changes per revenue reached
+		</span>MaxStatusChangesPerRevenueReached,
 		<span class="doccomment">/// Can not perform any action on a submitted revenue
 		</span>CannotPerformActionOnSubmittedRevenue,
 		<span class="doccomment">/// Can not perform any action on a approved revenue
@@ -2187,6 +2218,10 @@
 		</span>BankConfirmingDocumentsNotProvided,
 		<span class="doccomment">/// Banck confirming documents array is empty
 		</span>BankConfirmingDocumentsAreEmpty,
+		<span class="doccomment">/// No scope was provided checking if the user has permissions. No applies for administrator users
+		</span>NoScopeProvided,
+		<span class="doccomment">/// Only eb5 drawdowns are allowed to upload bank documentation
+		</span>OnlyEB5DrawdownsCanUploadBankDocuments,
 	}
 
 	<span class="comment">// E X T R I N S I C S
@@ -2289,20 +2324,21 @@
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		///
 		/// # Note:
-		/// WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
+		/// - WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
 		/// but administrators can not delete themselves.
-		/// WARNING: This function only registers, updates, or deletes users from the site.
-		/// DOESN&#39;T grant or remove permissions from the rbac pallet.
+		/// - WARNING: This function only registers, updates, or deletes users from the site.
+		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
+		/// a user from a selected project. 
 		</span><span class="attribute">#[transactional]
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>users(
 			origin: OriginFor&lt;T&gt;,
 			users: BoundedVec&lt;(
-				T::AccountId, <span class="comment">// account id
-				</span><span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="comment">// name
-				</span><span class="prelude-ty">Option</span>&lt;ProxyRole&gt;, <span class="comment">// role
-				</span>CUDAction, <span class="comment">// action
-			</span>), T::MaxRegistrationsAtTime&gt;,
+				T::AccountId,
+				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+				<span class="prelude-ty">Option</span>&lt;ProxyRole&gt;,
+				CUDAction,
+			), T::MaxRegistrationsAtTime&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2406,13 +2442,13 @@
 				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;
 			), T::MaxRegistrationsAtTime&gt;,
 			job_eligibles: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="comment">// name
-				</span><span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, <span class="comment">// naics code
-				</span><span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;, <span class="comment">// jobs multiplier
-				</span>CUDAction, <span class="comment">// action
-				</span><span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;, <span class="comment">// job_eligible_id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+				<span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
+				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
+				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+				CUDAction,
+				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+			), T::MaxRegistrationsAtTime&gt;&gt;,
 			users: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
 				T::AccountId,
 				ProxyRole,
@@ -2586,22 +2622,22 @@
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
 			expenditures: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="comment">// name
-				</span><span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;, <span class="comment">// type
-				</span><span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, <span class="comment">// naics code
-				</span><span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;, <span class="comment">// jobs multiplier
-				</span>CUDAction, <span class="comment">// action
-				</span><span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;, <span class="comment">// expenditure_id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+				<span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
+				<span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
+				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
+				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+				CUDAction,
+				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
+			), T::MaxRegistrationsAtTime&gt;&gt;,
 			job_eligibles: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="comment">// name
-				</span><span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, <span class="comment">// naics code
-				</span><span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;, <span class="comment">// jobs multiplier
-				</span>CUDAction, <span class="comment">// action
-				</span><span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;, <span class="comment">// job_eligible_id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+				<span class="prelude-ty">Option</span>&lt;FieldName&gt;, 
+				<span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
+				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, 
+				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+				CUDAction,
+				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+			), T::MaxRegistrationsAtTime&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2663,23 +2699,22 @@
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			transactions: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;, <span class="comment">// expenditure_id
-				</span><span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;, <span class="comment">//Documents
-				</span>CUDAction, <span class="comment">// Action
-				</span><span class="prelude-ty">Option</span>&lt;TransactionId&gt;, <span class="comment">// transaction_id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
+				<span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
+				<span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+				CUDAction,
+				<span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
+			), T::MaxRegistrationsAtTime&gt;&gt;,
 			submit: bool,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
-			// Ensure builder permissions
-			</span><span class="self">Self</span>::is_authorized(who, <span class="kw-2">&amp;</span>project_id, ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
 
-			<span class="kw">match </span>submit {
+			</span><span class="kw">match </span>submit {
 				<span class="comment">// Save transactions as draft
 				</span><span class="bool-val">false </span>=&gt; {
 					<span class="comment">// Do execute transactions
 					</span><span class="self">Self</span>::do_execute_transactions(
+						who.clone(),
 						project_id,
 						drawdown_id,
 						transactions.ok_or(Error::&lt;T&gt;::EmptyTransactions)<span class="question-mark">?</span>,
@@ -2692,6 +2727,7 @@
 						<span class="comment">// Do execute transactions
 						</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
 							<span class="self">Self</span>::do_execute_transactions(
+								who.clone(),
 								project_id,
 								drawdown_id,
 								mod_transactions)<span class="question-mark">?</span>;
@@ -2699,7 +2735,7 @@
 					}
 
 					<span class="comment">// Do submit drawdown
-					</span><span class="self">Self</span>::do_submit_drawdown(project_id, drawdown_id)
+					</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)
 				},
 			}
 
@@ -2768,7 +2804,7 @@
 			// a distinction between bulkupload and non-bulkupload drawdowns
 			// review those function in each step of the flow (approve, reject, submit)
 			
-			// Match bulkupdate
+			// Match bulkupload parameter
 			</span><span class="kw">match </span>bulkupload {
 				<span class="prelude-val">Some</span>(approval) =&gt; {
 					<span class="comment">// Execute bulkupload flow (construction loan &amp; developer equity)
@@ -2776,13 +2812,14 @@
 						<span class="bool-val">false </span>=&gt; {
 							<span class="comment">// 1. Do execute transactions
 							</span><span class="self">Self</span>::do_execute_transactions(
+								who.clone(),
 								project_id,
 								drawdown_id,
 								transactions.ok_or(Error::&lt;T&gt;::EmptyTransactions)<span class="question-mark">?</span>,
 							)<span class="question-mark">?</span>;
 
 							<span class="comment">// 2. Do submit drawdown
-							</span><span class="self">Self</span>::do_submit_drawdown(project_id, drawdown_id)
+							</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)
 
 						},
 						<span class="bool-val">true  </span>=&gt; {
@@ -2791,24 +2828,25 @@
 								<span class="comment">// Do execute transactions
 								</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
 									<span class="self">Self</span>::do_execute_transactions(
+										who.clone(),
 										project_id,
 										drawdown_id,
 										mod_transactions)<span class="question-mark">?</span>;
 								}
 
 								<span class="comment">// 2. Submit drawdown
-								</span><span class="self">Self</span>::do_submit_drawdown(project_id, drawdown_id)<span class="question-mark">?</span>;
+								</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)<span class="question-mark">?</span>;
 							}
 
 							<span class="comment">// 3. Approve drawdown
-							</span><span class="self">Self</span>::do_approve_drawdown(who, project_id, drawdown_id)
+							</span><span class="self">Self</span>::do_approve_drawdown(who.clone(), project_id, drawdown_id)
 						},
 					}
 
 				},
 				<span class="prelude-val">None </span>=&gt; {
 					<span class="comment">// Execute normal flow (EB5)
-					</span><span class="self">Self</span>::do_approve_drawdown(who, project_id, drawdown_id)
+					</span><span class="self">Self</span>::do_approve_drawdown(who.clone(), project_id, drawdown_id)
 				}
 			}
 
@@ -2973,25 +3011,22 @@
 			project_id: ProjectId,
 			revenue_id: RevenueId,
 			revenue_transactions: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;, <span class="comment">// job eligible id
-				</span><span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;, <span class="comment">// documents
-				</span>CUDAction, <span class="comment">// action
-				</span><span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;, <span class="comment">// revenue transaction id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+				<span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;,
+				<span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+				CUDAction,
+				<span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
+			), T::MaxRegistrationsAtTime&gt;&gt;,
 			submit: bool,
 		) -&gt; DispatchResult {
-			<span class="comment">//TODO: Remove underscore when permissions are updated
-			</span><span class="kw">let </span>_who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			
-			<span class="comment">//TODO: Ensure builder permissions
-			//Self::is_authorized(who, &amp;project_id, ProxyPermission::SubmitRevenue)?;
-
-			</span><span class="kw">match </span>submit { 
+			<span class="kw">match </span>submit { 
 				<span class="comment">// Save revenue transactions as draft
 				</span><span class="bool-val">false </span>=&gt; {
 					<span class="comment">// Do execute transactions 
 					</span><span class="self">Self</span>::do_execute_revenue_transactions(
+						who.clone(),
 						project_id,
 						revenue_id,
 						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsEmpty)<span class="question-mark">?</span>,
@@ -3004,6 +3039,7 @@
 						<span class="comment">// Do execute transactions 
 						</span><span class="kw">if </span>mod_revenue_transactions.len() &gt; <span class="number">0 </span>{
 							<span class="self">Self</span>::do_execute_revenue_transactions(
+								who.clone(),
 								project_id,
 								revenue_id,
 								mod_revenue_transactions)<span class="question-mark">?</span>;
@@ -3011,7 +3047,7 @@
 					}
 
 					<span class="comment">// Do submit revenue
-					</span><span class="self">Self</span>::do_submit_revenue(project_id, revenue_id)
+					</span><span class="self">Self</span>::do_submit_revenue(who.clone(), project_id, revenue_id)
 				},
 			}
 			

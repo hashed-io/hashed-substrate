@@ -2628,6 +2628,112 @@
 <span id="2628">2628</span>
 <span id="2629">2629</span>
 <span id="2630">2630</span>
+<span id="2631">2631</span>
+<span id="2632">2632</span>
+<span id="2633">2633</span>
+<span id="2634">2634</span>
+<span id="2635">2635</span>
+<span id="2636">2636</span>
+<span id="2637">2637</span>
+<span id="2638">2638</span>
+<span id="2639">2639</span>
+<span id="2640">2640</span>
+<span id="2641">2641</span>
+<span id="2642">2642</span>
+<span id="2643">2643</span>
+<span id="2644">2644</span>
+<span id="2645">2645</span>
+<span id="2646">2646</span>
+<span id="2647">2647</span>
+<span id="2648">2648</span>
+<span id="2649">2649</span>
+<span id="2650">2650</span>
+<span id="2651">2651</span>
+<span id="2652">2652</span>
+<span id="2653">2653</span>
+<span id="2654">2654</span>
+<span id="2655">2655</span>
+<span id="2656">2656</span>
+<span id="2657">2657</span>
+<span id="2658">2658</span>
+<span id="2659">2659</span>
+<span id="2660">2660</span>
+<span id="2661">2661</span>
+<span id="2662">2662</span>
+<span id="2663">2663</span>
+<span id="2664">2664</span>
+<span id="2665">2665</span>
+<span id="2666">2666</span>
+<span id="2667">2667</span>
+<span id="2668">2668</span>
+<span id="2669">2669</span>
+<span id="2670">2670</span>
+<span id="2671">2671</span>
+<span id="2672">2672</span>
+<span id="2673">2673</span>
+<span id="2674">2674</span>
+<span id="2675">2675</span>
+<span id="2676">2676</span>
+<span id="2677">2677</span>
+<span id="2678">2678</span>
+<span id="2679">2679</span>
+<span id="2680">2680</span>
+<span id="2681">2681</span>
+<span id="2682">2682</span>
+<span id="2683">2683</span>
+<span id="2684">2684</span>
+<span id="2685">2685</span>
+<span id="2686">2686</span>
+<span id="2687">2687</span>
+<span id="2688">2688</span>
+<span id="2689">2689</span>
+<span id="2690">2690</span>
+<span id="2691">2691</span>
+<span id="2692">2692</span>
+<span id="2693">2693</span>
+<span id="2694">2694</span>
+<span id="2695">2695</span>
+<span id="2696">2696</span>
+<span id="2697">2697</span>
+<span id="2698">2698</span>
+<span id="2699">2699</span>
+<span id="2700">2700</span>
+<span id="2701">2701</span>
+<span id="2702">2702</span>
+<span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
+<span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
+<span id="2719">2719</span>
+<span id="2720">2720</span>
+<span id="2721">2721</span>
+<span id="2722">2722</span>
+<span id="2723">2723</span>
+<span id="2724">2724</span>
+<span id="2725">2725</span>
+<span id="2726">2726</span>
+<span id="2727">2727</span>
+<span id="2728">2728</span>
+<span id="2729">2729</span>
+<span id="2730">2730</span>
+<span id="2731">2731</span>
+<span id="2732">2732</span>
+<span id="2733">2733</span>
+<span id="2734">2734</span>
+<span id="2735">2735</span>
+<span id="2736">2736</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="kw">use </span>frame_support::traits::Time;
@@ -2640,10 +2746,10 @@
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
     <span class="comment">// M A I N  F U N C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     // I N I T I A L   S E T U P
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
 
     </span><span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult{
         <span class="comment">// Create a global scope for the administrator role
@@ -2702,12 +2808,7 @@
 
 
     <span class="comment">// P R O J E C T S
-    // --------------------------------------------------------------------------------------------
-
-    </span><span class="doccomment">/// Create a new project
-    /// - only administrator can create a new project
-    /// Expenditures: (name, type, amount, naics code, jobs multiplier, CUDAction, expenditure_id)
-    /// users = (accountid, role)
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_create_project(
         admin: T::AccountId,
         title: FieldName,
@@ -2741,7 +2842,7 @@
         ), T::MaxRegistrationsAtTime&gt;&gt;,
         ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::CreateProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::CreateProject)<span class="question-mark">?</span>;
 
         <span class="comment">// Add timestamp
         </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
@@ -2800,7 +2901,7 @@
         </span><span class="self">Self</span>::do_initialize_drawdowns(admin.clone(), project_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Initialize revenue
-        </span><span class="self">Self</span>::do_initialize_revenue(admin.clone(), project_id)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::do_initialize_revenue(project_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -2819,7 +2920,7 @@
         completion_date: <span class="prelude-ty">Option</span>&lt;CompletionDate&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::EditProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::EditProject)<span class="question-mark">?</span>;
 
         <span class="comment">//Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -2874,7 +2975,7 @@
         project_id: ProjectId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::DeleteProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::DeleteProject)<span class="question-mark">?</span>;
 
         <span class="comment">//Ensure project exists &amp; get project data
         </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project_id).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
@@ -2889,7 +2990,7 @@
         // we could use get method (&lt;UsersByProject&lt;T&gt;&gt;::get()) instead getter function
         // Delete project from ProjectsByUser storage
         </span><span class="kw">let </span>users_by_project = <span class="self">Self</span>::users_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;T::AccountId&gt;&gt;();
-        <span class="kw">for </span>user <span class="kw">in </span>users_by_project {
+        <span class="kw">for </span>user <span class="kw">in </span>users_by_project.iter().cloned() {
             &lt;ProjectsByUser&lt;T&gt;&gt;::mutate(user, |projects| {
                 projects.retain(|project| <span class="kw-2">*</span>project != project_id);
             });
@@ -2903,7 +3004,7 @@
 
         <span class="comment">// Delete expenditures from ExpendituresInfo storagemap
         </span><span class="kw">let </span>expenditures_by_project = <span class="self">Self</span>::expenditures_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
-        <span class="kw">for </span>expenditure_id <span class="kw">in </span>expenditures_by_project {
+        <span class="kw">for </span>expenditure_id <span class="kw">in </span>expenditures_by_project.iter().cloned() {
             &lt;ExpendituresInfo&lt;T&gt;&gt;::remove(expenditure_id);
         }
 
@@ -2911,10 +3012,10 @@
         </span>&lt;ExpendituresByProject&lt;T&gt;&gt;::remove(project_id);
 
         <span class="kw">let </span>drawdowns_by_project = <span class="self">Self</span>::drawdowns_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
-        <span class="kw">for </span>drawdown_id <span class="kw">in </span>drawdowns_by_project {
+        <span class="kw">for </span>drawdown_id <span class="kw">in </span>drawdowns_by_project.iter().cloned() {
             <span class="comment">// Delete transactions from TransactionsInfo storagemap
             </span><span class="kw">let </span>transactions_by_drawdown = <span class="self">Self</span>::transactions_by_drawdown(project_id, drawdown_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
-            <span class="kw">for </span>transaction_id <span class="kw">in </span>transactions_by_drawdown {
+            <span class="kw">for </span>transaction_id <span class="kw">in </span>transactions_by_drawdown.iter().cloned() {
                 &lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
             }
 
@@ -2946,13 +3047,13 @@
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::AssignUser)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::AssignUsers)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Assign users
-        </span><span class="kw">for </span>user <span class="kw">in </span>users {
+        </span><span class="kw">for </span>user <span class="kw">in </span>users.iter().cloned() {
             <span class="kw">match </span>user.<span class="number">2 </span>{
                 AssignAction::Assign =&gt; {
                     <span class="self">Self</span>::do_assign_user(project_id, user.<span class="number">0</span>, user.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -3045,7 +3146,7 @@
 
 
     <span class="comment">// U S E R S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_users(
         admin: T::AccountId,
         users: BoundedVec&lt;(
@@ -3056,9 +3157,9 @@
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::RegisterUser)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ExecuteUsers)<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>user <span class="kw">in </span>users{
+        <span class="kw">for </span>user <span class="kw">in </span>users.iter().cloned() {
             <span class="kw">match </span>user.<span class="number">3 </span>{
                 CUDAction::Create =&gt; {
                     <span class="self">Self</span>::do_create_user(
@@ -3179,7 +3280,7 @@
                 </span>&lt;ProjectsByUser&lt;T&gt;&gt;::remove(user.clone());
 
                 <span class="comment">// Remove user from UsersByProject storagemap
-                </span><span class="kw">for </span>project <span class="kw">in </span>projects_by_user {
+                </span><span class="kw">for </span>project <span class="kw">in </span>projects_by_user.iter().cloned() {
                     &lt;UsersByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project, |users| {
                         users.retain(|u| u != <span class="kw-2">&amp;</span>user);
                         <span class="prelude-val">Ok</span>(())
@@ -3194,8 +3295,16 @@
         <span class="prelude-val">Ok</span>(())
 
     }
+    <span class="comment">// E D I T   U S E R
+    // ================================================================================================
 
-    <span class="kw">pub fn </span>do_edit_user(
+    </span><span class="doccomment">/// Editing your own user data does not require any kind of RBAC permissions, it only requires
+    /// that the user is registered. This is because permissions are granted to the 
+    /// user&#39;s account when the user is assigned to a project.
+    /// 
+    /// WARNING: Editing your own user data does not allow you to change your role. If you want to
+    /// change your role. Only the administrator can do it usign the `users` extrinsic.
+    </span><span class="kw">pub fn </span>do_edit_user(
         user: T::AccountId,
         name: <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
         image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
@@ -3233,8 +3342,7 @@
     }
 
     <span class="comment">// B U D G E T  E X P E N D I T U R E S
-    // --------------------------------------------------------------------------------------------
-
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_expenditures(
         admin: T::AccountId,
         project_id: ProjectId,
@@ -3249,7 +3357,7 @@
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3257,7 +3365,7 @@
         <span class="comment">// Ensure expenditures are not empty
         </span><span class="macro">ensure!</span>(!expenditures.is_empty(), Error::&lt;T&gt;::EmptyExpenditures);
 
-        <span class="kw">for </span>expenditure <span class="kw">in </span>expenditures {
+        <span class="kw">for </span>expenditure <span class="kw">in </span>expenditures.iter().cloned() {
             <span class="kw">match </span>expenditure.<span class="number">5 </span>{
                 CUDAction::Create =&gt; {
                     <span class="self">Self</span>::do_create_expenditure(
@@ -3291,7 +3399,6 @@
         </span><span class="self">Self</span>::deposit_event(Event::ExpendituresExecuted(admin, project_id));
         <span class="prelude-val">Ok</span>(())
     }
-
 
     <span class="doccomment">/// Create a new budget expenditure
     ///
@@ -3412,16 +3519,13 @@
     }
 
     <span class="comment">// D R A W D O W N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">fn </span>do_create_drawdown(
         project_id: ProjectId,
         drawdown_type: DrawdownType,
         drawdown_number: DrawdownNumber,
     ) -&gt; DispatchResult {
-        <span class="comment">// TODO: Ensure admin permissions
-        //Self::is_superuser(admin.clone(), &amp;Self::get_global_scope(), ProxyRole::Administrator.id())?;
-
-        // Ensure project exists
+        <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
         <span class="comment">// Get timestamp
@@ -3441,8 +3545,9 @@
             bank_documents: <span class="prelude-val">None</span>,
             description: <span class="prelude-val">None</span>,
             feedback: <span class="prelude-val">None</span>,
+            status_changes: DrawdownStatusChanges::&lt;T&gt;::default(),
             created_date: timestamp,
-            close_date: <span class="number">0</span>,
+            closed_date: <span class="number">0</span>,
         };
 
         <span class="comment">// Insert drawdown data
@@ -3456,9 +3561,10 @@
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-		<span class="self">Self</span>::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())<span class="question-mark">?</span>;
+        <span class="comment">// Update project drawdown status
+		</span><span class="self">Self</span>::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())<span class="question-mark">?</span>;
 
-        <span class="comment">// Emit event
+        <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::DrawdownCreated(project_id, drawdown_id));
         <span class="prelude-val">Ok</span>(())
     }
@@ -3468,7 +3574,7 @@
         project_id: ProjectId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3482,15 +3588,19 @@
         <span class="comment">// Create a Developer Equity drawdown
         </span><span class="self">Self</span>::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, <span class="number">1</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// Emit event
+        <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::DrawdownsInitialized(admin, project_id));
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>do_submit_drawdown(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
+        <span class="comment">// Ensure user permissions
+        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
+
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
@@ -3504,7 +3614,7 @@
         </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Update each transaction status to submitted
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
             <span class="comment">// Ensure transaction exists
             </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
 
@@ -3538,9 +3648,8 @@
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
-        <span class="comment">// TODO: update permissions
-        // Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
@@ -3555,7 +3664,7 @@
         </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Update each transaction status to approved
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
             <span class="comment">// Ensure transaction exits
             </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
 
@@ -3572,7 +3681,7 @@
         </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
             <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
             drawdown_data.status = DrawdownStatus::Approved;
-            drawdown_data.close_date = timestamp;
+            drawdown_data.closed_date = timestamp;
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
@@ -3600,9 +3709,8 @@
         ), T::MaxRegistrationsAtTime&gt;&gt;,
         drawdown_feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     ) -&gt; DispatchResult {
-        <span class="comment">//TODO: update permissions
-        // Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure drawdown is editable &amp; ensure drawdown exists
         </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
@@ -3620,7 +3728,7 @@
                 </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
                 <span class="comment">// Update each transaction status to rejected
-                </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+                </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
                     <span class="comment">// Ensure transaction exits
                     </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
 
@@ -3635,7 +3743,7 @@
                 <span class="comment">// Ensure transactions feedback is provided
                 </span><span class="kw">let </span>mod_transactions_feedback = transactions_feedback.ok_or(Error::&lt;T&gt;::EB5MissingFeedback)<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>mod_transactions_feedback {
+                <span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>mod_transactions_feedback.iter().cloned() {
                     <span class="comment">// Update transaction feedback
                     </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
                         <span class="kw">let </span>transaction_data = transaction_data.as_mut().ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
@@ -3675,8 +3783,9 @@
 
 
     <span class="comment">// T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions: BoundedVec&lt;(
@@ -3687,6 +3796,9 @@
             <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
+        <span class="comment">// Ensure admin or builder permissions
+        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
+
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again 
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
@@ -3699,7 +3811,7 @@
         <span class="comment">// Ensure if the selected drawdown is editable
         </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>transaction <span class="kw">in </span>transactions {
+        <span class="kw">for </span>transaction <span class="kw">in </span>transactions.iter().cloned() {
             <span class="kw">match </span>transaction.<span class="number">3 </span>{
                 CUDAction::Create =&gt; {
                     <span class="self">Self</span>::do_create_transaction(
@@ -3848,7 +3960,7 @@
     }
 
     <span class="comment">// B U L K   U P L O A D   T R A N S A C T I O N S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_up_bulk_upload(
         user: T::AccountId,
         project_id: ProjectId,
@@ -3858,7 +3970,7 @@
         documents: Documents&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permissions
-        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::UpBulkupload)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::UpBulkupload)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -3896,40 +4008,67 @@
     }
 
     <span class="comment">// I N F L A T I O N   A D J U S T M E N T
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_inflation_adjustment(
         admin: T::AccountId,
         projects: BoundedVec&lt;(ProjectId, <span class="prelude-ty">Option</span>&lt;InflationRate&gt;, CUDAction), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::InflationRate)<span class="question-mark">?</span>;
 
-        <span class="comment">// Ensure projects is not empty
+        <span class="comment">// Ensure projects array is not empty
         </span><span class="macro">ensure!</span>(!projects.is_empty(), Error::&lt;T&gt;::InflationRateMissingProjectIds);
 
         <span class="comment">// Match each CUD action
-        </span><span class="kw">for </span>project <span class="kw">in </span>projects {
+        </span><span class="kw">for </span>project <span class="kw">in </span>projects.iter().cloned() {
             <span class="comment">// Ensure project exists
             </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project.<span class="number">0</span>), Error::&lt;T&gt;::ProjectNotFound);
             <span class="kw">match </span>project.<span class="number">2 </span>{
-                CUDAction::Delete =&gt; {
-                    <span class="comment">// Mutate project data
-                    </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project.<span class="number">0</span>, |project_info| {
-                        <span class="kw">let </span>mod_project_data = project_info.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
-                        mod_project_data.inflation_rate = <span class="prelude-val">None</span>;
-                        <span class="prelude-val">Ok</span>(())
-                    })<span class="question-mark">?</span>;
-                },
-                <span class="comment">// TODO: Split into Create &amp; Update like the bank confirming documents flow
-                // Create &amp; Update
-                </span><span class="kw">_ </span>=&gt; {
+                CUDAction::Create =&gt; {
                     <span class="comment">// Ensure inflation rate is provided
                     </span><span class="kw">let </span>inflation_rate = project.<span class="number">1</span>.ok_or(Error::&lt;T&gt;::InflationRateRequired)<span class="question-mark">?</span>;
-                    
-                    <span class="comment">// Mutate project data
+                        
+                    <span class="comment">// Get project data
+                    </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project.<span class="number">0</span>).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Ensure project has no inflation rate
+                    </span><span class="macro">ensure!</span>(project_data.inflation_rate.is_none(), Error::&lt;T&gt;::InflationRateAlreadySet);
+
+                    <span class="comment">// Set inflation rate
                     </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project.<span class="number">0</span>, |project_info| {
                         <span class="kw">let </span>mod_project_data = project_info.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                         mod_project_data.inflation_rate = <span class="prelude-val">Some</span>(inflation_rate);
+                        <span class="prelude-val">Ok</span>(())
+                    })<span class="question-mark">?</span>;
+                },
+                CUDAction::Update =&gt; {
+                    <span class="comment">// Ensure inflation rate is provided
+                    </span><span class="kw">let </span>inflation_rate = project.<span class="number">1</span>.ok_or(Error::&lt;T&gt;::InflationRateRequired)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Get project data
+                    </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project.<span class="number">0</span>).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Ensure project has inflation rate
+                    </span><span class="macro">ensure!</span>(project_data.inflation_rate.is_some(), Error::&lt;T&gt;::InflationRateNotSet);
+
+                    <span class="comment">// Set inflation rate
+                    </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project.<span class="number">0</span>, |project_info| {
+                        <span class="kw">let </span>mod_project_data = project_info.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+                        mod_project_data.inflation_rate = <span class="prelude-val">Some</span>(inflation_rate);
+                        <span class="prelude-val">Ok</span>(())
+                    })<span class="question-mark">?</span>;
+                },
+                CUDAction::Delete =&gt; {
+                    <span class="comment">// Get project data
+                    </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project.<span class="number">0</span>).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Ensure project has inflation rate
+                    </span><span class="macro">ensure!</span>(project_data.inflation_rate.is_some(), Error::&lt;T&gt;::InflationRateNotSet);
+
+                    <span class="comment">// Delete inflation rate
+                    </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project.<span class="number">0</span>, |project_info| {
+                        <span class="kw">let </span>mod_project_data = project_info.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+                        mod_project_data.inflation_rate = <span class="prelude-val">None</span>;
                         <span class="prelude-val">Ok</span>(())
                     })<span class="question-mark">?</span>;
                 },
@@ -3942,21 +4081,21 @@
     }
 
     <span class="comment">// J O B    E L I G I B L E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_job_eligibles(
         admin: T::AccountId,
         project_id: ProjectId,
         job_eligibles: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="comment">// name
-            </span><span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;, <span class="comment">// amount
-            </span><span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, <span class="comment">// naics code
-            </span><span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;, <span class="comment">// jobs multiplier
-            </span>CUDAction, <span class="comment">// action
-            </span><span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;, <span class="comment">// job_eligible_id
-        </span>), T::MaxRegistrationsAtTime&gt;,
+            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+            <span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
+            <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
+            <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+            CUDAction,
+            <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+        ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions 
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::JobEligible)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::JobEligible)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3964,7 +4103,7 @@
         <span class="comment">// Ensure job eligibles is not empty
         </span><span class="macro">ensure!</span>(!job_eligibles.is_empty(), Error::&lt;T&gt;::JobEligiblesIsEmpty);
 
-        <span class="kw">for </span>job_eligible <span class="kw">in </span>job_eligibles {
+        <span class="kw">for </span>job_eligible <span class="kw">in </span>job_eligibles.iter().cloned() {
             <span class="kw">match </span>job_eligible.<span class="number">4 </span>{
                 CUDAction::Create =&gt; {
                     <span class="self">Self</span>::do_create_job_eligible(
@@ -4104,8 +4243,9 @@
     }
 
     <span class="comment">// R E V E N U E S
-    // --------------------------------------------------------------------------------------------
+    // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_revenue_transactions(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
         revenue_transactions: BoundedVec&lt;(
@@ -4116,6 +4256,9 @@
             <span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
+        <span class="comment">// Ensure builder permission
+        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
+
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again 
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
@@ -4128,7 +4271,7 @@
         <span class="comment">// Ensure if the selected revenue is editable
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>transaction <span class="kw">in </span>revenue_transactions {
+        <span class="kw">for </span>transaction <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="kw">match </span>transaction.<span class="number">3 </span>{
                 CUDAction::Create =&gt; {
                     <span class="self">Self</span>::do_create_revenue_transaction(
@@ -4276,9 +4419,13 @@
     }
 
     <span class="kw">pub fn </span>do_submit_revenue(
+        user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -&gt; DispatchResult {
+        <span class="comment">// Ensure builder permissions
+        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitRevenue)<span class="question-mark">?</span>;
+
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
@@ -4292,7 +4439,7 @@
         </span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Update each revenue transaction status to Submitted
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions {
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Ensure revenue transaction is editable
             </span><span class="self">Self</span>::is_revenue_transaction_editable(transaction_id)<span class="question-mark">?</span>;
 
@@ -4326,9 +4473,8 @@
         project_id: ProjectId,
         revenue_id: RevenueId,
     ) -&gt; DispatchResult {
-        <span class="comment">//TODO: update permissions
-        // Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
@@ -4346,7 +4492,7 @@
         </span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Update each revenue transaction status to Approved
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions {
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Ensure revenue transaction is editable
             </span><span class="self">Self</span>::is_revenue_transaction_editable(transaction_id)<span class="question-mark">?</span>;
 
@@ -4388,9 +4534,8 @@
             FieldDescription
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
-        <span class="comment">//TODO: update permissions
-        // Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        <span class="comment">// Ensure admin permissions
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
@@ -4402,7 +4547,7 @@
         </span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Update each revenue transaction status to Rejected
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions {
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Ensure revenue transaction is editable
             </span><span class="self">Self</span>::is_revenue_transaction_editable(transaction_id)<span class="question-mark">?</span>;
 
@@ -4415,7 +4560,7 @@
         }
 
         <span class="comment">// Update revenue transactions feedback
-        </span><span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>revenue_transactions_feedback {
+        </span><span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>revenue_transactions_feedback.iter().cloned() {
             <span class="comment">// Update revenue transaction feedback
             </span>&lt;RevenueTransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |revenue_transaction_data| {
                 <span class="kw">let </span>revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
@@ -4441,13 +4586,175 @@
     }
 
     <span class="comment">// B A N K   C O N F I R M I N G   D O C U M E N T S
+    // ------------------------------------------------------------------------
+    </span><span class="kw">pub fn </span>do_bank_confirming_documents(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+        confirming_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+        action: CUDAction,
+    ) -&gt; DispatchResult {
+        <span class="comment">// Ensure admin permissions
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::BankConfirming)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure project exists
+        </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
+
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
+        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown is EB5
+        </span><span class="macro">ensure!</span>(drawdown_data.drawdown_type == DrawdownType::EB5, Error::&lt;T&gt;::OnlyEB5DrawdownsCanUploadBankDocuments);
+
+        <span class="kw">match </span>action {
+            CUDAction::Create =&gt; {
+                <span class="comment">// Ensure bank confirming documents are provided
+                </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
+
+                <span class="comment">// Ensure confirming documents are not empty
+                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
+
+                <span class="comment">// Create drawdown bank confirming documents
+                </span><span class="self">Self</span>::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
+            },
+            CUDAction::Update =&gt; {
+                <span class="comment">// Ensure bank confirming documents are provided
+                </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
+
+                <span class="comment">// Ensure confirming documents are not empty
+                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
+
+                <span class="comment">// Update drawdown bank confirming documents
+                </span><span class="self">Self</span>::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
+            },
+            CUDAction::Delete =&gt; {
+                <span class="comment">// Delete drawdown bank confirming documents
+                </span><span class="self">Self</span>::do_delete_bank_confirming_documents(project_id, drawdown_id)
+            },
+        }
+
+    }
+
+    <span class="kw">fn </span>do_create_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents&lt;T&gt;,
+    ) -&gt; DispatchResult {
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
+        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown has no bank confirming documents
+        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_none(), Error::&lt;T&gt;::DrawdownHasAlreadyBankConfirmingDocuments);
+
+        <span class="comment">// Ensure drawdown status is Approved
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Approved, Error::&lt;T&gt;::DrawdownNotApproved);
+
+        <span class="comment">// Mutate drawdown data: Upload bank documents &amp; update drawdown status to Confirmed
+        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
+            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            drawdown_data.bank_documents =  <span class="prelude-val">Some</span>(confirming_documents);
+            drawdown_data.status = DrawdownStatus::Confirmed;
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// Get drawdown transactions
+        </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Mutate individual drawdown transactions status to Confirmed
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
+            <span class="comment">// Ensure transaction exists
+            </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
+
+            <span class="comment">// Update drawdown transaction status to Confirmed
+            </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
+                <span class="kw">let </span>transaction_data = transaction_data.as_mut().ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+                transaction_data.status = TransactionStatus::Confirmed;
+                <span class="prelude-val">Ok</span>(())
+            })<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// Update drawdown status changes in drawdown info
+        </span><span class="self">Self</span>::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Confirmed)<span class="question-mark">?</span>;
+
+        <span class="comment">// Event
+        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsUploaded(project_id, drawdown_id));
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>do_update_bank_confirming_documents(
+        drawdown_id: DrawdownId,
+        confirming_documents: Documents&lt;T&gt;,
+    ) -&gt; DispatchResult {
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
+        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown has bank confirming documents
+        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
+
+        <span class="comment">// Ensure drawdown status is Confirmed
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
+
+        <span class="comment">// Mutate drawdown data: Update bank documents
+        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
+            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            drawdown_data.bank_documents =  <span class="prelude-val">Some</span>(confirming_documents);
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// Event
+        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsUpdated(drawdown_data.project_id, drawdown_id));
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>do_delete_bank_confirming_documents(
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+    ) -&gt; DispatchResult {
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
+        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown has bank confirming documents
+        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
+
+        <span class="comment">// Ensure drawdown status is Confirmed
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
+
+        <span class="comment">// Rollback drawdown status to Approved &amp; remove bank confirming documents
+        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
+            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            drawdown_data.bank_documents = <span class="prelude-val">None</span>;
+            drawdown_data.status = DrawdownStatus::Approved;
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// Get drawdown transactions
+        </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Mutate individual drawdown transactions status to Approved
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
+            <span class="comment">// Ensure transaction exists
+            </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
+
+            <span class="comment">// Update drawdown transaction status to Approved
+            </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
+                <span class="kw">let </span>transaction_data = transaction_data.as_mut().ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+                transaction_data.status = TransactionStatus::Approved;
+                <span class="prelude-val">Ok</span>(())
+            })<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// Update drawdown status changes in drawdown info
+        </span><span class="self">Self</span>::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Approved)<span class="question-mark">?</span>;
+
+        <span class="comment">// Event
+        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
+        <span class="prelude-val">Ok</span>(())
+    }
 
 
 
-
-
-    // H E L P E R S
-    // --------------------------------------------------------------------------------------------
+    <span class="comment">// H E L P E R S
+    // ================================================================================================
 
     </span><span class="doccomment">/// Get the current timestamp in milliseconds
     </span><span class="kw">fn </span>get_timestamp_in_milliseconds() -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
@@ -4484,7 +4791,7 @@
         <span class="comment">// Check project status is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
-        <span class="comment">//Mutate project data
+        <span class="comment">// Mutate project data
         </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
             <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
             project.status = status;
@@ -4516,7 +4823,7 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRegisterAdminRole.into());
             },
             ProxyRole::Builder =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.builder.as_mut() {
@@ -4532,7 +4839,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::Investor =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.investor.as_mut() {
@@ -4548,7 +4855,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::Issuer =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.issuer.as_mut() {
@@ -4564,7 +4871,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::RegionalCenter =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.regional_center.as_mut() {
@@ -4595,7 +4902,7 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRemoveAdminRole.into());
             },
             ProxyRole::Builder =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.builder.as_mut() {
@@ -4610,7 +4917,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::Investor =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.investor.as_mut() {
@@ -4625,7 +4932,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::Issuer =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.issuer.as_mut() {
@@ -4640,7 +4947,7 @@
                 })<span class="question-mark">?</span>;
             },
             ProxyRole::RegionalCenter =&gt; {
-                <span class="comment">//Mutate project data
+                <span class="comment">// Mutate project data
                 </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
                     <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
                     <span class="kw">match </span>project.regional_center.as_mut() {
@@ -4791,14 +5098,42 @@
         }
     }
 
+    <span class="doccomment">/// # Checks if the caller has the permission to perform an action
+    /// 
+    /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
+    /// otherwise it checks the project scope
+    /// - This is useful for functions that are called by both administrators and project users
+    /// - In workflows where the caller is an administrator, the scope is not needed
+    /// because we can get it from the helper private function get_global_scope()
+    </span><span class="kw">pub fn </span>is_authorized( authority: T::AccountId, scope: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[u8;<span class="number">32</span>]&gt;, permission: ProxyPermission ) -&gt; DispatchResult{
+        <span class="comment">// Ensure user is registered
+        </span><span class="macro">ensure!</span>(&lt;UsersInfo&lt;T&gt;&gt;::contains_key(authority.clone()), Error::&lt;T&gt;::UserNotRegistered);
 
-    <span class="kw">pub fn </span>is_authorized( authority: T::AccountId, project_id: <span class="kw-2">&amp;</span>[u8;<span class="number">32</span>], permission: ProxyPermission ) -&gt; DispatchResult{
-        T::Rbac::is_authorized(
-            authority,
+        <span class="kw">match </span>T::Rbac::has_role(
+            authority.clone(),
             <span class="self">Self</span>::pallet_id(),
-            project_id,
-            <span class="kw-2">&amp;</span>permission.id(),
-        )
+            <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
+            [ProxyRole::Administrator.id()].to_vec()
+        ).is_ok() {
+            <span class="comment">// Check global scope
+            </span><span class="bool-val">true </span>=&gt; {
+                T::Rbac::is_authorized(
+                    authority,
+                    <span class="self">Self</span>::pallet_id(),
+                    <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
+                    <span class="kw-2">&amp;</span>permission.id(),
+                )
+            }, 
+            <span class="comment">// Check project scope
+            </span><span class="bool-val">false </span>=&gt; {
+                T::Rbac::is_authorized(
+                    authority,
+                    <span class="self">Self</span>::pallet_id(),
+                    scope.ok_or(Error::&lt;T&gt;::NoScopeProvided)<span class="question-mark">?</span>,
+                    <span class="kw-2">&amp;</span>permission.id(),
+                )
+            }
+        }
     }
 
     <span class="attribute">#[allow(dead_code)]
@@ -4875,7 +5210,7 @@
         <span class="comment">// Calculate drawdown total amount
         </span><span class="kw">let </span><span class="kw-2">mut </span>drawdown_total_amount: u64 = <span class="number">0</span>;
 
-        <span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+        <span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
             <span class="comment">// Get transaction data
             </span><span class="kw">let </span>transaction_data = TransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
 
@@ -4913,7 +5248,6 @@
 					project_data.eb5_drawdown_status = <span class="prelude-val">Some</span>(drawdown_status);
 					<span class="prelude-val">Ok</span>(())
 				})<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(())
 			},
 			DrawdownType::ConstructionLoan =&gt; {
 				<span class="comment">// Update Construction Loan drawdown status in project info
@@ -4922,7 +5256,6 @@
 					project_data.construction_loan_drawdown_status = <span class="prelude-val">Some</span>(drawdown_status);
 					<span class="prelude-val">Ok</span>(())
 				})<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(())
 			},
 			DrawdownType::DeveloperEquity =&gt; {
 				<span class="comment">// Update Developer Equity drawdown status in project info
@@ -4931,9 +5264,12 @@
 					project_data.developer_equity_drawdown_status = <span class="prelude-val">Some</span>(drawdown_status);
 					<span class="prelude-val">Ok</span>(())
 				})<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(())
 			},
         }
+
+        <span class="comment">// Update drawdown status changes in drawdown info
+        </span><span class="self">Self</span>::do_create_drawdown_status_change_record(drawdown_id, drawdown_status)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
 	}
 
     <span class="kw">fn </span>is_revenue_editable(
@@ -4996,7 +5332,7 @@
         <span class="comment">// Calculate revenue total amount
         </span><span class="kw">let </span><span class="kw-2">mut </span>revenue_total_amount: Amount = <span class="number">0</span>;
 
-        <span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions {
+        <span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Get revenue transaction data
             </span><span class="kw">let </span>revenue_transaction_data = RevenueTransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
 
@@ -5015,12 +5351,8 @@
     }    
 
     <span class="kw">fn </span>do_initialize_revenue(
-        admin: T::AccountId,
         project_id: ProjectId,
     ) -&gt; DispatchResult {
-        <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
-
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
@@ -5034,9 +5366,7 @@
         project_id: ProjectId,
         revenue_number: RevenueNumber,
     ) -&gt; DispatchResult {
-        <span class="comment">//TODO: Ensure admin permissions
-
-        // Ensure project exists
+        <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
         <span class="comment">// Get timestamp
@@ -5046,11 +5376,12 @@
         </span><span class="kw">let </span>revenue_id = (project_id, revenue_number, timestamp).using_encoded(blake2_256);
 
         <span class="comment">// Create revenue data
-        </span><span class="kw">let </span>revenue_data = RevenueData {
+        </span><span class="kw">let </span>revenue_data = RevenueData::&lt;T&gt; {
             project_id,
             revenue_number,
             total_amount: <span class="number">0</span>,
             status: RevenueStatus::default(),
+            status_changes: RevenueStatusChanges::&lt;T&gt;::default(),
             created_date: timestamp,
             closed_date: <span class="number">0</span>,  
         };
@@ -5069,7 +5400,7 @@
         <span class="comment">// Update revenue status in project info
         </span><span class="self">Self</span>::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())<span class="question-mark">?</span>;
 
-        <span class="comment">// Emit event
+        <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::RevenueCreated(project_id, revenue_id));
 
         <span class="prelude-val">Ok</span>(())
@@ -5093,169 +5424,51 @@
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
+        <span class="comment">// Update revenue status changes in revenue info
+        </span><span class="self">Self</span>::do_create_revenue_status_change_record(revenue_id, revenue_status)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>do_bank_confirming_documents(
-        admin: T::AccountId,
-        project_id: ProjectId,
+    <span class="kw">fn </span>do_create_drawdown_status_change_record(
         drawdown_id: DrawdownId,
-        confirming_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-        action: CUDAction,
+        drawdown_status: DrawdownStatus,
     ) -&gt; DispatchResult {
-        <span class="comment">// TODO: update permissions
-        // Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        <span class="comment">// Get timestamp
+        </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
-        <span class="comment">// Ensure project exists
-        </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
-
-        <span class="comment">// Ensure drawdown exists
-        </span><span class="macro">ensure!</span>(DrawdownsInfo::&lt;T&gt;::contains_key(drawdown_id), Error::&lt;T&gt;::DrawdownNotFound);
-
-        <span class="comment">// TODO: ENSURE DRAWDOWN IS EB5 
-
-        </span><span class="kw">match </span>action {
-            CUDAction::Create =&gt; {
-                <span class="comment">// Ensure bank confirming documents are provided
-                </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
-
-                <span class="comment">// Ensure confirming documents are not empty
-                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
-
-                <span class="comment">// Create drawdown bank confirming documents
-                </span><span class="self">Self</span>::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
-            },
-            CUDAction::Update =&gt; {
-                <span class="comment">// Ensure bank confirming documents are provided
-                </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
-
-                <span class="comment">// Ensure confirming documents are not empty
-                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
-
-                <span class="comment">// Update drawdown bank confirming documents
-                </span><span class="self">Self</span>::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
-            },
-            CUDAction::Delete =&gt; {
-                <span class="comment">// Delete drawdown bank confirming documents
-                </span><span class="self">Self</span>::do_delete_bank_confirming_documents(project_id, drawdown_id)
-            },
-        }
-
-    }
-
-    <span class="kw">fn </span>do_create_bank_confirming_documents(
-        project_id: ProjectId,
-        drawdown_id: DrawdownId,
-        confirming_documents: Documents&lt;T&gt;,
-    ) -&gt; DispatchResult {
-        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
-        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">// Ensure drawdown has no bank confirming documents
-        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_none(), Error::&lt;T&gt;::DrawdownHasAlreadyBankConfirmingDocuments);
-
-        <span class="comment">// Ensure drawdown status is Approved
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Approved, Error::&lt;T&gt;::DrawdownNotApproved);
-
-        <span class="comment">// Mutate drawdown data: Upload bank documents &amp; update drawdown status to Confirmed
+        <span class="comment">// Update drawdown status changes in drawdown info
         </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
             <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-            drawdown_data.bank_documents =  <span class="prelude-val">Some</span>(confirming_documents);
-            drawdown_data.status = DrawdownStatus::Confirmed;
+            drawdown_data.status_changes.try_push(
+                (drawdown_status, timestamp)
+            ).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxStatusChangesPerDrawdownReached)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-        <span class="comment">// Get drawdown transactions
-        </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">// Mutate individual drawdown transactions status to Confirmed
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
-            <span class="comment">// Ensure transaction exists
-            </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
-
-            <span class="comment">// Update drawdown transaction status to Confirmed
-            </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
-                <span class="kw">let </span>transaction_data = transaction_data.as_mut().ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
-                transaction_data.status = TransactionStatus::Confirmed;
-                <span class="prelude-val">Ok</span>(())
-            })<span class="question-mark">?</span>;
-        }
-
-        <span class="comment">// Event
-        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsUploaded(project_id, drawdown_id));
         <span class="prelude-val">Ok</span>(())
+
     }
 
-    <span class="kw">fn </span>do_update_bank_confirming_documents(
-        drawdown_id: DrawdownId,
-        confirming_documents: Documents&lt;T&gt;,
+    <span class="kw">fn </span>do_create_revenue_status_change_record(
+        revenue_id: RevenueId,
+        revenue_status: RevenueStatus,
     ) -&gt; DispatchResult {
-        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
-        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+        <span class="comment">// Get timestamp
+        </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
-        <span class="comment">// Ensure drawdown has bank confirming documents
-        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
-
-        <span class="comment">// Ensure drawdown status is Confirmed
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
-
-        <span class="comment">// Mutate drawdown data: Update bank documents
-        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
-            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-            drawdown_data.bank_documents =  <span class="prelude-val">Some</span>(confirming_documents);
+        <span class="comment">// Update revenue status changes in revenue info
+        </span>&lt;RevenuesInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(revenue_id, |revenue_data| {
+            <span class="kw">let </span>revenue_data = revenue_data.as_mut().ok_or(Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
+            revenue_data.status_changes.try_push(
+                (revenue_status, timestamp)
+            ).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxStatusChangesPerRevenueReached)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-        <span class="comment">// Event
-        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsUpdated(drawdown_data.project_id, drawdown_id));
         <span class="prelude-val">Ok</span>(())
     }
-
-    <span class="kw">fn </span>do_delete_bank_confirming_documents(
-        project_id: ProjectId,
-        drawdown_id: DrawdownId,
-    ) -&gt; DispatchResult {
-        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
-        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">// Ensure drawdown has bank confirming documents
-        </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
-
-        <span class="comment">// Ensure drawdown status is Confirmed
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
-
-        <span class="comment">// Rollback drawdown status to Approved &amp; remove bank confirming documents
-        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
-            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-            drawdown_data.bank_documents = <span class="prelude-val">None</span>;
-            drawdown_data.status = DrawdownStatus::Approved;
-            <span class="prelude-val">Ok</span>(())
-        })<span class="question-mark">?</span>;
-
-        <span class="comment">// Get drawdown transactions
-        </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">// Mutate individual drawdown transactions status to Approved
-        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
-            <span class="comment">// Ensure transaction exists
-            </span><span class="macro">ensure!</span>(TransactionsInfo::&lt;T&gt;::contains_key(transaction_id), Error::&lt;T&gt;::TransactionNotFound);
-
-            <span class="comment">// Update drawdown transaction status to Approved
-            </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
-                <span class="kw">let </span>transaction_data = transaction_data.as_mut().ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
-                transaction_data.status = TransactionStatus::Approved;
-                <span class="prelude-val">Ok</span>(())
-            })<span class="question-mark">?</span>;
-        }
-
-        <span class="comment">// Event
-        </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
 
 <span class="comment">// Do not code beyond this line
-</span>}</code></pre></div>
+</span>}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
