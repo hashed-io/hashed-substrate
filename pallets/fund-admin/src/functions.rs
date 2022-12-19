@@ -809,7 +809,7 @@ impl<T: Config> Pallet<T> {
             bank_documents: None,
             description: None,
             feedback: None,
-            status_changes: BoundedVec::<(DrawdownStatus, UpdatedDate), T::MaxStatusChangesPerDrawdown>::default(),
+            status_changes: DrawdownStatusChanges::<T>::default(),
             created_date: timestamp,
             closed_date: 0,
         };
@@ -1937,6 +1937,9 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
+        // Update drawdown status changes in drawdown info
+        Self::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Confirmed)?;
+
         // Event
         Self::deposit_event(Event::BankDocumentsUploaded(project_id, drawdown_id));
         Ok(())
@@ -2003,6 +2006,9 @@ impl<T: Config> Pallet<T> {
                 Ok(())
             })?;
         }
+
+        // Update drawdown status changes in drawdown info
+        Self::do_create_drawdown_status_change_record(drawdown_id, DrawdownStatus::Approved)?;
 
         // Event
         Self::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
@@ -2497,9 +2503,6 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
 		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
-
         // Match drawdown type
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
@@ -2529,14 +2532,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Update drawdown status changes in drawdown info
-        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
-            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
-            drawdown_data.status_changes.try_push(
-                (drawdown_status, timestamp)
-            ).map_err(|_| Error::<T>::MaxStatusChangesPerDrawdownReached)?;
-            Ok(())
-        })?;
-
+        Self::do_create_drawdown_status_change_record(drawdown_id, drawdown_status)?;
         Ok(())
 	}
 
@@ -2644,12 +2640,12 @@ impl<T: Config> Pallet<T> {
         let revenue_id = (project_id, revenue_number, timestamp).using_encoded(blake2_256);
 
         // Create revenue data
-        let revenue_data = RevenueData {
+        let revenue_data = RevenueData::<T> {
             project_id,
             revenue_number,
             total_amount: 0,
             status: RevenueStatus::default(),
-            status_changes: None,
+            status_changes: RevenueStatusChanges::<T>::default(),
             created_date: timestamp,
             closed_date: 0,  
         };
@@ -2692,9 +2688,49 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
+        // Update revenue status changes in revenue info
+        Self::do_create_revenue_status_change_record(revenue_id, revenue_status)?;
         Ok(())
     }
 
+    fn do_create_drawdown_status_change_record(
+        drawdown_id: DrawdownId,
+        drawdown_status: DrawdownStatus,
+    ) -> DispatchResult {
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Update drawdown status changes in drawdown info
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.status_changes.try_push(
+                (drawdown_status, timestamp)
+            ).map_err(|_| Error::<T>::MaxStatusChangesPerDrawdownReached)?;
+            Ok(())
+        })?;
+
+        Ok(())
+
+    }
+
+    fn do_create_revenue_status_change_record(
+        revenue_id: RevenueId,
+        revenue_status: RevenueStatus,
+    ) -> DispatchResult {
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Update revenue status changes in revenue info
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status_changes.try_push(
+                (revenue_status, timestamp)
+            ).map_err(|_| Error::<T>::MaxStatusChangesPerRevenueReached)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
 
 // Do not code beyond this line
 }

@@ -584,6 +584,8 @@ pub mod pallet {
 		RevenueTransactionNotFound,
 		/// Revenue transaction can not be edited
 		CannotEditRevenueTransaction,
+		/// Max number of status changes per revenue reached
+		MaxStatusChangesPerRevenueReached,
 		/// Can not perform any action on a submitted revenue
 		CannotPerformActionOnSubmittedRevenue,
 		/// Can not perform any action on a approved revenue
