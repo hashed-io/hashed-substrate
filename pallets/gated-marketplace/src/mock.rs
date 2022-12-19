@@ -23,7 +23,7 @@ frame_support::construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
@@ -133,7 +133,6 @@ impl pallet_uniques::Config for Test {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
 	type Locker = ();
-
 }
 
 parameter_types! {
@@ -152,7 +151,6 @@ impl pallet_balances::Config for Test {
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = [u8; 8];
 }
-
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 2;
@@ -177,8 +175,12 @@ impl pallet_rbac::Config for Test {
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	// TODO: get initial conf?
-	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
-	t.execute_with(|| GatedMarketplace::do_initial_setup().expect("Error on configuring initial setup"));
+	let mut t: sp_io::TestExternalities =
+		frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	t.execute_with(|| {
+		GatedMarketplace::do_initial_setup().expect("Error on GatedMarketplace configuring initial setup");
+		Fruniques::do_initial_setup().expect("Error on Fruniques configuring initial setup");
+	});
 	t
 }
 
