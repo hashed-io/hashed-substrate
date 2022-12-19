@@ -809,6 +809,7 @@ impl<T: Config> Pallet<T> {
             bank_documents: None,
             description: None,
             feedback: None,
+            status_changes: None,
             created_date: timestamp,
             closed_date: 0,
         };

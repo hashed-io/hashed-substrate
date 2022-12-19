@@ -134,6 +134,7 @@ pub struct DrawdownData<T: Config> {
     pub bank_documents: Option<Documents<T>>,
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
+    pub status_changes: Option<BoundedVec<DrawdownStatus, T::MaxStatusChangesPerDrawdown>>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }

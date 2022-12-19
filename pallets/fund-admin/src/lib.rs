@@ -110,6 +110,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxTransactionsPerRevenue: Get<u32>;
 
+		#[pallet::constant]
+		type MaxStatusChangesPerDrawdown: Get<u32>;
+
 	}
 
 	#[pallet::pallet]
