@@ -13,7 +13,7 @@ use frame_support::traits::ExistenceRequirement::KeepAlive;
 
 impl<T: Config> Pallet<T> {
 
-    pub fn do_initial_setup()->DispatchResult{
+    pub fn do_initial_setup() -> DispatchResult {
         let pallet_id = Self::pallet_id();
         let super_roles = vec![MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
         let super_role_ids = <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
@@ -788,7 +788,7 @@ impl<T: Config> Pallet<T> {
                 buy_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::LimitExceeded)?;
             }
         }
-        //ensure we already took the entry from the storage map, so we can insert it again.
+        //ensure we already took the entry from the storagemap, so we can insert it again.
         ensure!(!<OffersByItem<T>>::contains_key(collection_id, item_id), Error::<T>::OfferNotFound);
         <OffersByItem<T>>::insert(collection_id, item_id, buy_offer_ids);
 
