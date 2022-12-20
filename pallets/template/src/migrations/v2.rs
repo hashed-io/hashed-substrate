@@ -25,9 +25,9 @@ pub fn pre_migration<T: crate::Config, N: AsRef<str>>(new: N) {
 ///
 /// This new prefix must be the same as the one set in construct_runtime. For safety, use
 /// `PalletInfo` to get it, as:
-/// `<Runtime as frame_system::Config>::PalletInfo::name::<ElectionsPhragmenPallet>`.
+/// `<Runtime as frame_system::Config>::PalletInfo::name::<Template>`.
 ///
-/// The old storage prefix, `PhragmenElection` is hardcoded in the migration code.
+/// The old storage prefix, `Template` is hardcoded in the migration code.
 pub fn migrate<T: crate::Config, N: AsRef<str>>(new_pallet_name: N) -> Weight {
 	if new_pallet_name.as_ref().as_bytes() == OLD_PREFIX {
 		log::info!(

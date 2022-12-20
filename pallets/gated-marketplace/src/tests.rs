@@ -35,6 +35,23 @@ fn boundedvec_to_string(boundedvec: &BoundedVec<u8, MaxFeedbackLen>) -> String {
 	s
 }
 
+fn dummy_description() -> BoundedVec<u8, StringLimit> {
+	BoundedVec::<u8, StringLimit>::try_from(b"dummy description".to_vec()).unwrap()
+}
+
+fn dummy_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>)> {
+	vec![(
+		BoundedVec::<u8, KeyLimit>::try_from(b"dummy key".encode())
+			.expect("Error on encoding key to BoundedVec"),
+		BoundedVec::<u8, ValueLimit>::try_from(b"dummy value".encode())
+			.expect("Error on encoding value to BoundedVec"),
+	)]
+}
+
+fn dummy_empty_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>)> {
+	vec![]
+}
+
 fn _find_id(vec_tor: BoundedVec<[u8;32], ConstU32<100>>, id:[u8;32]) -> bool {
 	vec_tor.iter().find(|&x| *x == id).ok_or(Error::<Test>::OfferNotFound).is_ok()
 }
@@ -805,7 +822,7 @@ fn enlist_sell_offer_works() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -826,7 +843,7 @@ fn enlist_sell_offer_item_does_not_exist_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -843,7 +860,7 @@ fn enlist_sell_offer_item_already_enlisted_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -863,7 +880,7 @@ fn enlist_sell_offer_not_owner_tries_to_enlist_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -879,7 +896,7 @@ fn enlist_sell_offer_price_must_greater_than_zero_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -895,7 +912,7 @@ fn enlist_sell_offer_price_must_greater_than_minimun_amount_works() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -914,7 +931,7 @@ fn enlist_sell_offer_is_properly_stored_works() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -939,7 +956,7 @@ fn enlist_sell_offer_two_marketplaces(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace2")));
 		let m_id2 = create_label("my marketplace2").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -963,7 +980,7 @@ fn enlist_buy_offer_works() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -987,7 +1004,7 @@ fn enlist_buy_offer_item_is_not_for_sale_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1009,7 +1026,7 @@ fn enlist_buy_offer_owner_cannnot_create_buy_offers_for_their_own_items_shouldnt
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1031,7 +1048,7 @@ fn enlist_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1053,7 +1070,7 @@ fn enlist_buy_offer_price_must_greater_than_zero_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1077,7 +1094,7 @@ fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1111,7 +1128,7 @@ fn take_sell_offer_works(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1134,7 +1151,7 @@ fn take_sell_offer_owner_cannnot_be_the_buyer_shouldnt_work() {
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1154,7 +1171,7 @@ fn take_sell_offer_id_does_not_exist_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1176,7 +1193,7 @@ fn take_sell_offer_buyer_does_not_have_enough_balance_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1196,7 +1213,7 @@ fn take_buy_offer_works(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1223,7 +1240,7 @@ fn take_buy_offer_only_owner_can_accept_buy_offers_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1249,7 +1266,7 @@ fn take_buy_offer_id_does_not_exist_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1276,7 +1293,7 @@ fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1302,7 +1319,7 @@ fn remove_sell_offer_works(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1325,7 +1342,7 @@ fn remove_buy_offer_works(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1352,7 +1369,7 @@ fn remove_offer_id_does_not_exist_sholdnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1374,7 +1391,7 @@ fn remove_offer_creator_doesnt_match_sholdnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 
@@ -1395,7 +1412,7 @@ fn remove_offer_status_is_closed_shouldnt_work(){
 		assert_ok!(GatedMarketplace::create_marketplace(Origin::signed(1), 2, create_label("my marketplace")));
 		let m_id = create_label("my marketplace").using_encoded(blake2_256);
 
-		assert_ok!(Uniques::create(Origin::signed(1), 0, 1));
+		assert_ok!(Fruniques::create_collection(Origin::signed(1), dummy_description()));
 		assert_ok!(Uniques::mint(Origin::signed(1), 0, 0, 1));
 		assert_eq!(Uniques::owner(0, 0).unwrap(), 1);
 

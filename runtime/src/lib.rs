@@ -29,7 +29,7 @@ use frame_system::{EnsureRoot, EnsureSigned};
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse},
+	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse, OnRuntimeUpgrade},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight,
@@ -70,6 +70,24 @@ pub type Index = u32;
 pub type Hash = sp_core::H256;
 
 pub type Moment = u64;
+
+/// The hooks we want to run in Maintenance Mode
+pub struct MaintenanceHooks;
+
+impl OnRuntimeUpgrade for MaintenanceHooks {
+	fn on_runtime_upgrade() -> Weight {
+		AllPalletsWithSystem::on_runtime_upgrade()
+	}
+	#[cfg(feature = "try-runtime")]
+	fn pre_upgrade() -> Result<Vec<u8>, &'static str> {
+		AllPalletsWithSystem::pre_upgrade()
+	}
+
+	#[cfg(feature = "try-runtime")]
+	fn post_upgrade(state: Vec<u8>) -> Result<(), &'static str> {
+		AllPalletsWithSystem::post_upgrade(state)
+	}
+}
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
