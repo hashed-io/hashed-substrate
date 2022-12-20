@@ -233,7 +233,7 @@ impl<T: Config> Pallet<T> {
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
-		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
+		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 		let user: T::AccountId = ensure_signed(origin.clone())?;
 		Self::is_authorized(user, collection, Permission::Mint)?;
 

@@ -29,9 +29,8 @@ pub type DrawdownId = [u8; 32];
 pub type DrawdownNumber = u32;
 
 // Budget expenditures
-pub type BudgetExpenditureId = [u8; 32];
+pub type ExpenditureId = [u8; 32];
 pub type ExpenditureAmount = u64;
-pub type Balance = u64;
 pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
 pub type InflationRate = u32;
@@ -40,6 +39,14 @@ pub type InflationRate = u32;
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
 pub type TotalAmount = u64;
+
+// Revenues
+pub type RevenueAmount = u128;
+pub type JobEligibleId = [u8; 32];
+pub type JobEligibleAmount = u128;
+pub type RevenueId = [u8; 32];
+pub type RevenueNumber = u32;
+pub type RevenueTransactionId = [u8; 32];
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -63,6 +70,8 @@ pub struct ProjectData<T: Config> {
 	pub eb5_drawdown_status: Option<DrawdownStatus>,
 	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
 	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
+    pub revenue_status: Option<RevenueStatus>,
+
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -123,16 +132,6 @@ impl Default for ExpenditureType {
     }
 }
 
-
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct BudgetData {
-    pub expenditure_id: BudgetExpenditureId,
-    pub balance: Balance,
-    pub created_date: CreatedDate,
-    pub updated_date: UpdatedDate,
-}
-
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -182,7 +181,7 @@ impl Default for DrawdownStatus {
 pub struct TransactionData<T: Config> {
     pub project_id: ProjectId,
     pub drawdown_id: DrawdownId,
-    pub expenditure_id: BudgetExpenditureId,
+    pub expenditure_id: ExpenditureId,
     pub created_date: CreatedDate,
     pub updated_date: UpdatedDate,
     pub closed_date: CloseDate,
@@ -206,6 +205,70 @@ impl Default for TransactionStatus {
     }
 }
 
+// Possibles names: JobEligibleRenevueData, BudgetRevenueData, JobEligibleData
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct JobEligibleData {
+    pub project_id: ProjectId,
+    pub name: FieldName,
+    pub job_eligible_amount: JobEligibleAmount,
+    pub naics_code: Option<FieldDescription>,
+    pub jobs_multiplier: Option<JobsMultiplier>,
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct RevenueData {
+    pub project_id: ProjectId,
+    pub revenue_number: RevenueNumber,
+    pub total_amount: RevenueAmount,
+    pub status: RevenueStatus,
+    pub created_date: CreatedDate,
+    pub closed_date: CloseDate,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum RevenueStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
+}
+
+impl Default for RevenueStatus {
+    fn default() -> Self {
+        RevenueStatus::Draft
+    }
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct RevenueTransactionData<T: Config> {
+    pub project_id: ProjectId,
+    pub revenue_id: RevenueId,
+    pub job_eligible_id: JobEligibleId,
+    pub created_date: CreatedDate,
+    pub updated_date: UpdatedDate,
+    pub closed_date: CloseDate,
+    pub feedback: Option<FieldDescription>,
+    pub amount: RevenueAmount,
+    pub status: RevenueTransactionStatus,
+    pub documents: Option<Documents<T>>,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+pub enum RevenueTransactionStatus {
+    Draft,
+    Submitted,
+    Approved,
+    Rejected,
+}
+
+impl Default for RevenueTransactionStatus {
+    fn default() -> Self {
+        RevenueTransactionStatus::Draft
+    }
+}
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
 pub enum CUDAction {
     Create,
@@ -222,8 +285,6 @@ pub enum AssignAction {
 impl ProxyRole {
     pub fn to_vec(self) -> Vec<u8>{
         match self{
-            //TOREVIEW: optimization (?)
-            //Self::Administrator => b"Administrator".to_vec(),
             Self::Administrator => "Administrator".as_bytes().to_vec(),
             Self::Builder => "Builder".as_bytes().to_vec(),
             Self::Investor => "Investor".as_bytes().to_vec(),
@@ -260,6 +321,7 @@ pub enum ProxyPermission {
     RejectDrawdown, // reject_drawdown
     UpBulkupload, // up_bulkupload
     Inflation, // inflation
+    JobEligible, // job_eligible
 }
 
 impl ProxyPermission {
@@ -277,6 +339,7 @@ impl ProxyPermission {
             Self::RejectDrawdown => "RejectDrawdown".as_bytes().to_vec(),
             Self::UpBulkupload => "UpBulkupload".as_bytes().to_vec(),
             Self::Inflation => "Inflation".as_bytes().to_vec(),
+            Self::JobEligible => "JobEligible".as_bytes().to_vec(),
         }
     }
 
@@ -299,6 +362,7 @@ impl ProxyPermission {
             RejectDrawdown.to_vec(),
             UpBulkupload.to_vec(),
             Inflation.to_vec(),
+            JobEligible.to_vec(),
         ].to_vec();
         administrator_permissions
     }

@@ -91,8 +91,16 @@ impl<T: Config> Pallet<T> {
             Option<NAICSCode>,
             Option<JobsMultiplier>,
             CUDAction,
-            Option<BudgetExpenditureId>,
+            Option<ExpenditureId>,
         ), T::MaxRegistrationsAtTime>,
+        job_eligibles: Option<BoundedVec<(
+            Option<FieldName>, // name
+            Option<JobEligibleAmount>, // amount
+            Option<NAICSCode>, // naics code
+            Option<JobsMultiplier>, // jobs multiplier
+            CUDAction, // action
+            Option<JobEligibleId>, // job_eligible_id
+        ), T::MaxRegistrationsAtTime>>,
         users: Option<BoundedVec<(
             T::AccountId,
             ProxyRole,
@@ -106,7 +114,6 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         //Create project_id
-        //TOREVIEW: We could use only name as project_id or use a method/storagemap to check if the name is already in use
         let project_id: ProjectId = (title.clone(), timestamp).using_encoded(blake2_256);
 
         //ensure completion_date is in the future
@@ -132,6 +139,8 @@ impl<T: Config> Pallet<T> {
 			construction_loan_drawdown_status: None,
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
+            revenue_status: None,
+
         };
 
         // create scope for project_id
@@ -145,6 +154,11 @@ impl<T: Config> Pallet<T> {
         //Add expenditures
         Self::do_execute_expenditures(admin.clone(), project_id, expenditures)?;
 
+        //Add job_eligibles
+        if let Some(mod_job_eligibles) = job_eligibles {
+            Self::do_execute_job_eligibles(admin.clone(), project_id, mod_job_eligibles)?;
+        }
+
         // Add users
         if let Some(mod_users) = users {
             Self::do_execute_assign_users(admin.clone(), project_id, mod_users)?;
@@ -152,6 +166,9 @@ impl<T: Config> Pallet<T> {
 
         //Initialize drawdowns
         Self::do_initialize_drawdowns(admin.clone(), project_id)?;
+
+        //Initialize revenue
+        Self::do_initialize_revenue(admin.clone(), project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectCreated(admin, project_id));
@@ -283,6 +300,8 @@ impl<T: Config> Pallet<T> {
         // Deletes all drawdowns from DrawdownsByProject storagemap
         <DrawdownsByProject<T>>::remove(project_id);
 
+        //TODO: Delete revenue storagemaps
+
         //Event
         Self::deposit_event(Event::ProjectDeleted(project_id));
         Ok(())
@@ -300,10 +319,7 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::AssignUser)?;
 
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        //Ensure project is not completed
+        // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
         //Assign users
@@ -601,7 +617,7 @@ impl<T: Config> Pallet<T> {
             Option<NAICSCode>, // 3: naics code
             Option<JobsMultiplier>, // 4: jobs multiplier
             CUDAction, // 5: CUDAction
-            Option<BudgetExpenditureId>, // 6: expenditure_id
+            Option<ExpenditureId>, // 6: expenditure_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
@@ -644,7 +660,6 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
             }
-
         }
 
 
@@ -674,36 +689,25 @@ impl<T: Config> Pallet<T> {
         naics_code: Option<NAICSCode>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
-        //Ensure project exists
-        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        // Ensure project is not completed
-        Self::is_project_completed(project_id)?;
-
-        //Ejnsure expenditure name is not empty
+        //Ensure expenditure name is not empty
         ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
         // Create expenditure id
-        let expenditure_id: BudgetExpenditureId = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
+        let expenditure_id: ExpenditureId = (project_id, name.clone(), expenditure_type, timestamp).using_encoded(blake2_256);
 
-        // NAICS code
-        let get_naics_code = match naics_code {
-            Some(mod_naics_code) => {
-                Some(mod_naics_code.clone())
-            },
-            None => None,
-        };
-
-        // Create expenditurte data
+        // Create expenditure data
         let expenditure_data = ExpenditureData {
             project_id,
-            name: name.clone(),
+            name,
             expenditure_type,
             expenditure_amount,
-            naics_code: get_naics_code,
+            naics_code,
             jobs_multiplier,
         };
 
@@ -724,16 +728,13 @@ impl<T: Config> Pallet<T> {
 
     fn do_update_expenditure(
         project_id: ProjectId,
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
         name: Option<FieldName>,
         expenditure_amount: Option<ExpenditureAmount>,
-        naics_code: Option<FieldDescription>,
+        naics_code: Option<NAICSCode>,
         jobs_multiplier: Option<JobsMultiplier>,
     ) -> DispatchResult {
-        //Ensure project exists
-        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
-
-        // Ensure project is not completed
+        // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
 
         // Ensure expenditure_id exists
@@ -743,13 +744,11 @@ impl<T: Config> Pallet<T> {
         <ExpendituresInfo<T>>::try_mutate::<_,_,DispatchError, _>(expenditure_id, |expenditure_data| {
             let expenditure = expenditure_data.as_mut().ok_or(Error::<T>::ExpenditureNotFound)?;
 
-            // Ensure expenditure belongs to project
+            // Ensure expenditure belongs to the project
             ensure!(expenditure.project_id == project_id, Error::<T>::ExpenditureDoesNotBelongToProject);
 
-            //TODO: ensure name is unique
-
-            if let  Some(mod_name) = name {
-                expenditure.name = mod_name.clone();
+            if let Some(mod_name) = name {
+                expenditure.name = mod_name;
             }
             if let Some(mod_expenditure_amount) = expenditure_amount {
                 expenditure.expenditure_amount = mod_expenditure_amount;
@@ -764,17 +763,17 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        Self::deposit_event(Event::ExpenditureEdited(expenditure_id));
+        Self::deposit_event(Event::ExpenditureUpdated(expenditure_id));
         Ok(())
     }
 
     fn do_delete_expenditure(
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
     ) -> DispatchResult {
         // Ensure expenditure_id exists & get expenditure data
         let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
-        // Delete expenditure data
+        // Delete expenditure data from ExpendituresInfo
         <ExpendituresInfo<T>>::remove(expenditure_id);
 
         // Delete expenditure_id from ExpendituresByProject
@@ -795,7 +794,7 @@ impl<T: Config> Pallet<T> {
         drawdown_type: DrawdownType,
         drawdown_number: DrawdownNumber,
     ) -> DispatchResult {
-        // TOOD: Ensure builder permissions
+        // TODO: Ensure admin permissions
         //Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         // Ensure project exists
@@ -832,7 +831,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
         //TOREVIEW: Check if an event is needed
         Ok(())
     }
@@ -847,13 +846,13 @@ impl<T: Config> Pallet<T> {
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
-        //Create a EB5 drawdown
+        // Create a EB5 drawdown
         Self::do_create_drawdown(project_id, DrawdownType::EB5, 1)?;
 
-        //Create a Construction Loan drawdown
+        // Create a Construction Loan drawdown
         Self::do_create_drawdown(project_id, DrawdownType::ConstructionLoan, 1)?;
 
-        //Create a Developer Equity drawdown
+        // Create a Developer Equity drawdown
         Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
 
         Ok(())
@@ -877,11 +876,9 @@ impl<T: Config> Pallet<T> {
 
         // Update each transaction status to submitted
         for transaction_id in drawdown_transactions {
-            // Get transaction data
-            let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-
-            // Ensure transaction is in draft or rejected status
-            ensure!(transaction_data.status == TransactionStatus::Draft || transaction_data.status == TransactionStatus::Rejected, Error::<T>::CannotSubmitTransaction);
+            //TOREVIEW: Maybe get back to the old validation way
+            // Ensure transaction is editable
+            Self::is_transaction_editable(transaction_id)?;
 
             // Update transaction status to submitted
             <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -896,10 +893,12 @@ impl<T: Config> Pallet<T> {
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Submitted;
+            drawdown_data.feedback = None;
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+        // Update drawdown status in project info
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         //Event
         Self::deposit_event(Event::DrawdownSubmitted(drawdown_id));
@@ -912,10 +911,11 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
+        //TODO: update permissions
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
-        //  Get drawdown data & ensure drawdown exists
+        // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown is in submitted status
@@ -923,14 +923,18 @@ impl<T: Config> Pallet<T> {
 
         // Ensure drawdown has transactions
         ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-        // Get timestamp
-        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
         // Update each transaction status to approved
         for transaction_id in drawdown_transactions {
+            //TOREVIEW: Check if transaction data existence & status can be checked in a better way
+            // i.e inside the try_mutate function,
+
             // Get transaction data
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
@@ -946,7 +950,7 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
-        // Update drawdown status
+        // Update drawdown status to approved
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Approved;
@@ -954,7 +958,8 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
+        // Update drawdown status in project info
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Approved)?;
 
         // Generate the next drawdown
         Self::do_create_drawdown(project_id, drawdown_data.drawdown_type, drawdown_data.drawdown_number + 1)?;
@@ -969,9 +974,13 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions_feedback: Option<BoundedVec<(TransactionId, FieldDescription), T::MaxRegistrationsAtTime>>,
+        transactions_feedback: Option<BoundedVec<(
+            TransactionId,
+            FieldDescription
+        ), T::MaxRegistrationsAtTime>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
+        //TODO: update permissions
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
 
@@ -1020,6 +1029,10 @@ impl<T: Config> Pallet<T> {
 
             },
             _ => {
+                // TOREVIEW: Bulkupload drawdowns are only rejected 
+                // when a builder uploads the wrong file. So, I think rejecting individual
+                // bulkupload transactions is not necessary. 
+
                 // Construction Loan & Developer Equity drawdowns
                 // If drawdown has transactions, update each transaction status to rejected
                 if <TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id) {
@@ -1055,14 +1068,15 @@ impl<T: Config> Pallet<T> {
             },
         }
 
-        // Update drawdown status
+        // Update drawdown status to rejected
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
             let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
             drawdown_data.status = DrawdownStatus::Rejected;
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
+        // Update drawdown status in project info
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Rejected)?;
 
         //Event
         Self::deposit_event(Event::DrawdownRejected(drawdown_id));
@@ -1073,35 +1087,32 @@ impl<T: Config> Pallet<T> {
 
     // T R A N S A C T I O N S
     // --------------------------------------------------------------------------------------------
-    // For now transactions functions are private, but in the future they may be public
     pub fn do_execute_transactions(
         project_id: ProjectId,
         drawdown_id: DrawdownId,
         transactions: BoundedVec<(
-            Option<BudgetExpenditureId>, // expenditure_id
+            Option<ExpenditureId>, // expenditure_id
             Option<ExpenditureAmount>, // amount
             Option<Documents<T>>, //Documents
             CUDAction, // Action
             Option<TransactionId>, // transaction_id
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-
-        // Ensure project exists & is not completed so helper private functions doesn't need to check it
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
         Self::is_project_completed(project_id)?;
 
-        //Ensure drawdown exists so helper private functions doesn't need to check it
+        //Ensure drawdown exists so helper private functions doesn't need to check it again
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
-
         // Ensure transactions are not empty
         ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
 
-        // Ensure if drawdown is editable
+        // Ensure if the selected drawdown is editable
         Self::is_drawdown_editable(drawdown_id)?;
 
         for transaction in transactions {
             match transaction.3 {
                 CUDAction::Create => {
-                    // Create transaction only needs (expenditure_id, amount, documents)
+                    // Create transaction needs: expenditure_id, amount, documents
                     Self::do_create_transaction(
                         project_id,
                         drawdown_id,
@@ -1111,7 +1122,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Update => {
-                    // Update transaction needs (amount, documents, transaction_id)
+                    // Update transaction needs: amount, documents, transaction_id
                     Self::do_update_transaction(
                         transaction.1,
                         transaction.2,
@@ -1119,7 +1130,7 @@ impl<T: Config> Pallet<T> {
                     )?;
                 },
                 CUDAction::Delete => {
-                    // Delete transaction needs (transaction_id)
+                    // Delete transaction needs: transaction_id
                     Self::do_delete_transaction(
                         transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
                     )?;
@@ -1138,15 +1149,11 @@ impl<T: Config> Pallet<T> {
     fn do_create_transaction(
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        expenditure_id: BudgetExpenditureId,
+        expenditure_id: ExpenditureId,
         amount: Amount,
         documents: Option<Documents<T>>,
     ) -> DispatchResult {
-        // Ensure amount is valid
-        Self::is_amount_valid(amount)?;
-
         //TOREVIEW: If documents are mandatory, we need to check if they are provided
-        // TOOD: Ensure documents is not empty
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -1154,7 +1161,7 @@ impl<T: Config> Pallet<T> {
         // Create transaction id
         let transaction_id = (drawdown_id, amount, expenditure_id, timestamp, project_id).using_encoded(blake2_256);
 
-        // Ensure expenditure id exists
+        // Ensure expenditure id does not exist
         ensure!(ExpendituresInfo::<T>::contains_key(expenditure_id), Error::<T>::ExpenditureNotFound);
 
         // Create transaction data
@@ -1182,7 +1189,6 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionCreated(transaction_id));
         Ok(())
 
@@ -1196,16 +1202,6 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction exists
         ensure!(TransactionsInfo::<T>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
 
-        // Ensure amount is valid.
-        if let Some(amount) = amount {
-            Self::is_amount_valid(amount)?;
-        }
-
-        // Ensure documents is not empty
-        if let Some(mod_documents) = documents.clone() {
-            ensure!(mod_documents.len() > 0, Error::<T>::DocumentsIsEmpty);
-        }
-
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -1216,18 +1212,21 @@ impl<T: Config> Pallet<T> {
             // Ensure expenditure exists
             ensure!(ExpendituresInfo::<T>::contains_key(mod_transaction_data.expenditure_id), Error::<T>::ExpenditureNotFound);
 
+            // Update amount
             if let Some(mod_amount) = amount {
                 mod_transaction_data.amount = mod_amount;
             }
 
-            if let Some(documents) = documents.clone() {
-                mod_transaction_data.documents = Some(documents);
+            // Update documents
+            if let Some(mod_documents) = documents {
+                mod_transaction_data.documents = Some(mod_documents);
             }
+
+            // Update updated date
             mod_transaction_data.updated_date = timestamp;
             Ok(())
         })?;
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionEdited(transaction_id));
 
         Ok(())
@@ -1239,11 +1238,11 @@ impl<T: Config> Pallet<T> {
         // Ensure transaction exists and get transaction data
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-        // Ensure drawdown is not completed
-        ensure!(Self::is_drawdown_editable(transaction_data.drawdown_id).is_ok(), Error::<T>::DrawdownIsAlreadyCompleted);
+        // Ensure drawdown is deletable
+        Self::is_drawdown_editable(transaction_data.drawdown_id)?;
 
-        // Ensure transaction is not completed
-        ensure!(Self::is_transaction_editable(transaction_id).is_ok(), Error::<T>::TransactionIsAlreadyCompleted);
+        // Ensure transaction is deletable
+        Self::is_transaction_editable(transaction_id)?;
 
         // Remove transaction from TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::try_mutate::<_,_,_,DispatchError,_>(transaction_data.project_id, transaction_data.drawdown_id, |transactions| {
@@ -1254,14 +1253,13 @@ impl<T: Config> Pallet<T> {
         // Remove transaction from TransactionsInfo
         <TransactionsInfo<T>>::remove(transaction_id);
 
-        //TOREVIEW: Check if this event is needed
         Self::deposit_event(Event::TransactionDeleted(transaction_id));
 
         Ok(())
     }
 
     // B U L K   U P L O A D   T R A N S A C T I O N S
-
+    // --------------------------------------------------------------------------------------------
     pub fn do_up_bulk_upload(
         user: T::AccountId,
         project_id: ProjectId,
@@ -1278,9 +1276,6 @@ impl<T: Config> Pallet<T> {
 
         // Ensure drawdown is not completed
         Self::is_drawdown_editable(drawdown_id)?;
-
-        // Ensure amount is valid
-        Self::is_amount_valid(total_amount)?;
 
         //Ensure only Construction loan & developer equity drawdowns can call bulk uploaded
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -1306,7 +1301,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-		Self::do_edit_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
+		Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::Submitted)?;
 
         Ok(())
     }
@@ -1328,7 +1323,7 @@ impl<T: Config> Pallet<T> {
             // Ensure project exists
             ensure!(ProjectsInfo::<T>::contains_key(project.0), Error::<T>::ProjectNotFound);
             match project.2 {
-                // Delete need: project_id
+                // Delete needs: project_id
                 CUDAction::Delete => {
                     // Mutate project data
                     <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project.0, |project_info| {
@@ -1337,7 +1332,7 @@ impl<T: Config> Pallet<T> {
                         Ok(())
                     })?;
                 },
-                // Creation & Update need: project_id, inflation_rate
+                // Creation & Update needs: project_id, inflation_rate
                 _ => {
                     // Mutate project data
 
@@ -1355,6 +1350,344 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
+
+    // J O B    E L I G I B L E S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_job_eligibles(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        job_eligibles: BoundedVec<(
+            Option<FieldName>, // name
+            Option<JobEligibleAmount>, // amount
+            Option<NAICSCode>, // naics code
+            Option<JobsMultiplier>, // jobs multiplier
+            CUDAction, // action
+            Option<JobEligibleId>, // job_eligible_id
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        // Ensure admin permissions 
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::JobEligible)?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure job eligibles is not empty
+        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
+
+        for job_eligible in job_eligibles {
+            match job_eligible.4 {
+                CUDAction::Create => {
+                    // Create job eligible only needs: name, amount, naics code, jobs multiplier
+                    Self::do_create_job_eligible(
+                        project_id,
+                        job_eligible.0.ok_or(Error::<T>::JobEligibleNameRequired)?,
+                        job_eligible.1.ok_or(Error::<T>::JobEligibleAmountRequired)?,
+                        job_eligible.2,
+                        job_eligible.3,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update job eligible needs: job_eligible_id, name, amount, naics code, jobs multiplier
+                    Self::do_update_job_eligible(
+                        project_id,
+                        job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                        job_eligible.0,
+                        job_eligible.1,
+                        job_eligible.2,
+                        job_eligible.3,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete job eligible needs: job_eligible_id
+                    Self::do_delete_job_eligible(
+                        job_eligible.5.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                    )?;
+                },
+            }
+        }
+
+        Ok(())
+    }
+
+    fn do_create_job_eligible(
+        project_id: [u8;32],
+        name: FieldName,
+        job_eligible_amount: JobEligibleAmount,
+        naics_code: Option<NAICSCode>,
+        jobs_multiplier: Option<JobsMultiplier>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Ensure job eligible name is not empty
+        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameIsRequired);
+
+        // Create job eligible id
+        let job_eligible_id: JobEligibleId = (project_id, name.clone(), timestamp).using_encoded(blake2_256);
+
+        // Create job eligible data
+        let job_eligible_data = JobEligibleData {
+            project_id,
+            name,
+            job_eligible_amount,
+            naics_code,
+            jobs_multiplier,
+        };
+
+        // Insert job eligible data into JobEligiblesInfo
+        // Ensure job eligible id does not exist
+        ensure!(!JobEligiblesInfo::<T>::contains_key(job_eligible_id), Error::<T>::JobEligibleIdAlreadyExists);
+        <JobEligiblesInfo<T>>::insert(job_eligible_id, job_eligible_data);
+
+        // Insert job eligible id into JobEligiblesByProject
+        <JobEligiblesByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |job_eligibles| {
+            job_eligibles.try_push(job_eligible_id).map_err(|_| Error::<T>::MaxJobEligiblesPerProjectReached)?;
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::JobEligibleCreated(project_id, job_eligible_id));
+        Ok(())
+    }
+
+    fn do_update_job_eligible(
+        project_id: ProjectId,
+        job_eligible_id: JobEligibleId,
+        name: Option<FieldName>,
+        job_eligible_amount: Option<JobEligibleAmount>,
+        naics_code: Option<NAICSCode>,
+        jobs_multiplier: Option<JobsMultiplier>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Ensure job eligible exists
+        ensure!(JobEligiblesInfo::<T>::contains_key(job_eligible_id), Error::<T>::JobEligibleNotFound);
+
+        // Mutate job eligible data
+        <JobEligiblesInfo<T>>::try_mutate::<_,_,DispatchError,_>(job_eligible_id, |job_eligible_data| {
+            let job_eligible = job_eligible_data.as_mut().ok_or(Error::<T>::JobEligibleNotFound)?;
+
+            // Ensure job eligible belongs to the project
+            ensure!(job_eligible.project_id == project_id, Error::<T>::JobEligibleDoesNotBelongToProject);
+
+            if let Some(mod_name) = name {
+                job_eligible.name = mod_name;
+            }
+            if let Some(mod_job_eligible_amount) = job_eligible_amount {
+                job_eligible.job_eligible_amount = mod_job_eligible_amount;
+            }
+            if let Some(mod_naics_code) = naics_code {
+                job_eligible.naics_code = Some(mod_naics_code);
+            }
+            if let Some(mod_jobs_multiplier) = jobs_multiplier {
+                job_eligible.jobs_multiplier = Some(mod_jobs_multiplier);
+            }
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::JobEligibleUpdated(project_id, job_eligible_id));
+        Ok(())
+    }
+
+    fn do_delete_job_eligible(
+        job_eligible_id: JobEligibleId,     
+    ) -> DispatchResult {
+        // Ensure job eligible exists & get job eligible data
+        let job_eligible_data = JobEligiblesInfo::<T>::get(job_eligible_id).ok_or(Error::<T>::JobEligibleNotFound)?;
+
+        // Delete job eligible data from JobEligiblesInfo
+        <JobEligiblesInfo<T>>::remove(job_eligible_id);
+
+        // Delete job eligible id from JobEligiblesByProject
+        <JobEligiblesByProject<T>>::try_mutate::<_,_,DispatchError,_>(job_eligible_data.project_id, |job_eligibles| {
+            job_eligibles.retain(|job_eligible| job_eligible != &job_eligible_id);
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::JobEligibleDeleted(job_eligible_data.project_id, job_eligible_id));
+
+        Ok(())
+    }
+
+    // R E V E N U E S
+    // --------------------------------------------------------------------------------------------
+    pub fn do_execute_revenue_transactions(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_transactions: BoundedVec<(
+            Option<JobEligibleId>, // job_eligible_id
+            Option<RevenueAmount>, // revenue_amount
+            Option<Documents<T>>, // documents
+            CUDAction, // action
+            Option<RevenueTransactionId>, // revenue_transaction_id
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
+        Self::is_project_completed(project_id)?;
+
+        // Ensure revenue exists so helper private functions doesn't need to check it again
+        ensure!(RevenuesInfo::<T>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+        //Ensure revenue transactions are not empty
+        ensure!(!revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsAreEmpty);
+
+        // Ensure if the selected revenue is editable
+        Self::is_revenue_editable(revenue_id)?;
+
+        for transaction in revenue_transactions {
+            match transaction.3 {
+                CUDAction::Create => {
+                    // Create renevue transaction needs: job_eligible_id, revenue_amount, documents
+                    Self::do_create_revenue_transaction(
+                        project_id,
+                        revenue_id,
+                        transaction.0.ok_or(Error::<T>::JobEligibleIdRequired)?,
+                        transaction.1.ok_or(Error::<T>::RevenueAmountRequired)?,
+                        transaction.2,
+                    )?;
+                },
+                CUDAction::Update => {
+                    // Update revenue transaction needs: amount, documents, transaction_id
+                    Self::do_update_revenue_transaction(
+                        transaction.1,
+                        transaction.2,
+                        transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?,
+                    )?;
+                },
+                CUDAction::Delete => {
+                    // Delete revenue transaction needs: transaction_id
+                    Self::do_delete_revenue_transaction(
+                        transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?,
+                    )?;
+                },
+            }
+        }
+
+        //Update total amount for the given revenue
+        Self::do_calculate_revenue_total_amount(project_id, revenue_id)?;
+
+        Self::deposit_event(Event::RevenueTransactionsExecuted(project_id, revenue_id));
+
+        Ok(())
+    }
+
+    fn do_create_revenue_transaction(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        job_eligible_id: JobEligibleId,
+        revenue_amount: RevenueAmount,
+        documents: Option<Documents<T>>,
+    ) -> DispatchResult {
+        // TOREVIEW: If documents are mandatory, then we need to check if they are empty
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create revenue transaction id
+        let revenue_transaction_id = (revenue_id, job_eligible_id, project_id, timestamp).using_encoded(blake2_256);
+        
+        //Ensure revenue transaction id doesn't exist
+        ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
+
+        // Create revenue transaction data
+        let revenue_transaction_data = RevenueTransactionData {
+            project_id,
+            revenue_id,
+            job_eligible_id,
+            created_date: timestamp,
+            updated_date: timestamp,
+            closed_date: 0,
+            feedback: None,
+            amount: revenue_amount,
+            status: RevenueTransactionStatus::default(),
+            documents,
+        };
+
+        // Insert revenue transaction data into RevenueTransactionsInfo
+        // Ensure revenue transaction id doesn't exist
+        ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
+        <RevenueTransactionsInfo<T>>::insert(revenue_transaction_id, revenue_transaction_data);
+
+        // Insert revenue transaction id into TransactionsByRevenue
+        <TransactionsByRevenue<T>>::try_mutate::<_,_,_,DispatchError,_>(project_id, revenue_id, |revenue_transactions| {
+            revenue_transactions.try_push(revenue_transaction_id).map_err(|_| Error::<T>::MaxTransactionsPerRevenueReached)?;
+            Ok(())
+        })?;
+
+        Self::deposit_event(Event::RevenueTransactionCreated(revenue_transaction_id));
+
+        Ok(())
+    }
+
+    fn do_update_revenue_transaction(
+        amount: Option<RevenueAmount>,
+        documents: Option<Documents<T>>,
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Ensure revenue transaction exists
+        ensure!(RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionNotFound);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Try mutate revenue transaction data
+        <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_transaction_id, |revenue_transaction_data| {
+            let mod_revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+            
+            // Ensure job eligible exists
+            ensure!(JobEligiblesInfo::<T>::contains_key(mod_revenue_transaction_data.job_eligible_id), Error::<T>::JobEligibleNotFound);
+            
+            // Update amount
+            if let Some(mod_amount) = amount {
+                mod_revenue_transaction_data.amount = mod_amount;
+            }
+
+            // Update documents
+            if let Some(mod_documents) = documents {
+                mod_revenue_transaction_data.documents = Some(mod_documents);
+            }
+
+            // Update updated_date
+            mod_revenue_transaction_data.updated_date = timestamp;
+            Ok(())
+
+        })?;
+        Self::deposit_event(Event::RevenueTransactionUpdated(revenue_transaction_id));
+
+        Ok(())
+    }
+
+    fn do_delete_revenue_transaction(
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Ensure revenue transaction exists & get revenue transaction data
+        let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+        // Ensure revenue is deletable
+        Self::is_revenue_editable(revenue_transaction_data.revenue_id)?;
+
+        // Ensure revenue transaction is deletable
+        Self::is_revenue_transaction_editable(revenue_transaction_id)?;
+
+        // Remove revenue transaction from TransactionsByRevenue
+        <TransactionsByRevenue<T>>::try_mutate::<_,_,_,DispatchError,_>(revenue_transaction_data.project_id, revenue_transaction_data.revenue_id, |revenue_transactions| {
+            revenue_transactions.retain(|revenue_transaction| revenue_transaction != &revenue_transaction_id);
+            Ok(())
+        })?;
+       
+        // Remove revenue transaction from RevenueTransactionsInfo
+        <RevenueTransactionsInfo<T>>::remove(revenue_transaction_id);
+
+        Self::deposit_event(Event::RevenueTransactionDeleted(revenue_transaction_id));
+
+        Ok(())
+    }
+
+
+
 
     // H E L P E R S
     // --------------------------------------------------------------------------------------------
@@ -1626,19 +1959,21 @@ impl<T: Config> Pallet<T> {
         // Get project data & ensure project exists
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
-        // Ensure project is completed
+        // Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::ProjectIsAlreadyCompleted);
 
         Ok(())
     }
 
-    #[allow(dead_code)]
     fn is_drawdown_editable(
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+
+        //TODO: Merge all drawdown types in the next match, 
+        // we no longer need to do a distinction between EB5 and other drawdown types
         // Match drawdown type
         match drawdown_data.drawdown_type {
             DrawdownType::EB5 => {
@@ -1651,9 +1986,12 @@ impl<T: Config> Pallet<T> {
                     DrawdownStatus::Rejected => {
                         return Ok(())
                     },
-                    _ => {
-                        return Err(Error::<T>::CannotEditDrawdown.into());
-                    }
+                    DrawdownStatus::Submitted => {
+                        return Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into());
+                    },
+                    DrawdownStatus::Approved => {
+                        return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
+                    },
                 }
             },
             _ => {
@@ -1673,18 +2011,24 @@ impl<T: Config> Pallet<T> {
     fn is_transaction_editable(
         transaction_id: TransactionId,
     ) -> DispatchResult {
-        // Get transaction data
+        // Get transaction data & ensure transaction exists
         let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
         // Ensure transaction is in draft or rejected status
         // Match transaction status
         match transaction_data.status {
-            TransactionStatus::Approved => {
-                return Err(Error::<T>::CannotEditTransaction.into());
-            },
-            _ => {
+            TransactionStatus::Draft => {
                 return Ok(())
-            }
+            },
+            TransactionStatus::Rejected => {
+                return Ok(())
+            },
+            TransactionStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into());
+            },
+            TransactionStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into());
+            },
         }
     }
 
@@ -1759,13 +2103,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    #[allow(dead_code)]
-    fn is_amount_valid(amount: u64,) -> DispatchResult {
-        let minimun_amount: u64 = 0;
-        ensure!(amount >= minimun_amount, Error::<T>::InvalidAmount);
-        Ok(())
-    }
-
     fn do_calculate_drawdown_total_amount(
         project_id: [u8;32],
         drawdown_id: [u8;32],
@@ -1783,7 +2120,7 @@ impl<T: Config> Pallet<T> {
             let transaction_data = TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
             // Add transaction amount to drawdown total amount
-            drawdown_total_amount = drawdown_total_amount + transaction_data.amount;
+            drawdown_total_amount += transaction_data.amount;
         }
 
         // Update drawdown total amount
@@ -1796,11 +2133,15 @@ impl<T: Config> Pallet<T> {
        Ok(())
     }
 
-	fn do_edit_drawdown_status_in_project_info(
+	fn do_update_drawdown_status_in_project_info(
 		project_id: ProjectId,
 		drawdown_id: DrawdownId,
 		drawdown_status: DrawdownStatus
 	) -> DispatchResult {
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+        
+        // Get drawdown data & ensure drawdown exists
 		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Match drawdown type
@@ -1835,4 +2176,341 @@ impl<T: Config> Pallet<T> {
         }
 	}
 
+    //TODO: move revenue helper functions to its own section
+    fn is_revenue_editable(
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Get revenue data & ensure revenue exists
+        let revenue_data = RevenuesInfo::<T>::get(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+        // Match revenue status
+        match revenue_data.status {
+            RevenueStatus::Draft => {
+                return Ok(())
+            },
+            RevenueStatus::Rejected => {
+                return Ok(())
+            },
+            RevenueStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into());
+            },
+            RevenueStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into());
+            },
+        }
+    }
+
+    fn is_revenue_transaction_editable(
+        revenue_transaction_id: RevenueTransactionId,
+    ) -> DispatchResult {
+        // Get revenue transaction data & ensure revenue transaction exists
+        let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+        //Ensure transaction is in draft or rejected status
+        // Match revenue transaction status
+        match revenue_transaction_data.status {
+            RevenueTransactionStatus::Draft => {
+                return Ok(())
+            },
+            RevenueTransactionStatus::Rejected => {
+                return Ok(())
+            },
+            RevenueTransactionStatus::Submitted => {
+                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into());
+            },
+            RevenueTransactionStatus::Approved => {
+                return Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into());
+            },
+        }
+    }
+
+    fn do_calculate_revenue_total_amount(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Ensure revenue exists
+        ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+        
+        // Calculate revenue total amount
+        let mut revenue_total_amount: u128 = 0;
+
+        for transaction_id in revenue_transactions {
+            // Get revenue transaction data
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+            // Add transaction amount to revenue total amount
+            revenue_total_amount += revenue_transaction_data.amount;
+        }
+
+        // Update revenue total amount
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.total_amount = revenue_total_amount;
+            Ok(())
+        })?;
+
+        Ok(())
+    }    
+
+    fn do_initialize_revenue(
+        admin: T::AccountId,
+        project_id: ProjectId,
+    ) -> DispatchResult {
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Create revenue
+        Self::do_create_revenue(project_id, 1)?;
+        
+        Ok(())
+    }
+
+    fn do_create_revenue(
+        project_id: ProjectId,
+        revenue_number: RevenueNumber,
+    ) -> DispatchResult {
+        //TODO: Ensure admin permissions
+
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+        // Create revenue id
+        let revenue_id = (project_id, revenue_number, timestamp).using_encoded(blake2_256);
+
+        // Create revenue data
+        let revenue_data = RevenueData {
+            project_id,
+            revenue_number,
+            total_amount: 0,
+            status: RevenueStatus::default(),
+            created_date: timestamp,
+            closed_date: 0,  
+        };
+
+        // Insert revenue data
+        // Ensure revenue id is unique
+        ensure!(!<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueIdAlreadyExists);
+        <RevenuesInfo<T>>::insert(revenue_id, revenue_data);
+
+        // Insert revenue id into RevenuesByProject
+        <RevenuesByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |revenues| {
+            revenues.try_push(revenue_id).map_err(|_| Error::<T>::MaxRevenuesPerProjectReached)?;
+            Ok(())
+        })?;
+
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::default())?;
+
+        Self::deposit_event(Event::RevenueCreated(revenue_id));
+
+        Ok(())
+    }
+
+    fn do_update_revenue_status_in_project_info(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_status: RevenueStatus,
+    ) -> DispatchResult {
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Ensure revenue exists
+        ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+        // Update revenue status in project info
+        <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project_data| {
+            let project_data = project_data.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
+            project_data.revenue_status = Some(revenue_status);
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    pub fn do_submit_revenue(
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        // Ensure project exists & is not completed
+        Self::is_project_completed(project_id)?;
+
+        // Check if revenue exists & is editable
+        Self::is_revenue_editable(revenue_id)?;
+
+        // Ensure revenue has transactions
+        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+
+        // Update each revenue transaction status to Submitted
+        for transaction_id in revenue_transactions {
+            // Ensure revenue transaction is editable
+            Self::is_revenue_transaction_editable(transaction_id)?;
+
+            // Update revenue transaction status
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.status = RevenueTransactionStatus::Submitted;
+                revenue_transaction_data.feedback = None;
+                Ok(())
+            })?;
+        }
+
+        // Update revenue status
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status = RevenueStatus::Submitted;
+            Ok(())
+        })?;
+
+        // Update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::Submitted)?;
+
+        // Event
+        Self::deposit_event(Event::RevenueSubmitted(revenue_id));
+
+        Ok(())
+    }
+
+    pub fn do_approve_revenue(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+    ) -> DispatchResult {
+        //TODO: update permissions
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
+        // Get revenue data & ensure revenue exists
+        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+        // Ensure revenue is in Submitted status
+        ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueIsNotInSubmittedStatus);
+
+        // Ensure revenue has transactions
+        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+
+        // Get timestamp
+        let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+
+        // Update each revenue transaction status to Approved
+        for transaction_id in revenue_transactions {
+            // Get revenue transaction data & ensure revenue transaction exists
+            let revenue_transaction_data = Self::revenue_transactions_info(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+            // Ensure revenue transaction is in Submitted status
+            ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionIsNotInSubmittedStatus);
+
+            // Update revenue transaction status to Approved & update closed date
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.status = RevenueTransactionStatus::Approved;
+                revenue_transaction_data.closed_date = timestamp;
+                Ok(())
+            })?;
+        }
+
+        // Update revenue status to Approved
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status = RevenueStatus::Approved;
+            revenue_data.closed_date = timestamp;
+            Ok(())
+        })?;
+
+        // Update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::Approved)?;
+
+        // Generate the next revenue
+        Self::do_create_revenue(project_id, revenue_data.revenue_number + 1)?;
+
+        // Event
+        Self::deposit_event(Event::RevenueApproved(revenue_id));
+
+        Ok(())
+    }
+
+    pub fn do_reject_revenue(
+        admin: T::AccountId,
+        project_id: ProjectId,
+        revenue_id: RevenueId,
+        revenue_transactions_feedback: BoundedVec<(
+            TransactionId,
+            FieldDescription
+        ), T::MaxRegistrationsAtTime>,
+    ) -> DispatchResult {
+        //TODO: update permissions
+        // Ensure admin permissions
+        Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::Expenditures)?;
+
+        // Get revenue data & ensure revenue exists
+        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+        // Ensure revenue is in Submitted status
+        ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueIsNotInSubmittedStatus);
+
+        // Ensure revenue has transactions
+        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+
+        // Get revenue transactions
+        let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
+
+        // Update each revenue transaction status to Rejected
+        for transaction_id in revenue_transactions {
+            // Get revenue transaction data & ensure revenue transaction exists
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+            // Ensure revenue transaction is in Submitted status
+            ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionIsNotInSubmittedStatus);
+
+            // Update revenue transaction status to Rejected
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.status = RevenueTransactionStatus::Rejected;
+                Ok(())
+            })?;
+        }
+
+        // Update revenue transactions feedback
+        for (transaction_id, feedback) in revenue_transactions_feedback {
+            // Update revenue transaction feedback
+            <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
+                let revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+                revenue_transaction_data.feedback = Some(feedback);
+                Ok(())
+            })?;
+        }
+
+        // Update revenue status to Rejected
+        <RevenuesInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_id, |revenue_data| {
+            let revenue_data = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+            revenue_data.status = RevenueStatus::Rejected;
+            Ok(())
+        })?;
+
+        // Update revenue status in project info
+        Self::do_update_revenue_status_in_project_info(project_id, revenue_id, RevenueStatus::Rejected)?;
+
+        // Event
+        Self::deposit_event(Event::RevenueRejected(revenue_id));
+
+        Ok(())
+    }
+
+
+
+// Do not code beyond this line
 }

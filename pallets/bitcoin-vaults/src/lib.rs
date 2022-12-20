@@ -24,7 +24,7 @@ pub mod pallet {
 		pallet_prelude::{BoundedVec},
 		traits::Get,
 	};
-	use frame_support::{sp_io::hashing::blake2_256, transactional};
+	use frame_support::sp_io::hashing::blake2_256;
 	use frame_system::{
 		offchain::{
 			AppCrypto, CreateSignedTransaction,
@@ -70,8 +70,8 @@ pub mod pallet {
 		/// The identifier type for an offchain worker.
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type ChangeBDKOrigin : EnsureOrigin<Self::Origin>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type ChangeBDKOrigin : EnsureOrigin<Self::RuntimeOrigin>;
 		/*--- PSBT params ---*/
 		#[pallet::constant]
 		type XPubLen: Get<u32>;
@@ -259,7 +259,7 @@ pub mod pallet {
 			// transactions without it
 			let signer = Signer::<T, T::AuthorityId>::any_account();
 			if !signer.can_sign(){
-				return;	
+				return;
 			}
 
 			// Check if this OCW can modify the vaults
@@ -275,14 +275,14 @@ pub mod pallet {
 				let proposals_to_finalize = Self::get_proposals_to_finalize();
 				//let proposals_to_broadcast = Self::get_proposals_to_finalize();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
-				// This validation needs to be done after the lock: 
+				// This validation needs to be done after the lock:
 				if !pending_vaults.is_empty() {
 					let generated_vaults = Self::gen_vaults_payload_by_bulk(pending_vaults);
 					Self::send_ocw_insert_descriptors(generated_vaults, &signer);
 				}
 				if !pending_proposals.is_empty(){
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals, 
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals,
 						b"/gen_psbt".to_vec(),
 					&Self::gen_proposal_json_body);
 					Self::send_ocw_insert_psbts(generated_proposals_payload, &signer);
@@ -316,24 +316,22 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
-		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
-		///  fees will be applied nonetheless).
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn set_xpub(
 			origin: OriginFor<T>,
 			xpub: BoundedVec<u8, T::XPubLen>,
 		) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
-			ensure!(xpub.len() > 0, <Error<T>>::NoneValue);
-			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()) , <Error<T>>::UserAlreadyHasXpub);
+			ensure!(xpub.len() > 0, Error::<T>::NoneValue);
+			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()) , Error::<T>::UserAlreadyHasXpub);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
 			// Assert if the input xpub is free to take (or if the user owns it)
 			match Self::get_xpub_status(who.clone(), manual_hash.clone()) {
 				XpubStatus::Owned => log::info!("Xpub owned, nothing to insert"),
-				XpubStatus::Taken => Err(<Error<T>>::XPubAlreadyTaken)?, //xpub taken: abort tx
+				XpubStatus::Taken => Err(Error::<T>::XPubAlreadyTaken)?, //xpub taken: abort tx
 				XpubStatus::Free => {
 					// xpub free: erase unused xpub and insert on maps
 					// if <XpubsByOwner<T>>::contains_key(who.clone()) {
@@ -345,7 +343,7 @@ pub mod pallet {
 					// the 2nd half of the inserted_hash is the real key hash.
 					let partial_hash = inserted_hash.split_off(32);
 					// The manually calculated hash should always be equal to the StorageMap hash
-					ensure!(partial_hash.as_slice() == manual_hash, <Error<T>>::HashingError);
+					ensure!(partial_hash.as_slice() == manual_hash, Error::<T>::HashingError);
 					// If everything is ok, insert the xpub in the owner->hash map
 					<XpubsByOwner<T>>::insert(who.clone(), manual_hash);
 				},
@@ -363,9 +361,8 @@ pub mod pallet {
 		/// The xpub will be removed from both the pallet storage and identity registration.
 		/// 
 		/// This tx does not takes any parameters.
-		/// 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(2))]
+		///
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			// The xpub must exists
@@ -397,9 +394,8 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
-		/// 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		///
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_vault(
 			origin: OriginFor<T>,
 			threshold: u32,
@@ -443,9 +439,8 @@ pub mod pallet {
 		/// 
 		/// ### Considerations:
 		/// - Only the vault owner can perform this extrinsic
-		/// 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		///
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_vault(
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
@@ -467,8 +462,7 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - Please ensure the recipient address is a valid mainnet address.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn propose(
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
@@ -494,7 +488,6 @@ pub mod pallet {
 			Self::do_propose(proposal)
 		}
 
-
 		/// Proposal removal
 		/// 
 		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
@@ -502,8 +495,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
 		///
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -528,8 +520,7 @@ pub mod pallet {
 		/// ### Considerations
 		/// - Ensure the new url is valid.
 		/// - The url has a maximum length of 32 bytes
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
 			origin: OriginFor<T>,
 			new_url: BoundedVec<u8, ConstU32<32> >
@@ -550,9 +541,8 @@ pub mod pallet {
 		/// 
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
-		/// - A user can only sign a proposal once 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// - A user can only sign a proposal once
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn save_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -574,8 +564,7 @@ pub mod pallet {
 		/// - If successful, this process cannot be undone
 		/// - The proposal must have a valid PSBT
 		/// - Any vault member can perform this extrinsic
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn finalize_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -584,7 +573,6 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 			Self::do_finalize_psbt(who, proposal_id, broadcast)
 		}
-
 
 		/// Broadcast PSBT
 		/// 
@@ -597,8 +585,7 @@ pub mod pallet {
 		/// - If successful, this process cannot be undone
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(
 			origin: OriginFor<T>,
 			proposal_id: [u8; 32],
@@ -612,8 +599,7 @@ pub mod pallet {
 		/// Use with caution!
 		/// 
 		/// Can only be called by root and removes All vaults and proposals
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
 		) -> DispatchResult{
@@ -629,8 +615,7 @@ pub mod pallet {
 		/// Extrinsic to insert a valid vault descriptor
 		/// 
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		#[transactional]
+		///
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
@@ -664,8 +649,7 @@ pub mod pallet {
 		/// Extrinsic to insert a valid proposal PSBT
 		/// 
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		#[transactional]
+		///
 		#[pallet::weight(0)]
 		pub fn ocw_insert_psbts(
 			origin: OriginFor<T>,
@@ -692,8 +676,7 @@ pub mod pallet {
 		/// Extrinsic to insert a valid proposal TX_ID
 		/// 
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		#[transactional]
+		///
 		#[pallet::weight(0)]
 		pub fn ocw_finalize_psbts(
 			origin: OriginFor<T>,
