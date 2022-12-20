@@ -976,9 +976,6 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::RejectDrawdown)?;
 
-        // Ensure drawdown is editable & ensure drawdown exists
-        Self::is_drawdown_editable(drawdown_id)?;
-
         // Get drawdown data
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
