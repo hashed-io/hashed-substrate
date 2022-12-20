@@ -7,6 +7,7 @@ pub type FieldName = BoundedVec<u8, ConstU32<100>>;
 pub type FieldDescription = BoundedVec<u8, ConstU32<400>>;
 pub type CID = BoundedVec<u8, ConstU32<100>>;
 pub type Documents<T> = BoundedVec<(FieldName,CID), <T as Config>::MaxDocuments>;
+type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 // Projects
 pub type ProjectId = [u8; 32];
@@ -16,13 +17,31 @@ pub type UpdatedDate = u64;
 pub type RegistrationDate = u64;
 pub type BankName = BoundedVec<u8, ConstU32<100>>;
 pub type BankAddress = BoundedVec<u8, ConstU32<100>>;
+pub type UsersAssignation<T> = BoundedVec<(
+    AccountIdOf<T>,
+    ProxyRole,
+    AssignAction,
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Users
 pub type DateRegistered = u64;
+pub type Users<T> = BoundedVec<(
+    AccountIdOf<T>,
+    Option<FieldName>,
+    Option<ProxyRole>,
+    CUDAction,
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Transactions
 pub type TransactionId = [u8; 32];
 pub type Amount = u64;
+pub type Transactions<T> = BoundedVec<(
+    Option<ExpenditureId>,
+    Option<ExpenditureAmount>,
+    Option<Documents<T>>,
+    CUDAction,
+    Option<TransactionId>,
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Drawdowns
 pub type DrawdownId = [u8; 32];
@@ -35,20 +54,49 @@ pub type ExpenditureAmount = Amount;
 pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
 pub type InflationRate = u32;
+pub type Expenditures<T> = BoundedVec<(
+    Option<FieldName>,
+    Option<ExpenditureType>,
+    Option<ExpenditureAmount>,
+    Option<NAICSCode>,
+    Option<JobsMultiplier>,
+    CUDAction,
+    Option<ExpenditureId>
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Miscellaneous
 pub type CreatedDate = u64;
 pub type CloseDate = u64;
 pub type TotalAmount = Amount;
 
-// Revenues
-pub type RevenueAmount = Amount;
+// Job Elgibles
 pub type JobEligibleId = [u8; 32];
 pub type JobEligibleAmount = Amount;
+pub type JobEligibles<T> = BoundedVec<(
+    Option<FieldName>,
+    Option<JobEligibleAmount>,
+    Option<NAICSCode>,
+    Option<JobsMultiplier>,
+    CUDAction,
+    Option<JobEligibleId>,
+), <T as Config>::MaxRegistrationsAtTime>;
+
+// Revenues
+pub type RevenueAmount = Amount;
 pub type RevenueId = [u8; 32];
 pub type RevenueNumber = u32;
-pub type RevenueTransactionId = [u8; 32];
 pub type RevenueStatusChanges<T> = BoundedVec<(RevenueStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerRevenue>;
+
+// Revenue Transactions
+pub type RevenueTransactionId = [u8; 32];
+pub type RevenueTransactionAmount = Amount;
+pub type RevenueTransactions<T> = BoundedVec<(
+    Option<JobEligibleId>,
+    Option<RevenueAmount>,
+    Option<Documents<T>>,
+    CUDAction,
+    Option<RevenueTransactionId>,
+), <T as Config>::MaxRegistrationsAtTime>;
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -248,7 +296,7 @@ pub struct RevenueTransactionData<T: Config> {
     pub updated_date: UpdatedDate,
     pub closed_date: CloseDate,
     pub feedback: Option<FieldDescription>,
-    pub amount: RevenueAmount,
+    pub amount: RevenueTransactionAmount,
     pub status: RevenueTransactionStatus,
     pub documents: Option<Documents<T>>,
 }
@@ -367,7 +415,7 @@ impl ProxyPermission {
 
     pub fn administrator_permissions() -> Vec<Vec<u8>>{
         use crate::types::ProxyPermission::*;
-        let administrator_permissions = [
+        [
             CreateProject.to_vec(),
             EditProject.to_vec(),
             DeleteProject.to_vec(),
@@ -384,8 +432,7 @@ impl ProxyPermission {
             ApproveRevenue.to_vec(),
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
-        ].to_vec();
-        administrator_permissions
+        ].to_vec()
     }
 
     pub fn builder_permissions() -> Vec<Vec<u8>>{
