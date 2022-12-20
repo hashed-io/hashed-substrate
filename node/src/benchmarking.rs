@@ -80,7 +80,7 @@ pub struct TransferKeepAliveBuilder {
 }
 
 impl TransferKeepAliveBuilder {
-	/// Creates a new [`Self`] from the given client.
+	// Creates a new [`Self`] from the given client.
 	pub fn new(client: Arc<FullClient>, dest: AccountId, value: Balance) -> Self {
 		Self { client, dest, value }
 	}
@@ -119,7 +119,7 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for TransferKeepAliveBuilder {
 pub fn create_benchmark_extrinsic(
 	client: &FullClient,
 	sender: sp_core::sr25519::Pair,
-	call: runtime::Call,
+	call: runtime::RuntimeCall,
 	nonce: u32,
 ) -> runtime::UncheckedExtrinsic {
 	let genesis_hash = client.block_hash(0).ok().flatten().expect("Genesis block exists; qed");
