@@ -2731,9 +2731,6 @@
 <span id="2731">2731</span>
 <span id="2732">2732</span>
 <span id="2733">2733</span>
-<span id="2734">2734</span>
-<span id="2735">2735</span>
-<span id="2736">2736</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="kw">use </span>frame_support::traits::Time;
@@ -3711,9 +3708,6 @@
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
-
-        <span class="comment">// Ensure drawdown is editable &amp; ensure drawdown exists
-        </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Get drawdown data
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
