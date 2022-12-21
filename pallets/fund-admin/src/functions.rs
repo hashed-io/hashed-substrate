@@ -1,12 +1,14 @@
+
 use super::*;
 use frame_support::{pallet_prelude::*};
-use frame_support::traits::Time;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec; // vec primitive
 use scale_info::prelude::vec; // vec![] macro
 
-use pallet_rbac::types::*;
 use crate::types::*;
+use pallet_rbac::types::*;
+
+use frame_support::traits::Time;
 
 impl<T: Config> Pallet<T> {
     // M A I N  F U N C T I O N S
@@ -402,7 +404,7 @@ impl<T: Config> Pallet<T> {
 
         // Remove user from the scope rbac pallet
         T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;
-        
+
         // Event
         Self::deposit_event(Event::UserUnassignmentCompleted(user, project_id));
         Ok(())
@@ -563,9 +565,9 @@ impl<T: Config> Pallet<T> {
     // ================================================================================================
 
     /// Editing your own user data does not require any kind of RBAC permissions, it only requires
-    /// that the user is registered. This is because permissions are granted to the 
+    /// that the user is registered. This is because permissions are granted to the
     /// user's account when the user is assigned to a project.
-    /// 
+    ///
     /// WARNING: Editing your own user data does not allow you to change your role. If you want to
     /// change your role. Only the administrator can do it usign the `users` extrinsic.
     pub fn do_edit_user(
@@ -920,7 +922,7 @@ impl<T: Config> Pallet<T> {
 
         // Ensure drawdown has transactions
         ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
-        
+
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -1060,12 +1062,12 @@ impl<T: Config> Pallet<T> {
         // Ensure admin or builder permissions
         Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::ExecuteTransactions)?;
 
-        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again
         Self::is_project_completed(project_id)?;
 
         //Ensure drawdown exists so helper private functions doesn't need to check it again
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
-        
+
         // Ensure transactions are not empty
         ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
 
@@ -1288,7 +1290,7 @@ impl<T: Config> Pallet<T> {
                 CUDAction::Create => {
                     // Ensure inflation rate is provided
                     let inflation_rate = project.1.ok_or(Error::<T>::InflationRateRequired)?;
-                        
+
                     // Get project data
                     let project_data = ProjectsInfo::<T>::get(project.0).ok_or(Error::<T>::ProjectNotFound)?;
 
@@ -1355,7 +1357,7 @@ impl<T: Config> Pallet<T> {
             Option<JobEligibleId>,
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
-        // Ensure admin permissions 
+        // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::JobEligible)?;
 
         // Ensure project exists
@@ -1484,7 +1486,7 @@ impl<T: Config> Pallet<T> {
     }
 
     fn do_delete_job_eligible(
-        job_eligible_id: JobEligibleId,     
+        job_eligible_id: JobEligibleId,
     ) -> DispatchResult {
         // Ensure job eligible exists & get job eligible data
         let job_eligible_data = JobEligiblesInfo::<T>::get(job_eligible_id).ok_or(Error::<T>::JobEligibleNotFound)?;
@@ -1520,7 +1522,7 @@ impl<T: Config> Pallet<T> {
         // Ensure builder permission
         Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::RevenueTransaction)?;
 
-        // Ensure project exists & is not completed so helper private functions doesn't need to check it again 
+        // Ensure project exists & is not completed so helper private functions doesn't need to check it again
         Self::is_project_completed(project_id)?;
 
         // Ensure revenue exists so helper private functions doesn't need to check it again
@@ -1580,7 +1582,7 @@ impl<T: Config> Pallet<T> {
 
         // Create revenue transaction id
         let revenue_transaction_id = (revenue_id, job_eligible_id, project_id, timestamp).using_encoded(blake2_256);
-        
+
         //Ensure revenue transaction id doesn't exist
         ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
 
@@ -1621,17 +1623,17 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         // Get revenue transaction data & ensure revenue transaction exists
         let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
-        
+
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Try mutate revenue transaction data
         <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(revenue_transaction_id, |revenue_transaction_data| {
             let mod_revenue_transaction_data = revenue_transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
-            
+
             // Ensure job eligible exists
             ensure!(JobEligiblesInfo::<T>::contains_key(mod_revenue_transaction_data.job_eligible_id), Error::<T>::JobEligibleNotFound);
-            
+
             // Update amount
             if let Some(mod_amount) = amount {
                 mod_revenue_transaction_data.amount = mod_amount;
@@ -1670,7 +1672,7 @@ impl<T: Config> Pallet<T> {
             revenue_transactions.retain(|revenue_transaction| revenue_transaction != &revenue_transaction_id);
             Ok(())
         })?;
-       
+
         // Remove revenue transaction from RevenueTransactionsInfo
         <RevenueTransactionsInfo<T>>::remove(revenue_transaction_id);
 
@@ -2360,7 +2362,7 @@ impl<T: Config> Pallet<T> {
     }
 
     /// # Checks if the caller has the permission to perform an action
-    /// 
+    ///
     /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
     /// otherwise it checks the project scope
     /// - This is useful for functions that are called by both administrators and project users
@@ -2384,7 +2386,7 @@ impl<T: Config> Pallet<T> {
                     &Self::get_global_scope(),
                     &permission.id(),
                 )
-            }, 
+            },
             // Check project scope
             false => {
                 T::Rbac::is_authorized(
@@ -2467,7 +2469,7 @@ impl<T: Config> Pallet<T> {
 
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
-        
+
         // Calculate drawdown total amount
         let mut drawdown_total_amount: u64 = 0;
 
@@ -2496,7 +2498,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
         // Ensure project exists
         ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
-        
+
         // Get drawdown data & ensure drawdown exists
 		let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
@@ -2589,7 +2591,7 @@ impl<T: Config> Pallet<T> {
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
-        
+
         // Calculate revenue total amount
         let mut revenue_total_amount: Amount = 0;
 
@@ -2609,7 +2611,7 @@ impl<T: Config> Pallet<T> {
         })?;
 
         Ok(())
-    }    
+    }
 
     fn do_initialize_revenue(
         project_id: ProjectId,
@@ -2619,7 +2621,7 @@ impl<T: Config> Pallet<T> {
 
         // Create revenue
         Self::do_create_revenue(project_id, 1)?;
-        
+
         Ok(())
     }
 
@@ -2644,7 +2646,7 @@ impl<T: Config> Pallet<T> {
             status: RevenueStatus::default(),
             status_changes: RevenueStatusChanges::<T>::default(),
             created_date: timestamp,
-            closed_date: 0,  
+            closed_date: 0,
         };
 
         // Insert revenue data

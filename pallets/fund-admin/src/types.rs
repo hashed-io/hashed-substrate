@@ -90,7 +90,7 @@ impl Default for ProjectStatus {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct UserData<T: Config> {
+pub struct UserData<T: frame_system::Config> {
     pub name: FieldName,
     pub role: ProxyRole,
     pub image: CID,
@@ -126,7 +126,7 @@ impl Default for ExpenditureType {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct DrawdownData<T: Config> {
+pub struct DrawdownData<T: frame_system::Config> {
     pub project_id: ProjectId,
     pub drawdown_number: DrawdownNumber,
     pub drawdown_type: DrawdownType,
@@ -172,7 +172,7 @@ impl Default for DrawdownStatus {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct TransactionData<T: Config> {
+pub struct TransactionData<T: frame_system::Config> {
     pub project_id: ProjectId,
     pub drawdown_id: DrawdownId,
     pub expenditure_id: ExpenditureId,
@@ -213,7 +213,7 @@ pub struct JobEligibleData {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct RevenueData<T: Config> {
+pub struct RevenueData<T: frame_system::Config> {
     pub project_id: ProjectId,
     pub revenue_number: RevenueNumber,
     pub total_amount: RevenueAmount,
@@ -240,7 +240,7 @@ impl Default for RevenueStatus {
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct RevenueTransactionData<T: Config> {
+pub struct RevenueTransactionData<T: frame_system::Config> {
     pub project_id: ProjectId,
     pub revenue_id: RevenueId,
     pub job_eligible_id: JobEligibleId,
@@ -318,7 +318,7 @@ pub enum ProxyPermission {
     CreateProject, // projects_create_project: admin
     EditProject, // projects_edit_project: admin
     DeleteProject, // projects_delete_project: admin
-    AssignUsers, // projects_assign_user: admin 
+    AssignUsers, // projects_assign_user: admin
     ExecuteUsers, // users: admin
     EditUser, // users_edit_user: all
     Expenditures, // expenditures: admin
