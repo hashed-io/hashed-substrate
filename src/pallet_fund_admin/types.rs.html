@@ -417,6 +417,53 @@
 <span id="417">417</span>
 <span id="418">418</span>
 <span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -426,6 +473,7 @@
 <span class="kw">pub type </span>FieldDescription = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>CID = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 <span class="kw">pub type </span>Documents&lt;T&gt; = BoundedVec&lt;(FieldName,CID), &lt;T <span class="kw">as </span>Config&gt;::MaxDocuments&gt;;
+<span class="kw">type </span>AccountIdOf&lt;T&gt; = &lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId;
 
 <span class="comment">// Projects
 </span><span class="kw">pub type </span>ProjectId = [u8; <span class="number">32</span>];
@@ -435,13 +483,31 @@
 <span class="kw">pub type </span>RegistrationDate = u64;
 <span class="kw">pub type </span>BankName = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 <span class="kw">pub type </span>BankAddress = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
+<span class="kw">pub type </span>UsersAssignation&lt;T&gt; = BoundedVec&lt;(
+    AccountIdOf&lt;T&gt;,
+    ProxyRole,
+    AssignAction,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Users
 </span><span class="kw">pub type </span>DateRegistered = u64;
+<span class="kw">pub type </span>Users&lt;T&gt; = BoundedVec&lt;(
+    AccountIdOf&lt;T&gt;,
+    <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+    <span class="prelude-ty">Option</span>&lt;ProxyRole&gt;,
+    CUDAction,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Transactions
 </span><span class="kw">pub type </span>TransactionId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>Amount = u64;
+<span class="kw">pub type </span>Transactions&lt;T&gt; = BoundedVec&lt;(
+    <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
+    <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
+    <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+    CUDAction,
+    <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Drawdowns
 </span><span class="kw">pub type </span>DrawdownId = [u8; <span class="number">32</span>];
@@ -454,20 +520,49 @@
 <span class="kw">pub type </span>NAICSCode = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>JobsMultiplier = u32;
 <span class="kw">pub type </span>InflationRate = u32;
+<span class="kw">pub type </span>Expenditures&lt;T&gt; = BoundedVec&lt;(
+    <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+    <span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
+    <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
+    <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
+    <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+    CUDAction,
+    <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Miscellaneous
 </span><span class="kw">pub type </span>CreatedDate = u64;
 <span class="kw">pub type </span>CloseDate = u64;
 <span class="kw">pub type </span>TotalAmount = Amount;
 
+<span class="comment">// Job Elgibles
+</span><span class="kw">pub type </span>JobEligibleId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>JobEligibleAmount = Amount;
+<span class="kw">pub type </span>JobEligibles&lt;T&gt; = BoundedVec&lt;(
+    <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
+    <span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
+    <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
+    <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+    CUDAction,
+    <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+
 <span class="comment">// Revenues
 </span><span class="kw">pub type </span>RevenueAmount = Amount;
-<span class="kw">pub type </span>JobEligibleId = [u8; <span class="number">32</span>];
-<span class="kw">pub type </span>JobEligibleAmount = Amount;
 <span class="kw">pub type </span>RevenueId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueNumber = u32;
-<span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueStatusChanges&lt;T&gt; = BoundedVec&lt;(RevenueStatus, UpdatedDate),  &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerRevenue&gt;;
+
+<span class="comment">// Revenue Transactions
+</span><span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>RevenueTransactionAmount = Amount;
+<span class="kw">pub type </span>RevenueTransactions&lt;T&gt; = BoundedVec&lt;(
+    <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
+    <span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;,
+    <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+    CUDAction,
+    <span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -667,7 +762,7 @@
     <span class="kw">pub </span>updated_date: UpdatedDate,
     <span class="kw">pub </span>closed_date: CloseDate,
     <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>amount: RevenueAmount,
+    <span class="kw">pub </span>amount: RevenueTransactionAmount,
     <span class="kw">pub </span>status: RevenueTransactionStatus,
     <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
@@ -786,7 +881,7 @@
 
     <span class="kw">pub fn </span>administrator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
         <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        <span class="kw">let </span>administrator_permissions = [
+        [
             CreateProject.to_vec(),
             EditProject.to_vec(),
             DeleteProject.to_vec(),
@@ -803,8 +898,7 @@
             ApproveRevenue.to_vec(),
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
-        ].to_vec();
-        administrator_permissions
+        ].to_vec()
     }
 
     <span class="kw">pub fn </span>builder_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{

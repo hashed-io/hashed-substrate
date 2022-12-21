@@ -2701,36 +2701,6 @@
 <span id="2701">2701</span>
 <span id="2702">2702</span>
 <span id="2703">2703</span>
-<span id="2704">2704</span>
-<span id="2705">2705</span>
-<span id="2706">2706</span>
-<span id="2707">2707</span>
-<span id="2708">2708</span>
-<span id="2709">2709</span>
-<span id="2710">2710</span>
-<span id="2711">2711</span>
-<span id="2712">2712</span>
-<span id="2713">2713</span>
-<span id="2714">2714</span>
-<span id="2715">2715</span>
-<span id="2716">2716</span>
-<span id="2717">2717</span>
-<span id="2718">2718</span>
-<span id="2719">2719</span>
-<span id="2720">2720</span>
-<span id="2721">2721</span>
-<span id="2722">2722</span>
-<span id="2723">2723</span>
-<span id="2724">2724</span>
-<span id="2725">2725</span>
-<span id="2726">2726</span>
-<span id="2727">2727</span>
-<span id="2728">2728</span>
-<span id="2729">2729</span>
-<span id="2730">2730</span>
-<span id="2731">2731</span>
-<span id="2732">2732</span>
-<span id="2733">2733</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="kw">use </span>frame_support::traits::Time;
@@ -2773,7 +2743,7 @@
 
         <span class="comment">// Regional center rol &amp; permissions
         </span><span class="kw">let </span>regional_center_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::RegionalCenter.to_vec()].to_vec())<span class="question-mark">?</span>;
-        T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[<span class="number">0</span>], ProxyPermission::regional_center_permissions())<span class="question-mark">?</span>;
+        T::Rbac::create_and_set_permissions(pallet_id, regional_center_role_id[<span class="number">0</span>], ProxyPermission::regional_center_permissions())<span class="question-mark">?</span>;
 
         <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::ProxySetupCompleted);
@@ -2815,28 +2785,9 @@
         banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
         creation_date: CreationDate,
         completion_date: CompletionDate,
-        expenditures: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;,
-        job_eligibles: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;&gt;,
-        users: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-            T::AccountId,
-            ProxyRole,
-            AssignAction,
-        ), T::MaxRegistrationsAtTime&gt;&gt;,
+        expenditures: Expenditures&lt;T&gt;,
+        job_eligibles: <span class="prelude-ty">Option</span>&lt;JobEligibles&lt;T&gt;&gt;,
+        users: <span class="prelude-ty">Option</span>&lt;UsersAssignation&lt;T&gt;&gt;,
         ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::CreateProject)<span class="question-mark">?</span>;
@@ -2974,10 +2925,10 @@
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::DeleteProject)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure project exists &amp; get project data
+        <span class="comment">// Ensure project exists &amp; get project data
         </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project_id).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure project is not completed
+        <span class="comment">// Ensure project is not completed
         </span><span class="macro">ensure!</span>(project_data.status != ProjectStatus::Completed, Error::&lt;T&gt;::CannotDeleteCompletedProject);
 
         <span class="comment">// Delete scope from rbac pallet
@@ -3027,9 +2978,35 @@
         <span class="comment">// Deletes all drawdowns from DrawdownsByProject storagemap
         </span>&lt;DrawdownsByProject&lt;T&gt;&gt;::remove(project_id);
 
-        <span class="comment">// TODO: Delete revenue storagemaps
+        <span class="comment">// Delete job eligibles from JobEligiblesInfo storagemap
+        </span><span class="kw">let </span>job_eligibles_by_project = <span class="self">Self</span>::job_eligibles_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
+        <span class="kw">for </span>job_eligible_id <span class="kw">in </span>job_eligibles_by_project.iter().cloned() {
+            &lt;JobEligiblesInfo&lt;T&gt;&gt;::remove(job_eligible_id);
+        }
 
-        // Event
+        <span class="comment">// Deletes all job eligibles from JobEligiblesByProject storagemap
+        </span>&lt;JobEligiblesByProject&lt;T&gt;&gt;::remove(project_id);
+
+        <span class="comment">// Delete job from RevenuesInfo storagemap
+        </span><span class="kw">let </span>revenues_by_project = <span class="self">Self</span>::revenues_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
+        <span class="kw">for </span>revenue_id <span class="kw">in </span>revenues_by_project.iter().cloned() {
+            <span class="comment">// Delete revenue transactions from RevenueTransactionsInfo storagemap
+            </span><span class="kw">let </span>transactions_by_revenue = <span class="self">Self</span>::transactions_by_revenue(project_id, revenue_id).iter().cloned().collect::&lt;Vec&lt;[u8;<span class="number">32</span>]&gt;&gt;();
+            <span class="kw">for </span>transaction_id <span class="kw">in </span>transactions_by_revenue.iter().cloned() {
+                &lt;RevenueTransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+            }
+
+            <span class="comment">// Deletes all revenue transactions from TransactionsByRevenue storagemap
+            </span>&lt;TransactionsByRevenue&lt;T&gt;&gt;::remove(project_id, revenue_id);
+
+            <span class="comment">// Delete revenue from RevenuesInfo storagemap
+            </span>&lt;RevenuesInfo&lt;T&gt;&gt;::remove(revenue_id);
+        }
+
+        <span class="comment">// Deletes all revenues from RevenuesByProject storagemap
+        </span>&lt;RevenuesByProject&lt;T&gt;&gt;::remove(project_id);
+
+        <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::ProjectDeleted(admin, project_id));
         <span class="prelude-val">Ok</span>(())
     }
@@ -3037,11 +3014,7 @@
     <span class="kw">pub fn </span>do_execute_assign_users(
         admin: T::AccountId,
         project_id: ProjectId,
-        users: BoundedVec&lt;(
-            T::AccountId,
-            ProxyRole,
-            AssignAction,
-        ), T::MaxRegistrationsAtTime&gt;,
+        users: UsersAssignation&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::AssignUsers)<span class="question-mark">?</span>;
@@ -3146,12 +3119,7 @@
     // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_users(
         admin: T::AccountId,
-        users: BoundedVec&lt;(
-            T::AccountId,
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-            <span class="prelude-ty">Option</span>&lt;ProxyRole&gt;,
-            CUDAction,
-        ), T::MaxRegistrationsAtTime&gt;,
+        users: Users&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ExecuteUsers)<span class="question-mark">?</span>;
@@ -3162,14 +3130,14 @@
                     <span class="self">Self</span>::do_create_user(
                         user.<span class="number">0</span>.clone(),
                         user.<span class="number">1</span>.clone().ok_or(Error::&lt;T&gt;::UserNameRequired)<span class="question-mark">?</span>,
-                        user.<span class="number">2</span>.clone().ok_or(Error::&lt;T&gt;::UserRoleRequired)<span class="question-mark">?</span>,
+                        user.<span class="number">2</span>.ok_or(Error::&lt;T&gt;::UserRoleRequired)<span class="question-mark">?</span>,
                     )<span class="question-mark">?</span>;
                 },
                 CUDAction::Update =&gt; {
                     <span class="self">Self</span>::do_update_user(
                         user.<span class="number">0</span>.clone(),
                         user.<span class="number">1</span>.clone(),
-                        user.<span class="number">2</span>.clone()
+                        user.<span class="number">2</span>,
                     )<span class="question-mark">?</span>;
                 },
                 CUDAction::Delete =&gt; {
@@ -3204,12 +3172,12 @@
 
         <span class="kw">match </span>role {
             ProxyRole::Administrator =&gt; {
-                <span class="self">Self</span>::do_sudo_add_administrator(user.clone(), name.clone())<span class="question-mark">?</span>;
+                <span class="self">Self</span>::do_sudo_add_administrator(user.clone(), name)<span class="question-mark">?</span>;
             },
             <span class="kw">_ </span>=&gt; {
                 <span class="comment">// Create user data
                 </span><span class="kw">let </span>user_data = UserData::&lt;T&gt; {
-                    name: name.clone(),
+                    name,
                     role,
                     image: CID::default(),
                     date_registered: current_timestamp,
@@ -3240,7 +3208,7 @@
             <span class="kw">let </span>user_info = user_data.as_mut().ok_or(Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_name) = name {
-                user_info.name = mod_name.clone();
+                user_info.name = mod_name;
             }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_role) = role {
                 <span class="comment">// If user has assigned projects, its role cannot be updated
@@ -3315,20 +3283,20 @@
         </span>&lt;UsersInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(user.clone(), |user_data| {
             <span class="kw">let </span>user_info = user_data.as_mut().ok_or(Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = name {
-                user_info.name = name.clone();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_name) = name {
+                user_info.name = mod_name;
             }
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(image) = image {
-                user_info.image = image.clone();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_image) = image {
+                user_info.image = mod_image;
             }
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(email) = email {
-                user_info.email = email.clone();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_email) = email {
+                user_info.email = mod_email;
             }
             <span class="comment">// Only investors can upload documents
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(documents) = documents {
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_documents) = documents {
                 <span class="comment">// Ensure user is an investor
                 </span><span class="macro">ensure!</span>(user_info.role == ProxyRole::Investor, Error::&lt;T&gt;::UserIsNotAnInvestor);
-                user_info.documents = <span class="prelude-val">Some</span>(documents);
+                user_info.documents = <span class="prelude-val">Some</span>(mod_documents);
             }
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
@@ -3343,15 +3311,7 @@
     </span><span class="kw">pub fn </span>do_execute_expenditures(
         admin: T::AccountId,
         project_id: ProjectId,
-        expenditures: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;,
+        expenditures: Expenditures&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
@@ -3483,7 +3443,7 @@
                 expenditure.expenditure_amount = mod_expenditure_amount;
             }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_naics_code) = naics_code {
-                expenditure.naics_code = <span class="prelude-val">Some</span>(mod_naics_code.clone());
+                expenditure.naics_code = <span class="prelude-val">Some</span>(mod_naics_code);
             }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(mod_jobs_multiplier) = jobs_multiplier {
                 expenditure.jobs_multiplier = <span class="prelude-val">Some</span>(mod_jobs_multiplier);
@@ -3596,7 +3556,7 @@
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure user permissions
-        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -3646,7 +3606,7 @@
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
@@ -3707,7 +3667,7 @@
         drawdown_feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Get drawdown data
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
@@ -3782,16 +3742,10 @@
         user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
-            <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;,
+        transactions: Transactions&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin or builder permissions
-        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again 
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4079,14 +4033,7 @@
     </span><span class="kw">pub fn </span>do_execute_job_eligibles(
         admin: T::AccountId,
         project_id: ProjectId,
-        job_eligibles: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-            <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;,
+        job_eligibles: JobEligibles&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions 
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::JobEligible)<span class="question-mark">?</span>;
@@ -4242,16 +4189,10 @@
         user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
-        revenue_transactions: BoundedVec&lt;(
-            <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-            <span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;,
-            <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-            CUDAction,
-            <span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
-        ), T::MaxRegistrationsAtTime&gt;,
+        revenue_transactions: RevenueTransactions&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permission
-        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again 
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4468,7 +4409,7 @@
         revenue_id: RevenueId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
@@ -4529,7 +4470,7 @@
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
@@ -4589,7 +4530,7 @@
         action: CUDAction,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::BankConfirming)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::BankConfirming)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -4766,8 +4707,7 @@
 
     <span class="doccomment">/// Get global scope
     </span><span class="kw">pub fn </span>get_global_scope() -&gt; [u8;<span class="number">32</span>] {
-        <span class="kw">let </span>global_scope = &lt;GlobalScope&lt;T&gt;&gt;::try_get().map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::NoGlobalScopeValueWasFound).unwrap();
-        global_scope
+        &lt;GlobalScope&lt;T&gt;&gt;::try_get().map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::NoGlobalScopeValueWasFound).unwrap()
     }
 
     <span class="attribute">#[allow(dead_code)]
@@ -4777,7 +4717,7 @@
         status: ProjectStatus
     ) -&gt; DispatchResult {
         <span class="comment">//ensure admin permissions
-        </span><span class="self">Self</span>::is_superuser(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyRole::Administrator.id())<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_superuser(admin, <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyRole::Administrator.id())<span class="question-mark">?</span>;
 
         <span class="comment">//ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -4983,7 +4923,7 @@
         }
 
         <span class="comment">// Ensure how many projects the user is assigned to
-        </span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user.clone()).len();
+        </span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user).len();
 
         <span class="kw">match </span>user_data.role {
             ProxyRole::Builder =&gt; {
@@ -5032,19 +4972,19 @@
                 // Ensure drawdown is in draft or rejected status
                 </span><span class="kw">match </span>drawdown_data.status {
                     DrawdownStatus::Draft =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                        <span class="prelude-val">Ok</span>(())
                     },
                     DrawdownStatus::Rejected =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                        <span class="prelude-val">Ok</span>(())
                     },
                     DrawdownStatus::Submitted =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedDrawdown.into());
+                        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedDrawdown.into())
                     },
                     DrawdownStatus::Approved =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into());
+                        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into())
                     },
                     DrawdownStatus::Confirmed =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into());
+                        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into())
                     },
                 }
             },
@@ -5052,13 +4992,13 @@
                 <span class="comment">// Match drawdown status
                 </span><span class="kw">match </span>drawdown_data.status {
                     DrawdownStatus::Approved =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into());
+                        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into())
                     },
                     DrawdownStatus::Confirmed =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into());
+                        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into())
                     },
                     <span class="kw">_ </span>=&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                        <span class="prelude-val">Ok</span>(())
                     },
                 }
             }
@@ -5075,19 +5015,19 @@
         // Match transaction status
         </span><span class="kw">match </span>transaction_data.status {
             TransactionStatus::Draft =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             TransactionStatus::Rejected =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             TransactionStatus::Submitted =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedTransaction.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedTransaction.into())
             },
             TransactionStatus::Approved =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedTransaction.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedTransaction.into())
             },
             TransactionStatus::Confirmed =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedTransaction.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedTransaction.into())
             },
         }
     }
@@ -5164,7 +5104,7 @@
 
         <span class="comment">// Add administrator to rbac pallet
         </span>T::Rbac::assign_role_to_user(
-            admin.clone(),
+            admin,
             <span class="self">Self</span>::pallet_id(),
             <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
             ProxyRole::Administrator.id()
@@ -5182,7 +5122,7 @@
 
         <span class="comment">// Remove administrator from rbac pallet
         </span>T::Rbac::remove_role_from_user(
-            admin.clone(),
+            admin,
             <span class="self">Self</span>::pallet_id(),
             <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
             ProxyRole::Administrator.id()
@@ -5275,16 +5215,16 @@
         <span class="comment">// Match revenue status
         </span><span class="kw">match </span>revenue_data.status {
             RevenueStatus::Draft =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             RevenueStatus::Rejected =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             RevenueStatus::Submitted =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenue.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenue.into())
             },
             RevenueStatus::Approved =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenue.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenue.into())
             },
         }
     }
@@ -5299,16 +5239,16 @@
         // Match revenue transaction status
         </span><span class="kw">match </span>revenue_transaction_data.status {
             RevenueTransactionStatus::Draft =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             RevenueTransactionStatus::Rejected =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
             },
             RevenueTransactionStatus::Submitted =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenueTransaction.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenueTransaction.into())
             },
             RevenueTransactionStatus::Approved =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenueTransaction.into());
+                <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenueTransaction.into())
             },
         }
     }

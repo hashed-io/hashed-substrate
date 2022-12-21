@@ -1036,8 +1036,6 @@
 <span id="1036">1036</span>
 <span id="1037">1037</span>
 <span id="1038">1038</span>
-<span id="1039">1039</span>
-<span id="1040">1040</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attribute">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1602,7 +1600,6 @@
 	<span class="kw">pub const </span>MaxInvestorsPerProject:u32 = <span class="number">50</span>;
 	<span class="kw">pub const </span>MaxIssuersPerProject:u32 = <span class="number">1</span>;
 	<span class="kw">pub const </span>MaxRegionalCenterPerProject:u32 = <span class="number">1</span>;
-	<span class="kw">pub const </span>MaxBoundedVecs:u32 = <span class="number">1</span>;
 	<span class="kw">pub const </span>MaxDrawdownsPerProject:u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxTransactionsPerDrawdown:u32 = <span class="number">500</span>;
 	<span class="kw">pub const </span>MaxRegistrationsAtTime:u32 = <span class="number">50</span>;
@@ -1637,7 +1634,6 @@
 	<span class="kw">type </span>MaxInvestorsPerProject = MaxInvestorsPerProject;
 	<span class="kw">type </span>MaxIssuersPerProject = MaxIssuersPerProject;
 	<span class="kw">type </span>MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
-	<span class="kw">type </span>MaxBoundedVecs = MaxBoundedVecs;
 	<span class="kw">type </span>MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 	<span class="kw">type </span>MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	<span class="kw">type </span>MaxRegistrationsAtTime = MaxRegistrationsAtTime;

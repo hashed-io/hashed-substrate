@@ -1522,80 +1522,6 @@
 <span id="1522">1522</span>
 <span id="1523">1523</span>
 <span id="1524">1524</span>
-<span id="1525">1525</span>
-<span id="1526">1526</span>
-<span id="1527">1527</span>
-<span id="1528">1528</span>
-<span id="1529">1529</span>
-<span id="1530">1530</span>
-<span id="1531">1531</span>
-<span id="1532">1532</span>
-<span id="1533">1533</span>
-<span id="1534">1534</span>
-<span id="1535">1535</span>
-<span id="1536">1536</span>
-<span id="1537">1537</span>
-<span id="1538">1538</span>
-<span id="1539">1539</span>
-<span id="1540">1540</span>
-<span id="1541">1541</span>
-<span id="1542">1542</span>
-<span id="1543">1543</span>
-<span id="1544">1544</span>
-<span id="1545">1545</span>
-<span id="1546">1546</span>
-<span id="1547">1547</span>
-<span id="1548">1548</span>
-<span id="1549">1549</span>
-<span id="1550">1550</span>
-<span id="1551">1551</span>
-<span id="1552">1552</span>
-<span id="1553">1553</span>
-<span id="1554">1554</span>
-<span id="1555">1555</span>
-<span id="1556">1556</span>
-<span id="1557">1557</span>
-<span id="1558">1558</span>
-<span id="1559">1559</span>
-<span id="1560">1560</span>
-<span id="1561">1561</span>
-<span id="1562">1562</span>
-<span id="1563">1563</span>
-<span id="1564">1564</span>
-<span id="1565">1565</span>
-<span id="1566">1566</span>
-<span id="1567">1567</span>
-<span id="1568">1568</span>
-<span id="1569">1569</span>
-<span id="1570">1570</span>
-<span id="1571">1571</span>
-<span id="1572">1572</span>
-<span id="1573">1573</span>
-<span id="1574">1574</span>
-<span id="1575">1575</span>
-<span id="1576">1576</span>
-<span id="1577">1577</span>
-<span id="1578">1578</span>
-<span id="1579">1579</span>
-<span id="1580">1580</span>
-<span id="1581">1581</span>
-<span id="1582">1582</span>
-<span id="1583">1583</span>
-<span id="1584">1584</span>
-<span id="1585">1585</span>
-<span id="1586">1586</span>
-<span id="1587">1587</span>
-<span id="1588">1588</span>
-<span id="1589">1589</span>
-<span id="1590">1590</span>
-<span id="1591">1591</span>
-<span id="1592">1592</span>
-<span id="1593">1593</span>
-<span id="1594">1594</span>
-<span id="1595">1595</span>
-<span id="1596">1596</span>
-<span id="1597">1597</span>
-<span id="1598">1598</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1611,13 +1537,8 @@
 
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>types;
-<span class="comment">//TODO: Remove unused parameters, types, etc
-// - Change extrinsic names
-// - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
-// - Add external documentation for each extrinsic
-// - Fix typos
 
-</span><span class="attribute">#[frame_support::pallet]
+<span class="attribute">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
 	<span class="kw">use </span>frame_support::{pallet_prelude::{<span class="kw-2">*</span>, ValueQuery}, BoundedVec};
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
@@ -1630,8 +1551,7 @@
 
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		<span class="comment">//TODO: change all accounts names for users
-		</span><span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
 
 		<span class="kw">type </span>Moment: Parameter
 		+ Default
@@ -1667,10 +1587,6 @@
 
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxRegionalCenterPerProject: Get&lt;u32&gt;;
-
-		<span class="comment">//todo:remove MaxBoundedVecs
-		</span><span class="attribute">#[pallet::constant]
-		</span><span class="kw">type </span>MaxBoundedVecs: Get&lt;u32&gt;;
 
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxDrawdownsPerProject: Get&lt;u32&gt;;
@@ -1900,7 +1816,8 @@
 	</span><span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="doccomment">/// Proxy initial setup completed using the sudo pallet
+		<span class="comment">// TODO: Delete unused events when updating the readme file
+		</span><span class="doccomment">/// Proxy initial setup completed using the sudo pallet
 		</span>ProxySetupCompleted,
 		<span class="doccomment">/// Project was created successfully
 		</span>ProjectCreated(T::AccountId, ProjectId),
@@ -1992,7 +1909,8 @@
 	// ------------------------------------------------------------------------------------------------------------
 	</span><span class="attribute">#[pallet::error]
 	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="doccomment">/// No value was found for the global scope
+		<span class="comment">// TODO: Delete unused errors when updating the readme file
+		</span><span class="doccomment">/// No value was found for the global scope
 		</span>NoGlobalScopeValueWasFound,
 		<span class="doccomment">/// Project ID is already in use
 		</span>ProjectIdAlreadyInUse,
@@ -2333,12 +2251,7 @@
 		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>users(
 			origin: OriginFor&lt;T&gt;,
-			users: BoundedVec&lt;(
-				T::AccountId,
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-				<span class="prelude-ty">Option</span>&lt;ProxyRole&gt;,
-				CUDAction,
-			), T::MaxRegistrationsAtTime&gt;,
+			users: Users&lt;T&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2432,28 +2345,9 @@
 			banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
 			creation_date: CreationDate,
 			completion_date: CompletionDate,
-			expenditures: BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;
-			), T::MaxRegistrationsAtTime&gt;,
-			job_eligibles: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-				<span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
-			users: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				T::AccountId,
-				ProxyRole,
-				AssignAction,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
+			expenditures: Expenditures&lt;T&gt;,
+			job_eligibles: <span class="prelude-ty">Option</span>&lt;JobEligibles&lt;T&gt;&gt;,
+			users: <span class="prelude-ty">Option</span>&lt;UsersAssignation&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2567,11 +2461,7 @@
 		</span><span class="kw">pub fn </span>projects_assign_user(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
-			users: BoundedVec&lt;(
-				T::AccountId,
-				ProxyRole,
-				AssignAction,
-			), T::MaxRegistrationsAtTime&gt;,
+			users: UsersAssignation&lt;T&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2621,23 +2511,8 @@
 		</span><span class="kw">pub fn </span>expenditures_and_job_eligibles(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
-			expenditures: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
-				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
-			job_eligibles: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;FieldName&gt;, 
-				<span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;NAICSCode&gt;, 
-				<span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
+			expenditures: <span class="prelude-ty">Option</span>&lt;Expenditures&lt;T&gt;&gt;,
+			job_eligibles: <span class="prelude-ty">Option</span>&lt;JobEligibles&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2646,7 +2521,7 @@
 			}
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_job_eligibles) = job_eligibles {
-				<span class="self">Self</span>::do_execute_job_eligibles(who.clone(), project_id, mod_job_eligibles)<span class="question-mark">?</span>;
+				<span class="self">Self</span>::do_execute_job_eligibles(who, project_id, mod_job_eligibles)<span class="question-mark">?</span>;
 			}
 
 			<span class="prelude-val">Ok</span>(())
@@ -2698,13 +2573,7 @@
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
-				<span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
+			transactions: <span class="prelude-ty">Option</span>&lt;Transactions&lt;T&gt;&gt;,
 			submit: bool,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
@@ -2714,7 +2583,7 @@
 				</span><span class="bool-val">false </span>=&gt; {
 					<span class="comment">// Do execute transactions
 					</span><span class="self">Self</span>::do_execute_transactions(
-						who.clone(),
+						who,
 						project_id,
 						drawdown_id,
 						transactions.ok_or(Error::&lt;T&gt;::EmptyTransactions)<span class="question-mark">?</span>,
@@ -2735,7 +2604,7 @@
 					}
 
 					<span class="comment">// Do submit drawdown
-					</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)
+					</span><span class="self">Self</span>::do_submit_drawdown(who, project_id, drawdown_id)
 				},
 			}
 
@@ -2789,21 +2658,10 @@
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			bulkupload: <span class="prelude-ty">Option</span>&lt;bool&gt;,
-			transactions: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;, <span class="comment">// expenditure_id
-				</span><span class="prelude-ty">Option</span>&lt;u64&gt;, <span class="comment">// amount
-				</span><span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;, <span class="comment">//Documents
-				</span>CUDAction, <span class="comment">// Action
-				</span><span class="prelude-ty">Option</span>&lt;TransactionId&gt;, <span class="comment">// transaction_id
-			</span>), T::MaxRegistrationsAtTime&gt;&gt;,
+			transactions: <span class="prelude-ty">Option</span>&lt;Transactions&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
-			//TODO: REVIEW BULK UPLOAD APPROVAL FLOW
-			// is_drawdown_editable &amp; is_transaction_editable should do
-			// a distinction between bulkupload and non-bulkupload drawdowns
-			// review those function in each step of the flow (approve, reject, submit)
-			
 			// Match bulkupload parameter
 			</span><span class="kw">match </span>bulkupload {
 				<span class="prelude-val">Some</span>(approval) =&gt; {
@@ -2819,7 +2677,7 @@
 							)<span class="question-mark">?</span>;
 
 							<span class="comment">// 2. Do submit drawdown
-							</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)
+							</span><span class="self">Self</span>::do_submit_drawdown(who, project_id, drawdown_id)
 
 						},
 						<span class="bool-val">true  </span>=&gt; {
@@ -2839,14 +2697,14 @@
 							}
 
 							<span class="comment">// 3. Approve drawdown
-							</span><span class="self">Self</span>::do_approve_drawdown(who.clone(), project_id, drawdown_id)
+							</span><span class="self">Self</span>::do_approve_drawdown(who, project_id, drawdown_id)
 						},
 					}
 
 				},
 				<span class="prelude-val">None </span>=&gt; {
 					<span class="comment">// Execute normal flow (EB5)
-					</span><span class="self">Self</span>::do_approve_drawdown(who.clone(), project_id, drawdown_id)
+					</span><span class="self">Self</span>::do_approve_drawdown(who, project_id, drawdown_id)
 				}
 			}
 
@@ -3010,13 +2868,7 @@
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
 			revenue_id: RevenueId,
-			revenue_transactions: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				<span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-				<span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;,
-				<span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-				CUDAction,
-				<span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
-			), T::MaxRegistrationsAtTime&gt;&gt;,
+			revenue_transactions: <span class="prelude-ty">Option</span>&lt;RevenueTransactions&lt;T&gt;&gt;,
 			submit: bool,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
@@ -3026,7 +2878,7 @@
 				</span><span class="bool-val">false </span>=&gt; {
 					<span class="comment">// Do execute transactions 
 					</span><span class="self">Self</span>::do_execute_revenue_transactions(
-						who.clone(),
+						who,
 						project_id,
 						revenue_id,
 						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsEmpty)<span class="question-mark">?</span>,
@@ -3047,7 +2899,7 @@
 					}
 
 					<span class="comment">// Do submit revenue
-					</span><span class="self">Self</span>::do_submit_revenue(who.clone(), project_id, revenue_id)
+					</span><span class="self">Self</span>::do_submit_revenue(who, project_id, revenue_id)
 				},
 			}
 			
