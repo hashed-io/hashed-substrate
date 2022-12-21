@@ -42,7 +42,7 @@ impl<T: Config> Pallet<T> {
 
         // Regional center rol & permissions
         let regional_center_role_id = T::Rbac::create_and_set_roles(pallet_id.clone(), [ProxyRole::RegionalCenter.to_vec()].to_vec())?;
-        T::Rbac::create_and_set_permissions(pallet_id.clone(), regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;
+        T::Rbac::create_and_set_permissions(pallet_id, regional_center_role_id[0], ProxyPermission::regional_center_permissions())?;
 
         // Event
         Self::deposit_event(Event::ProxySetupCompleted);
@@ -84,28 +84,9 @@ impl<T: Config> Pallet<T> {
         banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
         creation_date: CreationDate,
         completion_date: CompletionDate,
-        expenditures: BoundedVec<(
-            Option<FieldName>,
-            Option<ExpenditureType>,
-            Option<ExpenditureAmount>,
-            Option<NAICSCode>,
-            Option<JobsMultiplier>,
-            CUDAction,
-            Option<ExpenditureId>,
-        ), T::MaxRegistrationsAtTime>,
-        job_eligibles: Option<BoundedVec<(
-            Option<FieldName>,
-            Option<JobEligibleAmount>,
-            Option<NAICSCode>,
-            Option<JobsMultiplier>,
-            CUDAction,
-            Option<JobEligibleId>,
-        ), T::MaxRegistrationsAtTime>>,
-        users: Option<BoundedVec<(
-            T::AccountId,
-            ProxyRole,
-            AssignAction,
-        ), T::MaxRegistrationsAtTime>>,
+        expenditures: Expenditures<T>,
+        job_eligibles: Option<JobEligibles<T>>,
+        users: Option<UsersAssignation<T>>,
         ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::CreateProject)?;
@@ -243,10 +224,10 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::DeleteProject)?;
 
-        //Ensure project exists & get project data
+        // Ensure project exists & get project data
         let project_data = ProjectsInfo::<T>::get(project_id).ok_or(Error::<T>::ProjectNotFound)?;
 
-        //Ensure project is not completed
+        // Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotDeleteCompletedProject);
 
         // Delete scope from rbac pallet
@@ -296,7 +277,33 @@ impl<T: Config> Pallet<T> {
         // Deletes all drawdowns from DrawdownsByProject storagemap
         <DrawdownsByProject<T>>::remove(project_id);
 
-        // TODO: Delete revenue storagemaps
+        // Delete job eligibles from JobEligiblesInfo storagemap
+        let job_eligibles_by_project = Self::job_eligibles_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for job_eligible_id in job_eligibles_by_project.iter().cloned() {
+            <JobEligiblesInfo<T>>::remove(job_eligible_id);
+        }
+
+        // Deletes all job eligibles from JobEligiblesByProject storagemap
+        <JobEligiblesByProject<T>>::remove(project_id);
+
+        // Delete job from RevenuesInfo storagemap
+        let revenues_by_project = Self::revenues_by_project(project_id).iter().cloned().collect::<Vec<[u8;32]>>();
+        for revenue_id in revenues_by_project.iter().cloned() {
+            // Delete revenue transactions from RevenueTransactionsInfo storagemap
+            let transactions_by_revenue = Self::transactions_by_revenue(project_id, revenue_id).iter().cloned().collect::<Vec<[u8;32]>>();
+            for transaction_id in transactions_by_revenue.iter().cloned() {
+                <RevenueTransactionsInfo<T>>::remove(transaction_id);
+            }
+
+            // Deletes all revenue transactions from TransactionsByRevenue storagemap
+            <TransactionsByRevenue<T>>::remove(project_id, revenue_id);
+
+            // Delete revenue from RevenuesInfo storagemap
+            <RevenuesInfo<T>>::remove(revenue_id);
+        }
+
+        // Deletes all revenues from RevenuesByProject storagemap
+        <RevenuesByProject<T>>::remove(project_id);
 
         // Event
         Self::deposit_event(Event::ProjectDeleted(admin, project_id));
@@ -306,11 +313,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_execute_assign_users(
         admin: T::AccountId,
         project_id: ProjectId,
-        users: BoundedVec<(
-            T::AccountId,
-            ProxyRole,
-            AssignAction,
-        ), T::MaxRegistrationsAtTime>,
+        users: UsersAssignation<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::AssignUsers)?;
@@ -415,12 +418,7 @@ impl<T: Config> Pallet<T> {
     // ================================================================================================
     pub fn do_execute_users(
         admin: T::AccountId,
-        users: BoundedVec<(
-            T::AccountId,
-            Option<FieldName>,
-            Option<ProxyRole>,
-            CUDAction,
-        ), T::MaxRegistrationsAtTime>,
+        users: Users<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::ExecuteUsers)?;
@@ -431,14 +429,14 @@ impl<T: Config> Pallet<T> {
                     Self::do_create_user(
                         user.0.clone(),
                         user.1.clone().ok_or(Error::<T>::UserNameRequired)?,
-                        user.2.clone().ok_or(Error::<T>::UserRoleRequired)?,
+                        user.2.ok_or(Error::<T>::UserRoleRequired)?,
                     )?;
                 },
                 CUDAction::Update => {
                     Self::do_update_user(
                         user.0.clone(),
                         user.1.clone(),
-                        user.2.clone()
+                        user.2,
                     )?;
                 },
                 CUDAction::Delete => {
@@ -473,12 +471,12 @@ impl<T: Config> Pallet<T> {
 
         match role {
             ProxyRole::Administrator => {
-                Self::do_sudo_add_administrator(user.clone(), name.clone())?;
+                Self::do_sudo_add_administrator(user.clone(), name)?;
             },
             _ => {
                 // Create user data
                 let user_data = UserData::<T> {
-                    name: name.clone(),
+                    name,
                     role,
                     image: CID::default(),
                     date_registered: current_timestamp,
@@ -509,7 +507,7 @@ impl<T: Config> Pallet<T> {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
             if let Some(mod_name) = name {
-                user_info.name = mod_name.clone();
+                user_info.name = mod_name;
             }
             if let Some(mod_role) = role {
                 // If user has assigned projects, its role cannot be updated
@@ -584,20 +582,20 @@ impl<T: Config> Pallet<T> {
         <UsersInfo<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |user_data| {
             let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
-            if let Some(name) = name {
-                user_info.name = name.clone();
+            if let Some(mod_name) = name {
+                user_info.name = mod_name;
             }
-            if let Some(image) = image {
-                user_info.image = image.clone();
+            if let Some(mod_image) = image {
+                user_info.image = mod_image;
             }
-            if let Some(email) = email {
-                user_info.email = email.clone();
+            if let Some(mod_email) = email {
+                user_info.email = mod_email;
             }
             // Only investors can upload documents
-            if let Some(documents) = documents {
+            if let Some(mod_documents) = documents {
                 // Ensure user is an investor
                 ensure!(user_info.role == ProxyRole::Investor, Error::<T>::UserIsNotAnInvestor);
-                user_info.documents = Some(documents);
+                user_info.documents = Some(mod_documents);
             }
             Ok(())
         })?;
@@ -612,15 +610,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_execute_expenditures(
         admin: T::AccountId,
         project_id: ProjectId,
-        expenditures: BoundedVec<(
-            Option<FieldName>,
-            Option<ExpenditureType>,
-            Option<ExpenditureAmount>,
-            Option<NAICSCode>,
-            Option<JobsMultiplier>,
-            CUDAction,
-            Option<ExpenditureId>,
-        ), T::MaxRegistrationsAtTime>,
+        expenditures: Expenditures<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::Expenditures)?;
@@ -752,7 +742,7 @@ impl<T: Config> Pallet<T> {
                 expenditure.expenditure_amount = mod_expenditure_amount;
             }
             if let Some(mod_naics_code) = naics_code {
-                expenditure.naics_code = Some(mod_naics_code.clone());
+                expenditure.naics_code = Some(mod_naics_code);
             }
             if let Some(mod_jobs_multiplier) = jobs_multiplier {
                 expenditure.jobs_multiplier = Some(mod_jobs_multiplier);
@@ -865,7 +855,7 @@ impl<T: Config> Pallet<T> {
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
         // Ensure user permissions
-        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::SubmitDrawdown)?;
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::SubmitDrawdown)?;
 
         // Ensure project exists & is not completed
         Self::is_project_completed(project_id)?;
@@ -915,7 +905,7 @@ impl<T: Config> Pallet<T> {
         drawdown_id: DrawdownId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveDrawdown)?;
+        Self::is_authorized(admin, None, ProxyPermission::ApproveDrawdown)?;
 
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -976,7 +966,7 @@ impl<T: Config> Pallet<T> {
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectDrawdown)?;
+        Self::is_authorized(admin, None, ProxyPermission::RejectDrawdown)?;
 
         // Get drawdown data
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -1051,16 +1041,10 @@ impl<T: Config> Pallet<T> {
         user: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions: BoundedVec<(
-            Option<ExpenditureId>,
-            Option<ExpenditureAmount>,
-            Option<Documents<T>>,
-            CUDAction,
-            Option<TransactionId>,
-        ), T::MaxRegistrationsAtTime>,
+        transactions: Transactions<T>,
     ) -> DispatchResult {
         // Ensure admin or builder permissions
-        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::ExecuteTransactions)?;
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::ExecuteTransactions)?;
 
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again
         Self::is_project_completed(project_id)?;
@@ -1348,14 +1332,7 @@ impl<T: Config> Pallet<T> {
     pub fn do_execute_job_eligibles(
         admin: T::AccountId,
         project_id: ProjectId,
-        job_eligibles: BoundedVec<(
-            Option<FieldName>,
-            Option<JobEligibleAmount>,
-            Option<NAICSCode>,
-            Option<JobsMultiplier>,
-            CUDAction,
-            Option<JobEligibleId>,
-        ), T::MaxRegistrationsAtTime>,
+        job_eligibles: JobEligibles<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::JobEligible)?;
@@ -1511,16 +1488,10 @@ impl<T: Config> Pallet<T> {
         user: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
-        revenue_transactions: BoundedVec<(
-            Option<JobEligibleId>,
-            Option<RevenueAmount>,
-            Option<Documents<T>>,
-            CUDAction,
-            Option<RevenueTransactionId>,
-        ), T::MaxRegistrationsAtTime>,
+        revenue_transactions: RevenueTransactions<T>,
     ) -> DispatchResult {
         // Ensure builder permission
-        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::RevenueTransaction)?;
+        Self::is_authorized(user, Some(&project_id), ProxyPermission::RevenueTransaction)?;
 
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again
         Self::is_project_completed(project_id)?;
@@ -1737,7 +1708,7 @@ impl<T: Config> Pallet<T> {
         revenue_id: RevenueId,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::ApproveRevenue)?;
+        Self::is_authorized(admin, None, ProxyPermission::ApproveRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1798,7 +1769,7 @@ impl<T: Config> Pallet<T> {
         ), T::MaxRegistrationsAtTime>,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::RejectRevenue)?;
+        Self::is_authorized(admin, None, ProxyPermission::RejectRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
         Self::is_revenue_editable(revenue_id)?;
@@ -1858,7 +1829,7 @@ impl<T: Config> Pallet<T> {
         action: CUDAction,
     ) -> DispatchResult {
         // Ensure admin permissions
-        Self::is_authorized(admin.clone(), None, ProxyPermission::BankConfirming)?;
+        Self::is_authorized(admin, None, ProxyPermission::BankConfirming)?;
 
         // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -2035,8 +2006,7 @@ impl<T: Config> Pallet<T> {
 
     /// Get global scope
     pub fn get_global_scope() -> [u8;32] {
-        let global_scope = <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoGlobalScopeValueWasFound).unwrap();
-        global_scope
+        <GlobalScope<T>>::try_get().map_err(|_| Error::<T>::NoGlobalScopeValueWasFound).unwrap()
     }
 
     #[allow(dead_code)]
@@ -2046,7 +2016,7 @@ impl<T: Config> Pallet<T> {
         status: ProjectStatus
     ) -> DispatchResult {
         //ensure admin permissions
-        Self::is_superuser(admin.clone(), &Self::get_global_scope(), ProxyRole::Administrator.id())?;
+        Self::is_superuser(admin, &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
         //ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
@@ -2252,7 +2222,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Ensure how many projects the user is assigned to
-        let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
+        let projects_count = <ProjectsByUser<T>>::get(user).len();
 
         match user_data.role {
             ProxyRole::Builder => {
@@ -2301,19 +2271,19 @@ impl<T: Config> Pallet<T> {
                 // Ensure drawdown is in draft or rejected status
                 match drawdown_data.status {
                     DrawdownStatus::Draft => {
-                        return Ok(())
+                        Ok(())
                     },
                     DrawdownStatus::Rejected => {
-                        return Ok(())
+                        Ok(())
                     },
                     DrawdownStatus::Submitted => {
-                        return Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into());
+                        Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into())
                     },
                     DrawdownStatus::Approved => {
-                        return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
+                        Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
                     },
                     DrawdownStatus::Confirmed => {
-                        return Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into());
+                        Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
                     },
                 }
             },
@@ -2321,13 +2291,13 @@ impl<T: Config> Pallet<T> {
                 // Match drawdown status
                 match drawdown_data.status {
                     DrawdownStatus::Approved => {
-                        return Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into());
+                        Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
                     },
                     DrawdownStatus::Confirmed => {
-                        return Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into());
+                        Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
                     },
                     _ => {
-                        return Ok(())
+                        Ok(())
                     },
                 }
             }
@@ -2344,19 +2314,19 @@ impl<T: Config> Pallet<T> {
         // Match transaction status
         match transaction_data.status {
             TransactionStatus::Draft => {
-                return Ok(())
+                Ok(())
             },
             TransactionStatus::Rejected => {
-                return Ok(())
+                Ok(())
             },
             TransactionStatus::Submitted => {
-                return Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into());
+                Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into())
             },
             TransactionStatus::Approved => {
-                return Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into());
+                Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into())
             },
             TransactionStatus::Confirmed => {
-                return Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into());
+                Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into())
             },
         }
     }
@@ -2433,7 +2403,7 @@ impl<T: Config> Pallet<T> {
 
         // Add administrator to rbac pallet
         T::Rbac::assign_role_to_user(
-            admin.clone(),
+            admin,
             Self::pallet_id(),
             &Self::get_global_scope(),
             ProxyRole::Administrator.id()
@@ -2451,7 +2421,7 @@ impl<T: Config> Pallet<T> {
 
         // Remove administrator from rbac pallet
         T::Rbac::remove_role_from_user(
-            admin.clone(),
+            admin,
             Self::pallet_id(),
             &Self::get_global_scope(),
             ProxyRole::Administrator.id()
@@ -2544,16 +2514,16 @@ impl<T: Config> Pallet<T> {
         // Match revenue status
         match revenue_data.status {
             RevenueStatus::Draft => {
-                return Ok(())
+                Ok(())
             },
             RevenueStatus::Rejected => {
-                return Ok(())
+                Ok(())
             },
             RevenueStatus::Submitted => {
-                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into());
+                Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into())
             },
             RevenueStatus::Approved => {
-                return Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into());
+                Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into())
             },
         }
     }
@@ -2568,16 +2538,16 @@ impl<T: Config> Pallet<T> {
         // Match revenue transaction status
         match revenue_transaction_data.status {
             RevenueTransactionStatus::Draft => {
-                return Ok(())
+                Ok(())
             },
             RevenueTransactionStatus::Rejected => {
-                return Ok(())
+                Ok(())
             },
             RevenueTransactionStatus::Submitted => {
-                return Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into());
+                Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into())
             },
             RevenueTransactionStatus::Approved => {
-                return Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into());
+                Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into())
             },
         }
     }
