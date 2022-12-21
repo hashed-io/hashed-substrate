@@ -18,10 +18,10 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Pallet, RuntimeCall, Config, Storage, Event<T>},
-		FundAdmin: pallet_fund_admin::{Pallet, RuntimeCall, Storage, Event<T>},
-		Timestamp: pallet_timestamp::{Pallet, RuntimeCall, Storage, Inherent},
-		RBAC: pallet_rbac::{Pallet, RuntimeCall, Storage, Event<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
