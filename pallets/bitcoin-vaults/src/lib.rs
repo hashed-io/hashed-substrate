@@ -39,6 +39,8 @@ pub mod pallet {
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 	};
 
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
 	/*--- Genesis Structs Section ---*/
 
 	#[pallet::genesis_config]
@@ -52,7 +54,7 @@ pub mod pallet {
 			Self { bdk_services_url: b"https://bdk.hashed.systems".encode() }
 		}
 	}
-	
+
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
@@ -92,6 +94,7 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
@@ -108,9 +111,9 @@ pub mod pallet {
 		VaultStored([u8; 32], T::AccountId),
 		/// The vault was succesfully removed by its owner
 		VaultRemoved([u8; 32],T::AccountId),
-		/// An offchain worker inserted a vault's descriptor 
+		/// An offchain worker inserted a vault's descriptor
 		DescriptorsStored([u8;32]),
-		/// A proposal has been inserted. 
+		/// A proposal has been inserted.
 		ProposalStored([u8;32],T::AccountId),
 		/// A proposal has been removed.
 		ProposalRemoved([u8;32],T::AccountId),
@@ -157,19 +160,19 @@ pub mod pallet {
 		DuplicateVaultMembers,
 		/// The account must participate in the vault to make a proposal or sign
 		SignerPermissionsNeeded,
-		/// The vault has too many proposals 
+		/// The vault has too many proposals
 		ExceedMaxProposalsPerVault,
 		/// Proposal not found (id)
 		ProposalNotFound,
 		/// The account must be the proposer to remove it
 		ProposerPermissionsNeeded,
-		/// An identical proposal exists in storage 
+		/// An identical proposal exists in storage
 		AlreadyProposed,
 		/// The proposal was already signed by the user
 		AlreadySigned,
 		/// The proposal is already finalized or broadcasted
 		PendingProposalRequired,
-		/// The proposal signatures need to surpass the vault's threshold 
+		/// The proposal signatures need to surpass the vault's threshold
 		NotEnoughSignatures,
 		/// The proposal has structural failures
 		InvalidProposal,
@@ -236,7 +239,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::type_value]
-	pub(super) fn DefaultURL() -> BoundedVec<u8, ConstU32<32>> { 
+	pub(super) fn DefaultURL() -> BoundedVec<u8, ConstU32<32>> {
 		BoundedVec::<u8, ConstU32<32>>::try_from(b"https://bdk.hashed.systems".encode()).unwrap_or_default()
 	}
 	#[pallet::storage]
@@ -359,7 +362,7 @@ pub mod pallet {
 		///
 		/// Removes the linked xpub from the account which signs the transaction.
 		/// The xpub will be removed from both the pallet storage and identity registration.
-		/// 
+		///
 		/// This tx does not takes any parameters.
 		///
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
@@ -378,7 +381,7 @@ pub mod pallet {
 				}
 			}).cloned().collect::<Vec<_>>();
 			ensure!(vaults.is_empty(),  Error::<T>::XpubLinkedToVault);
-			
+
 			Self::do_remove_xpub(who.clone())
 		}
 
@@ -431,12 +434,12 @@ pub mod pallet {
 		}
 
 		/// Vault removal
-		/// 
+		///
 		/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `vault_id`: the vault to be removed with all its proposals
-		/// 
+		///
 		/// ### Considerations:
 		/// - Only the vault owner can perform this extrinsic
 		///
@@ -451,9 +454,9 @@ pub mod pallet {
 		}
 
 		/// Vault transaction proposal
-		/// 
+		///
 		/// Inserts a proposal on the specified vault.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `vault_id`: the vault identifier in which the proposal will be inserted
 		/// - `recipient_address`: Mainnet address to which the funds will be send
@@ -489,9 +492,9 @@ pub mod pallet {
 		}
 
 		/// Proposal removal
-		/// 
+		///
 		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
 		///
@@ -511,11 +514,11 @@ pub mod pallet {
 		}
 
 		/// BDK URL insertion
-		/// 
+		///
 		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
-		/// 
+		///
 		/// ### Parameters:
-		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  
+		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.
 		///
 		/// ### Considerations
 		/// - Ensure the new url is valid.
@@ -531,14 +534,14 @@ pub mod pallet {
 		}
 
 		/// PSBT signature insertion
-		/// 
-		/// Stores the signature for a PSBT proposal 
-		/// 
-		/// 
+		///
+		/// Stores the signature for a PSBT proposal
+		///
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
-		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet 
-		/// 
+		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - A user can only sign a proposal once
@@ -553,13 +556,13 @@ pub mod pallet {
 		}
 
 		/// Finalize PSBT
-		/// 
+		///
 		/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
-		/// - `broadcast`: A boolean flag 
-		/// 
+		/// - `broadcast`: A boolean flag
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - The proposal must have a valid PSBT
@@ -575,12 +578,12 @@ pub mod pallet {
 		}
 
 		/// Broadcast PSBT
-		/// 
+		///
 		/// Queries a proposal to be broadcasted in case it wasn't on the finalization step.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the vault identifier in which the proposal will be inserted
-		/// 
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - The proposal must be finalized already
@@ -595,9 +598,9 @@ pub mod pallet {
 		}
 
 		/// Kill almost all storage
-		/// 
+		///
 		/// Use with caution!
-		/// 
+		///
 		/// Can only be called by root and removes All vaults and proposals
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
@@ -613,7 +616,7 @@ pub mod pallet {
 		}
 
 		/// Extrinsic to insert a valid vault descriptor
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
 		#[pallet::weight(0)]
@@ -647,7 +650,7 @@ pub mod pallet {
 		}
 
 		/// Extrinsic to insert a valid proposal PSBT
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
 		#[pallet::weight(0)]
@@ -674,7 +677,7 @@ pub mod pallet {
 		}
 
 		/// Extrinsic to insert a valid proposal TX_ID
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
 		#[pallet::weight(0)]

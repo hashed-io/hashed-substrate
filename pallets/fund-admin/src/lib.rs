@@ -18,6 +18,7 @@ pub mod pallet {
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
 
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
@@ -105,6 +106,7 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 

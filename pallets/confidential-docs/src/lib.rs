@@ -24,9 +24,11 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use crate::types::*;
 
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		
+
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -55,10 +57,11 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	
+
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
 	pub(super) type Vaults<T: Config> = StorageMap<
@@ -82,9 +85,9 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn users_ids)]
 	pub(super) type UserIds<T: Config> = StorageMap<
-		_, 
-		Identity, 
-		[u8; 32], 
+		_,
+		Identity,
+		[u8; 32],
 		UserId,
 		OptionQuery,
 	>;
@@ -92,7 +95,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn owned_docs)]
 	pub(super) type OwnedDocs<T: Config> = StorageMap<
-		_, 
+		_,
 		Blake2_256,
 		CID,
 		OwnedDoc<T>,
@@ -112,7 +115,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn shared_docs)]
 	pub(super) type SharedDocs<T: Config> = StorageMap<
-		_, 
+		_,
 		Blake2_256,
 		CID,
 		SharedDoc<T>,
@@ -143,7 +146,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Vault stored 
+		/// Vault stored
 		VaultStored(UserId, PublicKey, Vault<T>),
 		/// Owned confidential document stored
 		OwnedDocStored(OwnedDoc<T>),
@@ -196,19 +199,19 @@ pub mod pallet {
 		/// Max documents shared with the "from" account has been exceeded
 		ExceedMaxSharedFromDocs,
 
-		
+
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		
+
 		/// Create/Update a vault
-		/// 
+		///
 		/// Creates/Updates the calling user's vault and sets their public cipher key
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is configuring their vault
-		/// - `user_id`: User identifier generated from their login method, their address if using 
+		/// - `user_id`: User identifier generated from their login method, their address if using
 		/// native login or user id if using SSO
 		/// - `public key`: The users cipher public key
 		/// - `cid`: The IPFS CID that contains the vaults data
@@ -219,7 +222,7 @@ pub mod pallet {
 		}
 
 		/// Create/Update an owned document
-		/// 
+		///
 		/// Creates a new owned document or updates an existing owned document's metadata
 		/// .
 		/// ### Parameters:
@@ -232,7 +235,7 @@ pub mod pallet {
 		}
 
 		/// Remove an owned document
-		/// 
+		///
 		/// Removes an owned document
 		/// .
 		/// ### Parameters:
@@ -245,7 +248,7 @@ pub mod pallet {
 		}
 
 		/// Share a document
-		/// 
+		///
 		/// Creates a shared document
 		/// .
 		/// ### Parameters:
@@ -258,7 +261,7 @@ pub mod pallet {
 		}
 
 		/// Update share document metadata
-		/// 
+		///
 		/// Updates share document metadata, only the user with which the document
 		/// was shared can update it
 		/// .
@@ -273,7 +276,7 @@ pub mod pallet {
 
 
 		/// Remove a shared document
-		/// 
+		///
 		/// Removes a shared document, only the user with whom the document was
 		/// is able to remove it
 		/// .
@@ -288,13 +291,13 @@ pub mod pallet {
 
 
 		/// Kill all the stored data.
-		/// 
+		///
 		/// This function is used to kill ALL the stored data.
 		/// Use with caution!
-		/// 
+		///
 		/// ### Parameters:
-		/// - `origin`: The user who performs the action. 
-		/// 
+		/// - `origin`: The user who performs the action.
+		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
