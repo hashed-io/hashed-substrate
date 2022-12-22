@@ -219,7 +219,7 @@
 <span id="219">219</span>
 <span id="220">220</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::{
-	AccountId, Balances, Call, Event, Origin, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime,
+	AccountId, Balances, RuntimeCall, RuntimeEvent, RuntimeOrigin, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime,
 	WeightToFee, XcmpQueue,
 };
 <span class="kw">use </span>core::marker::PhantomData;
@@ -243,7 +243,7 @@
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>RelayLocation: MultiLocation = MultiLocation::parent();
 	<span class="kw">pub const </span>RelayNetwork: NetworkId = NetworkId::Any;
-	<span class="kw">pub </span>RelayChainOrigin: Origin = cumulus_pallet_xcm::Origin::Relay.into();
+	<span class="kw">pub </span>RelayChainOrigin: RuntimeOrigin = cumulus_pallet_xcm::Origin::Relay.into();
 	<span class="kw">pub </span>Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
 }
 
@@ -280,18 +280,18 @@
 	<span class="comment">// Sovereign account converter; this attempts to derive an `AccountId` from the origin location
 	// using `LocationToAccountId` and then turn that into the usual `Signed` origin. Useful for
 	// foreign chains who want to have a local sovereign account on this chain which they control.
-	</span>SovereignSignedViaLocation&lt;LocationToAccountId, Origin&gt;,
+	</span>SovereignSignedViaLocation&lt;LocationToAccountId, RuntimeOrigin&gt;,
 	<span class="comment">// Native converter for Relay-chain (Parent) location; will converts to a `Relay` origin when
 	// recognized.
-	</span>RelayChainAsNative&lt;RelayChainOrigin, Origin&gt;,
+	</span>RelayChainAsNative&lt;RelayChainOrigin, RuntimeOrigin&gt;,
 	<span class="comment">// Native converter for sibling Parachains; will convert to a `SiblingPara` origin when
 	// recognized.
-	</span>SiblingParachainAsNative&lt;cumulus_pallet_xcm::Origin, Origin&gt;,
+	</span>SiblingParachainAsNative&lt;cumulus_pallet_xcm::Origin, RuntimeOrigin&gt;,
 	<span class="comment">// Native signed account converter; this just converts an `AccountId32` origin into a normal
 	// `Origin::Signed` origin of the same 32-byte value.
-	</span>SignedAccountId32AsNative&lt;RelayNetwork, Origin&gt;,
+	</span>SignedAccountId32AsNative&lt;RelayNetwork, RuntimeOrigin&gt;,
 	<span class="comment">// Xcm origins can be represented natively under the Xcm pallet&#39;s Xcm origin.
-	</span>XcmPassthrough&lt;Origin&gt;,
+	</span>XcmPassthrough&lt;RuntimeOrigin&gt;,
 );
 
 <span class="macro">parameter_types! </span>{
@@ -320,9 +320,9 @@
 	</span>Deny: ShouldExecute,
 	Allow: ShouldExecute,
 {
-	<span class="kw">fn </span>should_execute&lt;Call&gt;(
+	<span class="kw">fn </span>should_execute&lt;RuntimeCall&gt;(
 		origin: <span class="kw-2">&amp;</span>MultiLocation,
-		message: <span class="kw-2">&amp;mut </span>Xcm&lt;Call&gt;,
+		message: <span class="kw-2">&amp;mut </span>Xcm&lt;RuntimeCall&gt;,
 		max_weight: XCMWeight,
 		weight_credit: <span class="kw-2">&amp;mut </span>XCMWeight,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;(), ()&gt; {
@@ -334,9 +334,9 @@
 <span class="comment">// See issue #5233
 </span><span class="kw">pub struct </span>DenyReserveTransferToRelayChain;
 <span class="kw">impl </span>ShouldExecute <span class="kw">for </span>DenyReserveTransferToRelayChain {
-	<span class="kw">fn </span>should_execute&lt;Call&gt;(
+	<span class="kw">fn </span>should_execute&lt;RuntimeCall&gt;(
 		origin: <span class="kw-2">&amp;</span>MultiLocation,
-		message: <span class="kw-2">&amp;mut </span>Xcm&lt;Call&gt;,
+		message: <span class="kw-2">&amp;mut </span>Xcm&lt;RuntimeCall&gt;,
 		_max_weight: XCMWeight,
 		_weight_credit: <span class="kw-2">&amp;mut </span>XCMWeight,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;(), ()&gt; {
@@ -383,7 +383,7 @@
 
 <span class="kw">pub struct </span>XcmConfig;
 <span class="kw">impl </span>xcm_executor::Config <span class="kw">for </span>XcmConfig {
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>XcmSender = XcmRouter;
 	<span class="comment">// How to withdraw and deposit an asset.
 	</span><span class="kw">type </span>AssetTransactor = LocalAssetTransactor;
@@ -392,7 +392,7 @@
 	<span class="kw">type </span>IsTeleporter = (); <span class="comment">// Teleporting is disabled.
 	</span><span class="kw">type </span>LocationInverter = LocationInverter&lt;Ancestry&gt;;
 	<span class="kw">type </span>Barrier = Barrier;
-	<span class="kw">type </span>Weigher = FixedWeightBounds&lt;UnitWeightCost, Call, MaxInstructions&gt;;
+	<span class="kw">type </span>Weigher = FixedWeightBounds&lt;UnitWeightCost, RuntimeCall, MaxInstructions&gt;;
 	<span class="kw">type </span>Trader =
 		UsingComponents&lt;WeightToFee, RelayLocation, AccountId, Balances, ToAuthor&lt;Runtime&gt;&gt;;
 	<span class="kw">type </span>ResponseHandler = PolkadotXcm;
@@ -402,7 +402,7 @@
 }
 
 <span class="doccomment">/// No local origins on this chain are allowed to dispatch XCM sends/executions.
-</span><span class="kw">pub type </span>LocalOriginToLocation = SignedToAccountId32&lt;Origin, AccountId, RelayNetwork&gt;;
+</span><span class="kw">pub type </span>LocalOriginToLocation = SignedToAccountId32&lt;RuntimeOrigin, AccountId, RelayNetwork&gt;;
 
 <span class="doccomment">/// The means for routing XCM messages which are not for local execution into the right message
 /// queues.
@@ -414,20 +414,20 @@
 );
 
 <span class="kw">impl </span>pallet_xcm::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
-	<span class="kw">type </span>SendXcmOrigin = EnsureXcmOrigin&lt;Origin, LocalOriginToLocation&gt;;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>SendXcmOrigin = EnsureXcmOrigin&lt;RuntimeOrigin, LocalOriginToLocation&gt;;
 	<span class="kw">type </span>XcmRouter = XcmRouter;
-	<span class="kw">type </span>ExecuteXcmOrigin = EnsureXcmOrigin&lt;Origin, LocalOriginToLocation&gt;;
+	<span class="kw">type </span>ExecuteXcmOrigin = EnsureXcmOrigin&lt;RuntimeOrigin, LocalOriginToLocation&gt;;
 	<span class="kw">type </span>XcmExecuteFilter = Nothing;
 	<span class="comment">// ^ Disable dispatchable execute on the XCM pallet.
 	// Needs to be `Everything` for local testing.
 	</span><span class="kw">type </span>XcmExecutor = XcmExecutor&lt;XcmConfig&gt;;
 	<span class="kw">type </span>XcmTeleportFilter = Everything;
 	<span class="kw">type </span>XcmReserveTransferFilter = Nothing;
-	<span class="kw">type </span>Weigher = FixedWeightBounds&lt;UnitWeightCost, Call, MaxInstructions&gt;;
+	<span class="kw">type </span>Weigher = FixedWeightBounds&lt;UnitWeightCost, RuntimeCall, MaxInstructions&gt;;
 	<span class="kw">type </span>LocationInverter = LocationInverter&lt;Ancestry&gt;;
-	<span class="kw">type </span>Origin = Origin;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeOrigin = RuntimeOrigin;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 
 	<span class="kw">const </span>VERSION_DISCOVERY_QUEUE_SIZE: u32 = <span class="number">100</span>;
 	<span class="comment">// ^ Override for AdvertisedXcmVersion default
@@ -435,7 +435,7 @@
 }
 
 <span class="kw">impl </span>cumulus_pallet_xcm::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>XcmExecutor = XcmExecutor&lt;XcmConfig&gt;;
 }
 </code></pre></div>

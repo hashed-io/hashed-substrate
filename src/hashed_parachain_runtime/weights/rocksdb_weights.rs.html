@@ -88,8 +88,8 @@
 		<span class="doccomment">/// By default, Substrate uses `RocksDB`, so this will be the weight used throughout
 		/// the runtime.
 		</span><span class="kw">pub const </span>RocksDbWeight: RuntimeDbWeight = RuntimeDbWeight {
-			read: <span class="number">25_000 </span>* constants::WEIGHT_PER_NANOS,
-			write: <span class="number">100_000 </span>* constants::WEIGHT_PER_NANOS,
+			read: <span class="number">25_000 </span>* constants::WEIGHT_PER_NANOS.ref_time(),
+			write: <span class="number">100_000 </span>* constants::WEIGHT_PER_NANOS.ref_time(),
 		};
 	}
 

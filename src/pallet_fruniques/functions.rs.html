@@ -299,35 +299,6 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -555,35 +526,6 @@
 		<span class="prelude-val">Ok</span>(())
 	}
 
-	<span class="comment">// TODO: add a function to transfer an instance
-	</span><span class="kw">pub fn </span>do_create(
-		origin: OriginFor&lt;T&gt;,
-		class_id: T::CollectionId,
-		instance_id: T::ItemId,
-		numeric_value: <span class="prelude-ty">Option</span>&lt;Permill&gt;,
-		admin: &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::Source,
-	) -&gt; DispatchResult {
-		pallet_uniques::Pallet::&lt;T&gt;::create(origin.clone(), class_id, admin.clone())<span class="question-mark">?</span>;
-
-		<span class="self">Self</span>::mint(origin.clone(), <span class="kw-2">&amp;</span>class_id, instance_id, admin)<span class="question-mark">?</span>;
-
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(n) = numeric_value {
-			<span class="kw">let </span>num_value_key = BoundedVec::&lt;u8, T::KeyLimit&gt;::try_from(<span class="string">r#&quot;num_value&quot;#</span>.encode())
-				.expect(<span class="string">&quot;Error on encoding the numeric value key to BoundedVec&quot;</span>);
-			<span class="kw">let </span>num_value = BoundedVec::&lt;u8, T::ValueLimit&gt;::try_from(n.encode())
-				.expect(<span class="string">&quot;Error on encoding the numeric value to BoundedVec&quot;</span>);
-			pallet_uniques::Pallet::&lt;T&gt;::set_attribute(
-				origin,
-				class_id,
-				<span class="prelude-val">Some</span>(instance_id),
-				num_value_key,
-				num_value,
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
 	<span class="kw">pub fn </span>do_spawn(
 		origin: OriginFor&lt;T&gt;,
 		collection: T::CollectionId,
@@ -592,7 +534,7 @@
 		metadata: CollectionDescription&lt;T&gt;,
 		attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
 	) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), &lt;Error&lt;T&gt;&gt;::CollectionNotFound);
+		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
 		<span class="kw">let </span>user: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 		<span class="self">Self</span>::is_authorized(user, collection, Permission::Mint)<span class="question-mark">?</span>;
 

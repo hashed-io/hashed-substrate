@@ -1,0 +1,4 @@
+(function() {var implementors = {
+"hashed_parachain_runtime":[["impl CallerTrait&lt;&lt;<a class=\"struct\" href=\"hashed_parachain_runtime/struct.Runtime.html\" title=\"struct hashed_parachain_runtime::Runtime\">Runtime</a> as Config&gt;::AccountId&gt; for <a class=\"enum\" href=\"hashed_parachain_runtime/enum.OriginCaller.html\" title=\"enum hashed_parachain_runtime::OriginCaller\">OriginCaller</a>"]],
+"hashed_runtime":[["impl CallerTrait&lt;&lt;<a class=\"struct\" href=\"hashed_runtime/struct.Runtime.html\" title=\"struct hashed_runtime::Runtime\">Runtime</a> as Config&gt;::AccountId&gt; for <a class=\"enum\" href=\"hashed_runtime/enum.OriginCaller.html\" title=\"enum hashed_runtime::OriginCaller\">OriginCaller</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

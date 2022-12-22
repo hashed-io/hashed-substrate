@@ -426,6 +426,7 @@
 <span id="426">426</span>
 <span id="427">427</span>
 <span id="428">428</span>
+<span id="429">429</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -446,16 +447,18 @@
 </span><span class="kw">pub mod </span>pallet {
 	<span class="kw">use super</span>::<span class="kw-2">*</span>;
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, transactional};
+	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
 	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
 	</span><span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_uniques::Config {
-		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
-		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::Origin&gt;;
+		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 
 		<span class="doccomment">/// Maximum number of children a Frunique can have
 		</span><span class="attribute">#[pallet::constant]
@@ -465,6 +468,7 @@
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
@@ -588,8 +592,7 @@
 	<span class="kw">where
 		</span>T: pallet_uniques::Config&lt;CollectionId = CollectionId, ItemId = ItemId&gt;,
 	{
-		<span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">10</span>))]
+		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
@@ -603,7 +606,7 @@
 		/// ## Parameters
 		/// - `origin`: The origin of the transaction.
 		/// - `metadata`: The title of the collection.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_collection(
 			origin: OriginFor&lt;T&gt;,
 			metadata: CollectionDescription&lt;T&gt;,
@@ -626,7 +629,7 @@
 			<span class="prelude-val">Ok</span>(())
 		}
 
-		<span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">4</span>))]
+		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">4</span>))]
 		</span><span class="kw">pub fn </span>instance_exists(
 			_origin: OriginFor&lt;T&gt;,
 			_class_id: T::CollectionId,
@@ -647,20 +650,20 @@
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>set_attributes(
 			origin: OriginFor&lt;T&gt;,
 			class_id: T::CollectionId,
 			instance_id: T::ItemId,
 			attributes: Attributes&lt;T&gt;,
 		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), &lt;Error&lt;T&gt;&gt;::FruniqueNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
 
 			<span class="comment">// ! Ensure the admin is the one who can add attributes to the frunique.
 			</span><span class="kw">let </span>admin = <span class="self">Self</span>::admin_of(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id);
 			<span class="kw">let </span>signer = core::prelude::v1::Some(ensure_signed(origin.clone())<span class="question-mark">?</span>);
 
-			<span class="macro">ensure!</span>(signer == admin, &lt;Error&lt;T&gt;&gt;::NotAdmin);
+			<span class="macro">ensure!</span>(signer == admin, Error::&lt;T&gt;::NotAdmin);
 
 			<span class="macro">ensure!</span>(!attributes.is_empty(), Error::&lt;T&gt;::AttributesEmpty);
 			<span class="kw">for </span>attribute <span class="kw">in </span><span class="kw-2">&amp;</span>attributes {
@@ -682,7 +685,7 @@
 		/// - `parent_info` Optional value needed for the NFT division.
 		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">4</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">4</span>))]
 		</span><span class="kw">pub fn </span>spawn(
 			origin: OriginFor&lt;T&gt;,
 			class_id: CollectionId,
@@ -690,19 +693,20 @@
 			metadata: CollectionDescription&lt;T&gt;,
 			attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), &lt;Error&lt;T&gt;&gt;::CollectionNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionNotFound);
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(parent_info) = parent_info {
-				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), &lt;Error&lt;T&gt;&gt;::ParentNotFound);
+				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), Error::&lt;T&gt;::ParentNotFound);
 			}
 
 			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="comment">// T::Currency::transfer(&amp;owner.clone(), &amp;owner_item, offer_data.price, KeepAlive)?;
 
-			<span class="kw">let </span>instance_id: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(class_id).unwrap_or(<span class="number">0</span>);
+			</span><span class="kw">let </span>instance_id: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(class_id).unwrap_or(<span class="number">0</span>);
 			&lt;NextFrunique&lt;T&gt;&gt;::insert(class_id, instance_id + <span class="number">1</span>);
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(parent_info) = parent_info {
-				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), &lt;Error&lt;T&gt;&gt;::ParentNotFound);
+				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), Error::&lt;T&gt;::ParentNotFound);
 				&lt;FruniqueParent&lt;T&gt;&gt;::insert(class_id, instance_id, <span class="prelude-val">Some</span>(parent_info));
 
 				<span class="kw">let </span>child_info = ChildInfo {
@@ -732,14 +736,14 @@
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>verify(
 			origin: OriginFor&lt;T&gt;,
 			class_id: CollectionId,
 			instance_id: ItemId,
 		) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), &lt;Error&lt;T&gt;&gt;::FruniqueNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
 
 			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -759,8 +763,7 @@
 		/// This functions enables the owner of a collection to invite a user to become a collaborator.
 		/// The user will be able to create NFTs in the collection.
 		/// The user will be able to add attributes to the NFTs in the collection.
-
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>invite(
 			origin: OriginFor&lt;T&gt;,
 			class_id: CollectionId,
@@ -783,7 +786,7 @@
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it&#39;s not expected to be used in production as it can lead to unexpected results.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>force_set_counter(
 			origin: OriginFor&lt;T&gt;,
 			class_id: T::CollectionId,
@@ -792,10 +795,10 @@
 			T::RemoveOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(instance_id) = instance_id {
-				<span class="macro">ensure!</span>(!<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), &lt;Error&lt;T&gt;&gt;::FruniqueAlreadyExists);
+				<span class="macro">ensure!</span>(!<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueAlreadyExists);
 				&lt;NextFrunique&lt;T&gt;&gt;::insert(class_id, instance_id);
 			} <span class="kw">else </span>{
-				<span class="macro">ensure!</span>(!<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), &lt;Error&lt;T&gt;&gt;::CollectionAlreadyExists);
+				<span class="macro">ensure!</span>(!<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionAlreadyExists);
 				&lt;NextCollection&lt;T&gt;&gt;::set(class_id);
 			}
 
@@ -811,7 +814,7 @@
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it&#39;s not expected to be used in production as it can lead to unexpected results.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>force_destroy_collection(
 			origin: OriginFor&lt;T&gt;,
 			class_id: T::CollectionId,
@@ -820,7 +823,7 @@
 		) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
 
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), &lt;Error&lt;T&gt;&gt;::CollectionNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionNotFound);
 			pallet_uniques::Pallet::&lt;T&gt;::do_destroy_collection(
 				class_id,
 				witness,
@@ -839,8 +842,7 @@
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			&lt;FruniqueCnt&lt;T&gt;&gt;::put(<span class="number">0</span>);

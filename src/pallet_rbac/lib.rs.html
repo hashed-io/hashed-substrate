@@ -197,6 +197,9 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.
@@ -222,9 +225,11 @@
 	<span class="kw">use </span>frame_support::pallet_prelude::{<span class="kw-2">*</span>, ValueQuery};
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxScopesPerPallet: Get&lt;u32&gt;;
 		<span class="attribute">#[pallet::constant]
@@ -238,10 +243,11 @@
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxRolesPerUser: Get&lt;u32&gt;;
 		<span class="attribute">#[pallet::constant]
-		</span><span class="kw">type </span>MaxUsersPerRole: Get&lt;u32&gt;;	
+		</span><span class="kw">type </span>MaxUsersPerRole: Get&lt;u32&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
@@ -250,8 +256,8 @@
 	</span><span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>scopes)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Scopes&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>, 
-		Identity, 
+		<span class="kw">_</span>,
+		Identity,
 		PalletId, <span class="comment">// pallet_id
 		</span>BoundedVec&lt;ScopeId, T::MaxScopesPerPallet&gt;,  <span class="comment">// scopes_id
 		</span>ValueQuery,
@@ -261,7 +267,7 @@
 	#[pallet::getter(<span class="kw">fn </span>roles)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Roles&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		Identity, 
+		Identity,
 		RoleId, <span class="comment">// role_id
 		</span>BoundedVec&lt;u8, T::RoleMaxLen &gt;,  <span class="comment">// role
 		</span>OptionQuery,
@@ -271,7 +277,7 @@
 	#[pallet::getter(<span class="kw">fn </span>pallet_roles)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PalletRoles&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
-		Identity, 
+		Identity,
 		PalletId, <span class="comment">// pallet_id
 		</span>BoundedVec&lt;RoleId, T::MaxRolesPerPallet &gt;, <span class="comment">// role_id
 		</span>ValueQuery,
@@ -281,9 +287,9 @@
 	#[pallet::getter(<span class="kw">fn </span>permissions)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Permissions&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
-		Identity, 
+		Identity,
 		PalletId, 			<span class="comment">// pallet_id
-		</span>Identity, 
+		</span>Identity,
 		PermissionId,		<span class="comment">// permission_id
 		</span>BoundedVec&lt;u8, T::PermissionMaxLen &gt;,	<span class="comment">// permission str
 		</span>ValueQuery,
@@ -293,9 +299,9 @@
 	#[pallet::getter(<span class="kw">fn </span>permissions_by_role)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PermissionsByRole&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
-		Identity, 
+		Identity,
 		PalletId, 			<span class="comment">// pallet_id
-		</span>Identity, 
+		</span>Identity,
 		RoleId,		<span class="comment">// role_id
 		</span>BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole &gt;,	<span class="comment">// permission_ids
 		</span>ValueQuery,
@@ -388,12 +394,13 @@
 		</span>ExceedRoleMaxLen,
 		<span class="doccomment">/// The permission string is too long
 		</span>ExceedPermissionMaxLen,
-		<span class="doccomment">/// The user does not have the specified role 
+		<span class="doccomment">/// The user does not have the specified role
 		</span>NotAuthorized,
 	}
 
 	<span class="attribute">#[pallet::call]
 	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 	}
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_rbac" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

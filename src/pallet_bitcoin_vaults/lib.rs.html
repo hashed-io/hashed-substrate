@@ -737,20 +737,6 @@
 <span id="737">737</span>
 <span id="738">738</span>
 <span id="739">739</span>
-<span id="740">740</span>
-<span id="741">741</span>
-<span id="742">742</span>
-<span id="743">743</span>
-<span id="744">744</span>
-<span id="745">745</span>
-<span id="746">746</span>
-<span id="747">747</span>
-<span id="748">748</span>
-<span id="749">749</span>
-<span id="750">750</span>
-<span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -777,7 +763,7 @@
 		pallet_prelude::{BoundedVec},
 		traits::Get,
 	};
-	<span class="kw">use </span>frame_support::{sp_io::hashing::blake2_256, transactional};
+	<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
 	<span class="kw">use </span>frame_system::{
 		offchain::{
 			AppCrypto, CreateSignedTransaction,
@@ -792,6 +778,8 @@
 		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 	};
 
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+
 	<span class="comment">/*--- Genesis Structs Section ---*/
 
 	</span><span class="attribute">#[pallet::genesis_config]
@@ -805,7 +793,7 @@
 			<span class="self">Self </span>{ bdk_services_url: <span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.encode() }
 		}
 	}
-	
+
 	<span class="attribute">#[pallet::genesis_build]
 	</span><span class="kw">impl</span>&lt;T: Config&gt; GenesisBuild&lt;T&gt; <span class="kw">for </span>GenesisConfig {
 		<span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) {
@@ -823,8 +811,8 @@
 		<span class="doccomment">/// The identifier type for an offchain worker.
 		</span><span class="kw">type </span>AuthorityId: AppCrypto&lt;<span class="self">Self</span>::Public, <span class="self">Self</span>::Signature&gt;;
 		<span class="doccomment">/// Because this pallet emits events, it depends on the runtime&#39;s definition of an event.
-		</span><span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
-		<span class="kw">type </span>ChangeBDKOrigin : EnsureOrigin&lt;<span class="self">Self</span>::Origin&gt;;
+		</span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+		<span class="kw">type </span>ChangeBDKOrigin : EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 		<span class="comment">/*--- PSBT params ---*/
 		</span><span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>XPubLen: Get&lt;u32&gt;;
@@ -845,6 +833,7 @@
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
@@ -861,9 +850,9 @@
 		</span>VaultStored([u8; <span class="number">32</span>], T::AccountId),
 		<span class="doccomment">/// The vault was succesfully removed by its owner
 		</span>VaultRemoved([u8; <span class="number">32</span>],T::AccountId),
-		<span class="doccomment">/// An offchain worker inserted a vault&#39;s descriptor 
+		<span class="doccomment">/// An offchain worker inserted a vault&#39;s descriptor
 		</span>DescriptorsStored([u8;<span class="number">32</span>]),
-		<span class="doccomment">/// A proposal has been inserted. 
+		<span class="doccomment">/// A proposal has been inserted.
 		</span>ProposalStored([u8;<span class="number">32</span>],T::AccountId),
 		<span class="doccomment">/// A proposal has been removed.
 		</span>ProposalRemoved([u8;<span class="number">32</span>],T::AccountId),
@@ -910,19 +899,19 @@
 		</span>DuplicateVaultMembers,
 		<span class="doccomment">/// The account must participate in the vault to make a proposal or sign
 		</span>SignerPermissionsNeeded,
-		<span class="doccomment">/// The vault has too many proposals 
+		<span class="doccomment">/// The vault has too many proposals
 		</span>ExceedMaxProposalsPerVault,
 		<span class="doccomment">/// Proposal not found (id)
 		</span>ProposalNotFound,
 		<span class="doccomment">/// The account must be the proposer to remove it
 		</span>ProposerPermissionsNeeded,
-		<span class="doccomment">/// An identical proposal exists in storage 
+		<span class="doccomment">/// An identical proposal exists in storage
 		</span>AlreadyProposed,
 		<span class="doccomment">/// The proposal was already signed by the user
 		</span>AlreadySigned,
 		<span class="doccomment">/// The proposal is already finalized or broadcasted
 		</span>PendingProposalRequired,
-		<span class="doccomment">/// The proposal signatures need to surpass the vault&#39;s threshold 
+		<span class="doccomment">/// The proposal signatures need to surpass the vault&#39;s threshold
 		</span>NotEnoughSignatures,
 		<span class="doccomment">/// The proposal has structural failures
 		</span>InvalidProposal,
@@ -989,7 +978,7 @@
 	&gt;;
 
 	<span class="attribute">#[pallet::type_value]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>DefaultURL() -&gt; BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt; { 
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>DefaultURL() -&gt; BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt; {
 		BoundedVec::&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt;::try_from(<span class="string">b&quot;https://bdk.hashed.systems&quot;</span>.encode()).unwrap_or_default()
 	}
 	<span class="attribute">#[pallet::storage]
@@ -1012,7 +1001,7 @@
 			// transactions without it
 			</span><span class="kw">let </span>signer = Signer::&lt;T, T::AuthorityId&gt;::any_account();
 			<span class="kw">if </span>!signer.can_sign(){
-				<span class="kw">return</span>;	
+				<span class="kw">return</span>;
 			}
 
 			<span class="comment">// Check if this OCW can modify the vaults
@@ -1028,14 +1017,14 @@
 				<span class="kw">let </span>proposals_to_finalize = <span class="self">Self</span>::get_proposals_to_finalize();
 				<span class="comment">//let proposals_to_broadcast = Self::get_proposals_to_finalize();
 				</span><span class="macro">log::info!</span>(<span class="string">&quot;Pending vaults {:?}&quot;</span>, pending_vaults.len());
-				<span class="comment">// This validation needs to be done after the lock: 
+				<span class="comment">// This validation needs to be done after the lock:
 				</span><span class="kw">if </span>!pending_vaults.is_empty() {
 					<span class="kw">let </span>generated_vaults = <span class="self">Self</span>::gen_vaults_payload_by_bulk(pending_vaults);
 					<span class="self">Self</span>::send_ocw_insert_descriptors(generated_vaults, <span class="kw-2">&amp;</span>signer);
 				}
 				<span class="kw">if </span>!pending_proposals.is_empty(){
 					<span class="macro">log::info!</span>(<span class="string">&quot;Pending proposals {:?}&quot;</span>, pending_proposals.len());
-					<span class="kw">let </span>generated_proposals_payload = <span class="self">Self</span>::gen_proposals_payload_by_bulk(pending_proposals, 
+					<span class="kw">let </span>generated_proposals_payload = <span class="self">Self</span>::gen_proposals_payload_by_bulk(pending_proposals,
 						<span class="string">b&quot;/gen_psbt&quot;</span>.to_vec(),
 					<span class="kw-2">&amp;</span><span class="self">Self</span>::gen_proposal_json_body);
 					<span class="self">Self</span>::send_ocw_insert_psbts(generated_proposals_payload, <span class="kw-2">&amp;</span>signer);
@@ -1069,24 +1058,22 @@
 		///
 		/// ### Considerations
 		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
-		/// - This extrinsic is marked as transactional, so if an error is fired, all the changes will be reverted (but the
-		///  fees will be applied nonetheless).
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">2</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
 		</span><span class="kw">pub fn </span>set_xpub(
 			origin: OriginFor&lt;T&gt;,
 			xpub: BoundedVec&lt;u8, T::XPubLen&gt;,
 		) -&gt; DispatchResult {
 			<span class="comment">// Check that the extrinsic was signed and get the signer.
 			</span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(xpub.len() &gt; <span class="number">0</span>, &lt;Error&lt;T&gt;&gt;::NoneValue);
-			<span class="macro">ensure!</span>(!&lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) , &lt;Error&lt;T&gt;&gt;::UserAlreadyHasXpub);
+			<span class="macro">ensure!</span>(xpub.len() &gt; <span class="number">0</span>, Error::&lt;T&gt;::NoneValue);
+			<span class="macro">ensure!</span>(!&lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) , Error::&lt;T&gt;::UserAlreadyHasXpub);
 			<span class="kw">let </span>manual_hash = xpub.clone().using_encoded(blake2_256);
 			<span class="comment">// Assert if the input xpub is free to take (or if the user owns it)
 			</span><span class="kw">match </span><span class="self">Self</span>::get_xpub_status(who.clone(), manual_hash.clone()) {
 				XpubStatus::Owned =&gt; <span class="macro">log::info!</span>(<span class="string">&quot;Xpub owned, nothing to insert&quot;</span>),
-				XpubStatus::Taken =&gt; <span class="prelude-val">Err</span>(&lt;Error&lt;T&gt;&gt;::XPubAlreadyTaken)<span class="question-mark">?</span>, <span class="comment">//xpub taken: abort tx
+				XpubStatus::Taken =&gt; <span class="prelude-val">Err</span>(Error::&lt;T&gt;::XPubAlreadyTaken)<span class="question-mark">?</span>, <span class="comment">//xpub taken: abort tx
 				</span>XpubStatus::Free =&gt; {
 					<span class="comment">// xpub free: erase unused xpub and insert on maps
 					// if &lt;XpubsByOwner&lt;T&gt;&gt;::contains_key(who.clone()) {
@@ -1098,7 +1085,7 @@
 					<span class="comment">// the 2nd half of the inserted_hash is the real key hash.
 					</span><span class="kw">let </span>partial_hash = inserted_hash.split_off(<span class="number">32</span>);
 					<span class="comment">// The manually calculated hash should always be equal to the StorageMap hash
-					</span><span class="macro">ensure!</span>(partial_hash.as_slice() == manual_hash, &lt;Error&lt;T&gt;&gt;::HashingError);
+					</span><span class="macro">ensure!</span>(partial_hash.as_slice() == manual_hash, Error::&lt;T&gt;::HashingError);
 					<span class="comment">// If everything is ok, insert the xpub in the owner-&gt;hash map
 					</span>&lt;XpubsByOwner&lt;T&gt;&gt;::insert(who.clone(), manual_hash);
 				},
@@ -1114,11 +1101,10 @@
 		///
 		/// Removes the linked xpub from the account which signs the transaction.
 		/// The xpub will be removed from both the pallet storage and identity registration.
-		/// 
+		///
 		/// This tx does not takes any parameters.
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">2</span>))]
+		///
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
 		</span><span class="kw">pub fn </span>remove_xpub(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 			<span class="comment">// The xpub must exists
@@ -1134,7 +1120,7 @@
 				}
 			}).cloned().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 			<span class="macro">ensure!</span>(vaults.is_empty(),  Error::&lt;T&gt;::XpubLinkedToVault);
-			
+
 			<span class="self">Self</span>::do_remove_xpub(who.clone())
 		}
 
@@ -1150,9 +1136,8 @@
 		///
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		///
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_vault(
 			origin: OriginFor&lt;T&gt;,
 			threshold: u32,
@@ -1188,17 +1173,16 @@
 		}
 
 		<span class="doccomment">/// Vault removal
-		/// 
+		///
 		/// Tries to remove vault and all its proposals, only the owner can call this extrinsic.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `vault_id`: the vault to be removed with all its proposals
-		/// 
+		///
 		/// ### Considerations:
 		/// - Only the vault owner can perform this extrinsic
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		///
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_vault(
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
@@ -1209,9 +1193,9 @@
 		}
 
 		<span class="doccomment">/// Vault transaction proposal
-		/// 
+		///
 		/// Inserts a proposal on the specified vault.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `vault_id`: the vault identifier in which the proposal will be inserted
 		/// - `recipient_address`: Mainnet address to which the funds will be send
@@ -1220,8 +1204,7 @@
 		///
 		/// ### Considerations
 		/// - Please ensure the recipient address is a valid mainnet address.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>propose(
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
@@ -1247,16 +1230,14 @@
 			<span class="self">Self</span>::do_propose(proposal)
 		}
 
-
 		<span class="doccomment">/// Proposal removal
-		/// 
+		///
 		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
 		///
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_proposal(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1272,17 +1253,16 @@
 		}
 
 		<span class="doccomment">/// BDK URL insertion
-		/// 
+		///
 		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
-		/// 
+		///
 		/// ### Parameters:
-		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.  
+		/// - `new_url`: The new endpoint to which all the bdk related requests will be sent.
 		///
 		/// ### Considerations
 		/// - Ensure the new url is valid.
 		/// - The url has a maximum length of 32 bytes
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>set_bdk_url(
 			origin: OriginFor&lt;T&gt;,
 			new_url: BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt; &gt;
@@ -1293,19 +1273,18 @@
 		}
 
 		<span class="doccomment">/// PSBT signature insertion
-		/// 
-		/// Stores the signature for a PSBT proposal 
-		/// 
-		/// 
+		///
+		/// Stores the signature for a PSBT proposal
+		///
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
-		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet 
-		/// 
+		/// - `signature_payload`: a blob of psbt bytes, resulting from a external wallet
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
-		/// - A user can only sign a proposal once 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		/// - A user can only sign a proposal once
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>save_psbt(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1316,19 +1295,18 @@
 		}
 
 		<span class="doccomment">/// Finalize PSBT
-		/// 
+		///
 		/// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
-		/// - `broadcast`: A boolean flag 
-		/// 
+		/// - `broadcast`: A boolean flag
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - The proposal must have a valid PSBT
 		/// - Any vault member can perform this extrinsic
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>finalize_psbt(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1338,20 +1316,18 @@
 			<span class="self">Self</span>::do_finalize_psbt(who, proposal_id, broadcast)
 		}
 
-
 		<span class="doccomment">/// Broadcast PSBT
-		/// 
+		///
 		/// Queries a proposal to be broadcasted in case it wasn&#39;t on the finalization step.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `proposal_id`: the vault identifier in which the proposal will be inserted
-		/// 
+		///
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>broadcast_psbt(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1361,12 +1337,11 @@
 		}
 
 		<span class="doccomment">/// Kill almost all storage
-		/// 
+		///
 		/// Use with caution!
-		/// 
+		///
 		/// Can only be called by root and removes All vaults and proposals
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(
 			origin: OriginFor&lt;T&gt;,
 		) -&gt; DispatchResult{
@@ -1380,11 +1355,10 @@
 		}
 
 		<span class="doccomment">/// Extrinsic to insert a valid vault descriptor
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">0</span>)]
+		///
+		</span><span class="attribute">#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_descriptors(
 			origin: OriginFor&lt;T&gt;,
 			payload: VaultsPayload&lt;T::Public&gt;,
@@ -1415,11 +1389,10 @@
 		}
 
 		<span class="doccomment">/// Extrinsic to insert a valid proposal PSBT
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">0</span>)]
+		///
+		</span><span class="attribute">#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_psbts(
 			origin: OriginFor&lt;T&gt;,
 			payload: ProposalsPayload&lt;T::Public&gt;,
@@ -1443,11 +1416,10 @@
 		}
 
 		<span class="doccomment">/// Extrinsic to insert a valid proposal TX_ID
-		/// 
+		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
-		/// 
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">0</span>)]
+		///
+		</span><span class="attribute">#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_finalize_psbts(
 			origin: OriginFor&lt;T&gt;,
 			payload: ProposalsPayload&lt;T::Public&gt;, <span class="comment">// here the payload
@@ -1503,5 +1475,6 @@
 			}
 		}
 	}
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_bitcoin_vaults" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

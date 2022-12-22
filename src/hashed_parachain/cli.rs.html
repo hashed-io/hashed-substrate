@@ -91,6 +91,11 @@
 <span id="91">91</span>
 <span id="92">92</span>
 <span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::path::PathBuf;
 
 <span class="doccomment">/// Sub-commands supported by the collator.
@@ -125,24 +130,29 @@
 
 	<span class="doccomment">/// Sub-commands concerned with benchmarking.
 	/// The pallet benchmarking moved to the `pallet` sub-command.
-	</span><span class="attribute">#[clap(subcommand)]
+	</span><span class="attribute">#[command(subcommand)]
 	</span>Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 
 	<span class="doccomment">/// Try some testing command against a specified runtime state.
+	</span><span class="attribute">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
 	</span>TryRuntime(try_runtime_cli::TryRuntimeCmd),
+
+	<span class="doccomment">/// Errors since the binary was not build with `--features try-runtime`.
+	</span><span class="attribute">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
+	</span>TryRuntime,
 }
 
 <span class="attribute">#[derive(Debug, clap::Parser)]
-#[clap(
+#[command(
 	propagate_version = <span class="bool-val">true</span>,
 	args_conflicts_with_subcommands = <span class="bool-val">true</span>,
 	subcommand_negates_reqs = <span class="bool-val">true
 </span>)]
 </span><span class="kw">pub struct </span>Cli {
-	<span class="attribute">#[clap(subcommand)]
+	<span class="attribute">#[command(subcommand)]
 	</span><span class="kw">pub </span>subcommand: <span class="prelude-ty">Option</span>&lt;Subcommand&gt;,
 
-	<span class="attribute">#[clap(flatten)]
+	<span class="attribute">#[command(flatten)]
 	</span><span class="kw">pub </span>run: cumulus_client_cli::RunCmd,
 
 	<span class="doccomment">/// Disable automatic hardware benchmarks.
@@ -152,11 +162,11 @@
 	///
 	/// The results are then printed out in the logs, and also sent as part of
 	/// telemetry, if telemetry is enabled.
-	</span><span class="attribute">#[clap(long)]
+	</span><span class="attribute">#[arg(long)]
 	</span><span class="kw">pub </span>no_hardware_benchmarks: bool,
 
 	<span class="doccomment">/// Relay chain arguments
-	</span><span class="attribute">#[clap(raw = <span class="bool-val">true</span>)]
+	</span><span class="attribute">#[arg(raw = <span class="bool-val">true</span>)]
 	</span><span class="kw">pub </span>relay_chain_args: Vec&lt;String&gt;,
 }
 

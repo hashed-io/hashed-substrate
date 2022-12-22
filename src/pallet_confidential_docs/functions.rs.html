@@ -173,9 +173,9 @@
     <span class="self">Self</span>::validate_cid(<span class="kw-2">&amp;</span>cid)<span class="question-mark">?</span>;
     <span class="kw">let </span>hashed_account =  owner.using_encoded(blake2_256);
     <span class="kw">if let </span><span class="prelude-val">Some</span>(uid) = &lt;UserIds&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>hashed_account){
-      <span class="macro">ensure!</span>(uid == user_id, &lt;Error&lt;T&gt;&gt;::NotOwnerOfUserId);
+      <span class="macro">ensure!</span>(uid == user_id, Error::&lt;T&gt;::NotOwnerOfUserId);
     } <span class="kw">else </span>{
-      <span class="macro">ensure!</span>(!&lt;Vaults&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>user_id), &lt;Error&lt;T&gt;&gt;::NotOwnerOfVault);
+      <span class="macro">ensure!</span>(!&lt;Vaults&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>user_id), Error::&lt;T&gt;::NotOwnerOfVault);
     }
     
     <span class="kw">let </span>vault = Vault{
@@ -198,11 +198,11 @@
       ..
     } = owned_doc.clone();
     <span class="kw">if let </span><span class="prelude-val">Some</span>(doc) = &lt;OwnedDocs&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>cid) {
-      <span class="macro">ensure!</span>(doc.owner == owner, &lt;Error&lt;T&gt;&gt;::NotDocOwner); 
+      <span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
     } <span class="kw">else </span>{
       &lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| {
         owned_vec.try_push(cid.clone())
-      }).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::ExceedMaxOwnedDocs)<span class="question-mark">?</span>;
+      }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxOwnedDocs)<span class="question-mark">?</span>;
     }
     &lt;OwnedDocs&lt;T&gt;&gt;::insert(cid.clone(), owned_doc.clone());
     <span class="self">Self</span>::deposit_event(Event::OwnedDocStored(owned_doc));
@@ -210,13 +210,13 @@
   }
 
   <span class="kw">pub fn </span>do_remove_owned_document(owner: T::AccountId, cid: CID) -&gt; DispatchResult {
-    <span class="kw">let </span>doc = &lt;OwnedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::DocNotFound)<span class="question-mark">?</span>;
-    <span class="macro">ensure!</span>(doc.owner == owner, &lt;Error&lt;T&gt;&gt;::NotDocOwner); 
+    <span class="kw">let </span>doc = &lt;OwnedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
     &lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| {
-      <span class="kw">let </span>cid_index = owned_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(&lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      <span class="kw">let </span>cid_index = owned_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
       owned_vec.remove(cid_index);
       <span class="prelude-val">Ok</span>(())
-    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| &lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
     &lt;OwnedDocs&lt;T&gt;&gt;::remove(cid.clone());
     <span class="self">Self</span>::deposit_event(Event::OwnedDocRemoved(doc));
     <span class="prelude-val">Ok</span>(())
@@ -234,11 +234,11 @@
 
     &lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>from, |shared_vec| {
       shared_vec.try_push(cid.clone())
-    }).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::ExceedMaxSharedFromDocs)<span class="question-mark">?</span>;
+    }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedFromDocs)<span class="question-mark">?</span>;
     
     &lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| {
       shared_vec.try_push(cid.clone())
-    }).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::ExceedMaxSharedToDocs)<span class="question-mark">?</span>;
+    }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedToDocs)<span class="question-mark">?</span>;
 
     &lt;SharedDocs&lt;T&gt;&gt;::insert(cid.clone(), shared_doc.clone());
     <span class="self">Self</span>::deposit_event(Event::SharedDocStored(shared_doc));
@@ -246,8 +246,8 @@
   }
 
   <span class="kw">pub fn </span>do_update_shared_document_metadata(to: T::AccountId, <span class="kw-2">mut </span>shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
-    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>shared_doc.cid).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::DocNotFound)<span class="question-mark">?</span>;
-    <span class="macro">ensure!</span>(doc.to == to, &lt;Error&lt;T&gt;&gt;::NotDocSharee);
+    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>shared_doc.cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
     shared_doc.from = doc.from;
     shared_doc.to = to;
     &lt;SharedDocs&lt;T&gt;&gt;::insert(doc.cid.clone(), shared_doc.clone());
@@ -256,18 +256,18 @@
   }
 
   <span class="kw">pub fn </span>do_remove_shared_document(to: T::AccountId, cid: CID) -&gt; DispatchResult {
-    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| &lt;Error&lt;T&gt;&gt;::DocNotFound)<span class="question-mark">?</span>;
-    <span class="macro">ensure!</span>(doc.to == to, &lt;Error&lt;T&gt;&gt;::NotDocSharee); 
+    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
     &lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| {
-      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(&lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
       shared_vec.remove(cid_index);
       <span class="prelude-val">Ok</span>(())
-    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| &lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
     &lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>doc.from, |shared_vec| {
-      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(&lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c==cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
       shared_vec.remove(cid_index);
       <span class="prelude-val">Ok</span>(())
-    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| &lt;Error&lt;T&gt;&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
     &lt;SharedDocs&lt;T&gt;&gt;::remove(cid.clone());
     <span class="self">Self</span>::deposit_event(Event::SharedDocRemoved(doc));
     <span class="prelude-val">Ok</span>(())
@@ -298,29 +298,29 @@
     <span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
     <span class="self">Self</span>::validate_doc_name(name)<span class="question-mark">?</span>;
     <span class="self">Self</span>::validate_doc_desc(description)<span class="question-mark">?</span>;
-    <span class="macro">ensure!</span>(from != to, &lt;Error&lt;T&gt;&gt;::DocSharedWithSelf);
-    <span class="macro">ensure!</span>(!&lt;SharedDocs&lt;T&gt;&gt;::contains_key(cid), &lt;Error&lt;T&gt;&gt;::DocAlreadyShared);
+    <span class="macro">ensure!</span>(from != to, Error::&lt;T&gt;::DocSharedWithSelf);
+    <span class="macro">ensure!</span>(!&lt;SharedDocs&lt;T&gt;&gt;::contains_key(cid), Error::&lt;T&gt;::DocAlreadyShared);
     <span class="self">Self</span>::validate_has_public_key(from)<span class="question-mark">?</span>;
     <span class="self">Self</span>::validate_has_public_key(to)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
   }
 
   <span class="kw">fn </span>validate_has_public_key(who: <span class="kw-2">&amp;</span>T::AccountId)-&gt;DispatchResult{
-    <span class="macro">ensure!</span>(&lt;PublicKeys&lt;T&gt;&gt;::contains_key(who), &lt;Error&lt;T&gt;&gt;::AccountHasNoPublicKey);
+    <span class="macro">ensure!</span>(&lt;PublicKeys&lt;T&gt;&gt;::contains_key(who), Error::&lt;T&gt;::AccountHasNoPublicKey);
     <span class="prelude-val">Ok</span>(())
   }
   <span class="kw">fn </span>validate_cid(cid: <span class="kw-2">&amp;</span>CID)-&gt;DispatchResult{
-    <span class="macro">ensure!</span>(cid.len() &gt; <span class="number">0</span>, &lt;Error&lt;T&gt;&gt;::CIDNoneValue);
+    <span class="macro">ensure!</span>(cid.len() &gt; <span class="number">0</span>, Error::&lt;T&gt;::CIDNoneValue);
     <span class="prelude-val">Ok</span>(())
   }
 
   <span class="kw">fn </span>validate_doc_name(doc_name: <span class="kw-2">&amp;</span>DocName&lt;T&gt;)-&gt;DispatchResult{
-    <span class="macro">ensure!</span>(doc_name.len() &gt;= T::DocNameMinLen::get().try_into().unwrap(), &lt;Error&lt;T&gt;&gt;::DocNameTooShort);
+    <span class="macro">ensure!</span>(doc_name.len() &gt;= T::DocNameMinLen::get().try_into().unwrap(), Error::&lt;T&gt;::DocNameTooShort);
     <span class="prelude-val">Ok</span>(())
   }
 
   <span class="kw">fn </span>validate_doc_desc(doc_desc: <span class="kw-2">&amp;</span>DocDesc&lt;T&gt;)-&gt;DispatchResult{
-    <span class="macro">ensure!</span>(doc_desc.len() &gt;= T::DocDescMinLen::get().try_into().unwrap(), &lt;Error&lt;T&gt;&gt;::DocDescTooShort);
+    <span class="macro">ensure!</span>(doc_desc.len() &gt;= T::DocDescMinLen::get().try_into().unwrap(), Error::&lt;T&gt;::DocDescTooShort);
     <span class="prelude-val">Ok</span>(())
   }
 }</code></pre></div>

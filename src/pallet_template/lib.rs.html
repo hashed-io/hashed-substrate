@@ -122,6 +122,12 @@
 <span id="122">122</span>
 <span id="123">123</span>
 <span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.
@@ -138,20 +144,26 @@
 <span class="attribute">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
 </span><span class="kw">mod </span>benchmarking;
 
+<span class="doccomment">/// All migrations.
+</span><span class="kw">pub mod </span>migrations;
+
 <span class="attribute">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
 
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
 	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
 	</span><span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
 		<span class="doccomment">/// Because this pallet emits events, it depends on the runtime&#39;s definition of an event.
-		</span><span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		</span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
@@ -196,7 +208,7 @@
 	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 		<span class="doccomment">/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>do_something(origin: OriginFor&lt;T&gt;, something: u32) -&gt; DispatchResult {
 			<span class="comment">// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
@@ -213,7 +225,7 @@
 		}
 
 		<span class="doccomment">/// An example dispatchable that may throw a custom error.
-		</span><span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>cause_error(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>_who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -231,12 +243,12 @@
 			}
 		}
 
-		<span class="attribute">#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>insert_my_bytes(origin: OriginFor&lt;T&gt;, optional_bytes: <span class="prelude-ty">Option</span>&lt;MyBytes&gt;) -&gt; DispatchResult {
 			<span class="comment">// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
-			</span><span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			</span><span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="comment">// Update storage.
 			</span><span class="kw">let </span>s = optional_bytes.unwrap_or_default();

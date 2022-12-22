@@ -667,20 +667,6 @@
 <span id="667">667</span>
 <span id="668">668</span>
 <span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
-<span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -699,10 +685,11 @@
 <span class="attribute">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
 	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::transactional;
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>sp_runtime::traits::Scale;
 	<span class="kw">use </span>frame_support::traits::{Currency, Time};
+
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
@@ -712,7 +699,7 @@
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_fruniques::Config{
 
-		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
+		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
 		<span class="kw">type </span>Moment: Parameter
 			+ Default
@@ -724,7 +711,7 @@
 
 		<span class="kw">type </span>Timestamp: Time&lt;Moment = <span class="self">Self</span>::Moment&gt;;
 
-		<span class="comment">// type RemoveOrigin: EnsureOrigin&lt;Self::Origin&gt;;
+		<span class="comment">// type RemoveOrigin: EnsureOrigin&lt;Self::RuntimeOrigin&gt;;
 		</span><span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxAuthsPerMarket: Get&lt;u32&gt;;
 		<span class="attribute">#[pallet::constant]
@@ -752,6 +739,7 @@
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
@@ -973,8 +961,7 @@
 		</span>T: pallet_uniques::Config&lt;CollectionId = u32, ItemId = u32&gt;,
 	{
 
-		<span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">10</span>))]
+		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
@@ -989,8 +976,7 @@
 		/// - `origin`: The owner of the marketplace.
 		/// - `admin`: The admin of the marketplace.
 		/// - `label`: The name of the marketplace.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_marketplace(origin: OriginFor&lt;T&gt;, admin: T::AccountId,label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
 			</span><span class="kw">let </span>m = Marketplace{
@@ -1014,8 +1000,7 @@
 		/// - The custodian account is optional. You can apply to a marketplace without a
 		/// custodian account.
 		/// - All custodian fields are optional.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>apply(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8;<span class="number">32</span>],
@@ -1052,8 +1037,7 @@
 		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
 		/// - The custodian account is optional. You can replace the previous custodian.
 		/// - Since we know the application exists, we can check the current status of the application.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>reapply(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8;<span class="number">32</span>],
@@ -1097,8 +1081,7 @@
 		/// because some fields changes.
 		/// - If you select `Account` you need to enter the account to be accepted.
 		/// - If you select `Application` you need to enter the `application_id` to be accepted.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enroll(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], account_or_application: AccountOrApplication&lt;T&gt;, approved: bool, feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;, ) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1115,8 +1098,7 @@
 		///
 		/// ### Considerations:
 		/// - You can only invite users to a marketplace where you are the admin.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>invite(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], account: T::AccountId, fields : Fields&lt;T&gt;, custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1137,8 +1119,7 @@
 		/// ### Considerations:
 		/// If the user has already applied to the marketplace for that particular
 		/// authority type, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>add_authority(origin: OriginFor&lt;T&gt;, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1159,8 +1140,7 @@
 		/// - This extrinsic doesn&#39;t remove the account from the marketplace,
 		/// it only removes the selected authority type for that account.
 		/// If the user doesn&#39;t have the selected authority type, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_authority(origin: OriginFor&lt;T&gt;, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="comment">//TOREVIEW: If we&#39;re allowing more than one role per user per marketplace, we should
@@ -1182,8 +1162,7 @@
 		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
 		/// - The label must be less than or equal to `T::LabelMaxLen
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>update_label_marketplace(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], new_label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1203,8 +1182,7 @@
 		/// ### Considerations:
 		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_marketplace(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1227,8 +1205,7 @@
 		/// - You can create only one sell order for each item per marketplace.
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
 		/// - If the selected collection doesn&#39;t exist, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enlist_sell_offer(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1249,8 +1226,7 @@
 		/// - You don&#39;t need to be the owner of the item to accept the sell order.
 		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
 		/// - If you don&#39;t have the enough balance to accept the sell order, it will throw an error.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -1271,8 +1247,7 @@
 		/// - Only open offers can be deleted.
 		/// - If you need to delete multiple offers for the same item, you need to
 		///  delete them one by one.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="comment">//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
@@ -1296,8 +1271,7 @@
 		/// - Any user can create a buy order in the marketplace.
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enlist_buy_offer(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -1321,8 +1295,7 @@
 		/// - When an offer is accepted, all the other offers for this item are closed.
 		/// - The buyer needs to have the enough balance to accept the buy order.
 		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -1342,8 +1315,7 @@
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(
 			origin: OriginFor&lt;T&gt;,
 		) -&gt; DispatchResult{

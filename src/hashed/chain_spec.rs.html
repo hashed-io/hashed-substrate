@@ -282,6 +282,9 @@
 <span id="282">282</span>
 <span id="283">283</span>
 <span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
 </pre><pre class="rust"><code><span class="kw">use </span>hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
 	SudoConfig, SystemConfig, NodeAuthorizationConfig, BitcoinVaultsConfig, WASM_BINARY,
@@ -346,7 +349,6 @@
 	p.insert(<span class="string">&quot;website&quot;</span>.into(), <span class="string">&quot;https://hashed.systems&quot;</span>.into());
 	p
 }
-
 <span class="kw">pub fn </span>development_config() -&gt; <span class="prelude-ty">Result</span>&lt;ChainSpec, String&gt; {
 	<span class="kw">let </span>wasm_binary = WASM_BINARY.ok_or_else(|| <span class="string">&quot;Development wasm not available&quot;</span>.to_string())<span class="question-mark">?</span>;
 
@@ -524,9 +526,13 @@
 	_enable_println: bool,
 ) -&gt; GenesisConfig {
 	GenesisConfig {
-		system: SystemConfig { code: wasm_binary.to_vec() },
+		system: SystemConfig {
+			<span class="comment">// Add Wasm runtime to storage.
+			</span>code: wasm_binary.to_vec(),
+		},
 		balances: BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k| (k, <span class="number">1 </span>&lt;&lt; <span class="number">60</span>)).collect(),
+			<span class="comment">// Configure endowed accounts with initial balance of 1 &lt;&lt; 60.
+			</span>balances: endowed_accounts.iter().cloned().map(|k| (k, <span class="number">1 </span>&lt;&lt; <span class="number">60</span>)).collect(),
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.<span class="number">0</span>.clone())).collect(),

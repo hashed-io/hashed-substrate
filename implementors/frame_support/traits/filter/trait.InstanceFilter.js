@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"hashed_parachain_runtime":[["impl InstanceFilter&lt;<a class=\"enum\" href=\"hashed_parachain_runtime/enum.Call.html\" title=\"enum hashed_parachain_runtime::Call\">Call</a>&gt; for <a class=\"enum\" href=\"hashed_parachain_runtime/enum.ProxyType.html\" title=\"enum hashed_parachain_runtime::ProxyType\">ProxyType</a>"]]
+"hashed_parachain_runtime":[["impl InstanceFilter&lt;<a class=\"enum\" href=\"hashed_parachain_runtime/enum.RuntimeCall.html\" title=\"enum hashed_parachain_runtime::RuntimeCall\">RuntimeCall</a>&gt; for <a class=\"enum\" href=\"hashed_parachain_runtime/enum.ProxyType.html\" title=\"enum hashed_parachain_runtime::ProxyType\">ProxyType</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

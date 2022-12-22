@@ -69,7 +69,7 @@
 
 	<span class="macro">parameter_types! </span>{
 		<span class="doccomment">/// Importing a block with 0 Extrinsics.
-		</span><span class="kw">pub const </span>BlockExecutionWeight: Weight = <span class="number">5_000_000 </span>* constants::WEIGHT_PER_NANOS;
+		</span><span class="kw">pub const </span>BlockExecutionWeight: Weight = constants::WEIGHT_PER_NANOS.mul(<span class="number">5_000_000</span>);
 	}
 
 	<span class="attribute">#[cfg(test)]

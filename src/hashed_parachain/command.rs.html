@@ -445,34 +445,26 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::net::SocketAddr;
 
 <span class="kw">use </span>codec::Encode;
 <span class="kw">use </span>cumulus_client_cli::generate_genesis_block;
 <span class="kw">use </span>cumulus_primitives_core::ParaId;
 <span class="kw">use </span>frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
-<span class="kw">use </span>hashed_parachain_runtime::{Block, RuntimeApi};
-<span class="kw">use </span>log::info;
+<span class="kw">use </span>log::{info, warn};
+<span class="kw">use </span>hashed_parachain_runtime::Block;
 <span class="kw">use </span>sc_cli::{
 	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
 	NetworkParams, <span class="prelude-ty">Result</span>, RuntimeVersion, SharedParams, SubstrateCli,
 };
-<span class="kw">use </span>sc_service::{
-	config::{BasePath, PrometheusConfig},
-	TaskManager,
-};
+<span class="kw">use </span>sc_service::config::{BasePath, PrometheusConfig};
 <span class="kw">use </span>sp_core::hexdisplay::HexDisplay;
 <span class="kw">use </span>sp_runtime::traits::{AccountIdConversion, Block <span class="kw">as </span>BlockT};
 
 <span class="kw">use crate</span>::{
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
-	service::{new_partial, TemplateRuntimeExecutor},
+	service::{new_partial, ParachainNativeExecutor},
 };
 
 <span class="kw">fn </span>load_spec(id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>ChainSpec&gt;, String&gt; {
@@ -570,14 +562,7 @@
 	(|<span class="macro-nonterminal">$components</span>:ident, <span class="macro-nonterminal">$cli</span>:ident, <span class="macro-nonterminal">$cmd</span>:ident, <span class="macro-nonterminal">$config</span>:ident| $( <span class="macro-nonterminal">$code</span>:tt )* ) =&gt; {{
 		<span class="kw">let </span>runner = <span class="macro-nonterminal">$cli</span>.create_runner(<span class="macro-nonterminal">$cmd</span>)<span class="question-mark">?</span>;
 		runner.async_run(|<span class="macro-nonterminal">$config</span>| {
-			<span class="kw">let </span><span class="macro-nonterminal">$components </span>= new_partial::&lt;
-				RuntimeApi,
-				TemplateRuntimeExecutor,
-				<span class="kw">_
-			</span>&gt;(
-				<span class="kw-2">&amp;</span><span class="macro-nonterminal">$config</span>,
-				<span class="kw">crate</span>::service::parachain_build_import_queue,
-			)<span class="question-mark">?</span>;
+			<span class="kw">let </span><span class="macro-nonterminal">$components </span>= new_partial(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$config</span>)<span class="question-mark">?</span>;
 			<span class="kw">let </span>task_manager = <span class="macro-nonterminal">$components</span>.task_manager;
 			{ $( <span class="macro-nonterminal">$code </span>)* }.map(|v| (v, task_manager))
 		})
@@ -656,58 +641,59 @@
 			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
 			<span class="comment">// Switch on the concrete benchmark sub-command-
 			</span><span class="kw">match </span>cmd {
-				BenchmarkCmd::Pallet(cmd) =&gt; {
+				BenchmarkCmd::Pallet(cmd) =&gt;
 					<span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>) {
-						runner.sync_run(|config| cmd.run::&lt;Block, TemplateRuntimeExecutor&gt;(config))
+						runner.sync_run(|config| cmd.run::&lt;Block, ParachainNativeExecutor&gt;(config))
 					} <span class="kw">else </span>{
 						<span class="prelude-val">Err</span>(<span class="string">&quot;Benchmarking wasn&#39;t enabled when building the node. \
 					You can enable it with `--features runtime-benchmarks`.&quot;
 							</span>.into())
-					}
-				},
+					},
 				BenchmarkCmd::Block(cmd) =&gt; runner.sync_run(|config| {
-					<span class="kw">let </span>partials = new_partial::&lt;RuntimeApi, TemplateRuntimeExecutor, <span class="kw">_</span>&gt;(
-						<span class="kw-2">&amp;</span>config,
-						<span class="kw">crate</span>::service::parachain_build_import_queue,
-					)<span class="question-mark">?</span>;
+					<span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
 					cmd.run(partials.client)
 				}),
-				BenchmarkCmd::Storage(cmd) =&gt; runner.sync_run(|config| {
-					<span class="kw">let </span>partials = new_partial::&lt;RuntimeApi, TemplateRuntimeExecutor, <span class="kw">_</span>&gt;(
-						<span class="kw-2">&amp;</span>config,
-						<span class="kw">crate</span>::service::parachain_build_import_queue,
-					)<span class="question-mark">?</span>;
+				<span class="attribute">#[cfg(not(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>))]
+				</span>BenchmarkCmd::Storage(<span class="kw">_</span>) =&gt;
+					<span class="kw">return </span><span class="prelude-val">Err</span>(sc_cli::Error::Input(
+						<span class="string">&quot;Compile with --features=runtime-benchmarks \
+						to enable storage benchmarks.&quot;
+							</span>.into(),
+					)
+					.into()),
+				<span class="attribute">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
+				</span>BenchmarkCmd::Storage(cmd) =&gt; runner.sync_run(|config| {
+					<span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
 					<span class="kw">let </span>db = partials.backend.expose_db();
 					<span class="kw">let </span>storage = partials.backend.expose_storage();
-
 					cmd.run(config, partials.client.clone(), db, storage)
 				}),
-				BenchmarkCmd::Machine(cmd) =&gt; {
-					runner.sync_run(|config| cmd.run(<span class="kw-2">&amp;</span>config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
-				},
+				BenchmarkCmd::Machine(cmd) =&gt;
+					runner.sync_run(|config| cmd.run(<span class="kw-2">&amp;</span>config, SUBSTRATE_REFERENCE_HARDWARE.clone())),
 				<span class="comment">// NOTE: this allows the Client to leniently implement
 				// new benchmark commands without requiring a companion MR.
 				</span><span class="attribute">#[allow(unreachable_patterns)]
 				</span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;Benchmarking sub-command unsupported&quot;</span>.into()),
 			}
 		},
-		<span class="prelude-val">Some</span>(Subcommand::TryRuntime(cmd)) =&gt; {
-			<span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;try-runtime&quot;</span>) {
-				<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+		<span class="attribute">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
+		</span><span class="prelude-val">Some</span>(Subcommand::TryRuntime(cmd)) =&gt; {
+			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
 
-				<span class="comment">// grab the task manager.
-				</span><span class="kw">let </span>registry = <span class="kw-2">&amp;</span>runner.config().prometheus_config.as_ref().map(|cfg| <span class="kw-2">&amp;</span>cfg.registry);
-				<span class="kw">let </span>task_manager =
-					TaskManager::new(runner.config().tokio_handle.clone(), <span class="kw-2">*</span>registry)
-						.map_err(|e| <span class="macro">format!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e))<span class="question-mark">?</span>;
+			<span class="comment">// grab the task manager.
+			</span><span class="kw">let </span>registry = <span class="kw-2">&amp;</span>runner.config().prometheus_config.as_ref().map(|cfg| <span class="kw-2">&amp;</span>cfg.registry);
+			<span class="kw">let </span>task_manager =
+				sc_service::TaskManager::new(runner.config().tokio_handle.clone(), <span class="kw-2">*</span>registry)
+					.map_err(|e| <span class="macro">format!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e))<span class="question-mark">?</span>;
 
-				runner.async_run(|config| {
-					<span class="prelude-val">Ok</span>((cmd.run::&lt;Block, TemplateRuntimeExecutor&gt;(config), task_manager))
-				})
-			} <span class="kw">else </span>{
-				<span class="prelude-val">Err</span>(<span class="string">&quot;Try-runtime must be enabled by `--features try-runtime`.&quot;</span>.into())
-			}
+			runner.async_run(|config| {
+				<span class="prelude-val">Ok</span>((cmd.run::&lt;Block, ParachainNativeExecutor&gt;(config), task_manager))
+			})
 		},
+		<span class="attribute">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
+		</span><span class="prelude-val">Some</span>(Subcommand::TryRuntime) =&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;Try-runtime was not enabled when building the node. \
+			You can enable it with `--features try-runtime`.&quot;
+			</span>.into()),
 		<span class="prelude-val">None </span>=&gt; {
 			<span class="kw">let </span>runner = cli.create_runner(<span class="kw-2">&amp;</span>cli.run.normalize())<span class="question-mark">?</span>;
 			<span class="kw">let </span>collator_options = cli.run.collator_options();
@@ -750,6 +736,10 @@
 				<span class="macro">info!</span>(<span class="string">&quot;Parachain Account: {}&quot;</span>, parachain_account);
 				<span class="macro">info!</span>(<span class="string">&quot;Parachain genesis state: {}&quot;</span>, genesis_state);
 				<span class="macro">info!</span>(<span class="string">&quot;Is collating: {}&quot;</span>, <span class="kw">if </span>config.role.is_authority() { <span class="string">&quot;yes&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;no&quot; </span>});
+
+				<span class="kw">if </span>collator_options.relay_chain_rpc_url.is_some() &amp;&amp; cli.relay_chain_args.len() &gt; <span class="number">0 </span>{
+					<span class="macro">warn!</span>(<span class="string">&quot;Detected relay chain node arguments together with --relay-chain-rpc-url. This command starts a minimal Polkadot node that only uses a network-related subset of all relay chain CLI options.&quot;</span>);
+				}
 
 				<span class="kw">crate</span>::service::start_parachain_node(
 					config,
@@ -804,8 +794,8 @@
 	<span class="kw">fn </span>base_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BasePath&gt;&gt; {
 		<span class="prelude-val">Ok</span>(<span class="self">self
 			</span>.shared_params()
-			.base_path()
-			.or_else(|| <span class="self">self</span>.base_path.clone().map(Into::into)))
+			.base_path()<span class="question-mark">?
+			</span>.or_else(|| <span class="self">self</span>.base_path.clone().map(Into::into)))
 	}
 
 	<span class="kw">fn </span>rpc_http(<span class="kw-2">&amp;</span><span class="self">self</span>, default_listen_port: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt; {
@@ -855,8 +845,8 @@
 		<span class="self">self</span>.base.base.transaction_pool(is_dev)
 	}
 
-	<span class="kw">fn </span>state_cache_child_ratio(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
-		<span class="self">self</span>.base.base.state_cache_child_ratio()
+	<span class="kw">fn </span>trie_cache_maximum_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
+		<span class="self">self</span>.base.base.trie_cache_maximum_size()
 	}
 
 	<span class="kw">fn </span>rpc_methods(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::config::RpcMethods&gt; {

@@ -88,8 +88,8 @@
 		<span class="doccomment">/// `ParityDB` can be enabled with a feature flag, but is still experimental. These weights
 		/// are available for brave runtime engineers who may want to try this out as default.
 		</span><span class="kw">pub const </span>ParityDbWeight: RuntimeDbWeight = RuntimeDbWeight {
-			read: <span class="number">8_000 </span>* constants::WEIGHT_PER_NANOS,
-			write: <span class="number">50_000 </span>* constants::WEIGHT_PER_NANOS,
+			read: <span class="number">8_000 </span>* constants::WEIGHT_PER_NANOS.ref_time(),
+			write: <span class="number">50_000 </span>* constants::WEIGHT_PER_NANOS.ref_time(),
 		};
 	}
 

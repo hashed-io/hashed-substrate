@@ -338,14 +338,10 @@
 <span id="338">338</span>
 <span id="339">339</span>
 <span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 </span><span class="kw">use </span>hashed_runtime::{<span class="self">self</span>, opaque::Block, RuntimeApi};
-<span class="kw">use </span>sc_client_api::{BlockBackend, ExecutorProvider};
+<span class="kw">use </span>sc_client_api::BlockBackend;
 <span class="kw">use </span>sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 <span class="kw">pub use </span>sc_executor::NativeElseWasmExecutor;
 <span class="kw">use </span>sc_finality_grandpa::SharedVoterState;
@@ -457,7 +453,7 @@
 	<span class="kw">let </span>slot_duration = sc_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
 
 	<span class="kw">let </span>import_queue =
-		sc_consensus_aura::import_queue::&lt;AuraPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(ImportQueueParams {
+		sc_consensus_aura::import_queue::&lt;AuraPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(ImportQueueParams {
 			block_import: grandpa_block_import.clone(),
 			justification_import: <span class="prelude-val">Some</span>(Box::new(grandpa_block_import.clone())),
 			client: client.clone(),
@@ -470,15 +466,13 @@
 						slot_duration,
 					);
 
-				<span class="prelude-val">Ok</span>((timestamp, slot))
+				<span class="prelude-val">Ok</span>((slot, timestamp))
 			},
 			spawner: <span class="kw-2">&amp;</span>task_manager.spawn_essential_handle(),
-			can_author_with: sp_consensus::CanAuthorWithNativeVersion::new(
-				client.executor().clone(),
-			),
 			registry: config.prometheus_registry(),
 			check_for_equivocation: Default::default(),
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
+			compatibility_mode: Default::default(),
 		})<span class="question-mark">?</span>;
 
 	<span class="prelude-val">Ok</span>(sc_service::PartialComponents {
@@ -538,7 +532,7 @@
 		Vec::default(),
 	));
 
-	<span class="kw">let </span>(network, system_rpc_tx, network_starter) =
+	<span class="kw">let </span>(network, system_rpc_tx, tx_handler_controller, network_starter) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: <span class="kw-2">&amp;</span>config,
 			client: client.clone(),
@@ -585,6 +579,7 @@
 		rpc_builder: rpc_extensions_builder,
 		backend,
 		system_rpc_tx,
+		tx_handler_controller,
 		config,
 		telemetry: telemetry.as_mut(),
 	})<span class="question-mark">?</span>;
@@ -598,12 +593,9 @@
 			telemetry.as_ref().map(|x| x.handle()),
 		);
 
-		<span class="kw">let </span>can_author_with =
-			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
-
 		<span class="kw">let </span>slot_duration = sc_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>aura = sc_consensus_aura::start_aura::&lt;AuraPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(
+		<span class="kw">let </span>aura = sc_consensus_aura::start_aura::&lt;AuraPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(
 			StartAuraParams {
 				slot_duration,
 				client,
@@ -619,17 +611,17 @@
 							slot_duration,
 						);
 
-					<span class="prelude-val">Ok</span>((timestamp, slot))
+					<span class="prelude-val">Ok</span>((slot, timestamp))
 				},
 				force_authoring,
 				backoff_authoring_blocks,
 				keystore: keystore_container.sync_keystore(),
-				can_author_with,
 				sync_oracle: network.clone(),
 				justification_sync_link: network.clone(),
 				block_proposal_slot_portion: SlotProportion::new(<span class="number">2f32 </span>/ <span class="number">3f32</span>),
 				max_block_proposal_slot_portion: <span class="prelude-val">None</span>,
 				telemetry: telemetry.as_ref().map(|x| x.handle()),
+				compatibility_mode: Default::default(),
 			},
 		)<span class="question-mark">?</span>;
 
@@ -640,24 +632,24 @@
 			.spawn_blocking(<span class="string">&quot;aura&quot;</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;block-authoring&quot;</span>), aura);
 	}
 
-	<span class="comment">// if the node isn&#39;t actively participating in consensus then it doesn&#39;t
-	// need a keystore, regardless of which protocol we use below.
-	</span><span class="kw">let </span>keystore =
-		<span class="kw">if </span>role.is_authority() { <span class="prelude-val">Some</span>(keystore_container.sync_keystore()) } <span class="kw">else </span>{ <span class="prelude-val">None </span>};
-
-	<span class="kw">let </span>grandpa_config = sc_finality_grandpa::Config {
-		<span class="comment">// FIXME #1578 make this available through chainspec
-		</span>gossip_duration: Duration::from_millis(<span class="number">333</span>),
-		justification_period: <span class="number">512</span>,
-		name: <span class="prelude-val">Some</span>(name),
-		observer_enabled: <span class="bool-val">false</span>,
-		keystore,
-		local_role: role,
-		telemetry: telemetry.as_ref().map(|x| x.handle()),
-		protocol_name: grandpa_protocol_name,
-	};
-
 	<span class="kw">if </span>enable_grandpa {
+		<span class="comment">// if the node isn&#39;t actively participating in consensus then it doesn&#39;t
+		// need a keystore, regardless of which protocol we use below.
+		</span><span class="kw">let </span>keystore =
+			<span class="kw">if </span>role.is_authority() { <span class="prelude-val">Some</span>(keystore_container.sync_keystore()) } <span class="kw">else </span>{ <span class="prelude-val">None </span>};
+
+		<span class="kw">let </span>grandpa_config = sc_finality_grandpa::Config {
+			<span class="comment">// FIXME #1578 make this available through chainspec
+			</span>gossip_duration: Duration::from_millis(<span class="number">333</span>),
+			justification_period: <span class="number">512</span>,
+			name: <span class="prelude-val">Some</span>(name),
+			observer_enabled: <span class="bool-val">false</span>,
+			keystore,
+			local_role: role,
+			telemetry: telemetry.as_ref().map(|x| x.handle()),
+			protocol_name: grandpa_protocol_name,
+		};
+
 		<span class="comment">// start the full GRANDPA voter
 		// NOTE: non-authorities could run the GRANDPA observer protocol, but at
 		// this point the full voter should provide better guarantees of block
@@ -685,5 +677,6 @@
 
 	network_starter.start_network();
 	<span class="prelude-val">Ok</span>(task_manager)
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashed" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

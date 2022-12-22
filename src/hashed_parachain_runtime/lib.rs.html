@@ -1311,6 +1311,9 @@
 <span id="1311">1311</span>
 <span id="1312">1312</span>
 <span id="1313">1313</span>
+<span id="1314">1314</span>
+<span id="1315">1315</span>
+<span id="1316">1316</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attribute">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1342,12 +1345,13 @@
 
 <span class="kw">use </span>frame_support::{
 	construct_runtime, parameter_types,
+	dispatch::DispatchClass,
 	traits::{
-		AsEnsureOriginWithArg, ConstU128, ConstU16, ConstU32, EitherOfDiverse,
-		Everything, InstanceFilter,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, EitherOfDiverse,
+		Everything, InstanceFilter, WithdrawReasons,
 	},
 	weights::{
-		constants::WEIGHT_PER_SECOND, ConstantMultiplier, DispatchClass, Weight,
+		constants::WEIGHT_PER_SECOND, ConstantMultiplier, Weight,
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
 	PalletId, RuntimeDebug,
@@ -1423,10 +1427,10 @@
 );
 
 <span class="doccomment">/// Unchecked extrinsic type as expected by this runtime.
-</span><span class="kw">pub type </span>UncheckedExtrinsic = generic::UncheckedExtrinsic&lt;Address, Call, Signature, SignedExtra&gt;;
+</span><span class="kw">pub type </span>UncheckedExtrinsic = generic::UncheckedExtrinsic&lt;Address, RuntimeCall, Signature, SignedExtra&gt;;
 
 <span class="doccomment">/// Extrinsic type that has already been checked.
-</span><span class="kw">pub type </span>CheckedExtrinsic = generic::CheckedExtrinsic&lt;AccountId, Call, SignedExtra&gt;;
+</span><span class="kw">pub type </span>CheckedExtrinsic = generic::CheckedExtrinsic&lt;AccountId, RuntimeCall, SignedExtra&gt;;
 
 <span class="doccomment">/// Executive: handles dispatch to the various modules.
 </span><span class="kw">pub type </span>Executive = frame_executive::Executive&lt;
@@ -1459,7 +1463,7 @@
 		<span class="comment">// in Rococo, extrinsic base weight (smallest non-zero weight) is mapped to 1 MILLIUNIT:
 		// in our template, we map to 1/10 of that, or 1/10 MILLIUNIT
 		</span><span class="kw">let </span>p = MILLIUNIT / <span class="number">10</span>;
-		<span class="kw">let </span>q = <span class="number">100 </span>* Balance::from(ExtrinsicBaseWeight::get());
+		<span class="kw">let </span>q = <span class="number">100 </span>* Balance::from(ExtrinsicBaseWeight::get().ref_time());
 		<span class="macro">smallvec!</span>[WeightToFeeCoefficient {
 			degree: <span class="number">1</span>,
 			negative: <span class="bool-val">false</span>,
@@ -1538,7 +1542,7 @@
 </span><span class="kw">const </span>NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(<span class="number">75</span>);
 
 <span class="doccomment">/// We allow for 0.5 of a second of compute with a 12 second average block time.
-</span><span class="kw">const </span>MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND / <span class="number">2</span>;
+</span><span class="kw">const </span>MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND.div(<span class="number">2</span>);
 
 <span class="doccomment">/// The version information used to identify this runtime when compiled natively.
 </span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -1582,7 +1586,7 @@
 	<span class="doccomment">/// The identifier used to distinguish between accounts.
 	</span><span class="kw">type </span>AccountId = AccountId;
 	<span class="doccomment">/// The aggregated dispatch type that is available for extrinsics.
-	</span><span class="kw">type </span>Call = Call;
+	</span><span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="doccomment">/// The lookup mechanism to get account ID from whatever is passed in dispatchers.
 	</span><span class="kw">type </span>Lookup = AccountIdLookup&lt;AccountId, ()&gt;;
 	<span class="doccomment">/// The index type for storing how many extrinsics an account has signed.
@@ -1596,9 +1600,9 @@
 	<span class="doccomment">/// The header type.
 	</span><span class="kw">type </span>Header = generic::Header&lt;BlockNumber, BlakeTwo256&gt;;
 	<span class="doccomment">/// The ubiquitous event type.
-	</span><span class="kw">type </span>Event = Event;
+	</span><span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="doccomment">/// The ubiquitous origin type.
-	</span><span class="kw">type </span>Origin = Origin;
+	</span><span class="kw">type </span>RuntimeOrigin = RuntimeOrigin;
 	<span class="doccomment">/// Maximum number of block number to block hash mappings to keep (oldest pruned first).
 	</span><span class="kw">type </span>BlockHashCount = BlockHashCount;
 	<span class="doccomment">/// Runtime version.
@@ -1662,7 +1666,7 @@
 	<span class="doccomment">/// The type for recording an account&#39;s balance.
 	</span><span class="kw">type </span>Balance = Balance;
 	<span class="doccomment">/// The ubiquitous event type.
-	</span><span class="kw">type </span>Event = Event;
+	</span><span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>DustRemoval = ();
 	<span class="kw">type </span>ExistentialDeposit = ExistentialDeposit;
 	<span class="kw">type </span>AccountStore = System;
@@ -1678,7 +1682,7 @@
 }
 
 <span class="kw">impl </span>pallet_transaction_payment::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>OnChargeTransaction = pallet_transaction_payment::CurrencyAdapter&lt;Balances, ()&gt;;
 	<span class="kw">type </span>WeightToFee = WeightToFee;
 	<span class="kw">type </span>LengthToFee = ConstantMultiplier&lt;Balance, TransactionByteFee&gt;;
@@ -1697,7 +1701,7 @@
 }
 
 <span class="kw">impl </span>pallet_identity::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>BasicDeposit = BasicDeposit;
 	<span class="kw">type </span>FieldDeposit = FieldDeposit;
@@ -1719,18 +1723,18 @@
 }
 
 <span class="kw">impl </span>pallet_multisig::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>DepositBase = DepositBase;
 	<span class="kw">type </span>DepositFactor = DepositFactor;
-	<span class="kw">type </span>MaxSignatories = ConstU16&lt;<span class="number">100</span>&gt;;
+	<span class="kw">type </span>MaxSignatories = ConstU32&lt;<span class="number">100</span>&gt;;
 	<span class="kw">type </span>WeightInfo = pallet_multisig::weights::SubstrateWeight&lt;Runtime&gt;;
 }
 
 <span class="kw">impl </span>pallet_sudo::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 }
 
 <span class="macro">parameter_types! </span>{
@@ -1767,31 +1771,31 @@
 		<span class="self">Self</span>::Any
 	}
 }
-<span class="kw">impl </span>InstanceFilter&lt;Call&gt; <span class="kw">for </span>ProxyType {
-	<span class="kw">fn </span>filter(<span class="kw-2">&amp;</span><span class="self">self</span>, c: <span class="kw-2">&amp;</span>Call) -&gt; bool {
+<span class="kw">impl </span>InstanceFilter&lt;RuntimeCall&gt; <span class="kw">for </span>ProxyType {
+	<span class="kw">fn </span>filter(<span class="kw-2">&amp;</span><span class="self">self</span>, c: <span class="kw-2">&amp;</span>RuntimeCall) -&gt; bool {
 		<span class="kw">match </span><span class="self">self </span>{
 			ProxyType::Any =&gt; <span class="bool-val">true</span>,
 			ProxyType::NonTransfer =&gt; !<span class="macro">matches!</span>(
 				c,
-				Call::Balances(..)
-					| Call::Assets(..)
-					| Call::Uniques(..)
-					| Call::Vesting(pallet_vesting::Call::vested_transfer { .. })
-					| Call::Indices(pallet_indices::Call::transfer { .. })
+				RuntimeCall::Balances(..)
+					| RuntimeCall::Assets(..)
+					| RuntimeCall::Uniques(..)
+					| RuntimeCall::Vesting(pallet_vesting::Call::vested_transfer { .. })
+					| RuntimeCall::Indices(pallet_indices::Call::transfer { .. })
 			),
 			ProxyType::Governance =&gt; <span class="macro">matches!</span>(
 				c,
-				Call::Bounties(..)
-					| Call::ChildBounties(..)
-					| Call::Council(..)
-					| Call::Society(..)
-					<span class="comment">// | Call::TechnicalCommittee(..)
-					// | Call::Elections(..)
-					</span>| Call::Treasury(..)
+				RuntimeCall::Bounties(..)
+					| RuntimeCall::ChildBounties(..)
+					| RuntimeCall::Council(..)
+					| RuntimeCall::Society(..)
+					<span class="comment">// | RuntimeCall::TechnicalCommittee(..)
+					// | RuntimeCall::Elections(..)
+					</span>| RuntimeCall::Treasury(..)
 			),
 			ProxyType::Marketplaces =&gt; <span class="macro">matches!</span>(
 				c,
-				Call::GatedMarketplace(..)
+				RuntimeCall::GatedMarketplace(..)
 			),
 		}
 	}
@@ -1807,8 +1811,8 @@
 }
 
 <span class="kw">impl </span>pallet_proxy::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>ProxyType = ProxyType;
 	<span class="kw">type </span>ProxyDepositBase = ProxyDepositBase;
@@ -1829,9 +1833,9 @@
 }
 
 <span class="kw">impl </span>pallet_recovery::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>WeightInfo = pallet_recovery::weights::SubstrateWeight&lt;Runtime&gt;;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>ConfigDepositBase = ConfigDepositBase;
 	<span class="kw">type </span>FriendDepositFactor = FriendDepositFactor;
@@ -1847,7 +1851,7 @@
 	<span class="kw">type </span>AccountIndex = AccountIndex;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>Deposit = IndexDeposit;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>WeightInfo = ();
 }
 
@@ -1856,7 +1860,7 @@
 }
 
 <span class="kw">impl </span>pallet_membership::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>AddOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>RemoveOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>SwapOrigin = EnsureRoot&lt;AccountId&gt;;
@@ -1876,9 +1880,9 @@
 
 <span class="kw">type </span>CouncilCollective = pallet_collective::Instance1;
 <span class="kw">impl </span>pallet_collective::Config&lt;CouncilCollective&gt; <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Origin = Origin;
-	<span class="kw">type </span>Proposal = Call;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeOrigin = RuntimeOrigin;
+	<span class="kw">type </span>Proposal = RuntimeCall;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>MotionDuration = CouncilMotionDuration;
 	<span class="kw">type </span>MaxProposals = CouncilMaxProposals;
 	<span class="kw">type </span>MaxMembers = CouncilMaxMembers;
@@ -1901,7 +1905,7 @@
 }
 
 <span class="kw">impl </span>pallet_society::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>Randomness = RandomnessCollectiveFlip;
 	<span class="kw">type </span>CandidateDeposit = CandidateDeposit;
@@ -1920,14 +1924,17 @@
 
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>MinVestedTransfer: Balance = <span class="number">100 </span>* DOLLARS;
+	<span class="kw">pub </span>UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
 }
 
 <span class="kw">impl </span>pallet_vesting::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>BlockNumberToBalance = ConvertInto;
 	<span class="kw">type </span>MinVestedTransfer = MinVestedTransfer;
 	<span class="kw">type </span>WeightInfo = pallet_vesting::weights::SubstrateWeight&lt;Runtime&gt;;
+	<span class="kw">type </span>UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
 	<span class="comment">// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
 	// highest number of schedules that encodes less than 2^10.
 	</span><span class="kw">const </span>MAX_VESTING_SCHEDULES: u32 = <span class="number">28</span>;
@@ -1956,7 +1963,7 @@
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>ApproveOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>RejectOrigin = EnsureRoot&lt;AccountId&gt;;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>OnSlash = Treasury;
 	<span class="kw">type </span>ProposalBond = ProposalBond;
 	<span class="kw">type </span>ProposalBondMinimum = ProposalBondMinimum;
@@ -1982,7 +1989,7 @@
 }
 
 <span class="kw">impl </span>pallet_bounties::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>BountyDepositBase = BountyDepositBase;
 	<span class="kw">type </span>BountyDepositPayoutDelay = BountyDepositPayoutDelay;
 	<span class="kw">type </span>BountyUpdatePeriod = BountyUpdatePeriod;
@@ -2001,7 +2008,7 @@
 }
 
 <span class="kw">impl </span>pallet_child_bounties::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>MaxActiveChildBountyCount = ConstU32&lt;<span class="number">200</span>&gt;;
 	<span class="kw">type </span>ChildBountyValueMinimum = ChildBountyValueMinimum;
 	<span class="kw">type </span>WeightInfo = ();
@@ -2016,10 +2023,11 @@
 }
 
 <span class="kw">impl </span>pallet_assets::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Balance = u128;
 	<span class="kw">type </span>AssetId = u32;
 	<span class="kw">type </span>Currency = Balances;
+	<span class="kw">type </span>CreateOrigin = AsEnsureOriginWithArg&lt;EnsureSigned&lt;AccountId&gt;&gt;;
 	<span class="kw">type </span>ForceOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>AssetDeposit = AssetDeposit;
 	<span class="kw">type </span>AssetAccountDeposit = ConstU128&lt;DOLLARS&gt;;
@@ -2040,17 +2048,16 @@
 
 <span class="kw">impl </span>pallet_preimage::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>WeightInfo = pallet_preimage::weights::SubstrateWeight&lt;Runtime&gt;;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>ManagerOrigin = EnsureRoot&lt;AccountId&gt;;
-	<span class="kw">type </span>MaxSize = PreimageMaxSize;
 	<span class="kw">type </span>BaseDeposit = PreimageBaseDeposit;
 	<span class="kw">type </span>ByteDeposit = PreimageByteDeposit;
 }
 
 <span class="kw">impl </span>pallet_whitelist::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
-	<span class="kw">type </span>Call = Call;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>WhitelistOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>DispatchWhitelistedOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>PreimageProvider = Preimage;
@@ -2069,7 +2076,7 @@
 
 <span class="kw">impl </span>pallet_bitcoin_vaults::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>AuthorityId = pallet_bitcoin_vaults::types::crypto::TestAuthId;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>ChangeBDKOrigin = RootOrThreeFifthsOfCouncil;
 	<span class="kw">type </span>XPubLen = XPubLen;
 	<span class="kw">type </span>PSBTMaxLen = PSBTMaxLen;
@@ -2091,7 +2098,7 @@
 }
 
 <span class="kw">impl </span>pallet_confidential_docs::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	<span class="kw">type </span>MaxOwnedDocs = MaxOwnedDocs;
 	<span class="kw">type </span>MaxSharedFromDocs = MaxSharedFromDocs;
@@ -2104,7 +2111,7 @@
 
 <span class="kw">impl </span>pallet_remark::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>WeightInfo = pallet_remark::weights::SubstrateWeight&lt;<span class="self">Self</span>&gt;;
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 }
 
 <span class="macro">parameter_types! </span>{
@@ -2113,7 +2120,7 @@
 }
 
 <span class="kw">impl </span>cumulus_pallet_parachain_system::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>OnSystemEvent = ();
 	<span class="kw">type </span>SelfParaId = parachain_info::Pallet&lt;Runtime&gt;;
 	<span class="kw">type </span>OutboundXcmpMessageSource = XcmpQueue;
@@ -2129,7 +2136,7 @@
 <span class="kw">impl </span>cumulus_pallet_aura_ext::Config <span class="kw">for </span>Runtime {}
 
 <span class="kw">impl </span>cumulus_pallet_xcmp_queue::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>XcmExecutor = XcmExecutor&lt;XcmConfig&gt;;
 	<span class="kw">type </span>ChannelInfo = ParachainSystem;
 	<span class="kw">type </span>VersionWrapper = ();
@@ -2140,7 +2147,7 @@
 }
 
 <span class="kw">impl </span>cumulus_pallet_dmp_queue::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>XcmExecutor = XcmExecutor&lt;XcmConfig&gt;;
 	<span class="kw">type </span>ExecuteOverweightOrigin = EnsureRoot&lt;AccountId&gt;;
 }
@@ -2152,7 +2159,7 @@
 }
 
 <span class="kw">impl </span>pallet_session::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>ValidatorId = &lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::AccountId;
 	<span class="comment">// we don&#39;t have stash and controller, thus we don&#39;t need the convert as well.
 	</span><span class="kw">type </span>ValidatorIdOf = pallet_collator_selection::IdentityCollator;
@@ -2184,7 +2191,7 @@
 </span><span class="kw">pub type </span>CollatorSelectionUpdateOrigin = EnsureRoot&lt;AccountId&gt;;
 
 <span class="kw">impl </span>pallet_collator_selection::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>Currency = Balances;
 	<span class="kw">type </span>UpdateOrigin = CollatorSelectionUpdateOrigin;
 	<span class="kw">type </span>PotId = PotId;
@@ -2200,29 +2207,29 @@
 }
 
 <span class="doccomment">/// The payload being signed in transactions.
-</span><span class="kw">pub type </span>SignedPayload = sp_runtime::generic::SignedPayload&lt;Call, SignedExtra&gt;;
+</span><span class="kw">pub type </span>SignedPayload = sp_runtime::generic::SignedPayload&lt;RuntimeCall, SignedExtra&gt;;
 
 <span class="kw">use </span>codec::{Decode, Encode, MaxEncodedLen};
 <span class="kw">use </span>sp_runtime::SaturatedConversion;
 
 <span class="kw">impl</span>&lt;LocalCall&gt; frame_system::offchain::SendTransactionTypes&lt;LocalCall&gt; <span class="kw">for </span>Runtime
 <span class="kw">where
-	</span>Call: From&lt;LocalCall&gt;,
+	</span>RuntimeCall: From&lt;LocalCall&gt;,
 {
-	<span class="kw">type </span>OverarchingCall = Call;
+	<span class="kw">type </span>OverarchingCall = RuntimeCall;
 	<span class="kw">type </span>Extrinsic = UncheckedExtrinsic;
 }
 
 <span class="kw">impl</span>&lt;LocalCall&gt; frame_system::offchain::CreateSignedTransaction&lt;LocalCall&gt; <span class="kw">for </span>Runtime
 <span class="kw">where
-	</span>Call: From&lt;LocalCall&gt;,
+	</span>RuntimeCall: From&lt;LocalCall&gt;,
 {
 	<span class="kw">fn </span>create_transaction&lt;C: frame_system::offchain::AppCrypto&lt;<span class="self">Self</span>::Public, <span class="self">Self</span>::Signature&gt;&gt;(
-		call: Call,
+		call: RuntimeCall,
 		public: &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer,
 		account: AccountId,
 		index: Index,
-	) -&gt; <span class="prelude-ty">Option</span>&lt;(Call, &lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload)&gt; {
+	) -&gt; <span class="prelude-ty">Option</span>&lt;(RuntimeCall, &lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload)&gt; {
 		<span class="kw">let </span>period = BlockHashCount::get() <span class="kw">as </span>u64;
 		<span class="kw">let </span>current_block = System::block_number().saturated_into::&lt;u64&gt;().saturating_sub(<span class="number">1</span>);
 		<span class="kw">let </span>tip = <span class="number">0</span>;
@@ -2262,7 +2269,7 @@
 }
 
 <span class="kw">impl </span>pallet_uniques::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>CollectionId = u32;
 	<span class="kw">type </span>ItemId = u32;
 	<span class="kw">type </span>Currency = Balances;
@@ -2276,14 +2283,12 @@
 	<span class="kw">type </span>KeyLimit = KeyLimit;
 	<span class="kw">type </span>ValueLimit = ValueLimit;
 	<span class="kw">type </span>WeightInfo = pallet_uniques::weights::SubstrateWeight&lt;Runtime&gt;;
-	<span class="attribute">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
-	</span><span class="kw">type </span>Helper = ();
 	<span class="kw">type </span>CreateOrigin = AsEnsureOriginWithArg&lt;EnsureSigned&lt;AccountId&gt;&gt;;
 	<span class="kw">type </span>Locker = ();
 }
 
 <span class="kw">impl </span>pallet_fruniques::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	<span class="kw">type </span>ChildMaxLen = ChildMaxLen;
 	<span class="kw">type </span>Rbac = RBAC;
@@ -2304,7 +2309,7 @@
 }
 
 <span class="kw">impl </span>pallet_gated_marketplace::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>MaxAuthsPerMarket = MaxAuthsPerMarket;
 	<span class="kw">type </span>MaxRolesPerAuth = MaxRolesPerAuth;
 	<span class="kw">type </span>MaxApplicants = MaxApplicants;
@@ -2330,8 +2335,9 @@
 	<span class="kw">pub const </span>MaxRolesPerUser: u32 = <span class="number">10</span>;
 	<span class="kw">pub const </span>MaxUsersPerRole: u32 = <span class="number">10</span>;
 }
+
 <span class="kw">impl </span>pallet_rbac::Config <span class="kw">for </span>Runtime {
-	<span class="kw">type </span>Event = Event;
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>MaxScopesPerPallet = MaxScopesPerPallet;
 	<span class="kw">type </span>MaxRolesPerPallet = MaxRolesPerPallet;
 	<span class="kw">type </span>RoleMaxLen = RoleMaxLen;

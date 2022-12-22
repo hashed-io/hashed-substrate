@@ -316,10 +316,6 @@
 <span id="316">316</span>
 <span id="317">317</span>
 <span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The confidential docs pallet provides the backend services and metadata
 //! storage for the confidential docs solution
 
@@ -342,16 +338,18 @@
 <span class="attribute">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
 	<span class="doccomment">//! Provides the backend services and metadata storage for the confidential docs solution
-	</span><span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, transactional};
+	</span><span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
+	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		
-		<span class="kw">type </span>Event: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::Event&gt;;
 
-		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::Origin&gt;;
+		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+
+		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 
 		<span class="doccomment">/// Maximum number of confidential documents that a user can own
 		</span><span class="attribute">#[pallet::constant]
@@ -377,10 +375,11 @@
 	}
 
 	<span class="attribute">#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
 	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	
+
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>vaults)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
@@ -404,9 +403,9 @@
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>users_ids)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserIds&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>, 
-		Identity, 
-		[u8; <span class="number">32</span>], 
+		<span class="kw">_</span>,
+		Identity,
+		[u8; <span class="number">32</span>],
 		UserId,
 		OptionQuery,
 	&gt;;
@@ -414,7 +413,7 @@
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>owned_docs)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocs&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>, 
+		<span class="kw">_</span>,
 		Blake2_256,
 		CID,
 		OwnedDoc&lt;T&gt;,
@@ -434,7 +433,7 @@
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>shared_docs)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocs&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>, 
+		<span class="kw">_</span>,
 		Blake2_256,
 		CID,
 		SharedDoc&lt;T&gt;,
@@ -465,7 +464,7 @@
 	<span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="doccomment">/// Vault stored 
+		<span class="doccomment">/// Vault stored
 		</span>VaultStored(UserId, PublicKey, Vault&lt;T&gt;),
 		<span class="doccomment">/// Owned confidential document stored
 		</span>OwnedDocStored(OwnedDoc&lt;T&gt;),
@@ -518,81 +517,76 @@
 		<span class="doccomment">/// Max documents shared with the &quot;from&quot; account has been exceeded
 		</span>ExceedMaxSharedFromDocs,
 
-		
+
 	}
 
 	<span class="attribute">#[pallet::call]
 	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-		
+
 		<span class="doccomment">/// Create/Update a vault
-		/// 
+		///
 		/// Creates/Updates the calling user&#39;s vault and sets their public cipher key
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is configuring their vault
-		/// - `user_id`: User identifier generated from their login method, their address if using 
+		/// - `user_id`: User identifier generated from their login method, their address if using
 		/// native login or user id if using SSO
 		/// - `public key`: The users cipher public key
 		/// - `cid`: The IPFS CID that contains the vaults data
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>set_vault(origin: OriginFor&lt;T&gt;, user_id: UserId, public_key: PublicKey, cid: CID) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_set_vault(who, user_id, public_key, cid)
 		}
 
 		<span class="doccomment">/// Create/Update an owned document
-		/// 
+		///
 		/// Creates a new owned document or updates an existing owned document&#39;s metadata
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is creating/updating an owned document
 		/// - `owned_doc`: Metadata related to the owned document
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>set_owned_document(origin: OriginFor&lt;T&gt;, owned_doc: OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_set_owned_document(who, owned_doc)
 		}
 
 		<span class="doccomment">/// Remove an owned document
-		/// 
+		///
 		/// Removes an owned document
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The owner of the document
 		/// - `cid`: of the document to be removed
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_owned_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_remove_owned_document(who, cid)
 		}
 
 		<span class="doccomment">/// Share a document
-		/// 
+		///
 		/// Creates a shared document
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The user that is creating the shared document
 		/// - `shared_doc`: Metadata related to the shared document
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>share_document(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_share_document(who, shared_doc)
 		}
 
 		<span class="doccomment">/// Update share document metadata
-		/// 
+		///
 		/// Updates share document metadata, only the user with which the document
 		/// was shared can update it
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The &quot;to&quot; user of the shared document
 		/// - `shared_doc`: Metadata related to the shared document
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>update_shared_document_metadata(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_update_shared_document_metadata(who, shared_doc)
@@ -600,15 +594,14 @@
 
 
 		<span class="doccomment">/// Remove a shared document
-		/// 
+		///
 		/// Removes a shared document, only the user with whom the document was
 		/// is able to remove it
 		/// .
 		/// ### Parameters:
 		/// - `origin`: The &quot;to&quot; user of the shared document
 		/// - `cid`: of the document to be removed
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_shared_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_remove_shared_document(who, cid)
@@ -616,17 +609,16 @@
 
 
 		<span class="doccomment">/// Kill all the stored data.
-		/// 
+		///
 		/// This function is used to kill ALL the stored data.
 		/// Use with caution!
-		/// 
+		///
 		/// ### Parameters:
-		/// - `origin`: The user who performs the action. 
-		/// 
+		/// - `origin`: The user who performs the action.
+		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attribute">#[transactional]
-		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(
 			origin: OriginFor&lt;T&gt;,
 		) -&gt; DispatchResult{
@@ -641,5 +633,6 @@
 			<span class="prelude-val">Ok</span>(())
 		}
 	}
-}</code></pre></div>
+}
+</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_confidential_docs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

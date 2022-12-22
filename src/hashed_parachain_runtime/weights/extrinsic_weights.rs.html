@@ -69,7 +69,7 @@
 
 	<span class="macro">parameter_types! </span>{
 		<span class="doccomment">/// Executing a NO-OP `System::remarks` Extrinsic.
-		</span><span class="kw">pub const </span>ExtrinsicBaseWeight: Weight = <span class="number">125_000 </span>* constants::WEIGHT_PER_NANOS;
+		</span><span class="kw">pub const </span>ExtrinsicBaseWeight: Weight = constants::WEIGHT_PER_NANOS.mul(<span class="number">125_000</span>);
 	}
 
 	<span class="attribute">#[cfg(test)]
