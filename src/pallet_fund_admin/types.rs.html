@@ -464,6 +464,11 @@
 <span id="464">464</span>
 <span id="465">465</span>
 <span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -488,6 +493,7 @@
     ProxyRole,
     AssignAction,
 ), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+<span class="kw">pub type </span>PrivateGroupId = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 
 <span class="comment">// Users
 </span><span class="kw">pub type </span>DateRegistered = u64;
@@ -587,6 +593,7 @@
 	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
 	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
     <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
+    <span class="kw">pub </span>private_group_id: PrivateGroupId,
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
@@ -848,6 +855,7 @@
     </span>ApproveRevenue, <span class="comment">// approve_revenue: admin
     </span>RejectRevenue, <span class="comment">// reject_revenue: admin
     </span>BankConfirming, <span class="comment">// bank_confirming: admin
+    </span>CancelDrawdownSubmission, <span class="comment">// cancel_drawdown_submission: builder
 </span>}
 
 <span class="kw">impl </span>ProxyPermission {
@@ -872,6 +880,7 @@
             <span class="self">Self</span>::ApproveRevenue =&gt; <span class="string">&quot;ApproveRevenue&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::RejectRevenue =&gt; <span class="string">&quot;RejectRevenue&quot;</span>.as_bytes().to_vec(),
             <span class="self">Self</span>::BankConfirming =&gt; <span class="string">&quot;BankConfirming&quot;</span>.as_bytes().to_vec(),
+            <span class="self">Self</span>::CancelDrawdownSubmission =&gt; <span class="string">&quot;CancelDrawdownSubmission&quot;</span>.as_bytes().to_vec(),
         }
     }
 
@@ -910,6 +919,7 @@
             UpBulkupload.to_vec(),
             RevenueTransaction.to_vec(),
             SubmitRevenue.to_vec(),
+            CancelDrawdownSubmission.to_vec(),
         ].to_vec()
     }
 

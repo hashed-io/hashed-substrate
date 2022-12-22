@@ -2701,6 +2701,73 @@
 <span id="2701">2701</span>
 <span id="2702">2702</span>
 <span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
+<span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
+<span id="2719">2719</span>
+<span id="2720">2720</span>
+<span id="2721">2721</span>
+<span id="2722">2722</span>
+<span id="2723">2723</span>
+<span id="2724">2724</span>
+<span id="2725">2725</span>
+<span id="2726">2726</span>
+<span id="2727">2727</span>
+<span id="2728">2728</span>
+<span id="2729">2729</span>
+<span id="2730">2730</span>
+<span id="2731">2731</span>
+<span id="2732">2732</span>
+<span id="2733">2733</span>
+<span id="2734">2734</span>
+<span id="2735">2735</span>
+<span id="2736">2736</span>
+<span id="2737">2737</span>
+<span id="2738">2738</span>
+<span id="2739">2739</span>
+<span id="2740">2740</span>
+<span id="2741">2741</span>
+<span id="2742">2742</span>
+<span id="2743">2743</span>
+<span id="2744">2744</span>
+<span id="2745">2745</span>
+<span id="2746">2746</span>
+<span id="2747">2747</span>
+<span id="2748">2748</span>
+<span id="2749">2749</span>
+<span id="2750">2750</span>
+<span id="2751">2751</span>
+<span id="2752">2752</span>
+<span id="2753">2753</span>
+<span id="2754">2754</span>
+<span id="2755">2755</span>
+<span id="2756">2756</span>
+<span id="2757">2757</span>
+<span id="2758">2758</span>
+<span id="2759">2759</span>
+<span id="2760">2760</span>
+<span id="2761">2761</span>
+<span id="2762">2762</span>
+<span id="2763">2763</span>
+<span id="2764">2764</span>
+<span id="2765">2765</span>
+<span id="2766">2766</span>
+<span id="2767">2767</span>
+<span id="2768">2768</span>
+<span id="2769">2769</span>
+<span id="2770">2770</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="kw">use </span>frame_support::traits::Time;
@@ -2788,6 +2855,7 @@
         expenditures: Expenditures&lt;T&gt;,
         job_eligibles: <span class="prelude-ty">Option</span>&lt;JobEligibles&lt;T&gt;&gt;,
         users: <span class="prelude-ty">Option</span>&lt;UsersAssignation&lt;T&gt;&gt;,
+        private_group_id: PrivateGroupId,
         ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::CreateProject)<span class="question-mark">?</span>;
@@ -2800,6 +2868,9 @@
 
         <span class="comment">// Ensure completion_date is in the future
         </span><span class="macro">ensure!</span>(completion_date &gt; creation_date, Error::&lt;T&gt;::CompletionDateMustBeLater);
+
+        <span class="comment">// Ensuree private group id is not empty
+        </span><span class="macro">ensure!</span>(!private_group_id.is_empty(), Error::&lt;T&gt;::PrivateGroupIdIsEmpty);
 
         <span class="comment">// Create project data
         </span><span class="kw">let </span>project_data = ProjectData::&lt;T&gt; {
@@ -2822,6 +2893,7 @@
 			developer_equity_drawdown_status: <span class="prelude-val">None</span>,
 			eb5_drawdown_status: <span class="prelude-val">None</span>,
             revenue_status: <span class="prelude-val">None</span>,
+            private_group_id
         };
 
         <span class="comment">// Create the scope for the given project_id
@@ -3608,12 +3680,18 @@
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
 
+        <span class="comment">// Ensure project exists
+        </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
+
         <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure drawdown has transactions
         </span><span class="macro">ensure!</span>(&lt;TransactionsByDrawdown&lt;T&gt;&gt;::contains_key(project_id, drawdown_id), Error::&lt;T&gt;::DrawdownHasNoTransactions);
-        
+
+        <span class="comment">// Ensure drawdown is in submitted status
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Submitted, Error::&lt;T&gt;::DrawdownNotSubmitted);
+
         <span class="comment">// Get timestamp
         </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
@@ -3669,8 +3747,14 @@
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
 
+        <span class="comment">// Ensure project exists
+        </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
+
         <span class="comment">// Get drawdown data
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown is in submitted status
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Submitted, Error::&lt;T&gt;::DrawdownNotSubmitted);
 
         <span class="comment">// Match drawdown type in order to update transactions status
         </span><span class="kw">match </span>drawdown_data.drawdown_type {
@@ -3732,6 +3816,56 @@
 
         <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::DrawdownRejected(project_id, drawdown_id));
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub fn </span>do_reset_drawdown(
+        user: T::AccountId,
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+    ) -&gt; DispatchResult {
+        <span class="comment">// Ensure builder permissions
+        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::CancelDrawdownSubmission)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure project exists
+        </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
+
+        <span class="comment">// Get drawdown data &amp; ensure drawdown exists
+        </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Ensure drawdown is in submitted status
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Submitted, Error::&lt;T&gt;::DrawdownNotSubmitted);
+
+        <span class="comment">// Get drawdown transactions
+        </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+        <span class="comment">// Delete drawdown transactions from TransactionsInfo 
+        </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
+            <span class="comment">// Delete transaction
+            </span>&lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+        }
+
+        <span class="comment">// Delete drawdown transactions from TransactionsByDrawdown
+        </span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::remove(project_id, drawdown_id);
+
+        <span class="comment">// Update drawdown status to default
+        </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
+            <span class="kw">let </span>drawdown_data = drawdown_data.as_mut().ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            drawdown_data.total_amount = <span class="number">0</span>;
+            drawdown_data.status = DrawdownStatus::default();
+            drawdown_data.bulkupload_documents = <span class="prelude-val">None</span>;
+            drawdown_data.bank_documents = <span class="prelude-val">None</span>;
+            drawdown_data.description = <span class="prelude-val">None</span>;
+            drawdown_data.feedback = <span class="prelude-val">None</span>;
+            drawdown_data.status_changes = DrawdownStatusChanges::&lt;T&gt;::default();
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
+        
+        <span class="comment">// Update drawdown status in project info
+        </span><span class="self">Self</span>::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())<span class="question-mark">?</span>;
+
+        <span class="comment">// Event
+        </span><span class="self">Self</span>::deposit_event(Event::DrawdownSubmissionCancelled(project_id, drawdown_id));
         <span class="prelude-val">Ok</span>(())
     }
 

@@ -1522,6 +1522,38 @@
 <span id="1522">1522</span>
 <span id="1523">1523</span>
 <span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1869,6 +1901,8 @@
 		</span>DrawdownApproved(ProjectId, DrawdownId),
 		<span class="doccomment">/// Drawdown was rejected successfully
 		</span>DrawdownRejected(ProjectId, DrawdownId),
+		<span class="doccomment">/// Drawdown was cancelled successfully
+		</span>DrawdownSubmissionCancelled(ProjectId, DrawdownId),
 		<span class="doccomment">/// Bulkupload drawdown was submitted successfully
 		</span>BulkUploadSubmitted(ProjectId, DrawdownId),
 		<span class="doccomment">/// An array of adjustments was executed depending on the CUDAction
@@ -2128,6 +2162,8 @@
 		</span>DrawdownNotApproved,
 		<span class="doccomment">/// Drawdown is not in Confirmed status
 		</span>DrawdownNotConfirmed,
+		<span class="doccomment">/// Drawdown is not in Submitted status
+		</span>DrawdownNotSubmitted, 
 		<span class="doccomment">/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
 		</span>DrawdownHasAlreadyBankConfirmingDocuments,
 		<span class="doccomment">/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
@@ -2140,6 +2176,8 @@
 		</span>NoScopeProvided,
 		<span class="doccomment">/// Only eb5 drawdowns are allowed to upload bank documentation
 		</span>OnlyEB5DrawdownsCanUploadBankDocuments,
+		<span class="doccomment">/// The private group id is empty
+		</span>PrivateGroupIdIsEmpty,
 	}
 
 	<span class="comment">// E X T R I N S I C S
@@ -2348,10 +2386,11 @@
 			expenditures: Expenditures&lt;T&gt;,
 			job_eligibles: <span class="prelude-ty">Option</span>&lt;JobEligibles&lt;T&gt;&gt;,
 			users: <span class="prelude-ty">Option</span>&lt;UsersAssignation&lt;T&gt;&gt;,
+			private_group_id: PrivateGroupId,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
-			</span><span class="self">Self</span>::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
+			</span><span class="self">Self</span>::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users, private_group_id)
 		}
 
 		<span class="doccomment">/// Edits a project.
@@ -3005,6 +3044,31 @@
 
 			<span class="self">Self</span>::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
 		}
+		
+		<span class="doccomment">/// The following extrinsic is used to cancel a drawdown submission.
+		/// 
+		/// # Parameters:
+		/// - origin: The builder account who is cancelling the drawdown submission
+		/// - project_id: The selected project id where the drawdown exists
+		/// - drawdown_id: The selected drawdown id to be cancelled
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by a builder role account
+		/// - The drawdown status will be rolled back to &quot;Draft&quot;.
+		/// - All of its transactions will be deleted.
+		/// - The whole drawdown will be reset to its initial state, so be careful when using this
+		</span><span class="attribute">#[transactional]
+		#[pallet::weight(<span class="number">10_000 </span>+ T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>reset_drawdown(
+			origin: OriginFor&lt;T&gt;,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+
+			<span class="self">Self</span>::do_reset_drawdown(who, project_id, drawdown_id)
+		}
+
 
 		<span class="doccomment">/// Kill all the stored data.
 		///
