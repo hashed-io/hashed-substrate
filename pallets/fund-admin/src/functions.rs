@@ -85,6 +85,7 @@ impl<T: Config> Pallet<T> {
         expenditures: Expenditures<T>,
         job_eligibles: Option<JobEligibles<T>>,
         users: Option<UsersAssignation<T>>,
+        private_group_id: PrivateGroupId,
         ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::CreateProject)?;
@@ -97,6 +98,9 @@ impl<T: Config> Pallet<T> {
 
         // Ensure completion_date is in the future
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
+
+        // Ensuree private group id is not empty
+        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdIsEmpty);
 
         // Create project data
         let project_data = ProjectData::<T> {
@@ -119,6 +123,7 @@ impl<T: Config> Pallet<T> {
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
             revenue_status: None,
+            private_group_id
         };
 
         // Create the scope for the given project_id

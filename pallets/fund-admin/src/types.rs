@@ -22,6 +22,7 @@ pub type UsersAssignation<T> = BoundedVec<(
     ProxyRole,
     AssignAction,
 ), <T as Config>::MaxRegistrationsAtTime>;
+pub type PrivateGroupId = BoundedVec<u8, ConstU32<400>>;
 
 // Users
 pub type DateRegistered = u64;
@@ -121,6 +122,7 @@ pub struct ProjectData<T: Config> {
 	pub construction_loan_drawdown_status: Option<DrawdownStatus>,
 	pub developer_equity_drawdown_status: Option<DrawdownStatus>,
     pub revenue_status: Option<RevenueStatus>,
+    pub private_group_id: PrivateGroupId,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]

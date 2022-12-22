@@ -620,6 +620,8 @@ pub mod pallet {
 		NoScopeProvided,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
+		/// The private group id is empty
+		PrivateGroupIdIsEmpty,
 	}
 
 	// E X T R I N S I C S
@@ -828,10 +830,11 @@ pub mod pallet {
 			expenditures: Expenditures<T>,
 			job_eligibles: Option<JobEligibles<T>>,
 			users: Option<UsersAssignation<T>>,
+			private_group_id: PrivateGroupId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users, private_group_id)
 		}
 
 		/// Edits a project.
