@@ -1071,7 +1071,7 @@ impl<T: Config> Pallet<T> {
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-        // Delete drawdown transactions from TransactionsInfo 
+        // Delete drawdown transactions from TransactionsInfo
         for transaction_id in drawdown_transactions.iter().cloned() {
             // Delete transaction
             <TransactionsInfo<T>>::remove(transaction_id);
@@ -1092,7 +1092,7 @@ impl<T: Config> Pallet<T> {
             drawdown_data.status_changes = DrawdownStatusChanges::<T>::default();
             Ok(())
         })?;
-        
+
         // Update drawdown status in project info
         Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
 
@@ -1778,7 +1778,7 @@ impl<T: Config> Pallet<T> {
         Self::is_authorized(admin, None, ProxyPermission::ApproveRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
-        Self::is_revenue_editable(revenue_id)?;
+        // Self::is_revenue_editable(revenue_id)?;
 
         // Get revenue data
         let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
@@ -1839,7 +1839,7 @@ impl<T: Config> Pallet<T> {
         Self::is_authorized(admin, None, ProxyPermission::RejectRevenue)?;
 
         // Ensure revenue is editable & ensure revenue exists
-        Self::is_revenue_editable(revenue_id)?;
+        // Self::is_revenue_editable(revenue_id)?;
 
         // Ensure revenue has transactions
         ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
