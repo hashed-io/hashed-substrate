@@ -1783,7 +1783,9 @@ impl<T: Config> Pallet<T> {
         // Get revenue data
         let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
 
-        // Ensure revenue has transactions
+		// Ensure revenue is submitted
+		ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueNotSubmitted);
+
         ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
 
         // Get timestamp
@@ -1838,8 +1840,11 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin, None, ProxyPermission::RejectRevenue)?;
 
-        // Ensure revenue is editable & ensure revenue exists
-        // Self::is_revenue_editable(revenue_id)?;
+		// Get revenue data
+        let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+		// Ensure revenue is submitted
+		ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueNotSubmitted);
 
         // Ensure revenue has transactions
         ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);

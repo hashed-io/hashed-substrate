@@ -601,6 +601,8 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+		/// The revenue is not in submitted status
+		RevenueNotSubmitted,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
 		DrawdownNotApproved,
 		/// Drawdown is not in Confirmed status
