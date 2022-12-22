@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 
-usage="./start_collator.sh [hashed|luhn] <base-data-path>"
+usage="./start_collator.sh [hashed|luhn|md5] <base-data-path>"
 if [ $# -ne 2 ]; then
     echo $usage
     exit 1
 fi
 
-if [[ ($1 != 'hashed' && $1 != 'luhn') ]]; then
+if [[ ($1 != 'hashed' && $1 != 'luhn' && $1 != 'md5') ]]; then
     echo $usage
     exit 1
 fi
