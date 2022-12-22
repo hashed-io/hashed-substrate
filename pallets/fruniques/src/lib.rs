@@ -263,13 +263,12 @@ pub mod pallet {
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 
-			// T::Currency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
-
 			if let Some(parent_info) = parent_info {
 				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
 			}
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
+			// T::Currency::transfer(&owner.clone(), &owner_item, offer_data.price, KeepAlive)?;
 
 			let instance_id: ItemId = <NextFrunique<T>>::try_get(class_id).unwrap_or(0);
 			<NextFrunique<T>>::insert(class_id, instance_id + 1);
