@@ -1082,6 +1082,7 @@ impl<T: Config> Pallet<T> {
             drawdown_data.bank_documents = None;
             drawdown_data.description = None;
             drawdown_data.feedback = None;
+            drawdown_data.status_changes = DrawdownStatusChanges::<T>::default();
             Ok(())
         })?;
         
