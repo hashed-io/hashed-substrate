@@ -16,10 +16,11 @@ mod types;
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
-	use frame_support::transactional;
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Currency, Time};
+
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
@@ -29,7 +30,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_fruniques::Config{
 
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
 			+ Default
@@ -41,7 +42,7 @@ pub mod pallet {
 
 		type Timestamp: Time<Moment = Self::Moment>;
 
-		// type RemoveOrigin: EnsureOrigin<Self::Origin>;
+		// type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 		#[pallet::constant]
 		type MaxAuthsPerMarket: Get<u32>;
 		#[pallet::constant]
@@ -69,6 +70,7 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
@@ -290,8 +292,7 @@ pub mod pallet {
 		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_initial_setup()?;
@@ -306,8 +307,7 @@ pub mod pallet {
 		/// - `origin`: The owner of the marketplace.
 		/// - `admin`: The admin of the marketplace.
 		/// - `label`: The name of the marketplace.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
 			let m = Marketplace{
@@ -331,8 +331,7 @@ pub mod pallet {
 		/// - The custodian account is optional. You can apply to a marketplace without a
 		/// custodian account.
 		/// - All custodian fields are optional.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>,
 			marketplace_id: [u8;32],
@@ -369,8 +368,7 @@ pub mod pallet {
 		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
 		/// - The custodian account is optional. You can replace the previous custodian.
 		/// - Since we know the application exists, we can check the current status of the application.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn reapply(
 			origin: OriginFor<T>,
 			marketplace_id: [u8;32],
@@ -414,8 +412,7 @@ pub mod pallet {
 		/// because some fields changes.
 		/// - If you select `Account` you need to enter the account to be accepted.
 		/// - If you select `Application` you need to enter the `application_id` to be accepted.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn enroll(origin: OriginFor<T>, marketplace_id: [u8;32], account_or_application: AccountOrApplication<T>, approved: bool, feedback: BoundedVec<u8, T::MaxFeedbackLen>, ) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -432,8 +429,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - You can only invite users to a marketplace where you are the admin.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn invite(origin: OriginFor<T>, marketplace_id: [u8;32], account: T::AccountId, fields : Fields<T>, custodian_fields: Option<CustodianFields<T>>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -454,8 +450,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// If the user has already applied to the marketplace for that particular
 		/// authority type, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn add_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -476,8 +471,7 @@ pub mod pallet {
 		/// - This extrinsic doesn't remove the account from the marketplace,
 		/// it only removes the selected authority type for that account.
 		/// If the user doesn't have the selected authority type, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_authority(origin: OriginFor<T>, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should
@@ -499,8 +493,7 @@ pub mod pallet {
 		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
 		/// - The label must be less than or equal to `T::LabelMaxLen
 		/// - If the selected marketplace doesn't exist, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn update_label_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32], new_label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -520,8 +513,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
 		/// - If the selected marketplace doesn't exist, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_marketplace(origin: OriginFor<T>, marketplace_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -544,8 +536,7 @@ pub mod pallet {
 		/// - You can create only one sell order for each item per marketplace.
 		/// - If the selected marketplace doesn't exist, it will throw an error.
 		/// - If the selected collection doesn't exist, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -566,8 +557,7 @@ pub mod pallet {
 		/// - You don't need to be the owner of the item to accept the sell order.
 		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
 		/// - If you don't have the enough balance to accept the sell order, it will throw an error.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 
@@ -588,8 +578,7 @@ pub mod pallet {
 		/// - Only open offers can be deleted.
 		/// - If you need to delete multiple offers for the same item, you need to
 		///  delete them one by one.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
@@ -613,8 +602,7 @@ pub mod pallet {
 		/// - Any user can create a buy order in the marketplace.
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -638,8 +626,7 @@ pub mod pallet {
 		/// - When an offer is accepted, all the other offers for this item are closed.
 		/// - The buyer needs to have the enough balance to accept the buy order.
 		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn take_buy_offer(origin: OriginFor<T>, offer_id: [u8;32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 
@@ -659,8 +646,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
 		) -> DispatchResult{

@@ -225,35 +225,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// TODO: add a function to transfer an instance
-	pub fn do_create(
-		origin: OriginFor<T>,
-		class_id: T::CollectionId,
-		instance_id: T::ItemId,
-		numeric_value: Option<Permill>,
-		admin: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::create(origin.clone(), class_id, admin.clone())?;
-
-		Self::mint(origin.clone(), &class_id, instance_id, admin)?;
-
-		if let Some(n) = numeric_value {
-			let num_value_key = BoundedVec::<u8, T::KeyLimit>::try_from(r#"num_value"#.encode())
-				.expect("Error on encoding the numeric value key to BoundedVec");
-			let num_value = BoundedVec::<u8, T::ValueLimit>::try_from(n.encode())
-				.expect("Error on encoding the numeric value to BoundedVec");
-			pallet_uniques::Pallet::<T>::set_attribute(
-				origin,
-				class_id,
-				Some(instance_id),
-				num_value_key,
-				num_value,
-			)?;
-		}
-
-		Ok(())
-	}
-
 	pub fn do_spawn(
 		origin: OriginFor<T>,
 		collection: T::CollectionId,
@@ -262,7 +233,7 @@ impl<T: Config> Pallet<T> {
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
-		ensure!(Self::collection_exists(&collection), <Error<T>>::CollectionNotFound);
+		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 		let user: T::AccountId = ensure_signed(origin.clone())?;
 		Self::is_authorized(user, collection, Permission::Mint)?;
 

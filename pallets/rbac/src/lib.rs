@@ -23,9 +23,11 @@ pub mod pallet {
 	use frame_support::pallet_prelude::{*, ValueQuery};
 	use crate::types::*;
 
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		#[pallet::constant]
 		type MaxScopesPerPallet: Get<u32>;
 		#[pallet::constant]
@@ -39,10 +41,11 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxRolesPerUser: Get<u32>;
 		#[pallet::constant]
-		type MaxUsersPerRole: Get<u32>;	
+		type MaxUsersPerRole: Get<u32>;
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
@@ -51,8 +54,8 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn scopes)]
 	pub(super) type Scopes<T: Config> = StorageMap<
-		_, 
-		Identity, 
+		_,
+		Identity,
 		PalletId, // pallet_id
 		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
 		ValueQuery,
@@ -62,7 +65,7 @@ pub mod pallet {
 	#[pallet::getter(fn roles)]
 	pub(super) type Roles<T: Config> = StorageMap<
 		_,
-		Identity, 
+		Identity,
 		RoleId, // role_id
 		BoundedVec<u8, T::RoleMaxLen >,  // role
 		OptionQuery,
@@ -72,7 +75,7 @@ pub mod pallet {
 	#[pallet::getter(fn pallet_roles)]
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
-		Identity, 
+		Identity,
 		PalletId, // pallet_id
 		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
 		ValueQuery,
@@ -82,9 +85,9 @@ pub mod pallet {
 	#[pallet::getter(fn permissions)]
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
-		Identity, 
+		Identity,
 		PalletId, 			// pallet_id
-		Identity, 
+		Identity,
 		PermissionId,		// permission_id
 		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
 		ValueQuery,
@@ -94,9 +97,9 @@ pub mod pallet {
 	#[pallet::getter(fn permissions_by_role)]
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
-		Identity, 
+		Identity,
 		PalletId, 			// pallet_id
-		Identity, 
+		Identity,
 		RoleId,		// role_id
 		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
 		ValueQuery,
@@ -189,7 +192,7 @@ pub mod pallet {
 		ExceedRoleMaxLen,
 		/// The permission string is too long
 		ExceedPermissionMaxLen,
-		/// The user does not have the specified role 
+		/// The user does not have the specified role
 		NotAuthorized,
 	}
 
