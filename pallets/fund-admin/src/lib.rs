@@ -345,6 +345,8 @@ pub mod pallet {
 		DrawdownApproved(ProjectId, DrawdownId),
 		/// Drawdown was rejected successfully
 		DrawdownRejected(ProjectId, DrawdownId),
+		/// Drawdown was cancelled successfully
+		DrawdownSubmissionCancelled(ProjectId, DrawdownId),
 		/// Bulkupload drawdown was submitted successfully
 		BulkUploadSubmitted(ProjectId, DrawdownId),
 		/// An array of adjustments was executed depending on the CUDAction
@@ -604,6 +606,8 @@ pub mod pallet {
 		DrawdownNotApproved,
 		/// Drawdown is not in Confirmed status
 		DrawdownNotConfirmed,
+		/// Drawdown is not in Submitted status
+		DrawdownNotSubmitted, 
 		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
@@ -1481,6 +1485,31 @@ pub mod pallet {
 
 			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
 		}
+		
+		/// The following extrinsic is used to cancel a drawdown submission.
+		/// 
+		/// # Parameters:
+		/// - origin: The builder account who is cancelling the drawdown submission
+		/// - project_id: The selected project id where the drawdown exists
+		/// - drawdown_id: The selected drawdown id to be cancelled
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by a builder role account
+		/// - The drawdown status will be rolled back to "Draft".
+		/// - All of its transactions will be deleted.
+		/// - The whole drawdown will be reset to its initial state, so be careful when using this
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reset_drawdown(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_reset_drawdown(who, project_id, drawdown_id)
+		}
+
 
 		/// Kill all the stored data.
 		///
