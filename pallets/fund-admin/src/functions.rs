@@ -1068,14 +1068,16 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
 
-        // Get drawdown transactions
-        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+		if drawdown_data.drawdown_type == DrawdownType::EB5 {
+			// Get drawdown transactions
+			let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
 
-        // Delete drawdown transactions from TransactionsInfo
-        for transaction_id in drawdown_transactions.iter().cloned() {
-            // Delete transaction
-            <TransactionsInfo<T>>::remove(transaction_id);
-        }
+			// Delete drawdown transactions from TransactionsInfo
+			for transaction_id in drawdown_transactions.iter().cloned() {
+				// Delete transaction
+				<TransactionsInfo<T>>::remove(transaction_id);
+			}
+		}
 
         // Delete drawdown transactions from TransactionsByDrawdown
         <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
