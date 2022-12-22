@@ -263,6 +263,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 
+			// T::Currency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
+
 			if let Some(parent_info) = parent_info {
 				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
 			}

@@ -10,4 +10,4 @@ cargo build --package hashed-runtime --release --features runtime-benchmarks
 --extrinsic '*' \
 --steps 20 \
 --repeat 10 \
---output pallets/pallet-template/src/weights.rs
+--output pallets/template/src/weights.rs
