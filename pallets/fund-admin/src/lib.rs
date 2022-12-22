@@ -13,11 +13,6 @@ mod benchmarking;
 
 mod functions;
 mod types;
-//TODO: Remove unused parameters, types, etc
-// - Change extrinsic names
-// - Update extrinsic names to beign like CURD actions ( create, update, read, delete)
-// - Add external documentation for each extrinsic
-// - Fix typos
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -32,7 +27,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		//TODO: change all accounts names for users
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type Moment: Parameter
@@ -69,10 +63,6 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxRegionalCenterPerProject: Get<u32>;
-
-		//todo:remove MaxBoundedVecs
-		#[pallet::constant]
-		type MaxBoundedVecs: Get<u32>;
 
 		#[pallet::constant]
 		type MaxDrawdownsPerProject: Get<u32>;
@@ -302,6 +292,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		// TODO: Delete unused events when updating the readme file
 		/// Proxy initial setup completed using the sudo pallet
 		ProxySetupCompleted,
 		/// Project was created successfully
@@ -354,6 +345,8 @@ pub mod pallet {
 		DrawdownApproved(ProjectId, DrawdownId),
 		/// Drawdown was rejected successfully
 		DrawdownRejected(ProjectId, DrawdownId),
+		/// Drawdown was cancelled successfully
+		DrawdownSubmissionCancelled(ProjectId, DrawdownId),
 		/// Bulkupload drawdown was submitted successfully
 		BulkUploadSubmitted(ProjectId, DrawdownId),
 		/// An array of adjustments was executed depending on the CUDAction
@@ -394,6 +387,7 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
+		// TODO: Delete unused errors when updating the readme file
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -612,6 +606,8 @@ pub mod pallet {
 		DrawdownNotApproved,
 		/// Drawdown is not in Confirmed status
 		DrawdownNotConfirmed,
+		/// Drawdown is not in Submitted status
+		DrawdownNotSubmitted, 
 		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
@@ -624,6 +620,8 @@ pub mod pallet {
 		NoScopeProvided,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
+		/// The private group id is empty
+		PrivateGroupIdIsEmpty,
 	}
 
 	// E X T R I N S I C S
@@ -735,12 +733,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn users(
 			origin: OriginFor<T>,
-			users: BoundedVec<(
-				T::AccountId,
-				Option<FieldName>,
-				Option<ProxyRole>,
-				CUDAction,
-			), T::MaxRegistrationsAtTime>,
+			users: Users<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -834,32 +827,14 @@ pub mod pallet {
 			banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
 			creation_date: CreationDate,
 			completion_date: CompletionDate,
-			expenditures: BoundedVec<(
-				Option<FieldName>,
-				Option<ExpenditureType>,
-				Option<ExpenditureAmount>,
-				Option<NAICSCode>,
-				Option<JobsMultiplier>,
-				CUDAction,
-				Option<ExpenditureId>
-			), T::MaxRegistrationsAtTime>,
-			job_eligibles: Option<BoundedVec<(
-				Option<FieldName>,
-				Option<JobEligibleAmount>,
-				Option<NAICSCode>,
-				Option<JobsMultiplier>,
-				CUDAction,
-				Option<JobEligibleId>,
-			), T::MaxRegistrationsAtTime>>,
-			users: Option<BoundedVec<(
-				T::AccountId,
-				ProxyRole,
-				AssignAction,
-			), T::MaxRegistrationsAtTime>>,
+			expenditures: Expenditures<T>,
+			job_eligibles: Option<JobEligibles<T>>,
+			users: Option<UsersAssignation<T>>,
+			private_group_id: PrivateGroupId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users)
+			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users, private_group_id)
 		}
 
 		/// Edits a project.
@@ -969,11 +944,7 @@ pub mod pallet {
 		pub fn projects_assign_user(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
-			users: BoundedVec<(
-				T::AccountId,
-				ProxyRole,
-				AssignAction,
-			), T::MaxRegistrationsAtTime>,
+			users: UsersAssignation<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -1023,23 +994,8 @@ pub mod pallet {
 		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
-			expenditures: Option<BoundedVec<(
-				Option<FieldName>,
-				Option<ExpenditureType>,
-				Option<ExpenditureAmount>,
-				Option<NAICSCode>,
-				Option<JobsMultiplier>,
-				CUDAction,
-				Option<ExpenditureId>,
-			), T::MaxRegistrationsAtTime>>,
-			job_eligibles: Option<BoundedVec<(
-				Option<FieldName>, 
-				Option<JobEligibleAmount>,
-				Option<NAICSCode>, 
-				Option<JobsMultiplier>,
-				CUDAction,
-				Option<JobEligibleId>,
-			), T::MaxRegistrationsAtTime>>,
+			expenditures: Option<Expenditures<T>>,
+			job_eligibles: Option<JobEligibles<T>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
@@ -1048,7 +1004,7 @@ pub mod pallet {
 			}
 
 			if let Some(mod_job_eligibles) = job_eligibles {
-				Self::do_execute_job_eligibles(who.clone(), project_id, mod_job_eligibles)?;
+				Self::do_execute_job_eligibles(who, project_id, mod_job_eligibles)?;
 			}
 
 			Ok(())
@@ -1100,13 +1056,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions: Option<BoundedVec<(
-				Option<ExpenditureId>,
-				Option<ExpenditureAmount>,
-				Option<Documents<T>>,
-				CUDAction,
-				Option<TransactionId>,
-			), T::MaxRegistrationsAtTime>>,
+			transactions: Option<Transactions<T>>,
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1116,7 +1066,7 @@ pub mod pallet {
 				false => {
 					// Do execute transactions
 					Self::do_execute_transactions(
-						who.clone(),
+						who,
 						project_id,
 						drawdown_id,
 						transactions.ok_or(Error::<T>::EmptyTransactions)?,
@@ -1137,7 +1087,7 @@ pub mod pallet {
 					}
 
 					// Do submit drawdown
-					Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)
+					Self::do_submit_drawdown(who, project_id, drawdown_id)
 				},
 			}
 
@@ -1191,21 +1141,10 @@ pub mod pallet {
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
 			bulkupload: Option<bool>,
-			transactions: Option<BoundedVec<(
-				Option<ExpenditureId>, // expenditure_id
-				Option<u64>, // amount
-				Option<Documents<T>>, //Documents
-				CUDAction, // Action
-				Option<TransactionId>, // transaction_id
-			), T::MaxRegistrationsAtTime>>,
+			transactions: Option<Transactions<T>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			//TODO: REVIEW BULK UPLOAD APPROVAL FLOW
-			// is_drawdown_editable & is_transaction_editable should do
-			// a distinction between bulkupload and non-bulkupload drawdowns
-			// review those function in each step of the flow (approve, reject, submit)
-			
 			// Match bulkupload parameter
 			match bulkupload {
 				Some(approval) => {
@@ -1221,7 +1160,7 @@ pub mod pallet {
 							)?;
 
 							// 2. Do submit drawdown
-							Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)
+							Self::do_submit_drawdown(who, project_id, drawdown_id)
 
 						},
 						true  => {
@@ -1241,14 +1180,14 @@ pub mod pallet {
 							}
 
 							// 3. Approve drawdown
-							Self::do_approve_drawdown(who.clone(), project_id, drawdown_id)
+							Self::do_approve_drawdown(who, project_id, drawdown_id)
 						},
 					}
 
 				},
 				None => {
 					// Execute normal flow (EB5)
-					Self::do_approve_drawdown(who.clone(), project_id, drawdown_id)
+					Self::do_approve_drawdown(who, project_id, drawdown_id)
 				}
 			}
 
@@ -1412,13 +1351,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			revenue_id: RevenueId,
-			revenue_transactions: Option<BoundedVec<(
-				Option<JobEligibleId>,
-				Option<RevenueAmount>,
-				Option<Documents<T>>,
-				CUDAction,
-				Option<RevenueTransactionId>,
-			), T::MaxRegistrationsAtTime>>,
+			revenue_transactions: Option<RevenueTransactions<T>>,
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -1428,7 +1361,7 @@ pub mod pallet {
 				false => {
 					// Do execute transactions 
 					Self::do_execute_revenue_transactions(
-						who.clone(),
+						who,
 						project_id,
 						revenue_id,
 						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsEmpty)?,
@@ -1449,7 +1382,7 @@ pub mod pallet {
 					}
 
 					// Do submit revenue
-					Self::do_submit_revenue(who.clone(), project_id, revenue_id)
+					Self::do_submit_revenue(who, project_id, revenue_id)
 				},
 			}
 			
@@ -1555,6 +1488,31 @@ pub mod pallet {
 
 			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
 		}
+		
+		/// The following extrinsic is used to cancel a drawdown submission.
+		/// 
+		/// # Parameters:
+		/// - origin: The builder account who is cancelling the drawdown submission
+		/// - project_id: The selected project id where the drawdown exists
+		/// - drawdown_id: The selected drawdown id to be cancelled
+		/// 
+		/// # Considerations:
+		/// - This function is only callable by a builder role account
+		/// - The drawdown status will be rolled back to "Draft".
+		/// - All of its transactions will be deleted.
+		/// - The whole drawdown will be reset to its initial state, so be careful when using this
+		#[transactional]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn reset_drawdown(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_reset_drawdown(who, project_id, drawdown_id)
+		}
+
 
 		/// Kill all the stored data.
 		///

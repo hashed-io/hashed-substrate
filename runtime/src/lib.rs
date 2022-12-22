@@ -106,7 +106,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 136,
+	spec_version: 137,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -562,7 +562,6 @@ parameter_types! {
 	pub const MaxInvestorsPerProject:u32 = 50;
 	pub const MaxIssuersPerProject:u32 = 1;
 	pub const MaxRegionalCenterPerProject:u32 = 1;
-	pub const MaxBoundedVecs:u32 = 1;
 	pub const MaxDrawdownsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
@@ -597,7 +596,6 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxInvestorsPerProject = MaxInvestorsPerProject;
 	type MaxIssuersPerProject = MaxIssuersPerProject;
 	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
-	type MaxBoundedVecs = MaxBoundedVecs;
 	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
