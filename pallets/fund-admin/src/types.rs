@@ -368,7 +368,7 @@ pub enum ProxyPermission {
     CreateProject, // projects_create_project: admin
     EditProject, // projects_edit_project: admin
     DeleteProject, // projects_delete_project: admin
-    AssignUsers, // projects_assign_user: admin 
+    AssignUsers, // projects_assign_user: admin
     ExecuteUsers, // users: admin
     EditUser, // users_edit_user: all
     Expenditures, // expenditures: admin

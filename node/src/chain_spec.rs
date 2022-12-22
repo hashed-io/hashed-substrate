@@ -62,7 +62,6 @@ fn md5_properties() -> sc_chain_spec::Properties {
 	p.insert("website".into(), "https://hashed.systems".into());
 	p
 }
-
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
@@ -240,8 +239,12 @@ fn testnet_genesis(
 	_enable_println: bool,
 ) -> GenesisConfig {
 	GenesisConfig {
-		system: SystemConfig { code: wasm_binary.to_vec() },
+		system: SystemConfig {
+			// Add Wasm runtime to storage.
+			code: wasm_binary.to_vec(),
+		},
 		balances: BalancesConfig {
+			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
 		aura: AuraConfig {

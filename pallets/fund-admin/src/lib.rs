@@ -8,9 +8,6 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
-
 mod functions;
 mod types;
 
@@ -18,16 +15,17 @@ mod types;
 pub mod pallet {
 	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
 	use frame_system::pallet_prelude::*;
-	use frame_support::transactional;
 	use sp_runtime::traits::Scale;
 	use frame_support::traits::{Time};
+
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
-
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		//TODO: change all accounts names for users
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
 		+ Default
@@ -41,7 +39,7 @@ pub mod pallet {
 
 		type Rbac : RoleBasedAccessControl<Self::AccountId>;
 
-		type RemoveOrigin: EnsureOrigin<Self::Origin>;
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
@@ -108,6 +106,7 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
@@ -568,7 +567,7 @@ pub mod pallet {
 		RevenueNotFound,
 		/// Transactions revenue array is empty
 		RevenueTransactionsEmpty,
-		/// Revenue can not be edited 
+		/// Revenue can not be edited
 		CannotEditRevenue,
 		/// Revenue transaction id already exists
 		RevenueTransactionIdAlreadyExists,
@@ -602,12 +601,14 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+		/// The revenue is not in submitted status
+		RevenueNotSubmitted,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
 		DrawdownNotApproved,
 		/// Drawdown is not in Confirmed status
 		DrawdownNotConfirmed,
 		/// Drawdown is not in Submitted status
-		DrawdownNotSubmitted, 
+		DrawdownNotSubmitted,
 		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
@@ -636,8 +637,7 @@ pub mod pallet {
 		/// # Considerations:
 		/// - This function can only be called once
 		/// - This function can only be called usinf the sudo pallet
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(
 			origin: OriginFor<T>,
 		) -> DispatchResult {
@@ -659,8 +659,7 @@ pub mod pallet {
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - This function grants administator permissions to the user from the rbac pallet
 		/// - Administator role have global scope permissions
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
 			origin: OriginFor<T>,
 			admin: T::AccountId,
@@ -686,8 +685,7 @@ pub mod pallet {
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site,
 		/// but they can add themselves back
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(10))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_remove_administrator(
 			origin: OriginFor<T>,
 			admin: T::AccountId
@@ -728,9 +726,8 @@ pub mod pallet {
 		/// but administrators can not delete themselves.
 		/// - WARNING: This function only registers, updates, or deletes users from the site.
 		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
-		/// a user from a selected project. 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// a user from a selected project.
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn users(
 			origin: OriginFor<T>,
 			users: Users<T>,
@@ -756,8 +753,7 @@ pub mod pallet {
 		/// - This function will be called by the user account itself
 		/// - ALL parameters are optional because depends on what is being edited
 		/// - ONLY the investor role can edit or update the documents
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn users_edit_user(
 			origin: OriginFor<T>,
 			name: Option<FieldName>,
@@ -817,7 +813,7 @@ pub mod pallet {
 		/// # Note:
 		/// WARNING: If users are provided, the function will assign the users to the project, granting them
 		/// permissions in the rbac pallet.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_create_project(
 			origin: OriginFor<T>,
 			title: FieldName,
@@ -861,8 +857,7 @@ pub mod pallet {
 		/// * projects_assign_user
 		/// - Project can only be edited in the Started status
 		/// - Completion date must be greater than creation date
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_edit_project(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -894,8 +889,7 @@ pub mod pallet {
 		/// # Note:
 		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
 		/// BE CAREFUL.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_delete_project(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -939,8 +933,7 @@ pub mod pallet {
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Do not perfom multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -989,8 +982,7 @@ pub mod pallet {
 		/// expenditure and update another one at the same time.
 		/// - Do not perform multiple actions over the same expenditure in the same call, it could
 		/// result in an unexpected behavior.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1028,7 +1020,7 @@ pub mod pallet {
 		/// * 2: Documents associated to the transaction
 		/// * 3: The action to be performed on the transaction. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// - submit: If true, transactions associated to the selected 
+		/// - submit: If true, transactions associated to the selected
 		/// drawdown will be submitted to the administator.
 		/// If false, the array of transactions will be saved as a draft.
 		///
@@ -1040,7 +1032,7 @@ pub mod pallet {
 		/// * **Create**: Expenditure id, Amount, Documents & action are required.
 		/// * **Update**: Except for the transaction id & action, all other parameters are optional.
 		/// * **Delete**: Only the transaction id & action are required.
-		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// - Multiple actions can be performed at the same time, but each must be performed on
 		/// a different transaction. For example, you can create a new
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
@@ -1050,8 +1042,7 @@ pub mod pallet {
 		/// - After a drawdown is submitted, it can not be updated or deleted.
 		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given drawdown.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn submit_drawdown(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1124,18 +1115,17 @@ pub mod pallet {
 		/// transaction and update another one at the same time (only for Construction Loan & Developer Equity drawdowns).
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
 		/// result in an unexpected behavior (only for Construction Loan & Developer Equity drawdowns).
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by an administrator account
-		/// - All transactions associated to the drawdown will be approved too. It's 
+		/// - All transactions associated to the drawdown will be approved too. It's
 		/// not possible to approve a drawdown without approving all of its transactions.
 		/// - After a drawdown is approved, it can not be updated or deleted.
 		/// - After a drawdown is approved, the next drawdown will be automatically created.
 		/// - The drawdown status will be updated to "Approved" after the extrinsic is executed.
 		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
 		/// new drawdown version uploaded by the builder.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn approve_drawdown(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1224,8 +1214,7 @@ pub mod pallet {
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
 		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
 		/// There is no way to reject a single transaction.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reject_drawdown(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1261,8 +1250,7 @@ pub mod pallet {
 		/// - Bulkuploads does not allow individual transactions.
 		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn up_bulkupload(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1295,8 +1283,7 @@ pub mod pallet {
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
 			projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
@@ -1310,23 +1297,23 @@ pub mod pallet {
 		// --------------------------------------------------------------------------------------------
 
 		/// This extrinsic is used to create, update or delete revenue transactions.
-		/// It also allows that an array of revenue transactions 
+		/// It also allows that an array of revenue transactions
 		/// to be saved as a draft or as submitted.
 		///
 		/// # Parameters:
 		/// */ - origin: The user account who is creating the revenue transactions
 		/// - project_id: The selected project id where the revenue transactions will be created
 		/// - revenue_id: The selected revenue id where the revenue transactions will be created
-		/// - revenue_transactions: The revenue transactions to be created/updated/deleted. 
+		/// - revenue_transactions: The revenue transactions to be created/updated/deleted.
 		/// This entry is a vector of tuples where each entry is composed by:
 		/// * 0: The job eligible id where the revenue transaction will be created
 		/// * 1: The amount of the revenue transaction
 		/// * 2: Documents associated to the revenue transaction
 		/// * 3: The action to be performed on the revenue transaction (Create, Update or Delete)
 		/// * 4: The revenue transaction id. This is required only if the action is being updated or deleted.
-		/// - submit: If true, the array of revenue transactions will be submitted to the administrator. 
+		/// - submit: If true, the array of revenue transactions will be submitted to the administrator.
 		/// If false, the array of revenue transactions will be saved as a draft.
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by a builder role account
 		/// - This extrinsic allows multiple revenue transactions to be created/updated/deleted at the same time.
@@ -1335,7 +1322,7 @@ pub mod pallet {
 		/// * **Create**: Job eligible id, Amount, Documents & action are required.
 		/// * **Update**: Except for the revenue transaction id & action, all other parameters are optional.
 		/// * **Delete**: Only the revenue transaction id & action are required.
-		/// - Multiple actions can be performed at the same time, but each must be performed on 
+		/// - Multiple actions can be performed at the same time, but each must be performed on
 		/// a different transaction. For example, you can create a new
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
@@ -1345,8 +1332,7 @@ pub mod pallet {
 		/// - After a revenue is submitted, it can not be updated or deleted.
 		/// - After a revenue is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given revenue.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn submit_revenue(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1355,11 +1341,11 @@ pub mod pallet {
 			submit: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			
-			match submit { 
+
+			match submit {
 				// Save revenue transactions as draft
 				false => {
-					// Do execute transactions 
+					// Do execute transactions
 					Self::do_execute_revenue_transactions(
 						who,
 						project_id,
@@ -1371,7 +1357,7 @@ pub mod pallet {
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
-						// Do execute transactions 
+						// Do execute transactions
 						if mod_revenue_transactions.len() > 0 {
 							Self::do_execute_revenue_transactions(
 								who.clone(),
@@ -1385,27 +1371,26 @@ pub mod pallet {
 					Self::do_submit_revenue(who, project_id, revenue_id)
 				},
 			}
-			
+
 		}
 
 		/// Approve a revenue
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administator account who is approving the revenue
 		/// - project_id: The selected project id where the revenue will be approved
 		/// - revenue_id: The selected revenue id to be approved
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by an administrator role account
-		/// - All transactions associated to the revenue will be approved too. It's 
+		/// - All transactions associated to the revenue will be approved too. It's
 		/// not possible to approve a revenue without approving all of its transactions.
 		/// - After a revenue is approved, it can not be updated or deleted.
 		/// - After a revenue is approved, the next revenue will be created automatically.
 		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
 		/// new revenue version uploaded by the builder.
 		/// - The revenue status will be updated to Approved.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn approve_revenue(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1417,7 +1402,7 @@ pub mod pallet {
 		}
 
 		/// Reject a revenue
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administator account who is rejecting the revenue
 		/// - project_id: The selected project id where the revenue will be rejected
@@ -1426,7 +1411,7 @@ pub mod pallet {
 		/// transacion. This is a vector of tuples where each entry is composed by:
 		/// * 0: The revenue transaction id
 		/// * 1: The revenue transaction feedback
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by an administrator role account
 		/// - All transactions associated to the revenue will be rejected too. It's
@@ -1435,8 +1420,7 @@ pub mod pallet {
 		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
 		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
 		/// There is no way to reject a single revenue transaction.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reject_revenue(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1453,7 +1437,7 @@ pub mod pallet {
 
 		/// The following extrinsic is used to upload the bank confirming documents
 		/// for a given drawdown.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The administrator account who is uploading the confirming documents
 		/// - project_id: The selected project id where the drawdown exists
@@ -1464,7 +1448,7 @@ pub mod pallet {
 		/// 	* Create: project_id, drawdown_id and confirming_documents are required
 		/// 	* Update: project_id, drawdown_id and confirming_documents are required
 		/// 	* Delete: project_id and drawdown_id are required
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by an administrator role account
 		/// - The confirming documents are required only when the action is Create or Update.
@@ -1474,9 +1458,8 @@ pub mod pallet {
 		/// - Update action will replace the existing confirming documents with the new ones.
 		/// - Delete action will remove the existing confirming documents. It will also update the
 		/// drawdown status to "Approved" and the status of all of its transactions to "Approved".
-		/// It does a rollback of the drawdown. 
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// It does a rollback of the drawdown.
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn bank_confirming_documents(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1488,21 +1471,20 @@ pub mod pallet {
 
 			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
 		}
-		
+
 		/// The following extrinsic is used to cancel a drawdown submission.
-		/// 
+		///
 		/// # Parameters:
 		/// - origin: The builder account who is cancelling the drawdown submission
 		/// - project_id: The selected project id where the drawdown exists
 		/// - drawdown_id: The selected drawdown id to be cancelled
-		/// 
+		///
 		/// # Considerations:
 		/// - This function is only callable by a builder role account
 		/// - The drawdown status will be rolled back to "Draft".
 		/// - All of its transactions will be deleted.
 		/// - The whole drawdown will be reset to its initial state, so be careful when using this
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reset_drawdown(
 			origin: OriginFor<T>,
 			project_id: ProjectId,
@@ -1524,8 +1506,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[transactional]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn kill_storage(
 			origin: OriginFor<T>,
 		) -> DispatchResult{

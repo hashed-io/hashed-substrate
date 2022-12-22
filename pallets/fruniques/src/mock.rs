@@ -34,8 +34,8 @@ impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
-	type Origin = Origin;
-	type Call = Call;
+	type RuntimeOrigin = RuntimeOrigin;
+	type RuntimeCall = RuntimeCall;
 	type Index = u64;
 	type BlockNumber = u64;
 	type Hash = H256;
@@ -43,7 +43,7 @@ impl frame_system::Config for Test {
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
 	type DbWeight = ();
 	type Version = ();
@@ -58,7 +58,7 @@ impl frame_system::Config for Test {
 }
 
 impl pallet_fruniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
 	type Rbac = RBAC;
@@ -76,7 +76,7 @@ parameter_types! {
 }
 
 impl pallet_uniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type CollectionId = u32;
 	type ItemId = u32;
 	type Currency = Balances;
@@ -105,7 +105,7 @@ parameter_types! {
 impl pallet_balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
@@ -124,7 +124,7 @@ parameter_types! {
 	pub const MaxUsersPerRole: u32 = 2;
 }
 impl pallet_rbac::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type RoleMaxLen = RoleMaxLen;

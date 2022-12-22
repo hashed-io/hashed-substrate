@@ -23,7 +23,7 @@ frame_support::construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
@@ -38,8 +38,8 @@ impl system::Config for Test {
 	type BlockWeights = ();
 	type BlockLength = ();
 	type DbWeight = ();
-	type Origin = Origin;
-	type Call = Call;
+	type RuntimeOrigin = RuntimeOrigin;
+	type RuntimeCall = RuntimeCall;
 	type Index = u64;
 	type BlockNumber = u64;
 	type Hash = H256;
@@ -47,7 +47,7 @@ impl system::Config for Test {
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
@@ -75,7 +75,7 @@ parameter_types! {
 }
 
 impl pallet_gated_marketplace::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
@@ -97,7 +97,7 @@ parameter_types! {
 }
 
 impl pallet_fruniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
 	type Rbac = RBAC;
@@ -115,7 +115,7 @@ parameter_types! {
 }
 
 impl pallet_uniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type CollectionId = u32;
 	type ItemId = u32;
 	type Currency = Balances;
@@ -133,7 +133,6 @@ impl pallet_uniques::Config for Test {
 	type Helper = ();
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<Self::AccountId>>;
 	type Locker = ();
-
 }
 
 parameter_types! {
@@ -144,7 +143,7 @@ parameter_types! {
 impl pallet_balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
@@ -152,7 +151,6 @@ impl pallet_balances::Config for Test {
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = [u8; 8];
 }
-
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 2;
@@ -164,7 +162,7 @@ parameter_types! {
 	pub const MaxUsersPerRole: u32 = 2;
 }
 impl pallet_rbac::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type RoleMaxLen = RoleMaxLen;
@@ -177,8 +175,12 @@ impl pallet_rbac::Config for Test {
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	// TODO: get initial conf?
-	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
-	t.execute_with(|| GatedMarketplace::do_initial_setup().expect("Error on configuring initial setup"));
+	let mut t: sp_io::TestExternalities =
+		frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	t.execute_with(|| {
+		GatedMarketplace::do_initial_setup().expect("Error on GatedMarketplace configuring initial setup");
+		Fruniques::do_initial_setup().expect("Error on Fruniques configuring initial setup");
+	});
 	t
 }
 
