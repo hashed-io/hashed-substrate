@@ -36,9 +36,9 @@ spec:
             mountPath:  /var/www/hashed/node-data
         env:
           - name: BOOTNODES
-            value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
-          - name: RUST_LOG
-            value: "runtime=debug"
+            value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30334/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
+          # - name: RUST_LOG
+          #   value: "libp2p=trace"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
