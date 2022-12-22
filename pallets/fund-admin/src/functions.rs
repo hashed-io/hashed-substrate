@@ -87,6 +87,7 @@ impl<T: Config> Pallet<T> {
         expenditures: Expenditures<T>,
         job_eligibles: Option<JobEligibles<T>>,
         users: Option<UsersAssignation<T>>,
+        private_group_id: PrivateGroupId,
         ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::CreateProject)?;
@@ -99,6 +100,9 @@ impl<T: Config> Pallet<T> {
 
         // Ensure completion_date is in the future
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
+
+        // Ensuree private group id is not empty
+        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdIsEmpty);
 
         // Create project data
         let project_data = ProjectData::<T> {
@@ -121,6 +125,7 @@ impl<T: Config> Pallet<T> {
 			developer_equity_drawdown_status: None,
 			eb5_drawdown_status: None,
             revenue_status: None,
+            private_group_id
         };
 
         // Create the scope for the given project_id
@@ -907,11 +912,17 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin, None, ProxyPermission::ApproveDrawdown)?;
 
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown has transactions
         ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
 
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -968,8 +979,14 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin, None, ProxyPermission::RejectDrawdown)?;
 
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
         // Get drawdown data
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
 
         // Match drawdown type in order to update transactions status
         match drawdown_data.drawdown_type {
@@ -1031,6 +1048,56 @@ impl<T: Config> Pallet<T> {
 
         // Event
         Self::deposit_event(Event::DrawdownRejected(project_id, drawdown_id));
+        Ok(())
+    }
+
+    pub fn do_reset_drawdown(
+        user: T::AccountId,
+        project_id: ProjectId,
+        drawdown_id: DrawdownId,
+    ) -> DispatchResult {
+        // Ensure builder permissions
+        Self::is_authorized(user.clone(), Some(&project_id), ProxyPermission::CancelDrawdownSubmission)?;
+
+        // Ensure project exists
+        ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get drawdown data & ensure drawdown exists
+        let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+        // Ensure drawdown is in submitted status
+        ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
+
+        // Get drawdown transactions
+        let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+        // Delete drawdown transactions from TransactionsInfo 
+        for transaction_id in drawdown_transactions.iter().cloned() {
+            // Delete transaction
+            <TransactionsInfo<T>>::remove(transaction_id);
+        }
+
+        // Delete drawdown transactions from TransactionsByDrawdown
+        <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
+
+        // Update drawdown status to default
+        <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
+            let drawdown_data = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+            drawdown_data.total_amount = 0;
+            drawdown_data.status = DrawdownStatus::default();
+            drawdown_data.bulkupload_documents = None;
+            drawdown_data.bank_documents = None;
+            drawdown_data.description = None;
+            drawdown_data.feedback = None;
+            drawdown_data.status_changes = DrawdownStatusChanges::<T>::default();
+            Ok(())
+        })?;
+        
+        // Update drawdown status in project info
+        Self::do_update_drawdown_status_in_project_info(project_id, drawdown_id, DrawdownStatus::default())?;
+
+        // Event
+        Self::deposit_event(Event::DrawdownSubmissionCancelled(project_id, drawdown_id));
         Ok(())
     }
 
