@@ -24,8 +24,12 @@ collator_args=(
     --rpc-external
     --rpc-cors all
     --rpc-methods unsafe
+    --node-key ${NODEKEY}
     --chain $1
 )
+if [[ ! -z ${BOOTNODES} ]]; then
+    collator_args+=(--bootnodes ${BOOTNODES})
+fi
 
 relay_args=(
     --execution wasm
