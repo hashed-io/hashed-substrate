@@ -1,27 +1,18 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-    name: inova-n2-pvc
-    namespace: hashed-network
-spec:
-  volumeMode: Filesystem
-  accessModes: [ "ReadWriteOnce" ]
-  resources:
-    requests:
-      storage: 50Gi
-  storageClassName: standard
----
+
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: inova-n2-network
   namespace: hashed-network
 spec:
+  replicas: 1
+  serviceName: inova-n2-network-headless
   selector:
     matchLabels:
       app: inova-n2-network
   template:
     metadata:
+      namespace: hashed-network
       labels:
         app: inova-n2-network
     spec:
@@ -32,13 +23,11 @@ spec:
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
-          - name: inova-n2-db
+          - name: inova-n2-pvc
             mountPath:  /var/www/hashed/node-data
         env:
           - name: BOOTNODES
             value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30334/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
-          # - name: RUST_LOG
-          #   value: "libp2p=trace"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
@@ -59,10 +48,17 @@ spec:
         - containerPort: 9933
         - containerPort: 9944
         - containerPort: 30333
-      volumes:
-        - name: inova-n2-db
-          persistentVolumeClaim:
-            claimName: inova-n2-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: inova-n2-pvc
+      namespace: hashed-network
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: standard
 ---
 apiVersion: v1
 kind: Service
