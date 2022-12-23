@@ -2777,6 +2777,8 @@
 <span id="2777">2777</span>
 <span id="2778">2778</span>
 <span id="2779">2779</span>
+<span id="2780">2780</span>
+<span id="2781">2781</span>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -4578,7 +4580,8 @@
         <span class="comment">// Update each revenue transaction status to Approved
         </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Ensure revenue transaction is editable
-            </span><span class="self">Self</span>::is_revenue_transaction_editable(transaction_id)<span class="question-mark">?</span>;
+            </span><span class="kw">let </span>revenue_transaction_data = RevenueTransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
+			<span class="macro">ensure!</span>(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::&lt;T&gt;::RevenueTransactionNotSubmitted);
 
             <span class="comment">// Update revenue transaction status to Approved &amp; update closed date
             </span>&lt;RevenueTransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |revenue_transaction_data| {
@@ -4636,7 +4639,8 @@
         <span class="comment">// Update each revenue transaction status to Rejected
         </span><span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
             <span class="comment">// Ensure revenue transaction is editable
-            </span><span class="self">Self</span>::is_revenue_transaction_editable(transaction_id)<span class="question-mark">?</span>;
+            </span><span class="kw">let </span>revenue_transaction_data = RevenueTransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
+			<span class="macro">ensure!</span>(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::&lt;T&gt;::RevenueTransactionNotSubmitted);
 
             <span class="comment">// Update revenue transaction status to Rejected
             </span>&lt;RevenueTransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |revenue_transaction_data| {

@@ -1535,6 +1535,8 @@
 <span id="1535">1535</span>
 <span id="1536">1536</span>
 <span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -2104,6 +2106,8 @@
 		</span>RevenueNotFound,
 		<span class="doccomment">/// Transactions revenue array is empty
 		</span>RevenueTransactionsEmpty,
+		<span class="doccomment">/// Revenue transaction is not in submitted status
+		</span>RevenueTransactionNotSubmitted,
 		<span class="doccomment">/// Revenue can not be edited
 		</span>CannotEditRevenue,
 		<span class="doccomment">/// Revenue transaction id already exists
