@@ -1799,7 +1799,8 @@ impl<T: Config> Pallet<T> {
         // Update each revenue transaction status to Approved
         for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
-            Self::is_revenue_transaction_editable(transaction_id)?;
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+			ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionNotSubmitted);
 
             // Update revenue transaction status to Approved & update closed date
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {
@@ -1857,7 +1858,8 @@ impl<T: Config> Pallet<T> {
         // Update each revenue transaction status to Rejected
         for transaction_id in revenue_transactions.iter().cloned() {
             // Ensure revenue transaction is editable
-            Self::is_revenue_transaction_editable(transaction_id)?;
+            let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+			ensure!(revenue_transaction_data.status == RevenueTransactionStatus::Submitted, Error::<T>::RevenueTransactionNotSubmitted);
 
             // Update revenue transaction status to Rejected
             <RevenueTransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |revenue_transaction_data| {

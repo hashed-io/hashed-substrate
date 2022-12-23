@@ -567,6 +567,8 @@ pub mod pallet {
 		RevenueNotFound,
 		/// Transactions revenue array is empty
 		RevenueTransactionsEmpty,
+		/// Revenue transaction is not in submitted status
+		RevenueTransactionNotSubmitted,
 		/// Revenue can not be edited
 		CannotEditRevenue,
 		/// Revenue transaction id already exists
