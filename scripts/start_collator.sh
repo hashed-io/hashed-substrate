@@ -24,7 +24,6 @@ collator_args=(
     --rpc-external
     --rpc-cors all
     --rpc-methods unsafe
-    --node-key ${NODEKEY}
     --chain $1
 )
 if [[ ! -z ${BOOTNODES} ]]; then

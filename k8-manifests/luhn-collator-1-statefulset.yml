@@ -17,16 +17,16 @@ spec:
     spec:
       containers:
       - name: luhn-collator-1
-        imagePullPolicy: Always
-        image: sebastianmontero/hashed-substrate-collator:db3f834438fd2daf59e3969af37ecc8cc46cf9be
+        imagePullPolicy: IfNotPresent
+        image: sebastianmontero/hashed-substrate-collator:05c48982763814ca09611c8e9dec36a75b8f830e
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["luhn", "/var/www/hashed/hashed"]
         volumeMounts:
           - name: luhn-collator-1-pvc
             mountPath:  /var/www/hashed/hashed
         env:
-          - name: RUST_LOG
-            value: "db=trace,sync=trace"
+          # - name: RUST_LOG
+          #   value: "db=trace,sync=trace"
           - name: NODEKEY
             valueFrom:
               secretKeyRef:
@@ -63,7 +63,7 @@ metadata:
 spec:
   selector:
     app:  luhn-collator-1
-  type:  NodePort
+  type:  ClusterIP
   ports:
   - name:  collator-p2p-port
     port:  40333
