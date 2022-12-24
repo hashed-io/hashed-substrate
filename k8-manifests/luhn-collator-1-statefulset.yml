@@ -18,21 +18,21 @@ spec:
       containers:
       - name: luhn-collator-1
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-collator:05c48982763814ca09611c8e9dec36a75b8f830e
+        image: sebastianmontero/hashed-substrate-collator:a5c7ebec6dc75064fc20b7992b03d7ff097f36f3
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["luhn", "/var/www/hashed/hashed"]
         volumeMounts:
           - name: luhn-collator-1-pvc
             mountPath:  /var/www/hashed/hashed
-        env:
+        # env:
           # - name: RUST_LOG
           #   value: "db=trace,sync=trace"
-          - name: NODEKEY
-            valueFrom:
-              secretKeyRef:
-                name: luhn-collator-1-secrets
-                key: NODEKEY
-                optional: false
+          # - name: NODEKEY
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: luhn-collator-1-secrets
+          #       key: NODEKEY
+          #       optional: false
         resources:
           limits:
             memory: "4G"
