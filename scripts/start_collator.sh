@@ -26,6 +26,10 @@ collator_args=(
     --rpc-methods unsafe
     --chain $1
 )
+if [[ ! -z ${NODEKEY} ]]; then
+    collator_args+=(--node-key ${NODEKEY})
+fi
+
 if [[ ! -z ${BOOTNODES} ]]; then
     collator_args+=(--bootnodes ${BOOTNODES})
 fi
