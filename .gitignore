@@ -33,3 +33,5 @@ collator-data
 relay-data
 .vscode/settings.json
 lcov.info
+
+dist/
