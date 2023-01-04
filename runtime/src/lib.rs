@@ -576,21 +576,20 @@ impl pallet_fruniques::Config for Runtime {
 
 parameter_types! {
 	pub const MaxDocuments:u32 = 5;
-	pub const MaxProjectsPerUser:u32 = 10;
-	pub const MaxUserPerProject:u32 = 50;
-	pub const MaxBuildersPerProject:u32 = 1;
-	pub const MaxInvestorsPerProject:u32 = 50;
-	pub const MaxIssuersPerProject:u32 = 1;
-	pub const MaxRegionalCenterPerProject:u32 = 1;
-	pub const MaxDrawdownsPerProject:u32 = 1000;
-	pub const MaxTransactionsPerDrawdown:u32 = 500;
-	pub const MaxRegistrationsAtTime:u32 = 50;
-	pub const MaxExpendituresPerProject:u32 = 1000;
-	pub const MaxExpendituresPerDrawdown:u32 = 500;
+	pub const MaxProjectsPerUser:u32 = 100;
+	pub const MaxUserPerProject:u32 = 2000; // should be the sum of the max number of builders, investors, issuers, regional centers
+	pub const MaxBuildersPerProject:u32 = 500;
+	pub const MaxInvestorsPerProject:u32 = 500;
+	pub const MaxIssuersPerProject:u32 = 500;
+	pub const MaxRegionalCenterPerProject:u32 = 500;
 	pub const MaxProjectsPerBuilder:u32 = 1000;
 	pub const MaxProjectsPerInvestor:u32 = 1;
 	pub const MaxProjectsPerIssuer:u32 = 1000;
 	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
+	pub const MaxDrawdownsPerProject:u32 = 1000;
+	pub const MaxTransactionsPerDrawdown:u32 = 500;
+	pub const MaxRegistrationsAtTime:u32 = 50;
+	pub const MaxExpendituresPerProject:u32 = 1000;
 	pub const MaxBanksPerProject:u32 = 200;
 	pub const MaxJobEligiblesByProject:u32 = 1000;
 	pub const MaxRevenuesByProject:u32 = 1000;
