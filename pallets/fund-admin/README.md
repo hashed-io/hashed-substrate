@@ -8,9 +8,26 @@ Fund administration pallet allows the creation of multiple projects and manages 
     - [Getters](#getters)
     - [Constants](#constants)
   - [Usage](#usage)
-    - [Polkadot-js CLI](#polkadot-js-cli)
-    - [](#)
+    - [**Polkadot-js CLI**](#polkadot-js-cli)
+      - [Submit initial role setup (requires sudo)](#submit-initial-role-setup-requires-sudo)
+      - [Create an admmistrator with sudo](#create-an-admmistrator-with-sudo)
+      - [Get a user info](#get-a-user-info)
+      - [Remove an admmistrator with sudo](#remove-an-admmistrator-with-sudo)
+      - [Register a new administrator account](#register-a-new-administrator-account)
+      - [Register a new builder account](#register-a-new-builder-account)
+      - [Register a new investor account](#register-a-new-investor-account)
+      - [Register a new issuer account](#register-a-new-issuer-account)
+      - [Register a new regional center account](#register-a-new-regional-center-account)
+      - [Register multiple users](#register-multiple-users)
+      - [Update a user](#update-a-user)
+      - [Delete a user](#delete-a-user)
+      - [Edit user information](#edit-user-information)
+      - [Create a basic project with some budget expenditures](#create-a-basic-project-with-some-budget-expenditures)
+      - [Create a basic project with some budget expenditures \& job eligibble revenues](#create-a-basic-project-with-some-budget-expenditures--job-eligibble-revenues)
+    - [Create a basic project with some budget expenditures \& job eligibble revenues \& user assignments](#create-a-basic-project-with-some-budget-expenditures--job-eligibble-revenues--user-assignments)
   - [Events](#events)
+  - [Errors](#errors)
+
 
 
 ## Overview
@@ -148,23 +165,176 @@ Constants are used to limit the number of elements that can be created in the sy
 The following examples will be using these prefunded accounts and testing data:
 
 ```bash
+# Alice's mnemonic seed
+"//Alice"
 # Alice's public address 
 "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
 
+# Alices stash's mnemonic seed
+"//Alice//stash"
+# Alices stash's public address
+"5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY"
+
+# Bob's mnemonic seed
+"//Bob"
 # Bob's public address
 "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
 
+# Charlie's mnemonic seed
+"//Charlie"
 # Charlie's public address
 "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"
 
+# Dave's mnemonic seed
+"//Dave"
 # Dave's public address
 "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy"
+
+# Eve's mnemonic seed
+"//Eve"
+# Eve's public address
+"5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+
+# Ferdie's mnemonic seed
+"//Ferdie"
+# Ferdie's public address
+"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL"
 ```
 
 
-### Polkadot-js CLI
+### **Polkadot-js CLI**
 
-### 
+Only pre-funded accounts can be used to perform transactions, this may vary depending on the chain spec. For development purposes, the following accounts are prefunded with tokens:
+Alice, Alice Stash, Bob & Bob Stash.
+```bash
+(Alice, Alice Stash, Bob & Bob Stash are prefunded with tokens. If you want to use other accounts, you will need to transfer tokens to them. The following command shows how to transfer tokens to a new account:
+
+```bash
+# Alice transfers 10 000 000 to Ferdie
+polkadot-js-api tx.balances.transfer "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL" 1000000000000 --seed "//Alice"
+```
+
+#### Submit initial role setup (requires sudo)
+```bash
+polkadot-js-api tx.fundAdmin.initialSetup --sudo --seed "//Alice"
+```
+
+#### Create an admmistrator with sudo
+```bash
+polkadot-js-api tx.fundAdmin.sudoAddAdministrator "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" "Sudo Administrator" --sudo --seed "//Alice"
+```
+
+#### Get a user info
+```bash
+# marketplace_id
+polkadot-js-api query.fundAdmin.usersInfo "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+```
+```bash
+# Output should look like this: 
+{
+  "usersInfo": {
+    "name": "Alice Administrator",
+    "role": "Administrator",
+    "image": "",
+    "dateRegistered": "1,672,770,708,001",
+    "email": "",
+    "documents": null
+  }
+}
+```
+
+#### Remove an admmistrator with sudo
+```bash
+polkadot-js-api tx.fundAdmin.sudoRemoveAdministrator "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" --sudo --seed "//Alice"
+```
+```bash
+# We ensure that the user was removed successfully by querying the user info again:
+polkadot-js-api query.fundAdmin.usersInfo "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+```
+```bash
+# Output should look like this: 
+{
+  "usersInfo": null
+}
+```
+#### Register a new administrator account
+```bash
+# Sudo Administrator registers a new administrator account -> //Alice//stash
+polkadot-js-api tx.fundAdmin.users '[["5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "Administrator Test", "Administrator", "Create"]]' --seed "//Alice"
+```
+
+#### Register a new builder account
+```bash
+# Sudo Administrator registers a new investor account -> //Bob
+polkadot-js-api tx.fundAdmin.users '[["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", "Builder Test", "Builder", "Create"]]' --seed "//Alice"
+```
+
+#### Register a new investor account
+```bash
+# Sudo Administrator registers a new investor account -> //Charlie
+polkadot-js-api tx.fundAdmin.users '[["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", "Investor Test", "Investor", "Create"]]' --seed "//Alice"
+```
+
+#### Register a new issuer account
+```bash
+# Sudo Administrator registers a new investor account -> //Dave
+polkadot-js-api tx.fundAdmin.users '[["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", "Issuer Test", "Issuer", "Create"]]' --seed "//Alice"
+```
+
+#### Register a new regional center account
+```bash
+# Sudo Administrator registers a new investor account -> //Eve
+polkadot-js-api tx.fundAdmin.users '[["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", "Regional Center Test", "RegionalCenter", "Create"]]' --seed "//Alice"
+```
+
+#### Register multiple users
+```bash
+# Sudo Administrator registers multiple users
+polkadot-js-api tx.fundAdmin.users '[["5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "Administrator Test", "Administrator", "Create"], ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", "Builder Test", "Builder", "Create"], ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", "Investor Test", "Investor", "Create"], ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", "Issuer Test", "Issuer", "Create"], ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", "Regional Center Test", "RegionalCenter", "Create"]]' --seed "//Alice"
+```
+
+#### Update a user
+```bash
+# Sudo Administrator updates a user -> //Administrator
+polkadot-js-api tx.fundAdmin.users '[["5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY", "Administrator Test Modified", "Administrator", "Update"]]' --seed "//Alice"
+```
+
+#### Delete a user
+```bash
+# Sudo Administrator deletes a user -> //Issuer
+polkadot-js-api tx.fundAdmin.users '[["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", null, null, "Delete"]]' --seed "//Alice"
+```
+
+#### Edit user information
+```bash
+# Users edit their own information -> //Builder
+polkadot-js-api tx.fundAdmin.usersEditUser "Builder Test Modified" "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.jpeg" "builder@fundadmin.com" "null" --seed "//Bob"
+```
+```bash
+# Only investors can upload documents
+# Investors upload documents -> //Investor
+polkadot-js-api tx.fundAdmin.usersEditUser "Investor Test Modified" "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.jpeg" "investor@fundadmin.com" '[["Investor document 1", "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.pdf"]]' --seed "//Charlie"
+```
+
+#### Create a basic project with some budget expenditures
+```bash
+# Sudo Administrator creates a project -> //Alice
+polkadot-js-api tx.fundAdmin.projectsCreateProject "Project Test" "Description test" "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.jpeg" "San Francisco" "null" "1672782546001" "1672789546001" '[["Furniture", "Hardcost", "100000000000", "15897", "145", "Create", null], ["Software", "SoftCost", "100000000000", "32312", "131", "Create", null], ["Marketing", "Operational", "100000000000", "58963", "896", "Create", null], ["Legal", "Others", "100000000000", "64039", "248", "Create", null]]' "null" "null" "6546161313" --seed "//Alice"
+```
+
+#### Create a basic project with some budget expenditures & job eligibble revenues
+```bash
+# Sudo Administrator creates a project -> //Alice
+polkadot-js-api tx.fundAdmin.projectsCreateProject "Project Test" "Description test" "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.jpeg" "San Francisco" "null" "1672782546001" "1672789546001" '[["Furniture", "Hardcost", "100000000000", "15897", "145", "Create", null], ["Software", "SoftCost", "100000000000", "32312", "131", "Create", null], ["Marketing", "Operational", "100000000000", "58963", "896", "Create", null], ["Legal", "Others", "100000000000", "64039", "248", "Create", null]]' '[["Job Eligible 1", "235354354343", "45897", "785", "Create", null], ["Job Eligible 2", "235354354343", "84467", "631", "Create", null]]' "null" "6546161313" --seed "//Alice"
+```
+
+### Create a basic project with some budget expenditures & job eligibble revenues & user assignments
+```bash
+# Sudo Administrator creates a project -> //Alice
+polkadot-js-api tx.fundAdmin.projectsCreateProject "Project Test" "Description test" "QmYTWeZrWH1nZ2pn3VxuJ4t3UqKDZoLoXob2hcq4vemxbK.jpeg" "San Francisco" "null" "1672782546001" "1672789546001" '[["Furniture", "Hardcost", "100000000000", "15897", "145", "Create", null], ["Software", "SoftCost", "100000000000", "32312", "131", "Create", null], ["Marketing", "Operational", "100000000000", "58963", "896", "Create", null], ["Legal", "Others", "100000000000", "64039", "248", "Create", null]]' '[["Job Eligible 1", "235354354343", "45897", "785", "Create", null], ["Job Eligible 2", "235354354343", "84467", "631", "Create", null]]' '[["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", "Builder", "Assign"], ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", "Investor", "Assign"], ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", "Issuer", "Assign"], ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", "RegionalCenter", "Assign"]]'  "6546161313" --seed "//Alice"
+```
+
+
 
 ## Events
 ```rust
@@ -297,9 +467,10 @@ BankDocumentsUpdated(ProjectId, DrawdownId)
 
 /// Bank's confirming documents were deleted successfully
 BankDocumentsDeleted(ProjectId, DrawdownId)
-    ```
+```
 
 ## Errors
+
 ```rust
 /// No value was found for the global scope
 NoGlobalScopeValueWasFound
