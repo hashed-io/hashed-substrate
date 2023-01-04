@@ -2297,7 +2297,7 @@ impl<T: Config> Pallet<T> {
             return Err(Error::<T>::CannotAddAdminRole.into());
         }
 
-        // Ensure how many projects the user is assigned to
+        // Make sure how many projects the user is assigned to
         let projects_count = <ProjectsByUser<T>>::get(user).len();
 
         match user_data.role {
