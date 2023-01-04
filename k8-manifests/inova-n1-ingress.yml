@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - n1.test.hashed.systems
+    - n1-test.hashed.systems
     secretName: inova-n1-network
   rules:
-  - host: n1.test.hashed.systems
+  - host: n1-test.hashed.systems
     http:
       paths:
       - pathType: Prefix
