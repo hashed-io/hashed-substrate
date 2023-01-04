@@ -5078,7 +5078,7 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotAddAdminRole.into());
         }
 
-        <span class="comment">// Ensure how many projects the user is assigned to
+        <span class="comment">// Make sure how many projects the user is assigned to
         </span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user).len();
 
         <span class="kw">match </span>user_data.role {

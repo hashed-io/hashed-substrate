@@ -1,3 +1,0 @@
-(function() {var implementors = {
-"hashed":[["impl ExtrinsicBuilder for <a class=\"struct\" href=\"hashed/benchmarking/struct.RemarkBuilder.html\" title=\"struct hashed::benchmarking::RemarkBuilder\">RemarkBuilder</a>"],["impl ExtrinsicBuilder for <a class=\"struct\" href=\"hashed/benchmarking/struct.TransferKeepAliveBuilder.html\" title=\"struct hashed::benchmarking::TransferKeepAliveBuilder\">TransferKeepAliveBuilder</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
