@@ -29,19 +29,6 @@ pub(super) type DepositBalanceOf<T, I = ()> =
 pub(super) type AssetAccountOf<T, I> =
 	AssetAccount<<T as Config<I>>::Balance, DepositBalanceOf<T, I>, <T as Config<I>>::Extra>;
 
-/// AssetStatus holds the current state of the asset. It could either be Live and available for use,
-/// or in a Destroying state.
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub(super) enum AssetStatus {
-	/// The asset is active and able to be used.
-	Live,
-	/// Whether the asset is frozen for non-admin transfers.
-	Frozen,
-	/// The asset is currently being destroyed, and all actions are no longer permitted on the
-	/// asset. Once set to `Destroying`, the asset can never transition back to a `Live` state.
-	Destroying,
-}
-
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct AssetDetails<Balance, AccountId, DepositBalance> {
 	/// Can change `owner`, `issuer`, `freezer` and `admin` accounts.
@@ -54,6 +41,8 @@ pub struct AssetDetails<Balance, AccountId, DepositBalance> {
 	pub(super) freezer: AccountId,
 	/// The total supply across all accounts.
 	pub(super) supply: Balance,
+	/// The total reserved balance across all accounts
+	pub(super) reserved: Balance,
 	/// The balance deposited for this asset. This pays for the data stored here.
 	pub(super) deposit: DepositBalance,
 	/// The ED for virtual accounts.
@@ -67,8 +56,18 @@ pub struct AssetDetails<Balance, AccountId, DepositBalance> {
 	pub(super) sufficients: u32,
 	/// The total number of approvals.
 	pub(super) approvals: u32,
-	/// The status of the asset
-	pub(super) status: AssetStatus,
+	/// Whether the asset is frozen for non-admin transfers.
+	pub(super) is_frozen: bool,
+}
+
+impl<Balance, AccountId, DepositBalance> AssetDetails<Balance, AccountId, DepositBalance> {
+	pub fn destroy_witness(&self) -> DestroyWitness {
+		DestroyWitness {
+			accounts: self.accounts,
+			sufficients: self.sufficients,
+			approvals: self.approvals,
+		}
+	}
 }
 
 /// Data concerning an approval.
@@ -116,8 +115,10 @@ impl<Balance> ExistenceReason<Balance> {
 
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct AssetAccount<Balance, DepositBalance, Extra> {
-	/// The balance.
-	pub(super) balance: Balance,
+	/// The free balance.
+	pub(super) free: Balance,
+	/// The reserved balance.
+	pub(super) reserved: Balance,
 	/// Whether the account is frozen.
 	pub(super) is_frozen: bool,
 	/// The reason for the existence of the account.
@@ -140,6 +141,20 @@ pub struct AssetMetadata<DepositBalance, BoundedString> {
 	pub(super) decimals: u8,
 	/// Whether the asset metadata may be changed by a non Force origin.
 	pub(super) is_frozen: bool,
+}
+
+/// Witness data for the destroy transactions.
+#[derive(Copy, Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct DestroyWitness {
+	/// The number of accounts holding the asset.
+	#[codec(compact)]
+	pub(super) accounts: u32,
+	/// The number of accounts holding the asset with a self-sufficient reference.
+	#[codec(compact)]
+	pub(super) sufficients: u32,
+	/// The number of transfer-approvals of the asset.
+	#[codec(compact)]
+	pub(super) approvals: u32,
 }
 
 /// Trait for allowing a minimum balance on the account to be specified, beyond the
@@ -260,4 +275,14 @@ where
 		Ok(FixedU128::saturating_from_rational(asset.min_balance, min_balance)
 			.saturating_mul_int(balance))
 	}
+}
+
+
+/// Store named reserved balance.
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct ReserveData<ReserveIdentifier, Balance> {
+	/// The identifier for the named reserve.
+	pub id: ReserveIdentifier,
+	/// The amount of the named reserve.
+	pub amount: Balance,
 }

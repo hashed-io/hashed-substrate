@@ -68,6 +68,7 @@ pallet-gated-marketplace= { default-features = false, path = "../pallets/gated-m
 pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
 pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
+pallet-mapped-assets = { default-features = false, path = "../pallets/mapped-assets" }
 
 
 [build-dependencies]

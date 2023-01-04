@@ -3175,6 +3175,7 @@ dependencies = [
  "pallet-grandpa",
  "pallet-identity",
  "pallet-indices",
+ "pallet-mapped-assets",
  "pallet-membership",
  "pallet-node-authorization",
  "pallet-randomness-collective-flip",
@@ -5646,6 +5647,22 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-mapped-assets"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]
