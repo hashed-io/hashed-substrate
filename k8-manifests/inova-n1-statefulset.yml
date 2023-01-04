@@ -71,13 +71,13 @@ spec:
   type:  ClusterIP
   ports:
   - name:  p2p-port
-    port:  30334
+    port:  30333
     targetPort:  30333
   - name:  ws-port
-    port:  9945
+    port:  9944
     targetPort:  9944
   - name:  rpc-port
-    port:  9934
+    port:  9933
     targetPort:  9933
 ---
 # Uncomment if a persistent volume needs to be created manually

@@ -27,7 +27,7 @@ spec:
             mountPath:  /var/www/hashed/node-data
         env:
           - name: BOOTNODES
-            value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30334/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
+            value: "/dns/inova-n1-network.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWRNsn75iQuPz4AAq6B64351z9u2LLSsdsxEjDy5vgJV9t"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
@@ -71,13 +71,13 @@ spec:
   type:  ClusterIP
   ports:
   - name:  p2p-port
-    port:  30334
+    port:  30333
     targetPort:  30333
   - name:  ws-port
-    port:  9945
+    port:  9944
     targetPort:  9944
   - name:  rpc-port
-    port:  9934
+    port:  9933
     targetPort:  9933
 ---
 # Uncomment if a persistent volume needs to be created manually
