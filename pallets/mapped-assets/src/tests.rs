@@ -1126,6 +1126,7 @@ fn reserve_equal_to_min_balance_should_work() {
 		assert_eq!(Assets::free_balance(0, 2), 99);
 		assert_eq!(Assets::reserved_balance(0, 2), 1);
 		assert_eq!(Assets::total_supply(0), 100);
+		assert_eq!(Assets::total_free_supply(0), 99);
 		assert_eq!(Assets::total_reserved_supply(0), 1);
 		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 1);
 	});
@@ -1203,6 +1204,7 @@ fn unreserve_should_work() {
 		assert_eq!(Assets::reserved_balance(0, 2), 2);
 		assert_eq!(Assets::total_supply(0), 100);
 		assert_eq!(Assets::total_reserved_supply(0), 2);
+		assert_eq!(Assets::total_free_supply(0), 98);
 		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 2);
 
 		assert_ok!(Assets::unreserve(RuntimeOrigin::signed(1), 0, 0, 2));
@@ -1218,6 +1220,7 @@ fn unreserve_should_work() {
 		assert_eq!(Assets::reserved_balance(0, 2), 0);
 		assert_eq!(Assets::total_supply(0), 100);
 		assert_eq!(Assets::total_reserved_supply(0), 0);
+		assert_eq!(Assets::total_free_supply(0), 100);
 		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 0);
 		assert_eq!(Assets::has_named_reserve(&0,&0,&2), false);
 	});
@@ -1255,6 +1258,7 @@ fn burn_reserve_should_work() {
 		assert_eq!(Assets::reserved_balance(0, 2), 10);
 		assert_eq!(Assets::total_supply(0), 100);
 		assert_eq!(Assets::total_reserved_supply(0), 10);
+		assert_eq!(Assets::total_free_supply(0), 90);
 		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 10);
 
 		assert_ok!(Assets::burn_reserve(RuntimeOrigin::signed(1), 0, 0, 2));
@@ -1270,6 +1274,7 @@ fn burn_reserve_should_work() {
 		assert_eq!(Assets::reserved_balance(0, 2), 0);
 		assert_eq!(Assets::total_supply(0), 90);
 		assert_eq!(Assets::total_reserved_supply(0), 0);
+		assert_eq!(Assets::total_free_supply(0), 90);
 		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 0);
 		assert_eq!(Assets::has_named_reserve(&0,&0,&2), false);
 	});

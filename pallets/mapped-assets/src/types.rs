@@ -30,7 +30,7 @@ pub(super) type AssetAccountOf<T, I> =
 	AssetAccount<<T as Config<I>>::Balance, DepositBalanceOf<T, I>, <T as Config<I>>::Extra>;
 
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct AssetDetails<Balance, AccountId, DepositBalance> {
+pub struct AssetDetails<Balance : AtLeast32BitUnsigned + Copy, AccountId, DepositBalance> {
 	/// Can change `owner`, `issuer`, `freezer` and `admin` accounts.
 	pub(super) owner: AccountId,
 	/// Can mint tokens.
@@ -60,13 +60,17 @@ pub struct AssetDetails<Balance, AccountId, DepositBalance> {
 	pub(super) is_frozen: bool,
 }
 
-impl<Balance, AccountId, DepositBalance> AssetDetails<Balance, AccountId, DepositBalance> {
+impl<Balance: AtLeast32BitUnsigned + Copy, AccountId, DepositBalance> AssetDetails<Balance, AccountId, DepositBalance> {
 	pub fn destroy_witness(&self) -> DestroyWitness {
 		DestroyWitness {
 			accounts: self.accounts,
 			sufficients: self.sufficients,
 			approvals: self.approvals,
 		}
+	}
+
+	pub fn free_supply(&self) -> Balance {
+		self.supply.saturating_sub(self.reserved)
 	}
 }
 

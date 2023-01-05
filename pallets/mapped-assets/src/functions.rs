@@ -77,6 +77,16 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Asset::<T, I>::get(id).map(|x| x.supply)
 	}
 
+	/// Get the total free supply of an asset `id`.
+	pub fn total_free_supply(id: T::AssetId) -> T::Balance {
+		Self::maybe_total_free_supply(id).unwrap_or_default()
+	}
+
+	/// Get the total reversed supply of an asset `id` if the asset exists.
+	pub fn maybe_total_free_supply(id: T::AssetId) -> Option<T::Balance> {
+		Asset::<T, I>::get(id).map(|x| x.free_supply())
+	}
+
 	/// Get the total reserved supply of an asset `id`.
 	pub fn total_reserved_supply(id: T::AssetId) -> T::Balance {
 		Self::maybe_total_reserved_supply(id).unwrap_or_default()
