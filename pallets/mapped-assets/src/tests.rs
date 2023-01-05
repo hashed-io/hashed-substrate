@@ -1301,3 +1301,50 @@ fn burn_reserve_for_non_existant_reserve_should_fail() {
 		assert_noop!(Assets::burn_reserve(RuntimeOrigin::signed(1), 0, 0, 2), Error::<Test>::UnknownReserve);
 	});
 }
+
+#[test]
+fn transfer_named_reserve_to_new_account_should_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(Assets::force_create(RuntimeOrigin::root(), 0, 1, true, 1));
+		assert_ok!(Assets::mint(RuntimeOrigin::signed(1), 0, 2, 100));
+		assert_eq!(Assets::free_balance(0, 2), 100);
+		assert_ok!(Assets::reserve(RuntimeOrigin::signed(1), 0, 0, 2, 20));
+		assert_eq!(Assets::free_balance(0, 2), 80);
+		assert_eq!(Assets::reserved_balance(0, 2), 20);
+		assert_eq!(Assets::total_supply(0), 100);
+		assert_eq!(Assets::total_reserved_supply(0), 20);
+		assert_eq!(Assets::total_free_supply(0), 80);
+		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 20);
+
+		assert_ok!(Assets::transfer_named_reserve(&0, 0, &2, &3, None));
+		assert_eq!(System::events().len(), 6);
+		assert_eq!(System::events()[5].event, RuntimeEvent::Assets(Event::<Test>::TransferredReserve {
+			reserve_id: 0,
+			asset_id: 0,
+			from: 2,
+			to: 3,
+			amount: 20
+		}));
+
+		assert_eq!(Assets::free_balance(0, 2), 80);
+		assert_eq!(Assets::reserved_balance(0, 2), 0);
+		assert_eq!(Assets::free_balance(0, 3), 20);
+		assert_eq!(Assets::reserved_balance(0, 3), 0);
+		assert_eq!(Assets::total_supply(0), 100);
+		assert_eq!(Assets::total_reserved_supply(0), 0);
+		assert_eq!(Assets::total_free_supply(0), 100);
+		assert_eq!(Assets::reserved_balance_named(&0,&0,&2), 0);
+		assert_eq!(Assets::has_named_reserve(&0,&0,&2), false);
+	});
+}
+
+
+#[test]
+fn transfer_named_reserve_for_non_existant_reserve_should_fail() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(Assets::force_create(RuntimeOrigin::root(), 0, 1, true, 1));
+		assert_ok!(Assets::mint(RuntimeOrigin::signed(1), 0, 2, 100));
+		assert_eq!(Assets::free_balance(0, 2), 100);
+		assert_noop!(Assets::transfer_named_reserve(&0, 0, &2, &3, None), Error::<Test>::UnknownReserve);
+	});
+}
