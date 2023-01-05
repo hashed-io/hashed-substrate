@@ -32,7 +32,7 @@ impl<T: Config<I>, I: 'static> fungibles::Inspect<<T as SystemConfig>::AccountId
 	}
 
 	fn balance(asset: Self::AssetId, who: &<T as SystemConfig>::AccountId) -> Self::Balance {
-		Pallet::<T, I>::balance(asset, who)
+		Pallet::<T, I>::free_balance(asset, who)
 	}
 
 	fn reducible_balance(

@@ -129,7 +129,7 @@ impl FrozenBalance<u32, u64, u64> for TestFreezer {
 		Hooks::mutate(|v| v.push(Hook::Died(asset, *who)));
 
 		// Sanity check: dead accounts have no balance.
-		assert!(Assets::balance(asset, *who).is_zero());
+		assert!(Assets::free_balance(asset, *who).is_zero());
 	}
 }
 

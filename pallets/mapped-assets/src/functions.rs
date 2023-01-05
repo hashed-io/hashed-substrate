@@ -40,18 +40,32 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		ExtraMutator::maybe_new(id, who)
 	}
 
-	/// Get the asset `id` balance of `who`, or zero if the asset-account doesn't exist.
-	pub fn balance(id: T::AssetId, who: impl sp_std::borrow::Borrow<T::AccountId>) -> T::Balance {
-		Self::maybe_balance(id, who).unwrap_or_default()
+	/// Get the asset `id` free balance of `who`, or zero if the asset-account doesn't exist.
+	pub fn free_balance(id: T::AssetId, who: impl sp_std::borrow::Borrow<T::AccountId>) -> T::Balance {
+		Self::maybe_free_balance(id, who).unwrap_or_default()
 	}
 
-	/// Get the asset `id` balance of `who` if the asset-account exists.
-	pub fn maybe_balance(
+	/// Get the asset `id` free balance of `who` if the asset-account exists.
+	pub fn maybe_free_balance(
 		id: T::AssetId,
 		who: impl sp_std::borrow::Borrow<T::AccountId>,
 	) -> Option<T::Balance> {
 		Account::<T, I>::get(id, who.borrow()).map(|a| a.free)
 	}
+
+	/// Get the asset `id` reserved balance of `who`, or zero if the asset-account doesn't exist.
+	pub fn reserved_balance(id: T::AssetId, who: impl sp_std::borrow::Borrow<T::AccountId>) -> T::Balance {
+		Self::maybe_reserved_balance(id, who).unwrap_or_default()
+	}
+
+	/// Get the asset `id` reserved balance of `who` if the asset-account exists.
+	pub fn maybe_reserved_balance(
+		id: T::AssetId,
+		who: impl sp_std::borrow::Borrow<T::AccountId>,
+	) -> Option<T::Balance> {
+		Account::<T, I>::get(id, who.borrow()).map(|a| a.reserved)
+	}
+
 
 	/// Get the total supply of an asset `id`.
 	pub fn total_supply(id: T::AssetId) -> T::Balance {
@@ -61,6 +75,16 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	/// Get the total supply of an asset `id` if the asset exists.
 	pub fn maybe_total_supply(id: T::AssetId) -> Option<T::Balance> {
 		Asset::<T, I>::get(id).map(|x| x.supply)
+	}
+
+	/// Get the total reserved supply of an asset `id`.
+	pub fn total_reserved_supply(id: T::AssetId) -> T::Balance {
+		Self::maybe_total_reserved_supply(id).unwrap_or_default()
+	}
+
+	/// Get the total reversed supply of an asset `id` if the asset exists.
+	pub fn maybe_total_reserved_supply(id: T::AssetId) -> Option<T::Balance> {
+		Asset::<T, I>::get(id).map(|x| x.reserved)
 	}
 
 	pub(super) fn new_account(
@@ -123,7 +147,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		if increase_supply && details.supply.checked_add(&amount).is_none() {
 			return DepositConsequence::Overflow
 		}
-		if let Some(balance) = Self::maybe_balance(id, who) {
+		if let Some(balance) = Self::maybe_free_balance(id, who) {
 			if balance.checked_add(&amount).is_none() {
 				return DepositConsequence::Overflow
 			}
@@ -872,6 +896,12 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 			.binary_search_by_key(id, |data| data.id)
 			.map(|index| reserves[index].amount)
 			.unwrap_or_default()
+	}
+
+	pub fn has_named_reserve(id: &T::ReserveIdentifier, asset_id: &T::AssetId, who: &T::AccountId) -> bool {
+		let reserves = Self::reserves(asset_id, who);
+		reserves
+			.binary_search_by_key(id, |data| data.id).is_ok()
 	}
 
 	/// Move `value` from the free balance from `who` to a named reserve balance.
