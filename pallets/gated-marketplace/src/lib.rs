@@ -220,6 +220,8 @@ pub mod pallet {
 		ExceedMaxApplicants,
 		/// This custodian has too many applications for this market, try with another one
 		ExceedMaxApplicationsPerCustodian,
+		/// This offer has bigger percentage than the allowed
+		ExceedMaxPercentage,
 		/// Applicaion doesnt exist
 		ApplicationNotFound,
 		/// The user has not applicated to that market before
@@ -308,10 +310,11 @@ pub mod pallet {
 		/// - `admin`: The admin of the marketplace.
 		/// - `label`: The name of the marketplace.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId,label: BoundedVec<u8,T::LabelMaxLen>) -> DispatchResult {
+		pub fn create_marketplace(origin: OriginFor<T>, admin: T::AccountId, label: BoundedVec<u8,T::LabelMaxLen>, fee: u16) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
 			let m = Marketplace{
 				label,
+				fee
 			};
 			Self::do_create_marketplace(who, admin, m)
 		}
@@ -537,10 +540,10 @@ pub mod pallet {
 		/// - If the selected marketplace doesn't exist, it will throw an error.
 		/// - If the selected collection doesn't exist, it will throw an error.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+		pub fn enlist_sell_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>, percentage: u16) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
+			Self::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price, percentage)
 		}
 
 		/// Accepts a sell order.
@@ -603,10 +606,10 @@ pub mod pallet {
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+		pub fn enlist_buy_offer(origin: OriginFor<T>, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>, percentage: u16) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
+			Self::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price, percentage)
 		}
 
 

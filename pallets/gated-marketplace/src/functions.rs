@@ -32,7 +32,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace<T>)->DispatchResult{
+    pub fn do_create_marketplace(owner: T::AccountId, admin: T::AccountId, marketplace: Marketplace<T>)->DispatchResult{
         // Gen market id
         let marketplace_id = marketplace.using_encoded(blake2_256);
         // ensure the generated id is unique
@@ -202,11 +202,11 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+    pub fn do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>, percentage: u16) -> DispatchResult {
         //This function is only called by the owner of the marketplace
         //ensure the marketplace exists
         ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-        Self::is_authorized(authority.clone(), &marketplace_id,Permission::EnlistSellOffer)?;
+        Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistSellOffer)?;
         //ensure the collection exists
         if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
             ensure!(a == authority, Error::<T>::NotOwner);
@@ -215,7 +215,7 @@ impl<T: Config> Pallet<T> {
         }
 
         //ensure the price is valid
-        Self::is_the_price_valid(price)?;
+        Self::is_the_offer_valid(price, percentage)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -230,6 +230,7 @@ impl<T: Config> Pallet<T> {
             item_id,
             creator: authority.clone(),
             price,
+			percentage,
             creation_date: timestamp,
             expiration_date: timestamp2,
             status: OfferStatus::Open,
@@ -264,7 +265,7 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>,) -> DispatchResult {
+    pub fn do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;32], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf<T>, percentage: u16) -> DispatchResult {
         //ensure the item is for sale, if not, return error
         Self::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)?;
 
@@ -286,7 +287,7 @@ impl<T: Config> Pallet<T> {
         ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
         //ensure the price is valid
-        Self::is_the_price_valid(price)?;
+        Self::is_the_offer_valid(price, percentage)?;
 
         //Add timestamp to the offer
         let(timestamp, timestamp2) = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -301,6 +302,7 @@ impl<T: Config> Pallet<T> {
             item_id,
             creator: authority.clone(),
             price,
+			percentage,
             creation_date: timestamp,
             expiration_date: timestamp2,
             status: OfferStatus::Open,
@@ -360,6 +362,7 @@ impl<T: Config> Pallet<T> {
         //Transfer the balance
         T::Currency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
 
+		//TODO: if percentage is not 100, spawn a item with percentage
         //Use uniques transfer function to transfer the item to the buyer
         pallet_uniques::Pallet::<T>::do_transfer(offer_data.collection_id, offer_data.item_id, buyer.clone(), |_, _|{
             Ok(())
@@ -731,9 +734,10 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn is_the_price_valid(price: BalanceOf<T>,) -> DispatchResult {
+    fn is_the_offer_valid(price: BalanceOf<T>, percentage: u16) -> DispatchResult {
         let minimun_amount: BalanceOf<T> = 1000u32.into();
         ensure!(price > minimun_amount, Error::<T>::PriceMustBeGreaterThanZero);
+		ensure!(percentage <= 10000, Error::<T>::ExceedMaxPercentage);
         Ok(())
     }
 

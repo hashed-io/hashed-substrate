@@ -17,6 +17,7 @@ pub type CustodianFields<T> = ( AccountIdOf<T>, Cids<<T as Config>::MaxFiles>);
 #[codec(mel_bound())]
 pub struct Marketplace<T: Config>{
     pub label: BoundedVec<u8, T::LabelMaxLen>,
+	pub fee: u16
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo,)]
@@ -179,7 +180,6 @@ pub enum OfferType{
     SellOrder,
     BuyOrder,
 }
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -187,6 +187,7 @@ pub struct OfferData<T: Config>{
     pub marketplace_id: [u8;32],
     pub collection_id: T::CollectionId,
     pub item_id: T::ItemId,
+	pub percentage: u16,
     pub creator: T::AccountId,
     pub price:  BalanceOf<T>,
     pub status: OfferStatus,
