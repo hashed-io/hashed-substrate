@@ -20,6 +20,7 @@ pub mod pallet {
 	use crate::types::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	// use frame_support::PalletId;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -30,12 +31,15 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-
 		/// Maximum number of children a Frunique can have
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
 
-		type Rbac : RoleBasedAccessControl<Self::AccountId>;
+		/// The fruniques pallet id, used for deriving its sovereign account ID.
+		// #[pallet::constant]
+		// type PalletId: Get<PalletId>;
+
+		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -91,7 +95,7 @@ pub mod pallet {
 		// Frunique already exists
 		FruniqueAlreadyExists,
 		// Frunique already verified
-		FruniqueAlreadyVerified
+		FruniqueAlreadyVerified,
 	}
 
 	#[pallet::storage]
@@ -186,12 +190,7 @@ pub mod pallet {
 
 			let new_collection_id: u32 = Self::next_collection();
 
-			Self::do_create_collection(
-				origin,
-				new_collection_id,
-				metadata,
-				admin.clone(),
-			)?;
+			Self::do_create_collection(origin, new_collection_id, metadata, admin.clone())?;
 
 			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
 
@@ -340,9 +339,12 @@ pub mod pallet {
 			class_id: CollectionId,
 			invitee: T::AccountId,
 		) -> DispatchResult {
-
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
-			Self::insert_auth_in_frunique_collection(invitee.clone(), class_id, FruniqueRole::Collaborator)?;
+			Self::insert_auth_in_frunique_collection(
+				invitee.clone(),
+				class_id,
+				FruniqueRole::Collaborator,
+			)?;
 
 			Self::deposit_event(Event::InvitedToCollaborate(owner, invitee, class_id));
 			Ok(())
@@ -366,7 +368,10 @@ pub mod pallet {
 			T::RemoveOrigin::ensure_origin(origin)?;
 
 			if let Some(instance_id) = instance_id {
-				ensure!(!Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueAlreadyExists);
+				ensure!(
+					!Self::item_exists(&class_id, &instance_id),
+					Error::<T>::FruniqueAlreadyExists
+				);
 				<NextFrunique<T>>::insert(class_id, instance_id);
 			} else {
 				ensure!(!Self::collection_exists(&class_id), Error::<T>::CollectionAlreadyExists);

@@ -10,7 +10,10 @@ use pallet_rbac::types::*;
 
 use frame_support::pallet_prelude::*;
 use frame_support::traits::EnsureOriginWithArg;
+use frame_support::PalletId;
 use sp_runtime::{sp_std::vec::Vec, Permill};
+use sp_runtime::traits::AccountIdConversion;
+
 
 impl<T: Config> Pallet<T> {
 	pub fn u32_to_instance_id(input: u32) -> T::ItemId
@@ -269,6 +272,17 @@ impl<T: Config> Pallet<T> {
 	pub fn pallet_id() -> IdOrVec {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
+
+	pub fn pallet_account() -> T::AccountId {
+		let pallet_name = Self::module_name().as_bytes().to_vec();
+		let pallet_account_name: [u8; 8] = pallet_name.as_slice().try_into().unwrap_or(*b"frunique");
+		let pallet_id = PalletId(pallet_account_name);
+		pallet_id.try_into_account().unwrap()
+	}
+
+	// pub fn pallet_account() -> T::AccountId {
+	// 	T::PalletId::get().into_account()
+	// }
 
 	pub fn insert_auth_in_frunique_collection(
 		user: T::AccountId,
