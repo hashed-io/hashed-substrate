@@ -169,6 +169,8 @@ pub mod pallet {
 	{
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+			//Transfer the balance
+        	// T::Currency::transfer(&buyer, &Self::pallet_account(), , KeepAlive)?;
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_initial_setup()?;
 			Ok(())
@@ -264,6 +266,8 @@ pub mod pallet {
 			attributes: Option<Attributes<T>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
+			let user: T::AccountId = ensure_signed(origin.clone())?;
+			Self::is_authorized(user, class_id, Permission::Mint)?;
 
 			if let Some(parent_info) = parent_info {
 				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
@@ -289,11 +293,11 @@ pub mod pallet {
 				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
 			}
 
-			Self::do_spawn(origin, class_id, instance_id, owner.clone(), metadata, attributes)?;
+			Self::do_spawn(class_id, instance_id, owner.clone(), metadata, attributes)?;
 
 			Self::deposit_event(Event::FruniqueCreated(
-				owner.clone(),
 				owner,
+				Self::pallet_account(),
 				class_id,
 				instance_id,
 			));

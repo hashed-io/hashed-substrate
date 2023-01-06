@@ -11,8 +11,10 @@ use pallet_rbac::types::*;
 use frame_support::pallet_prelude::*;
 use frame_support::traits::EnsureOriginWithArg;
 use frame_support::PalletId;
+// use frame_support::traits::OriginTrait;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 use sp_runtime::traits::AccountIdConversion;
+// use sp_runtime::traits::StaticLookup;
 
 
 impl<T: Config> Pallet<T> {
@@ -220,16 +222,27 @@ impl<T: Config> Pallet<T> {
 			admin.clone(),
 			T::CollectionDeposit::get(),
 			false,
-			pallet_uniques::Event::Created { collection: class_id, creator: admin, owner },
+			pallet_uniques::Event::Created { collection: class_id, creator: admin.clone(), owner },
 		)?;
 
-		pallet_uniques::Pallet::<T>::set_collection_metadata(origin, class_id, metadata, false)?;
+		pallet_uniques::Pallet::<T>::set_collection_metadata(
+			origin,
+			class_id.clone(),
+			metadata,
+			false)?;
+
+
+		// let pallet_lookup = T::Lookup::lookup(Self::account_id_to_lookup_source(&Self::pallet_account()))?;
+		// let res: OriginFor<T> = frame_system::RawOrigin::Signed(pallet_lookup).into();
+
+		// pallet_uniques::Pallet::<T>::set_accept_ownership(res, Some(class_id))?;
+
+		// pallet_uniques::Pallet::<T>::transfer_ownership(origin, class_id, Self::account_id_to_lookup_source(&Self::pallet_account()))?;
 
 		Ok(())
 	}
 
 	pub fn do_spawn(
-		origin: OriginFor<T>,
 		collection: T::CollectionId,
 		item: T::ItemId,
 		owner: T::AccountId,
@@ -237,16 +250,18 @@ impl<T: Config> Pallet<T> {
 		attributes: Option<Attributes<T>>,
 	) -> DispatchResult {
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
-		let user: T::AccountId = ensure_signed(origin.clone())?;
-		Self::is_authorized(user, collection, Permission::Mint)?;
 
 		// pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
 		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| {
-			Ok(())
-		})?;
+				Ok(())
+			})?;
+
+		// let pallet_lookup = T::Lookup::lookup(Self::account_id_to_lookup_source(&Self::pallet_account()))?;
+		// let res: OriginFor<T> = frame_system::RawOrigin::Signed(pallet_lookup).into();
 
 		pallet_uniques::Pallet::<T>::set_metadata(
-			origin.clone(),
+			// OriginFor::<T>::signed(Self::pallet_account()),
+			frame_system::RawOrigin::Root.into(),
 			collection,
 			item,
 			metadata,
@@ -256,7 +271,8 @@ impl<T: Config> Pallet<T> {
 		if let Some(attributes) = attributes {
 			for (key, value) in attributes {
 				pallet_uniques::Pallet::<T>::set_attribute(
-					origin.clone(),
+					// OriginFor::<T>::signed(Self::pallet_account()),
+					frame_system::RawOrigin::Root.into(),
 					collection,
 					Some(item),
 					key,
@@ -299,7 +315,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn is_authorized(
+	pub fn is_authorized(
 		user: T::AccountId,
 		collection_id: T::CollectionId,
 		permission: Permission,
