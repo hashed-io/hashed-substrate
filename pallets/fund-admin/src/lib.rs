@@ -258,7 +258,7 @@ pub mod pallet {
 		_,
 		Identity,
 		ProjectId, // Key project_id
-		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Revenues
 		ValueQuery,
 	>;
 
