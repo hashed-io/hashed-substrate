@@ -30,12 +30,34 @@ pub struct ChildInfo {
 	pub is_hierarchical: bool,
 }
 
-#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct ParentInfo {
-	pub collection_id: CollectionId,
-	pub parent_id: ItemId,
+#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, Copy)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ParentInfo<T: Config> {
+	pub collection_id: T::CollectionId,
+	pub parent_id: T::ItemId,
 	pub parent_weight: Permill,
 	pub is_hierarchical: bool,
+}
+
+impl <T: Config> PartialEq for ParentInfo<T> {
+	fn eq(&self, other: &Self) -> bool {
+		self.collection_id == other.collection_id
+			&& self.parent_id == other.parent_id
+			&& self.parent_weight == other.parent_weight
+			&& self.is_hierarchical == other.is_hierarchical
+	}
+}
+
+impl <T: Config> Clone for ParentInfo<T> {
+	fn clone(&self) -> Self {
+		Self {
+			collection_id: self.collection_id.clone(),
+			parent_id: self.parent_id.clone(),
+			parent_weight: self.parent_weight.clone(),
+			is_hierarchical: self.is_hierarchical.clone(),
+		}
+	}
 }
 
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
@@ -43,16 +65,12 @@ pub struct ParentInfo {
 #[codec(mel_bound())]
 pub struct FruniqueData<T: Config> {
 	pub weight: Permill,
-	pub parent: Option<ParentInfo>,
+	pub parent: Option<ParentInfo<T>>,
 	pub children: Option<BoundedVec<ChildInfo, T::ChildMaxLen>>,
 }
 impl<T: Config> FruniqueData<T> {
 	pub fn new() -> Self {
-		Self {
-			weight: Permill::from_percent(100),
-			parent: None,
-			children: None,
-		}
+		Self { weight: Permill::from_percent(100), parent: None, children: None }
 	}
 }
 
@@ -97,8 +115,7 @@ impl FruniqueRole {
 	}
 
 	pub fn get_collaborator_roles() -> Vec<Vec<u8>> {
-		[Self::Collaborator.to_vec()]
-			.to_vec()
+		[Self::Collaborator.to_vec()].to_vec()
 	}
 
 	pub fn get_collector_roles() -> Vec<Vec<u8>> {
@@ -150,8 +167,7 @@ impl Permission {
 
 	pub fn get_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		[None.to_vec(), Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()]
-			.to_vec()
+		[None.to_vec(), Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
 	}
 
 	pub fn owner_permissions() -> Vec<Vec<u8>> {

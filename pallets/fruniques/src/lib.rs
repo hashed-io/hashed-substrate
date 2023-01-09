@@ -126,7 +126,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::CollectionId,
 		Blake2_128Concat,
-		ItemId,
+		T::ItemId,
 		FruniqueData<T>,
 		OptionQuery,
 	>;
@@ -192,7 +192,7 @@ pub mod pallet {
 			instance_id: T::ItemId,
 			attributes: Attributes<T>,
 		) -> DispatchResult {
-			ensure!(Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
+			ensure!(Self::instance_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			// ! Ensure the admin is the one who can add attributes to the frunique.
 			let admin = Self::admin_of(&class_id, &instance_id);
@@ -217,15 +217,16 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
-		/// - `parent_info` Optional value needed for the NFT division.
 		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
+		/// - `parent_info` Optional value needed for the NFT division.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
 			metadata: CollectionDescription<T>,
 			attributes: Option<Attributes<T>>,
+			parent_info: Option<ParentInfo<T>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			let user: T::AccountId = ensure_signed(origin.clone())?;
@@ -233,7 +234,7 @@ pub mod pallet {
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 
-			Self::do_spawn(class_id, owner, metadata, attributes)?;
+			Self::do_spawn(class_id, owner, metadata, attributes, parent_info)?;
 
 			Ok(())
 		}
@@ -250,7 +251,7 @@ pub mod pallet {
 			instance_id: ItemId,
 		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			ensure!(Self::item_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
+			ensure!(Self::instance_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
 
@@ -306,7 +307,7 @@ pub mod pallet {
 
 			if let Some(instance_id) = instance_id {
 				ensure!(
-					!Self::item_exists(&class_id, &instance_id),
+					!Self::instance_exists(&class_id, &instance_id),
 					Error::<T>::FruniqueAlreadyExists
 				);
 				<NextFrunique<T>>::insert(class_id, instance_id);

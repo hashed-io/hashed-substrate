@@ -82,7 +82,7 @@ impl<T: Config> Pallet<T> {
 		false
 	}
 
-	pub fn item_exists(class_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+	pub fn instance_exists(class_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
 		if let Some(_owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
 			return true;
 		}
@@ -249,21 +249,35 @@ impl<T: Config> Pallet<T> {
 		owner: T::AccountId,
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
+		parent_info: Option<ParentInfo<T>>,
 	) -> DispatchResult
 	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 
+		if let Some(ref parent_info) = parent_info {
+			ensure!(
+				Self::collection_exists(&parent_info.collection_id),
+				Error::<T>::CollectionNotFound
+			);
+			ensure!(
+				Self::instance_exists(&parent_info.collection_id, &parent_info.parent_id),
+				Error::<T>::FruniqueNotFound
+			);
+		}
+
 		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
 		<NextFrunique<T>>::insert(collection, nex_item + 1);
+
 		let item = Self::u32_to_instance_id(nex_item);
 		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
 
 		pallet_uniques::Pallet::<T>::set_metadata(
 			frame_system::RawOrigin::Root.into(),
 			collection,
-			item,
+			item.clone(),
 			metadata,
 			false,
 		)?;
@@ -279,6 +293,14 @@ impl<T: Config> Pallet<T> {
 				)?;
 			}
 		}
+
+		let frunique_data = FruniqueData {
+			weight: Self::percent_to_permill(100),
+			parent: parent_info,
+			children: None,
+		};
+
+		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
 
 		Ok(())
 	}
@@ -299,10 +321,6 @@ impl<T: Config> Pallet<T> {
 		let pallet_id = PalletId(pallet_account_name);
 		pallet_id.try_into_account().unwrap()
 	}
-
-	// pub fn pallet_account() -> T::AccountId {
-	// 	T::PalletId::get().into_account()
-	// }
 
 	pub fn insert_auth_in_frunique_collection(
 		user: T::AccountId,
