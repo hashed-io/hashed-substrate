@@ -174,16 +174,16 @@ impl<T: Config> Pallet<T> {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), None, ProxyPermission::EditProject)?;
 
-        //Ensure project exists
+        // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Ensure project is not completed
         Self::is_project_completed(project_id)?;
 
-        //Get current timestamp
+        // Get current timestamp
         let current_timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        //Mutate project data
+        // Mutate project data
         <ProjectsInfo<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |project| {
             let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
 
@@ -214,7 +214,7 @@ impl<T: Config> Pallet<T> {
             Ok(())
         })?;
 
-        //Ensure completion_date is later than creation_date
+        // Ensure completion_date is later than creation_date
         Self::is_project_completion_date_later(project_id)?;
 
         // Event
@@ -238,9 +238,6 @@ impl<T: Config> Pallet<T> {
         // Delete scope from rbac pallet
         T::Rbac::remove_scope(Self::pallet_id(), project_id)?;
 
-        // TOREVIEW: check if this method is the best way to delete data from storage
-        // we could use get method (<UsersByProject<T>>::get()) instead getter function
-        // Delete project from ProjectsByUser storage
         let users_by_project = Self::users_by_project(project_id).iter().cloned().collect::<Vec<T::AccountId>>();
         for user in users_by_project.iter().cloned() {
             <ProjectsByUser<T>>::mutate(user, |projects| {
@@ -688,7 +685,7 @@ impl<T: Config> Pallet<T> {
         // Get timestamp
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-        //Ensure expenditure name is not empty
+        // Ensure expenditure name is not empty
         ensure!(!name.is_empty(), Error::<T>::EmptyExpenditureName);
 
         // Create expenditure id
@@ -1118,7 +1115,7 @@ impl<T: Config> Pallet<T> {
         // Ensure project exists & is not completed so helper private functions doesn't need to check it again
         Self::is_project_completed(project_id)?;
 
-        //Ensure drawdown exists so helper private functions doesn't need to check it again
+        // Ensure drawdown exists so helper private functions doesn't need to check it again
         ensure!(DrawdownsInfo::<T>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
         // Ensure transactions are not empty
@@ -1294,7 +1291,7 @@ impl<T: Config> Pallet<T> {
         // Ensure drawdown is not completed
         Self::is_drawdown_editable(drawdown_id)?;
 
-        //Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
+        // Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
         ensure!(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::<T>::DrawdownTypeNotSupportedForBulkUpload);
 
@@ -1623,7 +1620,7 @@ impl<T: Config> Pallet<T> {
         // Create revenue transaction id
         let revenue_transaction_id = (revenue_id, job_eligible_id, project_id, timestamp).using_encoded(blake2_256);
 
-        //Ensure revenue transaction id doesn't exist
+        // Ensure revenue transaction id doesn't exist
         ensure!(!RevenueTransactionsInfo::<T>::contains_key(revenue_transaction_id), Error::<T>::RevenueTransactionIdAlreadyExists);
 
         // Create revenue transaction data
@@ -2091,10 +2088,10 @@ impl<T: Config> Pallet<T> {
         project_id: ProjectId,
         status: ProjectStatus
     ) -> DispatchResult {
-        //ensure admin permissions
+        // Ensure admin permissions
         Self::is_superuser(admin, &Self::get_global_scope(), ProxyRole::Administrator.id())?;
 
-        //ensure project exists
+        // Ensure project exists
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Check project status is not completed
@@ -2275,7 +2272,7 @@ impl<T: Config> Pallet<T> {
     }
 
 
-    /// This functions performs the following checks:
+    /// Helper function to check the following:
     ///
     /// 1. Checks if the user is registered in the system
     /// 2. Checks if the user has the required role from UsersInfo storage

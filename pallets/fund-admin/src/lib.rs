@@ -24,7 +24,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		//TODO: change all accounts names for users
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
@@ -258,7 +257,7 @@ pub mod pallet {
 		_,
 		Identity,
 		ProjectId, // Key project_id
-		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Revenues
 		ValueQuery,
 	>;
 
@@ -291,7 +290,6 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		// TODO: Delete unused events when updating the readme file
 		/// Proxy initial setup completed using the sudo pallet
 		ProxySetupCompleted,
 		/// Project was created successfully
@@ -386,7 +384,6 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
-		// TODO: Delete unused errors when updating the readme file
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -889,7 +886,7 @@ pub mod pallet {
 		/// the function will return an error: ProjectNotFound
 		///
 		/// # Note:
-		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
+		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
 		/// BE CAREFUL.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_delete_project(
@@ -946,9 +943,9 @@ pub mod pallet {
 			Self::do_execute_assign_users(who, project_id, users)
 		}
 
-		// B U D G E T  E X P E N D I T U R E
+		// B U D G E T  E X P E N D I T U R E   &  J O B   E L I G I B L E S
 		// --------------------------------------------------------------------------------------------
-		/// This extrinsic is used to create, update or delete expenditures.
+		/// This extrinsic is used to create, update or delete expenditures & job eligibles.
 		///
 		/// # Parameters:
 		/// - origin: The administrator account
