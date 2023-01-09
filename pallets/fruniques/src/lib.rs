@@ -91,6 +91,8 @@ pub mod pallet {
 		ParentNotFound,
 		// The frunique doesn't exist
 		FruniqueNotFound,
+		// Max number of children reached
+		MaxNumberOfChildrenReached,
 		// Collection already exists
 		CollectionAlreadyExists,
 		// Frunique already exists
@@ -226,7 +228,7 @@ pub mod pallet {
 			class_id: CollectionId,
 			metadata: CollectionDescription<T>,
 			attributes: Option<Attributes<T>>,
-			parent_info: Option<ParentInfo<T>>,
+			parent_info: Option<ParentInfoCall<T>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			let user: T::AccountId = ensure_signed(origin.clone())?;

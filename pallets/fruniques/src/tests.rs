@@ -3,7 +3,7 @@ use codec::Encode;
 use core::convert::TryFrom;
 
 use frame_support::{assert_noop, assert_ok, BoundedVec};
-use crate::types::ParentInfo;
+use crate::types::ParentInfoCall;
 pub struct ExtBuilder;
 
 // helper function to set BoundedVec
@@ -51,11 +51,11 @@ fn dummy_empty_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, Val
 	vec![]
 }
 
-fn dummy_parent(collection_id: u32, parent_id: u32) -> ParentInfo<Test> {
-	ParentInfo {
+fn dummy_parent(collection_id: u32, parent_id: u32) -> ParentInfoCall<Test> {
+	ParentInfoCall {
 		collection_id,
 		parent_id,
-		parent_weight: Fruniques::percent_to_permill(50),
+		parent_percentage: 10,
 		is_hierarchical: true
 	}
 }

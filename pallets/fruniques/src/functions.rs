@@ -35,12 +35,12 @@ impl<T: Config> Pallet<T> {
 		u32::from_ne_bytes(input.try_into().unwrap())
 	}
 
-	pub fn percent_to_permill(input: u16) -> Permill {
-		Permill::from_percent(input as u32)
+	pub fn percent_to_permill(input: u32) -> Permill {
+		Permill::from_percent(input)
 	}
 
-	pub fn permill_to_percent(input: Permill) -> u16 {
-		input.deconstruct() as u16
+	pub fn permill_to_percent(input: Permill) -> u32 {
+		input.deconstruct() as u32
 	}
 
 	pub fn bytes_to_string(input: Vec<u8>) -> String {
@@ -167,13 +167,41 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn mint(
-		origin: OriginFor<T>,
-		class_id: &T::CollectionId,
-		instance_id: T::ItemId,
-		owner: <T::Lookup as sp_runtime::traits::StaticLookup>::Source,
-	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::mint(origin, *class_id, instance_id, owner)?;
+	pub fn do_mint(
+		collection: T::CollectionId,
+		owner: T::AccountId,
+		metadata: CollectionDescription<T>,
+		attributes: Option<Attributes<T>>,
+	) -> DispatchResult
+	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
+	{
+		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
+		<NextFrunique<T>>::insert(collection, nex_item + 1);
+
+		let item = Self::u32_to_instance_id(nex_item);
+		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
+
+		pallet_uniques::Pallet::<T>::set_metadata(
+			frame_system::RawOrigin::Root.into(),
+			collection,
+			item.clone(),
+			metadata,
+			false,
+		)?;
+
+		if let Some(attributes) = attributes {
+			for (key, value) in attributes {
+				pallet_uniques::Pallet::<T>::set_attribute(
+					frame_system::RawOrigin::Root.into(),
+					collection,
+					Some(item),
+					key,
+					value,
+				)?;
+			}
+		}
+
 		Ok(())
 	}
 
@@ -249,63 +277,89 @@ impl<T: Config> Pallet<T> {
 		owner: T::AccountId,
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
-		parent_info: Option<ParentInfo<T>>,
+		parent_info: Option<ParentInfoCall<T>>,
 	) -> DispatchResult
 	where
-		<T as pallet_uniques::Config>::ItemId: From<u32>,
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 
-		if let Some(ref parent_info) = parent_info {
-			ensure!(
-				Self::collection_exists(&parent_info.collection_id),
-				Error::<T>::CollectionNotFound
-			);
-			ensure!(
-				Self::instance_exists(&parent_info.collection_id, &parent_info.parent_id),
-				Error::<T>::FruniqueNotFound
-			);
-		}
-
 		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
-		<NextFrunique<T>>::insert(collection, nex_item + 1);
-
 		let item = Self::u32_to_instance_id(nex_item);
-		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
 
-		pallet_uniques::Pallet::<T>::set_metadata(
-			frame_system::RawOrigin::Root.into(),
-			collection,
-			item.clone(),
-			metadata,
-			false,
-		)?;
+		Self::do_mint(collection, owner, metadata, attributes)?;
 
-		if let Some(attributes) = attributes {
-			for (key, value) in attributes {
-				pallet_uniques::Pallet::<T>::set_attribute(
-					frame_system::RawOrigin::Root.into(),
-					collection,
-					Some(item),
-					key,
-					value,
-				)?;
-			}
+		if let Some(ref parent_info) = parent_info {
+			return Self::do_nft_division(collection, item, parent_info);
 		}
 
-		let frunique_data = FruniqueData {
-			weight: Self::percent_to_permill(100),
-			parent: parent_info,
-			children: None,
-		};
-
+		let frunique_data =
+			FruniqueData { weight: Self::percent_to_permill(100), parent: None, children: None };
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
 
 		Ok(())
 	}
 
-	pub fn do_nft_division() -> DispatchResult {
+	pub fn do_nft_division(
+		collection: T::CollectionId,
+		item: T::ItemId,
+		parent_info: &ParentInfoCall<T>,
+	) -> DispatchResult
+	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
+	{
+		ensure!(
+			Self::collection_exists(&parent_info.collection_id),
+			Error::<T>::CollectionNotFound
+		);
+		ensure!(
+			Self::instance_exists(&parent_info.collection_id, &parent_info.parent_id),
+			Error::<T>::FruniqueNotFound
+		);
+
+		let parent_data = ParentInfo {
+			collection_id: parent_info.collection_id,
+			parent_id: parent_info.parent_id,
+			parent_weight: Self::percent_to_permill(parent_info.parent_percentage),
+			is_hierarchical: parent_info.is_hierarchical,
+		};
+
+		let frunique_data = FruniqueData {
+			weight: Self::percent_to_permill(100),
+			parent: Some(parent_data),
+			children: None,
+		};
+
+		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
+
+		let frunique_child = ChildInfo {
+			collection_id: collection,
+			child_id: item,
+			weight_inherited: Self::percent_to_permill(parent_info.parent_percentage),
+			is_hierarchical: parent_info.is_hierarchical,
+		};
+
+		<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			parent_info.collection_id,
+			parent_info.parent_id,
+			|frunique_data| -> DispatchResult {
+				let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+				match frunique.children.as_mut() {
+					Some(children) => children
+						.try_push(frunique_child)
+						.map_err(|_| Error::<T>::MaxNumberOfChildrenReached)?,
+					None => {
+						let child = frunique.children.get_or_insert(Children::default());
+						child
+							.try_push(frunique_child)
+							.map_err(|_| Error::<T>::MaxNumberOfChildrenReached)?;
+					},
+				}
+				// let parent_weight = Self::permill_to_percent(frunique.weight);
+				Ok(())
+			},
+		)?;
+
 		Ok(())
 	}
 

@@ -9,6 +9,7 @@ use sp_runtime::Permill;
 pub type AttributeKey<T> = BoundedVec<u8, <T as pallet_uniques::Config>::KeyLimit>;
 pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::ValueLimit>;
 pub type Attributes<T> = Vec<(AttributeKey<T>, AttributeValue<T>)>;
+pub type Children<T> = BoundedVec<ChildInfo<T>, <T as Config>::ChildMaxLen>;
 
 // pub type CollectionDescription = [u8; 32];
 pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
@@ -23,9 +24,11 @@ pub type Hierarchical = bool;
 pub type Percentage = u16;
 
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
-pub struct ChildInfo {
-	pub collection_id: CollectionId,
-	pub child_id: ItemId,
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ChildInfo<T : Config> {
+	pub collection_id: T::CollectionId,
+	pub child_id: T::ItemId,
 	pub weight_inherited: Permill,
 	pub is_hierarchical: bool,
 }
@@ -40,7 +43,7 @@ pub struct ParentInfo<T: Config> {
 	pub is_hierarchical: bool,
 }
 
-impl <T: Config> PartialEq for ParentInfo<T> {
+impl<T: Config> PartialEq for ParentInfo<T> {
 	fn eq(&self, other: &Self) -> bool {
 		self.collection_id == other.collection_id
 			&& self.parent_id == other.parent_id
@@ -49,12 +52,53 @@ impl <T: Config> PartialEq for ParentInfo<T> {
 	}
 }
 
-impl <T: Config> Clone for ParentInfo<T> {
+impl<T: Config> Clone for ParentInfo<T> {
 	fn clone(&self) -> Self {
 		Self {
 			collection_id: self.collection_id.clone(),
 			parent_id: self.parent_id.clone(),
 			parent_weight: self.parent_weight.clone(),
+			is_hierarchical: self.is_hierarchical.clone(),
+		}
+	}
+}
+
+#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, Copy)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ParentInfoCall<T: Config> {
+	pub collection_id: T::CollectionId,
+	pub parent_id: T::ItemId,
+	pub parent_percentage: u32,
+	pub is_hierarchical: bool,
+}
+
+impl<T: Config> ParentInfoCall<T> {
+	pub fn new(
+		collection_id: T::CollectionId,
+		parent_id: T::ItemId,
+		parent_percentage: u32,
+		is_hierarchical: bool,
+	) -> Self {
+		Self { collection_id, parent_id, parent_percentage, is_hierarchical }
+	}
+}
+
+impl<T: Config> PartialEq for ParentInfoCall<T> {
+	fn eq(&self, other: &Self) -> bool {
+		self.collection_id == other.collection_id
+			&& self.parent_id == other.parent_id
+			&& self.parent_percentage == other.parent_percentage
+			&& self.is_hierarchical == other.is_hierarchical
+	}
+}
+
+impl<T: Config> Clone for ParentInfoCall<T> {
+	fn clone(&self) -> Self {
+		Self {
+			collection_id: self.collection_id.clone(),
+			parent_id: self.parent_id.clone(),
+			parent_percentage: self.parent_percentage.clone(),
 			is_hierarchical: self.is_hierarchical.clone(),
 		}
 	}
@@ -66,8 +110,9 @@ impl <T: Config> Clone for ParentInfo<T> {
 pub struct FruniqueData<T: Config> {
 	pub weight: Permill,
 	pub parent: Option<ParentInfo<T>>,
-	pub children: Option<BoundedVec<ChildInfo, T::ChildMaxLen>>,
+	pub children: Option<Children<T>>,
 }
+
 impl<T: Config> FruniqueData<T> {
 	pub fn new() -> Self {
 		Self { weight: Permill::from_percent(100), parent: None, children: None }
