@@ -18,26 +18,42 @@ pub type ItemId = u32;
 
 pub type CollectionDescription<T> = StringLimit<T>;
 // (ParentId, Hierarchical, Percentage)
-pub type HierarchicalInfo = (ItemId, bool, u8);
+pub type ParentId = ItemId;
+pub type Hierarchical = bool;
+pub type Percentage = u16;
 
-// pub type RoleId<T> =
-
-// pub type RoleIds<T> = BoundedVec<[u8; 32], <<T as Config>::Rbac as RoleBasedAccessControl<<T as Config>::AccountId>>::MaxRolesPerPallet>;
-
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct ChildInfo {
 	pub collection_id: CollectionId,
 	pub child_id: ItemId,
+	pub weight_inherited: Permill,
 	pub is_hierarchical: bool,
-	pub weight: Permill,
 }
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+pub struct ParentInfo {
+	pub collection_id: CollectionId,
+	pub parent_id: ItemId,
+	pub parent_weight: Permill,
+	pub is_hierarchical: bool,
+}
+
+#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct FruniqueInheritance<T: Config> {
-	pub parent: (CollectionId, ItemId),
-	pub children: BoundedVec<ChildInfo, T::ChildMaxLen>,
+pub struct FruniqueData<T: Config> {
+	pub weight: Permill,
+	pub parent: Option<ParentInfo>,
+	pub children: Option<BoundedVec<ChildInfo, T::ChildMaxLen>>,
+}
+impl<T: Config> FruniqueData<T> {
+	pub fn new() -> Self {
+		Self {
+			weight: Permill::from_percent(100),
+			parent: None,
+			children: None,
+		}
+	}
 }
 
 #[derive(
@@ -109,6 +125,8 @@ pub enum Permission {
 	None,
 	/// Authorization required and must be approved by the owner
 	Mint,
+	/// Authorization required and must be approved by the owner or admin
+	Burn,
 	/// Authorization required and must be approved by a holder / collector
 	Transfer,
 	/// Allow a user to collaborate on a collection
@@ -120,6 +138,7 @@ impl Permission {
 		match self {
 			Self::None => "None".as_bytes().to_vec(),
 			Self::Mint => "Mint".as_bytes().to_vec(),
+			Self::Burn => "Burn".as_bytes().to_vec(),
 			Self::Transfer => "Transfer".as_bytes().to_vec(),
 			Self::InviteCollaborator => "InviteCollaborator".as_bytes().to_vec(),
 		}
@@ -137,13 +156,13 @@ impl Permission {
 
 	pub fn owner_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		[Mint.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
+		[Mint.to_vec(), Burn.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
 	}
 
 	pub fn admin_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
 		let mut admin_permissions =
-			[Mint.to_vec(), InviteCollaborator.to_vec()].to_vec();
+			[Mint.to_vec(), Burn.to_vec(), InviteCollaborator.to_vec()].to_vec();
 		admin_permissions.append(&mut Permission::holder_permissions());
 		admin_permissions
 	}

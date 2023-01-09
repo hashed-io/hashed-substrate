@@ -12,10 +12,9 @@ use frame_support::pallet_prelude::*;
 use frame_support::traits::EnsureOriginWithArg;
 use frame_support::PalletId;
 // use frame_support::traits::OriginTrait;
-use sp_runtime::{sp_std::vec::Vec, Permill};
 use sp_runtime::traits::AccountIdConversion;
+use sp_runtime::{sp_std::vec::Vec, Permill};
 // use sp_runtime::traits::StaticLookup;
-
 
 impl<T: Config> Pallet<T> {
 	pub fn u32_to_instance_id(input: u32) -> T::ItemId
@@ -36,8 +35,12 @@ impl<T: Config> Pallet<T> {
 		u32::from_ne_bytes(input.try_into().unwrap())
 	}
 
-	pub fn percent_to_permill(input: u8) -> Permill {
+	pub fn percent_to_permill(input: u16) -> Permill {
 		Permill::from_percent(input as u32)
+	}
+
+	pub fn permill_to_percent(input: Permill) -> u16 {
+		input.deconstruct() as u16
 	}
 
 	pub fn bytes_to_string(input: Vec<u8>) -> String {
@@ -87,62 +90,61 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_initial_setup() -> DispatchResult {
-
 		let pallet: IdOrVec = Self::pallet_id();
 
-		let owner_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_owner_roles())?;
+		let owner_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_owner_roles())?;
 
 		for owner_role in owner_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				owner_role,
-				Permission::owner_permissions())?;
+				Permission::owner_permissions(),
+			)?;
 		}
 
-		let admin_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_admin_roles())?;
+		let admin_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_admin_roles())?;
 
 		for admin_role in admin_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				admin_role,
-				Permission::admin_permissions())?;
+				Permission::admin_permissions(),
+			)?;
 		}
 
-		let collaborator_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_collaborator_roles())?;
+		let collaborator_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collaborator_roles())?;
 
 		for collaborator_role in collaborator_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				collaborator_role,
-				Permission::collaborator_permissions())?;
+				Permission::collaborator_permissions(),
+			)?;
 		}
 
-		let collector_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_collector_roles())?;
+		let collector_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collector_roles())?;
 
 		for collector_role in collector_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				collector_role,
-				Permission::collector_permissions())?;
+				Permission::collector_permissions(),
+			)?;
 		}
 
-		let holder_role_ids = T::Rbac::create_and_set_roles(
-			pallet.clone(),
-			FruniqueRole::get_holder_roles())?;
+		let holder_role_ids =
+			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_holder_roles())?;
 
 		for holder_role in holder_role_ids {
 			T::Rbac::create_and_set_permissions(
 				pallet.clone(),
 				holder_role,
-				Permission::holder_permissions())?;
+				Permission::holder_permissions(),
+			)?;
 		}
 
 		Ok(())
@@ -205,10 +207,15 @@ impl<T: Config> Pallet<T> {
 	/// Creates a collection and updates its metadata if needed.
 	pub fn do_create_collection(
 		origin: OriginFor<T>,
-		class_id: T::CollectionId,
 		metadata: CollectionDescription<T>,
 		admin: T::AccountId,
-	) -> DispatchResult {
+	) -> DispatchResult
+	where
+		<T as pallet_uniques::Config>::CollectionId: From<u32>,
+	{
+		let next_collection: u32 = Self::next_collection();
+		let class_id = Self::u32_to_class_id(next_collection);
+
 		let owner = T::CreateOrigin::ensure_origin(origin.clone(), &class_id)?;
 
 		let scope_id = class_id.using_encoded(blake2_256);
@@ -229,38 +236,31 @@ impl<T: Config> Pallet<T> {
 			origin,
 			class_id.clone(),
 			metadata,
-			false)?;
+			false,
+		)?;
 
-
-		// let pallet_lookup = T::Lookup::lookup(Self::account_id_to_lookup_source(&Self::pallet_account()))?;
-		// let res: OriginFor<T> = frame_system::RawOrigin::Signed(pallet_lookup).into();
-
-		// pallet_uniques::Pallet::<T>::set_accept_ownership(res, Some(class_id))?;
-
-		// pallet_uniques::Pallet::<T>::transfer_ownership(origin, class_id, Self::account_id_to_lookup_source(&Self::pallet_account()))?;
+		<NextCollection<T>>::put(Self::next_collection() + 1);
 
 		Ok(())
 	}
 
 	pub fn do_spawn(
 		collection: T::CollectionId,
-		item: T::ItemId,
 		owner: T::AccountId,
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
-	) -> DispatchResult {
+	) -> DispatchResult
+	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
+	{
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 
-		// pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
-		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| {
-				Ok(())
-			})?;
-
-		// let pallet_lookup = T::Lookup::lookup(Self::account_id_to_lookup_source(&Self::pallet_account()))?;
-		// let res: OriginFor<T> = frame_system::RawOrigin::Signed(pallet_lookup).into();
+		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
+		<NextFrunique<T>>::insert(collection, nex_item + 1);
+		let item = Self::u32_to_instance_id(nex_item);
+		pallet_uniques::Pallet::<T>::do_mint(collection, item, owner, |_| Ok(()))?;
 
 		pallet_uniques::Pallet::<T>::set_metadata(
-			// OriginFor::<T>::signed(Self::pallet_account()),
 			frame_system::RawOrigin::Root.into(),
 			collection,
 			item,
@@ -271,7 +271,6 @@ impl<T: Config> Pallet<T> {
 		if let Some(attributes) = attributes {
 			for (key, value) in attributes {
 				pallet_uniques::Pallet::<T>::set_attribute(
-					// OriginFor::<T>::signed(Self::pallet_account()),
 					frame_system::RawOrigin::Root.into(),
 					collection,
 					Some(item),
@@ -284,6 +283,10 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn do_nft_division() -> DispatchResult {
+		Ok(())
+	}
+
 	/// Helper functions to interact with the RBAC module
 	pub fn pallet_id() -> IdOrVec {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
@@ -291,7 +294,8 @@ impl<T: Config> Pallet<T> {
 
 	pub fn pallet_account() -> T::AccountId {
 		let pallet_name = Self::module_name().as_bytes().to_vec();
-		let pallet_account_name: [u8; 8] = pallet_name.as_slice().try_into().unwrap_or(*b"frunique");
+		let pallet_account_name: [u8; 8] =
+			pallet_name.as_slice().try_into().unwrap_or(*b"frunique");
 		let pallet_id = PalletId(pallet_account_name);
 		pallet_id.try_into_account().unwrap()
 	}

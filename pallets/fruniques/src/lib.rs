@@ -38,7 +38,6 @@ pub mod pallet {
 		/// The fruniques pallet id, used for deriving its sovereign account ID.
 		// #[pallet::constant]
 		// type PalletId: Get<PalletId>;
-
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 	}
 
@@ -86,6 +85,8 @@ pub mod pallet {
 		AttributesEmpty,
 		// The collection doesn't exist
 		CollectionNotFound,
+		/// Frunique is bigger than the maximum allowed size
+		ExceedMaxPercentage,
 		// The parent doesn't exist
 		ParentNotFound,
 		// The frunique doesn't exist
@@ -97,11 +98,6 @@ pub mod pallet {
 		// Frunique already verified
 		FruniqueAlreadyVerified,
 	}
-
-	#[pallet::storage]
-	#[pallet::getter(fn frunique_cnt)]
-	/// Keeps track of the number of Kitties in existence.
-	pub(super) type FruniqueCnt<T: Config> = StorageValue<_, ItemId, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection)]
@@ -118,22 +114,21 @@ pub mod pallet {
 	pub(super) type NextFrunique<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
 		ItemId, // The next frunique id for a collection.
 		ValueQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn frunique_parent)]
-	/// Keeps track of hierarchical information for a frunique.
-	pub(super) type FruniqueParent<T: Config> = StorageDoubleMap<
+	#[pallet::getter(fn frunique_info)]
+	pub(super) type FruniqueInfo<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
 		Blake2_128Concat,
-		ItemId,                   // FruniqueId
-		Option<HierarchicalInfo>, // ParentId and flag if it inherit attributes
-		ValueQuery,
+		ItemId,
+		FruniqueData<T>,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -142,23 +137,10 @@ pub mod pallet {
 	pub(super) type FruniqueVerified<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
 		Blake2_128Concat,
-		ItemId,
+		T::ItemId,
 		bool,
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn frunique_child)]
-	/// Keeps track of hierarchical information for a frunique.
-	pub(super) type FruniqueChild<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat,
-		CollectionId, // Parent collection id
-		Blake2_128Concat,
-		ItemId,            // Parent item id
-		Option<ChildInfo>, // ParentId and flag if it inherit attributes
 		ValueQuery,
 	>;
 
@@ -190,30 +172,11 @@ pub mod pallet {
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
 
-			let new_collection_id: u32 = Self::next_collection();
+			Self::do_create_collection(origin, metadata, admin.clone())?;
 
-			Self::do_create_collection(origin, new_collection_id, metadata, admin.clone())?;
+			let next_collection_id: u32 = Self::next_collection();
+			Self::deposit_event(Event::FruniqueCollectionCreated(admin, next_collection_id));
 
-			Self::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
-
-			<NextCollection<T>>::put(Self::next_collection() + 1);
-
-			Ok(())
-		}
-
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(4))]
-		pub fn instance_exists(
-			_origin: OriginFor<T>,
-			_class_id: T::CollectionId,
-			_instance_id: T::ItemId,
-		) -> DispatchResult {
-			// Always returns an empty iterator?
-			//let instances = pallet_uniques::Pallet::<T>::;
-			//println!("Instances found in class {:?}",instances.count());
-			//log::info!("Instances found in class {:?}", instances.count());
-			//println!("\tIterator? {}",instances.count());
-			//Self::deposit_event(Event::NextFrunique(instances.count().try_into().unwrap()  ));
-			//instances.into_iter().for_each(|f| println!("\tInstance:{:?}",f));
 			Ok(())
 		}
 
@@ -261,7 +224,6 @@ pub mod pallet {
 		pub fn spawn(
 			origin: OriginFor<T>,
 			class_id: CollectionId,
-			parent_info: Option<HierarchicalInfo>,
 			metadata: CollectionDescription<T>,
 			attributes: Option<Attributes<T>>,
 		) -> DispatchResult {
@@ -269,38 +231,9 @@ pub mod pallet {
 			let user: T::AccountId = ensure_signed(origin.clone())?;
 			Self::is_authorized(user, class_id, Permission::Mint)?;
 
-			if let Some(parent_info) = parent_info {
-				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
-			}
-
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
-			// T::Currency::transfer(&owner.clone(), &owner_item, offer_data.price, KeepAlive)?;
 
-			let instance_id: ItemId = <NextFrunique<T>>::try_get(class_id).unwrap_or(0);
-			<NextFrunique<T>>::insert(class_id, instance_id + 1);
-
-			if let Some(parent_info) = parent_info {
-				ensure!(Self::item_exists(&class_id, &parent_info.0), Error::<T>::ParentNotFound);
-				<FruniqueParent<T>>::insert(class_id, instance_id, Some(parent_info));
-
-				let child_info = ChildInfo {
-					collection_id: class_id,
-					child_id: instance_id,
-					is_hierarchical: parent_info.1,
-					weight: Self::percent_to_permill(parent_info.2),
-				};
-
-				<FruniqueChild<T>>::insert(class_id, instance_id, Some(child_info));
-			}
-
-			Self::do_spawn(class_id, instance_id, owner.clone(), metadata, attributes)?;
-
-			Self::deposit_event(Event::FruniqueCreated(
-				owner,
-				Self::pallet_account(),
-				class_id,
-				instance_id,
-			));
+			Self::do_spawn(class_id, owner, metadata, attributes)?;
 
 			Ok(())
 		}
@@ -425,11 +358,10 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			<FruniqueCnt<T>>::put(0);
 			<NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
-			let _ = <FruniqueParent<T>>::clear(1000, None);
-			let _ = <FruniqueChild<T>>::clear(1000, None);
+			let _ = <FruniqueVerified<T>>::clear(1000, None);
+			let _ = <FruniqueInfo<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
