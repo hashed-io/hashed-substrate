@@ -2776,9 +2776,6 @@
 <span id="2776">2776</span>
 <span id="2777">2777</span>
 <span id="2778">2778</span>
-<span id="2779">2779</span>
-<span id="2780">2780</span>
-<span id="2781">2781</span>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -2955,16 +2952,16 @@
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::EditProject)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure project exists
+        <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
         <span class="comment">// Ensure project is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
-        <span class="comment">//Get current timestamp
+        <span class="comment">// Get current timestamp
         </span><span class="kw">let </span>current_timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
-        <span class="comment">//Mutate project data
+        <span class="comment">// Mutate project data
         </span>&lt;ProjectsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |project| {
             <span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
 
@@ -2995,7 +2992,7 @@
             <span class="prelude-val">Ok</span>(())
         })<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure completion_date is later than creation_date
+        <span class="comment">// Ensure completion_date is later than creation_date
         </span><span class="self">Self</span>::is_project_completion_date_later(project_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Event
@@ -3019,10 +3016,7 @@
         <span class="comment">// Delete scope from rbac pallet
         </span>T::Rbac::remove_scope(<span class="self">Self</span>::pallet_id(), project_id)<span class="question-mark">?</span>;
 
-        <span class="comment">// TOREVIEW: check if this method is the best way to delete data from storage
-        // we could use get method (&lt;UsersByProject&lt;T&gt;&gt;::get()) instead getter function
-        // Delete project from ProjectsByUser storage
-        </span><span class="kw">let </span>users_by_project = <span class="self">Self</span>::users_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;T::AccountId&gt;&gt;();
+        <span class="kw">let </span>users_by_project = <span class="self">Self</span>::users_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;T::AccountId&gt;&gt;();
         <span class="kw">for </span>user <span class="kw">in </span>users_by_project.iter().cloned() {
             &lt;ProjectsByUser&lt;T&gt;&gt;::mutate(user, |projects| {
                 projects.retain(|project| <span class="kw-2">*</span>project != project_id);
@@ -3469,7 +3463,7 @@
         <span class="comment">// Get timestamp
         </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure expenditure name is not empty
+        <span class="comment">// Ensure expenditure name is not empty
         </span><span class="macro">ensure!</span>(!name.is_empty(), Error::&lt;T&gt;::EmptyExpenditureName);
 
         <span class="comment">// Create expenditure id
@@ -3899,7 +3893,7 @@
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure drawdown exists so helper private functions doesn&#39;t need to check it again
+        <span class="comment">// Ensure drawdown exists so helper private functions doesn&#39;t need to check it again
         </span><span class="macro">ensure!</span>(DrawdownsInfo::&lt;T&gt;::contains_key(drawdown_id), Error::&lt;T&gt;::DrawdownNotFound);
 
         <span class="comment">// Ensure transactions are not empty
@@ -4075,7 +4069,7 @@
         <span class="comment">// Ensure drawdown is not completed
         </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
 
-        <span class="comment">//Ensure only Construction loan &amp; developer equity drawdowns are able to call bulk upload extrinsic
+        <span class="comment">// Ensure only Construction loan &amp; developer equity drawdowns are able to call bulk upload extrinsic
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
         <span class="macro">ensure!</span>(drawdown_data.drawdown_type == DrawdownType::ConstructionLoan || drawdown_data.drawdown_type == DrawdownType::DeveloperEquity, Error::&lt;T&gt;::DrawdownTypeNotSupportedForBulkUpload);
 
@@ -4404,7 +4398,7 @@
         <span class="comment">// Create revenue transaction id
         </span><span class="kw">let </span>revenue_transaction_id = (revenue_id, job_eligible_id, project_id, timestamp).using_encoded(blake2_256);
 
-        <span class="comment">//Ensure revenue transaction id doesn&#39;t exist
+        <span class="comment">// Ensure revenue transaction id doesn&#39;t exist
         </span><span class="macro">ensure!</span>(!RevenueTransactionsInfo::&lt;T&gt;::contains_key(revenue_transaction_id), Error::&lt;T&gt;::RevenueTransactionIdAlreadyExists);
 
         <span class="comment">// Create revenue transaction data
@@ -4872,10 +4866,10 @@
         project_id: ProjectId,
         status: ProjectStatus
     ) -&gt; DispatchResult {
-        <span class="comment">//ensure admin permissions
+        <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_superuser(admin, <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyRole::Administrator.id())<span class="question-mark">?</span>;
 
-        <span class="comment">//ensure project exists
+        <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
         <span class="comment">// Check project status is not completed
@@ -5056,7 +5050,7 @@
     }
 
 
-    <span class="doccomment">/// This functions performs the following checks:
+    <span class="doccomment">/// Helper function to check the following:
     ///
     /// 1. Checks if the user is registered in the system
     /// 2. Checks if the user has the required role from UsersInfo storage

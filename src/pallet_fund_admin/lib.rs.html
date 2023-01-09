@@ -1534,9 +1534,6 @@
 <span id="1534">1534</span>
 <span id="1535">1535</span>
 <span id="1536">1536</span>
-<span id="1537">1537</span>
-<span id="1538">1538</span>
-<span id="1539">1539</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1563,8 +1560,7 @@
 
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		<span class="comment">//TODO: change all accounts names for users
-		</span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
 		<span class="kw">type </span>Moment: Parameter
 		+ Default
@@ -1797,7 +1793,7 @@
 		<span class="kw">_</span>,
 		Identity,
 		ProjectId, <span class="comment">// Key project_id
-		</span>BoundedVec&lt;RevenueId, T::MaxDrawdownsPerProject&gt;,  <span class="comment">// Value Drawdowns
+		</span>BoundedVec&lt;RevenueId, T::MaxDrawdownsPerProject&gt;,  <span class="comment">// Value Revenues
 		</span>ValueQuery,
 	&gt;;
 
@@ -1830,8 +1826,7 @@
 	</span><span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="comment">// TODO: Delete unused events when updating the readme file
-		</span><span class="doccomment">/// Proxy initial setup completed using the sudo pallet
+		<span class="doccomment">/// Proxy initial setup completed using the sudo pallet
 		</span>ProxySetupCompleted,
 		<span class="doccomment">/// Project was created successfully
 		</span>ProjectCreated(T::AccountId, ProjectId),
@@ -1925,8 +1920,7 @@
 	// ------------------------------------------------------------------------------------------------------------
 	</span><span class="attribute">#[pallet::error]
 	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="comment">// TODO: Delete unused errors when updating the readme file
-		</span><span class="doccomment">/// No value was found for the global scope
+		<span class="doccomment">/// No value was found for the global scope
 		</span>NoGlobalScopeValueWasFound,
 		<span class="doccomment">/// Project ID is already in use
 		</span>ProjectIdAlreadyInUse,
@@ -2428,7 +2422,7 @@
 		/// the function will return an error: ProjectNotFound
 		///
 		/// # Note:
-		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
+		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
 		/// BE CAREFUL.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>projects_delete_project(
@@ -2485,9 +2479,9 @@
 			</span><span class="self">Self</span>::do_execute_assign_users(who, project_id, users)
 		}
 
-		<span class="comment">// B U D G E T  E X P E N D I T U R E
+		<span class="comment">// B U D G E T  E X P E N D I T U R E   &amp;  J O B   E L I G I B L E S
 		// --------------------------------------------------------------------------------------------
-		</span><span class="doccomment">/// This extrinsic is used to create, update or delete expenditures.
+		</span><span class="doccomment">/// This extrinsic is used to create, update or delete expenditures &amp; job eligibles.
 		///
 		/// # Parameters:
 		/// - origin: The administrator account
