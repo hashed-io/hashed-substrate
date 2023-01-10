@@ -81,7 +81,7 @@ impl<T: Config> Pallet<T> {
         description: FieldDescription,
         image: Option<CID>,
         address: FieldName,
-        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
+        banks: Option<Banks<T>>,
         creation_date: CreationDate,
         completion_date: CompletionDate,
         expenditures: Expenditures<T>,
@@ -167,7 +167,7 @@ impl<T: Config> Pallet<T> {
         description: Option<FieldDescription>,
         image: Option<CID>,
         address: Option<FieldName>,
-        banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
+        banks: Option<Banks<T>>,
         creation_date: Option<CreationDate>,
         completion_date: Option<CompletionDate>,
     ) -> DispatchResult {

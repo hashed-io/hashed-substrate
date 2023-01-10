@@ -22,6 +22,10 @@ pub type UsersAssignation<T> = BoundedVec<(
     ProxyRole,
     AssignAction,
 ), <T as Config>::MaxRegistrationsAtTime>;
+pub type Banks<T> = BoundedVec<(
+    BankName,
+    BankAddress,
+), <T as Config>::MaxBanksPerProject>;
 pub type PrivateGroupId = BoundedVec<u8, ConstU32<400>>;
 
 // Users
@@ -113,7 +117,7 @@ pub struct ProjectData<T: Config> {
     pub address: FieldName,
     pub status: ProjectStatus,
     pub inflation_rate: Option<InflationRate>,
-    pub banks: Option<BoundedVec<(BankName, BankAddress), T::MaxBanksPerProject>>,
+    pub banks: Option<Banks<T>>,
     pub creation_date: CreationDate,
     pub completion_date: CompletionDate,
     pub registration_date: RegistrationDate,
