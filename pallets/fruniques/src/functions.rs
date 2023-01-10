@@ -89,6 +89,7 @@ impl<T: Config> Pallet<T> {
 		false
 	}
 
+	// helper to initialize the roles for the RBAC module
 	pub fn do_initial_setup() -> DispatchResult {
 		let pallet: IdOrVec = Self::pallet_id();
 
@@ -150,6 +151,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// Helper function to set an attribute to a given NFT
 	pub fn set_attribute(
 		origin: OriginFor<T>,
 		class_id: &T::CollectionId,
@@ -167,6 +169,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// Helper function to mint a new NFT
 	pub fn do_mint(
 		collection: T::CollectionId,
 		owner: T::AccountId,
@@ -272,6 +275,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// Create a new NFT for a given collection
 	pub fn do_spawn(
 		collection: T::CollectionId,
 		owner: T::AccountId,
@@ -300,6 +304,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// Takes cares of the division of the NFT
 	pub fn do_nft_division(
 		collection: T::CollectionId,
 		item: T::ItemId,
@@ -317,10 +322,16 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::FruniqueNotFound
 		);
 
+		let frunique_parent =
+			<FruniqueInfo<T>>::try_get(&parent_info.collection_id, &parent_info.parent_id).unwrap();
+
+		let child_percentage = Permill::from_percent(parent_info.parent_percentage) * frunique_parent.weight;
+
+
 		let parent_data = ParentInfo {
 			collection_id: parent_info.collection_id,
 			parent_id: parent_info.parent_id,
-			parent_weight: Self::percent_to_permill(parent_info.parent_percentage),
+			parent_weight: child_percentage,
 			is_hierarchical: parent_info.is_hierarchical,
 		};
 
@@ -335,7 +346,7 @@ impl<T: Config> Pallet<T> {
 		let frunique_child = ChildInfo {
 			collection_id: collection,
 			child_id: item,
-			weight_inherited: Self::percent_to_permill(parent_info.parent_percentage),
+			weight_inherited: child_percentage,
 			is_hierarchical: parent_info.is_hierarchical,
 		};
 
@@ -355,7 +366,7 @@ impl<T: Config> Pallet<T> {
 							.map_err(|_| Error::<T>::MaxNumberOfChildrenReached)?;
 					},
 				}
-				// let parent_weight = Self::permill_to_percent(frunique.weight);
+				frunique.weight = frunique.weight - child_percentage;
 				Ok(())
 			},
 		)?;
@@ -368,6 +379,7 @@ impl<T: Config> Pallet<T> {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
 
+	// Helper function to get the pallet account as a AccountId
 	pub fn pallet_account() -> T::AccountId {
 		let pallet_name = Self::module_name().as_bytes().to_vec();
 		let pallet_account_name: [u8; 8] =
@@ -376,6 +388,7 @@ impl<T: Config> Pallet<T> {
 		pallet_id.try_into_account().unwrap()
 	}
 
+	// Helper add RBAC roles for collections
 	pub fn insert_auth_in_frunique_collection(
 		user: T::AccountId,
 		class_id: T::CollectionId,
@@ -391,6 +404,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// Helper function to check if a user has a specific role in a collection
 	pub fn is_authorized(
 		user: T::AccountId,
 		collection_id: T::CollectionId,
