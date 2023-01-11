@@ -281,7 +281,7 @@ impl<T: Config> Pallet<T> {
 		owner: T::AccountId,
 		metadata: CollectionDescription<T>,
 		attributes: Option<Attributes<T>>,
-		parent_info: Option<ParentInfoCall<T>>,
+		parent_info: Option<ParentInfo<T>>,
 	) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
@@ -291,14 +291,19 @@ impl<T: Config> Pallet<T> {
 		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
 		let item = Self::u32_to_instance_id(nex_item);
 
-		Self::do_mint(collection, owner, metadata, attributes)?;
+		Self::do_mint(collection, owner, metadata.clone(), attributes)?;
 
 		if let Some(ref parent_info) = parent_info {
-			return Self::do_nft_division(collection, item, parent_info);
+			return Self::do_nft_division(collection, item, metadata, parent_info);
 		}
 
-		let frunique_data =
-			FruniqueData { weight: Self::percent_to_permill(100), parent: None, children: None };
+		let frunique_data = FruniqueData {
+			metadata,
+			weight: Self::percent_to_permill(100),
+			parent: None,
+			children: None,
+		};
+
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
 
 		Ok(())
@@ -308,7 +313,8 @@ impl<T: Config> Pallet<T> {
 	pub fn do_nft_division(
 		collection: T::CollectionId,
 		item: T::ItemId,
-		parent_info: &ParentInfoCall<T>,
+		metadata: CollectionDescription<T>,
+		parent_info: &ParentInfo<T>,
 	) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
@@ -325,8 +331,7 @@ impl<T: Config> Pallet<T> {
 		let frunique_parent =
 			<FruniqueInfo<T>>::try_get(&parent_info.collection_id, &parent_info.parent_id).unwrap();
 
-		let child_percentage = Permill::from_percent(parent_info.parent_percentage) * frunique_parent.weight;
-
+		let child_percentage = parent_info.parent_weight * frunique_parent.weight;
 
 		let parent_data = ParentInfo {
 			collection_id: parent_info.collection_id,
@@ -336,6 +341,7 @@ impl<T: Config> Pallet<T> {
 		};
 
 		let frunique_data = FruniqueData {
+			metadata,
 			weight: Self::percent_to_permill(100),
 			parent: Some(parent_data),
 			children: None,
@@ -372,6 +378,14 @@ impl<T: Config> Pallet<T> {
 		)?;
 
 		Ok(())
+	}
+
+	pub fn get_nft_metadata(
+		collection: T::CollectionId,
+		item: T::ItemId,
+	) -> CollectionDescription<T> {
+		let frunique_data = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
+		frunique_data.metadata
 	}
 
 	/// Helper functions to interact with the RBAC module

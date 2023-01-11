@@ -11,6 +11,7 @@ pub type FieldName = BoundedVec<u8,ConstU32<100>>;
 pub type Cid = BoundedVec<u8,ConstU32<100>>;
 pub type Cids<Len> = BoundedVec<Cid, Len>;
 pub type CustodianFields<T> = ( AccountIdOf<T>, Cids<<T as Config>::MaxFiles>);
+use sp_runtime::Permill;
 
 #[derive(CloneNoBound,Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,)]
 #[scale_info(skip_type_params(T))]
@@ -187,7 +188,7 @@ pub struct OfferData<T: Config>{
     pub marketplace_id: [u8;32],
     pub collection_id: T::CollectionId,
     pub item_id: T::ItemId,
-	pub percentage: u16,
+	pub percentage: Permill,
     pub creator: T::AccountId,
     pub price:  BalanceOf<T>,
     pub status: OfferStatus,

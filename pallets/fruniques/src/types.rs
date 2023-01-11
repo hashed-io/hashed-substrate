@@ -26,7 +26,7 @@ pub type Percentage = u16;
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub struct ChildInfo<T : Config> {
+pub struct ChildInfo<T: Config> {
 	pub collection_id: T::CollectionId,
 	pub child_id: T::ItemId,
 	pub weight_inherited: Permill,
@@ -108,14 +108,15 @@ impl<T: Config> Clone for ParentInfoCall<T> {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct FruniqueData<T: Config> {
+	pub metadata: CollectionDescription<T>,
 	pub weight: Permill,
 	pub parent: Option<ParentInfo<T>>,
 	pub children: Option<Children<T>>,
 }
 
 impl<T: Config> FruniqueData<T> {
-	pub fn new() -> Self {
-		Self { weight: Permill::from_percent(100), parent: None, children: None }
+	pub fn new(metadata: CollectionDescription<T>) -> Self {
+		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None }
 	}
 }
 

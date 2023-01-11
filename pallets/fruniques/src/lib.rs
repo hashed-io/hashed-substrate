@@ -20,6 +20,8 @@ pub mod pallet {
 	use crate::types::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::Permill;
+
 	// use frame_support::PalletId;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -228,28 +230,38 @@ pub mod pallet {
 			class_id: CollectionId,
 			metadata: CollectionDescription<T>,
 			attributes: Option<Attributes<T>>,
-			parent_info: Option<ParentInfoCall<T>>,
+			parent_info_call: Option<ParentInfoCall<T>>,
 		) -> DispatchResult {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			let user: T::AccountId = ensure_signed(origin.clone())?;
 			Self::is_authorized(user.clone(), class_id, Permission::Mint)?;
 
-			if let Some(parent_info) = parent_info.clone() {
+			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			if let Some(parent_info_call) = parent_info_call.clone() {
 				ensure!(
-					Self::collection_exists(&parent_info.collection_id),
+					Self::collection_exists(&parent_info_call.collection_id),
 					Error::<T>::CollectionNotFound
 				);
 				ensure!(
-					Self::instance_exists(&parent_info.collection_id, &parent_info.parent_id),
+					Self::instance_exists(&parent_info_call.collection_id, &parent_info_call.parent_id),
 					Error::<T>::FruniqueNotFound
 				);
-				Self::is_authorized(user, parent_info.collection_id, Permission::Mint)?;
+				Self::is_authorized(user, parent_info_call.collection_id, Permission::Mint)?;
 
-			}
+				let parent_info = ParentInfo {
+					collection_id: parent_info_call.collection_id,
+					parent_id: parent_info_call.parent_id,
+					parent_weight: Permill::from_percent(parent_info_call.parent_percentage),
+					is_hierarchical: parent_info_call.is_hierarchical,
+				};
 
-			let owner: T::AccountId = ensure_signed(origin.clone())?;
+				Self::do_spawn(class_id, owner, metadata, attributes, Some(parent_info))?;
 
-			Self::do_spawn(class_id, owner, metadata, attributes, parent_info)?;
+				return Ok(());
+			};
+
+			Self::do_spawn(class_id, owner, metadata, attributes, None)?;
 
 			Ok(())
 		}
