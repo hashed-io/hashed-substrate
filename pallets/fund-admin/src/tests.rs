@@ -732,7 +732,7 @@ fn projects_a_non_authorized_user_registers_a_project_should_fail() {
                 None,
                 make_field_description("P9f5wbr13BK74p1"),
             ),
-            Error::<Test>::NoScopeProvided
+            Error::<Test>::NotAuthorized
         );
     });
 }

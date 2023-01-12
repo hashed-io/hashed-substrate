@@ -616,8 +616,6 @@ pub mod pallet {
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
 		BankConfirmingDocumentsAreEmpty,
-		/// No scope was provided checking if the user has permissions. No applies for administrator users
-		NoScopeProvided,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty

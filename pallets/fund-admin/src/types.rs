@@ -435,11 +435,15 @@ impl ProxyPermission {
             ApproveDrawdown.to_vec(),
             RejectDrawdown.to_vec(),
             ExecuteTransactions.to_vec(),
+            UpBulkupload.to_vec(),        
             InflationRate.to_vec(),
             JobEligible.to_vec(),
+            RevenueTransaction.to_vec(),
+            SubmitRevenue.to_vec(),
             ApproveRevenue.to_vec(),
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
+            CancelDrawdownSubmission.to_vec(),
         ].to_vec()
     }
 
