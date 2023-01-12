@@ -454,8 +454,13 @@ impl<T: Config> Pallet<T> {
 		let total_amount_buyer = T::Currency::total_balance(&buyer);
 		//ensure the buyer has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+
+		let marketplace = <Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
+		let owners_cut: BalanceOf<T> = offer_data.price * Permill::deconstruct(marketplace.fee).into();
+		let admins_cut: BalanceOf<T> = owners_cut - offer_data.price;
 		//Transfer the balance
-		T::Currency::transfer(&buyer, &owner_item, offer_data.price, KeepAlive)?;
+		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
+		T::Currency::transfer(&buyer, &marketplace.creator, admins_cut, KeepAlive)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer
@@ -541,8 +546,13 @@ impl<T: Config> Pallet<T> {
 		let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
 		//ensure the buy_offer_creator has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+
+		let marketplace = <Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
+		let owners_cut: BalanceOf<T> = offer_data.price * Permill::deconstruct(marketplace.fee).into();
+		let admins_cut: BalanceOf<T> = owners_cut - offer_data.price;
 		//Transfer the balance to the owner of the item
-		T::Currency::transfer(&offer_data.creator, &owner_item, offer_data.price, KeepAlive)?;
+		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
+		T::Currency::transfer(&offer_data.creator, &marketplace.creator, admins_cut, KeepAlive)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer

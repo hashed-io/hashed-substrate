@@ -17,6 +17,7 @@ pub mod pallet {
 	use frame_support::traits::{Currency, Time};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
+	use sp_runtime::Permill;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -313,10 +314,10 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			admin: T::AccountId,
 			label: BoundedVec<u8, T::LabelMaxLen>,
-			fee: u16,
+			fee: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
-			let m = Marketplace { label, fee };
+			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
 			Self::do_create_marketplace(who, admin, m)
 		}
 
