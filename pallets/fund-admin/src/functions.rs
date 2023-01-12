@@ -2289,33 +2289,22 @@ impl<T: Config> Pallet<T> {
             return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
         }
 
-        // Can't assign an admin to a project, admins exists globally
-        if role == ProxyRole::Administrator {
-            return Err(Error::<T>::CannotAddAdminRole.into());
-        }
-
-        // Make sure how many projects the user is assigned to
-        let projects_count = <ProjectsByUser<T>>::get(user).len();
-
-        match user_data.role {
-            ProxyRole::Builder => {
-                ensure!(projects_count < T::MaxProjectsPerBuilder::get() as usize, Error::<T>::MaxProjectsPerBuilderReached);
+        // Match user role
+        match user_data.role  {
+            ProxyRole::Administrator => {
+                // Can't assign an administrator role account to a project, admins are scoped globally
+                return Err(Error::<T>::CannotAddAdminRole.into())
             },
             ProxyRole::Investor => {
+                // Get how many projects the user is assigned to
+                let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
                 ensure!(projects_count < T::MaxProjectsPerInvestor::get() as usize, Error::<T>::MaxProjectsPerInvestorReached);
+                Ok(())
             },
-            ProxyRole::Issuer => {
-                ensure!(projects_count < T::MaxProjectsPerIssuer::get() as usize, Error::<T>::MaxProjectsPerIssuerReached);
-            },
-            ProxyRole::RegionalCenter => {
-                ensure!(projects_count < T::MaxProjectsPerRegionalCenter::get() as usize, Error::<T>::MaxProjectsPerRegionalCenterReached);
-            },
-            ProxyRole::Administrator => {
-                // This should never happen
-                return Err(Error::<T>::CannotAddAdminRole.into());
-            },
+            _ => {
+                Ok(())
+            }
         }
-        Ok(())
     }
 
     // TOREVIEW: Refactor this function when implementing the Error recovery workflow

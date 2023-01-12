@@ -74,16 +74,7 @@ pub mod pallet {
 		type MaxExpendituresPerProject: Get<u32>;
 
 		#[pallet::constant]
-		type MaxProjectsPerBuilder: Get<u32>;
-
-		#[pallet::constant]
 		type MaxProjectsPerInvestor: Get<u32>;
-
-		#[pallet::constant]
-		type MaxProjectsPerIssuer: Get<u32>;
-
-		#[pallet::constant]
-		type MaxProjectsPerRegionalCenter: Get<u32>;
 
 		#[pallet::constant]
 		type MaxBanksPerProject: Get<u32>;
@@ -534,14 +525,8 @@ pub mod pallet {
 		DrawdownIsNotInDraftOrRejectedStatus,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
-		/// Max number of projects per builder has been reached
-		MaxProjectsPerBuilderReached,
 		/// Max number of projects per investor has been reached
 		MaxProjectsPerInvestorReached,
-		/// Max number of projects per issuer has been reached
-		MaxProjectsPerIssuerReached,
-		/// Max number of projects per regional center has been reached
-		MaxProjectsPerRegionalCenterReached,
 		/// Jobs eligibles array is empty
 		JobEligiblesIsEmpty,
 		/// JOb eligible name is required

@@ -575,27 +575,23 @@ impl pallet_fruniques::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MaxDocuments:u32 = 5;
-	pub const MaxProjectsPerUser:u32 = 100;
-	pub const MaxUserPerProject:u32 = 2000; // should be the sum of the max number of builders, investors, issuers, regional centers
-	pub const MaxBuildersPerProject:u32 = 500;
-	pub const MaxInvestorsPerProject:u32 = 500;
-	pub const MaxIssuersPerProject:u32 = 500;
-	pub const MaxRegionalCenterPerProject:u32 = 500;
-	pub const MaxProjectsPerBuilder:u32 = 1000;
+	pub const MaxDocuments:u32 = 100;
+	pub const MaxProjectsPerUser:u32 = 10_000;
+	pub const MaxUserPerProject:u32 = 100_000; // should be the sum of the max number of builders, investors, issuers, regional centers
+	pub const MaxBuildersPerProject:u32 = 25_00;
+	pub const MaxInvestorsPerProject:u32 = 25_000;
+	pub const MaxIssuersPerProject:u32 = 25_000;
+	pub const MaxRegionalCenterPerProject:u32 = 25_000;
 	pub const MaxProjectsPerInvestor:u32 = 1;
-	pub const MaxProjectsPerIssuer:u32 = 1000;
-	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
-	pub const MaxDrawdownsPerProject:u32 = 1000;
-	pub const MaxTransactionsPerDrawdown:u32 = 500;
-	pub const MaxRegistrationsAtTime:u32 = 50;
-	pub const MaxExpendituresPerProject:u32 = 1000;
-	pub const MaxBanksPerProject:u32 = 200;
-	pub const MaxJobEligiblesByProject:u32 = 1000;
-	pub const MaxRevenuesByProject:u32 = 1000;
-	pub const MaxTransactionsPerRevenue:u32 = 500;
-	pub const MaxStatusChangesPerDrawdown:u32 = 100;
-	pub const MaxStatusChangesPerRevenue:u32 = 100;
+	pub const MaxTransactionsPerDrawdown:u32 = 1_000;
+	pub const MaxRegistrationsAtTime:u32 = 100;
+	pub const MaxExpendituresPerProject:u32 = 100_000;
+	pub const MaxBanksPerProject:u32 = 10_000;
+	pub const MaxJobEligiblesByProject:u32 = 100_000;
+	pub const MaxRevenuesByProject:u32 = 100_000;
+	pub const MaxTransactionsPerRevenue:u32 = 1_000;
+	pub const MaxStatusChangesPerDrawdown:u32 = 1_000;
+	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -619,10 +615,7 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
-	type MaxProjectsPerBuilder = MaxProjectsPerBuilder;
 	type MaxProjectsPerInvestor = MaxProjectsPerInvestor;
-	type MaxProjectsPerIssuer = MaxProjectsPerIssuer;
-	type MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
 	type MaxBanksPerProject = MaxBanksPerProject;
 	type MaxJobEligiblesByProject = MaxJobEligiblesByProject;
 	type MaxRevenuesByProject = MaxRevenuesByProject;

@@ -240,13 +240,7 @@ Constants are used to limit the number of elements that can be created in the sy
 
 - `MaxExpendituresPerProject`: Maximun number of budget expenditures that can be created for a project.
 
-- `MaxProjectsPerBuilder`: Maximun number of projects that can be assigned to a builder.
-
 - `MaxProjectsPerInvestor`: Maximun number of projects that can be assigned to an investor.
-
-- `MaxProjectsPerIssuer`: Maximun number of projects that can be assigned to an issuer.
-
-- `MaxProjectsPerRegionalCenter`: Maximun number of projects that can be assigned to a regional center.
 
 - `MaxBanksPerProject`: Maximun number of banks that can be assigned to a project.
 
@@ -1864,14 +1858,8 @@ DrawdownStatusNotSupportedForBulkUpload
 DrawdownIsNotInDraftOrRejectedStatus
 /// Only investors can update/edit their documents
 UserIsNotAnInvestor
-/// Max number of projects per builder has been reached
-MaxProjectsPerBuilderReached
 /// Max number of projects per investor has been reached
 MaxProjectsPerInvestorReached
-/// Max number of projects per issuer has been reached
-MaxProjectsPerIssuerReached
-/// Max number of projects per regional center has been reached
-MaxProjectsPerRegionalCenterReached
 /// Jobs eligibles array is empty
 JobEligiblesIsEmpty
 /// JOb eligible name is required
