@@ -305,6 +305,10 @@ impl<T: Config> Pallet<T> {
 		};
 
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
+		<FruniqueRoots<T>>::try_mutate::<_, _, DispatchError, _>(collection, |roots| {
+			roots.try_push(item).map_err(|_| Error::<T>::FruniqueRootsOverflow)?;
+			Ok(())
+		})?;
 
 		Ok(())
 	}

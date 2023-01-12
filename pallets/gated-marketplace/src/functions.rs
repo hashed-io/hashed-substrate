@@ -559,7 +559,12 @@ impl<T: Config> Pallet<T> {
 		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance to the owner of the item
 		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(&offer_data.creator, &marketplace.creator, offer_data.fee, KeepAlive)?;
+		T::Currency::transfer(
+			&offer_data.creator,
+			&marketplace.creator,
+			offer_data.fee,
+			KeepAlive,
+		)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer

@@ -37,6 +37,10 @@ pub mod pallet {
 		#[pallet::constant]
 		type ChildMaxLen: Get<u32>;
 
+		/// Maximum number of roots a Collection can have
+		#[pallet::constant]
+		type MaxParentsInCollection: Get<u32>;
+
 		/// The fruniques pallet id, used for deriving its sovereign account ID.
 		// #[pallet::constant]
 		// type PalletId: Get<PalletId>;
@@ -101,6 +105,7 @@ pub mod pallet {
 		FruniqueAlreadyExists,
 		// Frunique already verified
 		FruniqueAlreadyVerified,
+		FruniqueRootsOverflow,
 	}
 
 	#[pallet::storage]
@@ -120,6 +125,16 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::CollectionId,
 		ItemId, // The next frunique id for a collection.
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_roots)]
+	pub(super) type FruniqueRoots<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::CollectionId,
+		Roots<T>,
 		ValueQuery,
 	>;
 

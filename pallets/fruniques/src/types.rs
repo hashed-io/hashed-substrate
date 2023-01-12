@@ -23,6 +23,9 @@ pub type ParentId = ItemId;
 pub type Hierarchical = bool;
 pub type Percentage = u16;
 
+pub type UniqueTuple = (CollectionId, ItemId);
+pub type Roots<T> = BoundedVec<<T as pallet_uniques::Config>::ItemId, <T as Config>::MaxParentsInCollection>;
+
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
