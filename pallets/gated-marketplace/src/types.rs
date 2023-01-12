@@ -222,6 +222,7 @@ pub struct OfferData<T: Config> {
 	pub percentage: Permill,
 	pub creator: T::AccountId,
 	pub price: BalanceOf<T>,
+	pub fee: BalanceOf<T>,
 	pub status: OfferStatus,
 	pub creation_date: u64,
 	pub expiration_date: u64,

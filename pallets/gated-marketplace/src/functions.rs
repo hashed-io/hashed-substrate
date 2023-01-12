@@ -307,12 +307,17 @@ impl<T: Config> Pallet<T> {
 			.using_encoded(blake2_256);
 
 		//create offer structure
+
+		let marketplace =
+			<Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?;
+
 		let offer_data = OfferData::<T> {
 			marketplace_id,
 			collection_id,
 			item_id,
 			creator: authority.clone(),
 			price,
+			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
 			creation_date: timestamp,
 			expiration_date: timestamp2,
@@ -341,7 +346,7 @@ impl<T: Config> Pallet<T> {
 		<OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
-		Self::deposit_event(Event::OfferStored(collection_id, item_id));
+		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
 		Ok(())
 	}
 
@@ -385,12 +390,15 @@ impl<T: Config> Pallet<T> {
 			.using_encoded(blake2_256);
 
 		//create offer structure
+		let marketplace =
+			<Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?;
 		let offer_data = OfferData::<T> {
 			marketplace_id,
 			collection_id,
 			item_id,
 			creator: authority.clone(),
 			price,
+			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
 			creation_date: timestamp,
 			expiration_date: timestamp2,
@@ -417,7 +425,7 @@ impl<T: Config> Pallet<T> {
 		<OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
-		Self::deposit_event(Event::OfferStored(collection_id, item_id));
+		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
 		Ok(())
 	}
 
@@ -425,7 +433,7 @@ impl<T: Config> Pallet<T> {
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
-		//This extrisicn is called by the user who wants to buy the item
+		//This extrinsic is called by the user who wants to buy the item
 		//get offer data
 		let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
 
@@ -448,19 +456,18 @@ impl<T: Config> Pallet<T> {
 
 		//ensure the offer is open and available
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
-
 		//TODO: Use free_balance instead of total_balance
 		//Get the buyer's balance
 		let total_amount_buyer = T::Currency::total_balance(&buyer);
 		//ensure the buyer has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
-		let marketplace = <Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
-		let admins_cut: BalanceOf<T> = offer_data.price * Permill::deconstruct(marketplace.fee).into();
-		let owners_cut: BalanceOf<T> = offer_data.price -  admins_cut;
+		let marketplace =
+			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
+		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance
 		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(&buyer, &marketplace.creator, admins_cut, KeepAlive)?;
+		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer
@@ -525,7 +532,7 @@ impl<T: Config> Pallet<T> {
 			pallet_uniques::Pallet::<T>::owner(offer_data.collection_id, offer_data.item_id)
 				.ok_or(Error::<T>::OwnerNotFound)?;
 
-		//ensure only owner of the item can call the extrinic
+		//ensure only owner of the item can call the extrinsic
 		ensure!(owner_item == authority, Error::<T>::NotOwner);
 
 		//ensure owner is not the same as the buy_offer_creator
@@ -547,12 +554,12 @@ impl<T: Config> Pallet<T> {
 		//ensure the buy_offer_creator has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
-		let marketplace = <Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
-		let admins_cut: BalanceOf<T> = offer_data.price * Permill::deconstruct(marketplace.fee).into();
-		let owners_cut: BalanceOf<T> = offer_data.price - admins_cut;
+		let marketplace =
+			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
+		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance to the owner of the item
 		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(&offer_data.creator, &marketplace.creator, admins_cut, KeepAlive)?;
+		T::Currency::transfer(&offer_data.creator, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer

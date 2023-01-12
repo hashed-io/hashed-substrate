@@ -192,8 +192,8 @@ pub mod pallet {
 		MarketplaceLabelUpdated([u8; 32]),
 		/// The selected marketplace has been removed. [market_id]
 		MarketplaceRemoved([u8; 32]),
-		/// Offer stored. [collection_id, item_id]
-		OfferStored(T::CollectionId, T::ItemId),
+		/// Offer stored. [collection_id, item_id, [offer_id]]
+		OfferStored(T::CollectionId, T::ItemId, [u8; 32]),
 		/// Offer was accepted [offer_id, account]
 		OfferWasAccepted([u8; 32], T::AccountId),
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
