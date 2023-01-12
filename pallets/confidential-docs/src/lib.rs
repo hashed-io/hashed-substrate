@@ -54,6 +54,12 @@ pub mod pallet {
 		/// Maximum length for a document description
 		#[pallet::constant]
 		type DocDescMaxLen: Get<u32>;
+		/// Minimum length for a groupName
+		#[pallet::constant]
+		type GroupNameMinLen: Get<u32>;
+		/// Maximum length for a groupName
+		#[pallet::constant]
+		type GroupNameMaxLen: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -142,6 +148,43 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn groups)]
+	pub(super) type Groups<T: Config> = StorageMap<
+		_,
+		Blake2_256,
+		// Group Account Id
+		T::AccountId,
+		Group<T>,
+		OptionQuery
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn group_members)]
+	pub(super) type GroupMembers<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_256,
+		// Group Account Id
+		T::AccountId,
+		Blake2_256,
+		// Member Account Id
+		T::AccountId,
+		GroupMember<T>,
+		OptionQuery
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn member_groups)]
+	pub(super) type MemberGroups<T: Config> = StorageMap<
+		_,
+		Blake2_256,
+		// Member Account Id
+		T::AccountId,
+		// Group Account Id
+		T::AccountId,
+		OptionQuery
+	>;
+
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -158,6 +201,8 @@ pub mod pallet {
 		SharedDocUpdated(SharedDoc<T>),
 		/// Shared confidential document removed
 		SharedDocRemoved(SharedDoc<T>),
+		/// Group created
+		GroupCreated(Group<T>),
 	}
 
 	#[pallet::error]
@@ -168,6 +213,8 @@ pub mod pallet {
 		DocNameTooShort,
 		/// Document Desc is too short
 		DocDescTooShort,
+		/// Group Name is too short
+		GroupNameTooShort,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
 		/// Origin is not the owner of the user id
@@ -188,6 +235,8 @@ pub mod pallet {
 		DocNotFound,
 		/// The document has already been shared
 		DocAlreadyShared,
+		/// The group already exits
+		GroupAlreadyExists,
 		/// Shared with self
 		DocSharedWithSelf,
 		/// Account has no public key
@@ -289,6 +338,22 @@ pub mod pallet {
 			Self::do_remove_shared_document(who, cid)
 		}
 
+
+		/// Create a group
+		///
+		/// Creates a group that enables the sharing of documents with multiple users
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating the group
+		/// - `group`: AccountId of the group
+		/// - `name`: Name of the group
+		/// - `public_key`: Public key of the group
+		/// - `cid`: cid of the document containing the private key of the group
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn create_group(origin: OriginFor<T>, group: T::AccountId, name: GroupName<T>, public_key: PublicKey, cid: CID) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_create_group(who, group, name, public_key, cid)
+		}
 
 		/// Kill all the stored data.
 		///

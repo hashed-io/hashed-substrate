@@ -5,7 +5,7 @@ use frame_support::sp_io::hashing::blake2_256;
 use crate::types::*;
 
 impl<T: Config> Pallet<T> {
-	
+
   pub fn do_set_vault(owner: T::AccountId, user_id: UserId, public_key: PublicKey, cid: CID) -> DispatchResult {
     Self::validate_cid(&cid)?;
     let hashed_account =  owner.using_encoded(blake2_256);
@@ -14,7 +14,7 @@ impl<T: Config> Pallet<T> {
     } else {
       ensure!(!<Vaults<T>>::contains_key(&user_id), Error::<T>::NotOwnerOfVault);
     }
-    
+
     let vault = Vault{
       cid: cid.clone(),
       owner: owner.clone()
@@ -72,7 +72,7 @@ impl<T: Config> Pallet<T> {
     <SharedDocsByFrom<T>>::try_mutate(&from, |shared_vec| {
       shared_vec.try_push(cid.clone())
     }).map_err(|_| Error::<T>::ExceedMaxSharedFromDocs)?;
-    
+
     <SharedDocsByTo<T>>::try_mutate(&to, |shared_vec| {
       shared_vec.try_push(cid.clone())
     }).map_err(|_| Error::<T>::ExceedMaxSharedToDocs)?;
@@ -108,6 +108,16 @@ impl<T: Config> Pallet<T> {
     <SharedDocs<T>>::remove(cid.clone());
     Self::deposit_event(Event::SharedDocRemoved(doc));
     Ok(())
+  }
+
+  pub fn do_create_group(creator: T::AccountId, group: T::AccountId, name: GroupName<T>, public_key: PublicKey, cid: CID) -> DispatchResult {
+    ensure!(!<Groups<T>>::contains_key(&group), Error::<T>::GroupAlreadyExists);
+    Self::validate_cid(&cid)?;
+    Self::validate_group_name(&name)?;
+    Self::validate_has_public_key(&creator)?;
+	PublicKeys::<T>::insert(group.clone(), public_key);
+
+	  Ok(())
   }
 
   fn validate_owned_doc(owned_doc: &OwnedDoc<T>)->DispatchResult{
@@ -153,6 +163,11 @@ impl<T: Config> Pallet<T> {
 
   fn validate_doc_name(doc_name: &DocName<T>)->DispatchResult{
     ensure!(doc_name.len() >= T::DocNameMinLen::get().try_into().unwrap(), Error::<T>::DocNameTooShort);
+    Ok(())
+  }
+
+  fn validate_group_name(group_name: &GroupName<T>)->DispatchResult{
+    ensure!(group_name.len() >= T::GroupNameMinLen::get().try_into().unwrap(), Error::<T>::GroupNameTooShort);
     Ok(())
   }
 
