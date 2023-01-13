@@ -2776,6 +2776,8 @@
 <span id="2776">2776</span>
 <span id="2777">2777</span>
 <span id="2778">2778</span>
+<span id="2779">2779</span>
+<span id="2780">2780</span>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -2859,7 +2861,7 @@
         description: FieldDescription,
         image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
         address: FieldName,
-        banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
+        banks: <span class="prelude-ty">Option</span>&lt;Banks&lt;T&gt;&gt;,
         creation_date: CreationDate,
         completion_date: CompletionDate,
         expenditures: Expenditures&lt;T&gt;,
@@ -2868,7 +2870,7 @@
         private_group_id: PrivateGroupId,
         ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::CreateProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::CreateProject)<span class="question-mark">?</span>;
 
         <span class="comment">// Add timestamp
         </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
@@ -2945,12 +2947,12 @@
         description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
         image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
         address: <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-        banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
+        banks: <span class="prelude-ty">Option</span>&lt;Banks&lt;T&gt;&gt;,
         creation_date: <span class="prelude-ty">Option</span>&lt;CreationDate&gt;,
         completion_date: <span class="prelude-ty">Option</span>&lt;CompletionDate&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::EditProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::EditProject)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3005,7 +3007,7 @@
         project_id: ProjectId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::DeleteProject)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::DeleteProject)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; get project data
         </span><span class="kw">let </span>project_data = ProjectsInfo::&lt;T&gt;::get(project_id).ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
@@ -3013,14 +3015,29 @@
         <span class="comment">// Ensure project is not completed
         </span><span class="macro">ensure!</span>(project_data.status != ProjectStatus::Completed, Error::&lt;T&gt;::CannotDeleteCompletedProject);
 
-        <span class="comment">// Delete scope from rbac pallet
-        </span>T::Rbac::remove_scope(<span class="self">Self</span>::pallet_id(), project_id)<span class="question-mark">?</span>;
+        <span class="kw">if </span>UsersByProject::&lt;T&gt;::contains_key(project_id) {
+            <span class="comment">// Get users by project
+            </span><span class="kw">let </span>users_by_project = UsersByProject::&lt;T&gt;::get(project_id);
+            <span class="comment">// Unassign all users from project
+            // Create a UsersAssignation boundedvec with all users in the project
+            </span><span class="kw">let </span><span class="kw-2">mut </span>users_assignation: UsersAssignation&lt;T&gt; = UsersAssignation::&lt;T&gt;::default();
+            <span class="kw">for </span>user <span class="kw">in </span>users_by_project.iter().cloned() {
+                <span class="comment">// Get user data
+                </span><span class="kw">let </span>user_data = &lt;UsersInfo&lt;T&gt;&gt;::try_get(user.clone()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>users_by_project = <span class="self">Self</span>::users_by_project(project_id).iter().cloned().collect::&lt;Vec&lt;T::AccountId&gt;&gt;();
-        <span class="kw">for </span>user <span class="kw">in </span>users_by_project.iter().cloned() {
-            &lt;ProjectsByUser&lt;T&gt;&gt;::mutate(user, |projects| {
-                projects.retain(|project| <span class="kw-2">*</span>project != project_id);
-            });
+                users_assignation.try_push((user, user_data.role, AssignAction::Unassign)).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxRegistrationsAtATimeReached)<span class="question-mark">?</span>;
+            }
+
+            <span class="comment">// Unassign all users from project
+            </span><span class="self">Self</span>::do_execute_assign_users(admin.clone(), project_id, users_assignation)<span class="question-mark">?</span>;
+
+            <span class="comment">// Remove project from users
+            </span><span class="kw">for </span>user <span class="kw">in </span>users_by_project.iter().cloned() {
+                &lt;ProjectsByUser&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(user, |projects| {
+                    projects.retain(|project| <span class="kw-2">*</span>project != project_id);
+                    <span class="prelude-val">Ok</span>(())
+                })<span class="question-mark">?</span>;
+            }
         }
 
         <span class="comment">// Delete from ProjectsInfo storagemap
@@ -3085,6 +3102,9 @@
         <span class="comment">// Deletes all revenues from RevenuesByProject storagemap
         </span>&lt;RevenuesByProject&lt;T&gt;&gt;::remove(project_id);
 
+        <span class="comment">// Delete scope from rbac pallet
+        </span>T::Rbac::remove_scope(<span class="self">Self</span>::pallet_id(), project_id)<span class="question-mark">?</span>;
+
         <span class="comment">// Event
         </span><span class="self">Self</span>::deposit_event(Event::ProjectDeleted(admin, project_id));
         <span class="prelude-val">Ok</span>(())
@@ -3096,7 +3116,7 @@
         users: UsersAssignation&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::AssignUsers)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::AssignUsers)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -3175,15 +3195,17 @@
         <span class="comment">// Update project data depending on the role unassigned
         </span><span class="self">Self</span>::remove_project_role(project_id, user.clone(), role)<span class="question-mark">?</span>;
 
-        <span class="comment">// Remove user from UsersByProject storagemap
-        </span>&lt;UsersByProject&lt;T&gt;&gt;::mutate(project_id, |users| {
+        <span class="comment">// Remove user from UsersByProject storagemap.
+        </span>&lt;UsersByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |users| {
             users.retain(|u| u != <span class="kw-2">&amp;</span>user);
-        });
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
 
         <span class="comment">// Remove user from ProjectsByUser storagemap
-        </span>&lt;ProjectsByUser&lt;T&gt;&gt;::mutate(user.clone(), |projects| {
+        </span>&lt;ProjectsByUser&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(user.clone(), |projects| {
             projects.retain(|p| p != <span class="kw-2">&amp;</span>project_id);
-        });
+            <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
 
         <span class="comment">// Remove user from the scope rbac pallet
         </span>T::Rbac::remove_role_from_user(user.clone(), <span class="self">Self</span>::pallet_id(), <span class="kw-2">&amp;</span>project_id, role.id())<span class="question-mark">?</span>;
@@ -3201,7 +3223,7 @@
         users: Users&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::ExecuteUsers)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::ExecuteUsers)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>user <span class="kw">in </span>users.iter().cloned() {
             <span class="kw">match </span>user.<span class="number">3 </span>{
@@ -3393,7 +3415,7 @@
         expenditures: Expenditures&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3610,7 +3632,7 @@
         project_id: ProjectId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::Expenditures)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3635,7 +3657,7 @@
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure user permissions
-        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::SubmitDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -3685,7 +3707,7 @@
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3752,7 +3774,7 @@
         drawdown_feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::RejectDrawdown)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3832,7 +3854,7 @@
         drawdown_id: DrawdownId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permissions
-        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::CancelDrawdownSubmission)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::CancelDrawdownSubmission)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -3888,7 +3910,7 @@
         transactions: Transactions&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin or builder permissions
-        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4061,7 +4083,7 @@
         documents: Documents&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permissions
-        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::UpBulkupload)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::UpBulkupload)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4105,7 +4127,7 @@
         projects: BoundedVec&lt;(ProjectId, <span class="prelude-ty">Option</span>&lt;InflationRate&gt;, CUDAction), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::InflationRate)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::InflationRate)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure projects array is not empty
         </span><span class="macro">ensure!</span>(!projects.is_empty(), Error::&lt;T&gt;::InflationRateMissingProjectIds);
@@ -4179,7 +4201,7 @@
         job_eligibles: JobEligibles&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="prelude-val">None</span>, ProxyPermission::JobEligible)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::JobEligible)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -4335,7 +4357,7 @@
         revenue_transactions: RevenueTransactions&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permission
-        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4502,7 +4524,7 @@
         revenue_id: RevenueId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure builder permissions
-        </span><span class="self">Self</span>::is_authorized(user, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>project_id), ProxyPermission::SubmitRevenue)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(user, <span class="kw-2">&amp;</span>project_id, ProxyPermission::SubmitRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists &amp; is not completed
         </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
@@ -4552,7 +4574,7 @@
         revenue_id: RevenueId,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
         // Self::is_revenue_editable(revenue_id)?;
@@ -4616,7 +4638,7 @@
         ), T::MaxRegistrationsAtTime&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
 
 		<span class="comment">// Get revenue data
         </span><span class="kw">let </span>revenue_data = <span class="self">Self</span>::revenues_info(revenue_id).ok_or(Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
@@ -4680,7 +4702,7 @@
         action: CUDAction,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
-        </span><span class="self">Self</span>::is_authorized(admin, <span class="prelude-val">None</span>, ProxyPermission::BankConfirming)<span class="question-mark">?</span>;
+        </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::BankConfirming)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure project exists
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
@@ -5067,33 +5089,22 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserCannotHaveMoreThanOneRole.into());
         }
 
-        <span class="comment">// Can&#39;t assign an admin to a project, admins exists globally
-        </span><span class="kw">if </span>role == ProxyRole::Administrator {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotAddAdminRole.into());
-        }
-
-        <span class="comment">// Make sure how many projects the user is assigned to
-        </span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user).len();
-
-        <span class="kw">match </span>user_data.role {
-            ProxyRole::Builder =&gt; {
-                <span class="macro">ensure!</span>(projects_count &lt; T::MaxProjectsPerBuilder::get() <span class="kw">as </span>usize, Error::&lt;T&gt;::MaxProjectsPerBuilderReached);
+        <span class="comment">// Match user role
+        </span><span class="kw">match </span>user_data.role  {
+            ProxyRole::Administrator =&gt; {
+                <span class="comment">// Can&#39;t assign an administrator role account to a project, admins are scoped globally
+                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotAddAdminRole.into())
             },
             ProxyRole::Investor =&gt; {
+                <span class="comment">// Get how many projects the user is assigned to
+                </span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user.clone()).len();
                 <span class="macro">ensure!</span>(projects_count &lt; T::MaxProjectsPerInvestor::get() <span class="kw">as </span>usize, Error::&lt;T&gt;::MaxProjectsPerInvestorReached);
+                <span class="prelude-val">Ok</span>(())
             },
-            ProxyRole::Issuer =&gt; {
-                <span class="macro">ensure!</span>(projects_count &lt; T::MaxProjectsPerIssuer::get() <span class="kw">as </span>usize, Error::&lt;T&gt;::MaxProjectsPerIssuerReached);
-            },
-            ProxyRole::RegionalCenter =&gt; {
-                <span class="macro">ensure!</span>(projects_count &lt; T::MaxProjectsPerRegionalCenter::get() <span class="kw">as </span>usize, Error::&lt;T&gt;::MaxProjectsPerRegionalCenterReached);
-            },
-            ProxyRole::Administrator =&gt; {
-                <span class="comment">// This should never happen
-                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotAddAdminRole.into());
-            },
+            <span class="kw">_ </span>=&gt; {
+                <span class="prelude-val">Ok</span>(())
+            }
         }
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="comment">// TOREVIEW: Refactor this function when implementing the Error recovery workflow
@@ -5187,20 +5198,14 @@
     /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
     /// otherwise it checks the project scope
     /// - This is useful for functions that are called by both administrators and project users
-    /// - In workflows where the caller is an administrator, the scope is not needed
-    /// because we can get it from the helper private function get_global_scope()
-    </span><span class="kw">pub fn </span>is_authorized( authority: T::AccountId, scope: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[u8;<span class="number">32</span>]&gt;, permission: ProxyPermission ) -&gt; DispatchResult{
-        <span class="comment">// Ensure user is registered
-        </span><span class="macro">ensure!</span>(&lt;UsersInfo&lt;T&gt;&gt;::contains_key(authority.clone()), Error::&lt;T&gt;::UserNotRegistered);
+    /// - Scope is always required. In workflows where the caller is an administrator, 
+    /// we can get it from the helper private function `get_global_scope()`
+    </span><span class="kw">pub fn </span>is_authorized( authority: T::AccountId, scope: <span class="kw-2">&amp;</span>[u8;<span class="number">32</span>], permission: ProxyPermission ) -&gt; DispatchResult{
+        <span class="comment">// Get user data
+        </span><span class="kw">let </span>user_data = &lt;UsersInfo&lt;T&gt;&gt;::try_get(authority.clone()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
-        <span class="kw">match </span>T::Rbac::has_role(
-            authority.clone(),
-            <span class="self">Self</span>::pallet_id(),
-            <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
-            [ProxyRole::Administrator.id()].to_vec()
-        ).is_ok() {
-            <span class="comment">// Check global scope
-            </span><span class="bool-val">true </span>=&gt; {
+        <span class="kw">match </span>user_data.role {
+            ProxyRole::Administrator =&gt; {
                 T::Rbac::is_authorized(
                     authority,
                     <span class="self">Self</span>::pallet_id(),
@@ -5208,12 +5213,11 @@
                     <span class="kw-2">&amp;</span>permission.id(),
                 )
             },
-            <span class="comment">// Check project scope
-            </span><span class="bool-val">false </span>=&gt; {
+            <span class="kw">_ </span>=&gt; {
                 T::Rbac::is_authorized(
                     authority,
                     <span class="self">Self</span>::pallet_id(),
-                    scope.ok_or(Error::&lt;T&gt;::NoScopeProvided)<span class="question-mark">?</span>,
+                    scope,
                     <span class="kw-2">&amp;</span>permission.id(),
                 )
             }

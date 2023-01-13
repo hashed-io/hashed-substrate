@@ -1070,12 +1070,6 @@
 <span id="1070">1070</span>
 <span id="1071">1071</span>
 <span id="1072">1072</span>
-<span id="1073">1073</span>
-<span id="1074">1074</span>
-<span id="1075">1075</span>
-<span id="1076">1076</span>
-<span id="1077">1077</span>
-<span id="1078">1078</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attribute">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1657,27 +1651,24 @@
 </span>}
 
 <span class="macro">parameter_types! </span>{
-	<span class="kw">pub const </span>MaxDocuments:u32 = <span class="number">5</span>;
-	<span class="kw">pub const </span>MaxProjectsPerUser:u32 = <span class="number">100</span>;
-	<span class="kw">pub const </span>MaxUserPerProject:u32 = <span class="number">2000</span>; <span class="comment">// should be the sum of the max number of builders, investors, issuers, regional centers
-	</span><span class="kw">pub const </span>MaxBuildersPerProject:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxInvestorsPerProject:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxIssuersPerProject:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxRegionalCenterPerProject:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxProjectsPerBuilder:u32 = <span class="number">1000</span>;
+	<span class="kw">pub const </span>MaxDocuments:u32 = <span class="number">100</span>;
+	<span class="kw">pub const </span>MaxProjectsPerUser:u32 = <span class="number">10_000</span>;
+	<span class="kw">pub const </span>MaxUserPerProject:u32 = <span class="number">100_000</span>; <span class="comment">// should be the sum of the max number of builders, investors, issuers, regional centers
+	</span><span class="kw">pub const </span>MaxBuildersPerProject:u32 = <span class="number">25_00</span>;
+	<span class="kw">pub const </span>MaxInvestorsPerProject:u32 = <span class="number">25_000</span>;
+	<span class="kw">pub const </span>MaxIssuersPerProject:u32 = <span class="number">25_000</span>;
+	<span class="kw">pub const </span>MaxRegionalCenterPerProject:u32 = <span class="number">25_000</span>;
 	<span class="kw">pub const </span>MaxProjectsPerInvestor:u32 = <span class="number">1</span>;
-	<span class="kw">pub const </span>MaxProjectsPerIssuer:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxProjectsPerRegionalCenter:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxDrawdownsPerProject:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxTransactionsPerDrawdown:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxRegistrationsAtTime:u32 = <span class="number">50</span>;
-	<span class="kw">pub const </span>MaxExpendituresPerProject:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxBanksPerProject:u32 = <span class="number">200</span>;
-	<span class="kw">pub const </span>MaxJobEligiblesByProject:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxRevenuesByProject:u32 = <span class="number">1000</span>;
-	<span class="kw">pub const </span>MaxTransactionsPerRevenue:u32 = <span class="number">500</span>;
-	<span class="kw">pub const </span>MaxStatusChangesPerDrawdown:u32 = <span class="number">100</span>;
-	<span class="kw">pub const </span>MaxStatusChangesPerRevenue:u32 = <span class="number">100</span>;
+	<span class="kw">pub const </span>MaxDrawdownsPerProject:u32 = <span class="number">10_000</span>;
+	<span class="kw">pub const </span>MaxTransactionsPerDrawdown:u32 = <span class="number">1_000</span>;
+	<span class="kw">pub const </span>MaxRegistrationsAtTime:u32 = <span class="number">100</span>;
+	<span class="kw">pub const </span>MaxExpendituresPerProject:u32 = <span class="number">100_000</span>;
+	<span class="kw">pub const </span>MaxBanksPerProject:u32 = <span class="number">10_000</span>;
+	<span class="kw">pub const </span>MaxJobEligiblesByProject:u32 = <span class="number">100_000</span>;
+	<span class="kw">pub const </span>MaxRevenuesByProject:u32 = <span class="number">100_000</span>;
+	<span class="kw">pub const </span>MaxTransactionsPerRevenue:u32 = <span class="number">1_000</span>;
+	<span class="kw">pub const </span>MaxStatusChangesPerDrawdown:u32 = <span class="number">1_000</span>;
+	<span class="kw">pub const </span>MaxStatusChangesPerRevenue:u32 = <span class="number">1_000</span>;
 }
 
 <span class="kw">impl </span>pallet_fund_admin::Config <span class="kw">for </span>Runtime {
@@ -1701,10 +1692,7 @@
 	<span class="kw">type </span>MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	<span class="kw">type </span>MaxRegistrationsAtTime = MaxRegistrationsAtTime;
 	<span class="kw">type </span>MaxExpendituresPerProject = MaxExpendituresPerProject;
-	<span class="kw">type </span>MaxProjectsPerBuilder = MaxProjectsPerBuilder;
 	<span class="kw">type </span>MaxProjectsPerInvestor = MaxProjectsPerInvestor;
-	<span class="kw">type </span>MaxProjectsPerIssuer = MaxProjectsPerIssuer;
-	<span class="kw">type </span>MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
 	<span class="kw">type </span>MaxBanksPerProject = MaxBanksPerProject;
 	<span class="kw">type </span>MaxJobEligiblesByProject = MaxJobEligiblesByProject;
 	<span class="kw">type </span>MaxRevenuesByProject = MaxRevenuesByProject;

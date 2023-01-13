@@ -469,6 +469,14 @@
 <span id="469">469</span>
 <span id="470">470</span>
 <span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -493,6 +501,10 @@
     ProxyRole,
     AssignAction,
 ), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+<span class="kw">pub type </span>Banks&lt;T&gt; = BoundedVec&lt;(
+    BankName,
+    BankAddress,
+), &lt;T <span class="kw">as </span>Config&gt;::MaxBanksPerProject&gt;;
 <span class="kw">pub type </span>PrivateGroupId = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 
 <span class="comment">// Users
@@ -584,7 +596,7 @@
     <span class="kw">pub </span>address: FieldName,
     <span class="kw">pub </span>status: ProjectStatus,
     <span class="kw">pub </span>inflation_rate: <span class="prelude-ty">Option</span>&lt;InflationRate&gt;,
-    <span class="kw">pub </span>banks: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(BankName, BankAddress), T::MaxBanksPerProject&gt;&gt;,
+    <span class="kw">pub </span>banks: <span class="prelude-ty">Option</span>&lt;Banks&lt;T&gt;&gt;,
     <span class="kw">pub </span>creation_date: CreationDate,
     <span class="kw">pub </span>completion_date: CompletionDate,
     <span class="kw">pub </span>registration_date: RegistrationDate,
@@ -902,11 +914,15 @@
             ApproveDrawdown.to_vec(),
             RejectDrawdown.to_vec(),
             ExecuteTransactions.to_vec(),
+            UpBulkupload.to_vec(),        
             InflationRate.to_vec(),
             JobEligible.to_vec(),
+            RevenueTransaction.to_vec(),
+            SubmitRevenue.to_vec(),
             ApproveRevenue.to_vec(),
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
+            CancelDrawdownSubmission.to_vec(),
         ].to_vec()
     }
 
