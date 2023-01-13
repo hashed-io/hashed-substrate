@@ -30,14 +30,17 @@ fn make_field_description(description: &str) -> FieldDescription {
     description
 }
 
-fn register_administrator() -> DispatchResult {
-    FundAdmin::sudo_add_administrator(
-        RuntimeOrigin::root(),
-        1,
-        make_field_name("Administrator Test"),
-        ).map_err(|_| Error::<Test>::UserAlreadyRegistered
-    )?;
-    Ok(())
+fn make_files( n_files: u32) -> Documents<Test>{
+	let mut files: Documents<Test> = bounded_vec![];
+	for i in 0..n_files{
+		let file_name: &str = &format!("file_{}", i);
+        let file_description: &str = &format!("file_{}_description", i);
+        files.try_push((
+            make_field_name(file_name),
+            make_field_name(file_description),
+        )).unwrap_or_default();
+	}
+	files
 }
 
 fn field_name_to_string(boundedvec: &BoundedVec<u8, ConstU32<100>>) -> String {
@@ -57,6 +60,15 @@ fn field_description_to_string(boundedvec: &BoundedVec<u8, ConstU32<400>>) -> St
 	s
 }
 
+fn register_administrator() -> DispatchResult {
+    FundAdmin::sudo_add_administrator(
+        RuntimeOrigin::root(),
+        1,
+        make_field_name("Administrator Test"),
+        ).map_err(|_| Error::<Test>::UserAlreadyRegistered
+    )?;
+    Ok(())
+}
 
 fn make_user(
     user_account: u64,
@@ -542,7 +554,7 @@ fn users_update_a_registered_account_works() {
 }
 
 #[test]
-fn users_update_role_of_a_registered_account_works() {
+fn users_admnistrator_updates_role_of_a_registered_account_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(register_administrator());
 
@@ -613,8 +625,54 @@ fn users_delete_a_non_registered_account_shouldnt_work() {
     });
 }
 
-//TODO: cannot delete a registered users if the user has assigned projects
+#[test]
+fn users_user_updates_their_own_account_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
 
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Bob Regional Center")), Some(ProxyRole::RegionalCenter), CUDAction::Create)
+        ));
+
+        assert_ok!(FundAdmin::users_edit_user(
+            RuntimeOrigin::signed(2),
+            Some(make_field_name("Bob Regiona Center New York")),
+            Some(make_field_name("image.png")),
+            Some(make_field_name("bob.regionalcenter@fundadmin.com")),
+            None,
+        ));
+
+        assert_eq!(FundAdmin::users_info(2).unwrap().role, ProxyRole::RegionalCenter);
+        assert_eq!(FundAdmin::users_info(2).unwrap().name, make_field_name("Bob Regiona Center New York"));
+        assert_eq!(FundAdmin::users_info(2).unwrap().image, make_field_name("image.png"));
+        assert_eq!(FundAdmin::users_info(2).unwrap().email, make_field_name("bob.regionalcenter@fundadmin.com"));
+    });
+}
+
+#[test]
+fn users_only_investors_can_upload_documentation_to_their_account_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create)
+        ));
+
+        assert_ok!(
+            FundAdmin::users_edit_user(
+                RuntimeOrigin::signed(2),
+                None,
+                None,
+                None,
+                Some(make_files(1)),
+            )
+        );
+        assert_eq!(FundAdmin::users_info(2).unwrap().name, make_field_name("Bob Investor"));
+        assert_eq!(FundAdmin::users_info(2).unwrap().documents, Some(make_files(1)));
+    });
+}
 
 // P R O J E C T S
 // -----------------------------------------------------------------------------------------
@@ -1460,13 +1518,12 @@ fn projects_cannot_delete_a_user_who_has_assigned_projects_should_fail() {
             builder_assignment,
         ));
 
-        assert_noop!(
-            FundAdmin::users(
+        assert_noop!(FundAdmin::users(
                 RuntimeOrigin::signed(1),
                 make_user(
                     2,
-                    Some(make_field_name("Builder Test")),
-                    Some(ProxyRole::Builder),
+                    None,
+                    None,
                     CUDAction::Delete,
                 ),
             ),
@@ -1475,48 +1532,47 @@ fn projects_cannot_delete_a_user_who_has_assigned_projects_should_fail() {
     });
 }
 
-// #[test]
-// fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_fail() {
-//     new_test_ext().execute_with(|| {
-//         assert_ok!(make_default_simple_project());
+#[test]
+fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
 
-//         let builder_data = make_user(
-//             2,
-//             Some(make_field_name("Builder Test")),
-//             Some(ProxyRole::Builder),
-//             CUDAction::Create,
-//         );
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
 
-//         assert_ok!(FundAdmin::users(
-//             RuntimeOrigin::signed(1),
-//             builder_data,
-//         ));
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
 
-//         let builder_assignment = make_user_assignation(
-//             2,
-//             ProxyRole::Builder,
-//             AssignAction::Assign,
-//         );
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
 
-//         let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-//         assert_ok!(FundAdmin::projects_assign_user(
-//             RuntimeOrigin::signed(1),
-//             get_project_id,
-//             builder_assignment,
-//         ));
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment,
+        ));
 
-//         assert_noop!(
-//             FundAdmin::users(
-//                 RuntimeOrigin::signed(1),
-//                 make_user(
-//                     2,
-//                     Some(make_field_name("Builder Test")),
-//                     Some(ProxyRole::Investor),
-//                     CUDAction::Update,
-//                 ),
-//             ),
-//             Error::<Test>::UserHasAssignedProjectsCannotUpdate
-//         );
-//     });
-// }
+        assert_noop!(FundAdmin::users(
+                RuntimeOrigin::signed(1),
+                make_user(
+                    2,
+                    Some(make_field_name("Builder Test")),
+                    Some(ProxyRole::Investor),
+                    CUDAction::Update,
+                ),
+            ),
+            Error::<Test>::UserHasAssignedProjectsCannotUpdateRole
+        );
+    });
+}
