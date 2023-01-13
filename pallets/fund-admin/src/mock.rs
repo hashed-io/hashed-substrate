@@ -65,10 +65,7 @@ parameter_types! {
 	pub const MaxInvestorsPerProject:u32 = 500;
 	pub const MaxIssuersPerProject:u32 = 500;
 	pub const MaxRegionalCenterPerProject:u32 = 500;
-	pub const MaxProjectsPerBuilder:u32 = 1000;
 	pub const MaxProjectsPerInvestor:u32 = 1;
-	pub const MaxProjectsPerIssuer:u32 = 1000;
-	pub const MaxProjectsPerRegionalCenter:u32 = 1000;
 	pub const MaxDrawdownsPerProject:u32 = 1000;
 	pub const MaxTransactionsPerDrawdown:u32 = 500;
 	pub const MaxRegistrationsAtTime:u32 = 50;
@@ -99,10 +96,7 @@ impl pallet_fund_admin::Config for Test {
 	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
 	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
 	type MaxExpendituresPerProject = MaxExpendituresPerProject;
-	type MaxProjectsPerBuilder = MaxProjectsPerBuilder;
 	type MaxProjectsPerInvestor = MaxProjectsPerInvestor;
-	type MaxProjectsPerIssuer = MaxProjectsPerIssuer;
-	type MaxProjectsPerRegionalCenter = MaxProjectsPerRegionalCenter;
 	type MaxBanksPerProject = MaxBanksPerProject;
 	type MaxJobEligiblesByProject = MaxJobEligiblesByProject;
 	type MaxRevenuesByProject = MaxRevenuesByProject;
