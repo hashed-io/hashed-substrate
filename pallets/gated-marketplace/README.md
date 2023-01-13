@@ -9,7 +9,7 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
-      - [Submit initial role setup (needs sudo](#submit-initial-role-setup-needs-sudo)
+      - [Submit initial role setup (needs sudo)](#submit-initial-role-setup-needs-sudo)
       - [Create a marketplace](#create-a-marketplace)
       - [Get a marketplace](#get-a-marketplace)
       - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace)
@@ -149,7 +149,7 @@ The following examples will be using these prefunded accounts and testing data:
 
 ### Polkadot-js CLI
 
-#### Submit initial role setup (needs sudo
+#### Submit initial role setup (needs sudo)
 ```bash
 polkadot-js-api tx.gatedMarketplace.initialSetup --sudo --seed "//Alice"
 ```

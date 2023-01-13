@@ -950,6 +950,7 @@ parameter_types! {
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
 	pub const ChildMaxLen: u32 = 25;
+	pub const MaxParentsInCollection: u32 = 4_294_967_295;
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -975,6 +976,7 @@ impl pallet_fruniques::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RemoveOrigin = RootOrThreeFifthsOfCouncil;
 	type ChildMaxLen = ChildMaxLen;
+	type MaxParentsInCollection = MaxParentsInCollection;
 	type Rbac = RBAC;
 }
 

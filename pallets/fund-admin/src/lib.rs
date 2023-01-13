@@ -24,7 +24,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		//TODO: change all accounts names for users
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
@@ -75,16 +74,7 @@ pub mod pallet {
 		type MaxExpendituresPerProject: Get<u32>;
 
 		#[pallet::constant]
-		type MaxProjectsPerBuilder: Get<u32>;
-
-		#[pallet::constant]
 		type MaxProjectsPerInvestor: Get<u32>;
-
-		#[pallet::constant]
-		type MaxProjectsPerIssuer: Get<u32>;
-
-		#[pallet::constant]
-		type MaxProjectsPerRegionalCenter: Get<u32>;
 
 		#[pallet::constant]
 		type MaxBanksPerProject: Get<u32>;
@@ -258,7 +248,7 @@ pub mod pallet {
 		_,
 		Identity,
 		ProjectId, // Key project_id
-		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Revenues
 		ValueQuery,
 	>;
 
@@ -291,7 +281,6 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		// TODO: Delete unused events when updating the readme file
 		/// Proxy initial setup completed using the sudo pallet
 		ProxySetupCompleted,
 		/// Project was created successfully
@@ -386,7 +375,6 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
-		// TODO: Delete unused errors when updating the readme file
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -537,14 +525,8 @@ pub mod pallet {
 		DrawdownIsNotInDraftOrRejectedStatus,
 		/// Only investors can update/edit their documents
 		UserIsNotAnInvestor,
-		/// Max number of projects per builder has been reached
-		MaxProjectsPerBuilderReached,
 		/// Max number of projects per investor has been reached
 		MaxProjectsPerInvestorReached,
-		/// Max number of projects per issuer has been reached
-		MaxProjectsPerIssuerReached,
-		/// Max number of projects per regional center has been reached
-		MaxProjectsPerRegionalCenterReached,
 		/// Jobs eligibles array is empty
 		JobEligiblesIsEmpty,
 		/// JOb eligible name is required
@@ -619,12 +601,12 @@ pub mod pallet {
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
 		BankConfirmingDocumentsAreEmpty,
-		/// No scope was provided checking if the user has permissions. No applies for administrator users
-		NoScopeProvided,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty
 		PrivateGroupIdIsEmpty,
+		/// Maximun number of registrations at a time reached
+		MaxRegistrationsAtATimeReached,
 	}
 
 	// E X T R I N S I C S
@@ -659,8 +641,8 @@ pub mod pallet {
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to add the first administrator to the site
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
-		/// - This function grants administator permissions to the user from the rbac pallet
-		/// - Administator role have global scope permissions
+		/// - This function grants administrator permissions to the user from the rbac pallet
+		/// - administrator role have global scope permissions
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
 			origin: OriginFor<T>,
@@ -682,7 +664,7 @@ pub mod pallet {
 		/// - This function can only be called using the sudo pallet
 		/// - This function is used to remove any administrator from the site
 		/// - If the user is not registered, the function will return an error: UserNotFound
-		/// - This function removes administator permissions of the user from the rbac pallet
+		/// - This function removes administrator permissions of the user from the rbac pallet
 		///
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site,
@@ -724,7 +706,7 @@ pub mod pallet {
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		///
 		/// # Note:
-		/// - WARNING: It is possible to register, update, or delete administators accounts using this extrinsic,
+		/// - WARNING: It is possible to register, update, or delete administrators accounts using this extrinsic,
 		/// but administrators can not delete themselves.
 		/// - WARNING: This function only registers, updates, or deletes users from the site.
 		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
@@ -889,7 +871,7 @@ pub mod pallet {
 		/// the function will return an error: ProjectNotFound
 		///
 		/// # Note:
-		/// - WARNING: Deleting a project will delete ALL stored information associated with the project.
+		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
 		/// BE CAREFUL.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_delete_project(
@@ -922,7 +904,7 @@ pub mod pallet {
 		/// in the project depending on the role assigned to the user.
 		/// - After a user is unassigned from a project, the user will not be able to perform actions
 		/// in the project anymore.
-		/// - If the user is already assigned to the project, the function will return an erro.
+		/// - If the user is already assigned to the project, the function will return an error.
 		///
 		/// # Note:
 		/// - WARNING: ALL provided users needs to be registered in the site. If any of the users
@@ -933,7 +915,7 @@ pub mod pallet {
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Cannot unassign a user from a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
-		/// - Warning: Do not perfom multiple actions over the same user in the same call, it could
+		/// - Warning: Do not perform multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_assign_user(
@@ -946,9 +928,9 @@ pub mod pallet {
 			Self::do_execute_assign_users(who, project_id, users)
 		}
 
-		// B U D G E T  E X P E N D I T U R E
+		// B U D G E T  E X P E N D I T U R E   &  J O B   E L I G I B L E S
 		// --------------------------------------------------------------------------------------------
-		/// This extrinsic is used to create, update or delete expenditures.
+		/// This extrinsic is used to create, update or delete expenditures & job eligibles.
 		///
 		/// # Parameters:
 		/// - origin: The administrator account
@@ -976,7 +958,7 @@ pub mod pallet {
 		/// - This function can only be called by an administrator account
 		/// - This extrinsic allows multiple expenditures to be created/updated/deleted at the same time.
 		/// - The project id is required because it is the only way to identify the project
-		/// - Expentiture parameters are optional because depends on the action to be performed:
+		/// - Expenditure parameters are optional because depends on the action to be performed:
 		/// * **Create**: Name, Type & Amount are required. Nacis code & Jobs multiplier are optional.
 		/// * **Update**: Except for the expenditure id & action, all parameters are optional.
 		/// * **Delete**: Only the expenditure id & action is required.
@@ -1023,7 +1005,7 @@ pub mod pallet {
 		/// * 3: The action to be performed on the transaction. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
 		/// - submit: If true, transactions associated to the selected
-		/// drawdown will be submitted to the administator.
+		/// drawdown will be submitted to the administrator.
 		/// If false, the array of transactions will be saved as a draft.
 		///
 		/// # Considerations:
@@ -1090,12 +1072,12 @@ pub mod pallet {
 		///
 		/// # Parameters:
 		/// ### For EB5 drawdowns:
-		/// - origin: The administator account who is approving the drawdown
+		/// - origin: The administrator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved
 		///
 		/// ### For Construction Loan & Developer Equity (bulk uploads) drawdowns:
-		/// - origin: The administator account who is approving the drawdown
+		/// - origin: The administrator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved.
 		/// - bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a pseudo
@@ -1188,7 +1170,7 @@ pub mod pallet {
 		/// Reject a drawdown
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is rejecting the drawdown
+		/// - origin: The administrator account who is rejecting the drawdown
 		/// - project_id: The selected project id where the drawdown will be rejected
 		/// - drawdown_id: The selected drawdown id to be rejected
 		///
@@ -1235,7 +1217,7 @@ pub mod pallet {
 		/// Bulk upload drawdowns.
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is uploading the drawdowns
+		/// - origin: The administrator account who is uploading the drawdowns
 		/// - project_id: The selected project id where the drawdowns will be uploaded
 		/// - drawdown_id: The drawdowns to be uploaded
 		/// - description: The description of the drawdown provided by the builder
@@ -1269,7 +1251,7 @@ pub mod pallet {
 		/// Modifies the inflation rate of a project.
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is modifying the inflation rate
+		/// - origin: The administrator account who is modifying the inflation rate
 		/// - projects: The projects where the inflation rate will be modified.
 		/// This is a vector of tuples where each entry is composed by:
 		/// * 0: The project id
@@ -1379,7 +1361,7 @@ pub mod pallet {
 		/// Approve a revenue
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is approving the revenue
+		/// - origin: The administrator account who is approving the revenue
 		/// - project_id: The selected project id where the revenue will be approved
 		/// - revenue_id: The selected revenue id to be approved
 		///
@@ -1406,7 +1388,7 @@ pub mod pallet {
 		/// Reject a revenue
 		///
 		/// # Parameters:
-		/// - origin: The administator account who is rejecting the revenue
+		/// - origin: The administrator account who is rejecting the revenue
 		/// - project_id: The selected project id where the revenue will be rejected
 		/// - revenue_id: The selected revenue id to be rejected
 		/// - revenue_transactions_feedback: Administrator will provide feedback for each rejected
