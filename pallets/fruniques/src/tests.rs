@@ -3,7 +3,7 @@ use codec::Encode;
 use core::convert::TryFrom;
 
 use frame_support::{assert_noop, assert_ok, BoundedVec};
-
+use crate::types::ParentInfoCall;
 pub struct ExtBuilder;
 
 // helper function to set BoundedVec
@@ -51,6 +51,15 @@ fn dummy_empty_attributes() -> Vec<(BoundedVec<u8, KeyLimit>, BoundedVec<u8, Val
 	vec![]
 }
 
+fn dummy_parent(collection_id: u32, parent_id: u32) -> ParentInfoCall<Test> {
+	ParentInfoCall {
+		collection_id,
+		parent_id,
+		parent_percentage: 10,
+		is_hierarchical: true
+	}
+}
+
 #[test]
 fn create_collection_works() {
 	ExtBuilder::default().build().execute_with(|| {
@@ -63,7 +72,7 @@ fn spawn_extrinsic_works() {
 	ExtBuilder::default().build().execute_with(|| {
 		// A collection must be created before spawning an NFT
 		assert_noop!(
-			Fruniques::spawn(RuntimeOrigin::signed(1), 0, None, dummy_description(), None),
+			Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None),
 			Error::<Test>::CollectionNotFound
 		);
 
@@ -72,26 +81,26 @@ fn spawn_extrinsic_works() {
 
 		// The first item can not be a child
 		assert_noop!(
-			Fruniques::spawn(RuntimeOrigin::signed(1), 0, Some((0, false, 10)), dummy_description(), None),
+			Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, Some(dummy_parent(0, 10))),
 			Error::<Test>::ParentNotFound
 		);
 
 		// A NFT can be created with empty data
-		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, None, dummy_description(), None));
+		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
 		// A NFT can be created with attributes
 		assert_ok!(Fruniques::spawn(
 			RuntimeOrigin::signed(1),
 			0,
-			None,
 			dummy_description(),
-			Some(dummy_attributes())
+			Some(dummy_attributes()),
+			None
 		));
 		// A NFT can be hierarchical
 		assert_ok!(Fruniques::spawn(
 			RuntimeOrigin::signed(1),
 			0,
-			Some((0, false, 10)),
 			dummy_description(),
+			None,
 			None
 		));
 		// The parent must exist
@@ -99,8 +108,8 @@ fn spawn_extrinsic_works() {
 			Fruniques::spawn(
 				RuntimeOrigin::signed(1),
 				0,
-				Some((100, false, 10)),
 				dummy_description(),
+				None,
 				None
 			),
 			Error::<Test>::ParentNotFound
@@ -113,7 +122,7 @@ fn set_attributes_works() {
 	ExtBuilder::default().build().execute_with(|| {
 		// A collection must be created before spawning an NFT
 		assert_noop!(
-			Fruniques::spawn(RuntimeOrigin::signed(1), 0, None, dummy_description(), None),
+			Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None),
 			Error::<Test>::CollectionNotFound
 		);
 
@@ -125,7 +134,7 @@ fn set_attributes_works() {
 			Error::<Test>::FruniqueNotFound
 		);
 		// A NFT can be created with empty data
-		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, None, dummy_description(), None));
+		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
 		// Attributes can not be empty
 		assert_noop!(
 			Fruniques::set_attributes(RuntimeOrigin::signed(1), 0, 0, dummy_empty_attributes()),

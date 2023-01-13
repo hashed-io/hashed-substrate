@@ -542,6 +542,8 @@ parameter_types! {
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
 	pub const ChildMaxLen: u32 = 100;
+	pub const MaxParentsInCollection: u32 = 4_294_967_295;
+	// pub const FruniquesPalletId: PalletId = PalletId(*b"frunique");
 }
 
 impl pallet_uniques::Config for Runtime {
@@ -571,6 +573,8 @@ impl pallet_fruniques::Config for Runtime {
 	>;
 	type Rbac = RBAC;
 	type ChildMaxLen = ChildMaxLen;
+	type MaxParentsInCollection = MaxParentsInCollection;
+	// type PalletId = FruniquesPalletId;
 
 }
 
