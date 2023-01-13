@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/functions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_gated_marketplace/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_gated_marketplace/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/functions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -810,817 +810,1407 @@
 <span id="810">810</span>
 <span id="811">811</span>
 <span id="812">812</span>
-</pre><pre class="rust"><code>
-<span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
-<span class="kw">use </span>sp_runtime::sp_std::vec::Vec; <span class="comment">// vec primitive
-</span><span class="kw">use </span>scale_info::prelude::vec; <span class="comment">// vec![] macro
-</span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
+<span class="kw">use </span>scale_info::prelude::vec; <span class="comment">// vec![] macro
+</span><span class="kw">use </span>sp_runtime::sp_std::vec::Vec; <span class="comment">// vec primitive
 
-<span class="kw">use </span>frame_support::traits::Time;
-<span class="kw">use </span>frame_support::traits::{Currency};
+</span><span class="kw">use </span>frame_support::traits::Currency;
 <span class="kw">use </span>frame_support::traits::ExistenceRequirement::KeepAlive;
+<span class="kw">use </span>frame_support::traits::Time;
+<span class="kw">use </span>sp_runtime::Permill;
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+	<span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
+		<span class="kw">let </span>pallet_id = <span class="self">Self</span>::pallet_id();
+		<span class="kw">let </span>super_roles = <span class="macro">vec!</span>[MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
+		<span class="kw">let </span>super_role_ids =
+			&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)<span class="question-mark">?</span>;
+		<span class="kw">for </span>super_role <span class="kw">in </span>super_role_ids {
+			&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_permissions(
+				pallet_id.clone(),
+				super_role,
+				Permission::admin_permissions(),
+			)<span class="question-mark">?</span>;
+		}
+		<span class="comment">// participant role and permissions
+		</span><span class="kw">let </span>participant_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(
+			pallet_id.clone(),
+			[MarketplaceRole::Participant.to_vec()].to_vec(),
+		)<span class="question-mark">?</span>;
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_permissions(
+			pallet_id.clone(),
+			participant_role_id[<span class="number">0</span>],
+			Permission::participant_permissions(),
+		)<span class="question-mark">?</span>;
+		<span class="comment">// appraiser role and permissions
+		</span><span class="kw">let </span>_appraiser_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(
+			pallet_id.clone(),
+			[MarketplaceRole::Appraiser.to_vec()].to_vec(),
+		)<span class="question-mark">?</span>;
+		<span class="comment">// redemption specialist role and permissions
+		</span><span class="kw">let </span>_redemption_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(
+			pallet_id,
+			[MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec(),
+		)<span class="question-mark">?</span>;
 
-    <span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
-        <span class="kw">let </span>pallet_id = <span class="self">Self</span>::pallet_id();
-        <span class="kw">let </span>super_roles = <span class="macro">vec!</span>[MarketplaceRole::Owner.to_vec(), MarketplaceRole::Admin.to_vec()];
-        <span class="kw">let </span>super_role_ids = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)<span class="question-mark">?</span>;
-        <span class="kw">for </span>super_role <span class="kw">in </span>super_role_ids{
-            &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_permissions(pallet_id.clone(), super_role, Permission::admin_permissions())<span class="question-mark">?</span>;
-        }
-        <span class="comment">// participant role and permissions
-        </span><span class="kw">let </span>participant_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Participant.to_vec()].to_vec())<span class="question-mark">?</span>;
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_permissions(pallet_id.clone(), participant_role_id[<span class="number">0</span>], Permission::participant_permissions() )<span class="question-mark">?</span>;
-        <span class="comment">// appraiser role and permissions
-        </span><span class="kw">let </span>_appraiser_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id.clone(), [MarketplaceRole::Appraiser.to_vec()].to_vec())<span class="question-mark">?</span>;
-        <span class="comment">// redemption specialist role and permissions
-        </span><span class="kw">let </span>_redemption_role_id = &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_and_set_roles(pallet_id, [MarketplaceRole::RedemptionSpecialist.to_vec()].to_vec())<span class="question-mark">?</span>;
+		<span class="self">Self</span>::deposit_event(Event::MarketplaceSetupCompleted);
+		<span class="prelude-val">Ok</span>(())
+	}
 
-        <span class="self">Self</span>::deposit_event(Event::MarketplaceSetupCompleted);
-        <span class="prelude-val">Ok</span>(())
-    }
+	<span class="kw">pub fn </span>do_create_marketplace(
+		owner: T::AccountId,
+		admin: T::AccountId,
+		marketplace: Marketplace&lt;T&gt;,
+	) -&gt; DispatchResult {
+		<span class="comment">// Gen market id
+		</span><span class="kw">let </span>marketplace_id = marketplace.using_encoded(blake2_256);
+		<span class="comment">// ensure the generated id is unique
+		</span><span class="macro">ensure!</span>(
+			!&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id),
+			Error::&lt;T&gt;::MarketplaceAlreadyExists
+		);
+		<span class="comment">//Insert on marketplaces and marketplaces by auth
+		</span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)<span class="question-mark">?</span>;
+		&lt;Marketplaces&lt;T&gt;&gt;::insert(marketplace_id, marketplace);
+		<span class="self">Self</span>::deposit_event(Event::MarketplaceStored(owner, admin, marketplace_id));
+		<span class="prelude-val">Ok</span>(())
+	}
 
-    <span class="kw">pub fn </span>do_create_marketplace(owner: T::AccountId, admin: T::AccountId ,marketplace: Marketplace&lt;T&gt;)-&gt;DispatchResult{
-        <span class="comment">// Gen market id
-        </span><span class="kw">let </span>marketplace_id = marketplace.using_encoded(blake2_256);
-        <span class="comment">// ensure the generated id is unique
-        </span><span class="macro">ensure!</span>(!&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceAlreadyExists);
-        <span class="comment">//Insert on marketplaces and marketplaces by auth
-        </span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)<span class="question-mark">?</span>;
-        &lt;Marketplaces&lt;T&gt;&gt;::insert(marketplace_id, marketplace);
-        <span class="self">Self</span>::deposit_event(Event::MarketplaceStored(owner, admin, marketplace_id));
-        <span class="prelude-val">Ok</span>(())
-    }
+	<span class="kw">pub fn </span>do_apply(
+		applicant: T::AccountId,
+		custodian: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+		marketplace_id: [u8; <span class="number">32</span>],
+		application: Application&lt;T&gt;,
+	) -&gt; DispatchResult {
+		<span class="comment">// marketplace exists?
+		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="comment">// The user only can apply once by marketplace
+		</span><span class="macro">ensure!</span>(
+			!&lt;ApplicationsByAccount&lt;T&gt;&gt;::contains_key(applicant.clone(), marketplace_id),
+			Error::&lt;T&gt;::AlreadyApplied
+		);
+		<span class="comment">// Generate application Id
+		</span><span class="kw">let </span>app_id =
+			(marketplace_id, applicant.clone(), application.clone()).using_encoded(blake2_256);
+		<span class="comment">// Ensure another identical application doesnt exists
+		</span><span class="macro">ensure!</span>(!&lt;Applications&lt;T&gt;&gt;::contains_key(app_id), Error::&lt;T&gt;::AlreadyApplied);
 
-    <span class="kw">pub fn </span>do_apply(applicant: T::AccountId, custodian: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;, marketplace_id: [u8;<span class="number">32</span>], application : Application&lt;T&gt;)-&gt;DispatchResult{
-        <span class="comment">// marketplace exists?
-        </span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="comment">// The user only can apply once by marketplace
-        </span><span class="macro">ensure!</span>(!&lt;ApplicationsByAccount&lt;T&gt;&gt;::contains_key(applicant.clone(), marketplace_id), Error::&lt;T&gt;::AlreadyApplied);
-        <span class="comment">// Generate application Id
-        </span><span class="kw">let </span>app_id = (marketplace_id, applicant.clone(), application.clone()).using_encoded(blake2_256);
-        <span class="comment">// Ensure another identical application doesnt exists
-        </span><span class="macro">ensure!</span>(!&lt;Applications&lt;T&gt;&gt;::contains_key(app_id), Error::&lt;T&gt;::AlreadyApplied);
+		<span class="kw">if let </span><span class="prelude-val">Some</span>(c) = custodian {
+			<span class="comment">// Ensure applicant and custodian arent the same
+			</span><span class="macro">ensure!</span>(applicant.ne(<span class="kw-2">&amp;</span>c), Error::&lt;T&gt;::ApplicantCannotBeCustodian);
+			<span class="self">Self</span>::insert_custodian(c, marketplace_id, applicant.clone())<span class="question-mark">?</span>;
+		}
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = custodian{
-            <span class="comment">// Ensure applicant and custodian arent the same
-            </span><span class="macro">ensure!</span>(applicant.ne(<span class="kw-2">&amp;</span>c),Error::&lt;T&gt;::ApplicantCannotBeCustodian);
-            <span class="self">Self</span>::insert_custodian(c, marketplace_id, applicant.clone())<span class="question-mark">?</span>;
-        }
+		<span class="self">Self</span>::insert_in_applicants_lists(
+			applicant.clone(),
+			ApplicationStatus::default(),
+			marketplace_id,
+		)<span class="question-mark">?</span>;
+		&lt;ApplicationsByAccount&lt;T&gt;&gt;::insert(applicant, marketplace_id, app_id);
+		&lt;Applications&lt;T&gt;&gt;::insert(app_id, application);
 
-        <span class="self">Self</span>::insert_in_applicants_lists(applicant.clone(),ApplicationStatus::default(), marketplace_id)<span class="question-mark">?</span>;
-        &lt;ApplicationsByAccount&lt;T&gt;&gt;::insert(applicant, marketplace_id, app_id);
-        &lt;Applications&lt;T&gt;&gt;::insert(app_id, application);
+		<span class="self">Self</span>::deposit_event(Event::ApplicationStored(app_id, marketplace_id));
+		<span class="prelude-val">Ok</span>(())
+	}
 
-        <span class="self">Self</span>::deposit_event(Event::ApplicationStored(app_id, marketplace_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-	<span class="kw">pub fn </span>do_invite(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>], new_user: T::AccountId, fields : Fields&lt;T&gt;, custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;) -&gt; DispatchResult {
+	<span class="kw">pub fn </span>do_invite(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		new_user: T::AccountId,
+		fields: Fields&lt;T&gt;,
+		custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+	) -&gt; DispatchResult {
 		<span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="comment">// The user only can apply once by marketplace
-        </span><span class="macro">ensure!</span>(!&lt;ApplicationsByAccount&lt;T&gt;&gt;::contains_key(new_user.clone(), marketplace_id), Error::&lt;T&gt;::AlreadyApplied);
+		<span class="comment">// The user only can apply once by marketplace
+		</span><span class="macro">ensure!</span>(
+			!&lt;ApplicationsByAccount&lt;T&gt;&gt;::contains_key(new_user.clone(), marketplace_id),
+			Error::&lt;T&gt;::AlreadyApplied
+		);
 
 		<span class="comment">// ensure the origin is owner or admin
-        </span><span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::Enroll)<span class="question-mark">?</span>;
+		</span><span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::Enroll)<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>(custodian, fields) =
-				<span class="self">Self</span>::set_up_application(fields,custodian_fields);
+		<span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
 
-		<span class="kw">let </span>application = Application::&lt;T&gt;{
-				status: ApplicationStatus::default(),
-				fields,
-				feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
-			};
+		<span class="kw">let </span>application = Application::&lt;T&gt; {
+			status: ApplicationStatus::default(),
+			fields,
+			feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
+		};
 
 		<span class="self">Self</span>::do_apply(new_user.clone(), custodian, marketplace_id, application)<span class="question-mark">?</span>;
 
-		<span class="self">Self</span>::do_enroll(authority, marketplace_id, AccountOrApplication::Account(new_user), <span class="bool-val">true</span>, BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::try_from(<span class="string">b&quot;User enrolled by the marketplace admin&quot;</span>.to_vec()).unwrap())<span class="question-mark">?</span>;
+		<span class="self">Self</span>::do_enroll(
+			authority,
+			marketplace_id,
+			AccountOrApplication::Account(new_user),
+			<span class="bool-val">true</span>,
+			BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::try_from(
+				<span class="string">b&quot;User enrolled by the marketplace admin&quot;</span>.to_vec(),
+			)
+			.unwrap(),
+		)<span class="question-mark">?</span>;
 
 		<span class="prelude-val">Ok</span>(())
 	}
 
-    <span class="kw">pub fn </span>do_enroll(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>], account_or_application: AccountOrApplication&lt;T&gt;, approved: bool, feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,)-&gt;DispatchResult{
-        <span class="comment">// ensure the origin is owner or admin
-        </span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id,Permission::Enroll)<span class="question-mark">?</span>;
-        <span class="kw">let </span>next_status = <span class="kw">match </span>approved{
-            <span class="bool-val">true </span>=&gt; ApplicationStatus::Approved,
-            <span class="bool-val">false </span>=&gt; ApplicationStatus::Rejected,
-        };
-        <span class="kw">let </span>applicant = <span class="kw">match </span>account_or_application.clone() {
-            AccountOrApplication::Account(acc)=&gt; acc,
-            AccountOrApplication::Application(application_id) =&gt; {
-                &lt;ApplicationsByAccount&lt;T&gt;&gt;::iter().find_map(|(acc,m_id,app_id)|{
-                    <span class="kw">if  </span>m_id == marketplace_id &amp;&amp; app_id == application_id{
-                        <span class="kw">return </span><span class="prelude-val">Some</span>(acc)
-                    }
-                    <span class="prelude-val">None
-                </span>}).ok_or(Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?
-            </span>},
-        };
-        <span class="self">Self</span>::change_applicant_status(applicant, marketplace_id, next_status, feedback)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::ApplicationProcessed(account_or_application, marketplace_id, next_status));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">pub fn </span>do_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>], ) -&gt; DispatchResult {
-        <span class="comment">//ensure the origin is owner or admin
-        //TODO: implement copy trait for MarketplaceAuthority &amp; T::AccountId
-        //Self::can_enroll(authority, marketplace_id)?;
-        </span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id,Permission::AddAuth)<span class="question-mark">?</span>;
-        <span class="comment">//ensure the account is not already an authority
-        // handled by &lt;T as pallet::Config&gt;::Rbac::assign_role_to_user
-        //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::&lt;T&gt;::AlreadyApplied);
-        </span><span class="kw">match </span>authority_type{
-            MarketplaceRole::Owner =&gt; {
-                <span class="macro">ensure!</span>(!<span class="self">Self</span>::owner_exist(marketplace_id), Error::&lt;T&gt;::OnlyOneOwnerIsAllowed);
-                <span class="self">Self</span>::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
-
-            },
-            <span class="kw">_ </span>=&gt;{
-                <span class="self">Self</span>::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
-            }
-        }
-
-        <span class="self">Self</span>::deposit_event(Event::AuthorityAdded(account, authority_type));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">pub fn </span>do_remove_authority(authority: T::AccountId, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>], ) -&gt; DispatchResult {
-        <span class="comment">//ensure the origin is owner or admin
-        //Self::can_enroll(authority.clone(), marketplace_id)?;
-        </span><span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id,Permission::RemoveAuth)<span class="question-mark">?</span>;
-        <span class="comment">//ensure the account has the selected authority before to try to remove
-        // &lt;T as pallet::Config&gt;::Rbac handles the if role doesnt hasnt been asigned to the user
-        //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::&lt;T&gt;::AuthorityNotFoundForUser);
-
-        </span><span class="kw">match </span>authority_type{
-            MarketplaceRole::Owner =&gt; {
-                <span class="macro">ensure!</span>(<span class="self">Self</span>::owner_exist(marketplace_id), Error::&lt;T&gt;::OwnerNotFound);
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CantRemoveOwner.into());
-            },
-            MarketplaceRole::Admin =&gt; {
-                <span class="comment">// Admins can not delete themselves
-                </span><span class="macro">ensure!</span>(authority != account, Error::&lt;T&gt;::AdminCannotRemoveItself);
-
-                <span class="comment">// Admis cannot be deleted between them, only the owner can
-                </span><span class="macro">ensure!</span>(!<span class="self">Self</span>::is_admin(authority, marketplace_id), Error::&lt;T&gt;::CannotDeleteAdmin);
-
-                <span class="self">Self</span>::remove_from_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
-            },
-            <span class="kw">_ </span>=&gt;{
-
-                <span class="self">Self</span>::remove_from_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
-
-            }
-        }
-
-        <span class="self">Self</span>::deposit_event(Event::AuthorityRemoved(account, authority_type));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">pub fn </span>do_update_label_marketplace(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>], new_label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
-        <span class="comment">//ensure the marketplace exists
-        </span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="comment">//ensure the origin is owner or admin
-        //Self::can_enroll(authority, marketplace_id)?;
-        </span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::UpdateLabel)<span class="question-mark">?</span>;
-        <span class="comment">//update marketplace
-        </span><span class="self">Self</span>::update_label(marketplace_id, new_label)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">pub fn </span>do_remove_marketplace(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//ensure the marketplace exists
-        </span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="comment">//ensure the origin is owner or admin
-        //Self::can_enroll(authority, marketplace_id)?;
-        </span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::RemoveMarketplace)<span class="question-mark">?</span>;
-        <span class="comment">//remove marketplace
-        </span><span class="self">Self</span>::remove_selected_marketplace(marketplace_id)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::deposit_event(Event::MarketplaceRemoved(marketplace_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub fn </span>do_enlist_sell_offer(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
-        <span class="comment">//This function is only called by the owner of the marketplace
-        //ensure the marketplace exists
-        </span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id,Permission::EnlistSellOffer)<span class="question-mark">?</span>;
-        <span class="comment">//ensure the collection exists
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::owner(collection_id, item_id) {
-            <span class="macro">ensure!</span>(a == authority, Error::&lt;T&gt;::NotOwner);
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
-        }
-
-        <span class="comment">//ensure the price is valid
-        </span><span class="self">Self</span>::is_the_price_valid(price)<span class="question-mark">?</span>;
-
-        <span class="comment">//Add timestamp to the offer
-        </span><span class="kw">let</span>(timestamp, timestamp2) = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
-
-        <span class="comment">//create an offer_id
-        </span><span class="kw">let </span>offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
-
-        <span class="comment">//create offer structure
-        </span><span class="kw">let </span>offer_data = OfferData::&lt;T&gt; {
-            marketplace_id,
-            collection_id,
-            item_id,
-            creator: authority.clone(),
-            price,
-            creation_date: timestamp,
-            expiration_date: timestamp2,
-            status: OfferStatus::Open,
-            offer_type: OfferType::SellOrder,
-            buyer: <span class="prelude-val">None</span>,
-        };
-
-        <span class="comment">//ensure there is no a previous sell offer for this item
-        </span><span class="self">Self</span>::can_this_item_receive_sell_orders(collection_id, item_id, marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in OffersByItem
-        </span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(collection_id, item_id, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in OffersByAccount
-        </span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in OffersInfo
-        // ensure the offer_id doesn&#39;t exist
-        </span><span class="macro">ensure!</span>(!&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferAlreadyExists);
-        &lt;OffersInfo&lt;T&gt;&gt;::insert(offer_id, offer_data);
-
-        <span class="comment">//Insert in OffersByMarketplace
-        </span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub fn </span>do_enlist_buy_offer(authority: T::AccountId, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
-        <span class="comment">//ensure the item is for sale, if not, return error
-        </span><span class="self">Self</span>::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the marketplace exists
-        </span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-        <span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id,Permission::EnlistBuyOffer)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the collection exists
-        //For this case user doesn&#39;t need to be the owner of the collection
-        //but the owner of the item cannot create a buy offer for their own collection
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::owner(collection_id, item_id) {
-            <span class="macro">ensure!</span>(a != authority, Error::&lt;T&gt;::CannotCreateOffer);
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
-        }
-
-        <span class="comment">//ensure user has enough balance to create the offer
-        </span><span class="kw">let </span>total_user_balance = T::Currency::total_balance(<span class="kw-2">&amp;</span>authority);
-        <span class="macro">ensure!</span>(total_user_balance &gt;= price, Error::&lt;T&gt;::NotEnoughBalance);
-
-        <span class="comment">//ensure the price is valid
-        </span><span class="self">Self</span>::is_the_price_valid(price)<span class="question-mark">?</span>;
-
-        <span class="comment">//Add timestamp to the offer
-        </span><span class="kw">let</span>(timestamp, timestamp2) = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
-
-        <span class="comment">//create an offer_id
-        </span><span class="kw">let </span>offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2).using_encoded(blake2_256);
-
-        <span class="comment">//create offer structure
-        </span><span class="kw">let </span>offer_data = OfferData::&lt;T&gt; {
-            marketplace_id,
-            collection_id,
-            item_id,
-            creator: authority.clone(),
-            price,
-            creation_date: timestamp,
-            expiration_date: timestamp2,
-            status: OfferStatus::Open,
-            offer_type: OfferType::BuyOrder,
-            buyer: <span class="prelude-val">None</span>,
-        };
-
-        <span class="comment">//insert in OffersByItem
-        //An item can receive multiple buy offers
-        </span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(collection_id, item_id, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in OffersByAccount
-        </span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in OffersInfo
-        // ensure the offer_id doesn&#39;t exist
-        </span><span class="macro">ensure!</span>(!&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferAlreadyExists);
-        &lt;OffersInfo&lt;T&gt;&gt;::insert(offer_id, offer_data);
-
-        <span class="comment">//Insert in OffersByMarketplace
-        </span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, |offers| {
-            offers.try_push(offer_id)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub fn </span>do_take_sell_offer(buyer: T::AccountId, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//This extrisicn is called by the user who wants to buy the item
-        //get offer data
-        </span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::is_authorized(buyer.clone(), <span class="kw-2">&amp;</span>offer_data.marketplace_id,Permission::TakeSellOffer)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the collection &amp; owner exists
-        </span><span class="kw">let </span>owner_item = pallet_uniques::Pallet::&lt;T&gt;::owner(offer_data.collection_id, offer_data.item_id).ok_or(Error::&lt;T&gt;::OwnerNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure owner is not the same as the buyer
-        </span><span class="macro">ensure!</span>(owner_item != buyer, Error::&lt;T&gt;::CannotTakeOffer);
-
-        <span class="comment">//ensure the offer_id exists in OffersByItem
-        </span><span class="self">Self</span>::does_exist_offer_id_for_this_item(offer_data.collection_id, offer_data.item_id, offer_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the offer is open and available
-        </span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
-
-        <span class="comment">//TODO: Use free_balance instead of total_balance
-        //Get the buyer&#39;s balance
-        </span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>buyer);
-        <span class="comment">//ensure the buyer has enough balance to buy the item
-        </span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
-        <span class="comment">//Transfer the balance
-        </span>T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>owner_item, offer_data.price, KeepAlive)<span class="question-mark">?</span>;
-
-        <span class="comment">//Use uniques transfer function to transfer the item to the buyer
-        </span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(offer_data.collection_id, offer_data.item_id, buyer.clone(), |<span class="kw">_</span>, <span class="kw">_</span>|{
-            <span class="prelude-val">Ok</span>(())
-        })<span class="question-mark">?</span>;
-
-        <span class="comment">//update offer status from all marketplaces
-        </span><span class="self">Self</span>::update_offers_status(buyer.clone(), offer_data.collection_id, offer_data.item_id, offer_data.marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//remove all the offers associated with the item
-        </span><span class="self">Self</span>::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::OfferWasAccepted(offer_id, buyer));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub fn </span>do_take_buy_offer(authority: T::AccountId, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant
-        //get offer data
-        </span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>offer_data.marketplace_id,Permission::TakeBuyOffer)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the collection &amp; owner exists
-        </span><span class="kw">let </span>owner_item = pallet_uniques::Pallet::&lt;T&gt;::owner(offer_data.collection_id, offer_data.item_id).ok_or(Error::&lt;T&gt;::OwnerNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure only owner of the item can call the extrinic
-        </span><span class="macro">ensure!</span>(owner_item == authority, Error::&lt;T&gt;::NotOwner);
-
-        <span class="comment">//ensure owner is not the same as the buy_offer_creator
-        </span><span class="macro">ensure!</span>(owner_item != offer_data.creator, Error::&lt;T&gt;::CannotTakeOffer);
-
-        <span class="comment">//ensure the offer_id exists in OffersByItem
-        </span><span class="self">Self</span>::does_exist_offer_id_for_this_item(offer_data.collection_id, offer_data.item_id, offer_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the offer is open and available
-        </span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
-
-        <span class="comment">//TODO: Use free_balance instead of total_balance
-        //Get the buyer&#39;s balance
-        </span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>offer_data.creator);
-        <span class="comment">//ensure the buy_offer_creator has enough balance to buy the item
-        </span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
-        <span class="comment">//Transfer the balance to the owner of the item
-        </span>T::Currency::transfer(<span class="kw-2">&amp;</span>offer_data.creator, <span class="kw-2">&amp;</span>owner_item, offer_data.price, KeepAlive)<span class="question-mark">?</span>;
-        <span class="comment">//Use uniques transfer function to transfer the item to the market_participant
-        </span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(offer_data.collection_id, offer_data.item_id, offer_data.creator.clone(), |<span class="kw">_</span>, <span class="kw">_</span>|{
-            <span class="prelude-val">Ok</span>(())
-        })<span class="question-mark">?</span>;
-
-        <span class="comment">//update offer status from all marketplaces
-        </span><span class="self">Self</span>::update_offers_status(offer_data.creator.clone(), offer_data.collection_id, offer_data.item_id, offer_data.marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//remove all the offers associated with the item
-        </span><span class="self">Self</span>::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id )<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::OfferWasAccepted(offer_id, offer_data.creator));
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">pub fn </span>do_remove_offer(authority: T::AccountId, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//ensure the offer_id exists
-        </span><span class="macro">ensure!</span>(&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferNotFound);
-
-        <span class="comment">//get offer data
-        </span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>offer_data.marketplace_id,Permission::RemoveOffer)<span class="question-mark">?</span>;
-
-        <span class="comment">//ensure the offer status is Open
-        </span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::CannotDeleteOffer);
-
-        <span class="comment">// ensure the authority is the creator of the offer
-        </span><span class="macro">ensure!</span>(offer_data.creator == authority, Error::&lt;T&gt;::CannotRemoveOffer);
-
-        <span class="comment">//ensure the offer_id exists in OffersByItem
-        </span><span class="self">Self</span>::does_exist_offer_id_for_this_item(offer_data.collection_id, offer_data.item_id, offer_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//remove the offer from OfferInfo
-        </span>&lt;OffersInfo&lt;T&gt;&gt;::remove(offer_id);
-
-        <span class="comment">//remove the offer from OffersByMarketplace
-        </span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(offer_data.marketplace_id, |offers| {
-            <span class="kw">let </span>offer_index = offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-            offers.remove(offer_index);
-            <span class="prelude-val">Ok</span>(())
-        }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">//remove the offer from OffersByAccount
-        </span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| {
-            <span class="kw">let </span>offer_index = offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-            offers.remove(offer_index);
-            <span class="prelude-val">Ok</span>(())
-        }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="comment">//remove the offer from OffersByItem
-        </span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(offer_data.collection_id, offer_data.item_id, |offers| {
-            <span class="kw">let </span>offer_index = offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-            offers.remove(offer_index);
-            <span class="prelude-val">Ok</span>(())
-        }).map_err(|<span class="kw">_</span>:Error::&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="self">Self</span>::deposit_event(Event::OfferRemoved(offer_id, offer_data.marketplace_id));
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-
-    <span class="comment">/*---- Helper functions ----*/
-
-    </span><span class="kw">pub fn </span>set_up_application(
-        fields : Fields&lt;T&gt;,
-        custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;
-    )-&gt; (<span class="prelude-ty">Option</span>&lt;T::AccountId&gt;, BoundedVec&lt;ApplicationField, T::MaxFiles&gt; ){
-        <span class="kw">let </span><span class="kw-2">mut </span>f: Vec&lt;ApplicationField&gt;= fields.iter().map(|tuple|{
-            ApplicationField{
-                display_name: tuple.<span class="number">0</span>.clone(), cid: tuple.<span class="number">1</span>.clone(), custodian_cid: <span class="prelude-val">None</span>,
-            }
-        }).collect();
-        <span class="kw">let </span>custodian = <span class="kw">match </span>custodian_fields{
-            <span class="prelude-val">Some</span>(c_fields)=&gt;{
-                <span class="kw">for </span>(i, field) <span class="kw">in </span>f.iter_mut().enumerate(){
-                    field.custodian_cid = <span class="prelude-val">Some</span>(c_fields.<span class="number">1</span>[i].clone());
-                }
-
-                <span class="prelude-val">Some</span>(c_fields.<span class="number">0</span>)
-            },
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        };
-        (custodian, BoundedVec::&lt;ApplicationField, T::MaxFiles&gt;::try_from(f).unwrap_or_default() )
-    }
-
-    <span class="kw">fn </span>insert_in_auth_market_lists(authority: T::AccountId, role: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>])-&gt;DispatchResult{
-
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::assign_role_to_user(authority, <span class="self">Self</span>::pallet_id(),
-             <span class="kw-2">&amp;</span>marketplace_id, role.id())<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>insert_in_applicants_lists(applicant: T::AccountId, status: ApplicationStatus , marketplace_id : [u8;<span class="number">32</span>])-&gt;DispatchResult{
-        &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, status,|applicants|{
-            applicants.try_push(applicant)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxApplicants)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>insert_custodian(custodian: T::AccountId, marketplace_id : [u8;<span class="number">32</span>], applicant: T::AccountId)-&gt; DispatchResult{
-        &lt;Custodians&lt;T&gt;&gt;::try_mutate(custodian, marketplace_id, | applications |{
-            applications.try_push(applicant)
-        }).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxApplicationsPerCustodian)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>remove_from_applicants_lists(applicant: T::AccountId, status: ApplicationStatus , marketplace_id : [u8;<span class="number">32</span>])-&gt;DispatchResult{
-        &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(marketplace_id, status, |applicants|{
-            <span class="kw">let </span>applicant_index = applicants.iter().position(|a| <span class="kw-2">*</span>a==applicant.clone())
-                .ok_or(Error::&lt;T&gt;::ApplicantNotFound)<span class="question-mark">?</span>;
-            applicants.remove(applicant_index);
-
-            <span class="prelude-val">Ok</span>(())
-        })
-    }
-
-
-    <span class="kw">fn </span>remove_from_market_lists(account: T::AccountId, author_type: MarketplaceRole , marketplace_id : [u8;<span class="number">32</span>])-&gt;DispatchResult{
-
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_role_from_user(account, <span class="self">Self</span>::pallet_id(),
-            <span class="kw-2">&amp;</span>marketplace_id, author_type.id())<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
-
-    }
-
-
-    <span class="kw">fn </span>change_applicant_status(applicant: T::AccountId , marketplace_id : [u8;<span class="number">32</span>], next_status: ApplicationStatus, feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;, )-&gt;DispatchResult{
-        <span class="kw">let </span><span class="kw-2">mut </span>prev_status = ApplicationStatus::default();
-        <span class="kw">let </span>app_id = &lt;ApplicationsByAccount&lt;T&gt;&gt;::get(applicant.clone(), marketplace_id)
-            .ok_or(Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
-        &lt;Applications&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(app_id, | application|{
-            application.as_ref().ok_or( Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(a) = application{
-                prev_status.clone_from(<span class="kw-2">&amp;</span>a.status);
-                a.feedback = feedback;
-                a.status.clone_from(<span class="kw-2">&amp;</span>next_status)
-            }
-            <span class="prelude-val">Ok</span>(())
-        })<span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(prev_status != next_status, Error::&lt;T&gt;::AlreadyEnrolled);
-        <span class="comment">//remove from previous state list
-        </span><span class="self">Self</span>::remove_from_applicants_lists(applicant.clone(),prev_status, marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="comment">//insert in current state list
-        </span><span class="self">Self</span>::insert_in_applicants_lists(applicant.clone(), next_status,marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="kw">if </span>prev_status == ApplicationStatus::Approved{
-            &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_role_from_user(applicant.clone(), <span class="self">Self</span>::pallet_id(), <span class="kw-2">&amp;</span>marketplace_id, MarketplaceRole::Participant.id())<span class="question-mark">?</span>;
-        }
-        <span class="kw">if </span>next_status == ApplicationStatus::Approved{
-            &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::assign_role_to_user(applicant, <span class="self">Self</span>::pallet_id(), <span class="kw-2">&amp;</span>marketplace_id, MarketplaceRole::Participant.id())<span class="question-mark">?
-        </span>}
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>is_authorized( authority: T::AccountId, marketplace_id: <span class="kw-2">&amp;</span>[u8;<span class="number">32</span>], permission: Permission ) -&gt; DispatchResult{
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::is_authorized(
-            authority,
-            <span class="self">Self</span>::pallet_id(),
-            marketplace_id,
-            <span class="kw-2">&amp;</span>permission.id(),
-        )
-    }
-
-
-    <span class="doccomment">///Lets us know if the selected user is an admin.
-    /// It returns true if the user is an admin, false otherwise.
-    </span><span class="kw">fn </span>is_admin(account: T::AccountId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; bool{
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::has_role(account, <span class="self">Self</span>::pallet_id(),
-            <span class="kw-2">&amp;</span>marketplace_id, [MarketplaceRole::Admin.id()].to_vec()).is_ok()
-    }
-
-
-    <span class="doccomment">/// Let us know if the selected account has the selected authority type.
-    /// It returns true if the account has the authority type, false otherwise
-    </span><span class="comment">// fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceRole) -&gt; bool{
-    //     let roles = match &lt;MarketplacesByAuthority&lt;T&gt;&gt;::try_get(account, marketplace_id){
-    //         Ok(roles) =&gt; roles,
-    //         Err(_) =&gt; return false,
-    //     };
-
-    //     roles.iter().any(|authority| authority == &amp;authority_type)
-    // }
-
-    </span><span class="doccomment">/// Let us know if there&#39;s an owner for the selected marketplace.
-    /// It returns true if there&#39;s an owner, false otherwise
-    </span><span class="kw">fn </span>owner_exist(marketplace_id: [u8;<span class="number">32</span>]) -&gt; bool {
-        <span class="comment">// let owners =  match &lt;AuthoritiesByMarketplace&lt;T&gt;&gt;::try_get( marketplace_id, MarketplaceAuthority::Owner){
-        //     Ok(owners) =&gt; owners,
-        //     Err(_) =&gt; return false,
-        // };
-
-        //owners.len() == 1
-        </span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::get_role_users_len(<span class="self">Self</span>::pallet_id(),
-            <span class="kw-2">&amp;</span>marketplace_id, <span class="kw-2">&amp;</span>MarketplaceRole::Owner.id()) == <span class="number">1
-    </span>}
-
-    <span class="doccomment">/// Let us update the marketplace&#39;s label.
-    /// It returns ok if the update was successful, error otherwise.
-    </span><span class="kw">fn  </span>update_label(marketplace_id : [u8;<span class="number">32</span>], new_label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
-        &lt;Marketplaces&lt;T&gt;&gt;::try_mutate(marketplace_id, |marketplace|{
-        <span class="kw">let </span>market = marketplace.as_mut().ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>;
-        market.label = new_label;
-        <span class="prelude-val">Ok</span>(())
-        })
-    }
-
-    <span class="doccomment">/// Let us delete the selected marketplace
-    /// and remove all of its associated authorities from all the storage sources.
-    /// If returns ok if the deletion was successful, error otherwise.
-    /// Errors only could happen if the storage sources are corrupted.
-    </span><span class="kw">fn </span>remove_selected_marketplace(marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//TODO: evaluate use iter_key_prefix -&gt;instead iter()
-        //Before to remove the marketplace, we need to remove all its associated authorities
-        // as well as the applicants/applications.
-
-        //First we need to get the list of all the authorities for the marketplace.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>applications =  Vec::new();
-
-        <span class="comment">// remove from Applications lists
-        </span><span class="kw">for </span>ele <span class="kw">in </span>&lt;ApplicationsByAccount&lt;T&gt;&gt;::iter() {
-            <span class="kw">if </span>ele.<span class="number">1 </span>== marketplace_id {
-                applications.push(ele.<span class="number">2</span>);
-            }
-        };
-
-        <span class="kw">for </span>application <span class="kw">in </span>applications {
-            &lt;Applications&lt;T&gt;&gt;::remove(application);
-        }
-
-        <span class="comment">// remove from ApplicationsByAccount list
-        </span>&lt;ApplicationsByAccount&lt;T&gt;&gt;::iter().for_each(|(_k1, _k2, _k3)|{
-            &lt;ApplicationsByAccount&lt;T&gt;&gt;::remove(_k1, marketplace_id);
-        });
-
-        <span class="comment">// remove from ApplicantsByMarketplace list
-        </span><span class="kw">let _ </span>= &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::clear_prefix(marketplace_id,<span class="number">1000</span>, <span class="prelude-val">None</span>);
-
-        <span class="comment">// remove from Custodians list
-        </span>&lt;Custodians&lt;T&gt;&gt;::iter().for_each(|(_k1, _k2, _k3)|{
-                &lt;Custodians&lt;T&gt;&gt;::remove(_k1, marketplace_id);
-        });
-
-        <span class="comment">// remove from Marketplaces list
-        </span>&lt;Marketplaces&lt;T&gt;&gt;::remove(marketplace_id);
-
-        &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="doccomment">/// Let us check the curent status of the selected application.
-    /// If the status is rejected, we can safely remove its data from the storage sources
-    /// so the user can apply again.
-    /// It doesn&#39;t affect any other storage source/workflow.
-    </span><span class="kw">pub fn </span>is_application_in_rejected_status(account: T::AccountId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult{
-        <span class="kw">let </span>application_id = &lt;ApplicationsByAccount&lt;T&gt;&gt;::try_get(account.clone(), marketplace_id)
-            .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ApplicationIdNotFound)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>application = &lt;Applications&lt;T&gt;&gt;::try_get(application_id)
-            .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
-
-        <span class="kw">match </span>application.status {
-            ApplicationStatus::Pending =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::ApplicationStatusStillPending.into()),
-            ApplicationStatus::Approved =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::ApplicationHasAlreadyBeenApproved.into()),
-            ApplicationStatus::Rejected =&gt; {
-                <span class="comment">//If status is Rejected, we need to delete the previous application from all the storage sources.
-                </span>&lt;Applications&lt;T&gt;&gt;::remove(application_id);
-                &lt;ApplicationsByAccount&lt;T&gt;&gt;::remove(account, marketplace_id);
-                &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::remove(marketplace_id, ApplicationStatus::Rejected);
-            }
-        }
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-    <span class="kw">fn </span>get_timestamp_in_milliseconds() -&gt; <span class="prelude-ty">Option</span>&lt;(u64, u64)&gt; {
-        <span class="kw">let </span>timestamp:u64 = T::Timestamp::now().into();
-        <span class="kw">let </span>timestamp2 = timestamp + (<span class="number">7 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60 </span>* <span class="number">1000</span>);
-
-        <span class="prelude-val">Some</span>((timestamp, timestamp2))
-    }
-
-    <span class="kw">fn </span>_is_offer_status(offer_id: [u8;<span class="number">32</span>], offer_status: OfferStatus,) -&gt; bool{
-        <span class="comment">//we already know that the offer exists, so we don&#39;t need to check it here.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(offer) = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id) {
-            offer.status == offer_status
-        } <span class="kw">else </span>{
-            <span class="bool-val">false
-        </span>}
-    }
-
-
-    <span class="kw">fn </span>does_exist_offer_id_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="kw">let </span>offers =  &lt;OffersByItem&lt;T&gt;&gt;::try_get(collection_id, item_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-        <span class="comment">//find the offer_id in the vector of offers_ids
-        </span>offers.iter().find(|<span class="kw-2">&amp;</span>x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-
-    <span class="comment">//sell orders here...
-
-    </span><span class="kw">fn </span>update_offers_status(buyer: T::AccountId, collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult{
-        <span class="kw">let </span>offer_ids = &lt;OffersByItem&lt;T&gt;&gt;::try_get(collection_id, item_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-
-        <span class="kw">for </span>offer_id <span class="kw">in </span>offer_ids {
-            &lt;OffersInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(offer_id, |offer|{
-                <span class="kw">let </span>offer = offer.as_mut().ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-                offer.status = OfferStatus::Closed;
-                offer.buyer = <span class="prelude-val">Some</span>((buyer.clone(), marketplace_id));
-                <span class="prelude-val">Ok</span>(())
-            })<span class="question-mark">?</span>;
-
-        }
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>is_the_price_valid(price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
-        <span class="kw">let </span>minimun_amount: BalanceOf&lt;T&gt; = <span class="number">1000u32</span>.into();
-        <span class="macro">ensure!</span>(price &gt; minimun_amount, Error::&lt;T&gt;::PriceMustBeGreaterThanZero);
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>can_this_item_receive_sell_orders(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="kw">let </span>offers =  &lt;OffersByItem&lt;T&gt;&gt;::get(collection_id, item_id);
-
-        <span class="comment">//if len is == 0, it means that there is no offers for this item, maybe it&#39;s the first entry
-        </span><span class="kw">if </span>offers.len() &gt; <span class="number">0 </span>{
-            <span class="kw">for </span>offer <span class="kw">in </span>offers {
-                <span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-                <span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-                </span><span class="kw">if </span>offer_info.marketplace_id == marketplace_id &amp;&amp; offer_info.offer_type == OfferType::SellOrder {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::OfferAlreadyExists.into());
-                }
-            }
-        }
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>can_this_item_receive_buy_orders(collection_id: T::CollectionId, item_id: T::ItemId, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
-        <span class="comment">//First we check if the item has is for sale, if not, return error
-        </span><span class="macro">ensure!</span>(&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id), Error::&lt;T&gt;::ItemNotForSale);
-
-        <span class="comment">//ensure the item can receive buy offers on the selected marketplace
-        </span><span class="kw">let </span>offers =  &lt;OffersByItem&lt;T&gt;&gt;::get(collection_id, item_id);
-
-        <span class="kw">for </span>offer <span class="kw">in </span>offers {
-            <span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-            <span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-            </span><span class="kw">if </span>offer_info.marketplace_id == marketplace_id &amp;&amp; offer_info.offer_type == OfferType::SellOrder {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(())
-            }
-        }
-
-        <span class="prelude-val">Err</span>(Error::&lt;T&gt;::ItemNotForSale.into())
-    }
-
-
-    <span class="kw">fn </span>_delete_all_sell_orders_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -&gt; DispatchResult {
-        <span class="comment">//ensure the item has offers associated with it.
-        </span><span class="macro">ensure!</span>(&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id), Error::&lt;T&gt;::OfferNotFound);
-
-        <span class="kw">let </span>offers_ids = &lt;OffersByItem&lt;T&gt;&gt;::take(collection_id, item_id);
-        <span class="comment">//let mut remaining_offer_ids: Vec&lt;[u8;32]&gt; = Vec::new();
-        </span><span class="kw">let </span><span class="kw-2">mut </span>buy_offer_ids: BoundedVec&lt;[u8;<span class="number">32</span>], T::MaxOffersPerMarket&gt; = BoundedVec::default();
-
-        <span class="kw">for </span>offer_id <span class="kw">in </span>offers_ids {
-            <span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-            <span class="comment">//ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
-            </span><span class="kw">if </span>offer_info.offer_type != OfferType::SellOrder {
-                buy_offer_ids.try_push(offer_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::LimitExceeded)<span class="question-mark">?</span>;
-            }
-        }
-        <span class="comment">//ensure we already took the entry from the storagemap, so we can insert it again.
-        </span><span class="macro">ensure!</span>(!&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id), Error::&lt;T&gt;::OfferNotFound);
-        &lt;OffersByItem&lt;T&gt;&gt;::insert(collection_id, item_id, buy_offer_ids);
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>delete_all_offers_for_this_item(collection_id: T::CollectionId, item_id: T::ItemId) -&gt; DispatchResult {
-        &lt;OffersByItem&lt;T&gt;&gt;::remove(collection_id, item_id);
-        <span class="prelude-val">Ok</span>(())
-    }
-
-
-
-
-    <span class="kw">pub fn </span>pallet_id()-&gt;IdOrVec{
-        IdOrVec::Vec(
-            <span class="self">Self</span>::module_name().as_bytes().to_vec()
-        )
-    }
-
+	<span class="kw">pub fn </span>do_enroll(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		account_or_application: AccountOrApplication&lt;T&gt;,
+		approved: bool,
+		feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
+	) -&gt; DispatchResult {
+		<span class="comment">// ensure the origin is owner or admin
+		</span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::Enroll)<span class="question-mark">?</span>;
+		<span class="kw">let </span>next_status = <span class="kw">match </span>approved {
+			<span class="bool-val">true </span>=&gt; ApplicationStatus::Approved,
+			<span class="bool-val">false </span>=&gt; ApplicationStatus::Rejected,
+		};
+		<span class="kw">let </span>applicant = <span class="kw">match </span>account_or_application.clone() {
+			AccountOrApplication::Account(acc) =&gt; acc,
+			AccountOrApplication::Application(application_id) =&gt; &lt;ApplicationsByAccount&lt;T&gt;&gt;::iter()
+				.find_map(|(acc, m_id, app_id)| {
+					<span class="kw">if </span>m_id == marketplace_id &amp;&amp; app_id == application_id {
+						<span class="kw">return </span><span class="prelude-val">Some</span>(acc);
+					}
+					<span class="prelude-val">None
+				</span>})
+				.ok_or(Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>,
+		};
+		<span class="self">Self</span>::change_applicant_status(applicant, marketplace_id, next_status, feedback)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::ApplicationProcessed(
+			account_or_application,
+			marketplace_id,
+			next_status,
+		));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_authority(
+		authority: T::AccountId,
+		account: T::AccountId,
+		authority_type: MarketplaceRole,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the origin is owner or admin
+		//TODO: implement copy trait for MarketplaceAuthority &amp; T::AccountId
+		//Self::can_enroll(authority, marketplace_id)?;
+		</span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::AddAuth)<span class="question-mark">?</span>;
+		<span class="comment">//ensure the account is not already an authority
+		// handled by &lt;T as pallet::Config&gt;::Rbac::assign_role_to_user
+		//ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::&lt;T&gt;::AlreadyApplied);
+		</span><span class="kw">match </span>authority_type {
+			MarketplaceRole::Owner =&gt; {
+				<span class="macro">ensure!</span>(!<span class="self">Self</span>::owner_exist(marketplace_id), Error::&lt;T&gt;::OnlyOneOwnerIsAllowed);
+				<span class="self">Self</span>::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
+			},
+			<span class="kw">_ </span>=&gt; {
+				<span class="self">Self</span>::insert_in_auth_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
+			},
+		}
+
+		<span class="self">Self</span>::deposit_event(Event::AuthorityAdded(account, authority_type));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_remove_authority(
+		authority: T::AccountId,
+		account: T::AccountId,
+		authority_type: MarketplaceRole,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the origin is owner or admin
+		//Self::can_enroll(authority.clone(), marketplace_id)?;
+		</span><span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::RemoveAuth)<span class="question-mark">?</span>;
+		<span class="comment">//ensure the account has the selected authority before to try to remove
+		// &lt;T as pallet::Config&gt;::Rbac handles the if role doesnt hasnt been asigned to the user
+		//ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::&lt;T&gt;::AuthorityNotFoundForUser);
+
+		</span><span class="kw">match </span>authority_type {
+			MarketplaceRole::Owner =&gt; {
+				<span class="macro">ensure!</span>(<span class="self">Self</span>::owner_exist(marketplace_id), Error::&lt;T&gt;::OwnerNotFound);
+				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CantRemoveOwner.into());
+			},
+			MarketplaceRole::Admin =&gt; {
+				<span class="comment">// Admins can not delete themselves
+				</span><span class="macro">ensure!</span>(authority != account, Error::&lt;T&gt;::AdminCannotRemoveItself);
+
+				<span class="comment">// Admis cannot be deleted between them, only the owner can
+				</span><span class="macro">ensure!</span>(!<span class="self">Self</span>::is_admin(authority, marketplace_id), Error::&lt;T&gt;::CannotDeleteAdmin);
+
+				<span class="self">Self</span>::remove_from_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
+			},
+			<span class="kw">_ </span>=&gt; {
+				<span class="self">Self</span>::remove_from_market_lists(account.clone(), authority_type, marketplace_id)<span class="question-mark">?</span>;
+			},
+		}
+
+		<span class="self">Self</span>::deposit_event(Event::AuthorityRemoved(account, authority_type));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_update_label_marketplace(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		new_label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the marketplace exists
+		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="comment">//ensure the origin is owner or admin
+		//Self::can_enroll(authority, marketplace_id)?;
+		</span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::UpdateLabel)<span class="question-mark">?</span>;
+		<span class="comment">//update marketplace
+		</span><span class="self">Self</span>::update_label(marketplace_id, new_label)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::deposit_event(Event::MarketplaceLabelUpdated(marketplace_id));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_remove_marketplace(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the marketplace exists
+		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="comment">//ensure the origin is owner or admin
+		//Self::can_enroll(authority, marketplace_id)?;
+		</span><span class="self">Self</span>::is_authorized(authority, <span class="kw-2">&amp;</span>marketplace_id, Permission::RemoveMarketplace)<span class="question-mark">?</span>;
+		<span class="comment">//remove marketplace
+		</span><span class="self">Self</span>::remove_selected_marketplace(marketplace_id)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::deposit_event(Event::MarketplaceRemoved(marketplace_id));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_enlist_sell_offer(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		price: BalanceOf&lt;T&gt;,
+		percentage: u32,
+	) -&gt; DispatchResult {
+		<span class="comment">//This function is only called by the owner of the marketplace
+		//ensure the marketplace exists
+		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::EnlistSellOffer)<span class="question-mark">?</span>;
+		<span class="comment">//ensure the collection exists
+		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::owner(collection_id, item_id) {
+			<span class="macro">ensure!</span>(a == authority, Error::&lt;T&gt;::NotOwner);
+		} <span class="kw">else </span>{
+			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
+		}
+
+		<span class="comment">//ensure the price is valid
+		</span><span class="self">Self</span>::is_the_offer_valid(price, Permill::from_percent(percentage))<span class="question-mark">?</span>;
+
+		<span class="comment">//Add timestamp to the offer
+		</span><span class="kw">let </span>(timestamp, timestamp2) =
+			<span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
+
+		<span class="comment">//create an offer_id
+		</span><span class="kw">let </span>offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+			.using_encoded(blake2_256);
+
+		<span class="comment">//create offer structure
+
+		</span><span class="kw">let </span>marketplace =
+			&lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>;
+
+		<span class="kw">let </span>offer_data = OfferData::&lt;T&gt; {
+			marketplace_id,
+			collection_id,
+			item_id,
+			creator: authority.clone(),
+			price,
+			fee: price * Permill::deconstruct(marketplace.fee).into() / <span class="number">1_000_000u32</span>.into(),
+			percentage: Permill::from_percent(percentage),
+			creation_date: timestamp,
+			expiration_date: timestamp2,
+			status: OfferStatus::Open,
+			offer_type: OfferType::SellOrder,
+			buyer: <span class="prelude-val">None</span>,
+		};
+
+		<span class="comment">//ensure there is no a previous sell offer for this item
+		</span><span class="self">Self</span>::can_this_item_receive_sell_orders(collection_id, item_id, marketplace_id)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in OffersByItem
+		</span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(collection_id, item_id, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in OffersByAccount
+		</span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in OffersInfo
+		// ensure the offer_id doesn&#39;t exist
+		</span><span class="macro">ensure!</span>(!&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferAlreadyExists);
+		&lt;OffersInfo&lt;T&gt;&gt;::insert(offer_id, offer_data);
+
+		<span class="comment">//Insert in OffersByMarketplace
+		</span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_enlist_buy_offer(
+		authority: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		price: BalanceOf&lt;T&gt;,
+		percentage: u32,
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the item is for sale, if not, return error
+		</span><span class="self">Self</span>::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the marketplace exists
+		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::EnlistBuyOffer)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the collection exists
+		//For this case user doesn&#39;t need to be the owner of the collection
+		//but the owner of the item cannot create a buy offer for their own collection
+		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::owner(collection_id, item_id) {
+			<span class="macro">ensure!</span>(a != authority, Error::&lt;T&gt;::CannotCreateOffer);
+		} <span class="kw">else </span>{
+			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
+		}
+
+		<span class="comment">//ensure user has enough balance to create the offer
+		</span><span class="kw">let </span>total_user_balance = T::Currency::total_balance(<span class="kw-2">&amp;</span>authority);
+		<span class="macro">ensure!</span>(total_user_balance &gt;= price, Error::&lt;T&gt;::NotEnoughBalance);
+
+		<span class="comment">//ensure the price is valid
+		</span><span class="self">Self</span>::is_the_offer_valid(price, Permill::from_percent(percentage))<span class="question-mark">?</span>;
+
+		<span class="comment">//Add timestamp to the offer
+		</span><span class="kw">let </span>(timestamp, timestamp2) =
+			<span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
+
+		<span class="comment">//create an offer_id
+		</span><span class="kw">let </span>offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+			.using_encoded(blake2_256);
+
+		<span class="comment">//create offer structure
+		</span><span class="kw">let </span>marketplace =
+			&lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>;
+		<span class="kw">let </span>offer_data = OfferData::&lt;T&gt; {
+			marketplace_id,
+			collection_id,
+			item_id,
+			creator: authority.clone(),
+			price,
+			fee: price * Permill::deconstruct(marketplace.fee).into() / <span class="number">1_000_000u32</span>.into(),
+			percentage: Permill::from_percent(percentage),
+			creation_date: timestamp,
+			expiration_date: timestamp2,
+			status: OfferStatus::Open,
+			offer_type: OfferType::BuyOrder,
+			buyer: <span class="prelude-val">None</span>,
+		};
+
+		<span class="comment">//insert in OffersByItem
+		//An item can receive multiple buy offers
+		</span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(collection_id, item_id, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in OffersByAccount
+		</span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in OffersInfo
+		// ensure the offer_id doesn&#39;t exist
+		</span><span class="macro">ensure!</span>(!&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferAlreadyExists);
+		&lt;OffersInfo&lt;T&gt;&gt;::insert(offer_id, offer_data);
+
+		<span class="comment">//Insert in OffersByMarketplace
+		</span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_take_sell_offer(buyer: T::AccountId, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult
+	<span class="kw">where
+		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+	{
+		<span class="comment">//This extrinsic is called by the user who wants to buy the item
+		//get offer data
+		</span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::is_authorized(buyer.clone(), <span class="kw-2">&amp;</span>offer_data.marketplace_id, Permission::TakeSellOffer)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the collection &amp; owner exists
+		</span><span class="kw">let </span>owner_item =
+			pallet_uniques::Pallet::&lt;T&gt;::owner(offer_data.collection_id, offer_data.item_id)
+				.ok_or(Error::&lt;T&gt;::OwnerNotFound)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure owner is not the same as the buyer
+		</span><span class="macro">ensure!</span>(owner_item != buyer, Error::&lt;T&gt;::CannotTakeOffer);
+
+		<span class="comment">//ensure the offer_id exists in OffersByItem
+		</span><span class="self">Self</span>::does_exist_offer_id_for_this_item(
+			offer_data.collection_id,
+			offer_data.item_id,
+			offer_id,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the offer is open and available
+		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
+		<span class="comment">//TODO: Use free_balance instead of total_balance
+		//Get the buyer&#39;s balance
+		</span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>buyer);
+		<span class="comment">//ensure the buyer has enough balance to buy the item
+		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
+
+		<span class="kw">let </span>marketplace =
+			&lt;Marketplaces&lt;T&gt;&gt;::get(offer_data.marketplace_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="kw">let </span>owners_cut: BalanceOf&lt;T&gt; = offer_data.price - offer_data.fee;
+		<span class="comment">//Transfer the balance
+		</span>T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>owner_item, owners_cut, KeepAlive)<span class="question-mark">?</span>;
+		T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>marketplace.creator, offer_data.fee, KeepAlive)<span class="question-mark">?</span>;
+
+		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
+			<span class="comment">//Use uniques transfer function to transfer the item to the buyer
+			</span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(
+				offer_data.collection_id,
+				offer_data.item_id,
+				buyer.clone(),
+				|<span class="kw">_</span>, <span class="kw">_</span>| <span class="prelude-val">Ok</span>(()),
+			)<span class="question-mark">?</span>;
+		} <span class="kw">else </span>{
+			<span class="kw">let </span>parent_info = pallet_fruniques::types::ParentInfo {
+				collection_id: offer_data.collection_id,
+				parent_id: offer_data.item_id,
+				parent_weight: offer_data.percentage,
+				is_hierarchical: <span class="bool-val">true</span>,
+			};
+			<span class="kw">let </span>metadata = pallet_fruniques::Pallet::&lt;T&gt;::get_nft_metadata(
+				offer_data.collection_id,
+				offer_data.item_id,
+			);
+
+			pallet_fruniques::Pallet::&lt;T&gt;::do_spawn(
+				offer_data.collection_id,
+				buyer.clone(),
+				metadata,
+				<span class="prelude-val">None</span>,
+				<span class="prelude-val">Some</span>(parent_info),
+			)<span class="question-mark">?</span>;
+		}
+
+		<span class="comment">//update offer status from all marketplaces
+		</span><span class="self">Self</span>::update_offers_status(
+			buyer.clone(),
+			offer_data.collection_id,
+			offer_data.item_id,
+			offer_data.marketplace_id,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//remove all the offers associated with the item
+		</span><span class="self">Self</span>::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::OfferWasAccepted(offer_id, buyer));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_take_buy_offer(authority: T::AccountId, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult
+	<span class="kw">where
+		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+	{
+		<span class="comment">//This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant
+		//get offer data
+		</span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::is_authorized(
+			authority.clone(),
+			<span class="kw-2">&amp;</span>offer_data.marketplace_id,
+			Permission::TakeBuyOffer,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the collection &amp; owner exists
+		</span><span class="kw">let </span>owner_item =
+			pallet_uniques::Pallet::&lt;T&gt;::owner(offer_data.collection_id, offer_data.item_id)
+				.ok_or(Error::&lt;T&gt;::OwnerNotFound)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure only owner of the item can call the extrinsic
+		</span><span class="macro">ensure!</span>(owner_item == authority, Error::&lt;T&gt;::NotOwner);
+
+		<span class="comment">//ensure owner is not the same as the buy_offer_creator
+		</span><span class="macro">ensure!</span>(owner_item != offer_data.creator, Error::&lt;T&gt;::CannotTakeOffer);
+
+		<span class="comment">//ensure the offer_id exists in OffersByItem
+		</span><span class="self">Self</span>::does_exist_offer_id_for_this_item(
+			offer_data.collection_id,
+			offer_data.item_id,
+			offer_id,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the offer is open and available
+		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
+
+		<span class="comment">//TODO: Use free_balance instead of total_balance
+		//Get the buyer&#39;s balance
+		</span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>offer_data.creator);
+		<span class="comment">//ensure the buy_offer_creator has enough balance to buy the item
+		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
+
+		<span class="kw">let </span>marketplace =
+			&lt;Marketplaces&lt;T&gt;&gt;::get(offer_data.marketplace_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="kw">let </span>owners_cut: BalanceOf&lt;T&gt; = offer_data.price - offer_data.fee;
+		<span class="comment">//Transfer the balance to the owner of the item
+		</span>T::Currency::transfer(<span class="kw-2">&amp;</span>offer_data.creator, <span class="kw-2">&amp;</span>owner_item, owners_cut, KeepAlive)<span class="question-mark">?</span>;
+		T::Currency::transfer(
+			<span class="kw-2">&amp;</span>offer_data.creator,
+			<span class="kw-2">&amp;</span>marketplace.creator,
+			offer_data.fee,
+			KeepAlive,
+		)<span class="question-mark">?</span>;
+
+		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
+			<span class="comment">//Use uniques transfer function to transfer the item to the buyer
+			</span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(
+				offer_data.collection_id,
+				offer_data.item_id,
+				offer_data.creator.clone(),
+				|<span class="kw">_</span>, <span class="kw">_</span>| <span class="prelude-val">Ok</span>(()),
+			)<span class="question-mark">?</span>;
+		} <span class="kw">else </span>{
+			<span class="kw">let </span>parent_info = pallet_fruniques::types::ParentInfo {
+				collection_id: offer_data.collection_id,
+				parent_id: offer_data.item_id,
+				parent_weight: offer_data.percentage,
+				is_hierarchical: <span class="bool-val">true</span>,
+			};
+			<span class="kw">let </span>metadata = pallet_fruniques::Pallet::&lt;T&gt;::get_nft_metadata(
+				offer_data.collection_id,
+				offer_data.item_id,
+			);
+
+			pallet_fruniques::Pallet::&lt;T&gt;::do_spawn(
+				offer_data.collection_id,
+				offer_data.creator.clone(),
+				metadata,
+				<span class="prelude-val">None</span>,
+				<span class="prelude-val">Some</span>(parent_info),
+			)<span class="question-mark">?</span>;
+		}
+
+		<span class="comment">//update offer status from all marketplaces
+		</span><span class="self">Self</span>::update_offers_status(
+			offer_data.creator.clone(),
+			offer_data.collection_id,
+			offer_data.item_id,
+			offer_data.marketplace_id,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//remove all the offers associated with the item
+		</span><span class="self">Self</span>::delete_all_offers_for_this_item(offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::OfferWasAccepted(offer_id, offer_data.creator));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_remove_offer(authority: T::AccountId, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+		<span class="comment">//ensure the offer_id exists
+		</span><span class="macro">ensure!</span>(&lt;OffersInfo&lt;T&gt;&gt;::contains_key(offer_id), Error::&lt;T&gt;::OfferNotFound);
+
+		<span class="comment">//get offer data
+		</span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::is_authorized(
+			authority.clone(),
+			<span class="kw-2">&amp;</span>offer_data.marketplace_id,
+			Permission::RemoveOffer,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//ensure the offer status is Open
+		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::CannotDeleteOffer);
+
+		<span class="comment">// ensure the authority is the creator of the offer
+		</span><span class="macro">ensure!</span>(offer_data.creator == authority, Error::&lt;T&gt;::CannotRemoveOffer);
+
+		<span class="comment">//ensure the offer_id exists in OffersByItem
+		</span><span class="self">Self</span>::does_exist_offer_id_for_this_item(
+			offer_data.collection_id,
+			offer_data.item_id,
+			offer_id,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">//remove the offer from OfferInfo
+		</span>&lt;OffersInfo&lt;T&gt;&gt;::remove(offer_id);
+
+		<span class="comment">//remove the offer from OffersByMarketplace
+		</span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(offer_data.marketplace_id, |offers| {
+			<span class="kw">let </span>offer_index =
+				offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+			offers.remove(offer_index);
+			<span class="prelude-val">Ok</span>(())
+		})
+		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="comment">//remove the offer from OffersByAccount
+		</span>&lt;OffersByAccount&lt;T&gt;&gt;::try_mutate(authority, |offers| {
+			<span class="kw">let </span>offer_index =
+				offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+			offers.remove(offer_index);
+			<span class="prelude-val">Ok</span>(())
+		})
+		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="comment">//remove the offer from OffersByItem
+		</span>&lt;OffersByItem&lt;T&gt;&gt;::try_mutate(offer_data.collection_id, offer_data.item_id, |offers| {
+			<span class="kw">let </span>offer_index =
+				offers.iter().position(|x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+			offers.remove(offer_index);
+			<span class="prelude-val">Ok</span>(())
+		})
+		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="self">Self</span>::deposit_event(Event::OfferRemoved(offer_id, offer_data.marketplace_id));
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="comment">/*---- Helper functions ----*/
+
+	</span><span class="kw">pub fn </span>set_up_application(
+		fields: Fields&lt;T&gt;,
+		custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+	) -&gt; (<span class="prelude-ty">Option</span>&lt;T::AccountId&gt;, BoundedVec&lt;ApplicationField, T::MaxFiles&gt;) {
+		<span class="kw">let </span><span class="kw-2">mut </span>f: Vec&lt;ApplicationField&gt; = fields
+			.iter()
+			.map(|tuple| ApplicationField {
+				display_name: tuple.<span class="number">0</span>.clone(),
+				cid: tuple.<span class="number">1</span>.clone(),
+				custodian_cid: <span class="prelude-val">None</span>,
+			})
+			.collect();
+		<span class="kw">let </span>custodian = <span class="kw">match </span>custodian_fields {
+			<span class="prelude-val">Some</span>(c_fields) =&gt; {
+				<span class="kw">for </span>(i, field) <span class="kw">in </span>f.iter_mut().enumerate() {
+					field.custodian_cid = <span class="prelude-val">Some</span>(c_fields.<span class="number">1</span>[i].clone());
+				}
+
+				<span class="prelude-val">Some</span>(c_fields.<span class="number">0</span>)
+			},
+			<span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+		};
+		(custodian, BoundedVec::&lt;ApplicationField, T::MaxFiles&gt;::try_from(f).unwrap_or_default())
+	}
+
+	<span class="kw">fn </span>insert_in_auth_market_lists(
+		authority: T::AccountId,
+		role: MarketplaceRole,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::assign_role_to_user(
+			authority,
+			<span class="self">Self</span>::pallet_id(),
+			<span class="kw-2">&amp;</span>marketplace_id,
+			role.id(),
+		)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>insert_in_applicants_lists(
+		applicant: T::AccountId,
+		status: ApplicationStatus,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		&lt;ApplicantsByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, status, |applicants| {
+			applicants.try_push(applicant)
+		})
+		.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxApplicants)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>insert_custodian(
+		custodian: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		applicant: T::AccountId,
+	) -&gt; DispatchResult {
+		&lt;Custodians&lt;T&gt;&gt;::try_mutate(custodian, marketplace_id, |applications| {
+			applications.try_push(applicant)
+		})
+		.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxApplicationsPerCustodian)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>remove_from_applicants_lists(
+		applicant: T::AccountId,
+		status: ApplicationStatus,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		&lt;ApplicantsByMarketplace&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+			marketplace_id,
+			status,
+			|applicants| {
+				<span class="kw">let </span>applicant_index = applicants
+					.iter()
+					.position(|a| <span class="kw-2">*</span>a == applicant.clone())
+					.ok_or(Error::&lt;T&gt;::ApplicantNotFound)<span class="question-mark">?</span>;
+				applicants.remove(applicant_index);
+
+				<span class="prelude-val">Ok</span>(())
+			},
+		)
+	}
+
+	<span class="kw">fn </span>remove_from_market_lists(
+		account: T::AccountId,
+		author_type: MarketplaceRole,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_role_from_user(
+			account,
+			<span class="self">Self</span>::pallet_id(),
+			<span class="kw-2">&amp;</span>marketplace_id,
+			author_type.id(),
+		)<span class="question-mark">?</span>;
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>change_applicant_status(
+		applicant: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+		next_status: ApplicationStatus,
+		feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
+	) -&gt; DispatchResult {
+		<span class="kw">let </span><span class="kw-2">mut </span>prev_status = ApplicationStatus::default();
+		<span class="kw">let </span>app_id = &lt;ApplicationsByAccount&lt;T&gt;&gt;::get(applicant.clone(), marketplace_id)
+			.ok_or(Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
+		&lt;Applications&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(app_id, |application| {
+			application.as_ref().ok_or(Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
+			<span class="kw">if let </span><span class="prelude-val">Some</span>(a) = application {
+				prev_status.clone_from(<span class="kw-2">&amp;</span>a.status);
+				a.feedback = feedback;
+				a.status.clone_from(<span class="kw-2">&amp;</span>next_status)
+			}
+			<span class="prelude-val">Ok</span>(())
+		})<span class="question-mark">?</span>;
+		<span class="macro">ensure!</span>(prev_status != next_status, Error::&lt;T&gt;::AlreadyEnrolled);
+		<span class="comment">//remove from previous state list
+		</span><span class="self">Self</span>::remove_from_applicants_lists(applicant.clone(), prev_status, marketplace_id)<span class="question-mark">?</span>;
+
+		<span class="comment">//insert in current state list
+		</span><span class="self">Self</span>::insert_in_applicants_lists(applicant.clone(), next_status, marketplace_id)<span class="question-mark">?</span>;
+
+		<span class="kw">if </span>prev_status == ApplicationStatus::Approved {
+			&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_role_from_user(
+				applicant.clone(),
+				<span class="self">Self</span>::pallet_id(),
+				<span class="kw-2">&amp;</span>marketplace_id,
+				MarketplaceRole::Participant.id(),
+			)<span class="question-mark">?</span>;
+		}
+		<span class="kw">if </span>next_status == ApplicationStatus::Approved {
+			&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::assign_role_to_user(
+				applicant,
+				<span class="self">Self</span>::pallet_id(),
+				<span class="kw-2">&amp;</span>marketplace_id,
+				MarketplaceRole::Participant.id(),
+			)<span class="question-mark">?
+		</span>}
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>is_authorized(
+		authority: T::AccountId,
+		marketplace_id: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>],
+		permission: Permission,
+	) -&gt; DispatchResult {
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::is_authorized(
+			authority,
+			<span class="self">Self</span>::pallet_id(),
+			marketplace_id,
+			<span class="kw-2">&amp;</span>permission.id(),
+		)
+	}
+
+	<span class="doccomment">///Lets us know if the selected user is an admin.
+	/// It returns true if the user is an admin, false otherwise.
+	</span><span class="kw">fn </span>is_admin(account: T::AccountId, marketplace_id: [u8; <span class="number">32</span>]) -&gt; bool {
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::has_role(
+			account,
+			<span class="self">Self</span>::pallet_id(),
+			<span class="kw-2">&amp;</span>marketplace_id,
+			[MarketplaceRole::Admin.id()].to_vec(),
+		)
+		.is_ok()
+	}
+
+	<span class="doccomment">/// Let us know if the selected account has the selected authority type.
+	/// It returns true if the account has the authority type, false otherwise
+	</span><span class="comment">// fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceRole) -&gt; bool{
+	//     let roles = match &lt;MarketplacesByAuthority&lt;T&gt;&gt;::try_get(account, marketplace_id){
+	//         Ok(roles) =&gt; roles,
+	//         Err(_) =&gt; return false,
+	//     };
+
+	//     roles.iter().any(|authority| authority == &amp;authority_type)
+	// }
+
+	</span><span class="doccomment">/// Let us know if there&#39;s an owner for the selected marketplace.
+	/// It returns true if there&#39;s an owner, false otherwise
+	</span><span class="kw">fn </span>owner_exist(marketplace_id: [u8; <span class="number">32</span>]) -&gt; bool {
+		<span class="comment">// let owners =  match &lt;AuthoritiesByMarketplace&lt;T&gt;&gt;::try_get( marketplace_id, MarketplaceAuthority::Owner){
+		//     Ok(owners) =&gt; owners,
+		//     Err(_) =&gt; return false,
+		// };
+
+		//owners.len() == 1
+		</span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::get_role_users_len(
+			<span class="self">Self</span>::pallet_id(),
+			<span class="kw-2">&amp;</span>marketplace_id,
+			<span class="kw-2">&amp;</span>MarketplaceRole::Owner.id(),
+		) == <span class="number">1
+	</span>}
+
+	<span class="doccomment">/// Let us update the marketplace&#39;s label.
+	/// It returns ok if the update was successful, error otherwise.
+	</span><span class="kw">fn </span>update_label(
+		marketplace_id: [u8; <span class="number">32</span>],
+		new_label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+	) -&gt; DispatchResult {
+		&lt;Marketplaces&lt;T&gt;&gt;::try_mutate(marketplace_id, |marketplace| {
+			<span class="kw">let </span>market = marketplace.as_mut().ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>;
+			market.label = new_label;
+			<span class="prelude-val">Ok</span>(())
+		})
+	}
+
+	<span class="doccomment">/// Let us delete the selected marketplace
+	/// and remove all of its associated authorities from all the storage sources.
+	/// If returns ok if the deletion was successful, error otherwise.
+	/// Errors only could happen if the storage sources are corrupted.
+	</span><span class="kw">fn </span>remove_selected_marketplace(marketplace_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+		<span class="comment">//TODO: evaluate use iter_key_prefix -&gt;instead iter()
+		//Before to remove the marketplace, we need to remove all its associated authorities
+		// as well as the applicants/applications.
+
+		//First we need to get the list of all the authorities for the marketplace.
+		</span><span class="kw">let </span><span class="kw-2">mut </span>applications = Vec::new();
+
+		<span class="comment">// remove from Applications lists
+		</span><span class="kw">for </span>ele <span class="kw">in </span>&lt;ApplicationsByAccount&lt;T&gt;&gt;::iter() {
+			<span class="kw">if </span>ele.<span class="number">1 </span>== marketplace_id {
+				applications.push(ele.<span class="number">2</span>);
+			}
+		}
+
+		<span class="kw">for </span>application <span class="kw">in </span>applications {
+			&lt;Applications&lt;T&gt;&gt;::remove(application);
+		}
+
+		<span class="comment">// remove from ApplicationsByAccount list
+		</span>&lt;ApplicationsByAccount&lt;T&gt;&gt;::iter().for_each(|(_k1, _k2, _k3)| {
+			&lt;ApplicationsByAccount&lt;T&gt;&gt;::remove(_k1, marketplace_id);
+		});
+
+		<span class="comment">// remove from ApplicantsByMarketplace list
+		</span><span class="kw">let _ </span>= &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::clear_prefix(marketplace_id, <span class="number">1000</span>, <span class="prelude-val">None</span>);
+
+		<span class="comment">// remove from Custodians list
+		</span>&lt;Custodians&lt;T&gt;&gt;::iter().for_each(|(_k1, _k2, _k3)| {
+			&lt;Custodians&lt;T&gt;&gt;::remove(_k1, marketplace_id);
+		});
+
+		<span class="comment">// remove from Marketplaces list
+		</span>&lt;Marketplaces&lt;T&gt;&gt;::remove(marketplace_id);
+
+		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::remove_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="doccomment">/// Let us check the curent status of the selected application.
+	/// If the status is rejected, we can safely remove its data from the storage sources
+	/// so the user can apply again.
+	/// It doesn&#39;t affect any other storage source/workflow.
+	</span><span class="kw">pub fn </span>is_application_in_rejected_status(
+		account: T::AccountId,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="kw">let </span>application_id = &lt;ApplicationsByAccount&lt;T&gt;&gt;::try_get(account.clone(), marketplace_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ApplicationIdNotFound)<span class="question-mark">?</span>;
+
+		<span class="kw">let </span>application = &lt;Applications&lt;T&gt;&gt;::try_get(application_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ApplicationNotFound)<span class="question-mark">?</span>;
+
+		<span class="kw">match </span>application.status {
+			ApplicationStatus::Pending =&gt; {
+				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::ApplicationStatusStillPending.into())
+			},
+			ApplicationStatus::Approved =&gt; {
+				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::ApplicationHasAlreadyBeenApproved.into())
+			},
+			ApplicationStatus::Rejected =&gt; {
+				<span class="comment">//If status is Rejected, we need to delete the previous application from all the storage sources.
+				</span>&lt;Applications&lt;T&gt;&gt;::remove(application_id);
+				&lt;ApplicationsByAccount&lt;T&gt;&gt;::remove(account, marketplace_id);
+				&lt;ApplicantsByMarketplace&lt;T&gt;&gt;::remove(marketplace_id, ApplicationStatus::Rejected);
+			},
+		}
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>get_timestamp_in_milliseconds() -&gt; <span class="prelude-ty">Option</span>&lt;(u64, u64)&gt; {
+		<span class="kw">let </span>timestamp: u64 = T::Timestamp::now().into();
+		<span class="kw">let </span>timestamp2 = timestamp + (<span class="number">7 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60 </span>* <span class="number">1000</span>);
+
+		<span class="prelude-val">Some</span>((timestamp, timestamp2))
+	}
+
+	<span class="kw">fn </span>_is_offer_status(offer_id: [u8; <span class="number">32</span>], offer_status: OfferStatus) -&gt; bool {
+		<span class="comment">//we already know that the offer exists, so we don&#39;t need to check it here.
+		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(offer) = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id) {
+			offer.status == offer_status
+		} <span class="kw">else </span>{
+			<span class="bool-val">false
+		</span>}
+	}
+
+	<span class="kw">fn </span>does_exist_offer_id_for_this_item(
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		offer_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="kw">let </span>offers = &lt;OffersByItem&lt;T&gt;&gt;::try_get(collection_id, item_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="comment">//find the offer_id in the vector of offers_ids
+		</span>offers.iter().find(|<span class="kw-2">&amp;</span>x| <span class="kw-2">*</span>x == offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="comment">//sell orders here...
+
+	</span><span class="kw">fn </span>update_offers_status(
+		buyer: T::AccountId,
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="kw">let </span>offer_ids = &lt;OffersByItem&lt;T&gt;&gt;::try_get(collection_id, item_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+
+		<span class="kw">for </span>offer_id <span class="kw">in </span>offer_ids {
+			&lt;OffersInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(offer_id, |offer| {
+				<span class="kw">let </span>offer = offer.as_mut().ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+				offer.status = OfferStatus::Closed;
+				offer.buyer = <span class="prelude-val">Some</span>((buyer.clone(), marketplace_id));
+				<span class="prelude-val">Ok</span>(())
+			})<span class="question-mark">?</span>;
+		}
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>is_the_offer_valid(price: BalanceOf&lt;T&gt;, percentage: Permill) -&gt; DispatchResult {
+		<span class="kw">let </span>minimun_amount: BalanceOf&lt;T&gt; = <span class="number">1000u32</span>.into();
+		<span class="macro">ensure!</span>(price &gt; minimun_amount, Error::&lt;T&gt;::PriceMustBeGreaterThanZero);
+		<span class="macro">ensure!</span>(percentage &lt;= Permill::from_percent(<span class="number">99</span>), Error::&lt;T&gt;::ExceedMaxPercentage);
+		<span class="macro">ensure!</span>(percentage &gt;= Permill::from_percent(<span class="number">1</span>), Error::&lt;T&gt;::ExceedMinPercentage);
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>can_this_item_receive_sell_orders(
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="kw">let </span>offers = &lt;OffersByItem&lt;T&gt;&gt;::get(collection_id, item_id);
+
+		<span class="comment">//if len is == 0, it means that there is no offers for this item, maybe it&#39;s the first entry
+		</span><span class="kw">if </span>offers.len() &gt; <span class="number">0 </span>{
+			<span class="kw">for </span>offer <span class="kw">in </span>offers {
+				<span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+				<span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.
+				</span><span class="kw">if </span>offer_info.marketplace_id == marketplace_id
+					&amp;&amp; offer_info.offer_type == OfferType::SellOrder
+				{
+					<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::OfferAlreadyExists.into());
+				}
+			}
+		}
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>can_this_item_receive_buy_orders(
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+		marketplace_id: [u8; <span class="number">32</span>],
+	) -&gt; DispatchResult {
+		<span class="comment">//First we check if the item has is for sale, if not, return error
+		</span><span class="macro">ensure!</span>(
+			&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id),
+			Error::&lt;T&gt;::ItemNotForSale
+		);
+
+		<span class="comment">//ensure the item can receive buy offers on the selected marketplace
+		</span><span class="kw">let </span>offers = &lt;OffersByItem&lt;T&gt;&gt;::get(collection_id, item_id);
+
+		<span class="kw">for </span>offer <span class="kw">in </span>offers {
+			<span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+			<span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.
+			</span><span class="kw">if </span>offer_info.marketplace_id == marketplace_id
+				&amp;&amp; offer_info.offer_type == OfferType::SellOrder
+			{
+				<span class="kw">return </span><span class="prelude-val">Ok</span>(());
+			}
+		}
+
+		<span class="prelude-val">Err</span>(Error::&lt;T&gt;::ItemNotForSale.into())
+	}
+
+	<span class="kw">fn </span>_delete_all_sell_orders_for_this_item(
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+	) -&gt; DispatchResult {
+		<span class="comment">//ensure the item has offers associated with it.
+		</span><span class="macro">ensure!</span>(&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id), Error::&lt;T&gt;::OfferNotFound);
+
+		<span class="kw">let </span>offers_ids = &lt;OffersByItem&lt;T&gt;&gt;::take(collection_id, item_id);
+		<span class="comment">//let mut remaining_offer_ids: Vec&lt;[u8;32]&gt; = Vec::new();
+		</span><span class="kw">let </span><span class="kw-2">mut </span>buy_offer_ids: BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt; = BoundedVec::default();
+
+		<span class="kw">for </span>offer_id <span class="kw">in </span>offers_ids {
+			<span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+			<span class="comment">//ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
+			</span><span class="kw">if </span>offer_info.offer_type != OfferType::SellOrder {
+				buy_offer_ids.try_push(offer_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::LimitExceeded)<span class="question-mark">?</span>;
+			}
+		}
+		<span class="comment">//ensure we already took the entry from the storagemap, so we can insert it again.
+		</span><span class="macro">ensure!</span>(
+			!&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id),
+			Error::&lt;T&gt;::OfferNotFound
+		);
+		&lt;OffersByItem&lt;T&gt;&gt;::insert(collection_id, item_id, buy_offer_ids);
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">fn </span>delete_all_offers_for_this_item(
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+	) -&gt; DispatchResult {
+		&lt;OffersByItem&lt;T&gt;&gt;::remove(collection_id, item_id);
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>pallet_id() -&gt; IdOrVec {
+		IdOrVec::Vec(<span class="self">Self</span>::module_name().as_bytes().to_vec())
+	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

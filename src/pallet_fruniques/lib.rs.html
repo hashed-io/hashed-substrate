@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fruniques/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_fruniques/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_fruniques/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fruniques/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_fruniques/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -411,22 +411,6 @@
 <span id="411">411</span>
 <span id="412">412</span>
 <span id="413">413</span>
-<span id="414">414</span>
-<span id="415">415</span>
-<span id="416">416</span>
-<span id="417">417</span>
-<span id="418">418</span>
-<span id="419">419</span>
-<span id="420">420</span>
-<span id="421">421</span>
-<span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
-<span id="425">425</span>
-<span id="426">426</span>
-<span id="427">427</span>
-<span id="428">428</span>
-<span id="429">429</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -449,8 +433,11 @@
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+	<span class="kw">use </span>sp_runtime::Permill;
 
-	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+	<span class="comment">// use frame_support::PalletId;
+
+	</span><span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
 	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -459,12 +446,18 @@
 		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
 		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
-
 		<span class="doccomment">/// Maximum number of children a Frunique can have
 		</span><span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>ChildMaxLen: Get&lt;u32&gt;;
 
-		<span class="kw">type </span>Rbac : RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
+		<span class="doccomment">/// Maximum number of roots a Collection can have
+		</span><span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MaxParentsInCollection: Get&lt;u32&gt;;
+
+		<span class="doccomment">/// The fruniques pallet id, used for deriving its sovereign account ID.
+		</span><span class="comment">// #[pallet::constant]
+		// type PalletId: Get&lt;PalletId&gt;;
+		</span><span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
@@ -511,22 +504,22 @@
 		</span>AttributesEmpty,
 		<span class="comment">// The collection doesn&#39;t exist
 		</span>CollectionNotFound,
+		<span class="doccomment">/// Frunique is bigger than the maximum allowed size
+		</span>ExceedMaxPercentage,
 		<span class="comment">// The parent doesn&#39;t exist
 		</span>ParentNotFound,
 		<span class="comment">// The frunique doesn&#39;t exist
 		</span>FruniqueNotFound,
+		<span class="comment">// Max number of children reached
+		</span>MaxNumberOfChildrenReached,
 		<span class="comment">// Collection already exists
 		</span>CollectionAlreadyExists,
 		<span class="comment">// Frunique already exists
 		</span>FruniqueAlreadyExists,
 		<span class="comment">// Frunique already verified
-		</span>FruniqueAlreadyVerified
+		</span>FruniqueAlreadyVerified,
+		FruniqueRootsOverflow,
 	}
-
-	<span class="attribute">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>frunique_cnt)]
-	</span><span class="doccomment">/// Keeps track of the number of Kitties in existence.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueCnt&lt;T: Config&gt; = StorageValue&lt;<span class="kw">_</span>, ItemId, ValueQuery&gt;;
 
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>next_collection)]
@@ -543,22 +536,31 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>NextFrunique&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
 		ItemId, <span class="comment">// The next frunique id for a collection.
 		</span>ValueQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>frunique_parent)]
-	</span><span class="doccomment">/// Keeps track of hierarchical information for a frunique.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueParent&lt;T: Config&gt; = StorageDoubleMap&lt;
+	#[pallet::getter(<span class="kw">fn </span>frunique_roots)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueRoots&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
+		Roots&lt;T&gt;,
+		ValueQuery,
+	&gt;;
+
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>frunique_info)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueInfo&lt;T: Config&gt; = StorageDoubleMap&lt;
+		<span class="kw">_</span>,
 		Blake2_128Concat,
-		ItemId,                   <span class="comment">// FruniqueId
-		</span><span class="prelude-ty">Option</span>&lt;HierarchicalInfo&gt;, <span class="comment">// ParentId and flag if it inherit attributes
-		</span>ValueQuery,
+		T::CollectionId,
+		Blake2_128Concat,
+		T::ItemId,
+		FruniqueData&lt;T&gt;,
+		OptionQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
@@ -567,24 +569,11 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueVerified&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
 		Blake2_128Concat,
-		CollectionId,
+		T::CollectionId,
 		Blake2_128Concat,
-		ItemId,
+		T::ItemId,
 		bool,
 		ValueQuery,
-	&gt;;
-
-	<span class="attribute">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>frunique_child)]
-	</span><span class="doccomment">/// Keeps track of hierarchical information for a frunique.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>FruniqueChild&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		CollectionId, <span class="comment">// Parent collection id
-		</span>Blake2_128Concat,
-		ItemId,            <span class="comment">// Parent item id
-		</span><span class="prelude-ty">Option</span>&lt;ChildInfo&gt;, <span class="comment">// ParentId and flag if it inherit attributes
-		</span>ValueQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::call]
@@ -594,7 +583,9 @@
 	{
 		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+			<span class="comment">//Transfer the balance
+			// T::Currency::transfer(&amp;buyer, &amp;Self::pallet_account(), , KeepAlive)?;
+			</span>T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
@@ -613,36 +604,12 @@
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>admin: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>new_collection_id: u32 = <span class="self">Self</span>::next_collection();
+			<span class="self">Self</span>::do_create_collection(origin, metadata, admin.clone())<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_create_collection(
-				origin,
-				new_collection_id,
-				metadata,
-				admin.clone(),
-			)<span class="question-mark">?</span>;
-
-			<span class="self">Self</span>::deposit_event(Event::FruniqueCollectionCreated(admin, new_collection_id));
-
-			&lt;NextCollection&lt;T&gt;&gt;::put(<span class="self">Self</span>::next_collection() + <span class="number">1</span>);
+			<span class="kw">let </span>next_collection_id: u32 = <span class="self">Self</span>::next_collection();
+			<span class="self">Self</span>::deposit_event(Event::FruniqueCollectionCreated(admin, next_collection_id));
 
 			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">4</span>))]
-		</span><span class="kw">pub fn </span>instance_exists(
-			_origin: OriginFor&lt;T&gt;,
-			_class_id: T::CollectionId,
-			_instance_id: T::ItemId,
-		) -&gt; DispatchResult {
-			<span class="comment">// Always returns an empty iterator?
-			//let instances = pallet_uniques::Pallet::&lt;T&gt;::;
-			//println!(&quot;Instances found in class {:?}&quot;,instances.count());
-			//log::info!(&quot;Instances found in class {:?}&quot;, instances.count());
-			//println!(&quot;\tIterator? {}&quot;,instances.count());
-			//Self::deposit_event(Event::NextFrunique(instances.count().try_into().unwrap()  ));
-			//instances.into_iter().for_each(|f| println!(&quot;\tInstance:{:?}&quot;,f));
-			</span><span class="prelude-val">Ok</span>(())
 		}
 
 		<span class="doccomment">/// ## Set multiple attributes to a frunique.
@@ -657,7 +624,7 @@
 			instance_id: T::ItemId,
 			attributes: Attributes&lt;T&gt;,
 		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
 
 			<span class="comment">// ! Ensure the admin is the one who can add attributes to the frunique.
 			</span><span class="kw">let </span>admin = <span class="self">Self</span>::admin_of(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id);
@@ -682,51 +649,47 @@
 		/// ### Parameters:
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
-		/// - `parent_info` Optional value needed for the NFT division.
 		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
+		/// - `parent_info` Optional value needed for the NFT division.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">4</span>))]
 		</span><span class="kw">pub fn </span>spawn(
 			origin: OriginFor&lt;T&gt;,
 			class_id: CollectionId,
-			parent_info: <span class="prelude-ty">Option</span>&lt;HierarchicalInfo&gt;,
 			metadata: CollectionDescription&lt;T&gt;,
 			attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
+			parent_info_call: <span class="prelude-ty">Option</span>&lt;ParentInfoCall&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionNotFound);
-
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(parent_info) = parent_info {
-				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), Error::&lt;T&gt;::ParentNotFound);
-			}
+			<span class="kw">let </span>user: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::is_authorized(user.clone(), class_id, Permission::Mint)<span class="question-mark">?</span>;
 
 			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="comment">// T::Currency::transfer(&amp;owner.clone(), &amp;owner_item, offer_data.price, KeepAlive)?;
 
-			</span><span class="kw">let </span>instance_id: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(class_id).unwrap_or(<span class="number">0</span>);
-			&lt;NextFrunique&lt;T&gt;&gt;::insert(class_id, instance_id + <span class="number">1</span>);
+			<span class="kw">if let </span><span class="prelude-val">Some</span>(parent_info_call) = parent_info_call.clone() {
+				<span class="macro">ensure!</span>(
+					<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>parent_info_call.collection_id),
+					Error::&lt;T&gt;::CollectionNotFound
+				);
+				<span class="macro">ensure!</span>(
+					<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>parent_info_call.collection_id, <span class="kw-2">&amp;</span>parent_info_call.parent_id),
+					Error::&lt;T&gt;::FruniqueNotFound
+				);
+				<span class="self">Self</span>::is_authorized(user, parent_info_call.collection_id, Permission::Mint)<span class="question-mark">?</span>;
 
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(parent_info) = parent_info {
-				<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>parent_info.<span class="number">0</span>), Error::&lt;T&gt;::ParentNotFound);
-				&lt;FruniqueParent&lt;T&gt;&gt;::insert(class_id, instance_id, <span class="prelude-val">Some</span>(parent_info));
-
-				<span class="kw">let </span>child_info = ChildInfo {
-					collection_id: class_id,
-					child_id: instance_id,
-					is_hierarchical: parent_info.<span class="number">1</span>,
-					weight: <span class="self">Self</span>::percent_to_permill(parent_info.<span class="number">2</span>),
+				<span class="kw">let </span>parent_info = ParentInfo {
+					collection_id: parent_info_call.collection_id,
+					parent_id: parent_info_call.parent_id,
+					parent_weight: Permill::from_percent(parent_info_call.parent_percentage),
+					is_hierarchical: parent_info_call.is_hierarchical,
 				};
 
-				&lt;FruniqueChild&lt;T&gt;&gt;::insert(class_id, instance_id, <span class="prelude-val">Some</span>(child_info));
-			}
+				<span class="self">Self</span>::do_spawn(class_id, owner, metadata, attributes, <span class="prelude-val">Some</span>(parent_info))<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_spawn(origin, class_id, instance_id, owner.clone(), metadata, attributes)<span class="question-mark">?</span>;
+				<span class="kw">return </span><span class="prelude-val">Ok</span>(());
+			};
 
-			<span class="self">Self</span>::deposit_event(Event::FruniqueCreated(
-				owner.clone(),
-				owner,
-				class_id,
-				instance_id,
-			));
+			<span class="self">Self</span>::do_spawn(class_id, owner, metadata, attributes, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
 			<span class="prelude-val">Ok</span>(())
 		}
@@ -743,7 +706,7 @@
 			instance_id: ItemId,
 		) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
+			<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
 
 			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -769,9 +732,12 @@
 			class_id: CollectionId,
 			invitee: T::AccountId,
 		) -&gt; DispatchResult {
-
 			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="self">Self</span>::insert_auth_in_frunique_collection(invitee.clone(), class_id, FruniqueRole::Collaborator)<span class="question-mark">?</span>;
+			<span class="self">Self</span>::insert_auth_in_frunique_collection(
+				invitee.clone(),
+				class_id,
+				FruniqueRole::Collaborator,
+			)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::deposit_event(Event::InvitedToCollaborate(owner, invitee, class_id));
 			<span class="prelude-val">Ok</span>(())
@@ -795,7 +761,10 @@
 			T::RemoveOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(instance_id) = instance_id {
-				<span class="macro">ensure!</span>(!<span class="self">Self</span>::item_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueAlreadyExists);
+				<span class="macro">ensure!</span>(
+					!<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id),
+					Error::&lt;T&gt;::FruniqueAlreadyExists
+				);
 				&lt;NextFrunique&lt;T&gt;&gt;::insert(class_id, instance_id);
 			} <span class="kw">else </span>{
 				<span class="macro">ensure!</span>(!<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionAlreadyExists);
@@ -845,11 +814,10 @@
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			&lt;FruniqueCnt&lt;T&gt;&gt;::put(<span class="number">0</span>);
 			&lt;NextCollection&lt;T&gt;&gt;::put(<span class="number">0</span>);
 			<span class="kw">let _ </span>= &lt;NextFrunique&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;FruniqueParent&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;FruniqueChild&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;FruniqueVerified&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;FruniqueInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 
 			T::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
@@ -857,4 +825,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fruniques" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fruniques" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../pallet_gated_marketplace/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../pallet_gated_marketplace/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -667,6 +667,58 @@
 <span id="667">667</span>
 <span id="668">668</span>
 <span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -680,25 +732,25 @@
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>types;
 
-
-
 <span class="attribute">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
 	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+	<span class="kw">use </span>frame_support::traits::{Currency, Time};
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>sp_runtime::traits::Scale;
-	<span class="kw">use </span>frame_support::traits::{Currency, Time};
+	<span class="kw">use </span>sp_runtime::Permill;
 
 	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 
-	<span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;&lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId&gt;&gt;::Balance;
+	<span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;
+		&lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId,
+	&gt;&gt;::Balance;
 
 	<span class="attribute">#[pallet::config]
-	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_fruniques::Config{
-
+	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_fruniques::Config {
 		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
 		<span class="kw">type </span>Moment: Parameter
@@ -735,7 +787,7 @@
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxOffersPerMarket: Get&lt;u32&gt;;
 
-		<span class="kw">type </span>Rbac : RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
+		<span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
@@ -750,8 +802,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Marketplaces&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>], <span class="comment">// Key
-		</span>Marketplace&lt;T&gt;,  <span class="comment">// Value
+		[u8; <span class="number">32</span>],       <span class="comment">// Key
+		</span>Marketplace&lt;T&gt;, <span class="comment">// Value
 		</span>OptionQuery,
 	&gt;;
 
@@ -760,9 +812,9 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8;<span class="number">32</span>], <span class="comment">//K1: application_id
+		[u8; <span class="number">32</span>], <span class="comment">//K1: application_id
 		</span>Application&lt;T&gt;,
-		OptionQuery
+		OptionQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
@@ -772,22 +824,21 @@
 		Blake2_128Concat,
 		T::AccountId, <span class="comment">// K1: account_id
 		</span>Identity,
-		[u8;<span class="number">32</span>], <span class="comment">// k2: marketplace_id
-		</span>[u8;<span class="number">32</span>], <span class="comment">//application_id
-		</span>OptionQuery
+		[u8; <span class="number">32</span>], <span class="comment">// k2: marketplace_id
+		</span>[u8; <span class="number">32</span>], <span class="comment">//application_id
+		</span>OptionQuery,
 	&gt;;
-
 
 	<span class="attribute">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>applicants_by_marketplace)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicantsByMarketplace&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8;<span class="number">32</span>], <span class="comment">//K1: marketplace_id
+		[u8; <span class="number">32</span>], <span class="comment">//K1: marketplace_id
 		</span>Blake2_128Concat,
 		ApplicationStatus, <span class="comment">//K2: application_status
-		</span>BoundedVec&lt;T::AccountId,T::MaxApplicants&gt;,
-		ValueQuery
+		</span>BoundedVec&lt;T::AccountId, T::MaxApplicants&gt;,
+		ValueQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
@@ -797,9 +848,9 @@
 		Blake2_128Concat,
 		T::AccountId, <span class="comment">//custodians
 		</span>Identity,
-		[u8;<span class="number">32</span>], <span class="comment">//marketplace_id
-		</span>BoundedVec&lt;T::AccountId,T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
-		</span>ValueQuery
+		[u8; <span class="number">32</span>],                                                 <span class="comment">//marketplace_id
+		</span>BoundedVec&lt;T::AccountId, T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
+		</span>ValueQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
@@ -809,8 +860,8 @@
 		Blake2_128Concat,
 		T::CollectionId, <span class="comment">//collection_id
 		</span>Blake2_128Concat,
-		T::ItemId, <span class="comment">//item_id
-		</span>BoundedVec&lt;[u8;<span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+		T::ItemId,                                   <span class="comment">//item_id
+		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -819,8 +870,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByAccount&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Blake2_128Concat,
-		T::AccountId, <span class="comment">// account_id
-		</span>BoundedVec&lt;[u8;<span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+		T::AccountId,                                <span class="comment">// account_id
+		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -829,8 +880,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>], <span class="comment">// Marketplace_id
-		</span>BoundedVec&lt;[u8;<span class="number">32</span>], T::MaxOffersPerMarket&gt;,  <span class="comment">// offer_id&#39;s
+		[u8; <span class="number">32</span>],                                    <span class="comment">// Marketplace_id
+		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -841,37 +892,35 @@
 		Identity,
 		[u8; <span class="number">32</span>], <span class="comment">// offer_id
 		//StorageDoubleMap -&gt; marketplace_id(?)
-		</span>OfferData&lt;T&gt;,  <span class="comment">// offer data
+		</span>OfferData&lt;T&gt;, <span class="comment">// offer data
 		</span>OptionQuery,
 	&gt;;
-
-
 
 	<span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
 		<span class="doccomment">/// Marketplaces stored. [owner, admin, market_id]
-		</span>MarketplaceStored(T::AccountId, T::AccountId, [u8;<span class="number">32</span>]),
+		</span>MarketplaceStored(T::AccountId, T::AccountId, [u8; <span class="number">32</span>]),
 		<span class="doccomment">/// Application stored on the specified marketplace. [application_id, market_id]
-		</span>ApplicationStored([u8;<span class="number">32</span>], [u8;<span class="number">32</span>]),
+		</span>ApplicationStored([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
 		<span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
-		</span>ApplicationProcessed(AccountOrApplication&lt;T&gt;,[u8;<span class="number">32</span>], ApplicationStatus),
+		</span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, [u8; <span class="number">32</span>], ApplicationStatus),
 		<span class="doccomment">/// Add a new authority to the selected marketplace [account, authority]
 		</span>AuthorityAdded(T::AccountId, MarketplaceRole),
 		<span class="doccomment">/// Remove the selected authority from the selected marketplace [account, authority]
 		</span>AuthorityRemoved(T::AccountId, MarketplaceRole),
 		<span class="doccomment">/// The label of the selected marketplace has been updated. [market_id]
-		</span>MarketplaceLabelUpdated([u8;<span class="number">32</span>]),
+		</span>MarketplaceLabelUpdated([u8; <span class="number">32</span>]),
 		<span class="doccomment">/// The selected marketplace has been removed. [market_id]
-		</span>MarketplaceRemoved([u8;<span class="number">32</span>]),
-		<span class="doccomment">/// Offer stored. [collection_id, item_id]
-		</span>OfferStored(T::CollectionId, T::ItemId),
+		</span>MarketplaceRemoved([u8; <span class="number">32</span>]),
+		<span class="doccomment">/// Offer stored. [collection_id, item_id, [offer_id]]
+		</span>OfferStored(T::CollectionId, T::ItemId, [u8; <span class="number">32</span>]),
 		<span class="doccomment">/// Offer was accepted [offer_id, account]
-		</span>OfferWasAccepted([u8;<span class="number">32</span>], T::AccountId),
+		</span>OfferWasAccepted([u8; <span class="number">32</span>], T::AccountId),
 		<span class="doccomment">/// Offer was duplicated. [new_offer_id, new_marketplace_id]
-		</span>OfferDuplicated([u8;<span class="number">32</span>], [u8;<span class="number">32</span>]),
+		</span>OfferDuplicated([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
 		<span class="doccomment">/// Offer was removed. [offer_id], [marketplace_id]
-		</span>OfferRemoved([u8;<span class="number">32</span>], [u8;<span class="number">32</span>]),
+		</span>OfferRemoved([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
 		<span class="doccomment">/// Initial palllet setup
 		</span>MarketplaceSetupCompleted,
 	}
@@ -889,6 +938,10 @@
 		</span>ExceedMaxApplicants,
 		<span class="doccomment">/// This custodian has too many applications for this market, try with another one
 		</span>ExceedMaxApplicationsPerCustodian,
+		<span class="doccomment">/// This offer has bigger percentage than the allowed
+		</span>ExceedMaxPercentage,
+		<span class="doccomment">/// This offer has smaller percentage than the allowed
+		</span>ExceedMinPercentage,
 		<span class="doccomment">/// Applicaion doesnt exist
 		</span>ApplicationNotFound,
 		<span class="doccomment">/// The user has not applicated to that market before
@@ -953,6 +1006,8 @@
 		</span>CannotCreateOffer,
 		<span class="doccomment">/// This items is not available for sale
 		</span>ItemNotForSale,
+		<span class="doccomment">/// Could not access to item metadata
+		</span>ItemMetadataNotFound,
 	}
 
 	<span class="attribute">#[pallet::call]
@@ -960,7 +1015,6 @@
 	<span class="kw">where
 		</span>T: pallet_uniques::Config&lt;CollectionId = u32, ItemId = u32&gt;,
 	{
-
 		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
@@ -977,11 +1031,14 @@
 		/// - `admin`: The admin of the marketplace.
 		/// - `label`: The name of the marketplace.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>create_marketplace(origin: OriginFor&lt;T&gt;, admin: T::AccountId,label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>create_marketplace(
+			origin: OriginFor&lt;T&gt;,
+			admin: T::AccountId,
+			label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+			fee: u32,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
-			</span><span class="kw">let </span>m = Marketplace{
-				label,
-			};
+			</span><span class="kw">let </span>m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
 			<span class="self">Self</span>::do_create_marketplace(who, admin, m)
 		}
 
@@ -1003,18 +1060,16 @@
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>apply(
 			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8;<span class="number">32</span>],
+			marketplace_id: [u8; <span class="number">32</span>],
 			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
-			</span>fields : Fields&lt;T&gt;,
-			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;
+			</span>fields: Fields&lt;T&gt;,
+			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>(custodian, fields) =
-				<span class="self">Self</span>::set_up_application(fields,custodian_fields);
+			<span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
 
-
-			<span class="kw">let </span>application = Application::&lt;T&gt;{
+			<span class="kw">let </span>application = Application::&lt;T&gt; {
 				status: ApplicationStatus::default(),
 				fields,
 				feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
@@ -1040,17 +1095,16 @@
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>reapply(
 			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8;<span class="number">32</span>],
+			marketplace_id: [u8; <span class="number">32</span>],
 			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
-			</span>fields : Fields&lt;T&gt;,
-			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;
+			</span>fields: Fields&lt;T&gt;,
+			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>(custodian, fields) =
-				<span class="self">Self</span>::set_up_application(fields,custodian_fields);
+			<span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
 
-			<span class="kw">let </span>application = Application::&lt;T&gt;{
+			<span class="kw">let </span>application = Application::&lt;T&gt; {
 				status: ApplicationStatus::default(),
 				fields,
 				feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
@@ -1060,7 +1114,6 @@
 
 			<span class="self">Self</span>::do_apply(who, custodian, marketplace_id, application)
 		}
-
 
 		<span class="doccomment">/// Accept or reject an application.
 		///
@@ -1082,7 +1135,13 @@
 		/// - If you select `Account` you need to enter the account to be accepted.
 		/// - If you select `Application` you need to enter the `application_id` to be accepted.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enroll(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], account_or_application: AccountOrApplication&lt;T&gt;, approved: bool, feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;, ) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>enroll(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+			account_or_application: AccountOrApplication&lt;T&gt;,
+			approved: bool,
+			feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
@@ -1099,7 +1158,13 @@
 		/// ### Considerations:
 		/// - You can only invite users to a marketplace where you are the admin.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>invite(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], account: T::AccountId, fields : Fields&lt;T&gt;, custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>invite(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+			account: T::AccountId,
+			fields: Fields&lt;T&gt;,
+			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_invite(who, marketplace_id, account, fields, custodian_fields)
@@ -1120,7 +1185,12 @@
 		/// If the user has already applied to the marketplace for that particular
 		/// authority type, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>add_authority(origin: OriginFor&lt;T&gt;, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>add_authority(
+			origin: OriginFor&lt;T&gt;,
+			account: T::AccountId,
+			authority_type: MarketplaceRole,
+			marketplace_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_authority(who, account, authority_type, marketplace_id)
@@ -1141,7 +1211,12 @@
 		/// it only removes the selected authority type for that account.
 		/// If the user doesn&#39;t have the selected authority type, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_authority(origin: OriginFor&lt;T&gt;, account: T::AccountId, authority_type: MarketplaceRole, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>remove_authority(
+			origin: OriginFor&lt;T&gt;,
+			account: T::AccountId,
+			authority_type: MarketplaceRole,
+			marketplace_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="comment">//TOREVIEW: If we&#39;re allowing more than one role per user per marketplace, we should
 			// check what role we want to remove instead of removing the user completely from
@@ -1163,7 +1238,11 @@
 		/// - The label must be less than or equal to `T::LabelMaxLen
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>update_label_marketplace(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], new_label: BoundedVec&lt;u8,T::LabelMaxLen&gt;) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>update_label_marketplace(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+			new_label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_update_label_marketplace(who, marketplace_id, new_label)
@@ -1183,7 +1262,10 @@
 		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_marketplace(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>remove_marketplace(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_remove_marketplace(who, marketplace_id)
@@ -1206,10 +1288,24 @@
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
 		/// - If the selected collection doesn&#39;t exist, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enlist_sell_offer(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>enlist_sell_offer(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+			collection_id: T::CollectionId,
+			item_id: T::ItemId,
+			price: BalanceOf&lt;T&gt;,
+			percentage: u32,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price)
+			<span class="self">Self</span>::do_enlist_sell_offer(
+				who,
+				marketplace_id,
+				collection_id,
+				item_id,
+				price,
+				percentage,
+			)
 		}
 
 		<span class="doccomment">/// Accepts a sell order.
@@ -1227,7 +1323,7 @@
 		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
 		/// - If you don&#39;t have the enough balance to accept the sell order, it will throw an error.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_take_sell_offer(who, offer_id)
@@ -1248,7 +1344,7 @@
 		/// - If you need to delete multiple offers for the same item, you need to
 		///  delete them one by one.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="comment">//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
 			</span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
@@ -1272,12 +1368,25 @@
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enlist_buy_offer(origin: OriginFor&lt;T&gt;, marketplace_id: [u8;<span class="number">32</span>], collection_id: T::CollectionId, item_id: T::ItemId, price: BalanceOf&lt;T&gt;,) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>enlist_buy_offer(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: [u8; <span class="number">32</span>],
+			collection_id: T::CollectionId,
+			item_id: T::ItemId,
+			price: BalanceOf&lt;T&gt;,
+			percentage: u32,
+		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price)
+			<span class="self">Self</span>::do_enlist_buy_offer(
+				who,
+				marketplace_id,
+				collection_id,
+				item_id,
+				price,
+				percentage,
+			)
 		}
-
 
 		<span class="doccomment">/// Accepts a buy order.
 		///
@@ -1296,12 +1405,11 @@
 		/// - The buyer needs to have the enough balance to accept the buy order.
 		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8;<span class="number">32</span>]) -&gt; DispatchResult {
+		</span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_take_buy_offer(who, offer_id)
 		}
-
 
 		<span class="comment">//TODO: Add CRUD operations for the offers
 
@@ -1316,9 +1424,7 @@
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>kill_storage(
-			origin: OriginFor&lt;T&gt;,
-		) -&gt; DispatchResult{
+		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="kw">let _ </span>= &lt;Marketplaces&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;Applications&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
@@ -1332,9 +1438,7 @@
 			&lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
-
-
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_gated_marketplace" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
