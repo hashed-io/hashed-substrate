@@ -2,6 +2,7 @@ use crate::{mock::*, types::*, Error};
 use codec::Encode;
 use frame_support::{assert_noop, assert_ok, sp_io::hashing::blake2_256};
 use frame_system as system;
+use frame_system::Event;
 
 fn generate_user_id(id: &str) -> UserId {
 	format!("user id: {}", id).using_encoded(blake2_256)
@@ -617,11 +618,8 @@ fn create_group_works() {
 			public_key,
 			cid.clone()
 		));
-
-		assert_eq!(
-			ConfidentialDocs::groups(group_id),
-			Some(Group { group: group_id, creator, name: group_name })
-		);
+		let group = Group { group: group_id, creator, name: group_name };
+		assert_eq!(ConfidentialDocs::groups(group_id), Some(group));
 		assert_eq!(
 			ConfidentialDocs::group_members(group_id, creator),
 			Some(GroupMember {
@@ -635,5 +633,10 @@ fn create_group_works() {
 		let expected_member_groups = vec![group_id];
 		assert_eq!(ConfidentialDocs::member_groups(creator).into_inner(), expected_member_groups);
 		assert_eq!(ConfidentialDocs::public_keys(group_id), Some(public_key));
+		assert_eq!(System::events().len(), 2);
+		assert_eq!(
+			System::events()[1].event,
+			RuntimeEvent::ConfidentialDocs(Event::<Test>::GroupCreated(group))
+		);
 	});
 }
