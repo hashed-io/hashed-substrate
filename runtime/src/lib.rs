@@ -583,6 +583,7 @@ parameter_types! {
 	pub const MaxIssuersPerProject:u32 = 25_000;
 	pub const MaxRegionalCenterPerProject:u32 = 25_000;
 	pub const MaxProjectsPerInvestor:u32 = 1;
+	pub const MaxDrawdownsPerProject:u32 = 10_000;
 	pub const MaxTransactionsPerDrawdown:u32 = 1_000;
 	pub const MaxRegistrationsAtTime:u32 = 100;
 	pub const MaxExpendituresPerProject:u32 = 100_000;

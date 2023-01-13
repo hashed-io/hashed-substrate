@@ -235,14 +235,29 @@ impl<T: Config> Pallet<T> {
         // Ensure project is not completed
         ensure!(project_data.status != ProjectStatus::Completed, Error::<T>::CannotDeleteCompletedProject);
 
-        // Delete scope from rbac pallet
-        T::Rbac::remove_scope(Self::pallet_id(), project_id)?;
+        if UsersByProject::<T>::contains_key(project_id) {
+            // Get users by project
+            let users_by_project = UsersByProject::<T>::get(project_id);
+            // Unassign all users from project
+            // Create a UsersAssignation boundedvec with all users in the project
+            let mut users_assignation: UsersAssignation<T> = UsersAssignation::<T>::default();
+            for user in users_by_project.iter().cloned() {
+                // Get user data
+                let user_data = <UsersInfo<T>>::try_get(user.clone()).map_err(|_| Error::<T>::UserNotRegistered)?;
 
-        let users_by_project = Self::users_by_project(project_id).iter().cloned().collect::<Vec<T::AccountId>>();
-        for user in users_by_project.iter().cloned() {
-            <ProjectsByUser<T>>::mutate(user, |projects| {
-                projects.retain(|project| *project != project_id);
-            });
+                users_assignation.try_push((user, user_data.role, AssignAction::Unassign)).map_err(|_| Error::<T>::MaxRegistrationsAtATimeReached)?;
+            }
+
+            // Unassign all users from project
+            Self::do_execute_assign_users(admin.clone(), project_id, users_assignation)?;
+
+            // Remove project from users
+            for user in users_by_project.iter().cloned() {
+                <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user, |projects| {
+                    projects.retain(|project| *project != project_id);
+                    Ok(())
+                })?;
+            }
         }
 
         // Delete from ProjectsInfo storagemap
@@ -306,6 +321,9 @@ impl<T: Config> Pallet<T> {
 
         // Deletes all revenues from RevenuesByProject storagemap
         <RevenuesByProject<T>>::remove(project_id);
+
+        // Delete scope from rbac pallet
+        T::Rbac::remove_scope(Self::pallet_id(), project_id)?;
 
         // Event
         Self::deposit_event(Event::ProjectDeleted(admin, project_id));
@@ -397,15 +415,17 @@ impl<T: Config> Pallet<T> {
         // Update project data depending on the role unassigned
         Self::remove_project_role(project_id, user.clone(), role)?;
 
-        // Remove user from UsersByProject storagemap
-        <UsersByProject<T>>::mutate(project_id, |users| {
+        // Remove user from UsersByProject storagemap.
+        <UsersByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |users| {
             users.retain(|u| u != &user);
-        });
+            Ok(())
+        })?;
 
         // Remove user from ProjectsByUser storagemap
-        <ProjectsByUser<T>>::mutate(user.clone(), |projects| {
+        <ProjectsByUser<T>>::try_mutate::<_,_,DispatchError,_>(user.clone(), |projects| {
             projects.retain(|p| p != &project_id);
-        });
+            Ok(())
+        })?;
 
         // Remove user from the scope rbac pallet
         T::Rbac::remove_role_from_user(user.clone(), Self::pallet_id(), &project_id, role.id())?;

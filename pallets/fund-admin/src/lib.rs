@@ -605,6 +605,8 @@ pub mod pallet {
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty
 		PrivateGroupIdIsEmpty,
+		/// Maximun number of registrations at a time reached
+		MaxRegistrationsAtATimeReached,
 	}
 
 	// E X T R I N S I C S
