@@ -226,7 +226,28 @@ fn make_default_allowed_banks() -> Banks<Test> {
     banks
 }
 
-fn make_default_project() -> DispatchResult {
+fn make_default_simple_project() -> DispatchResult {
+
+    register_administrator()?;
+
+    FundAdmin::projects_create_project(
+        RuntimeOrigin::signed(1),
+        make_field_name("Project 1"),
+        make_field_description("Project 1 description"),
+        Some(make_field_name("project_image.jpeg")),
+        make_field_name("New York"),
+        None,
+        1000,
+        2000,
+        make_default_expenditures(),
+        None,
+        None,
+        make_field_description("P9f5wbr13BK74p1"),
+    )?;
+    Ok(())
+}
+
+fn make_default_full_project() -> DispatchResult {
 
     register_administrator()?;
 
@@ -894,7 +915,7 @@ fn projects_edit_a_project_works() {
 #[test]
 fn projects_delete_project_works() {
     new_test_ext().execute_with(|| {
-        assert_ok!(make_default_project());
+        assert_ok!(make_default_full_project());
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
         let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -924,23 +945,578 @@ fn projects_delete_project_works() {
         for job_eligible_id in get_job_eligible_ids {
             assert_eq!(JobEligiblesInfo::<Test>::contains_key(job_eligible_id), false);
         }
-        assert_eq!(UsersByProject::<Test>::contains_key(get_project_id), false);
         for assigned_user_id in get_assigned_user_ids {
-            let get_project_ids_per_user: Vec<[u8; 32]> = ProjectsByUser::<Test>::get(assigned_user_id).iter().cloned().collect();
-            assert_eq!(get_project_ids_per_user.contains(&get_project_id), false);
+            assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&assigned_user_id), false);
+            assert_eq!(ProjectsByUser::<Test>::get(assigned_user_id).contains(&get_project_id), false);
         }
     });
 }
 
+#[test]
+fn projects_assign_a_builder_to_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
 
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
 
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
 
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
 
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-// function project_assign_user _=>
-// todo: projects_a_user_cannot_have_more_than_one_role_in_a_project
-// todo: assign a builder to a project
-// todo: assign a investor to a project
-// todo: assign a issuer to a project
-// todo: assign a regional center to a project
-// unassign same user from different roles
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+    });
+}
+
+#[test]
+fn projects_assign_an_investor_to_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+        
+        let investor_data = make_user(
+            3,
+            Some(make_field_name("Investor Test")),
+            Some(ProxyRole::Investor),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            investor_data,
+        ));
+
+        let investor_assignment = make_user_assignation(
+            3,
+            ProxyRole::Investor,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            investor_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), true);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), true);
+    });
+}
+
+#[test]
+fn projects_assign_an_issuer_to_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let issuer_data = make_user(
+            4,
+            Some(make_field_name("Issuer Test")),
+            Some(ProxyRole::Issuer),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            issuer_data,
+        ));
+
+        let issuer_assignment = make_user_assignation(
+            4,
+            ProxyRole::Issuer,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            issuer_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), true);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), true);
+    });
+}
+
+#[test]
+fn projects_assign_a_regional_center_to_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let regional_center_data = make_user(
+            5,
+            Some(make_field_name("Regional Center Test")),
+            Some(ProxyRole::RegionalCenter),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            regional_center_data,
+        ));
+
+        let regional_center_assignment = make_user_assignation(
+            5,
+            ProxyRole::RegionalCenter,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            regional_center_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), true);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), true);
+    });
+}
+
+#[test]
+fn projects_unassign_a_builder_from_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
+
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+
+        let builder_unassignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Unassign,
+        );
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_unassignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), false);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), false);
+    });
+}
+
+#[test]
+fn projects_unassign_an_investor_from_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let investor_data = make_user(
+            3,
+            Some(make_field_name("Investor Test")),
+            Some(ProxyRole::Investor),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            investor_data,
+        ));
+
+        let investor_assignment = make_user_assignation(
+            3,
+            ProxyRole::Investor,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            investor_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), true);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), true);
+
+        let investor_unassignment = make_user_assignation(
+            3,
+            ProxyRole::Investor,
+            AssignAction::Unassign,
+        );
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            investor_unassignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), false);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), false);
+    });
+}
+
+#[test]
+fn projects_unassign_an_issuer_from_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let issuer_data = make_user(
+            4,
+            Some(make_field_name("Issuer Test")),
+            Some(ProxyRole::Issuer),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            issuer_data,
+        ));
+
+        let issuer_assignment = make_user_assignation(
+            4,
+            ProxyRole::Issuer,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            issuer_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), true);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), true);
+
+        let issuer_unassignment = make_user_assignation(
+            4,
+            ProxyRole::Issuer,
+            AssignAction::Unassign,
+        );
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            issuer_unassignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), false);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), false);
+    });
+}
+
+#[test]
+fn projects_unassign_a_regional_center_from_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let regional_center_data = make_user(
+            5,
+            Some(make_field_name("Regional Center Test")),
+            Some(ProxyRole::RegionalCenter),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            regional_center_data,
+        ));
+
+        let regional_center_assignment = make_user_assignation(
+            5,
+            ProxyRole::RegionalCenter,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            regional_center_assignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), true);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), true);
+
+        let regional_center_unassignment = make_user_assignation(
+            5,
+            ProxyRole::RegionalCenter,
+            AssignAction::Unassign,
+        );
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            regional_center_unassignment,
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), false);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), false);
+    });
+}
+
+#[test]
+fn projects_cannot_assign_a_user_to_a_project_twice_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
+
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment.clone(),
+        ));
+
+        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+
+        assert_noop!(
+            FundAdmin::projects_assign_user(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                builder_assignment,
+            ),
+            Error::<Test>::UserAlreadyAssignedToProject
+        );
+    });
+}
+
+#[test]
+fn user_cannot_be_assigned_to_a_project_with_a_different_role_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
+
+        let investor_assignment = make_user_assignation(
+            2,
+            ProxyRole::Investor,
+            AssignAction::Assign,
+        );
+    
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_noop!(
+            FundAdmin::projects_assign_user(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                investor_assignment,
+            ),
+            Error::<Test>::UserCannotHaveMoreThanOneRole
+        );
+    });
+}
+
+#[test]
+fn projects_a_user_cannot_have_more_than_one_role_in_a_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
+    
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment,
+        ));
+
+        let investor_assignment = make_user_assignation(
+            2,
+            ProxyRole::Investor,
+            AssignAction::Assign,
+        );
+
+        assert_noop!(
+            FundAdmin::projects_assign_user(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                investor_assignment,
+            ),
+            Error::<Test>::UserCannotHaveMoreThanOneRole
+        );
+    });
+}
+
+#[test]
+fn projects_cannot_delete_a_user_who_has_assigned_projects_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let builder_data = make_user(
+            2,
+            Some(make_field_name("Builder Test")),
+            Some(ProxyRole::Builder),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            builder_data,
+        ));
+
+        let builder_assignment = make_user_assignation(
+            2,
+            ProxyRole::Builder,
+            AssignAction::Assign,
+        );
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_assign_user(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            builder_assignment,
+        ));
+
+        assert_noop!(
+            FundAdmin::users(
+                RuntimeOrigin::signed(1),
+                make_user(
+                    2,
+                    Some(make_field_name("Builder Test")),
+                    Some(ProxyRole::Builder),
+                    CUDAction::Delete,
+                ),
+            ),
+            Error::<Test>::UserHasAssignedProjectsCannotDelete
+        );
+    });
+}
+
+// #[test]
+// fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_fail() {
+//     new_test_ext().execute_with(|| {
+//         assert_ok!(make_default_simple_project());
+
+//         let builder_data = make_user(
+//             2,
+//             Some(make_field_name("Builder Test")),
+//             Some(ProxyRole::Builder),
+//             CUDAction::Create,
+//         );
+
+//         assert_ok!(FundAdmin::users(
+//             RuntimeOrigin::signed(1),
+//             builder_data,
+//         ));
+
+//         let builder_assignment = make_user_assignation(
+//             2,
+//             ProxyRole::Builder,
+//             AssignAction::Assign,
+//         );
+
+//         let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+//         assert_ok!(FundAdmin::projects_assign_user(
+//             RuntimeOrigin::signed(1),
+//             get_project_id,
+//             builder_assignment,
+//         ));
+
+//         assert_noop!(
+//             FundAdmin::users(
+//                 RuntimeOrigin::signed(1),
+//                 make_user(
+//                     2,
+//                     Some(make_field_name("Builder Test")),
+//                     Some(ProxyRole::Investor),
+//                     CUDAction::Update,
+//                 ),
+//             ),
+//             Error::<Test>::UserHasAssignedProjectsCannotUpdate
+//         );
+//     });
+// }
