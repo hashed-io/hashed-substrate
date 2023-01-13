@@ -91,6 +91,23 @@ fn make_default_users() -> Users<Test> {
 	users
 }
 
+#[allow(dead_code)]
+fn make_expenditure(
+    expenditure_name: Option<FieldName>,
+    expenditure_type: Option<ExpenditureType>,
+    expenditure_amount: Option<ExpenditureAmount>,
+    naics_code: Option<NAICSCode>,
+    jobs_multiplier: Option<JobsMultiplier>,
+    action: CUDAction,
+    budget_expenditure_id: Option<ExpenditureId>
+) -> Expenditures<Test> {
+    let mut expenditures: Expenditures<Test> = bounded_vec![];
+    expenditures.try_push((
+        expenditure_name, expenditure_type, expenditure_amount, naics_code, jobs_multiplier, action, budget_expenditure_id
+    )).unwrap_or_default();
+    expenditures
+}
+
 fn make_default_expenditures() -> Expenditures<Test> {
 	let mut expenditures: Expenditures<Test> = bounded_vec![];
     let expenditure_name: Vec<FieldName> = ["Expenditure Test 1", "Expenditure Test 2", "Expenditure Test 3", "Expenditure Test 4"].iter().map(|s| make_field_name(s)).collect();
@@ -117,6 +134,22 @@ fn make_default_expenditures() -> Expenditures<Test> {
 	expenditures
 }
 
+#[allow(dead_code)]
+fn make_job_eligible(
+    field_name: Option<FieldName>,
+    job_eligible_amount: Option<JobEligibleAmount>,
+    naics_code: Option<NAICSCode>,
+    jobs_multiplier: Option<JobsMultiplier>,
+    action: CUDAction,
+    budget_job_eligible_id: Option<JobEligibleId>
+) -> JobEligibles<Test> {
+    let mut job_eligibles: JobEligibles<Test> = bounded_vec![];
+    job_eligibles.try_push((
+        field_name, job_eligible_amount, naics_code, jobs_multiplier, action, budget_job_eligible_id
+    )).unwrap_or_default();
+    job_eligibles
+}
+
 fn make_default_job_eligibles() -> JobEligibles<Test> {
     let mut job_eligibles: JobEligibles<Test> = bounded_vec![];
     let field_name = make_field_name("Job Eligible");
@@ -137,6 +170,19 @@ fn make_default_job_eligibles() -> JobEligibles<Test> {
     job_eligibles
 }
 
+#[allow(dead_code)]
+fn make_user_assignation(
+    user_account: u64,
+    user_role: ProxyRole,
+    action: AssignAction,
+) -> UsersAssignation<Test> {
+    let mut users_assignation: UsersAssignation<Test> = bounded_vec![];
+    users_assignation.try_push((
+        user_account, user_role, action
+    )).unwrap_or_default();
+    users_assignation
+}
+
 fn make_default_user_assignation() ->  UsersAssignation<Test> {
     let mut users_assignation: UsersAssignation<Test> = bounded_vec![];
     let user_account: Vec<u64> = [2, 3, 4, 5].iter().map(|s| *s).collect();
@@ -153,6 +199,18 @@ fn make_default_user_assignation() ->  UsersAssignation<Test> {
             .unwrap_or_default();
     };
     users_assignation
+}
+
+#[allow(dead_code)]
+fn make_allowed_bank(
+    bank_name: BankName,
+    bank_address: BankAddress,
+) -> Banks<Test> {
+    let mut banks: Banks<Test> = bounded_vec![];
+    banks.try_push((
+        bank_name, bank_address
+    )).unwrap_or_default();
+    banks
 }
 
 fn make_default_allowed_banks() -> Banks<Test> {
@@ -717,11 +775,63 @@ fn projects_a_non_authorized_user_registers_a_project_should_fail() {
             make_default_users(),
         ));
 
+        let unauthorized_users: Vec<u64> = vec![2, 3, 4, 5];
+
+        for i in unauthorized_users {
+            assert_noop!(
+                FundAdmin::projects_create_project(
+                    RuntimeOrigin::signed(i),
+                    make_field_name("Project 1"),
+                    make_field_description("Project 1 description"),
+                    Some(make_field_name("project_image.jpeg")),
+                    make_field_name("New York"),
+                    None,
+                    1000,
+                    2000,
+                    make_default_expenditures(),
+                    None,
+                    None,
+                    make_field_description("P9f5wbr13BK74p1"),
+                ),
+                RbacErr::NotAuthorized
+            );
+        }
+    });
+}
+
+
+#[test]
+fn projects_investors_can_be_only_assigned_to_one_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_default_users(),
+        ));
+
+        let investor_data = make_user_assignation(3, ProxyRole::Investor, AssignAction::Assign);
+
+        assert_ok!(FundAdmin::projects_create_project(
+            RuntimeOrigin::signed(1),
+            make_field_name("Project 1"),
+            make_field_description("Project 1 description"),
+            Some(make_field_name("project_image.jpeg")),
+            make_field_name("New York"),
+            None,
+            1000,
+            2000,
+            make_default_expenditures(),
+            None,
+            Some(investor_data.clone()),
+            make_field_description("P9f5wbr13BK74p1"),
+        ));
+
         assert_noop!(
             FundAdmin::projects_create_project(
-                RuntimeOrigin::signed(2),
-                make_field_name("Project 1"),
-                make_field_description("Project 1 description"),
+                RuntimeOrigin::signed(1),
+                make_field_name("Project 2"),
+                make_field_description("Project 2 description"),
                 Some(make_field_name("project_image.jpeg")),
                 make_field_name("New York"),
                 None,
@@ -729,10 +839,108 @@ fn projects_a_non_authorized_user_registers_a_project_should_fail() {
                 2000,
                 make_default_expenditures(),
                 None,
-                None,
+                Some(investor_data),
                 make_field_description("P9f5wbr13BK74p1"),
             ),
-            Error::<Test>::NotAuthorized
+            Error::<Test>::MaxProjectsPerInvestorReached
         );
     });
 }
+
+#[test]
+fn projects_edit_a_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_default_users(),
+        ));
+
+        assert_ok!(FundAdmin::projects_create_project(
+            RuntimeOrigin::signed(1),
+            make_field_name("Project 1"),
+            make_field_description("Project 1 description"),
+            Some(make_field_name("project_image.jpeg")),
+            make_field_name("New York"),
+            None,
+            1000,
+            2000,
+            make_default_expenditures(),
+            None,
+            None,
+            make_field_description("P9f5wbr13BK74p1"),
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_ok!(FundAdmin::projects_edit_project(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(make_field_name("Project 1 edited")),
+            Some(make_field_description("Project 1 description edited")),
+            Some(make_field_name("project_image.jpeg")),
+            Some(make_field_name("California")),
+            None,
+            Some(5000u64),
+            Some(10000u64),
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(get_project_id).unwrap().title, make_field_name("Project 1 edited"));
+    });
+}
+
+#[test]
+fn projects_delete_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_project());
+
+        assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_job_eligible_ids: Vec<[u8; 32]> = JobEligiblesByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_assigned_user_ids: Vec<u64> = UsersByProject::<Test>::get(get_project_id).iter().cloned().collect();
+
+        assert_ok!(FundAdmin::projects_delete_project(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+        ));
+
+        // Ensure project data was deleted
+        assert_eq!(ProjectsInfo::<Test>::contains_key(get_project_id), false);
+        assert_eq!(ExpendituresInfo::<Test>::contains_key(get_project_id), false);
+        for expenditure_id in get_expenditure_ids {
+            assert_eq!(ExpendituresInfo::<Test>::contains_key(expenditure_id), false);
+        }
+        for drawdown_id in get_drawdown_ids {
+            assert_eq!(DrawdownsInfo::<Test>::contains_key(drawdown_id), false);
+        }
+        for revenue_id in get_revenue_ids {
+            assert_eq!(RevenuesInfo::<Test>::contains_key(revenue_id), false);
+        }
+        for job_eligible_id in get_job_eligible_ids {
+            assert_eq!(JobEligiblesInfo::<Test>::contains_key(job_eligible_id), false);
+        }
+        assert_eq!(UsersByProject::<Test>::contains_key(get_project_id), false);
+        for assigned_user_id in get_assigned_user_ids {
+            let get_project_ids_per_user: Vec<[u8; 32]> = ProjectsByUser::<Test>::get(assigned_user_id).iter().cloned().collect();
+            assert_eq!(get_project_ids_per_user.contains(&get_project_id), false);
+        }
+    });
+}
+
+
+
+
+
+
+// function project_assign_user _=>
+// todo: projects_a_user_cannot_have_more_than_one_role_in_a_project
+// todo: assign a builder to a project
+// todo: assign a investor to a project
+// todo: assign a issuer to a project
+// todo: assign a regional center to a project
+// unassign same user from different roles
