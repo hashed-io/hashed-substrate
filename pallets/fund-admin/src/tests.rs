@@ -289,6 +289,13 @@ fn make_default_full_project() -> DispatchResult {
 // I N I T I A L
 // -----------------------------------------------------------------------------------------
 #[test]
+fn global_scope_is_created_after_pallet_initialization() {
+    new_test_ext().execute_with(|| {
+        assert!(GlobalScope::<Test>::exists());
+    });
+}
+
+#[test]
 fn cannon_initialize_pallet_twice_shouldnt_work() {
     new_test_ext().execute_with(|| {
         assert_noop!(
@@ -308,7 +315,7 @@ fn sudo_register_administrator_account_works() {
             2,
             alice_name.clone()
         ));
-        assert!(FundAdmin::users_info(2).is_some());
+        assert!(UsersInfo::<Test>::contains_key(2));
     });
 }
 
@@ -1709,7 +1716,7 @@ fn expenditures_add_an_operational_budget_expenditure_for_a_given_project_works(
 }
 
 #[test]
-fn expenditures_add_a_others_budget_expenditure_for_a_given_project_works() {
+fn expenditures_add_an_others_budget_expenditure_for_a_given_project_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
@@ -1974,9 +1981,7 @@ fn expenditures_edit_a_given_expenditure_from_another_project_should_fail() {
         let first_project_id = get_project_ids.pop().unwrap();
         let second_project_id = get_project_ids.pop().unwrap();
 
-        let mut get_second_expenditure_ids = ExpendituresByProject::<Test>::get(second_project_id);
-        let second_expenditure_id = get_second_expenditure_ids.pop().unwrap();
-
+        let second_expenditure_id = ExpendituresByProject::<Test>::get(second_project_id).pop().unwrap();
 
         let mod_expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost Modified")),
@@ -2044,62 +2049,6 @@ fn expenditures_expenditure_id_is_required_while_editing_a_given_expenditure_sho
             ),
             Error::<Test>::ExpenditureIdRequired
         );
-    });
-}
-
-#[test]
-fn expenditures_delete_a_selected_expenditure_works() {
-    new_test_ext().execute_with(|| {
-        assert_ok!(make_default_simple_project());
-
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-
-        let expenditure_data = make_expenditure(
-            Some(make_field_name("Expenditure Test: Hard Cost")),
-            Some(ExpenditureType::HardCost),
-            Some(100),
-            Some(make_field_description("16344, 45862, 57143")),
-            Some(200),
-            CUDAction::Create,
-            None,
-        );
-
-        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
-            RuntimeOrigin::signed(1),
-            get_project_id,
-            Some(expenditure_data),
-            None,
-        ));
-
-        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
-
-        let mut target_expenditure_id: [u8; 32] = [0; 32];
-
-        for expenditure_id in get_expenditure_ids {
-            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
-
-            if expenditure_data.name == make_field_name("Expenditure Test: Hard Cost") {
-                target_expenditure_id = expenditure_id;
-                break;
-            }
-        }
-
-        let del_expenditure_data = make_expenditure(
-            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
-            Some(ExpenditureType::HardCost),
-            Some(1000000),
-            Some(make_field_description("16344, 57143")),
-            Some(200),
-            CUDAction::Delete,
-            Some(target_expenditure_id),
-        );
-
-        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
-            RuntimeOrigin::signed(1),
-            get_project_id,
-            Some(del_expenditure_data),
-            None,
-        ));
     });
 }
 
@@ -2180,7 +2129,595 @@ fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_f
     });
 }
 
+#[test]
+fn expenditures_delete_a_selected_expenditure_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
 
-//TOOD:WZOWSURYR US RE  UIERED WHILE DELETING
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+
+            if expenditure_data.name == make_field_name("Expenditure Test: Hard Cost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        let del_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Delete,
+            Some(target_expenditure_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(del_expenditure_data),
+            None,
+        ));
+    });
+}
+
+#[test]
+fn expenditures_expenditure_id_es_required_to_delete_an_expenditure() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let del_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(del_expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureIdRequired
+        );
+    });
+}
+
 // J O B   E L I G I B L E S
 // =================================================================================================
+#[test]
+fn job_eligibles_create_a_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+        
+        assert!(JobEligiblesInfo::<Test>::contains_key(get_job_eligible_id));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().name, make_field_name("Job Eligible Test: Construction"));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().job_eligible_amount, 1000);
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().jobs_multiplier, Some(200));
+
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_send_an_empty_array_of_job_eligibles_for_a_given_project() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data: JobEligibles<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligiblesIsEmpty
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_without_a_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            None,
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNameRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_without_an_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Hard Cost")),
+            None,
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleAmountRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_with_an_empty_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligiblesNameIsRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some(get_job_eligible_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(mod_job_eligible_data),
+        ));
+
+        assert!(JobEligiblesInfo::<Test>::contains_key(get_job_eligible_id));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().name, make_field_name("Job Eligible Test: Construction Modified"));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().job_eligible_amount, 5000);
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().naics_code, Some(make_field_description("16344, 57143")));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().jobs_multiplier, Some(320));
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_given_job_eligible_from_another_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        assert_ok!(FundAdmin::projects_create_project(
+            RuntimeOrigin::signed(1),
+            make_field_name("Project 2"),
+            make_field_description("Project 2 description"),
+            Some(make_field_name("project_image.jpeg")),
+            make_field_name("Brooklyn"),
+            None,
+            1000,
+            2000,
+            make_default_expenditures(),
+            None,
+            None,
+            make_field_description("P9f5wbr13BK74p1"),
+        ));
+
+        let mut get_project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
+        let first_project_id = get_project_ids.pop().unwrap();
+        let second_project_id = get_project_ids.pop().unwrap();
+
+        let first_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        let second_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Development")),
+            Some(22000),
+            Some(make_field_description("45612, 97856, 43284")),
+            Some(540),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            first_project_id,
+            None,
+            Some(first_job_eligible_data),
+        ));
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            second_project_id,
+            None,
+            Some(second_job_eligible_data),
+        ));
+
+        let second_job_eligible_id = JobEligiblesByProject::<Test>::get(second_project_id).pop().unwrap();
+
+        let mod_first_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some(second_job_eligible_id),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                first_project_id,
+                None,
+                Some(mod_first_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleDoesNotBelongToProject
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_given_job_eligible_with_an_invalid_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some([0; 32]),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(mod_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNotFound
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_job_eligible_id_is_required_to_update_a_given_job_eligible_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(mod_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_delete_a_given_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let job_eligible_id = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            Some(job_eligible_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(del_job_eligible_data),
+        ));
+
+        assert_eq!(JobEligiblesByProject::<Test>::get(get_project_id).len(), 0);
+        assert_eq!(JobEligiblesInfo::<Test>::iter().count(), 0);
+    });
+}
+
+#[test]
+fn job_eligibles_delete_a_given_job_eligible_with_an_invalid_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            Some([0; 32]),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(del_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNotFound
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(del_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}

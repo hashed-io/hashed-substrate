@@ -529,7 +529,7 @@ pub mod pallet {
 		MaxProjectsPerInvestorReached,
 		/// Jobs eligibles array is empty
 		JobEligiblesIsEmpty,
-		/// JOb eligible name is required
+		/// JOb eligible name is empty
 		JobEligiblesNameIsRequired,
 		/// Job eligible id already exists
 		JobEligibleIdAlreadyExists,
