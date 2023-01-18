@@ -1519,6 +1519,11 @@
 <span id="1519">1519</span>
 <span id="1520">1520</span>
 <span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1953,7 +1958,7 @@
 		<span class="doccomment">/// Invalid amount
 		</span>InvalidAmount,
 		<span class="doccomment">/// Documents field is empty
-		</span>DocumentsIsEmpty,
+		</span>DocumentsEmpty,
 		<span class="doccomment">/// Transaction id is not found
 		</span>TransactionNotFound,
 		<span class="doccomment">/// Transaction already exist
@@ -1986,8 +1991,10 @@
 		</span>UserDoesNotHaveRole,
 		<span class="doccomment">/// Transactions vector is empty
 		</span>EmptyTransactions,
+		<span class="doccomment">/// Transactions are required for the current workflow
+		</span>TransactionsRequired,
 		<span class="doccomment">/// Transaction ID was not found in do_execute_transaction
-		</span>TransactionIdNotFound,
+		</span>TransactionIdRequired,
 		<span class="doccomment">/// Drawdown can not be submitted if does not has any transactions
 		</span>DrawdownHasNoTransactions,
 		<span class="doccomment">/// Cannot submit transaction
@@ -2049,9 +2056,9 @@
 		<span class="doccomment">/// Max number of projects per investor has been reached
 		</span>MaxProjectsPerInvestorReached,
 		<span class="doccomment">/// Jobs eligibles array is empty
-		</span>JobEligiblesIsEmpty,
-		<span class="doccomment">/// JOb eligible name is required
-		</span>JobEligiblesNameIsRequired,
+		</span>JobEligiblesEmpty,
+		<span class="doccomment">/// JOb eligible name is empty
+		</span>JobEligiblesNameRequired,
 		<span class="doccomment">/// Job eligible id already exists
 		</span>JobEligibleIdAlreadyExists,
 		<span class="doccomment">/// Max number of job eligibles per project reached
@@ -2125,7 +2132,7 @@
 		<span class="doccomment">/// Only eb5 drawdowns are allowed to upload bank documentation
 		</span>OnlyEB5DrawdownsCanUploadBankDocuments,
 		<span class="doccomment">/// The private group id is empty
-		</span>PrivateGroupIdIsEmpty,
+		</span>PrivateGroupIdEmpty,
 		<span class="doccomment">/// Maximun number of registrations at a time reached
 		</span>MaxRegistrationsAtATimeReached,
 	}
@@ -2565,21 +2572,23 @@
 						who,
 						project_id,
 						drawdown_id,
-						transactions.ok_or(Error::&lt;T&gt;::EmptyTransactions)<span class="question-mark">?</span>,
+						transactions.ok_or(Error::&lt;T&gt;::TransactionsRequired)<span class="question-mark">?</span>,
 					)
 				},
 				<span class="comment">// Submit transactions
 				</span><span class="bool-val">true </span>=&gt; {
 					<span class="comment">// Check if there are transactions to execute
 					</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_transactions) = transactions {
+						<span class="comment">// Ensure transactions are not empty
+						</span><span class="macro">ensure!</span>(!mod_transactions.is_empty(), Error::&lt;T&gt;::EmptyTransactions);
+
 						<span class="comment">// Do execute transactions
-						</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
-							<span class="self">Self</span>::do_execute_transactions(
-								who.clone(),
-								project_id,
-								drawdown_id,
-								mod_transactions)<span class="question-mark">?</span>;
-						}
+						</span><span class="self">Self</span>::do_execute_transactions(
+							who.clone(),
+							project_id,
+							drawdown_id,
+							mod_transactions
+						)<span class="question-mark">?</span>;
 					}
 
 					<span class="comment">// Do submit drawdown
@@ -2651,7 +2660,7 @@
 								who.clone(),
 								project_id,
 								drawdown_id,
-								transactions.ok_or(Error::&lt;T&gt;::EmptyTransactions)<span class="question-mark">?</span>,
+								transactions.ok_or(Error::&lt;T&gt;::TransactionsRequired)<span class="question-mark">?</span>,
 							)<span class="question-mark">?</span>;
 
 							<span class="comment">// 2. Do submit drawdown
@@ -2661,14 +2670,15 @@
 						<span class="bool-val">true  </span>=&gt; {
 							<span class="comment">// 1.Execute transactions if provided
 							</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_transactions) = transactions {
+								<span class="comment">// Ensure transactions are not empty
+								</span><span class="macro">ensure!</span>(!mod_transactions.is_empty(), Error::&lt;T&gt;::EmptyTransactions);
+								
 								<span class="comment">// Do execute transactions
-								</span><span class="kw">if </span>mod_transactions.len() &gt; <span class="number">0 </span>{
-									<span class="self">Self</span>::do_execute_transactions(
-										who.clone(),
-										project_id,
-										drawdown_id,
-										mod_transactions)<span class="question-mark">?</span>;
-								}
+								</span><span class="self">Self</span>::do_execute_transactions(
+									who.clone(),
+									project_id,
+									drawdown_id,
+									mod_transactions)<span class="question-mark">?</span>;
 
 								<span class="comment">// 2. Submit drawdown
 								</span><span class="self">Self</span>::do_submit_drawdown(who.clone(), project_id, drawdown_id)<span class="question-mark">?</span>;

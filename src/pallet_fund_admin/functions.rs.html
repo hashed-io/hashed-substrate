@@ -2882,7 +2882,7 @@
         </span><span class="macro">ensure!</span>(completion_date &gt; creation_date, Error::&lt;T&gt;::CompletionDateMustBeLater);
 
         <span class="comment">// Ensuree private group id is not empty
-        </span><span class="macro">ensure!</span>(!private_group_id.is_empty(), Error::&lt;T&gt;::PrivateGroupIdIsEmpty);
+        </span><span class="macro">ensure!</span>(!private_group_id.is_empty(), Error::&lt;T&gt;::PrivateGroupIdEmpty);
 
         <span class="comment">// Create project data
         </span><span class="kw">let </span>project_data = ProjectData::&lt;T&gt; {
@@ -3939,12 +3939,12 @@
                     <span class="self">Self</span>::do_update_transaction(
                         transaction.<span class="number">1</span>,
                         transaction.<span class="number">2</span>,
-                        transaction.<span class="number">4</span>.ok_or(Error::&lt;T&gt;::TransactionIdNotFound)<span class="question-mark">?</span>,
+                        transaction.<span class="number">4</span>.ok_or(Error::&lt;T&gt;::TransactionIdRequired)<span class="question-mark">?</span>,
                     )<span class="question-mark">?</span>;
                 },
                 CUDAction::Delete =&gt; {
                     <span class="self">Self</span>::do_delete_transaction(
-                        transaction.<span class="number">4</span>.ok_or(Error::&lt;T&gt;::TransactionIdNotFound)<span class="question-mark">?</span>,
+                        transaction.<span class="number">4</span>.ok_or(Error::&lt;T&gt;::TransactionIdRequired)<span class="question-mark">?</span>,
                     )<span class="question-mark">?</span>;
                 },
             }
@@ -4207,7 +4207,7 @@
         </span><span class="macro">ensure!</span>(ProjectsInfo::&lt;T&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
 
         <span class="comment">// Ensure job eligibles is not empty
-        </span><span class="macro">ensure!</span>(!job_eligibles.is_empty(), Error::&lt;T&gt;::JobEligiblesIsEmpty);
+        </span><span class="macro">ensure!</span>(!job_eligibles.is_empty(), Error::&lt;T&gt;::JobEligiblesEmpty);
 
         <span class="kw">for </span>job_eligible <span class="kw">in </span>job_eligibles.iter().cloned() {
             <span class="kw">match </span>job_eligible.<span class="number">4 </span>{
@@ -4257,7 +4257,7 @@
         </span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure job eligible name is not empty
-        </span><span class="macro">ensure!</span>(!name.is_empty(), Error::&lt;T&gt;::JobEligiblesNameIsRequired);
+        </span><span class="macro">ensure!</span>(!name.is_empty(), Error::&lt;T&gt;::JobEligiblesNameRequired);
 
         <span class="comment">// Create job eligible id
         </span><span class="kw">let </span>job_eligible_id: JobEligibleId = (project_id, name.clone(), timestamp).using_encoded(blake2_256);
