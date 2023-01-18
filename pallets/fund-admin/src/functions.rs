@@ -102,7 +102,7 @@ impl<T: Config> Pallet<T> {
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
 
         // Ensuree private group id is not empty
-        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdIsEmpty);
+        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdEmpty);
 
         // Create project data
         let project_data = ProjectData::<T> {
@@ -1159,12 +1159,12 @@ impl<T: Config> Pallet<T> {
                     Self::do_update_transaction(
                         transaction.1,
                         transaction.2,
-                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                        transaction.4.ok_or(Error::<T>::TransactionIdRequired)?,
                     )?;
                 },
                 CUDAction::Delete => {
                     Self::do_delete_transaction(
-                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                        transaction.4.ok_or(Error::<T>::TransactionIdRequired)?,
                     )?;
                 },
             }
@@ -1427,7 +1427,7 @@ impl<T: Config> Pallet<T> {
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Ensure job eligibles is not empty
-        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
+        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesEmpty);
 
         for job_eligible in job_eligibles.iter().cloned() {
             match job_eligible.4 {
@@ -1477,7 +1477,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Ensure job eligible name is not empty
-        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameIsRequired);
+        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameRequired);
 
         // Create job eligible id
         let job_eligible_id: JobEligibleId = (project_id, name.clone(), timestamp).using_encoded(blake2_256);

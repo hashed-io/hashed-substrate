@@ -285,6 +285,77 @@ fn make_default_full_project() -> DispatchResult {
     Ok(())
 }
 
+fn make_transaction(
+    expenditure_id: Option<ExpenditureId>,
+    expenditure_amount: Option<ExpenditureAmount>,
+    action: CUDAction,
+    transaction_id: Option<TransactionId>,
+) -> Transactions<Test> {
+    let mut transactions: Transactions<Test> = bounded_vec![];
+    let documents = Some(make_files(1));
+    transactions
+        .try_push((
+            expenditure_id,
+            expenditure_amount,
+            documents,
+            action,
+            transaction_id,
+        ))
+        .unwrap_or_default();
+    transactions
+}
+
+fn get_drawdown_id(
+    project_id: ProjectId,
+    drawdown_type: DrawdownType,
+    drawdown_number: DrawdownNumber,
+) -> DrawdownId {
+    let mut drawdown_id: [u8;32] = [0;32];
+    let drawdonws_by_project = DrawdownsByProject::<Test>::get(project_id);
+
+    for i in 0..drawdonws_by_project.len() {
+        let drawdown_data = DrawdownsInfo::<Test>::get(drawdonws_by_project[i]).unwrap();
+        if drawdown_data.drawdown_type == drawdown_type {
+            drawdown_id = drawdonws_by_project[i];
+        }
+    }
+    drawdown_id
+}
+
+fn get_budget_expenditure_id(
+    project_id: ProjectId,
+    name: FieldName,
+    expenditure_type: ExpenditureType,
+) -> ExpenditureId {
+    let mut expenditure_id: [u8;32] = [0;32];
+    let expenditures_by_project = ExpendituresByProject::<Test>::get(project_id);
+
+    for i in 0..expenditures_by_project.len() {
+        let expenditure_data = ExpendituresInfo::<Test>::get(expenditures_by_project[i]).unwrap();
+        if expenditure_data.name == name && expenditure_data.expenditure_type == expenditure_type {
+            expenditure_id = expenditures_by_project[i];
+        }
+    }
+    expenditure_id
+}
+
+fn get_transaction_id(
+    project_id: ProjectId,
+    drawdown_id: DrawdownId,
+    expenditure_id: ExpenditureId,
+) -> TransactionId {
+    let mut transaction_id: [u8;32] = [0;32];
+    let transactions_by_drawdown = TransactionsByDrawdown::<Test>::get(project_id, drawdown_id);
+
+    for i in 0..transactions_by_drawdown.len() {
+        let transaction_data = TransactionsInfo::<Test>::get(transactions_by_drawdown[i]).unwrap();
+        if transaction_data.project_id == project_id && transaction_data.drawdown_id == drawdown_id && transaction_data.expenditure_id == expenditure_id {
+            transaction_id = transactions_by_drawdown[i];
+        }
+    }
+    transaction_id
+}
+ 
 
 // I N I T I A L
 // -----------------------------------------------------------------------------------------
@@ -846,7 +917,7 @@ fn projects_register_a_project_without_a_group_id_should_fail() {
                 None,
                 make_field_description(""),
             ),
-            Error::<Test>::PrivateGroupIdIsEmpty
+            Error::<Test>::PrivateGroupIdEmpty
         );
     });
 }
@@ -2283,7 +2354,7 @@ fn job_eligibles_cannot_send_an_empty_array_of_job_eligibles_for_a_given_project
                 None,
                 Some(job_eligible_data),
             ),
-            Error::<Test>::JobEligiblesIsEmpty
+            Error::<Test>::JobEligiblesEmpty
         );
     });
 }
@@ -2367,7 +2438,7 @@ fn job_eligibles_cannot_create_a_job_eligible_with_an_empty_name_should_fail() {
                 None,
                 Some(job_eligible_data),
             ),
-            Error::<Test>::JobEligiblesNameIsRequired
+            Error::<Test>::JobEligiblesNameRequired
         );
     });
 }
@@ -2718,6 +2789,346 @@ fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail(
                 Some(del_job_eligible_data),
             ),
             Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}
+
+// D R A W D O W N S
+// ============================================================================
+#[test]
+fn drawdowns_drawdowns_are_initialized_correctly_after_a_project_is_created_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(DrawdownsByProject::<Test>::get(get_project_id).len(), 3);
+        let drawdowns_ids = DrawdownsByProject::<Test>::get(get_project_id);
+
+        for drawdown_id in drawdowns_ids {
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().project_id, get_project_id);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().drawdown_number, 1);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, None);
+        }
+    });
+}
+
+#[test]
+fn drawdowns_a_builder_saves_a_drawdown_as_a_draft_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+        
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().project_id, project_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().drawdown_id, drawdown_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().expenditure_id, expenditure_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().closed_date, 0);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().feedback, None);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Draft);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        let mod_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(mod_transaction_data),
+            false,
+        ));
+
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 20000);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_deletes_a_transaction_in_draft_status_works(){
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        let del_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(del_transaction_data),
+            false,
+        ));
+
+        assert_eq!(TransactionsInfo::<Test>::contains_key(transaction_id), false);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_save_transactions_as_draft_if_transactions_are_not_provided_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                false,
+            ),
+            Error::<Test>::TransactionsRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_an_empty_array_of_transactions_when_saving_as_a_draft_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let empty_transaction_data: Transactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(empty_transaction_data),
+                false,
+            ),
+            Error::<Test>::EmptyTransactions
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_a_transaction_without_the_expenditure_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let transaction_data = make_transaction(
+            None,
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                false,
+            ),
+            Error::<Test>::ExpenditureIdRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_a_transaction_without_an_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            None,
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                false,
+            ),
+            Error::<Test>::AmountRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_transaction_id_is_required_when_editing_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let mod_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(mod_transaction_data),
+                false,
+            ),
+            Error::<Test>::TransactionIdRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let del_transaction_data = make_transaction(
+            None,
+            None,
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(del_transaction_data),
+                false,
+            ),
+            Error::<Test>::TransactionIdRequired
         );
     });
 }
