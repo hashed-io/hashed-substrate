@@ -285,9 +285,87 @@ fn make_default_full_project() -> DispatchResult {
     Ok(())
 }
 
+fn make_transaction(
+    expenditure_id: Option<ExpenditureId>,
+    expenditure_amount: Option<ExpenditureAmount>,
+    action: CUDAction,
+    transaction_id: Option<TransactionId>,
+) -> Transactions<Test> {
+    let mut transactions: Transactions<Test> = bounded_vec![];
+    let documents = Some(make_files(1));
+    transactions
+        .try_push((
+            expenditure_id,
+            expenditure_amount,
+            documents,
+            action,
+            transaction_id,
+        ))
+        .unwrap_or_default();
+    transactions
+}
+
+fn get_drawdown_id(
+    project_id: ProjectId,
+    drawdown_type: DrawdownType,
+    drawdown_number: DrawdownNumber,
+) -> DrawdownId {
+    let mut drawdown_id: [u8;32] = [0;32];
+    let drawdonws_by_project = DrawdownsByProject::<Test>::get(project_id);
+
+    for i in 0..drawdonws_by_project.len() {
+        let drawdown_data = DrawdownsInfo::<Test>::get(drawdonws_by_project[i]).unwrap();
+        if drawdown_data.drawdown_type == drawdown_type {
+            drawdown_id = drawdonws_by_project[i];
+        }
+    }
+    drawdown_id
+}
+
+fn get_budget_expenditure_id(
+    project_id: ProjectId,
+    name: FieldName,
+    expenditure_type: ExpenditureType,
+) -> ExpenditureId {
+    let mut expenditure_id: [u8;32] = [0;32];
+    let expenditures_by_project = ExpendituresByProject::<Test>::get(project_id);
+
+    for i in 0..expenditures_by_project.len() {
+        let expenditure_data = ExpendituresInfo::<Test>::get(expenditures_by_project[i]).unwrap();
+        if expenditure_data.name == name && expenditure_data.expenditure_type == expenditure_type {
+            expenditure_id = expenditures_by_project[i];
+        }
+    }
+    expenditure_id
+}
+
+fn get_transaction_id(
+    project_id: ProjectId,
+    drawdown_id: DrawdownId,
+    expenditure_id: ExpenditureId,
+) -> TransactionId {
+    let mut transaction_id: [u8;32] = [0;32];
+    let transactions_by_drawdown = TransactionsByDrawdown::<Test>::get(project_id, drawdown_id);
+
+    for i in 0..transactions_by_drawdown.len() {
+        let transaction_data = TransactionsInfo::<Test>::get(transactions_by_drawdown[i]).unwrap();
+        if transaction_data.project_id == project_id && transaction_data.drawdown_id == drawdown_id && transaction_data.expenditure_id == expenditure_id {
+            transaction_id = transactions_by_drawdown[i];
+        }
+    }
+    transaction_id
+}
+ 
 
 // I N I T I A L
 // -----------------------------------------------------------------------------------------
+#[test]
+fn global_scope_is_created_after_pallet_initialization() {
+    new_test_ext().execute_with(|| {
+        assert!(GlobalScope::<Test>::exists());
+    });
+}
+
 #[test]
 fn cannon_initialize_pallet_twice_shouldnt_work() {
     new_test_ext().execute_with(|| {
@@ -308,7 +386,7 @@ fn sudo_register_administrator_account_works() {
             2,
             alice_name.clone()
         ));
-        assert!(FundAdmin::users_info(2).is_some());
+        assert!(UsersInfo::<Test>::contains_key(2));
     });
 }
 
@@ -839,7 +917,7 @@ fn projects_register_a_project_without_a_group_id_should_fail() {
                 None,
                 make_field_description(""),
             ),
-            Error::<Test>::PrivateGroupIdIsEmpty
+            Error::<Test>::PrivateGroupIdEmpty
         );
     });
 }
@@ -1573,6 +1651,1484 @@ fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_f
                 ),
             ),
             Error::<Test>::UserHasAssignedProjectsCannotUpdateRole
+        );
+    });
+}
+
+// E X P E N D I T U R E S
+// ============================================================================
+#[test]
+fn expenditures_add_a_hard_cost_budget_expenditure_for_a_given_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: HardCost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+            if expenditure_data.name == make_field_name("Expenditure Test: HardCost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().name, make_field_name("Expenditure Test: HardCost"));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_type, ExpenditureType::HardCost);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_amount, 100);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().jobs_multiplier, Some(200));
+    });
+}
+
+#[test]
+fn expenditures_add_a_softcost_budget_expenditure_for_a_given_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: SoftCost")),
+            Some(ExpenditureType::SoftCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+            if expenditure_data.name == make_field_name("Expenditure Test: SoftCost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().name, make_field_name("Expenditure Test: SoftCost"));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_type, ExpenditureType::SoftCost);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_amount, 100);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().jobs_multiplier, Some(200));
+    });
+}
+
+#[test]
+fn expenditures_add_an_operational_budget_expenditure_for_a_given_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Operational")),
+            Some(ExpenditureType::Operational),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+            if expenditure_data.name == make_field_name("Expenditure Test: Operational") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().name, make_field_name("Expenditure Test: Operational"));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_type, ExpenditureType::Operational);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_amount, 100);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().jobs_multiplier, Some(200));
+    });
+}
+
+#[test]
+fn expenditures_add_an_others_budget_expenditure_for_a_given_project_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Others")),
+            Some(ExpenditureType::Others),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+            if expenditure_data.name == make_field_name("Expenditure Test: Others") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().name, make_field_name("Expenditure Test: Others"));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_type, ExpenditureType::Others);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_amount, 100);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().jobs_multiplier, Some(200));
+    });
+}
+
+#[test]
+fn expenditures_cannot_send_an_empty_array_of_expenditures_for_a_given_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data: Expenditures<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(expenditure_data),
+                None,
+            ),
+            Error::<Test>::EmptyExpenditures
+        );
+    });
+}
+
+#[test]
+fn expenditures_cannot_create_a_budget_expenditure_without_a_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            None,
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureNameRequired
+        );
+    });
+}
+
+#[test]
+fn expenditures_cannot_create_a_budget_without_expenditure_type_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            None,
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureTypeRequired
+        );
+    });
+}
+
+#[test]
+fn expenditures_cannot_create_a_budget_expenditute_without_an_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            None,
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureAmountRequired
+        );
+    });
+}
+
+#[test]
+fn expenditures_cannot_create_a_budget_expenditure_with_an_empty_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(expenditure_data),
+                None,
+            ),
+            Error::<Test>::EmptyExpenditureName
+        );
+    });
+}
+
+#[test]
+fn expenditures_edit_a_given_expenditure_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+
+            if expenditure_data.name == make_field_name("Expenditure Test: Hard Cost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        let mod_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Update,
+            Some(target_expenditure_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(mod_expenditure_data),
+            None,
+        ));
+
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().name, make_field_name("Expenditure Test: Hard Cost Modified"));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_type, ExpenditureType::HardCost);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().expenditure_amount, 1000000);
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().naics_code, Some(make_field_description("16344, 57143")));
+        assert_eq!(ExpendituresInfo::<Test>::get(target_expenditure_id).unwrap().jobs_multiplier, Some(200));
+    });
+}
+
+#[test]
+fn expenditures_edit_a_given_expenditure_from_another_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+      
+        assert_ok!(FundAdmin::projects_create_project(
+            RuntimeOrigin::signed(1),
+            make_field_name("Project 2"),
+            make_field_description("Project 2 description"),
+            Some(make_field_name("project_image.jpeg")),
+            make_field_name("Brooklyn"),
+            None,
+            1000,
+            2000,
+            make_default_expenditures(),
+            None,
+            None,
+            make_field_description("P9f5wbr13BK74p1"),
+        ));
+
+        let mut get_project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
+        let first_project_id = get_project_ids.pop().unwrap();
+        let second_project_id = get_project_ids.pop().unwrap();
+
+        let second_expenditure_id = ExpendituresByProject::<Test>::get(second_project_id).pop().unwrap();
+
+        let mod_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Update,
+            Some(second_expenditure_id),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                first_project_id,
+                Some(mod_expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureDoesNotBelongToProject
+        );
+
+    });
+}
+
+#[test]
+fn expenditures_expenditure_id_is_required_while_editing_a_given_expenditure_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let mod_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(mod_expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureIdRequired
+        );
+    });
+}
+
+#[test]
+fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+
+            if expenditure_data.name == make_field_name("Expenditure Test: Hard Cost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        let del_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Delete,
+            Some(target_expenditure_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(del_expenditure_data),
+            None,
+        ));
+
+        let mod_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Update,
+            Some(target_expenditure_id),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(mod_expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureNotFound
+        );
+
+    });
+}
+
+#[test]
+fn expenditures_delete_a_selected_expenditure_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+
+        let mut target_expenditure_id: [u8; 32] = [0; 32];
+
+        for expenditure_id in get_expenditure_ids {
+            let expenditure_data = ExpendituresInfo::<Test>::get(expenditure_id).ok_or(Error::<Test>::ExpenditureNotFound).unwrap();
+
+            if expenditure_data.name == make_field_name("Expenditure Test: Hard Cost") {
+                target_expenditure_id = expenditure_id;
+                break;
+            }
+        }
+
+        let del_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Delete,
+            Some(target_expenditure_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(del_expenditure_data),
+            None,
+        ));
+    });
+}
+
+#[test]
+fn expenditures_expenditure_id_es_required_to_delete_an_expenditure() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost")),
+            Some(ExpenditureType::HardCost),
+            Some(100),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            Some(expenditure_data),
+            None,
+        ));
+
+        let del_expenditure_data = make_expenditure(
+            Some(make_field_name("Expenditure Test: Hard Cost Modified")),
+            Some(ExpenditureType::HardCost),
+            Some(1000000),
+            Some(make_field_description("16344, 57143")),
+            Some(200),
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                Some(del_expenditure_data),
+                None,
+            ),
+            Error::<Test>::ExpenditureIdRequired
+        );
+    });
+}
+
+// J O B   E L I G I B L E S
+// =================================================================================================
+#[test]
+fn job_eligibles_create_a_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+        
+        assert!(JobEligiblesInfo::<Test>::contains_key(get_job_eligible_id));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().name, make_field_name("Job Eligible Test: Construction"));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().job_eligible_amount, 1000);
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().naics_code, Some(make_field_description("16344, 45862, 57143")));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().jobs_multiplier, Some(200));
+
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_send_an_empty_array_of_job_eligibles_for_a_given_project() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data: JobEligibles<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligiblesEmpty
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_without_a_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            None,
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNameRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_without_an_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Hard Cost")),
+            None,
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleAmountRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_cannot_create_a_job_eligible_with_an_empty_name_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(job_eligible_data),
+            ),
+            Error::<Test>::JobEligiblesNameRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some(get_job_eligible_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(mod_job_eligible_data),
+        ));
+
+        assert!(JobEligiblesInfo::<Test>::contains_key(get_job_eligible_id));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().name, make_field_name("Job Eligible Test: Construction Modified"));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().job_eligible_amount, 5000);
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().naics_code, Some(make_field_description("16344, 57143")));
+        assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().jobs_multiplier, Some(320));
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_given_job_eligible_from_another_project_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        assert_ok!(FundAdmin::projects_create_project(
+            RuntimeOrigin::signed(1),
+            make_field_name("Project 2"),
+            make_field_description("Project 2 description"),
+            Some(make_field_name("project_image.jpeg")),
+            make_field_name("Brooklyn"),
+            None,
+            1000,
+            2000,
+            make_default_expenditures(),
+            None,
+            None,
+            make_field_description("P9f5wbr13BK74p1"),
+        ));
+
+        let mut get_project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
+        let first_project_id = get_project_ids.pop().unwrap();
+        let second_project_id = get_project_ids.pop().unwrap();
+
+        let first_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        let second_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Development")),
+            Some(22000),
+            Some(make_field_description("45612, 97856, 43284")),
+            Some(540),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            first_project_id,
+            None,
+            Some(first_job_eligible_data),
+        ));
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            second_project_id,
+            None,
+            Some(second_job_eligible_data),
+        ));
+
+        let second_job_eligible_id = JobEligiblesByProject::<Test>::get(second_project_id).pop().unwrap();
+
+        let mod_first_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some(second_job_eligible_id),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                first_project_id,
+                None,
+                Some(mod_first_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleDoesNotBelongToProject
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_edit_a_given_job_eligible_with_an_invalid_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            Some([0; 32]),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(mod_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNotFound
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_job_eligible_id_is_required_to_update_a_given_job_eligible_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let mod_job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction Modified")),
+            Some(5000),
+            Some(make_field_description("16344, 57143")),
+            Some(320),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(mod_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_delete_a_given_job_eligible_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let job_eligible_id = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            Some(job_eligible_id),
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(del_job_eligible_data),
+        ));
+
+        assert_eq!(JobEligiblesByProject::<Test>::get(get_project_id).len(), 0);
+        assert_eq!(JobEligiblesInfo::<Test>::iter().count(), 0);
+    });
+}
+
+#[test]
+fn job_eligibles_delete_a_given_job_eligible_with_an_invalid_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            Some([0; 32]),
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(del_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleNotFound
+        );
+    });
+}
+
+#[test]
+fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            get_project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let del_job_eligible_data = make_job_eligible(
+            None,
+            None,
+            None,
+            None,
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::expenditures_and_job_eligibles(
+                RuntimeOrigin::signed(1),
+                get_project_id,
+                None,
+                Some(del_job_eligible_data),
+            ),
+            Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}
+
+// D R A W D O W N S
+// ============================================================================
+#[test]
+fn drawdowns_drawdowns_are_initialized_correctly_after_a_project_is_created_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_simple_project());
+
+        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(DrawdownsByProject::<Test>::get(get_project_id).len(), 3);
+        let drawdowns_ids = DrawdownsByProject::<Test>::get(get_project_id);
+
+        for drawdown_id in drawdowns_ids {
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().project_id, get_project_id);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().drawdown_number, 1);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, None);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, None);
+        }
+    });
+}
+
+#[test]
+fn drawdowns_a_builder_saves_a_drawdown_as_a_draft_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+        
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().project_id, project_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().drawdown_id, drawdown_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().expenditure_id, expenditure_id);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().closed_date, 0);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().feedback, None);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Draft);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        let mod_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(mod_transaction_data),
+            false,
+        ));
+
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 20000);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_deletes_a_transaction_in_draft_status_works(){
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        let del_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(del_transaction_data),
+            false,
+        ));
+
+        assert_eq!(TransactionsInfo::<Test>::contains_key(transaction_id), false);
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_save_transactions_as_draft_if_transactions_are_not_provided_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                false,
+            ),
+            Error::<Test>::TransactionsRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_an_empty_array_of_transactions_when_saving_as_a_draft_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let empty_transaction_data: Transactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(empty_transaction_data),
+                false,
+            ),
+            Error::<Test>::EmptyTransactions
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_a_transaction_without_the_expenditure_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let transaction_data = make_transaction(
+            None,
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                false,
+            ),
+            Error::<Test>::ExpenditureIdRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_user_cannot_send_a_transaction_without_an_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            None,
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                false,
+            ),
+            Error::<Test>::AmountRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_transaction_id_is_required_when_editing_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let mod_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(mod_transaction_data),
+                false,
+            ),
+            Error::<Test>::TransactionIdRequired
+        );
+    });
+}
+
+#[test]
+fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let del_transaction_data = make_transaction(
+            None,
+            None,
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(del_transaction_data),
+                false,
+            ),
+            Error::<Test>::TransactionIdRequired
         );
     });
 }

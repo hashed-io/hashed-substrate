@@ -1799,7 +1799,7 @@ UserDoesNotHaveRole
 /// Transactions vector is empty
 EmptyTransactions
 /// Transaction ID was not found in do_execute_transaction
-TransactionIdNotFound
+TransactionIdRequired
 /// Drawdown can not be submitted if does not has any transactions
 DrawdownHasNoTransactions
 /// Cannot submit transaction
@@ -1861,7 +1861,7 @@ UserIsNotAnInvestor
 /// Max number of projects per investor has been reached
 MaxProjectsPerInvestorReached
 /// Jobs eligibles array is empty
-JobEligiblesIsEmpty
+JobEligiblesEmpty
 /// JOb eligible name is required
 JobEligiblesNameIsRequired
 /// Job eligible id already exists
