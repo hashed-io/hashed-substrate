@@ -597,8 +597,8 @@ parameter_types! {
 	pub const MaxTransactionsPerRevenue:u32 = 1_000;
 	pub const MaxStatusChangesPerDrawdown:u32 = 1_000;
 	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
-	pub const MinAdminBalance: Balance = 10;
-	pub const TransferAmount: Balance = 10;
+	pub const MinAdminBalance: Balance = 10_000_000_000_000;
+	pub const TransferAmount: Balance = 10_000_000_000_000;
 }
 
 impl pallet_fund_admin::Config for Runtime {
