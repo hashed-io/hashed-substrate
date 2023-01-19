@@ -597,6 +597,8 @@ parameter_types! {
 	pub const MaxTransactionsPerRevenue:u32 = 1_000;
 	pub const MaxStatusChangesPerDrawdown:u32 = 1_000;
 	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
+	pub const MinAdminBalance: Balance = 10;
+	pub const TransferAmount: Balance = 10;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -608,6 +610,7 @@ impl pallet_fund_admin::Config for Runtime {
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;
+	type Currency = Balances;
 
 	type MaxDocuments = MaxDocuments;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
@@ -627,7 +630,8 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
 	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
-
+	type MinAdminBalance = MinAdminBalance;
+	type TransferAmount = TransferAmount;
 }
 
 

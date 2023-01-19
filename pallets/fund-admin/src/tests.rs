@@ -2,7 +2,7 @@ use crate::{mock::*, types::*, Error, ProjectsInfo, GlobalScope, UsersInfo, User
 ProjectsByUser, ExpendituresInfo, ExpendituresByProject, DrawdownsInfo, DrawdownsByProject, TransactionsInfo, 
 TransactionsByDrawdown, JobEligiblesInfo, JobEligiblesByProject, RevenuesInfo,
 RevenuesByProject, RevenueTransactionsInfo, TransactionsByRevenue};
-use frame_support::{assert_noop, assert_ok, bounded_vec, error::BadOrigin, traits::ConstU32, BoundedVec};
+use frame_support::{assert_noop, assert_ok, bounded_vec, error::BadOrigin, traits::{ConstU32, Currency}, BoundedVec};
 use sp_runtime::DispatchResult;
 
 
@@ -3130,5 +3130,95 @@ fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail(
             ),
             Error::<Test>::TransactionIdRequired
         );
+    });
+}
+
+// B A L A N C E S
+// ============================================================================
+#[test]
+fn balances_main_account_has_an_initial_balance_works(){
+    new_test_ext().execute_with(|| {
+        // Get administrator free balance
+        let free_balance = Balances::free_balance(1);
+        assert_eq!(free_balance, InitialAdminBalance::get());
+    });
+}
+
+#[test]
+fn balances_any_other_account_should_have_a_zero_balance_works(){
+    new_test_ext().execute_with(|| {
+        // Get non-registered user free balance
+        let free_balance = Balances::free_balance(1);
+        let free_balance_2 = Balances::free_balance(2);
+        let free_balance_3 = Balances::free_balance(3);
+
+        assert_eq!(free_balance, InitialAdminBalance::get());
+        assert_eq!(free_balance_2, 0);
+        assert_eq!(free_balance_3, 0);
+    });
+}
+
+#[test]
+fn balances_a_new_registered_user_should_have_a_initial_balance_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        assert!(FundAdmin::users_info(2).is_some());
+
+        // Get non-registered user free balance
+        let admin_free_balance = Balances::free_balance(1);
+        let user_free_balance = Balances::free_balance(2);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+        assert_eq!(user_free_balance, TransferAmount::get());
+    });
+}
+
+#[test]
+fn balances_an_administrator_goes_out_of_balance_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        let admin_free_balance = Balances::free_balance(1);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+
+        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance - TransferAmount::get()/2).unwrap();
+
+        assert_noop!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
+        ), Error::<Test>::InsufficientFundsToTransfer);
+
+    });
+}
+
+#[test]
+fn balances_an_administrator_doesnot_have_anough_free_balance_to_perform_a_user_registration() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        let admin_free_balance = Balances::free_balance(1);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+
+        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance).unwrap();
+
+        assert_noop!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
+        ), Error::<Test>::AdminHasNoFreeBalance);
     });
 }
