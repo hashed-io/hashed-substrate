@@ -16,11 +16,12 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
-	use frame_support::traits::{Time};
+	use frame_support::traits::{Currency, Time};
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
+	pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -40,6 +41,8 @@ pub mod pallet {
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
+		type Currency: Currency<Self::AccountId>;
+			
 		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
 
@@ -93,6 +96,12 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxStatusChangesPerRevenue: Get<u32>;
+
+		#[pallet::constant]
+		type MinAdminBalance: Get<BalanceOf<Self>>;
+
+		#[pallet::constant]
+		type TransferAmount: Get<BalanceOf<Self>>;
 	}
 
 	#[pallet::pallet]
@@ -609,6 +618,10 @@ pub mod pallet {
 		PrivateGroupIdEmpty,
 		/// Maximun number of registrations at a time reached
 		MaxRegistrationsAtATimeReached,
+		/// Administrator account has insuficiente balance to register a new user
+		AdminHasNoFreeBalance,
+		/// Administrator account has insuficiente balance to register a new user
+		InsufficientFundsToTransfer
 	}
 
 	// E X T R I N S I C S
