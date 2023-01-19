@@ -1524,6 +1524,19 @@
 <span id="1524">1524</span>
 <span id="1525">1525</span>
 <span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1542,11 +1555,12 @@
 	<span class="kw">use </span>frame_support::{pallet_prelude::{<span class="kw-2">*</span>, ValueQuery}, BoundedVec};
 	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 	<span class="kw">use </span>sp_runtime::traits::Scale;
-	<span class="kw">use </span>frame_support::traits::{Time};
+	<span class="kw">use </span>frame_support::traits::{Currency, Time};
 
 	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
+	<span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>Config&gt;::Currency <span class="kw">as </span>Currency&lt;&lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId&gt;&gt;::Balance;
 
 	<span class="attribute">#[pallet::config]
 	</span><span class="kw">pub trait </span>Config: frame_system::Config {
@@ -1566,6 +1580,8 @@
 
 		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 
+		<span class="kw">type </span>Currency: Currency&lt;<span class="self">Self</span>::AccountId&gt;;
+			
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxDocuments: Get&lt;u32&gt;;
 
@@ -1619,6 +1635,12 @@
 
 		<span class="attribute">#[pallet::constant]
 		</span><span class="kw">type </span>MaxStatusChangesPerRevenue: Get&lt;u32&gt;;
+
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>MinAdminBalance: Get&lt;BalanceOf&lt;<span class="self">Self</span>&gt;&gt;;
+
+		<span class="attribute">#[pallet::constant]
+		</span><span class="kw">type </span>TransferAmount: Get&lt;BalanceOf&lt;<span class="self">Self</span>&gt;&gt;;
 	}
 
 	<span class="attribute">#[pallet::pallet]
@@ -2135,6 +2157,10 @@
 		</span>PrivateGroupIdEmpty,
 		<span class="doccomment">/// Maximun number of registrations at a time reached
 		</span>MaxRegistrationsAtATimeReached,
+		<span class="doccomment">/// Administrator account has insuficiente balance to register a new user
+		</span>AdminHasNoFreeBalance,
+		<span class="doccomment">/// Administrator account has insuficiente balance to register a new user
+		</span>InsufficientFundsToTransfer
 	}
 
 	<span class="comment">// E X T R I N S I C S
@@ -3051,4 +3077,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

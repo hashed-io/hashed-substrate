@@ -2778,6 +2778,35 @@
 <span id="2778">2778</span>
 <span id="2779">2779</span>
 <span id="2780">2780</span>
+<span id="2781">2781</span>
+<span id="2782">2782</span>
+<span id="2783">2783</span>
+<span id="2784">2784</span>
+<span id="2785">2785</span>
+<span id="2786">2786</span>
+<span id="2787">2787</span>
+<span id="2788">2788</span>
+<span id="2789">2789</span>
+<span id="2790">2790</span>
+<span id="2791">2791</span>
+<span id="2792">2792</span>
+<span id="2793">2793</span>
+<span id="2794">2794</span>
+<span id="2795">2795</span>
+<span id="2796">2796</span>
+<span id="2797">2797</span>
+<span id="2798">2798</span>
+<span id="2799">2799</span>
+<span id="2800">2800</span>
+<span id="2801">2801</span>
+<span id="2802">2802</span>
+<span id="2803">2803</span>
+<span id="2804">2804</span>
+<span id="2805">2805</span>
+<span id="2806">2806</span>
+<span id="2807">2807</span>
+<span id="2808">2808</span>
+<span id="2809">2809</span>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -2785,7 +2814,10 @@
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec; <span class="comment">// vec primitive
 </span><span class="kw">use </span>scale_info::prelude::vec; <span class="comment">// vec![] macro
 
-</span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+</span><span class="kw">use </span>frame_support::traits::Currency;
+<span class="kw">use </span>frame_support::traits::ExistenceRequirement::KeepAlive;
+
+<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
 
 <span class="kw">use </span>frame_support::traits::Time;
@@ -3233,6 +3265,9 @@
                         user.<span class="number">1</span>.clone().ok_or(Error::&lt;T&gt;::UserNameRequired)<span class="question-mark">?</span>,
                         user.<span class="number">2</span>.ok_or(Error::&lt;T&gt;::UserRoleRequired)<span class="question-mark">?</span>,
                     )<span class="question-mark">?</span>;
+
+                    <span class="comment">//Send funds to the user
+                    </span><span class="self">Self</span>::send_funds(admin.clone(), user.<span class="number">0</span>.clone())<span class="question-mark">?</span>;
                 },
                 CUDAction::Update =&gt; {
                     <span class="self">Self</span>::do_update_user(
@@ -3240,6 +3275,9 @@
                         user.<span class="number">1</span>.clone(),
                         user.<span class="number">2</span>,
                     )<span class="question-mark">?</span>;
+
+                    <span class="comment">//Send funds to the user
+                    </span><span class="self">Self</span>::send_funds(admin.clone(), user.<span class="number">0</span>.clone())<span class="question-mark">?</span>;
                 },
                 CUDAction::Delete =&gt; {
                     <span class="macro">ensure!</span>(user.<span class="number">0 </span>!= admin, Error::&lt;T&gt;::AdministratorsCannotDeleteThemselves,
@@ -5556,7 +5594,27 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>send_funds(
+        admin: T::AccountId,
+        user: T::AccountId,
+    ) -&gt; DispatchResult {        
+        <span class="comment">// Ensure admin has enough funds to perform transfer without reaping the account
+        </span><span class="macro">ensure!</span>(T::Currency::free_balance(<span class="kw-2">&amp;</span>admin) &gt; T::Currency::minimum_balance(), Error::&lt;T&gt;::AdminHasNoFreeBalance);
+       
+        <span class="comment">//Ensure admin has enough funds to transfer &amp; keep some balance to perform other operations
+        </span><span class="macro">ensure!</span>(T::Currency::free_balance(<span class="kw-2">&amp;</span>admin) &gt; T::MinAdminBalance::get(), Error::&lt;T&gt;::InsufficientFundsToTransfer);
+
+        <span class="comment">// If user has no funds, then transfer funds to user
+        </span><span class="kw">if </span>T::Currency::free_balance(<span class="kw-2">&amp;</span>user) &lt; T::Currency::minimum_balance() {
+            <span class="comment">// Transfer funds to user
+            </span>T::Currency::transfer(<span class="kw-2">&amp;</span>admin, <span class="kw-2">&amp;</span>user, T::TransferAmount::get(), KeepAlive)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(())
+        }
+    }
+
 <span class="comment">// Do not code beyond this line
 </span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="pallet_fund_admin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
