@@ -16,11 +16,12 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
-	use frame_support::traits::{Time};
+	use frame_support::traits::{Currency, Time};
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
+	pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -40,6 +41,8 @@ pub mod pallet {
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
+		type Currency: Currency<Self::AccountId>;
+			
 		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
 
@@ -93,6 +96,12 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxStatusChangesPerRevenue: Get<u32>;
+
+		#[pallet::constant]
+		type MinAdminBalance: Get<BalanceOf<Self>>;
+
+		#[pallet::constant]
+		type TransferAmount: Get<BalanceOf<Self>>;
 	}
 
 	#[pallet::pallet]
@@ -432,7 +441,7 @@ pub mod pallet {
 		/// Invalid amount
 		InvalidAmount,
 		/// Documents field is empty
-		DocumentsIsEmpty,
+		DocumentsEmpty,
 		/// Transaction id is not found
 		TransactionNotFound,
 		/// Transaction already exist
@@ -465,8 +474,10 @@ pub mod pallet {
 		UserDoesNotHaveRole,
 		/// Transactions vector is empty
 		EmptyTransactions,
+		/// Transactions are required for the current workflow
+		TransactionsRequired,
 		/// Transaction ID was not found in do_execute_transaction
-		TransactionIdNotFound,
+		TransactionIdRequired,
 		/// Drawdown can not be submitted if does not has any transactions
 		DrawdownHasNoTransactions,
 		/// Cannot submit transaction
@@ -528,9 +539,9 @@ pub mod pallet {
 		/// Max number of projects per investor has been reached
 		MaxProjectsPerInvestorReached,
 		/// Jobs eligibles array is empty
-		JobEligiblesIsEmpty,
-		/// JOb eligible name is required
-		JobEligiblesNameIsRequired,
+		JobEligiblesEmpty,
+		/// JOb eligible name is empty
+		JobEligiblesNameRequired,
 		/// Job eligible id already exists
 		JobEligibleIdAlreadyExists,
 		/// Max number of job eligibles per project reached
@@ -604,9 +615,13 @@ pub mod pallet {
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty
-		PrivateGroupIdIsEmpty,
+		PrivateGroupIdEmpty,
 		/// Maximun number of registrations at a time reached
 		MaxRegistrationsAtATimeReached,
+		/// Administrator account has insuficiente balance to register a new user
+		AdminHasNoFreeBalance,
+		/// Administrator account has insuficiente balance to register a new user
+		InsufficientFundsToTransfer
 	}
 
 	// E X T R I N S I C S
@@ -1044,21 +1059,23 @@ pub mod pallet {
 						who,
 						project_id,
 						drawdown_id,
-						transactions.ok_or(Error::<T>::EmptyTransactions)?,
+						transactions.ok_or(Error::<T>::TransactionsRequired)?,
 					)
 				},
 				// Submit transactions
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_transactions) = transactions {
+						// Ensure transactions are not empty
+						ensure!(!mod_transactions.is_empty(), Error::<T>::EmptyTransactions);
+
 						// Do execute transactions
-						if mod_transactions.len() > 0 {
-							Self::do_execute_transactions(
-								who.clone(),
-								project_id,
-								drawdown_id,
-								mod_transactions)?;
-						}
+						Self::do_execute_transactions(
+							who.clone(),
+							project_id,
+							drawdown_id,
+							mod_transactions
+						)?;
 					}
 
 					// Do submit drawdown
@@ -1130,7 +1147,7 @@ pub mod pallet {
 								who.clone(),
 								project_id,
 								drawdown_id,
-								transactions.ok_or(Error::<T>::EmptyTransactions)?,
+								transactions.ok_or(Error::<T>::TransactionsRequired)?,
 							)?;
 
 							// 2. Do submit drawdown
@@ -1140,14 +1157,15 @@ pub mod pallet {
 						true  => {
 							// 1.Execute transactions if provided
 							if let Some(mod_transactions) = transactions {
+								// Ensure transactions are not empty
+								ensure!(!mod_transactions.is_empty(), Error::<T>::EmptyTransactions);
+								
 								// Do execute transactions
-								if mod_transactions.len() > 0 {
-									Self::do_execute_transactions(
-										who.clone(),
-										project_id,
-										drawdown_id,
-										mod_transactions)?;
-								}
+								Self::do_execute_transactions(
+									who.clone(),
+									project_id,
+									drawdown_id,
+									mod_transactions)?;
 
 								// 2. Submit drawdown
 								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;

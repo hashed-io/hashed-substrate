@@ -5,6 +5,9 @@ use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec; // vec primitive
 use scale_info::prelude::vec; // vec![] macro
 
+use frame_support::traits::Currency;
+use frame_support::traits::ExistenceRequirement::KeepAlive;
+
 use crate::types::*;
 use pallet_rbac::types::*;
 
@@ -102,7 +105,7 @@ impl<T: Config> Pallet<T> {
         ensure!(completion_date > creation_date, Error::<T>::CompletionDateMustBeLater);
 
         // Ensuree private group id is not empty
-        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdIsEmpty);
+        ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdEmpty);
 
         // Create project data
         let project_data = ProjectData::<T> {
@@ -453,6 +456,9 @@ impl<T: Config> Pallet<T> {
                         user.1.clone().ok_or(Error::<T>::UserNameRequired)?,
                         user.2.ok_or(Error::<T>::UserRoleRequired)?,
                     )?;
+
+                    //Send funds to the user
+                    Self::send_funds(admin.clone(), user.0.clone())?;
                 },
                 CUDAction::Update => {
                     Self::do_update_user(
@@ -460,6 +466,9 @@ impl<T: Config> Pallet<T> {
                         user.1.clone(),
                         user.2,
                     )?;
+
+                    //Send funds to the user
+                    Self::send_funds(admin.clone(), user.0.clone())?;
                 },
                 CUDAction::Delete => {
                     ensure!(user.0 != admin, Error::<T>::AdministratorsCannotDeleteThemselves,
@@ -1159,12 +1168,12 @@ impl<T: Config> Pallet<T> {
                     Self::do_update_transaction(
                         transaction.1,
                         transaction.2,
-                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                        transaction.4.ok_or(Error::<T>::TransactionIdRequired)?,
                     )?;
                 },
                 CUDAction::Delete => {
                     Self::do_delete_transaction(
-                        transaction.4.ok_or(Error::<T>::TransactionIdNotFound)?,
+                        transaction.4.ok_or(Error::<T>::TransactionIdRequired)?,
                     )?;
                 },
             }
@@ -1427,7 +1436,7 @@ impl<T: Config> Pallet<T> {
         ensure!(ProjectsInfo::<T>::contains_key(project_id), Error::<T>::ProjectNotFound);
 
         // Ensure job eligibles is not empty
-        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesIsEmpty);
+        ensure!(!job_eligibles.is_empty(), Error::<T>::JobEligiblesEmpty);
 
         for job_eligible in job_eligibles.iter().cloned() {
             match job_eligible.4 {
@@ -1477,7 +1486,7 @@ impl<T: Config> Pallet<T> {
         let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
         // Ensure job eligible name is not empty
-        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameIsRequired);
+        ensure!(!name.is_empty(), Error::<T>::JobEligiblesNameRequired);
 
         // Create job eligible id
         let job_eligible_id: JobEligibleId = (project_id, name.clone(), timestamp).using_encoded(blake2_256);
@@ -2774,6 +2783,26 @@ impl<T: Config> Pallet<T> {
         })?;
 
         Ok(())
+    }
+
+    fn send_funds(
+        admin: T::AccountId,
+        user: T::AccountId,
+    ) -> DispatchResult {        
+        // Ensure admin has enough funds to perform transfer without reaping the account
+        ensure!(T::Currency::free_balance(&admin) > T::Currency::minimum_balance(), Error::<T>::AdminHasNoFreeBalance);
+       
+        //Ensure admin has enough funds to transfer & keep some balance to perform other operations
+        ensure!(T::Currency::free_balance(&admin) > T::MinAdminBalance::get(), Error::<T>::InsufficientFundsToTransfer);
+
+        // If user has no funds, then transfer funds to user
+        if T::Currency::free_balance(&user) < T::Currency::minimum_balance() {
+            // Transfer funds to user
+            T::Currency::transfer(&admin, &user, T::TransferAmount::get(), KeepAlive)?;
+            Ok(())
+        } else {
+            return Ok(())
+        }
     }
 
 // Do not code beyond this line
