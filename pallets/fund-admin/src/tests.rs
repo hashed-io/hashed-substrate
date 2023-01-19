@@ -3202,7 +3202,7 @@ fn balances_an_administrator_goes_out_of_balance_should_fail() {
 }
 
 #[test]
-fn balances_an_administrator_doesnot_have_anough_free_balance_to_perform_a_user_registration() {
+fn balances_an_administrator_does_not_have_anough_free_balance_to_perform_a_user_registration() {
     new_test_ext().execute_with(|| {
         assert_ok!(register_administrator());
 
