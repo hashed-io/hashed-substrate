@@ -238,6 +238,14 @@ fn make_default_allowed_banks() -> Banks<Test> {
     banks
 }
 
+fn make_transaction_feedback(transaction_id: TransactionId, feedback: FieldDescription) -> TransactionsFeedback<Test> {
+    let mut transaction_feedback: TransactionsFeedback<Test> = bounded_vec![];
+    transaction_feedback.try_push((
+        transaction_id, feedback
+    )).unwrap_or_default();
+    transaction_feedback
+}
+
 fn make_default_simple_project() -> DispatchResult {
 
     register_administrator()?;
@@ -666,8 +674,6 @@ fn users_update_a_non_registered_account_shouldnt_work() {
         );
     });
 }
-
-//TODO: cannot update a registered users if the user has assigned projects
 
 #[test]
 fn users_delete_a_registered_account_works() {
@@ -2835,7 +2841,7 @@ fn drawdowns_a_builder_saves_a_drawdown_as_a_draft_works() {
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(transaction_data),
@@ -2873,7 +2879,7 @@ fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(transaction_data),
@@ -2889,7 +2895,7 @@ fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(mod_transaction_data),
@@ -2917,7 +2923,7 @@ fn drawdowns_a_user_deletes_a_transaction_in_draft_status_works(){
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(transaction_data),
@@ -2933,7 +2939,7 @@ fn drawdowns_a_user_deletes_a_transaction_in_draft_status_works(){
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(del_transaction_data),
@@ -2954,7 +2960,7 @@ fn drawdowns_a_user_cannot_save_transactions_as_draft_if_transactions_are_not_pr
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 None,
@@ -2977,7 +2983,7 @@ fn drawdowns_a_user_cannot_send_an_empty_array_of_transactions_when_saving_as_a_
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 Some(empty_transaction_data),
@@ -3005,7 +3011,7 @@ fn drawdowns_a_user_cannot_send_a_transaction_without_the_expenditure_id_should_
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 Some(transaction_data),
@@ -3034,7 +3040,7 @@ fn drawdowns_a_user_cannot_send_a_transaction_without_an_amount_should_fail() {
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 Some(transaction_data),
@@ -3062,7 +3068,7 @@ fn drawdowns_transaction_id_is_required_when_editing_a_transaction_should_fail()
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(transaction_data),
@@ -3078,7 +3084,7 @@ fn drawdowns_transaction_id_is_required_when_editing_a_transaction_should_fail()
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 Some(mod_transaction_data),
@@ -3106,7 +3112,7 @@ fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail(
         );
 
         assert_ok!(FundAdmin::submit_drawdown(
-            RuntimeOrigin::signed(1),
+            RuntimeOrigin::signed(2),
             project_id,
             drawdown_id,
             Some(transaction_data),
@@ -3122,7 +3128,7 @@ fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail(
 
         assert_noop!(
             FundAdmin::submit_drawdown(
-                RuntimeOrigin::signed(1),
+                RuntimeOrigin::signed(2),
                 project_id,
                 drawdown_id,
                 Some(del_transaction_data),
@@ -3133,92 +3139,395 @@ fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail(
     });
 }
 
-// B A L A N C E S
-// ============================================================================
 #[test]
-fn balances_main_account_has_an_initial_balance_works(){
+fn drawdowns_a_user_submits_the_selected_drawdown_works(){
     new_test_ext().execute_with(|| {
-        // Get administrator free balance
-        let free_balance = Balances::free_balance(1);
-        assert_eq!(free_balance, InitialAdminBalance::get());
-    });
-}
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-#[test]
-fn balances_any_other_account_should_have_a_zero_balance_works(){
-    new_test_ext().execute_with(|| {
-        // Get non-registered user free balance
-        let free_balance = Balances::free_balance(1);
-        let free_balance_2 = Balances::free_balance(2);
-        let free_balance_3 = Balances::free_balance(3);
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
 
-        assert_eq!(free_balance, InitialAdminBalance::get());
-        assert_eq!(free_balance_2, 0);
-        assert_eq!(free_balance_3, 0);
-    });
-}
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
 
-#[test]
-fn balances_a_new_registered_user_should_have_a_initial_balance_works() {
-    new_test_ext().execute_with(|| {
-        assert_ok!(register_administrator());
-
-        assert_ok!(FundAdmin::users(
-            RuntimeOrigin::signed(1),
-            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
         ));
 
-        assert!(FundAdmin::users_info(2).is_some());
+        let drawdown_data = DrawdownsInfo::<Test>::get(drawdown_id).unwrap();
 
-        // Get non-registered user free balance
-        let admin_free_balance = Balances::free_balance(1);
-        let user_free_balance = Balances::free_balance(2);
-        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
-        assert_eq!(user_free_balance, TransferAmount::get());
+        assert_eq!(drawdown_data.status, DrawdownStatus::Submitted);
+        assert_eq!(drawdown_data.total_amount, 10000);
     });
 }
 
 #[test]
-fn balances_an_administrator_goes_out_of_balance_should_fail() {
+fn drawdowns_a_users_submits_a_previous_drawdown_which_was_saved_as_draft_works() {
     new_test_ext().execute_with(|| {
-        assert_ok!(register_administrator());
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-        assert_ok!(FundAdmin::users(
-            RuntimeOrigin::signed(1),
-            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
         ));
 
-        let admin_free_balance = Balances::free_balance(1);
-        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            None,
+            true,
+        ));
 
-        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance - TransferAmount::get()/2).unwrap();
-
-        assert_noop!(FundAdmin::users(
-            RuntimeOrigin::signed(1),
-            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
-        ), Error::<Test>::InsufficientFundsToTransfer);
-
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
     });
 }
 
 #[test]
-fn balances_an_administrator_does_not_have_anough_free_balance_to_perform_a_user_registration() {
+fn drawdowns_a_user_tries_to_add_transactions_using_an_empty_array_before_submitting_the_drawdown_should_fail() {
     new_test_ext().execute_with(|| {
-        assert_ok!(register_administrator());
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-        assert_ok!(FundAdmin::users(
-            RuntimeOrigin::signed(1),
-            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let transaction_data: Transactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                true,
+            ),
+            Error::<Test>::EmptyTransactions
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_drawdown_cannot_be_submmited_if_has_no_transactions_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
         ));
 
-        let admin_free_balance = Balances::free_balance(1);
-        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
 
-        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance).unwrap();
+        let del_transaction_data = make_transaction(
+            Some(expenditure_id),
+            None,
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
 
-        assert_noop!(FundAdmin::users(
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                Some(del_transaction_data),
+                true,
+            ),
+            Error::<Test>::DrawdownHasNoTransactions
+        );
+    });
+}
+
+#[test]
+fn drawdowns_after_a_drawdown_is_submitted_the_status_is_updated_in_the_project_data() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+    });
+}
+
+#[test]
+fn drawdowns_an_administrators_approves_a_submitted_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
             RuntimeOrigin::signed(1),
-            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
-        ), Error::<Test>::AdminHasNoFreeBalance);
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+    });
+}
+
+#[test]
+fn drawdowns_an_administrator_cannot_aproves_a_drawdown_that_is_not_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        assert_noop!(
+            FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ),
+            Error::<Test>::DrawdownNotSubmitted
+        );
+    });
+}
+
+#[test]
+fn drawdowns_after_a_drawdown_is_approved_the_next_one_is_generated_autoamtically_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let next_drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 2);
+
+        assert_eq!(DrawdownsInfo::<Test>::get(next_drawdown_id).unwrap().status, DrawdownStatus::Draft);
+    });
+}
+
+#[test]
+fn drawdowns_an_administrator_rejects_a_given_drawdown() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+
+        let feedback = make_field_description("Transaction was rejected bacause it was not valid");
+
+        let transaction_feedback = make_transaction_feedback(transaction_id, feedback.clone());
+
+        assert_ok!(FundAdmin::reject_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(transaction_feedback),
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Rejected);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Rejected);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().feedback, Some(feedback));
+    });
+}
+
+#[test]
+fn drawdowns_an_administrator_cannot_rejects_a_drawdown_that_is_not_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        assert_noop!(
+            FundAdmin::reject_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ),
+            Error::<Test>::DrawdownNotSubmitted
+        );
+    });
+}
+
+#[test]
+fn drawdowns_an_administrator_cannot_rejects_a_drawdown_without_a_feedback() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_noop!(
+            FundAdmin::reject_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ),
+            Error::<Test>::EB5MissingFeedback
+        );
     });
 }
