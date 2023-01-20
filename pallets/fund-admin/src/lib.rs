@@ -514,8 +514,12 @@ pub mod pallet {
 		AdministratorsCannotDeleteThemselves,
 		/// No feedback was provided for bulk upload
 		NoFeedbackProvidedForBulkUpload,
+		/// Bulkupload feedback is empty
+		EmptyBulkUploadFeedback,
 		/// NO feedback for EN5 drawdown was provided
 		EB5MissingFeedback,
+		/// EB5 feedback is empty
+		EmptyEb5Feedback,
 		/// Inflation rate extrinsic is missing an array of project ids
 		InflationRateMissingProjectIds,
 		/// Inflation rate was not provided
@@ -1139,6 +1143,9 @@ pub mod pallet {
 			// Match bulkupload parameter
 			match bulkupload {
 				Some(approval) => {
+					// Ensure admin permissions
+					Self::is_authorized(who.clone(), &project_id, ProxyPermission::ApproveDrawdown)?;
+					
 					// Execute bulkupload flow (construction loan & developer equity)
 					match approval {
 						false => {
@@ -1152,7 +1159,6 @@ pub mod pallet {
 
 							// 2. Do submit drawdown
 							Self::do_submit_drawdown(who, project_id, drawdown_id)
-
 						},
 						true  => {
 							// 1.Execute transactions if provided

@@ -30,17 +30,17 @@ fn make_field_description(description: &str) -> FieldDescription {
     description
 }
 
-fn make_files( n_files: u32) -> Documents<Test>{
-	let mut files: Documents<Test> = bounded_vec![];
+fn make_documents( n_files: u32) -> Documents<Test>{
+	let mut documents: Documents<Test> = bounded_vec![];
 	for i in 0..n_files{
 		let file_name: &str = &format!("file_{}", i);
         let file_description: &str = &format!("file_{}_description", i);
-        files.try_push((
+        documents.try_push((
             make_field_name(file_name),
             make_field_name(file_description),
         )).unwrap_or_default();
 	}
-	files
+	documents
 }
 
 fn field_name_to_string(boundedvec: &BoundedVec<u8, ConstU32<100>>) -> String {
@@ -300,7 +300,7 @@ fn make_transaction(
     transaction_id: Option<TransactionId>,
 ) -> Transactions<Test> {
     let mut transactions: Transactions<Test> = bounded_vec![];
-    let documents = Some(make_files(1));
+    let documents = Some(make_documents(1));
     transactions
         .try_push((
             expenditure_id,
@@ -750,17 +750,16 @@ fn users_only_investors_can_upload_documentation_to_their_account_works() {
                 None,
                 None,
                 None,
-                Some(make_files(1)),
+                Some(make_documents(1)),
             )
         );
         assert_eq!(FundAdmin::users_info(2).unwrap().name, make_field_name("Bob Investor"));
-        assert_eq!(FundAdmin::users_info(2).unwrap().documents, Some(make_files(1)));
+        assert_eq!(FundAdmin::users_info(2).unwrap().documents, Some(make_documents(1)));
     });
 }
 
 // P R O J E C T S
 // -----------------------------------------------------------------------------------------
-
 #[test]
 fn projects_register_a_project_works() {
     new_test_ext().execute_with(|| {
@@ -3276,7 +3275,7 @@ fn drawdowns_a_drawdown_cannot_be_submmited_if_has_no_transactions_should_fail()
 }
 
 #[test]
-fn drawdowns_after_a_drawdown_is_submitted_the_status_is_updated_in_the_project_data() {
+fn drawdowns_after_a_drawdown_is_submitted_the_status_is_updated_in_the_project_data_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3415,7 +3414,7 @@ fn drawdowns_after_a_drawdown_is_approved_the_next_one_is_generated_autoamticall
 }
 
 #[test]
-fn drawdowns_an_administrator_rejects_a_given_drawdown() {
+fn drawdowns_an_administrator_rejects_a_given_drawdown_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3496,7 +3495,7 @@ fn drawdowns_an_administrator_cannot_rejects_a_drawdown_that_is_not_submitted_sh
 }
 
 #[test]
-fn drawdowns_an_administrator_cannot_rejects_a_drawdown_without_a_feedback() {
+fn drawdowns_an_administrator_cannot_rejects_a_drawdown_without_a_feedback_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3531,3 +3530,529 @@ fn drawdowns_an_administrator_cannot_rejects_a_drawdown_without_a_feedback() {
         );
     });
 }
+
+#[test]
+fn bulkupload_an_administrator_rejects_a_eb5_drawdown_with_an_empty_feedback_should_fail(){
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_feedback: TransactionsFeedback<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::reject_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(transaction_feedback),
+                None,
+            ),
+            Error::<Test>::EmptyEb5Feedback
+        );
+    });
+}
+
+// B U L K   D R A W D O W N S
+// ============================================================================
+#[test]
+fn bulkupload_a_builder_submits_a_construction_loan_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        let drawdown_description = make_field_description("Construction Loan Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, Some(drawdown_description));
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, total_amount);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, Some(documents));
+    });
+}
+
+#[test]
+fn bulkupload_a_builder_submits_a_developer_equity_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::DeveloperEquity, 1);
+
+        let drawdown_description = make_field_description("Developer Equity Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, Some(drawdown_description));
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, total_amount);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, Some(documents));
+    });
+}
+
+#[test]
+fn bulkupload_a_builder_submits_a_eb5_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let drawdown_description = make_field_description("EB5 Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_noop!(
+            FundAdmin::up_bulkupload(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                drawdown_description.clone(),
+                total_amount,
+                documents.clone(),
+            ),
+            Error::<Test>::DrawdownTypeNotSupportedForBulkUpload
+        );
+    });
+}
+
+#[test]
+fn bulkupload_a_builder_submits_an_empty_array_of_documents_for_a_construction_loan_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        let drawdown_description = make_field_description("Construction Loan Drawdown 1");
+        let total_amount = 100000u64;
+        let documents: Documents<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::up_bulkupload(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                drawdown_description.clone(),
+                total_amount,
+                documents.clone(),
+            ),
+            Error::<Test>::BulkUploadDocumentsRequired
+        );
+    });
+}
+
+#[test]
+fn bulkupload_a_builder_submits_an_empty_adescription_for_a_construction_loan_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        let drawdown_description: FieldDescription = bounded_vec![];
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_noop!(
+            FundAdmin::up_bulkupload(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                drawdown_description.clone(),
+                total_amount,
+                documents.clone(),
+            ),
+            Error::<Test>::BulkUploadDescriptionRequired
+        );
+    });
+}
+
+#[test]
+fn bulkupload_after_a_contruction_loan_is_submitted_their_status_is_updated_in_project_data_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        let drawdown_description = make_field_description("Construction Loan Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().construction_loan_drawdown_status, Some(DrawdownStatus::Submitted));
+    });
+}
+
+#[test]
+fn bulkupload_after_a_developer_equity_is_submitted_their_status_is_updated_in_project_data_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::DeveloperEquity, 1);
+
+        let drawdown_description = make_field_description("Developer Equity Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().developer_equity_drawdown_status, Some(DrawdownStatus::Submitted));
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_saves_transactions_without_approving_the_drawdown_pseudo_draft_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(false),
+            Some(transaction_data),
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_saves_transactions_and_approves_the_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(true),
+            Some(transaction_data),
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+    });
+}
+
+#[test]
+fn bulkupload_an_array_of_transactions_is_required_to_save_transactions_as_a_pseudo_draft_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        assert_noop!(
+            FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(false),
+                None,
+            ),
+            Error::<Test>::TransactionsRequired
+        );
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_sends_an_empty_array_of_transactions_as_a_pseudo_draft_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let transaction_data: Transactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(false),
+                Some(transaction_data),
+            ),
+            Error::<Test>::EmptyTransactions
+        );
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_sends_an_empty_array_while_approving_a_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let transaction_data: Transactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(true),
+                Some(transaction_data),
+            ),
+            Error::<Test>::EmptyTransactions
+        );
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_rejects_a_contruction_loan_drawdown_with_a_feedback_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let bulkupload_feedback = make_field_description("Bulkupload Feedback");
+
+        assert_ok!(FundAdmin::reject_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            Some(bulkupload_feedback.clone()),
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Rejected);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, Some(bulkupload_feedback));
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_rejects_a_developer_equity_drawdown_with_a_feedback_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::DeveloperEquity, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Developer Equity Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        let bulkupload_feedback = make_field_description("Bulkupload Feedback");
+
+        assert_ok!(FundAdmin::reject_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            Some(bulkupload_feedback.clone()),
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Rejected);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, Some(bulkupload_feedback));
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_rejects_a_bulkupload_drawdown_without_a_feedback_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        assert_noop!(
+            FundAdmin::reject_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ),
+            Error::<Test>::NoFeedbackProvidedForBulkUpload
+        );
+    });
+}
+
+#[test]
+fn bulkupload_an_administrator_rejects_a_bulkupload_drawdown_with_an_empty_feedback_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            make_field_description("Construction Loan Drawdown 1"),
+            100000u64,
+            make_documents(1),
+        ));
+
+        assert_noop!(
+            FundAdmin::reject_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                Some(make_field_description("")),
+            ),
+            Error::<Test>::EmptyBulkUploadFeedback
+        );
+    });
+}
+
+
+//TODO: A rejected drawdown changes its status from rejected to submitted after a builder submits again the drawdopwn

@@ -1036,6 +1036,9 @@ impl<T: Config> Pallet<T> {
                 // Ensure transactions feedback is provided
                 let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
+                // Ensure feedback is not empty
+                ensure!(!mod_transactions_feedback.is_empty(), Error::<T>::EmptyEb5Feedback);
+
                 for (transaction_id, feedback) in mod_transactions_feedback.iter().cloned() {
                     // Update transaction feedback
                     <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -1049,6 +1052,9 @@ impl<T: Config> Pallet<T> {
             _ => {
                 // Ensure drawdown feedback is provided
                 let mod_drawdown_feedback = drawdown_feedback.ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
+
+                // Esnure feedback is not empty
+                ensure!(!mod_drawdown_feedback.is_empty(), Error::<T>::EmptyBulkUploadFeedback);
 
                 // Update drawdown feedback
                 <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
