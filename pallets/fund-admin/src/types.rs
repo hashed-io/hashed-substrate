@@ -47,6 +47,10 @@ pub type Transactions<T> = BoundedVec<(
     CUDAction,
     Option<TransactionId>,
 ), <T as Config>::MaxRegistrationsAtTime>;
+pub type TransactionsFeedback<T> = BoundedVec<(
+    TransactionId,
+    FieldDescription
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Drawdowns
 pub type DrawdownId = [u8; 32];

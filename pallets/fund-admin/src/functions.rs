@@ -895,7 +895,7 @@ impl<T: Config> Pallet<T> {
         Self::is_drawdown_editable(drawdown_id)?;
 
         // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        ensure!(!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(), Error::<T>::DrawdownHasNoTransactions);
 
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
@@ -945,7 +945,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        ensure!(!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(), Error::<T>::DrawdownHasNoTransactions);
 
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
@@ -996,10 +996,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions_feedback: Option<BoundedVec<(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime>>,
+        transactions_feedback: Option<TransactionsFeedback<T>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
         // Ensure admin permissions
@@ -1861,10 +1858,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
-        revenue_transactions_feedback: BoundedVec<(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime>,
+        revenue_transactions_feedback: TransactionsFeedback<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin, &project_id, ProxyPermission::RejectRevenue)?;

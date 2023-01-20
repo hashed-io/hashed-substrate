@@ -1221,10 +1221,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions_feedback: Option<BoundedVec<(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<TransactionsFeedback<T>>,
 			drawdown_feedback: Option<FieldDescription>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1427,10 +1424,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			revenue_id: RevenueId,
-			revenue_transactions_feedback: BoundedVec<(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime>,
+			revenue_transactions_feedback: TransactionsFeedback<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
