@@ -1023,6 +1023,7 @@ parameter_types! {
 }
 
 impl pallet_rbac::Config for Runtime {
+	type SudoOrigin = EnsureRoot<AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;

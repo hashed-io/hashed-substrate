@@ -729,6 +729,10 @@ parameter_types! {
 }
 impl pallet_rbac::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	type SudoOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type RoleMaxLen = RoleMaxLen;

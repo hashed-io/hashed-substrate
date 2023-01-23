@@ -9,7 +9,7 @@ pub type RoleId = [u8;32];
 pub type ScopeId = [u8;32];
 pub type PermissionId = [u8;32];
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq,)]
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq,TypeInfo,)]
 pub enum IdOrVec{
     Id([u8;32]),
     Vec(Vec<u8>)
