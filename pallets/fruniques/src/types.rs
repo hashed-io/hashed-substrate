@@ -11,20 +11,16 @@ pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::Value
 pub type Attributes<T> = Vec<(AttributeKey<T>, AttributeValue<T>)>;
 pub type Children<T> = BoundedVec<ChildInfo<T>, <T as Config>::ChildMaxLen>;
 
-// pub type CollectionDescription = [u8; 32];
 pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
 
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
 pub type CollectionDescription<T> = StringLimit<T>;
-// (ParentId, Hierarchical, Percentage)
+
 pub type ParentId = ItemId;
 pub type Hierarchical = bool;
 pub type Percentage = u16;
-
-pub type UniqueTuple = (CollectionId, ItemId);
-pub type Roots<T> = BoundedVec<<T as pallet_uniques::Config>::ItemId, <T as Config>::MaxParentsInCollection>;
 
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
@@ -115,11 +111,14 @@ pub struct FruniqueData<T: Config> {
 	pub weight: Permill,
 	pub parent: Option<ParentInfo<T>>,
 	pub children: Option<Children<T>>,
+	pub frozen: bool,
+	pub verified: bool,
+	pub redeemed: bool,
 }
 
 impl<T: Config> FruniqueData<T> {
 	pub fn new(metadata: CollectionDescription<T>) -> Self {
-		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None }
+		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None, frozen: false, verified: false, redeemed: false }
 	}
 }
 

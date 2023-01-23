@@ -105,7 +105,16 @@ pub mod pallet {
 		FruniqueAlreadyExists,
 		// Frunique already verified
 		FruniqueAlreadyVerified,
+		// Too many fruniques roots
 		FruniqueRootsOverflow,
+		// The frunique parent is frozen
+		ParentFrozen,
+		// Frunique parent already redeemed
+		ParentAlreadyRedeemed,
+		// Frunique if frozen
+		FruniqueFrozen,
+		// Frunique already redeemed
+		FruniqueAlreadyRedeemed,
 	}
 
 	#[pallet::storage]
@@ -129,16 +138,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn frunique_roots)]
-	pub(super) type FruniqueRoots<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::CollectionId,
-		Roots<T>,
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn frunique_info)]
 	pub(super) type FruniqueInfo<T: Config> = StorageDoubleMap<
 		_,
@@ -151,8 +150,19 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn frunique_roots)]
+	pub(super) type FruniqueRoots<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::CollectionId,
+		Blake2_128Concat,
+		T::ItemId,
+		bool,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn frunique_verified)]
-	/// Keeps track of verified fruniques.
 	pub(super) type FruniqueVerified<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -160,8 +170,21 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::ItemId,
 		bool,
-		ValueQuery,
+		OptionQuery,
 	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_redeemed)]
+	pub(super) type FruniqueRedeemed<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::CollectionId,
+		Blake2_128Concat,
+		T::ItemId,
+		bool,
+		OptionQuery,
+	>;
+
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
@@ -259,7 +282,10 @@ pub mod pallet {
 					Error::<T>::CollectionNotFound
 				);
 				ensure!(
-					Self::instance_exists(&parent_info_call.collection_id, &parent_info_call.parent_id),
+					Self::instance_exists(
+						&parent_info_call.collection_id,
+						&parent_info_call.parent_id
+					),
 					Error::<T>::FruniqueNotFound
 				);
 				Self::is_authorized(user, parent_info_call.collection_id, Permission::Mint)?;
@@ -296,6 +322,16 @@ pub mod pallet {
 			ensure!(Self::instance_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
+				class_id,
+				instance_id,
+				|frunique_data| -> DispatchResult {
+					let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+					frunique.verified = true;
+					Ok(())
+				},
+			)?;
 
 			<FruniqueVerified<T>>::insert(class_id, instance_id, true);
 
