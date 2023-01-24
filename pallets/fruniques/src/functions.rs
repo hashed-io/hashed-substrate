@@ -478,5 +478,4 @@ impl<T: Config> Pallet<T> {
 			&permission.id(),
 		)
 	}
-
 }

@@ -52,6 +52,7 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -116,6 +117,14 @@ pub mod pallet {
 		// Frunique already redeemed
 		FruniqueAlreadyRedeemed,
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn freezer)]
+	/// Keeps track of the number of collections in existence.
+	pub(super) type Freezer<T: Config> = StorageValue<
+		_,
+		T::AccountId, // Sudo account
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection)]
@@ -192,10 +201,12 @@ pub mod pallet {
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+		pub fn initial_setup(origin: OriginFor<T>, freezer: T::AccountId) -> DispatchResult {
 			//Transfer the balance
-			// T::Currency::transfer(&buyer, &Self::pallet_account(), , KeepAlive)?;
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
+
+			<Freezer<T>>::put(freezer);
+
 			Self::do_initial_setup()?;
 			Ok(())
 		}
@@ -213,6 +224,7 @@ pub mod pallet {
 			metadata: CollectionDescription<T>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
+			// let admin: T::AccountId = frame_system::RawOrigin::Root.into();
 
 			Self::do_create_collection(origin, metadata, admin.clone())?;
 
@@ -437,6 +449,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			<Freezer<T>>::kill();
 			<NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueVerified<T>>::clear(1000, None);

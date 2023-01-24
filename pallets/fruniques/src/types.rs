@@ -22,6 +22,7 @@ pub type ParentId = ItemId;
 pub type Hierarchical = bool;
 pub type Percentage = u16;
 
+
 #[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
