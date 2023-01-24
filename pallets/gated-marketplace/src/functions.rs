@@ -1101,6 +1101,81 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn do_ask_for_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+	) -> DispatchResult {
+		ensure!(<Marketplaces<T>>::contains_key(marketplace), Error::<T>::MarketplaceNotFound);
+		Self::is_authorized(who.clone(), &marketplace, Permission::AskForRedemption)?;
+		//ensure the collection exists
+		if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
+			ensure!(a == who, Error::<T>::NotOwner);
+		} else {
+			return Err(Error::<T>::CollectionNotFound.into());
+		}
+
+		let redemption_data: RedemptionData<T> = RedemptionData {
+			creator: who.clone(),
+			redeemed_by: None,
+			collection_id,
+			item_id,
+			is_redeemed: false,
+		};
+
+		// Gen market id
+		let redemption_id = redemption_data.using_encoded(blake2_256);
+		// ensure the generated id is unique
+		ensure!(
+			!<AskingForRedemption<T>>::contains_key(marketplace, redemption_id),
+			Error::<T>::RedemptionRequestAlreadyExists
+		);
+
+		<AskingForRedemption<T>>::insert(marketplace, redemption_id, redemption_data);
+		Self::deposit_event(Event::RedemptionRequested(marketplace, redemption_id, who));
+
+		Ok(())
+	}
+
+	pub fn do_accept_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		redemption_id: RedemptionId,
+	) -> DispatchResult where <T as pallet_uniques::Config>::ItemId: From<u32>
+	{
+		ensure!(<Marketplaces<T>>::contains_key(marketplace), Error::<T>::MarketplaceNotFound);
+		Self::is_authorized(who.clone(), &marketplace, Permission::AcceptRedemption)?;
+
+		ensure!(
+			<AskingForRedemption<T>>::contains_key(marketplace, redemption_id),
+			Error::<T>::RedemptionRequestNotFound
+		);
+
+		<AskingForRedemption<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			marketplace,
+			redemption_id,
+			|redemption_data| -> DispatchResult {
+				let mut redemption_data =
+					redemption_data.take().ok_or(Error::<T>::RedemptionRequestNotFound)?;
+				ensure!(
+					redemption_data.is_redeemed == false,
+					Error::<T>::RedemptionRequestAlreadyRedeemed
+				);
+				redemption_data.is_redeemed = true;
+				redemption_data.redeemed_by = Some(who.clone());
+				Self::deposit_event(Event::RedemptionAccepted(marketplace, redemption_id, who));
+
+				pallet_fruniques::Pallet::<T>::do_redeem(
+					redemption_data.collection_id,
+					redemption_data.item_id,
+				)?;
+				Ok(())
+			},
+		)?;
+
+		Ok(())
+	}
 	pub fn pallet_id() -> IdOrVec {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
