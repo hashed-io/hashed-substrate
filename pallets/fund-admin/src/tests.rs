@@ -2,7 +2,7 @@ use crate::{mock::*, types::*, Error, ProjectsInfo, GlobalScope, UsersInfo, User
 ProjectsByUser, ExpendituresInfo, ExpendituresByProject, DrawdownsInfo, DrawdownsByProject, TransactionsInfo, 
 TransactionsByDrawdown, JobEligiblesInfo, JobEligiblesByProject, RevenuesInfo,
 RevenuesByProject, RevenueTransactionsInfo, TransactionsByRevenue};
-use frame_support::{assert_noop, assert_ok, bounded_vec, error::BadOrigin, traits::{ConstU32, Currency}, BoundedVec};
+use frame_support::{assert_noop, assert_ok, bounded_vec, error::BadOrigin, traits::{ConstU32}, BoundedVec};
 use sp_runtime::DispatchResult;
 
 
@@ -164,7 +164,7 @@ fn make_job_eligible(
 
 fn make_default_job_eligibles() -> JobEligibles<Test> {
     let mut job_eligibles: JobEligibles<Test> = bounded_vec![];
-    let field_name = make_field_name("Job Eligible");
+    let field_name = make_field_name("Job Eligible Test");
     let job_eligible_amount = 100;
     let naics_code = make_field_description("1293, 1231");
     let jobs_multiplier = 100;
@@ -246,6 +246,47 @@ fn make_transaction_feedback(transaction_id: TransactionId, feedback: FieldDescr
     transaction_feedback
 }
 
+fn make_transaction(
+    expenditure_id: Option<ExpenditureId>,
+    expenditure_amount: Option<ExpenditureAmount>,
+    action: CUDAction,
+    transaction_id: Option<TransactionId>,
+) -> Transactions<Test> {
+    let mut transactions: Transactions<Test> = bounded_vec![];
+    let documents = Some(make_documents(1));
+    transactions
+        .try_push((
+            expenditure_id,
+            expenditure_amount,
+            documents,
+            action,
+            transaction_id,
+        ))
+        .unwrap_or_default();
+    transactions
+}
+
+fn make_revenue_transaction(
+    job_eligible_id: Option<JobEligibleId>,
+    job_eligible_amount: Option<JobEligibleAmount>,
+    action: CUDAction,
+    revenue_transaction_id: Option<RevenueTransactionId>,
+) -> RevenueTransactions<Test> {
+    let mut revenue_transactions: RevenueTransactions<Test> = bounded_vec![];
+    let documents = Some(make_documents(1));
+    revenue_transactions
+        .try_push((
+            job_eligible_id,
+            job_eligible_amount,
+            documents,
+            action,
+            revenue_transaction_id,
+        ))
+        .unwrap_or_default();
+    revenue_transactions
+}
+
+
 fn make_default_simple_project() -> DispatchResult {
 
     register_administrator()?;
@@ -293,37 +334,17 @@ fn make_default_full_project() -> DispatchResult {
     Ok(())
 }
 
-fn make_transaction(
-    expenditure_id: Option<ExpenditureId>,
-    expenditure_amount: Option<ExpenditureAmount>,
-    action: CUDAction,
-    transaction_id: Option<TransactionId>,
-) -> Transactions<Test> {
-    let mut transactions: Transactions<Test> = bounded_vec![];
-    let documents = Some(make_documents(1));
-    transactions
-        .try_push((
-            expenditure_id,
-            expenditure_amount,
-            documents,
-            action,
-            transaction_id,
-        ))
-        .unwrap_or_default();
-    transactions
-}
-
 fn get_drawdown_id(
     project_id: ProjectId,
     drawdown_type: DrawdownType,
     drawdown_number: DrawdownNumber,
 ) -> DrawdownId {
-    let mut drawdown_id: [u8;32] = [0;32];
+    let mut drawdown_id: DrawdownId = [0;32];
     let drawdonws_by_project = DrawdownsByProject::<Test>::get(project_id);
 
     for i in 0..drawdonws_by_project.len() {
         let drawdown_data = DrawdownsInfo::<Test>::get(drawdonws_by_project[i]).unwrap();
-        if drawdown_data.drawdown_type == drawdown_type {
+        if drawdown_data.drawdown_type == drawdown_type && drawdown_data.drawdown_number == drawdown_number {
             drawdown_id = drawdonws_by_project[i];
         }
     }
@@ -363,7 +384,55 @@ fn get_transaction_id(
     }
     transaction_id
 }
- 
+
+fn get_revenue_id(
+    project_id: ProjectId,
+    revenue_number: RevenueNumber,
+) -> RevenueId {
+    let mut revenue_id: RevenueId = [0;32];
+    let revenues_by_project = RevenuesByProject::<Test>::get(project_id);
+
+    for i in 0..revenues_by_project.len() {
+        let revenue_data = RevenuesInfo::<Test>::get(revenues_by_project[i]).unwrap();
+        if revenue_data.revenue_number == revenue_number {
+            revenue_id = revenues_by_project[i];
+        }
+    }
+    revenue_id
+}
+
+fn get_job_eligible_id(
+    project_id: ProjectId,
+    name: FieldName,
+) -> JobEligibleId {
+    let mut job_eligible_id: [u8;32] = [0;32];
+    let job_eligibles_by_project = JobEligiblesByProject::<Test>::get(project_id);
+
+    for i in 0..job_eligibles_by_project.len() {
+        let job_eligible_data = JobEligiblesInfo::<Test>::get(job_eligibles_by_project[i]).unwrap();
+        if job_eligible_data.name == name {
+            job_eligible_id = job_eligibles_by_project[i];
+        }
+    }
+    job_eligible_id
+}
+
+fn get_revenue_transaction_id(
+    project_id: ProjectId,
+    revenue_id: RevenueId,
+    job_eligible_id: JobEligibleId,
+) -> RevenueTransactionId {
+    let mut revenue_transaction_id: RevenueTransactionId = [0;32];
+    let transactions_by_revenue = TransactionsByRevenue::<Test>::get(project_id, revenue_id);
+
+    for i in 0..transactions_by_revenue.len() {
+        let revenue_transaction_data = RevenueTransactionsInfo::<Test>::get(transactions_by_revenue[i]).unwrap();
+        if revenue_transaction_data.project_id == project_id && revenue_transaction_data.revenue_id == revenue_id && revenue_transaction_data.job_eligible_id == job_eligible_id {
+            revenue_transaction_id = transactions_by_revenue[i];
+        }
+    }
+    revenue_transaction_id
+}
 
 // I N I T I A L
 // -----------------------------------------------------------------------------------------
@@ -494,6 +563,96 @@ fn sudo_administrator_can_remove_themselves_works() {
             2,
         ));
         assert!(FundAdmin::users_info(2).is_none());
+    });
+}
+
+// B A L A N C E S
+// ============================================================================
+#[test]
+fn balances_main_account_has_an_initial_balance_works(){
+    new_test_ext().execute_with(|| {
+        // Get administrator free balance
+        let free_balance = Balances::free_balance(1);
+        assert_eq!(free_balance, InitialAdminBalance::get());
+    });
+}
+
+#[test]
+fn balances_any_other_account_should_have_a_zero_balance_works(){
+    new_test_ext().execute_with(|| {
+        // Get non-registered user free balance
+        let free_balance = Balances::free_balance(1);
+        let free_balance_2 = Balances::free_balance(2);
+        let free_balance_3 = Balances::free_balance(3);
+
+        assert_eq!(free_balance, InitialAdminBalance::get());
+        assert_eq!(free_balance_2, 0);
+        assert_eq!(free_balance_3, 0);
+    });
+}
+
+#[test]
+fn balances_a_new_registered_user_should_have_a_initial_balance_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        assert!(FundAdmin::users_info(2).is_some());
+
+        // Get non-registered user free balance
+        let admin_free_balance = Balances::free_balance(1);
+        let user_free_balance = Balances::free_balance(2);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+        assert_eq!(user_free_balance, TransferAmount::get());
+    });
+}
+
+#[test]
+fn balances_an_administrator_goes_out_of_balance_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        let admin_free_balance = Balances::free_balance(1);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+
+        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance - TransferAmount::get()/2).unwrap();
+
+        assert_noop!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
+        ), Error::<Test>::InsufficientFundsToTransfer);
+
+    });
+}
+
+#[test]
+fn balances_an_administrator_does_not_have_anough_free_balance_to_perform_a_user_registration() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(register_administrator());
+
+        assert_ok!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(2, Some(make_field_name("Alice Builder")), Some(ProxyRole::Builder), CUDAction::Create)
+        ));
+
+        let admin_free_balance = Balances::free_balance(1);
+        assert_eq!(admin_free_balance, InitialAdminBalance::get() - TransferAmount::get());
+
+        Balances::transfer(RuntimeOrigin::signed(1), 2, admin_free_balance).unwrap();
+
+        assert_noop!(FundAdmin::users(
+            RuntimeOrigin::signed(1),
+            make_user(3, Some(make_field_name("Bob Investor")), Some(ProxyRole::Investor), CUDAction::Create),
+        ), Error::<Test>::AdminHasNoFreeBalance);
     });
 }
 
@@ -781,25 +940,25 @@ fn projects_register_a_project_works() {
         ));
 
         assert_eq!(ProjectsInfo::<Test>::iter().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(ProjectsInfo::<Test>::get(get_project_id).unwrap().title, make_field_name("Project 1"));
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().title, make_field_name("Project 1"));
 
-        assert_eq!(ExpendituresInfo::<Test>::iter().count(), ExpendituresByProject::<Test>::get(get_project_id).len());
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        assert_eq!(ExpendituresInfo::<Test>::iter().count(), ExpendituresByProject::<Test>::get(project_id).len());
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_expenditure_ids {
-            assert_eq!(ExpendituresInfo::<Test>::get(i).unwrap().project_id, get_project_id);
+            assert_eq!(ExpendituresInfo::<Test>::get(i).unwrap().project_id, project_id);
         }
 
-        assert_eq!(DrawdownsInfo::<Test>::iter().count(), DrawdownsByProject::<Test>::get(get_project_id).len());
-        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        assert_eq!(DrawdownsInfo::<Test>::iter().count(), DrawdownsByProject::<Test>::get(project_id).len());
+        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_drawdown_ids {
-            assert_eq!(DrawdownsInfo::<Test>::get(i).unwrap().project_id, get_project_id);
+            assert_eq!(DrawdownsInfo::<Test>::get(i).unwrap().project_id, project_id);
         }
 
-        assert_eq!(RevenuesInfo::<Test>::iter().count(), RevenuesByProject::<Test>::get(get_project_id).len());
-        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        assert_eq!(RevenuesInfo::<Test>::iter().count(), RevenuesByProject::<Test>::get(project_id).len());
+        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_revenue_ids {
-            assert_eq!(RevenuesInfo::<Test>::get(i).unwrap().project_id, get_project_id);
+            assert_eq!(RevenuesInfo::<Test>::get(i).unwrap().project_id, project_id);
         }
     });
 }
@@ -825,12 +984,12 @@ fn projects_register_a_project_with_job_eligibles_works() {
         ));
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(JobEligiblesInfo::<Test>::iter().count(), JobEligiblesByProject::<Test>::get(get_project_id).len());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(JobEligiblesInfo::<Test>::iter().count(), JobEligiblesByProject::<Test>::get(project_id).len());
 
-        let get_job_eligible_ids: Vec<[u8; 32]> = JobEligiblesByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_job_eligible_ids: Vec<[u8; 32]> = JobEligiblesByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_job_eligible_ids {
-            assert_eq!(JobEligiblesInfo::<Test>::get(i).unwrap().project_id, get_project_id);
+            assert_eq!(JobEligiblesInfo::<Test>::get(i).unwrap().project_id, project_id);
         }
 
     });
@@ -862,13 +1021,13 @@ fn projects_register_a_project_with_assigned_users_works() {
         ));
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).len(), 4);
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(UsersByProject::<Test>::get(project_id).len(), 4);
 
-        let get_assigned_user_ids: Vec<u64> = UsersByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_assigned_user_ids: Vec<u64> = UsersByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_assigned_user_ids {
             assert_eq!(ProjectsByUser::<Test>::get(i).len(), 1);
-            assert_eq!(ProjectsByUser::<Test>::get(i).iter().next().unwrap(), &get_project_id);
+            assert_eq!(ProjectsByUser::<Test>::get(i).iter().next().unwrap(), &project_id);
         }
 
     });
@@ -895,9 +1054,9 @@ fn projects_register_a_project_with_allowed_banks_works() {
         ));
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
-        assert_eq!(ProjectsInfo::<Test>::get(get_project_id).unwrap().banks, Some(make_default_allowed_banks()));
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().banks, Some(make_default_allowed_banks()));
 
     });
 }
@@ -1035,11 +1194,11 @@ fn projects_edit_a_project_works() {
         ));
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_edit_project(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(make_field_name("Project 1 edited")),
             Some(make_field_description("Project 1 description edited")),
             Some(make_field_name("project_image.jpeg")),
@@ -1049,7 +1208,7 @@ fn projects_edit_a_project_works() {
             Some(10000u64),
         ));
 
-        assert_eq!(ProjectsInfo::<Test>::get(get_project_id).unwrap().title, make_field_name("Project 1 edited"));
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().title, make_field_name("Project 1 edited"));
     });
 }
 
@@ -1059,21 +1218,21 @@ fn projects_delete_project_works() {
         assert_ok!(make_default_full_project());
 
         assert_eq!(ProjectsInfo::<Test>::iter_values().count(), 1);
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
-        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(get_project_id).iter().cloned().collect();
-        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(get_project_id).iter().cloned().collect();
-        let get_job_eligible_ids: Vec<[u8; 32]> = JobEligiblesByProject::<Test>::get(get_project_id).iter().cloned().collect();
-        let get_assigned_user_ids: Vec<u64> = UsersByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
+        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(project_id).iter().cloned().collect();
+        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(project_id).iter().cloned().collect();
+        let get_job_eligible_ids: Vec<[u8; 32]> = JobEligiblesByProject::<Test>::get(project_id).iter().cloned().collect();
+        let get_assigned_user_ids: Vec<u64> = UsersByProject::<Test>::get(project_id).iter().cloned().collect();
 
         assert_ok!(FundAdmin::projects_delete_project(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
         ));
 
         // Ensure project data was deleted
-        assert_eq!(ProjectsInfo::<Test>::contains_key(get_project_id), false);
-        assert_eq!(ExpendituresInfo::<Test>::contains_key(get_project_id), false);
+        assert_eq!(ProjectsInfo::<Test>::contains_key(project_id), false);
+        assert_eq!(ExpendituresInfo::<Test>::contains_key(project_id), false);
         for expenditure_id in get_expenditure_ids {
             assert_eq!(ExpendituresInfo::<Test>::contains_key(expenditure_id), false);
         }
@@ -1087,8 +1246,8 @@ fn projects_delete_project_works() {
             assert_eq!(JobEligiblesInfo::<Test>::contains_key(job_eligible_id), false);
         }
         for assigned_user_id in get_assigned_user_ids {
-            assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&assigned_user_id), false);
-            assert_eq!(ProjectsByUser::<Test>::get(assigned_user_id).contains(&get_project_id), false);
+            assert_eq!(UsersByProject::<Test>::get(project_id).contains(&assigned_user_id), false);
+            assert_eq!(ProjectsByUser::<Test>::get(assigned_user_id).contains(&project_id), false);
         }
     });
 }
@@ -1116,16 +1275,16 @@ fn projects_assign_a_builder_to_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
-        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&project_id), true);
     });
 }
 
@@ -1152,16 +1311,16 @@ fn projects_assign_an_investor_to_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             investor_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), true);
-        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&3), true);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&project_id), true);
     });
 }
 
@@ -1188,16 +1347,16 @@ fn projects_assign_an_issuer_to_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             issuer_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), true);
-        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&4), true);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&project_id), true);
     });
 }
 
@@ -1224,16 +1383,16 @@ fn projects_assign_a_regional_center_to_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             regional_center_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), true);
-        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&5), true);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&project_id), true);
     });
 }
 
@@ -1260,16 +1419,16 @@ fn projects_unassign_a_builder_from_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
-        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&project_id), true);
 
         let builder_unassignment = make_user_assignation(
             2,
@@ -1279,12 +1438,12 @@ fn projects_unassign_a_builder_from_a_project_works() {
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_unassignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), false);
-        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), false);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&2), false);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&project_id), false);
     });
 }
 
@@ -1311,16 +1470,16 @@ fn projects_unassign_an_investor_from_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             investor_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), true);
-        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&3), true);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&project_id), true);
 
         let investor_unassignment = make_user_assignation(
             3,
@@ -1330,12 +1489,12 @@ fn projects_unassign_an_investor_from_a_project_works() {
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             investor_unassignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&3), false);
-        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&get_project_id), false);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&3), false);
+        assert_eq!(ProjectsByUser::<Test>::get(3).contains(&project_id), false);
     });
 }
 
@@ -1362,16 +1521,16 @@ fn projects_unassign_an_issuer_from_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             issuer_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), true);
-        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&4), true);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&project_id), true);
 
         let issuer_unassignment = make_user_assignation(
             4,
@@ -1381,12 +1540,12 @@ fn projects_unassign_an_issuer_from_a_project_works() {
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             issuer_unassignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&4), false);
-        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&get_project_id), false);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&4), false);
+        assert_eq!(ProjectsByUser::<Test>::get(4).contains(&project_id), false);
     });
 }
 
@@ -1413,16 +1572,16 @@ fn projects_unassign_a_regional_center_from_a_project_works() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             regional_center_assignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), true);
-        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&5), true);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&project_id), true);
 
         let regional_center_unassignment = make_user_assignation(
             5,
@@ -1432,12 +1591,12 @@ fn projects_unassign_a_regional_center_from_a_project_works() {
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             regional_center_unassignment,
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&5), false);
-        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&get_project_id), false);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&5), false);
+        assert_eq!(ProjectsByUser::<Test>::get(5).contains(&project_id), false);
     });
 }
 
@@ -1464,21 +1623,21 @@ fn projects_cannot_assign_a_user_to_a_project_twice_should_fail() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment.clone(),
         ));
 
-        assert_eq!(UsersByProject::<Test>::get(get_project_id).contains(&2), true);
-        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&get_project_id), true);
+        assert_eq!(UsersByProject::<Test>::get(project_id).contains(&2), true);
+        assert_eq!(ProjectsByUser::<Test>::get(2).contains(&project_id), true);
 
         assert_noop!(
             FundAdmin::projects_assign_user(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 builder_assignment,
             ),
             Error::<Test>::UserAlreadyAssignedToProject
@@ -1509,12 +1668,12 @@ fn user_cannot_be_assigned_to_a_project_with_a_different_role_should_fail() {
             AssignAction::Assign,
         );
     
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_noop!(
             FundAdmin::projects_assign_user(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 investor_assignment,
             ),
             Error::<Test>::UserCannotHaveMoreThanOneRole
@@ -1539,7 +1698,7 @@ fn projects_a_user_cannot_have_more_than_one_role_in_a_project_should_fail() {
             builder_data,
         ));
     
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let builder_assignment = make_user_assignation(
             2,
@@ -1549,7 +1708,7 @@ fn projects_a_user_cannot_have_more_than_one_role_in_a_project_should_fail() {
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment,
         ));
 
@@ -1562,7 +1721,7 @@ fn projects_a_user_cannot_have_more_than_one_role_in_a_project_should_fail() {
         assert_noop!(
             FundAdmin::projects_assign_user(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 investor_assignment,
             ),
             Error::<Test>::UserCannotHaveMoreThanOneRole
@@ -1593,11 +1752,11 @@ fn projects_cannot_delete_a_user_who_has_assigned_projects_should_fail() {
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment,
         ));
 
@@ -1638,11 +1797,11 @@ fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_f
             AssignAction::Assign,
         );
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         assert_ok!(FundAdmin::projects_assign_user(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             builder_assignment,
         ));
 
@@ -1667,7 +1826,7 @@ fn expenditures_add_a_hard_cost_budget_expenditure_for_a_given_project_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: HardCost")),
@@ -1681,12 +1840,12 @@ fn expenditures_add_a_hard_cost_budget_expenditure_for_a_given_project_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
         for expenditure_id in get_expenditure_ids {
@@ -1710,7 +1869,7 @@ fn expenditures_add_a_softcost_budget_expenditure_for_a_given_project_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: SoftCost")),
@@ -1724,12 +1883,12 @@ fn expenditures_add_a_softcost_budget_expenditure_for_a_given_project_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
         for expenditure_id in get_expenditure_ids {
@@ -1753,7 +1912,7 @@ fn expenditures_add_an_operational_budget_expenditure_for_a_given_project_works(
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Operational")),
@@ -1767,12 +1926,12 @@ fn expenditures_add_an_operational_budget_expenditure_for_a_given_project_works(
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
         for expenditure_id in get_expenditure_ids {
@@ -1796,7 +1955,7 @@ fn expenditures_add_an_others_budget_expenditure_for_a_given_project_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Others")),
@@ -1810,12 +1969,12 @@ fn expenditures_add_an_others_budget_expenditure_for_a_given_project_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(get_project_id).iter().cloned().collect();
+        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
         for expenditure_id in get_expenditure_ids {
@@ -1839,14 +1998,14 @@ fn expenditures_cannot_send_an_empty_array_of_expenditures_for_a_given_project_s
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data: Expenditures<Test> = bounded_vec![];
 
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(expenditure_data),
                 None,
             ),
@@ -1860,7 +2019,7 @@ fn expenditures_cannot_create_a_budget_expenditure_without_a_name_should_fail() 
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             None,
@@ -1875,7 +2034,7 @@ fn expenditures_cannot_create_a_budget_expenditure_without_a_name_should_fail() 
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(expenditure_data),
                 None,
             ),
@@ -1889,7 +2048,7 @@ fn expenditures_cannot_create_a_budget_without_expenditure_type_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -1904,7 +2063,7 @@ fn expenditures_cannot_create_a_budget_without_expenditure_type_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(expenditure_data),
                 None,
             ),
@@ -1918,7 +2077,7 @@ fn expenditures_cannot_create_a_budget_expenditute_without_an_amount_should_fail
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -1933,7 +2092,7 @@ fn expenditures_cannot_create_a_budget_expenditute_without_an_amount_should_fail
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(expenditure_data),
                 None,
             ),
@@ -1947,7 +2106,7 @@ fn expenditures_cannot_create_a_budget_expenditure_with_an_empty_name_should_fai
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("")),
@@ -1962,7 +2121,7 @@ fn expenditures_cannot_create_a_budget_expenditure_with_an_empty_name_should_fai
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(expenditure_data),
                 None,
             ),
@@ -1976,7 +2135,7 @@ fn expenditures_edit_a_given_expenditure_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -1990,12 +2149,12 @@ fn expenditures_edit_a_given_expenditure_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(project_id);
 
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
@@ -2020,7 +2179,7 @@ fn expenditures_edit_a_given_expenditure_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(mod_expenditure_data),
             None,
         ));
@@ -2053,9 +2212,9 @@ fn expenditures_edit_a_given_expenditure_from_another_project_should_fail() {
             make_field_description("P9f5wbr13BK74p1"),
         ));
 
-        let mut get_project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
-        let first_project_id = get_project_ids.pop().unwrap();
-        let second_project_id = get_project_ids.pop().unwrap();
+        let mut project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
+        let first_project_id = project_ids.pop().unwrap();
+        let second_project_id = project_ids.pop().unwrap();
 
         let second_expenditure_id = ExpendituresByProject::<Test>::get(second_project_id).pop().unwrap();
 
@@ -2087,7 +2246,7 @@ fn expenditures_expenditure_id_is_required_while_editing_a_given_expenditure_sho
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -2101,7 +2260,7 @@ fn expenditures_expenditure_id_is_required_while_editing_a_given_expenditure_sho
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
@@ -2119,7 +2278,7 @@ fn expenditures_expenditure_id_is_required_while_editing_a_given_expenditure_sho
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(mod_expenditure_data),
                 None,
             ),
@@ -2133,7 +2292,7 @@ fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_f
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -2147,12 +2306,12 @@ fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_f
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(project_id);
 
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
@@ -2177,7 +2336,7 @@ fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_f
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(del_expenditure_data),
             None,
         ));
@@ -2195,7 +2354,7 @@ fn expenditures_admnistrator_tries_to_update_a_non_existent_expenditure_should_f
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(mod_expenditure_data),
                 None,
             ),
@@ -2210,7 +2369,7 @@ fn expenditures_delete_a_selected_expenditure_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -2224,12 +2383,12 @@ fn expenditures_delete_a_selected_expenditure_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
 
-        let get_expenditure_ids = ExpendituresByProject::<Test>::get(get_project_id);
+        let get_expenditure_ids = ExpendituresByProject::<Test>::get(project_id);
 
         let mut target_expenditure_id: [u8; 32] = [0; 32];
 
@@ -2254,7 +2413,7 @@ fn expenditures_delete_a_selected_expenditure_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(del_expenditure_data),
             None,
         ));
@@ -2266,7 +2425,7 @@ fn expenditures_expenditure_id_es_required_to_delete_an_expenditure() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let expenditure_data = make_expenditure(
             Some(make_field_name("Expenditure Test: Hard Cost")),
@@ -2280,7 +2439,7 @@ fn expenditures_expenditure_id_es_required_to_delete_an_expenditure() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             Some(expenditure_data),
             None,
         ));
@@ -2298,7 +2457,7 @@ fn expenditures_expenditure_id_es_required_to_delete_an_expenditure() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 Some(del_expenditure_data),
                 None,
             ),
@@ -2314,7 +2473,7 @@ fn job_eligibles_create_a_job_eligible_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2327,12 +2486,12 @@ fn job_eligibles_create_a_job_eligible_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
 
-        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(project_id).pop().unwrap();
         
         assert!(JobEligiblesInfo::<Test>::contains_key(get_job_eligible_id));
         assert_eq!(JobEligiblesInfo::<Test>::get(get_job_eligible_id).unwrap().name, make_field_name("Job Eligible Test: Construction"));
@@ -2348,14 +2507,14 @@ fn job_eligibles_cannot_send_an_empty_array_of_job_eligibles_for_a_given_project
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data: JobEligibles<Test> = bounded_vec![];
 
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(job_eligible_data),
             ),
@@ -2369,7 +2528,7 @@ fn job_eligibles_cannot_create_a_job_eligible_without_a_name_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             None,
@@ -2383,7 +2542,7 @@ fn job_eligibles_cannot_create_a_job_eligible_without_a_name_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(job_eligible_data),
             ),
@@ -2397,7 +2556,7 @@ fn job_eligibles_cannot_create_a_job_eligible_without_an_amount_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Hard Cost")),
@@ -2411,7 +2570,7 @@ fn job_eligibles_cannot_create_a_job_eligible_without_an_amount_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(job_eligible_data),
             ),
@@ -2425,7 +2584,7 @@ fn job_eligibles_cannot_create_a_job_eligible_with_an_empty_name_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("")),
@@ -2439,7 +2598,7 @@ fn job_eligibles_cannot_create_a_job_eligible_with_an_empty_name_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(job_eligible_data),
             ),
@@ -2453,7 +2612,7 @@ fn job_eligibles_edit_a_job_eligible_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2466,12 +2625,12 @@ fn job_eligibles_edit_a_job_eligible_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
 
-        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+        let get_job_eligible_id: [u8; 32] = JobEligiblesByProject::<Test>::get(project_id).pop().unwrap();
 
         let mod_job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction Modified")),
@@ -2484,7 +2643,7 @@ fn job_eligibles_edit_a_job_eligible_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(mod_job_eligible_data),
         ));
@@ -2517,9 +2676,9 @@ fn job_eligibles_edit_a_given_job_eligible_from_another_project_should_fail() {
             make_field_description("P9f5wbr13BK74p1"),
         ));
 
-        let mut get_project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
-        let first_project_id = get_project_ids.pop().unwrap();
-        let second_project_id = get_project_ids.pop().unwrap();
+        let mut project_ids: Vec<ProjectId> = ProjectsInfo::<Test>::iter_keys().collect();
+        let first_project_id = project_ids.pop().unwrap();
+        let second_project_id = project_ids.pop().unwrap();
 
         let first_job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2581,7 +2740,7 @@ fn job_eligibles_edit_a_given_job_eligible_with_an_invalid_id_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2594,7 +2753,7 @@ fn job_eligibles_edit_a_given_job_eligible_with_an_invalid_id_should_fail() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
@@ -2611,7 +2770,7 @@ fn job_eligibles_edit_a_given_job_eligible_with_an_invalid_id_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(mod_job_eligible_data),
             ),
@@ -2625,7 +2784,7 @@ fn job_eligibles_job_eligible_id_is_required_to_update_a_given_job_eligible_shou
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2638,7 +2797,7 @@ fn job_eligibles_job_eligible_id_is_required_to_update_a_given_job_eligible_shou
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
@@ -2655,7 +2814,7 @@ fn job_eligibles_job_eligible_id_is_required_to_update_a_given_job_eligible_shou
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(mod_job_eligible_data),
             ),
@@ -2669,7 +2828,7 @@ fn job_eligibles_delete_a_given_job_eligible_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2682,12 +2841,12 @@ fn job_eligibles_delete_a_given_job_eligible_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
 
-        let job_eligible_id = JobEligiblesByProject::<Test>::get(get_project_id).pop().unwrap();
+        let job_eligible_id = JobEligiblesByProject::<Test>::get(project_id).pop().unwrap();
 
         let del_job_eligible_data = make_job_eligible(
             None,
@@ -2700,12 +2859,12 @@ fn job_eligibles_delete_a_given_job_eligible_works() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(del_job_eligible_data),
         ));
 
-        assert_eq!(JobEligiblesByProject::<Test>::get(get_project_id).len(), 0);
+        assert_eq!(JobEligiblesByProject::<Test>::get(project_id).len(), 0);
         assert_eq!(JobEligiblesInfo::<Test>::iter().count(), 0);
     });
 }
@@ -2715,7 +2874,7 @@ fn job_eligibles_delete_a_given_job_eligible_with_an_invalid_id_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2728,7 +2887,7 @@ fn job_eligibles_delete_a_given_job_eligible_with_an_invalid_id_should_fail() {
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
@@ -2745,7 +2904,7 @@ fn job_eligibles_delete_a_given_job_eligible_with_an_invalid_id_should_fail() {
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(del_job_eligible_data),
             ),
@@ -2759,7 +2918,7 @@ fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail(
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
 
         let job_eligible_data = make_job_eligible(
             Some(make_field_name("Job Eligible Test: Construction")),
@@ -2772,7 +2931,7 @@ fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail(
 
         assert_ok!(FundAdmin::expenditures_and_job_eligibles(
             RuntimeOrigin::signed(1),
-            get_project_id,
+            project_id,
             None,
             Some(job_eligible_data),
         ));
@@ -2789,7 +2948,7 @@ fn job_eligibles_deleting_a_job_eligible_requires_a_job_eligible_id_should_fail(
         assert_noop!(
             FundAdmin::expenditures_and_job_eligibles(
                 RuntimeOrigin::signed(1),
-                get_project_id,
+                project_id,
                 None,
                 Some(del_job_eligible_data),
             ),
@@ -2805,12 +2964,12 @@ fn drawdowns_drawdowns_are_initialized_correctly_after_a_project_is_created_work
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_simple_project());
 
-        let get_project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(DrawdownsByProject::<Test>::get(get_project_id).len(), 3);
-        let drawdowns_ids = DrawdownsByProject::<Test>::get(get_project_id);
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        assert_eq!(DrawdownsByProject::<Test>::get(project_id).len(), 3);
+        let drawdowns_ids = DrawdownsByProject::<Test>::get(project_id);
 
         for drawdown_id in drawdowns_ids {
-            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().project_id, get_project_id);
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().project_id, project_id);
             assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().drawdown_number, 1);
             assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
             assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
@@ -2861,6 +3020,7 @@ fn drawdowns_a_builder_saves_a_drawdown_as_a_draft_works() {
     });
 }
 
+
 #[test]
 fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
     new_test_ext().execute_with(|| {
@@ -2901,7 +3061,61 @@ fn drawdowns_a_user_modifies_a_transaction_in_draft_status_works(){
             false,
         ));
 
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Draft);
         assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 20000);
+    });
+}
+
+#[test]
+fn drawdowns_a_builder_cannot_submit_a_drawdown_twice_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        let mod_transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(20000),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(mod_transaction_data.clone()),
+            true,
+        ));
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                Some(mod_transaction_data),
+                true,
+            ),
+            Error::<Test>::CannotPerformActionOnSubmittedDrawdown
+        );
     });
 }
 
@@ -2931,8 +3145,8 @@ fn drawdowns_a_user_deletes_a_transaction_in_draft_status_works(){
 
         let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
         let del_transaction_data = make_transaction(
-            Some(expenditure_id),
-            Some(20000),
+            None,
+            None,
             CUDAction::Delete,
             Some(transaction_id),
         );
@@ -3022,7 +3236,7 @@ fn drawdowns_a_user_cannot_send_a_transaction_without_the_expenditure_id_should_
 }
 
 #[test]
-fn drawdowns_a_user_cannot_send_a_transaction_without_an_amount_should_fail() {
+fn drawdowns_a_user_cannot_create_a_transaction_without_an_amount_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3139,7 +3353,7 @@ fn drawdowns_transaction_id_is_required_when_deleting_a_transaction_should_fail(
 }
 
 #[test]
-fn drawdowns_a_user_submits_the_selected_drawdown_works(){
+fn drawdowns_a_user_submits_a_drawdown_for_approval_works(){
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3170,7 +3384,7 @@ fn drawdowns_a_user_submits_the_selected_drawdown_works(){
 }
 
 #[test]
-fn drawdowns_a_users_submits_a_previous_drawdown_which_was_saved_as_draft_works() {
+fn drawdowns_a_user_submits_a_draft_drawdown_for_approval_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3192,6 +3406,8 @@ fn drawdowns_a_users_submits_a_previous_drawdown_which_was_saved_as_draft_works(
             Some(transaction_data),
             false,
         ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
 
         assert_ok!(FundAdmin::submit_drawdown(
             RuntimeOrigin::signed(2),
@@ -3229,7 +3445,28 @@ fn drawdowns_a_user_tries_to_add_transactions_using_an_empty_array_before_submit
 }
 
 #[test]
-fn drawdowns_a_drawdown_cannot_be_submmited_if_has_no_transactions_should_fail() {
+fn drawdowns_a_drawdown_cannot_be_submitted_if_has_no_transactions_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        assert_noop!(
+            FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                None,
+                true,
+            ),
+            Error::<Test>::DrawdownHasNoTransactions
+        );
+    });
+}
+
+#[test]
+fn drawdowns_a_builder_deletes_all_transactions_while_submitting_a_revenue_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3275,7 +3512,7 @@ fn drawdowns_a_drawdown_cannot_be_submmited_if_has_no_transactions_should_fail()
 }
 
 #[test]
-fn drawdowns_after_a_drawdown_is_submitted_the_status_is_updated_in_the_project_data_works() {
+fn drawdowns_after_a_drawdown_is_submitted_the_status_is_updated_in_project_data_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -3481,12 +3718,17 @@ fn drawdowns_an_administrator_cannot_rejects_a_drawdown_that_is_not_submitted_sh
             false,
         ));
 
+        let transaction_feedback = make_transaction_feedback(
+            get_transaction_id(project_id, drawdown_id, expenditure_id),
+            make_field_description("Transaction was rejected bacause it was not valid"),
+        );
+
         assert_noop!(
             FundAdmin::reject_drawdown(
                 RuntimeOrigin::signed(1),
                 project_id,
                 drawdown_id,
-                None,
+                Some(transaction_feedback),
                 None,
             ),
             Error::<Test>::DrawdownNotSubmitted
@@ -3532,7 +3774,7 @@ fn drawdowns_an_administrator_cannot_rejects_a_drawdown_without_a_feedback_shoul
 }
 
 #[test]
-fn bulkupload_an_administrator_rejects_a_eb5_drawdown_with_an_empty_feedback_should_fail(){
+fn drawdowns_an_administrator_rejects_a_eb5_drawdown_with_an_empty_feedback_should_fail(){
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
@@ -4054,5 +4296,840 @@ fn bulkupload_an_administrator_rejects_a_bulkupload_drawdown_with_an_empty_feedb
     });
 }
 
+//TODO: A rejected drawdown changes its status from rejected to submitted after a builder submits again the drawdown
 
-//TODO: A rejected drawdown changes its status from rejected to submitted after a builder submits again the drawdopwn
+// R E V E N U E S
+// =================================================================================================
+#[test]
+fn revenues_are_initialized_correctly_after_a_project_is_created_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_eq!(RevenuesInfo::<Test>::iter().count(), 1);
+
+        let revenue_id = RevenuesInfo::<Test>::iter_keys().next().unwrap();
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().project_id, project_id);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().revenue_number, 1);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().total_amount, 0);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Draft);
+    });
+}
+
+#[test]
+fn revenues_a_builder_saves_a_revenue_as_draft_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Draft);
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().project_id, project_id);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().revenue_id, revenue_id);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().job_eligible_id, job_eligible_id);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().closed_date, 0);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().feedback, None);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().amount, 10000);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().status, RevenueTransactionStatus::Draft);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().documents, Some(make_documents(1)));
+    });
+}
+
+#[test]
+fn revenues_a_builder_modifies_a_transaction_in_draft_status_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        let mod_revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(20000),
+            CUDAction::Update,
+            Some(revenue_transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(mod_revenue_transaction_data),
+            false,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Draft);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().amount, 20000);
+    });
+}
+
+#[test]
+fn revenues_a_user_deletes_a_transaction_in_draft_status_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        let del_revenue_transaction_data = make_revenue_transaction(
+            None,
+            None,
+            CUDAction::Delete,
+            Some(revenue_transaction_id),
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(del_revenue_transaction_data),
+            false,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Draft);
+        assert_eq!(RevenueTransactionsInfo::<Test>::contains_key(revenue_transaction_id), false);
+    });
+}
+
+#[test]
+fn revenues_a_builder_cannot_submit_a_revenue_if_there_is_no_revenue_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                None,
+                false,
+            ),
+            Error::<Test>::RevenueTransactionsRequired
+        );
+    });
+}
+
+#[test]
+fn revenues_a_user_cannot_submit_a_revenue_as_draft_with_an_empty_array_of_transactions_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+
+        let empty_transaction_data: RevenueTransactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(empty_transaction_data),
+                false,
+            ),
+            Error::<Test>::RevenueTransactionsEmpty
+        );
+    });
+}
+
+#[test]
+fn revenues_a_user_cannot_create_a_revenue_transaction_with_no_job_eligible_id_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+
+        let revenue_transaction_data = make_revenue_transaction(
+            None,
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(revenue_transaction_data),
+                false,
+            ),
+            Error::<Test>::JobEligibleIdRequired
+        );
+    });
+}
+
+#[test]
+fn revenues_a_user_cannot_create_a_revenue_transaction_with_no_amount_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            None,
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(revenue_transaction_data),
+                false,
+            ),
+            Error::<Test>::RevenueAmountRequired
+        );
+    });
+}
+
+#[test]
+fn revenues_transaction_id_is_required_for_updating_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        let mod_revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(20000),
+            CUDAction::Update,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(mod_revenue_transaction_data),
+                false,
+            ),
+            Error::<Test>::RevenueTransactionIdRequired
+        );
+    });
+}
+
+#[test]
+fn revenues_transaction_id_is_required_for_deleting_a_transaction_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        let del_revenue_transaction_data = make_revenue_transaction(
+            None,
+            None,
+            CUDAction::Delete,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(del_revenue_transaction_data),
+                false,
+            ),
+            Error::<Test>::RevenueTransactionIdRequired
+        );
+    });
+}
+
+#[test]
+fn revenues_a_builder_submits_a_revenue_for_approval_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        let revenue_data = RevenuesInfo::<Test>::get(revenue_id).unwrap();
+
+        assert_eq!(revenue_data.status, RevenueStatus::Submitted);
+        assert_eq!(revenue_data.total_amount, 10000);
+    });
+}
+
+#[test]
+fn revenues_a_builder_submits_a_draft_revenue_for_approval_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Draft);
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            None,
+            true,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Submitted);
+    });
+}
+
+#[test]
+fn revenues_a_user_tries_to_submit_a_revenue_for_approval_without_being_a_builder_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(3),
+                project_id,
+                revenue_id,
+                Some(revenue_transaction_data),
+                true,
+            ),
+            RbacErr::NotAuthorized
+        );
+    });
+}
+
+#[test]
+fn revenues_a_revenue_cannot_be_submitted_for_approval_if_it_is_already_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data.clone()),
+            true,
+        ));
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(revenue_transaction_data),
+                true,
+            ),
+            Error::<Test>::CannotPerformActionOnSubmittedRevenue
+        );
+    });
+}
+
+#[test]
+fn revenues_a_revenue_cannot_be_submitted_if_has_no_transactions_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                None,
+                true,
+            ),
+            Error::<Test>::RevenueHasNoTransactions
+        );
+    });
+}
+
+#[test]
+fn revenues_a_builder_deletes_all_transactions_while_submitting_a_revenue_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            false,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        let del_revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Delete,
+            Some(revenue_transaction_id),
+        );
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(del_revenue_transaction_data),
+                true,
+            ),
+            Error::<Test>::RevenueHasNoTransactions
+        );
+    });
+}
+
+#[test]
+fn revenues_a_builder_tries_to_submit_a_revenue_with_an_empty_array_of_transactions_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let empty_revenue_transaction_data: RevenueTransactions<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::submit_revenue(
+                RuntimeOrigin::signed(2),
+                project_id,
+                revenue_id,
+                Some(empty_revenue_transaction_data),
+                true,
+            ),
+            Error::<Test>::RevenueTransactionsEmpty
+        );
+    });
+}
+
+#[test]
+fn revenues_after_a_revenue_is_submitted_the_status_is_updated_in_project_data_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().revenue_status, Some(RevenueStatus::Submitted));
+    });
+}
+
+#[test]
+fn revenues_an_administrator_approves_a_submitted_revenue_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+    });
+}
+
+#[test]
+fn revenues_an_administrator_cannot_approve_a_revenue_if_it_is_not_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+
+        assert_noop!(
+            FundAdmin::approve_revenue(
+                RuntimeOrigin::signed(1),
+                project_id,
+                revenue_id,
+            ),
+            Error::<Test>::RevenueNotSubmitted
+        );
+    });
+}
+
+#[test]
+fn revenues_after_a_revenue_is_submitted_the_next_one_is_generated_automaticaly_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+        ));
+
+        let next_revenue_id = get_revenue_id(project_id, 2);
+
+        assert_eq!(RevenuesInfo::<Test>::get(next_revenue_id).unwrap().status, RevenueStatus::Draft);
+    });
+}
+
+#[test]
+fn revenues_an_administrator_rejects_a_given_revenue_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+
+        let feedback = make_field_description("Transaction was rejected because it was not valid");
+
+        let transaction_feedback = make_transaction_feedback(revenue_transaction_id, feedback.clone());
+
+        assert_ok!(FundAdmin::reject_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+            transaction_feedback,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Rejected);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().status, RevenueTransactionStatus::Rejected);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(revenue_transaction_id).unwrap().feedback, Some(feedback));
+    });
+}
+
+#[test]
+fn revenues_an_administrator_cannot_reject_a_revenue_if_it_is_not_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(transaction_data),
+            false,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        let feedback = make_field_description("Transaction was rejected because it was not valid");
+        let transaction_feedback = make_transaction_feedback(revenue_transaction_id, feedback.clone());
+
+        assert_noop!(
+            FundAdmin::reject_revenue(
+                RuntimeOrigin::signed(1),
+                project_id,
+                revenue_id,
+                transaction_feedback,
+            ),
+            Error::<Test>::RevenueNotSubmitted
+        );
+    });
+}
+
+#[test]
+fn revenues_an_administrator_cannot_reject_a_revenue_with_an_empty_array_of_feedback_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_feedback: TransactionsFeedback<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::reject_revenue(
+                RuntimeOrigin::signed(1),
+                project_id,
+                revenue_id,
+                transaction_feedback,
+            ),
+            Error::<Test>::RevenueTransactionsFeedbackEmpty
+        );
+    });
+}
+
+#[test]
+fn revenues_after_a_revenue_is_rejected_the_status_is_updated_in_project_data_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let revenue_transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        let feedback = make_field_description("Transaction was rejected because it was not valid");
+        let transaction_feedback = make_transaction_feedback(revenue_transaction_id, feedback.clone());
+
+        assert_ok!(FundAdmin::reject_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+            transaction_feedback,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().revenue_status, Some(RevenueStatus::Rejected));
+    });
+}

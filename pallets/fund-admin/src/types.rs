@@ -258,7 +258,6 @@ impl Default for TransactionStatus {
     }
 }
 
-// Possibles names: JobEligibleRenevueData, BudgetRevenueData, JobEligibleData
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 pub struct JobEligibleData {
     pub project_id: ProjectId,

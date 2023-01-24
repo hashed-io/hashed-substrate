@@ -564,6 +564,8 @@ pub mod pallet {
 		RevenueNotFound,
 		/// Transactions revenue array is empty
 		RevenueTransactionsEmpty,
+		/// An array of revenue transactions is required
+		RevenueTransactionsRequired,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionNotSubmitted,
 		/// Revenue can not be edited
@@ -600,6 +602,8 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+		/// Revenue transactions feedback is empty
+		RevenueTransactionsFeedbackEmpty,
 		/// The revenue is not in submitted status
 		RevenueNotSubmitted,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
@@ -1355,21 +1359,22 @@ pub mod pallet {
 						who,
 						project_id,
 						revenue_id,
-						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsEmpty)?,
+						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsRequired)?,
 					)
 				},
 				// Submit revenue transactions
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
+						// Ensure transactions are not empty
+						ensure!(!mod_revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsEmpty);
+
 						// Do execute transactions
-						if mod_revenue_transactions.len() > 0 {
-							Self::do_execute_revenue_transactions(
-								who.clone(),
-								project_id,
-								revenue_id,
-								mod_revenue_transactions)?;
-						}
+						Self::do_execute_revenue_transactions(
+							who.clone(),
+							project_id,
+							revenue_id,
+							mod_revenue_transactions)?;
 					}
 
 					// Do submit revenue

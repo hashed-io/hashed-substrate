@@ -1765,7 +1765,7 @@ impl<T: Config> Pallet<T> {
         Self::is_revenue_editable(revenue_id)?;
 
         // Ensure revenue has transactions
-        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+        ensure!(!TransactionsByRevenue::<T>::get(project_id, revenue_id).is_empty(), Error::<T>::RevenueHasNoTransactions);
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
@@ -1807,9 +1807,6 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin, &project_id, ProxyPermission::ApproveRevenue)?;
-
-        // Ensure revenue is editable & ensure revenue exists
-        // Self::is_revenue_editable(revenue_id)?;
 
         // Get revenue data
         let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
@@ -1876,7 +1873,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueNotSubmitted);
 
         // Ensure revenue has transactions
-        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+        ensure!(!TransactionsByRevenue::<T>::get(project_id, revenue_id).is_empty(), Error::<T>::RevenueHasNoTransactions);
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
@@ -1895,6 +1892,8 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
+        // Ensure revenue transactions feedback is not empty
+        ensure!(!revenue_transactions_feedback.is_empty(), Error::<T>::RevenueTransactionsFeedbackEmpty);
         // Update revenue transactions feedback
         for (transaction_id, feedback) in revenue_transactions_feedback.iter().cloned() {
             // Update revenue transaction feedback
