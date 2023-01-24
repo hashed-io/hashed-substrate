@@ -458,6 +458,8 @@ pub mod pallet {
 			<NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueVerified<T>>::clear(1000, None);
+			let _ = <FruniqueRoots<T>>::clear(1000, None);
+			let _ = <FruniqueRedeemed<T>>::clear(1000, None);
 			let _ = <FruniqueInfo<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
