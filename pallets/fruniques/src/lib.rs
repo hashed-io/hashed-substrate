@@ -52,7 +52,6 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -194,7 +193,6 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
-
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
 	where
@@ -299,6 +297,13 @@ pub mod pallet {
 						&parent_info_call.parent_id
 					),
 					Error::<T>::FruniqueNotFound
+				);
+
+				ensure!(
+					!<FruniqueInfo<T>>::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
+						.unwrap()
+						.redeemed,
+					Error::<T>::ParentAlreadyRedeemed
 				);
 				Self::is_authorized(user, parent_info_call.collection_id, Permission::Mint)?;
 

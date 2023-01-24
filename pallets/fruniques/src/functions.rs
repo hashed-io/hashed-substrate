@@ -397,19 +397,10 @@ impl<T: Config> Pallet<T> {
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 		ensure!(Self::instance_exists(&collection, &item), Error::<T>::FruniqueNotFound);
 
-		let frunique_data = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
+		let frunique_data : FruniqueData<T> = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
 
 		ensure!(!frunique_data.frozen, Error::<T>::FruniqueFrozen);
 		ensure!(!frunique_data.redeemed, Error::<T>::FruniqueAlreadyRedeemed);
-
-		if let Some(parent) = frunique_data.parent {
-			ensure!(
-				!<FruniqueInfo<T>>::try_get(parent.collection_id, parent.parent_id)
-					.unwrap()
-					.redeemed,
-				Error::<T>::ParentAlreadyRedeemed
-			);
-		}
 
 		<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
 			collection,
