@@ -260,20 +260,17 @@
 <span class="kw">pub type </span>Attributes&lt;T&gt; = Vec&lt;(AttributeKey&lt;T&gt;, AttributeValue&lt;T&gt;)&gt;;
 <span class="kw">pub type </span>Children&lt;T&gt; = BoundedVec&lt;ChildInfo&lt;T&gt;, &lt;T <span class="kw">as </span>Config&gt;::ChildMaxLen&gt;;
 
-<span class="comment">// pub type CollectionDescription = [u8; 32];
-</span><span class="kw">pub type </span>StringLimit&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::StringLimit&gt;;
+<span class="kw">pub type </span>StringLimit&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::StringLimit&gt;;
 
 <span class="kw">pub type </span>CollectionId = u32;
 <span class="kw">pub type </span>ItemId = u32;
 
 <span class="kw">pub type </span>CollectionDescription&lt;T&gt; = StringLimit&lt;T&gt;;
-<span class="comment">// (ParentId, Hierarchical, Percentage)
-</span><span class="kw">pub type </span>ParentId = ItemId;
+
+<span class="kw">pub type </span>ParentId = ItemId;
 <span class="kw">pub type </span>Hierarchical = bool;
 <span class="kw">pub type </span>Percentage = u16;
 
-<span class="kw">pub type </span>UniqueTuple = (CollectionId, ItemId);
-<span class="kw">pub type </span>Roots&lt;T&gt; = BoundedVec&lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId, &lt;T <span class="kw">as </span>Config&gt;::MaxParentsInCollection&gt;;
 
 <span class="attribute">#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
@@ -364,11 +361,14 @@
 	<span class="kw">pub </span>weight: Permill,
 	<span class="kw">pub </span>parent: <span class="prelude-ty">Option</span>&lt;ParentInfo&lt;T&gt;&gt;,
 	<span class="kw">pub </span>children: <span class="prelude-ty">Option</span>&lt;Children&lt;T&gt;&gt;,
+	<span class="kw">pub </span>frozen: bool,
+	<span class="kw">pub </span>verified: bool,
+	<span class="kw">pub </span>redeemed: bool,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; FruniqueData&lt;T&gt; {
 	<span class="kw">pub fn </span>new(metadata: CollectionDescription&lt;T&gt;) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{ metadata, weight: Permill::from_percent(<span class="number">100</span>), parent: <span class="prelude-val">None</span>, children: <span class="prelude-val">None </span>}
+		<span class="self">Self </span>{ metadata, weight: Permill::from_percent(<span class="number">100</span>), parent: <span class="prelude-val">None</span>, children: <span class="prelude-val">None</span>, frozen: <span class="bool-val">false</span>, verified: <span class="bool-val">false</span>, redeemed: <span class="bool-val">false </span>}
 	}
 }
 

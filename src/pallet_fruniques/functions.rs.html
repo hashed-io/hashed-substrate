@@ -437,6 +437,39 @@
 <span id="437">437</span>
 <span id="438">438</span>
 <span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -741,13 +774,13 @@
 			weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
 			parent: <span class="prelude-val">None</span>,
 			children: <span class="prelude-val">None</span>,
+			verified: <span class="bool-val">false</span>,
+			frozen: <span class="bool-val">false</span>,
+			redeemed: <span class="bool-val">false</span>,
 		};
 
 		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
-		&lt;FruniqueRoots&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(collection, |roots| {
-			roots.try_push(item).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::FruniqueRootsOverflow)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
+		&lt;FruniqueRoots&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
 
 		<span class="prelude-val">Ok</span>(())
 	}
@@ -771,28 +804,34 @@
 			Error::&lt;T&gt;::FruniqueNotFound
 		);
 
-		<span class="kw">let </span>frunique_parent =
+		<span class="kw">let </span>frunique_parent: FruniqueData&lt;T&gt; =
 			&lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>parent_info.collection_id, <span class="kw-2">&amp;</span>parent_info.parent_id).unwrap();
 
-		<span class="kw">let </span>child_percentage = parent_info.parent_weight * frunique_parent.weight;
+		<span class="macro">ensure!</span>(!frunique_parent.frozen, Error::&lt;T&gt;::ParentFrozen);
+		<span class="macro">ensure!</span>(!frunique_parent.redeemed, Error::&lt;T&gt;::ParentAlreadyRedeemed);
 
-		<span class="kw">let </span>parent_data = ParentInfo {
+		<span class="kw">let </span>child_percentage: Permill = parent_info.parent_weight * frunique_parent.weight;
+
+		<span class="kw">let </span>parent_data: ParentInfo&lt;T&gt; = ParentInfo {
 			collection_id: parent_info.collection_id,
 			parent_id: parent_info.parent_id,
 			parent_weight: child_percentage,
 			is_hierarchical: parent_info.is_hierarchical,
 		};
 
-		<span class="kw">let </span>frunique_data = FruniqueData {
+		<span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = FruniqueData {
 			metadata,
 			weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
 			parent: <span class="prelude-val">Some</span>(parent_data),
 			children: <span class="prelude-val">None</span>,
+			verified: <span class="bool-val">false</span>,
+			frozen: <span class="bool-val">false</span>,
+			redeemed: <span class="bool-val">false</span>,
 		};
 
 		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
 
-		<span class="kw">let </span>frunique_child = ChildInfo {
+		<span class="kw">let </span>frunique_child: ChildInfo&lt;T&gt; = ChildInfo {
 			collection_id: collection,
 			child_id: item,
 			weight_inherited: child_percentage,
@@ -819,6 +858,33 @@
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_redeem(collection: T::CollectionId, item: T::ItemId) -&gt; DispatchResult
+	<span class="kw">where
+		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+	{
+		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
+		<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>collection, <span class="kw-2">&amp;</span>item), Error::&lt;T&gt;::FruniqueNotFound);
+
+		<span class="kw">let </span>frunique_data : FruniqueData&lt;T&gt; = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
+
+		<span class="macro">ensure!</span>(!frunique_data.frozen, Error::&lt;T&gt;::FruniqueFrozen);
+		<span class="macro">ensure!</span>(!frunique_data.redeemed, Error::&lt;T&gt;::FruniqueAlreadyRedeemed);
+
+		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+			collection,
+			item,
+			|frunique_data| -&gt; DispatchResult {
+				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+				frunique.redeemed = <span class="bool-val">true</span>;
+				<span class="prelude-val">Ok</span>(())
+			},
+		)<span class="question-mark">?</span>;
+
+		&lt;FruniqueRedeemed&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
 
 		<span class="prelude-val">Ok</span>(())
 	}

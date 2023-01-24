@@ -1105,6 +1105,87 @@
 <span id="1105">1105</span>
 <span id="1106">1106</span>
 <span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -2208,6 +2289,87 @@
 		<span class="prelude-val">Ok</span>(())
 	}
 
+	<span class="kw">pub fn </span>do_ask_for_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+	) -&gt; DispatchResult {
+		<span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="self">Self</span>::is_authorized(who.clone(), <span class="kw-2">&amp;</span>marketplace, Permission::AskForRedemption)<span class="question-mark">?</span>;
+		<span class="comment">//ensure the collection exists
+		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::owner(collection_id, item_id) {
+			<span class="macro">ensure!</span>(a == who, Error::&lt;T&gt;::NotOwner);
+		} <span class="kw">else </span>{
+			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
+		}
+
+		<span class="kw">let </span>redemption_data: RedemptionData&lt;T&gt; = RedemptionData {
+			creator: who.clone(),
+			redeemed_by: <span class="prelude-val">None</span>,
+			collection_id,
+			item_id,
+			is_redeemed: <span class="bool-val">false</span>,
+		};
+
+		<span class="comment">// Gen market id
+		</span><span class="kw">let </span>redemption_id = redemption_data.using_encoded(blake2_256);
+		<span class="comment">// ensure the generated id is unique
+		</span><span class="macro">ensure!</span>(
+			!&lt;AskingForRedemption&lt;T&gt;&gt;::contains_key(marketplace, redemption_id),
+			Error::&lt;T&gt;::RedemptionRequestAlreadyExists
+		);
+
+		&lt;AskingForRedemption&lt;T&gt;&gt;::insert(marketplace, redemption_id, redemption_data);
+		<span class="self">Self</span>::deposit_event(Event::RedemptionRequested(marketplace, redemption_id, who));
+
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_accept_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		redemption_id: RedemptionId,
+	) -&gt; DispatchResult
+	<span class="kw">where
+		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+	{
+		<span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace), Error::&lt;T&gt;::MarketplaceNotFound);
+		<span class="self">Self</span>::is_authorized(who.clone(), <span class="kw-2">&amp;</span>marketplace, Permission::AcceptRedemption)<span class="question-mark">?</span>;
+
+		<span class="macro">ensure!</span>(
+			&lt;AskingForRedemption&lt;T&gt;&gt;::contains_key(marketplace, redemption_id),
+			Error::&lt;T&gt;::RedemptionRequestNotFound
+		);
+
+		&lt;AskingForRedemption&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+			marketplace,
+			redemption_id,
+			|redemption_data| -&gt; DispatchResult {
+				<span class="kw">let </span>redemption_data =
+					redemption_data.as_mut().ok_or(Error::&lt;T&gt;::RedemptionRequestNotFound)<span class="question-mark">?</span>;
+				<span class="macro">ensure!</span>(
+					redemption_data.is_redeemed == <span class="bool-val">false</span>,
+					Error::&lt;T&gt;::RedemptionRequestAlreadyRedeemed
+				);
+				<span class="macro">ensure!</span>(
+					redemption_data.is_redeemed == <span class="bool-val">false</span>,
+					Error::&lt;T&gt;::RedemptionRequestAlreadyRedeemed
+				);
+				redemption_data.is_redeemed = <span class="bool-val">true</span>;
+				redemption_data.redeemed_by = <span class="prelude-val">Some</span>(who.clone());
+				<span class="self">Self</span>::deposit_event(Event::RedemptionAccepted(marketplace, redemption_id, who));
+				pallet_fruniques::Pallet::&lt;T&gt;::do_redeem(
+					redemption_data.collection_id,
+					redemption_data.item_id,
+				)<span class="question-mark">?</span>;
+
+				<span class="prelude-val">Ok</span>(())
+			},
+		)<span class="question-mark">?</span>;
+
+		<span class="prelude-val">Ok</span>(())
+	}
 	<span class="kw">pub fn </span>pallet_id() -&gt; IdOrVec {
 		IdOrVec::Vec(<span class="self">Self</span>::module_name().as_bytes().to_vec())
 	}

@@ -229,6 +229,38 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -241,6 +273,12 @@
 <span class="kw">pub type </span>Cid = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 <span class="kw">pub type </span>Cids&lt;Len&gt; = BoundedVec&lt;Cid, Len&gt;;
 <span class="kw">pub type </span>CustodianFields&lt;T&gt; = (AccountIdOf&lt;T&gt;, Cids&lt;&lt;T <span class="kw">as </span>Config&gt;::MaxFiles&gt;);
+
+<span class="kw">pub type </span>MarketplaceId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>ApplicationId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>OfferId = [u8; <span class="number">32</span>];
+<span class="kw">pub type </span>RedemptionId = [u8; <span class="number">32</span>];
+
 <span class="kw">use </span>sp_runtime::Permill;
 
 <span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
@@ -250,6 +288,26 @@
 	<span class="kw">pub </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
 	<span class="kw">pub </span>fee: Permill,
 	<span class="kw">pub </span>creator: T::AccountId,
+}
+
+<span class="attribute">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>RedemptionData&lt;T: Config&gt; {
+	<span class="kw">pub </span>creator: T::AccountId,
+	<span class="kw">pub </span>redeemed_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+	<span class="kw">pub </span>collection_id: T::CollectionId,
+	<span class="kw">pub </span>item_id: T::ItemId,
+	<span class="kw">pub </span>is_redeemed: bool,
+}
+
+<span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+
+</span><span class="kw">pub enum </span>RedeemArgs&lt;T: Config&gt; {
+	AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId, },
+	AcceptRedemption (RedemptionId),
 }
 
 <span class="attribute">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
@@ -321,6 +379,8 @@
 	RemoveOffer,
 	EnlistBuyOffer,
 	TakeBuyOffer,
+	AskForRedemption,
+	AcceptRedemption,
 }
 
 <span class="kw">impl </span>Permission {
@@ -337,6 +397,8 @@
 			<span class="self">Self</span>::RemoveOffer =&gt; <span class="string">&quot;RemoveOffer&quot;</span>.as_bytes().to_vec(),
 			<span class="self">Self</span>::EnlistBuyOffer =&gt; <span class="string">&quot;EnlistBuyOffer&quot;</span>.as_bytes().to_vec(),
 			<span class="self">Self</span>::TakeBuyOffer =&gt; <span class="string">&quot;TakeBuyOffer&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::AskForRedemption =&gt; <span class="string">&quot;AskForRedemption&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::AcceptRedemption =&gt; <span class="string">&quot;AcceptRedemption&quot;</span>.as_bytes().to_vec(),
 		}
 	}
 
@@ -352,6 +414,7 @@
 			RemoveAuth.to_vec(),
 			UpdateLabel.to_vec(),
 			RemoveMarketplace.to_vec(),
+			AcceptRedemption.to_vec(),
 		]
 		.to_vec();
 		admin_permissions.append(<span class="kw-2">&amp;mut </span>Permission::participant_permissions());
@@ -367,6 +430,7 @@
 			RemoveOffer.to_vec(),
 			EnlistBuyOffer.to_vec(),
 			TakeBuyOffer.to_vec(),
+			AskForRedemption.to_vec(),
 		]
 		.to_vec()
 	}

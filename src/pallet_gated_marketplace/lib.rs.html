@@ -719,6 +719,46 @@
 <span id="719">719</span>
 <span id="720">720</span>
 <span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -802,8 +842,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Marketplaces&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>],       <span class="comment">// Key
-		</span>Marketplace&lt;T&gt;, <span class="comment">// Value
+		MarketplaceId,
+		Marketplace&lt;T&gt;, <span class="comment">// Value
 		</span>OptionQuery,
 	&gt;;
 
@@ -812,8 +852,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>], <span class="comment">//K1: application_id
-		</span>Application&lt;T&gt;,
+		ApplicationId,
+		Application&lt;T&gt;,
 		OptionQuery,
 	&gt;;
 
@@ -824,9 +864,9 @@
 		Blake2_128Concat,
 		T::AccountId, <span class="comment">// K1: account_id
 		</span>Identity,
-		[u8; <span class="number">32</span>], <span class="comment">// k2: marketplace_id
-		</span>[u8; <span class="number">32</span>], <span class="comment">//application_id
-		</span>OptionQuery,
+		MarketplaceId,
+		ApplicationId,
+		OptionQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::storage]
@@ -834,8 +874,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicantsByMarketplace&lt;T: Config&gt; = StorageDoubleMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>], <span class="comment">//K1: marketplace_id
-		</span>Blake2_128Concat,
+		MarketplaceId,
+		Blake2_128Concat,
 		ApplicationStatus, <span class="comment">//K2: application_status
 		</span>BoundedVec&lt;T::AccountId, T::MaxApplicants&gt;,
 		ValueQuery,
@@ -848,8 +888,8 @@
 		Blake2_128Concat,
 		T::AccountId, <span class="comment">//custodians
 		</span>Identity,
-		[u8; <span class="number">32</span>],                                                 <span class="comment">//marketplace_id
-		</span>BoundedVec&lt;T::AccountId, T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
+		MarketplaceId,
+		BoundedVec&lt;T::AccountId, T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
 		</span>ValueQuery,
 	&gt;;
 
@@ -861,7 +901,7 @@
 		T::CollectionId, <span class="comment">//collection_id
 		</span>Blake2_128Concat,
 		T::ItemId,                                   <span class="comment">//item_id
-		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -871,7 +911,7 @@
 		<span class="kw">_</span>,
 		Blake2_128Concat,
 		T::AccountId,                                <span class="comment">// account_id
-		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -880,8 +920,8 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>],                                    <span class="comment">// Marketplace_id
-		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+		MarketplaceId,
+		BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
 
@@ -890,39 +930,55 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersInfo&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Identity,
-		[u8; <span class="number">32</span>], <span class="comment">// offer_id
-		//StorageDoubleMap -&gt; marketplace_id(?)
+		OfferId,
+		<span class="comment">//StorageDoubleMap -&gt; marketplace_id(?)
 		</span>OfferData&lt;T&gt;, <span class="comment">// offer data
 		</span>OptionQuery,
+	&gt;;
+
+	<span class="attribute">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>asking_for_redemption)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AskingForRedemption&lt;T: Config&gt; = StorageDoubleMap&lt;
+		<span class="kw">_</span>,
+		Blake2_128Concat,
+		MarketplaceId,
+		Blake2_128Concat,
+		RedemptionId,
+		RedemptionData&lt;T&gt;,
+		OptionQuery,
 	&gt;;
 
 	<span class="attribute">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
 		<span class="doccomment">/// Marketplaces stored. [owner, admin, market_id]
-		</span>MarketplaceStored(T::AccountId, T::AccountId, [u8; <span class="number">32</span>]),
+		</span>MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
 		<span class="doccomment">/// Application stored on the specified marketplace. [application_id, market_id]
-		</span>ApplicationStored([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
+		</span>ApplicationStored(ApplicationId, MarketplaceId),
 		<span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
-		</span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, [u8; <span class="number">32</span>], ApplicationStatus),
+		</span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, MarketplaceId, ApplicationStatus),
 		<span class="doccomment">/// Add a new authority to the selected marketplace [account, authority]
 		</span>AuthorityAdded(T::AccountId, MarketplaceRole),
 		<span class="doccomment">/// Remove the selected authority from the selected marketplace [account, authority]
 		</span>AuthorityRemoved(T::AccountId, MarketplaceRole),
 		<span class="doccomment">/// The label of the selected marketplace has been updated. [market_id]
-		</span>MarketplaceLabelUpdated([u8; <span class="number">32</span>]),
+		</span>MarketplaceLabelUpdated(MarketplaceId),
 		<span class="doccomment">/// The selected marketplace has been removed. [market_id]
-		</span>MarketplaceRemoved([u8; <span class="number">32</span>]),
+		</span>MarketplaceRemoved(MarketplaceId),
 		<span class="doccomment">/// Offer stored. [collection_id, item_id, [offer_id]]
-		</span>OfferStored(T::CollectionId, T::ItemId, [u8; <span class="number">32</span>]),
+		</span>OfferStored(T::CollectionId, T::ItemId, OfferId),
 		<span class="doccomment">/// Offer was accepted [offer_id, account]
-		</span>OfferWasAccepted([u8; <span class="number">32</span>], T::AccountId),
+		</span>OfferWasAccepted(OfferId, T::AccountId),
 		<span class="doccomment">/// Offer was duplicated. [new_offer_id, new_marketplace_id]
-		</span>OfferDuplicated([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
+		</span>OfferDuplicated(OfferId, MarketplaceId),
 		<span class="doccomment">/// Offer was removed. [offer_id], [marketplace_id]
-		</span>OfferRemoved([u8; <span class="number">32</span>], [u8; <span class="number">32</span>]),
-		<span class="doccomment">/// Initial palllet setup
+		</span>OfferRemoved(OfferId, MarketplaceId),
+		<span class="doccomment">/// Initial pallet setup
 		</span>MarketplaceSetupCompleted,
+		<span class="doccomment">/// A new redemption was requested. [marketplace_id, redemption_id], owner
+		</span>RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
+		<span class="doccomment">/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
+		</span>RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
 	}
 
 	<span class="comment">// Errors inform users that something went wrong.
@@ -942,9 +998,9 @@
 		</span>ExceedMaxPercentage,
 		<span class="doccomment">/// This offer has smaller percentage than the allowed
 		</span>ExceedMinPercentage,
-		<span class="doccomment">/// Applicaion doesnt exist
+		<span class="doccomment">/// Application does not exist
 		</span>ApplicationNotFound,
-		<span class="doccomment">/// The user has not applicated to that market before
+		<span class="doccomment">/// The user has not applied to that market before
 		</span>ApplicantNotFound,
 		<span class="doccomment">/// The user cannot be custodian of its own application
 		</span>ApplicantCannotBeCustodian,
@@ -970,7 +1026,7 @@
 		</span>OwnerNotFound,
 		<span class="comment">// Rol not found for the selected user
 		</span>AuthorityNotFoundForUser,
-		<span class="doccomment">/// Admis cannot be deleted between them, only the owner can
+		<span class="doccomment">/// Admins cannot be deleted between them, only the owner can
 		</span>CannotDeleteAdmin,
 		<span class="doccomment">/// Application ID not found
 		</span>ApplicationIdNotFound,
@@ -988,7 +1044,7 @@
 		</span>OfferNotFound,
 		<span class="doccomment">/// Offer is not available at the moment
 		</span>OfferIsNotAvailable,
-		<span class="doccomment">/// Owner cannnot buy its own offer
+		<span class="doccomment">/// Owner can not buy its own offer
 		</span>CannotTakeOffer,
 		<span class="doccomment">/// User cannot remove the offer from the marketplace
 		</span>CannotRemoveOffer,
@@ -1008,6 +1064,12 @@
 		</span>ItemNotForSale,
 		<span class="doccomment">/// Could not access to item metadata
 		</span>ItemMetadataNotFound,
+		<span class="doccomment">/// Redemption request not found
+		</span>RedemptionRequestNotFound,
+		<span class="doccomment">/// Redemption request already in place
+		</span>RedemptionRequestAlreadyExists,
+		<span class="doccomment">/// The redemption in question is already redeemed
+		</span>RedemptionRequestAlreadyRedeemed,
 	}
 
 	<span class="attribute">#[pallet::call]
@@ -1218,7 +1280,7 @@
 			marketplace_id: [u8; <span class="number">32</span>],
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="comment">//TOREVIEW: If we&#39;re allowing more than one role per user per marketplace, we should
+			<span class="comment">// TODO: review If we&#39;re allowing more than one role per user per marketplace, we should
 			// check what role we want to remove instead of removing the user completely from
 			// selected marketplace.
 			</span><span class="self">Self</span>::do_remove_authority(who, account, authority_type, marketplace_id)
@@ -1310,8 +1372,8 @@
 
 		<span class="doccomment">/// Accepts a sell order.
 		///
-		/// This extrisicn is called by the user who wants to buy the item.
-		/// Aaccepts a sell order in the selected marketplace.
+		/// This extrinsic is called by the user who wants to buy the item.
+		/// Accepts a sell order in the selected marketplace.
 		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
@@ -1390,7 +1452,7 @@
 
 		<span class="doccomment">/// Accepts a buy order.
 		///
-		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.
+		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
 		/// Accepts a buy order in the selected marketplace.
 		///
 		/// ### Parameters:
@@ -1409,6 +1471,23 @@
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_take_buy_offer(who, offer_id)
+		}
+
+		<span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>redeem(
+			origin: OriginFor&lt;T&gt;,
+			marketplace: MarketplaceId,
+			redeem: RedeemArgs&lt;T&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="kw">match </span>redeem {
+				RedeemArgs::AskForRedemption { collection_id, item_id } =&gt; {
+					<span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id);
+				}
+				RedeemArgs::AcceptRedemption ( redemption_id ) =&gt; {
+					<span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id);
+				}
+			}
 		}
 
 		<span class="comment">//TODO: Add CRUD operations for the offers
@@ -1435,6 +1514,7 @@
 			<span class="kw">let _ </span>= &lt;OffersByAccount&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;OffersByMarketplace&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;OffersInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;AskingForRedemption&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			&lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
