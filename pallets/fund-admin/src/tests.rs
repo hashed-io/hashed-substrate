@@ -286,6 +286,21 @@ fn make_revenue_transaction(
     revenue_transactions
 }
 
+fn make_project_inflation(
+    project_id: ProjectId,
+    inflation: Option<InflationRate>,
+    action: CUDAction,
+) -> ProjectsInflation<Test> {
+    let mut projects_inflation: ProjectsInflation<Test> = bounded_vec![];
+    projects_inflation
+        .try_push((
+            project_id,
+            inflation,
+            action,
+        ))
+        .unwrap_or_default();
+    projects_inflation
+}
 
 fn make_default_simple_project() -> DispatchResult {
 
@@ -5131,5 +5146,1054 @@ fn revenues_after_a_revenue_is_rejected_the_status_is_updated_in_project_data_wo
         ));
 
         assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().revenue_status, Some(RevenueStatus::Rejected));
+    });
+}
+
+// I N F L A T I O N  R A T E
+// ============================================================================
+#[test]
+fn inflation_rate_an_administrator_can_set_the_inflation_rate_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 70;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().inflation_rate, Some(inflation_rate));
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_cannot_submit_an_empty_array_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+
+        let inflation_rate_data: ProjectsInflation<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::ProjectsInflationRateEmpty
+        );
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_cannot_set_the_inflation_rate_without_a_value_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            None,
+            CUDAction::Create,
+        );
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::InflationRateRequired
+        );
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_cannot_set_the_inflation_rate_if_it_is_already_set_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 70;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data.clone(),
+        ));
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::InflationRateAlreadySet
+        );
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_updates_the_inflation_rate_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 70;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data.clone(),
+        ));
+
+        let inflation_rate = 80;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Update,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().inflation_rate, Some(inflation_rate));
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_cannot_update_the_inflation_rate_if_it_is_not_set_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 80;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Update,
+        );
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::InflationRateNotSet
+        );
+    });
+}
+
+#[test]
+fn inflation_rate_inflation_value_is_required_while_updating_the_inflation_rate_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 70;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data.clone(),
+        ));
+
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            None,
+            CUDAction::Update,
+        );
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::InflationRateRequired
+        );
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_deletes_the_inflation_rate_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate = 70;
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            Some(inflation_rate),
+            CUDAction::Create,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data.clone(),
+        ));
+
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            None,
+            CUDAction::Delete,
+        );
+
+        assert_ok!(FundAdmin::inflation_rate(
+            RuntimeOrigin::signed(1),
+            inflation_rate_data,
+        ));
+
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().inflation_rate, None);
+    });
+}
+
+#[test]
+fn inflation_rate_an_administrator_cannot_delete_the_inflation_rate_if_it_is_not_set_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let inflation_rate_data = make_project_inflation(
+            project_id,
+            None,
+            CUDAction::Delete,
+        );
+
+        assert_noop!(
+            FundAdmin::inflation_rate(
+                RuntimeOrigin::signed(1),
+                inflation_rate_data,
+            ),
+            Error::<Test>::InflationRateNotSet
+        );
+    });
+}
+
+// B A N K   D O C U M E N T S
+// ============================================================================
+#[test]
+fn bank_documents_an_administrator_uploads_bank_documents_for_a_given_eb5_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, Some(bank_documents));
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_for_a_contruction_loan_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents.clone()),
+                CUDAction::Create,
+            ),
+            Error::<Test>::OnlyEB5DrawdownsCanUploadBankDocuments
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_for_a_developer_equity_drawdown_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::DeveloperEquity, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents.clone()),
+                CUDAction::Create,
+            ),
+            Error::<Test>::OnlyEB5DrawdownsCanUploadBankDocuments
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_without_an_array_of_documents_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                CUDAction::Create,
+            ),
+            Error::<Test>::BankConfirmingDocumentsNotProvided
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_with_an_empty_array_of_documents_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents: Documents<Test> = bounded_vec![];
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents),
+                CUDAction::Create,
+            ),
+            Error::<Test>::BankConfirmingDocumentsEmpty
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_if_the_drawdown_is_not_approved_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents),
+                CUDAction::Create,
+            ),
+            Error::<Test>::DrawdowMustBeInApprovedStatus
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_upload_documents_twice_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents),
+                CUDAction::Create,
+            ),
+            Error::<Test>::DrawdownHasAlreadyBankConfirmingDocuments
+        );
+    });
+}
+
+#[test]
+fn bank_documents_an_administrator_updates_the_bank_documents_should_work() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        let bank_documents = make_documents(2);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Update,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, Some(bank_documents));
+    });
+}
+
+#[test]
+fn bank_documents_cannot_update_documents_without_uploading_documents_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                CUDAction::Update,
+            ),
+            Error::<Test>::BankConfirmingDocumentsNotProvided
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_update_documents_with_an_empty_array_of_documents_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        let bank_documents = make_documents(0);
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents),
+                CUDAction::Update,
+            ),
+            Error::<Test>::BankConfirmingDocumentsEmpty
+        );
+    });
+}
+
+#[test]
+fn bank_documents_cannot_update_bank_documents_if_the_drawdown_is_not_confirmed_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let bank_documents = make_documents(2);
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents),
+                CUDAction::Update,
+            ),
+            Error::<Test>::DrawdowMustBeInConfirmedStatus
+        );
+    });
+}
+
+#[test]
+fn bank_documents_an_administrator_deletes_bank_documents_should_work() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        let bank_documents = make_documents(1);
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            CUDAction::Delete,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+    });
+}
+
+#[test]
+fn bank_documents_cannot_delete_documents_if_the_drawdown_is_not_confirmed_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_noop!(
+            FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                CUDAction::Delete,
+            ),
+            Error::<Test>::DrawdowMustBeInConfirmedStatus
+        );
+    });
+}
+
+// R E S E T    D R A W D O W N
+// =================================================================================================3
+#[test]
+fn reset_drawdown_a_builder_resets_a_eb5_drawdown_should_work() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transactions_by_drawdown = TransactionsByDrawdown::<Test>::get(project_id, drawdown_id);
+
+        assert_ok!(FundAdmin::reset_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+        ));
+
+        for transaction in transactions_by_drawdown {
+            assert_eq!(TransactionsInfo::<Test>::contains_key(transaction), false);
+        }
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, None);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+    });
+}
+
+#[test]
+fn reset_drawdown_a_builder_resets_a_construction_loan_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::ConstructionLoan, 1);
+
+        let drawdown_description = make_field_description("Construction Loan Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_ok!(FundAdmin::reset_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, None);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().construction_loan_drawdown_status, Some(DrawdownStatus::Draft));
+    });
+}
+
+#[test]
+fn reset_drawdown_a_builder_resets_a_developer_equity_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::DeveloperEquity, 1);
+
+        let drawdown_description = make_field_description("Developer Equity Drawdown 1");
+        let total_amount = 100000u64;
+        let documents = make_documents(1);
+
+        assert_ok!(FundAdmin::up_bulkupload(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            drawdown_description.clone(),
+            total_amount,
+            documents.clone(),
+        ));
+
+        assert_ok!(FundAdmin::reset_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bulkupload_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().bank_documents, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().description, None);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().feedback, None);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().developer_equity_drawdown_status, Some(DrawdownStatus::Draft));
+    });
+}
+
+#[test]
+fn reset_drawdown_a_builder_cannot_reset_a_drawdown_if_it_is_not_submitted_should_fail() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        assert_noop!(
+            FundAdmin::reset_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+            ),
+            Error::<Test>::DrawdownNotSubmitted
+        );
+    });
+}
+
+#[test]
+fn reset_drawdown_a_builder_cannot_reset_an_approved_drawdown() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_noop!(
+            FundAdmin::reset_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+            ),
+            Error::<Test>::DrawdownNotSubmitted
+        );
     });
 }

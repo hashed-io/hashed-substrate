@@ -27,6 +27,12 @@ pub type Banks<T> = BoundedVec<(
     BankAddress,
 ), <T as Config>::MaxBanksPerProject>;
 pub type PrivateGroupId = BoundedVec<u8, ConstU32<400>>;
+pub type InflationRate = u32;
+pub type ProjectsInflation<T> = BoundedVec<(
+    ProjectId,
+    Option<InflationRate>,
+    CUDAction,
+), <T as Config>::MaxRegistrationsAtTime>;
 
 // Users
 pub type DateRegistered = u64;
@@ -62,7 +68,6 @@ pub type ExpenditureId = [u8; 32];
 pub type ExpenditureAmount = Amount;
 pub type NAICSCode = BoundedVec<u8, ConstU32<400>>;
 pub type JobsMultiplier = u32;
-pub type InflationRate = u32;
 pub type Expenditures<T> = BoundedVec<(
     Option<FieldName>,
     Option<ExpenditureType>,

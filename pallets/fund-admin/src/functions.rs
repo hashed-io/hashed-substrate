@@ -1356,13 +1356,13 @@ impl<T: Config> Pallet<T> {
     // ================================================================================================
     pub fn do_execute_inflation_adjustment(
         admin: T::AccountId,
-        projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
+        projects: ProjectsInflation<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::InflationRate)?;
 
         // Ensure projects array is not empty
-        ensure!(!projects.is_empty(), Error::<T>::InflationRateMissingProjectIds);
+        ensure!(!projects.is_empty(), Error::<T>::ProjectsInflationRateEmpty);
 
         // Match each CUD action
         for project in projects.iter().cloned() {
@@ -1947,7 +1947,7 @@ impl<T: Config> Pallet<T> {
                 let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
                 // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsEmpty);
 
                 // Create drawdown bank confirming documents
                 Self::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
@@ -1957,7 +1957,7 @@ impl<T: Config> Pallet<T> {
                 let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
                 // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsEmpty);
 
                 // Update drawdown bank confirming documents
                 Self::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
@@ -1982,7 +1982,7 @@ impl<T: Config> Pallet<T> {
         ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
 
         // Ensure drawdown status is Approved
-        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
+        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdowMustBeInApprovedStatus);
 
         // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2023,11 +2023,11 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdowMustBeInConfirmedStatus);
+
         // Ensure drawdown has bank confirming documents
         ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
 
         // Mutate drawdown data: Update bank documents
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2048,11 +2048,11 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdowMustBeInConfirmedStatus);
+
         // Ensure drawdown has bank confirming documents
         ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
 
         // Rollback drawdown status to Approved & remove bank confirming documents
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2085,8 +2085,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
         Ok(())
     }
-
-
 
     // H E L P E R S
     // ================================================================================================

@@ -521,7 +521,7 @@ pub mod pallet {
 		/// EB5 feedback is empty
 		EmptyEb5Feedback,
 		/// Inflation rate extrinsic is missing an array of project ids
-		InflationRateMissingProjectIds,
+		ProjectsInflationRateEmpty,
 		/// Inflation rate was not provided
 		InflationRateRequired,
 		/// Inflation rate has been already set for the selected project
@@ -607,9 +607,9 @@ pub mod pallet {
 		/// The revenue is not in submitted status
 		RevenueNotSubmitted,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
-		DrawdownNotApproved,
+		DrawdowMustBeInApprovedStatus,
 		/// Drawdown is not in Confirmed status
-		DrawdownNotConfirmed,
+		DrawdowMustBeInConfirmedStatus,
 		/// Drawdown is not in Submitted status
 		DrawdownNotSubmitted,
 		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
@@ -619,7 +619,7 @@ pub mod pallet {
 		/// Bank confirming documents are required
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
-		BankConfirmingDocumentsAreEmpty,
+		BankConfirmingDocumentsEmpty,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty
@@ -1295,7 +1295,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
-			projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
+			projects: ProjectsInflation<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
