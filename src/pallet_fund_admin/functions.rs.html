@@ -2804,9 +2804,6 @@
 <span id="2804">2804</span>
 <span id="2805">2805</span>
 <span id="2806">2806</span>
-<span id="2807">2807</span>
-<span id="2808">2808</span>
-<span id="2809">2809</span>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -3704,7 +3701,7 @@
         </span><span class="self">Self</span>::is_drawdown_editable(drawdown_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure drawdown has transactions
-        </span><span class="macro">ensure!</span>(&lt;TransactionsByDrawdown&lt;T&gt;&gt;::contains_key(project_id, drawdown_id), Error::&lt;T&gt;::DrawdownHasNoTransactions);
+        </span><span class="macro">ensure!</span>(!&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(project_id, drawdown_id).is_empty(), Error::&lt;T&gt;::DrawdownHasNoTransactions);
 
         <span class="comment">// Get drawdown transactions
         </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
@@ -3754,7 +3751,7 @@
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure drawdown has transactions
-        </span><span class="macro">ensure!</span>(&lt;TransactionsByDrawdown&lt;T&gt;&gt;::contains_key(project_id, drawdown_id), Error::&lt;T&gt;::DrawdownHasNoTransactions);
+        </span><span class="macro">ensure!</span>(!&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(project_id, drawdown_id).is_empty(), Error::&lt;T&gt;::DrawdownHasNoTransactions);
 
         <span class="comment">// Ensure drawdown is in submitted status
         </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Submitted, Error::&lt;T&gt;::DrawdownNotSubmitted);
@@ -3805,10 +3802,7 @@
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions_feedback: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime&gt;&gt;,
+        transactions_feedback: <span class="prelude-ty">Option</span>&lt;TransactionsFeedback&lt;T&gt;&gt;,
         drawdown_feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
@@ -3848,6 +3842,9 @@
                 <span class="comment">// Ensure transactions feedback is provided
                 </span><span class="kw">let </span>mod_transactions_feedback = transactions_feedback.ok_or(Error::&lt;T&gt;::EB5MissingFeedback)<span class="question-mark">?</span>;
 
+                <span class="comment">// Ensure feedback is not empty
+                </span><span class="macro">ensure!</span>(!mod_transactions_feedback.is_empty(), Error::&lt;T&gt;::EmptyEb5Feedback);
+
                 <span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>mod_transactions_feedback.iter().cloned() {
                     <span class="comment">// Update transaction feedback
                     </span>&lt;TransactionsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(transaction_id, |transaction_data| {
@@ -3861,6 +3858,9 @@
             <span class="kw">_ </span>=&gt; {
                 <span class="comment">// Ensure drawdown feedback is provided
                 </span><span class="kw">let </span>mod_drawdown_feedback = drawdown_feedback.ok_or(Error::&lt;T&gt;::NoFeedbackProvidedForBulkUpload)<span class="question-mark">?</span>;
+
+                <span class="comment">// Esnure feedback is not empty
+                </span><span class="macro">ensure!</span>(!mod_drawdown_feedback.is_empty(), Error::&lt;T&gt;::EmptyBulkUploadFeedback);
 
                 <span class="comment">// Update drawdown feedback
                 </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
@@ -4162,13 +4162,13 @@
     // ================================================================================================
     </span><span class="kw">pub fn </span>do_execute_inflation_adjustment(
         admin: T::AccountId,
-        projects: BoundedVec&lt;(ProjectId, <span class="prelude-ty">Option</span>&lt;InflationRate&gt;, CUDAction), T::MaxRegistrationsAtTime&gt;,
+        projects: ProjectsInflation&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(), ProxyPermission::InflationRate)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure projects array is not empty
-        </span><span class="macro">ensure!</span>(!projects.is_empty(), Error::&lt;T&gt;::InflationRateMissingProjectIds);
+        </span><span class="macro">ensure!</span>(!projects.is_empty(), Error::&lt;T&gt;::ProjectsInflationRateEmpty);
 
         <span class="comment">// Match each CUD action
         </span><span class="kw">for </span>project <span class="kw">in </span>projects.iter().cloned() {
@@ -4571,7 +4571,7 @@
         </span><span class="self">Self</span>::is_revenue_editable(revenue_id)<span class="question-mark">?</span>;
 
         <span class="comment">// Ensure revenue has transactions
-        </span><span class="macro">ensure!</span>(TransactionsByRevenue::&lt;T&gt;::contains_key(project_id, revenue_id), Error::&lt;T&gt;::RevenueHasNoTransactions);
+        </span><span class="macro">ensure!</span>(!TransactionsByRevenue::&lt;T&gt;::get(project_id, revenue_id).is_empty(), Error::&lt;T&gt;::RevenueHasNoTransactions);
 
         <span class="comment">// Get revenue transactions
         </span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
@@ -4614,10 +4614,7 @@
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::ApproveRevenue)<span class="question-mark">?</span>;
 
-        <span class="comment">// Ensure revenue is editable &amp; ensure revenue exists
-        // Self::is_revenue_editable(revenue_id)?;
-
-        // Get revenue data
+        <span class="comment">// Get revenue data
         </span><span class="kw">let </span>revenue_data = <span class="self">Self</span>::revenues_info(revenue_id).ok_or(Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
 
 		<span class="comment">// Ensure revenue is submitted
@@ -4670,10 +4667,7 @@
         admin: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
-        revenue_transactions_feedback: BoundedVec&lt;(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime&gt;,
+        revenue_transactions_feedback: TransactionsFeedback&lt;T&gt;,
     ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin permissions
         </span><span class="self">Self</span>::is_authorized(admin, <span class="kw-2">&amp;</span>project_id, ProxyPermission::RejectRevenue)<span class="question-mark">?</span>;
@@ -4685,7 +4679,7 @@
 		</span><span class="macro">ensure!</span>(revenue_data.status == RevenueStatus::Submitted, Error::&lt;T&gt;::RevenueNotSubmitted);
 
         <span class="comment">// Ensure revenue has transactions
-        </span><span class="macro">ensure!</span>(TransactionsByRevenue::&lt;T&gt;::contains_key(project_id, revenue_id), Error::&lt;T&gt;::RevenueHasNoTransactions);
+        </span><span class="macro">ensure!</span>(!TransactionsByRevenue::&lt;T&gt;::get(project_id, revenue_id).is_empty(), Error::&lt;T&gt;::RevenueHasNoTransactions);
 
         <span class="comment">// Get revenue transactions
         </span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
@@ -4704,6 +4698,8 @@
             })<span class="question-mark">?</span>;
         }
 
+        <span class="comment">// Ensure revenue transactions feedback is not empty
+        </span><span class="macro">ensure!</span>(!revenue_transactions_feedback.is_empty(), Error::&lt;T&gt;::RevenueTransactionsFeedbackEmpty);
         <span class="comment">// Update revenue transactions feedback
         </span><span class="kw">for </span>(transaction_id, feedback) <span class="kw">in </span>revenue_transactions_feedback.iter().cloned() {
             <span class="comment">// Update revenue transaction feedback
@@ -4757,7 +4753,7 @@
                 </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
 
                 <span class="comment">// Ensure confirming documents are not empty
-                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
+                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsEmpty);
 
                 <span class="comment">// Create drawdown bank confirming documents
                 </span><span class="self">Self</span>::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
@@ -4767,7 +4763,7 @@
                 </span><span class="kw">let </span>mod_confirming_documents = confirming_documents.ok_or(Error::&lt;T&gt;::BankConfirmingDocumentsNotProvided)<span class="question-mark">?</span>;
 
                 <span class="comment">// Ensure confirming documents are not empty
-                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsAreEmpty);
+                </span><span class="macro">ensure!</span>(!mod_confirming_documents.is_empty(), Error::&lt;T&gt;::BankConfirmingDocumentsEmpty);
 
                 <span class="comment">// Update drawdown bank confirming documents
                 </span><span class="self">Self</span>::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
@@ -4792,7 +4788,7 @@
         </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_none(), Error::&lt;T&gt;::DrawdownHasAlreadyBankConfirmingDocuments);
 
         <span class="comment">// Ensure drawdown status is Approved
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Approved, Error::&lt;T&gt;::DrawdownNotApproved);
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Approved, Error::&lt;T&gt;::DrawdowMustBeInApprovedStatus);
 
         <span class="comment">// Mutate drawdown data: Upload bank documents &amp; update drawdown status to Confirmed
         </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
@@ -4833,11 +4829,11 @@
         <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
+        <span class="comment">// Ensure drawdown status is Confirmed
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdowMustBeInConfirmedStatus);
+
         <span class="comment">// Ensure drawdown has bank confirming documents
         </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
-
-        <span class="comment">// Ensure drawdown status is Confirmed
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
 
         <span class="comment">// Mutate drawdown data: Update bank documents
         </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
@@ -4858,11 +4854,11 @@
         <span class="comment">// Get drawdown data &amp; ensure drawdown exists
         </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
+        <span class="comment">// Ensure drawdown status is Confirmed
+        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdowMustBeInConfirmedStatus);
+
         <span class="comment">// Ensure drawdown has bank confirming documents
         </span><span class="macro">ensure!</span>(drawdown_data.bank_documents.is_some(), Error::&lt;T&gt;::DrawdownHasNoBankConfirmingDocuments);
-
-        <span class="comment">// Ensure drawdown status is Confirmed
-        </span><span class="macro">ensure!</span>(drawdown_data.status == DrawdownStatus::Confirmed, Error::&lt;T&gt;::DrawdownNotConfirmed);
 
         <span class="comment">// Rollback drawdown status to Approved &amp; remove bank confirming documents
         </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(drawdown_id, |drawdown_data| {
@@ -4895,8 +4891,6 @@
         </span><span class="self">Self</span>::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
         <span class="prelude-val">Ok</span>(())
     }
-
-
 
     <span class="comment">// H E L P E R S
     // ================================================================================================

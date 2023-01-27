@@ -1537,6 +1537,11 @@
 <span id="1537">1537</span>
 <span id="1538">1538</span>
 <span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
 </pre><pre class="rust"><code><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -2053,10 +2058,14 @@
 		</span>AdministratorsCannotDeleteThemselves,
 		<span class="doccomment">/// No feedback was provided for bulk upload
 		</span>NoFeedbackProvidedForBulkUpload,
+		<span class="doccomment">/// Bulkupload feedback is empty
+		</span>EmptyBulkUploadFeedback,
 		<span class="doccomment">/// NO feedback for EN5 drawdown was provided
 		</span>EB5MissingFeedback,
+		<span class="doccomment">/// EB5 feedback is empty
+		</span>EmptyEb5Feedback,
 		<span class="doccomment">/// Inflation rate extrinsic is missing an array of project ids
-		</span>InflationRateMissingProjectIds,
+		</span>ProjectsInflationRateEmpty,
 		<span class="doccomment">/// Inflation rate was not provided
 		</span>InflationRateRequired,
 		<span class="doccomment">/// Inflation rate has been already set for the selected project
@@ -2099,6 +2108,8 @@
 		</span>RevenueNotFound,
 		<span class="doccomment">/// Transactions revenue array is empty
 		</span>RevenueTransactionsEmpty,
+		<span class="doccomment">/// An array of revenue transactions is required
+		</span>RevenueTransactionsRequired,
 		<span class="doccomment">/// Revenue transaction is not in submitted status
 		</span>RevenueTransactionNotSubmitted,
 		<span class="doccomment">/// Revenue can not be edited
@@ -2135,12 +2146,14 @@
 		</span>RevenueIsNotInSubmittedStatus,
 		<span class="doccomment">/// Revenue transaction is not in submitted status
 		</span>RevenueTransactionIsNotInSubmittedStatus,
+		<span class="doccomment">/// Revenue transactions feedback is empty
+		</span>RevenueTransactionsFeedbackEmpty,
 		<span class="doccomment">/// The revenue is not in submitted status
 		</span>RevenueNotSubmitted,
 		<span class="doccomment">/// Can not upload bank confirming documents if the drawdown is not in Approved status
-		</span>DrawdownNotApproved,
+		</span>DrawdowMustBeInApprovedStatus,
 		<span class="doccomment">/// Drawdown is not in Confirmed status
-		</span>DrawdownNotConfirmed,
+		</span>DrawdowMustBeInConfirmedStatus,
 		<span class="doccomment">/// Drawdown is not in Submitted status
 		</span>DrawdownNotSubmitted,
 		<span class="doccomment">/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
@@ -2150,7 +2163,7 @@
 		<span class="doccomment">/// Bank confirming documents are required
 		</span>BankConfirmingDocumentsNotProvided,
 		<span class="doccomment">/// Banck confirming documents array is empty
-		</span>BankConfirmingDocumentsAreEmpty,
+		</span>BankConfirmingDocumentsEmpty,
 		<span class="doccomment">/// Only eb5 drawdowns are allowed to upload bank documentation
 		</span>OnlyEB5DrawdownsCanUploadBankDocuments,
 		<span class="doccomment">/// The private group id is empty
@@ -2678,6 +2691,9 @@
 			// Match bulkupload parameter
 			</span><span class="kw">match </span>bulkupload {
 				<span class="prelude-val">Some</span>(approval) =&gt; {
+					<span class="comment">// Ensure admin permissions
+					</span><span class="self">Self</span>::is_authorized(who.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::ApproveDrawdown)<span class="question-mark">?</span>;
+					
 					<span class="comment">// Execute bulkupload flow (construction loan &amp; developer equity)
 					</span><span class="kw">match </span>approval {
 						<span class="bool-val">false </span>=&gt; {
@@ -2691,7 +2707,6 @@
 
 							<span class="comment">// 2. Do submit drawdown
 							</span><span class="self">Self</span>::do_submit_drawdown(who, project_id, drawdown_id)
-
 						},
 						<span class="bool-val">true  </span>=&gt; {
 							<span class="comment">// 1.Execute transactions if provided
@@ -2760,10 +2775,7 @@
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions_feedback: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime&gt;&gt;,
+			transactions_feedback: <span class="prelude-ty">Option</span>&lt;TransactionsFeedback&lt;T&gt;&gt;,
 			drawdown_feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
@@ -2827,7 +2839,7 @@
 		</span><span class="attribute">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>inflation_rate(
 			origin: OriginFor&lt;T&gt;,
-			projects: BoundedVec&lt;(ProjectId, <span class="prelude-ty">Option</span>&lt;InflationRate&gt;, CUDAction), T::MaxRegistrationsAtTime&gt;,
+			projects: ProjectsInflation&lt;T&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
@@ -2891,21 +2903,22 @@
 						who,
 						project_id,
 						revenue_id,
-						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsEmpty)<span class="question-mark">?</span>,
+						revenue_transactions.ok_or(Error::&lt;T&gt;::RevenueTransactionsRequired)<span class="question-mark">?</span>,
 					)
 				},
 				<span class="comment">// Submit revenue transactions
 				</span><span class="bool-val">true </span>=&gt; {
 					<span class="comment">// Check if there are transactions to execute
 					</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_revenue_transactions) = revenue_transactions {
+						<span class="comment">// Ensure transactions are not empty
+						</span><span class="macro">ensure!</span>(!mod_revenue_transactions.is_empty(), Error::&lt;T&gt;::RevenueTransactionsEmpty);
+
 						<span class="comment">// Do execute transactions
-						</span><span class="kw">if </span>mod_revenue_transactions.len() &gt; <span class="number">0 </span>{
-							<span class="self">Self</span>::do_execute_revenue_transactions(
-								who.clone(),
-								project_id,
-								revenue_id,
-								mod_revenue_transactions)<span class="question-mark">?</span>;
-						}
+						</span><span class="self">Self</span>::do_execute_revenue_transactions(
+							who.clone(),
+							project_id,
+							revenue_id,
+							mod_revenue_transactions)<span class="question-mark">?</span>;
 					}
 
 					<span class="comment">// Do submit revenue
@@ -2966,10 +2979,7 @@
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
 			revenue_id: RevenueId,
-			revenue_transactions_feedback: BoundedVec&lt;(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime&gt;,
+			revenue_transactions_feedback: TransactionsFeedback&lt;T&gt;,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
