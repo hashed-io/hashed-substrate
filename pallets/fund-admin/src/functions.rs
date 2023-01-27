@@ -895,7 +895,7 @@ impl<T: Config> Pallet<T> {
         Self::is_drawdown_editable(drawdown_id)?;
 
         // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        ensure!(!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(), Error::<T>::DrawdownHasNoTransactions);
 
         // Get drawdown transactions
         let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
@@ -945,7 +945,7 @@ impl<T: Config> Pallet<T> {
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
         // Ensure drawdown has transactions
-        ensure!(<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id), Error::<T>::DrawdownHasNoTransactions);
+        ensure!(!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(), Error::<T>::DrawdownHasNoTransactions);
 
         // Ensure drawdown is in submitted status
         ensure!(drawdown_data.status == DrawdownStatus::Submitted, Error::<T>::DrawdownNotSubmitted);
@@ -996,10 +996,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         drawdown_id: DrawdownId,
-        transactions_feedback: Option<BoundedVec<(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime>>,
+        transactions_feedback: Option<TransactionsFeedback<T>>,
         drawdown_feedback: Option<FieldDescription>,
     ) -> DispatchResult {
         // Ensure admin permissions
@@ -1039,6 +1036,9 @@ impl<T: Config> Pallet<T> {
                 // Ensure transactions feedback is provided
                 let mod_transactions_feedback = transactions_feedback.ok_or(Error::<T>::EB5MissingFeedback)?;
 
+                // Ensure feedback is not empty
+                ensure!(!mod_transactions_feedback.is_empty(), Error::<T>::EmptyEb5Feedback);
+
                 for (transaction_id, feedback) in mod_transactions_feedback.iter().cloned() {
                     // Update transaction feedback
                     <TransactionsInfo<T>>::try_mutate::<_,_,DispatchError,_>(transaction_id, |transaction_data| {
@@ -1052,6 +1052,9 @@ impl<T: Config> Pallet<T> {
             _ => {
                 // Ensure drawdown feedback is provided
                 let mod_drawdown_feedback = drawdown_feedback.ok_or(Error::<T>::NoFeedbackProvidedForBulkUpload)?;
+
+                // Esnure feedback is not empty
+                ensure!(!mod_drawdown_feedback.is_empty(), Error::<T>::EmptyBulkUploadFeedback);
 
                 // Update drawdown feedback
                 <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -1353,13 +1356,13 @@ impl<T: Config> Pallet<T> {
     // ================================================================================================
     pub fn do_execute_inflation_adjustment(
         admin: T::AccountId,
-        projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
+        projects: ProjectsInflation<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin.clone(), &Self::get_global_scope(), ProxyPermission::InflationRate)?;
 
         // Ensure projects array is not empty
-        ensure!(!projects.is_empty(), Error::<T>::InflationRateMissingProjectIds);
+        ensure!(!projects.is_empty(), Error::<T>::ProjectsInflationRateEmpty);
 
         // Match each CUD action
         for project in projects.iter().cloned() {
@@ -1762,7 +1765,7 @@ impl<T: Config> Pallet<T> {
         Self::is_revenue_editable(revenue_id)?;
 
         // Ensure revenue has transactions
-        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+        ensure!(!TransactionsByRevenue::<T>::get(project_id, revenue_id).is_empty(), Error::<T>::RevenueHasNoTransactions);
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
@@ -1804,9 +1807,6 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin, &project_id, ProxyPermission::ApproveRevenue)?;
-
-        // Ensure revenue is editable & ensure revenue exists
-        // Self::is_revenue_editable(revenue_id)?;
 
         // Get revenue data
         let revenue_data = Self::revenues_info(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
@@ -1861,10 +1861,7 @@ impl<T: Config> Pallet<T> {
         admin: T::AccountId,
         project_id: ProjectId,
         revenue_id: RevenueId,
-        revenue_transactions_feedback: BoundedVec<(
-            TransactionId,
-            FieldDescription
-        ), T::MaxRegistrationsAtTime>,
+        revenue_transactions_feedback: TransactionsFeedback<T>,
     ) -> DispatchResult {
         // Ensure admin permissions
         Self::is_authorized(admin, &project_id, ProxyPermission::RejectRevenue)?;
@@ -1876,7 +1873,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(revenue_data.status == RevenueStatus::Submitted, Error::<T>::RevenueNotSubmitted);
 
         // Ensure revenue has transactions
-        ensure!(TransactionsByRevenue::<T>::contains_key(project_id, revenue_id), Error::<T>::RevenueHasNoTransactions);
+        ensure!(!TransactionsByRevenue::<T>::get(project_id, revenue_id).is_empty(), Error::<T>::RevenueHasNoTransactions);
 
         // Get revenue transactions
         let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id).map_err(|_| Error::<T>::RevenueNotFound)?;
@@ -1895,6 +1892,8 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
+        // Ensure revenue transactions feedback is not empty
+        ensure!(!revenue_transactions_feedback.is_empty(), Error::<T>::RevenueTransactionsFeedbackEmpty);
         // Update revenue transactions feedback
         for (transaction_id, feedback) in revenue_transactions_feedback.iter().cloned() {
             // Update revenue transaction feedback
@@ -1948,7 +1947,7 @@ impl<T: Config> Pallet<T> {
                 let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
                 // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsEmpty);
 
                 // Create drawdown bank confirming documents
                 Self::do_create_bank_confirming_documents(project_id, drawdown_id, mod_confirming_documents)
@@ -1958,7 +1957,7 @@ impl<T: Config> Pallet<T> {
                 let mod_confirming_documents = confirming_documents.ok_or(Error::<T>::BankConfirmingDocumentsNotProvided)?;
 
                 // Ensure confirming documents are not empty
-                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsAreEmpty);
+                ensure!(!mod_confirming_documents.is_empty(), Error::<T>::BankConfirmingDocumentsEmpty);
 
                 // Update drawdown bank confirming documents
                 Self::do_update_bank_confirming_documents(drawdown_id, mod_confirming_documents)
@@ -1983,7 +1982,7 @@ impl<T: Config> Pallet<T> {
         ensure!(drawdown_data.bank_documents.is_none(), Error::<T>::DrawdownHasAlreadyBankConfirmingDocuments);
 
         // Ensure drawdown status is Approved
-        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdownNotApproved);
+        ensure!(drawdown_data.status == DrawdownStatus::Approved, Error::<T>::DrawdowMustBeInApprovedStatus);
 
         // Mutate drawdown data: Upload bank documents & update drawdown status to Confirmed
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2024,11 +2023,11 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdowMustBeInConfirmedStatus);
+
         // Ensure drawdown has bank confirming documents
         ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
 
         // Mutate drawdown data: Update bank documents
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2049,11 +2048,11 @@ impl<T: Config> Pallet<T> {
         // Get drawdown data & ensure drawdown exists
         let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
+        // Ensure drawdown status is Confirmed
+        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdowMustBeInConfirmedStatus);
+
         // Ensure drawdown has bank confirming documents
         ensure!(drawdown_data.bank_documents.is_some(), Error::<T>::DrawdownHasNoBankConfirmingDocuments);
-
-        // Ensure drawdown status is Confirmed
-        ensure!(drawdown_data.status == DrawdownStatus::Confirmed, Error::<T>::DrawdownNotConfirmed);
 
         // Rollback drawdown status to Approved & remove bank confirming documents
         <DrawdownsInfo<T>>::try_mutate::<_,_,DispatchError,_>(drawdown_id, |drawdown_data| {
@@ -2086,8 +2085,6 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::BankDocumentsDeleted(project_id, drawdown_id));
         Ok(())
     }
-
-
 
     // H E L P E R S
     // ================================================================================================
