@@ -10,6 +10,12 @@ pub type FieldName = BoundedVec<u8, ConstU32<100>>;
 pub type Cid = BoundedVec<u8, ConstU32<100>>;
 pub type Cids<Len> = BoundedVec<Cid, Len>;
 pub type CustodianFields<T> = (AccountIdOf<T>, Cids<<T as Config>::MaxFiles>);
+
+pub type MarketplaceId = [u8; 32];
+pub type ApplicationId = [u8; 32];
+pub type OfferId = [u8; 32];
+pub type RedemptionId = [u8; 32];
+
 use sp_runtime::Permill;
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
@@ -19,6 +25,26 @@ pub struct Marketplace<T: Config> {
 	pub label: BoundedVec<u8, T::LabelMaxLen>,
 	pub fee: Permill,
 	pub creator: T::AccountId,
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct RedemptionData<T: Config> {
+	pub creator: T::AccountId,
+	pub redeemed_by: Option<T::AccountId>,
+	pub collection_id: T::CollectionId,
+	pub item_id: T::ItemId,
+	pub is_redeemed: bool,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+
+pub enum RedeemArgs<T: Config> {
+	AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId, },
+	AcceptRedemption (RedemptionId),
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
@@ -90,6 +116,8 @@ pub enum Permission {
 	RemoveOffer,
 	EnlistBuyOffer,
 	TakeBuyOffer,
+	AskForRedemption,
+	AcceptRedemption,
 }
 
 impl Permission {
@@ -106,6 +134,8 @@ impl Permission {
 			Self::RemoveOffer => "RemoveOffer".as_bytes().to_vec(),
 			Self::EnlistBuyOffer => "EnlistBuyOffer".as_bytes().to_vec(),
 			Self::TakeBuyOffer => "TakeBuyOffer".as_bytes().to_vec(),
+			Self::AskForRedemption => "AskForRedemption".as_bytes().to_vec(),
+			Self::AcceptRedemption => "AcceptRedemption".as_bytes().to_vec(),
 		}
 	}
 
@@ -121,6 +151,7 @@ impl Permission {
 			RemoveAuth.to_vec(),
 			UpdateLabel.to_vec(),
 			RemoveMarketplace.to_vec(),
+			AcceptRedemption.to_vec(),
 		]
 		.to_vec();
 		admin_permissions.append(&mut Permission::participant_permissions());
@@ -136,6 +167,7 @@ impl Permission {
 			RemoveOffer.to_vec(),
 			EnlistBuyOffer.to_vec(),
 			TakeBuyOffer.to_vec(),
+			AskForRedemption.to_vec(),
 		]
 		.to_vec()
 	}

@@ -81,7 +81,7 @@ pub mod pallet {
 	pub(super) type Marketplaces<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8; 32],       // Key
+		MarketplaceId,
 		Marketplace<T>, // Value
 		OptionQuery,
 	>;
@@ -91,7 +91,7 @@ pub mod pallet {
 	pub(super) type Applications<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8; 32], //K1: application_id
+		ApplicationId,
 		Application<T>,
 		OptionQuery,
 	>;
@@ -103,8 +103,8 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId, // K1: account_id
 		Identity,
-		[u8; 32], // k2: marketplace_id
-		[u8; 32], //application_id
+		MarketplaceId,
+		ApplicationId,
 		OptionQuery,
 	>;
 
@@ -113,7 +113,7 @@ pub mod pallet {
 	pub(super) type ApplicantsByMarketplace<T: Config> = StorageDoubleMap<
 		_,
 		Identity,
-		[u8; 32], //K1: marketplace_id
+		MarketplaceId,
 		Blake2_128Concat,
 		ApplicationStatus, //K2: application_status
 		BoundedVec<T::AccountId, T::MaxApplicants>,
@@ -127,7 +127,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId, //custodians
 		Identity,
-		[u8; 32],                                                 //marketplace_id
+		MarketplaceId,
 		BoundedVec<T::AccountId, T::MaxApplicationsPerCustodian>, //applicants
 		ValueQuery,
 	>;
@@ -140,7 +140,7 @@ pub mod pallet {
 		T::CollectionId, //collection_id
 		Blake2_128Concat,
 		T::ItemId,                                   //item_id
-		BoundedVec<[u8; 32], T::MaxOffersPerMarket>, // offer_id's
+		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
 
@@ -150,7 +150,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		T::AccountId,                                // account_id
-		BoundedVec<[u8; 32], T::MaxOffersPerMarket>, // offer_id's
+		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
 
@@ -159,8 +159,8 @@ pub mod pallet {
 	pub(super) type OffersByMarketplace<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8; 32],                                    // Marketplace_id
-		BoundedVec<[u8; 32], T::MaxOffersPerMarket>, // offer_id's
+		MarketplaceId,
+		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
 
@@ -169,9 +169,21 @@ pub mod pallet {
 	pub(super) type OffersInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8; 32], // offer_id
+		OfferId,
 		//StorageDoubleMap -> marketplace_id(?)
 		OfferData<T>, // offer data
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn asking_for_redemption)]
+	pub(super) type AskingForRedemption<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		MarketplaceId,
+		Blake2_128Concat,
+		RedemptionId,
+		RedemptionData<T>,
 		OptionQuery,
 	>;
 
@@ -179,29 +191,33 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Marketplaces stored. [owner, admin, market_id]
-		MarketplaceStored(T::AccountId, T::AccountId, [u8; 32]),
+		MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
 		/// Application stored on the specified marketplace. [application_id, market_id]
-		ApplicationStored([u8; 32], [u8; 32]),
+		ApplicationStored(ApplicationId, MarketplaceId),
 		/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
-		ApplicationProcessed(AccountOrApplication<T>, [u8; 32], ApplicationStatus),
+		ApplicationProcessed(AccountOrApplication<T>, MarketplaceId, ApplicationStatus),
 		/// Add a new authority to the selected marketplace [account, authority]
 		AuthorityAdded(T::AccountId, MarketplaceRole),
 		/// Remove the selected authority from the selected marketplace [account, authority]
 		AuthorityRemoved(T::AccountId, MarketplaceRole),
 		/// The label of the selected marketplace has been updated. [market_id]
-		MarketplaceLabelUpdated([u8; 32]),
+		MarketplaceLabelUpdated(MarketplaceId),
 		/// The selected marketplace has been removed. [market_id]
-		MarketplaceRemoved([u8; 32]),
+		MarketplaceRemoved(MarketplaceId),
 		/// Offer stored. [collection_id, item_id, [offer_id]]
-		OfferStored(T::CollectionId, T::ItemId, [u8; 32]),
+		OfferStored(T::CollectionId, T::ItemId, OfferId),
 		/// Offer was accepted [offer_id, account]
-		OfferWasAccepted([u8; 32], T::AccountId),
+		OfferWasAccepted(OfferId, T::AccountId),
 		/// Offer was duplicated. [new_offer_id, new_marketplace_id]
-		OfferDuplicated([u8; 32], [u8; 32]),
+		OfferDuplicated(OfferId, MarketplaceId),
 		/// Offer was removed. [offer_id], [marketplace_id]
-		OfferRemoved([u8; 32], [u8; 32]),
-		/// Initial palllet setup
+		OfferRemoved(OfferId, MarketplaceId),
+		/// Initial pallet setup
 		MarketplaceSetupCompleted,
+		/// A new redemption was requested. [marketplace_id, redemption_id], owner
+		RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
+		/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
+		RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -221,9 +237,9 @@ pub mod pallet {
 		ExceedMaxPercentage,
 		/// This offer has smaller percentage than the allowed
 		ExceedMinPercentage,
-		/// Applicaion doesnt exist
+		/// Application does not exist
 		ApplicationNotFound,
-		/// The user has not applicated to that market before
+		/// The user has not applied to that market before
 		ApplicantNotFound,
 		/// The user cannot be custodian of its own application
 		ApplicantCannotBeCustodian,
@@ -249,7 +265,7 @@ pub mod pallet {
 		OwnerNotFound,
 		// Rol not found for the selected user
 		AuthorityNotFoundForUser,
-		/// Admis cannot be deleted between them, only the owner can
+		/// Admins cannot be deleted between them, only the owner can
 		CannotDeleteAdmin,
 		/// Application ID not found
 		ApplicationIdNotFound,
@@ -267,7 +283,7 @@ pub mod pallet {
 		OfferNotFound,
 		/// Offer is not available at the moment
 		OfferIsNotAvailable,
-		/// Owner cannnot buy its own offer
+		/// Owner can not buy its own offer
 		CannotTakeOffer,
 		/// User cannot remove the offer from the marketplace
 		CannotRemoveOffer,
@@ -287,6 +303,12 @@ pub mod pallet {
 		ItemNotForSale,
 		/// Could not access to item metadata
 		ItemMetadataNotFound,
+		/// Redemption request not found
+		RedemptionRequestNotFound,
+		/// Redemption request already in place
+		RedemptionRequestAlreadyExists,
+		/// The redemption in question is already redeemed
+		RedemptionRequestAlreadyRedeemed,
 	}
 
 	#[pallet::call]
@@ -497,7 +519,7 @@ pub mod pallet {
 			marketplace_id: [u8; 32],
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			//TOREVIEW: If we're allowing more than one role per user per marketplace, we should
+			// TODO: review If we're allowing more than one role per user per marketplace, we should
 			// check what role we want to remove instead of removing the user completely from
 			// selected marketplace.
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
@@ -589,8 +611,8 @@ pub mod pallet {
 
 		/// Accepts a sell order.
 		///
-		/// This extrisicn is called by the user who wants to buy the item.
-		/// Aaccepts a sell order in the selected marketplace.
+		/// This extrinsic is called by the user who wants to buy the item.
+		/// Accepts a sell order in the selected marketplace.
 		///
 		/// ### Parameters:
 		/// - `origin`: The user who performs the action.
@@ -669,7 +691,7 @@ pub mod pallet {
 
 		/// Accepts a buy order.
 		///
-		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant.
+		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
 		/// Accepts a buy order in the selected marketplace.
 		///
 		/// ### Parameters:
@@ -688,6 +710,23 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 
 			Self::do_take_buy_offer(who, offer_id)
+		}
+
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn redeem(
+			origin: OriginFor<T>,
+			marketplace: MarketplaceId,
+			redeem: RedeemArgs<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			match redeem {
+				RedeemArgs::AskForRedemption { collection_id, item_id } => {
+					return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id);
+				}
+				RedeemArgs::AcceptRedemption ( redemption_id ) => {
+					return Self::do_accept_redeem(who, marketplace, redemption_id);
+				}
+			}
 		}
 
 		//TODO: Add CRUD operations for the offers
@@ -714,6 +753,7 @@ pub mod pallet {
 			let _ = <OffersByAccount<T>>::clear(1000, None);
 			let _ = <OffersByMarketplace<T>>::clear(1000, None);
 			let _ = <OffersInfo<T>>::clear(1000, None);
+			let _ = <AskingForRedemption<T>>::clear(1000, None);
 			<T as Config>::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
