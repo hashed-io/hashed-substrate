@@ -346,6 +346,8 @@ impl<T: Config> Pallet<T> {
 		<OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
+		pallet_fruniques::Pallet::<T>::do_freeze(&collection_id, item_id)?;
+
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
 		Ok(())
 	}
@@ -469,6 +471,7 @@ impl<T: Config> Pallet<T> {
 		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
 		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
+		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer
 			pallet_uniques::Pallet::<T>::do_transfer(
@@ -565,6 +568,7 @@ impl<T: Config> Pallet<T> {
 			offer_data.fee,
 			KeepAlive,
 		)?;
+		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer

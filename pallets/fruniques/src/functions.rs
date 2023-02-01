@@ -75,6 +75,13 @@ impl<T: Config> Pallet<T> {
 		pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id)
 	}
 
+	pub fn is_frozen(collection_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+		let frunique: FruniqueData<T> =
+			<FruniqueInfo<T>>::try_get(&collection_id, &instance_id).unwrap();
+
+		frunique.frozen
+	}
+
 	pub fn collection_exists(class_id: &T::CollectionId) -> bool {
 		if let Some(_owner) = pallet_uniques::Pallet::<T>::collection_owner(*class_id) {
 			return true;
@@ -208,12 +215,29 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn freeze(
-		origin: OriginFor<T>,
-		class_id: &T::CollectionId,
-		instance_id: T::ItemId,
-	) -> DispatchResult {
-		pallet_uniques::Pallet::<T>::freeze(origin, *class_id, instance_id)?;
+	pub fn do_freeze(class_id: &T::CollectionId, instance_id: T::ItemId) -> DispatchResult {
+		<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			class_id,
+			instance_id,
+			|frunique_data| -> DispatchResult {
+				let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+				frunique.frozen = true;
+				Ok(())
+			},
+		)?;
+		Ok(())
+	}
+
+	pub fn do_thaw(class_id: &T::CollectionId, instance_id: T::ItemId) -> DispatchResult {
+		<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			class_id,
+			instance_id,
+			|frunique_data| -> DispatchResult {
+				let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+				frunique.frozen = false;
+				Ok(())
+			},
+		)?;
 		Ok(())
 	}
 
@@ -397,7 +421,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 		ensure!(Self::instance_exists(&collection, &item), Error::<T>::FruniqueNotFound);
 
-		let frunique_data : FruniqueData<T> = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
+		let frunique_data: FruniqueData<T> = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
 
 		ensure!(!frunique_data.frozen, Error::<T>::FruniqueFrozen);
 		ensure!(!frunique_data.redeemed, Error::<T>::FruniqueAlreadyRedeemed);
@@ -408,6 +432,7 @@ impl<T: Config> Pallet<T> {
 			|frunique_data| -> DispatchResult {
 				let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
 				frunique.redeemed = true;
+				frunique.frozen = true;
 				Ok(())
 			},
 		)?;
