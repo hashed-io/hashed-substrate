@@ -1186,6 +1186,10 @@
 <span id="1186">1186</span>
 <span id="1187">1187</span>
 <span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1534,6 +1538,8 @@
 		</span>&lt;OffersByMarketplace&lt;T&gt;&gt;::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
 			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
 
+		pallet_fruniques::Pallet::&lt;T&gt;::do_freeze(<span class="kw-2">&amp;</span>collection_id, item_id)<span class="question-mark">?</span>;
+
 		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
 		<span class="prelude-val">Ok</span>(())
 	}
@@ -1657,6 +1663,7 @@
 		</span>T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>owner_item, owners_cut, KeepAlive)<span class="question-mark">?</span>;
 		T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>marketplace.creator, offer_data.fee, KeepAlive)<span class="question-mark">?</span>;
 
+		pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
 		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
 			<span class="comment">//Use uniques transfer function to transfer the item to the buyer
 			</span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(
@@ -1753,6 +1760,7 @@
 			offer_data.fee,
 			KeepAlive,
 		)<span class="question-mark">?</span>;
+		pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
 
 		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
 			<span class="comment">//Use uniques transfer function to transfer the item to the buyer

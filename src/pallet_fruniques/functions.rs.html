@@ -470,6 +470,33 @@
 <span id="470">470</span>
 <span id="471">471</span>
 <span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -545,6 +572,13 @@
 
 	<span class="kw">pub fn </span>admin_of(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; <span class="prelude-ty">Option</span>&lt;T::AccountId&gt; {
 		pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id)
+	}
+
+	<span class="kw">pub fn </span>is_frozen(collection_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; bool {
+		<span class="kw">let </span>frunique: FruniqueData&lt;T&gt; =
+			&lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>collection_id, <span class="kw-2">&amp;</span>instance_id).unwrap();
+
+		frunique.frozen
 	}
 
 	<span class="kw">pub fn </span>collection_exists(class_id: <span class="kw-2">&amp;</span>T::CollectionId) -&gt; bool {
@@ -680,12 +714,29 @@
 		<span class="prelude-val">Ok</span>(())
 	}
 
-	<span class="kw">pub fn </span>freeze(
-		origin: OriginFor&lt;T&gt;,
-		class_id: <span class="kw-2">&amp;</span>T::CollectionId,
-		instance_id: T::ItemId,
-	) -&gt; DispatchResult {
-		pallet_uniques::Pallet::&lt;T&gt;::freeze(origin, <span class="kw-2">*</span>class_id, instance_id)<span class="question-mark">?</span>;
+	<span class="kw">pub fn </span>do_freeze(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
+		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+			class_id,
+			instance_id,
+			|frunique_data| -&gt; DispatchResult {
+				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+				frunique.frozen = <span class="bool-val">true</span>;
+				<span class="prelude-val">Ok</span>(())
+			},
+		)<span class="question-mark">?</span>;
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_thaw(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
+		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+			class_id,
+			instance_id,
+			|frunique_data| -&gt; DispatchResult {
+				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+				frunique.frozen = <span class="bool-val">false</span>;
+				<span class="prelude-val">Ok</span>(())
+			},
+		)<span class="question-mark">?</span>;
 		<span class="prelude-val">Ok</span>(())
 	}
 
@@ -869,7 +920,8 @@
 		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
 		<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>collection, <span class="kw-2">&amp;</span>item), Error::&lt;T&gt;::FruniqueNotFound);
 
-		<span class="kw">let </span>frunique_data : FruniqueData&lt;T&gt; = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
+		<span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
+
 
 		<span class="macro">ensure!</span>(!frunique_data.frozen, Error::&lt;T&gt;::FruniqueFrozen);
 		<span class="macro">ensure!</span>(!frunique_data.redeemed, Error::&lt;T&gt;::FruniqueAlreadyRedeemed);
@@ -880,6 +932,8 @@
 			|frunique_data| -&gt; DispatchResult {
 				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
 				frunique.redeemed = <span class="bool-val">true</span>;
+				frunique.frozen = <span class="bool-val">true</span>;
+
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
