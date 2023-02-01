@@ -22,8 +22,26 @@ frame_support::construct_runtime!(
 		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Event<T>},
 	}
 );
+
+parameter_types! {
+	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxReserves: u32 = 50;
+}
+
+impl pallet_balances::Config for Test {
+	type Balance = u64;
+	type DustRemoval = ();
+	type RuntimeEvent = RuntimeEvent;
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
+	type MaxLocks = ();
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
+}
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -48,13 +66,13 @@ impl system::Config for Test {
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
+	type AccountData = pallet_balances::AccountData<u64>;
 }
 
 parameter_types! {
@@ -76,6 +94,9 @@ parameter_types! {
 	pub const MaxTransactionsPerRevenue:u32 = 500;
 	pub const MaxStatusChangesPerDrawdown:u32 = 100;
 	pub const MaxStatusChangesPerRevenue:u32 = 100;
+	pub const MinAdminBalance:u64 = 10;
+	pub const TransferAmount:u64 = 10;
+	pub const InitialAdminBalance:u64 = 1_000_000;
 }
 
 impl pallet_fund_admin::Config for Test {
@@ -84,6 +105,7 @@ impl pallet_fund_admin::Config for Test {
 	type Timestamp = Timestamp;
 	type Moment = u64;
 	type Rbac = RBAC;
+	type Currency = Balances;
 
 	type MaxDocuments = MaxDocuments;
 	type MaxProjectsPerUser = MaxProjectsPerUser;
@@ -103,6 +125,8 @@ impl pallet_fund_admin::Config for Test {
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
 	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
+	type MinAdminBalance = MinAdminBalance;
+	type TransferAmount = TransferAmount;
 }
 
 
@@ -135,7 +159,12 @@ impl pallet_rbac::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t: sp_io::TestExternalities = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	let balance_amount = InitialAdminBalance::get();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, balance_amount)],
+	}.assimilate_storage(&mut t).expect("assimilate_storage failed");
+	let mut t: sp_io::TestExternalities = t.into();
 	t.execute_with(|| FundAdmin::do_initial_setup().expect("Error on configuring initial setup"));
 	t
 }

@@ -423,6 +423,7 @@ impl<T: Config> Pallet<T> {
 
 		let frunique_data: FruniqueData<T> = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
 
+
 		ensure!(!frunique_data.frozen, Error::<T>::FruniqueFrozen);
 		ensure!(!frunique_data.redeemed, Error::<T>::FruniqueAlreadyRedeemed);
 
@@ -433,6 +434,7 @@ impl<T: Config> Pallet<T> {
 				let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
 				frunique.redeemed = true;
 				frunique.frozen = true;
+
 				Ok(())
 			},
 		)?;
