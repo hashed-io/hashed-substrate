@@ -11,32 +11,29 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-pub mod types;
 mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::*};
+	use frame_support::pallet_prelude::*;
 	//#[cfg(feature = "std")]
 	//use frame_support::serde::{Deserialize, Serialize};
 	use crate::types::*;
-	use frame_support::{
-		pallet_prelude::{BoundedVec},
-		traits::Get,
-	};
 	use frame_support::sp_io::hashing::blake2_256;
+	use frame_support::{pallet_prelude::BoundedVec, traits::Get};
 	use frame_system::{
-		offchain::{
-			AppCrypto, CreateSignedTransaction,
-			SignedPayload, Signer,
-		},
+		offchain::{AppCrypto, CreateSignedTransaction, SignedPayload, Signer},
 		pallet_prelude::*,
 	};
 	use sp_runtime::sp_std::str;
 	use sp_runtime::sp_std::vec::Vec;
 	use sp_runtime::{
+		offchain::{
+			storage_lock::{BlockAndTime, StorageLock},
+			Duration,
+		},
 		transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
-		offchain::{Duration, storage_lock::{StorageLock,BlockAndTime}},
 	};
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -44,7 +41,7 @@ pub mod pallet {
 	/*--- Genesis Structs Section ---*/
 
 	#[pallet::genesis_config]
-	pub struct GenesisConfig{
+	pub struct GenesisConfig {
 		pub bdk_services_url: Vec<u8>,
 	}
 
@@ -59,21 +56,20 @@ pub mod pallet {
 	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
 			<BDKServicesURL<T>>::put(
-				BoundedVec::<u8,ConstU32<32>>::try_from(self.bdk_services_url.clone()).unwrap_or_default()
+				BoundedVec::<u8, ConstU32<32>>::try_from(self.bdk_services_url.clone())
+					.unwrap_or_default(),
 			);
 		}
 	}
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config:
-		frame_system::Config + CreateSignedTransaction<Call<Self>>
-	{
+	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
 		/// The identifier type for an offchain worker.
 		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		type ChangeBDKOrigin : EnsureOrigin<Self::RuntimeOrigin>;
+		type ChangeBDKOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 		/*--- PSBT params ---*/
 		#[pallet::constant]
 		type XPubLen: Get<u32>;
@@ -106,23 +102,23 @@ pub mod pallet {
 		/// Removed Xpub previously linked to the account
 		XPubRemoved(T::AccountId),
 		/// The PBST was succesfully inserted by an OCW
-		PSBTStored([u8;32]),
+		PSBTStored([u8; 32]),
 		/// The vault was succesfully inserted and linked to the account as owner
 		VaultStored([u8; 32], T::AccountId),
 		/// The vault was succesfully removed by its owner
-		VaultRemoved([u8; 32],T::AccountId),
+		VaultRemoved([u8; 32], T::AccountId),
 		/// An offchain worker inserted a vault's descriptor
-		DescriptorsStored([u8;32]),
+		DescriptorsStored([u8; 32]),
 		/// A proposal has been inserted.
-		ProposalStored([u8;32],T::AccountId),
+		ProposalStored([u8; 32], T::AccountId),
 		/// A proposal has been removed.
-		ProposalRemoved([u8;32],T::AccountId),
+		ProposalRemoved([u8; 32], T::AccountId),
 		/// The user has uploaded its own PSBT
-		ProposalSigned([u8;32],T::AccountId),
+		ProposalSigned([u8; 32], T::AccountId),
 		/// A proposal has been set to be finalized
-		ProposalFinalized([u8;32],T::AccountId),
+		ProposalFinalized([u8; 32], T::AccountId),
 		/// A proposal tx has been inserted by an OCW
-		ProposalTxIdStored([u8;32])
+		ProposalTxIdStored([u8; 32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -213,8 +209,8 @@ pub mod pallet {
 	pub(super) type ProposalsByVault<T: Config> = StorageMap<
 		_,
 		Identity,
-		[u8; 32], //vaultId
-		BoundedVec<[u8; 32],T::MaxProposalsPerVault>, //proposalId
+		[u8; 32],                                      //vaultId
+		BoundedVec<[u8; 32], T::MaxProposalsPerVault>, //proposalId
 		ValueQuery,
 	>;
 
@@ -233,19 +229,20 @@ pub mod pallet {
 	pub(super) type VaultsBySigner<T: Config> = StorageMap<
 		_,
 		Twox64Concat,
-		T::AccountId,                                  // signer
+		T::AccountId,                              // signer
 		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
 	>;
 
 	#[pallet::type_value]
 	pub(super) fn DefaultURL() -> BoundedVec<u8, ConstU32<32>> {
-		BoundedVec::<u8, ConstU32<32>>::try_from(b"https://bdk.hashed.systems".encode()).unwrap_or_default()
+		BoundedVec::<u8, ConstU32<32>>::try_from(b"https://bdk.hashed.systems".encode())
+			.unwrap_or_default()
 	}
 	#[pallet::storage]
 	//#[pallet::getter(fn dummy)]
-	pub(super) type BDKServicesURL<T: Config> = StorageValue<_, BoundedVec<u8, ConstU32<32>>, ValueQuery, DefaultURL>;
-
+	pub(super) type BDKServicesURL<T: Config> =
+		StorageValue<_, BoundedVec<u8, ConstU32<32>>, ValueQuery, DefaultURL>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -261,7 +258,7 @@ pub mod pallet {
 			// check if the node has an account available, the offchain worker can't submit
 			// transactions without it
 			let signer = Signer::<T, T::AuthorityId>::any_account();
-			if !signer.can_sign(){
+			if !signer.can_sign() {
 				return;
 			}
 
@@ -269,7 +266,7 @@ pub mod pallet {
 			let mut lock = StorageLock::<BlockAndTime<Self>>::with_block_and_time_deadline(
 				b"nbv::vault-storage-lock",
 				LOCK_BLOCK_EXPIRATION,
-				Duration::from_millis(LOCK_TIMEOUT_EXPIRATION)
+				Duration::from_millis(LOCK_TIMEOUT_EXPIRATION),
 			);
 			if let Ok(_guard) = lock.try_lock() {
 				// check for pending vaults to insert
@@ -283,25 +280,28 @@ pub mod pallet {
 					let generated_vaults = Self::gen_vaults_payload_by_bulk(pending_vaults);
 					Self::send_ocw_insert_descriptors(generated_vaults, &signer);
 				}
-				if !pending_proposals.is_empty(){
+				if !pending_proposals.is_empty() {
 					log::info!("Pending proposals {:?}", pending_proposals.len());
-					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(pending_proposals,
+					let generated_proposals_payload = Self::gen_proposals_payload_by_bulk(
+						pending_proposals,
 						b"/gen_psbt".to_vec(),
-					&Self::gen_proposal_json_body);
+						&Self::gen_proposal_json_body,
+					);
 					Self::send_ocw_insert_psbts(generated_proposals_payload, &signer);
 				}
-				if !proposals_to_finalize.is_empty(){
+				if !proposals_to_finalize.is_empty() {
 					// generate proposal payloads:
 					let finalized_proposals = Self::get_proposals_to_finalize();
 					//Send unsigned tx:
 					let generated_finalized_tx = Self::gen_proposals_payload_by_bulk(
-						finalized_proposals, b"/finalize_trx".to_vec(),
-					&Self::gen_finalize_json_body);
+						finalized_proposals,
+						b"/finalize_trx".to_vec(),
+						&Self::gen_finalize_json_body,
+					);
 
 					Self::send_ocw_finalize_psbts(generated_finalized_tx, &signer);
-
 				}
-			}else {
+			} else {
 				log::error!("This OCW couln't get the lock");
 			};
 		}
@@ -322,14 +322,11 @@ pub mod pallet {
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
-		pub fn set_xpub(
-			origin: OriginFor<T>,
-			xpub: BoundedVec<u8, T::XPubLen>,
-		) -> DispatchResult {
+		pub fn set_xpub(origin: OriginFor<T>, xpub: BoundedVec<u8, T::XPubLen>) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			let who = ensure_signed(origin.clone())?;
 			ensure!(xpub.len() > 0, Error::<T>::NoneValue);
-			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()) , Error::<T>::UserAlreadyHasXpub);
+			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::UserAlreadyHasXpub);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
 			// Assert if the input xpub is free to take (or if the user owns it)
 			match Self::get_xpub_status(who.clone(), manual_hash.clone()) {
@@ -371,16 +368,18 @@ pub mod pallet {
 			// The xpub must exists
 			ensure!(<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::XPubNotFound);
 			// The xpub must not be used on a vault
-			let vaults: Vec<[u8;32]>= <VaultsBySigner<T>>::get(who.clone()).iter().filter(|id|{
-				match <Vaults<T>>::get(id){
-					Some(vault) =>{
+			let vaults: Vec<[u8; 32]> = <VaultsBySigner<T>>::get(who.clone())
+				.iter()
+				.filter(|id| match <Vaults<T>>::get(id) {
+					Some(vault) => {
 						let vault_members = vault.get_vault_members();
 						vault_members.contains(&who.clone())
 					},
 					None => false,
-				}
-			}).cloned().collect::<Vec<_>>();
-			ensure!(vaults.is_empty(),  Error::<T>::XpubLinkedToVault);
+				})
+				.cloned()
+				.collect::<Vec<_>>();
+			ensure!(vaults.is_empty(), Error::<T>::XpubLinkedToVault);
 
 			Self::do_remove_xpub(who.clone())
 		}
@@ -403,18 +402,22 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			threshold: u32,
 			description: BoundedVec<u8, T::VaultDescriptionMaxLen>,
-			include_owner_as_cosigner : bool,
+			include_owner_as_cosigner: bool,
 			mut cosigners: BoundedVec<T::AccountId, T::MaxCosignersPerVault>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			if include_owner_as_cosigner {
-				cosigners.try_push(who.clone())
-				.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault )?;
+				cosigners
+					.try_push(who.clone())
+					.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
 			}
 			//  Cosigners are already bounded, only is necessary to check if its not empty
-			ensure!( cosigners.len()>1 , Error::<T>::NotEnoughCosigners);
+			ensure!(cosigners.len() > 1, Error::<T>::NotEnoughCosigners);
 			// Threshold needs to be greater than 0 and less than the current cosigners number
-			ensure!( threshold>0 && threshold <= (cosigners.len() as u32), Error::<T>::InvalidVaultThreshold);
+			ensure!(
+				threshold > 0 && threshold <= (cosigners.len() as u32),
+				Error::<T>::InvalidVaultThreshold
+			);
 			let vault = Vault::<T> {
 				owner: who.clone(),
 				threshold,
@@ -444,10 +447,7 @@ pub mod pallet {
 		/// - Only the vault owner can perform this extrinsic
 		///
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn remove_vault(
-			origin: OriginFor<T>,
-			vault_id: [u8; 32],
-		) -> DispatchResult {
+		pub fn remove_vault(origin: OriginFor<T>, vault_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 
 			Self::do_remove_vault(who, vault_id)
@@ -475,7 +475,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			// ensure user is in the vault
-			let proposal = Proposal::<T>{
+			let proposal = Proposal::<T> {
 				proposer: who.clone(),
 				vault_id,
 				status: ProposalStatus::Pending,
@@ -486,7 +486,8 @@ pub mod pallet {
 				description,
 				tx_id: None,
 				psbt: BoundedVec::<u8, T::PSBTMaxLen>::default(),
-				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(),
+				signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default(
+				),
 			};
 			Self::do_propose(proposal)
 		}
@@ -499,16 +500,13 @@ pub mod pallet {
 		/// - `proposal_id`: the proposal identifier
 		///
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn remove_proposal(
-			origin: OriginFor<T>,
-			proposal_id: [u8; 32],
-		) -> DispatchResult{
+		pub fn remove_proposal(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
 			// Only vault proposer can remove
 			// validation before do_remove_proposal because the user is not needed anymore
 			//TODO: proposal cannot be erased if readyToBroadcast() finalized or broadcasted
-        	// -> erase only pending
+			// -> erase only pending
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
@@ -526,8 +524,8 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
 			origin: OriginFor<T>,
-			new_url: BoundedVec<u8, ConstU32<32> >
-		) -> DispatchResult{
+			new_url: BoundedVec<u8, ConstU32<32>>,
+		) -> DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
 			<BDKServicesURL<T>>::put(new_url);
 			Ok(())
@@ -589,10 +587,7 @@ pub mod pallet {
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn broadcast_psbt(
-			origin: OriginFor<T>,
-			proposal_id: [u8; 32],
-		) -> DispatchResult {
+		pub fn broadcast_psbt(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			Self::do_finalize_psbt(who, proposal_id, true)
 		}
@@ -603,15 +598,14 @@ pub mod pallet {
 		///
 		/// Can only be called by root and removes All vaults and proposals
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn kill_storage(
-			origin: OriginFor<T>,
-		) -> DispatchResult{
+		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
-			let _ = <Vaults<T>>::clear(1000, None);
-			let _ = <VaultsBySigner<T>>::clear(1000, None);
-			let _ = <Proposals<T>>::clear(1000, None);
+			let _ = <Xpubs<T>>::clear(1000, None);
+			let _ = <XpubsByOwner<T>>::clear(1000, None);
 			let _ = <Proposals<T>>::clear(1000, None);
 			let _ = <ProposalsByVault<T>>::clear(1000, None);
+			let _ = <Vaults<T>>::clear(1000, None);
+			let _ = <VaultsBySigner<T>>::clear(1000, None);
 			Ok(())
 		}
 
@@ -627,26 +621,33 @@ pub mod pallet {
 		) -> DispatchResult {
 			// This ensures that the function can only be called via unsigned transaction.
 			ensure_none(origin.clone())?;
-			payload.vaults_payload.iter().find_map(
-				|vault_payload|{
-					let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
-						try_from(vault_payload.output_descriptor.clone()).expect("Error trying to convert desc to bounded vec");
-					let change_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::
-						try_from(vault_payload.change_descriptor.clone()).expect("Error trying to convert change desc to bounded vec");
-					let descriptors = Descriptors::<T::OutputDescriptorMaxLen>{
-						output_descriptor : output_descriptor,
-						change_descriptor : Some(change_descriptor),
+			payload
+				.vaults_payload
+				.iter()
+				.find_map(|vault_payload| {
+					let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
+						vault_payload.output_descriptor.clone(),
+					)
+					.expect("Error trying to convert desc to bounded vec");
+					let change_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
+						vault_payload.change_descriptor.clone(),
+					)
+					.expect("Error trying to convert change desc to bounded vec");
+					let descriptors = Descriptors::<T::OutputDescriptorMaxLen> {
+						output_descriptor,
+						change_descriptor: Some(change_descriptor),
 					};
-					let status: BDKStatus<T::VaultDescriptionMaxLen> = vault_payload.clone().status.into();
+					let status: BDKStatus<T::VaultDescriptionMaxLen> =
+						vault_payload.clone().status.into();
 					//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());
-					let tx_res = Self::do_insert_descriptors(vault_payload.vault_id,descriptors, status);
-					if tx_res.is_err(){
+					let tx_res =
+						Self::do_insert_descriptors(vault_payload.vault_id, descriptors, status);
+					if tx_res.is_err() {
 						return Some(tx_res);
 					}
 					None
-
-				}
-			).unwrap_or(Ok(()))
+				})
+				.unwrap_or(Ok(()))
 		}
 
 		/// Extrinsic to insert a valid proposal PSBT
@@ -660,19 +661,23 @@ pub mod pallet {
 			_signature: T::Signature,
 		) -> DispatchResult {
 			ensure_none(origin.clone())?;
-			payload.proposals_payload.iter().find_map(
-				|proposal_psbt|{
-					let bounded_psbt = BoundedVec::<u8, T::PSBTMaxLen>::try_from(proposal_psbt.psbt.clone())
-						.expect("Error trying to bound the psbt");
-					let status: BDKStatus<T::VaultDescriptionMaxLen> = proposal_psbt.status.clone().into();
-					let tx_res = Self::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt, status);
-					if tx_res.is_err(){
+			payload
+				.proposals_payload
+				.iter()
+				.find_map(|proposal_psbt| {
+					let bounded_psbt =
+						BoundedVec::<u8, T::PSBTMaxLen>::try_from(proposal_psbt.psbt.clone())
+							.expect("Error trying to bound the psbt");
+					let status: BDKStatus<T::VaultDescriptionMaxLen> =
+						proposal_psbt.status.clone().into();
+					let tx_res =
+						Self::do_insert_psbt(proposal_psbt.proposal_id, bounded_psbt, status);
+					if tx_res.is_err() {
 						return Some(tx_res);
 					}
 					None
-				}
-			)
-			.unwrap_or(Ok(()))?;
+				})
+				.unwrap_or(Ok(()))?;
 			Ok(())
 		}
 
@@ -684,14 +689,16 @@ pub mod pallet {
 		pub fn ocw_finalize_psbts(
 			origin: OriginFor<T>,
 			payload: ProposalsPayload<T::Public>, // here the payload
-			_signature: T::Signature,// we don't need to verify the signature here because it has been verified in
-			//   `validate_unsigned` function when sending out the unsigned tx.
+			_signature: T::Signature, // we don't need to verify the signature here because it has been verified in
+			                          //   `validate_unsigned` function when sending out the unsigned tx.
 		) -> DispatchResult {
 			ensure_none(origin.clone())?;
-			log::info!("Extrinsic recibido payload de: {:?}",payload);
-			payload.proposals_payload.iter().try_for_each(|proposal_tx|{
-				let bounded_tx_id = BoundedVec::<u8, T::VaultDescriptionMaxLen>::try_from(proposal_tx.psbt.clone() );
-				let status: BDKStatus<T::VaultDescriptionMaxLen> = proposal_tx.status.clone().into();
+			log::info!("Extrinsic recibido payload de: {:?}", payload);
+			payload.proposals_payload.iter().try_for_each(|proposal_tx| {
+				let bounded_tx_id =
+					BoundedVec::<u8, T::VaultDescriptionMaxLen>::try_from(proposal_tx.psbt.clone());
+				let status: BDKStatus<T::VaultDescriptionMaxLen> =
+					proposal_tx.status.clone().into();
 				Self::do_insert_tx_id(proposal_tx.proposal_id, bounded_tx_id.ok(), status)
 			})?;
 			Ok(())
@@ -700,7 +707,6 @@ pub mod pallet {
 
 	#[pallet::validate_unsigned]
 	impl<T: Config> ValidateUnsigned for Pallet<T> {
-
 		type Call = Call<T>;
 
 		fn validate_unsigned(_source: TransactionSource, call: &Self::Call) -> TransactionValidity {
