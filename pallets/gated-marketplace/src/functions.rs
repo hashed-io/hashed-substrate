@@ -639,6 +639,10 @@ impl<T: Config> Pallet<T> {
 			offer_id,
 		)?;
 
+		if offer_data.offer_type == OfferType::SellOrder {
+			pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
+		}
+
 		//remove the offer from OfferInfo
 		<OffersInfo<T>>::remove(offer_id);
 
@@ -1101,6 +1105,7 @@ impl<T: Config> Pallet<T> {
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
 	) -> DispatchResult {
+		pallet_fruniques::Pallet::<T>::do_thaw(&collection_id, item_id)?;
 		<OffersByItem<T>>::remove(collection_id, item_id);
 		Ok(())
 	}
