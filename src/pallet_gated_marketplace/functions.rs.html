@@ -1190,6 +1190,11 @@
 <a href="#1190" id="1190">1190</a>
 <a href="#1191" id="1191">1191</a>
 <a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1831,6 +1836,10 @@
 			offer_id,
 		)<span class="question-mark">?</span>;
 
+		<span class="kw">if </span>offer_data.offer_type == OfferType::SellOrder {
+			pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
+		}
+
 		<span class="comment">//remove the offer from OfferInfo
 		</span>&lt;OffersInfo&lt;T&gt;&gt;::remove(offer_id);
 
@@ -2293,6 +2302,7 @@
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
 	) -&gt; DispatchResult {
+		pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>collection_id, item_id)<span class="question-mark">?</span>;
 		&lt;OffersByItem&lt;T&gt;&gt;::remove(collection_id, item_id);
 		<span class="prelude-val">Ok</span>(())
 	}
