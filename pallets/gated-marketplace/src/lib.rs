@@ -309,6 +309,8 @@ pub mod pallet {
 		RedemptionRequestAlreadyExists,
 		/// The redemption in question is already redeemed
 		RedemptionRequestAlreadyRedeemed,
+		/// The owner of NFT is not ins the marketplace
+		OwnerNotInMarketplace,
 	}
 
 	#[pallet::call]

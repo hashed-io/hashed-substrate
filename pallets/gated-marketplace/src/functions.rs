@@ -360,8 +360,17 @@ impl<T: Config> Pallet<T> {
 		price: BalanceOf<T>,
 		percentage: u32,
 	) -> DispatchResult {
-		//ensure the item is for sale, if not, return error
-		Self::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)?;
+		
+		//ensure the holder of NFT is in the same marketplace as the caller making the offer
+		ensure!(
+			Self::is_holder_in_marketplace(
+				&marketplace_id,
+				authority.clone(),
+				&collection_id,
+				&item_id
+			) == true,
+			Error::<T>::OwnerNotInMarketplace
+		);
 
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -1046,31 +1055,30 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn can_this_item_receive_buy_orders(
-		collection_id: T::CollectionId,
-		item_id: T::ItemId,
-		marketplace_id: [u8; 32],
-	) -> DispatchResult {
-		//First we check if the item has is for sale, if not, return error
-		ensure!(
-			<OffersByItem<T>>::contains_key(collection_id, item_id),
-			Error::<T>::ItemNotForSale
-		);
-
-		//ensure the item can receive buy offers on the selected marketplace
-		let offers = <OffersByItem<T>>::get(collection_id, item_id);
-
-		for offer in offers {
-			let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
-			//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-			if offer_info.marketplace_id == marketplace_id
-				&& offer_info.offer_type == OfferType::SellOrder
-			{
-				return Ok(());
+	fn is_holder_in_marketplace(
+		marketplace_id: &[u8; 32],
+		who: T::AccountId,
+		class_id: &T::CollectionId,
+		instance_id: &T::ItemId,
+	) -> bool {
+		if let Some(owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
+			if Self::is_caller_in_marketplace(marketplace_id, owner) == true {
+				if Self::is_caller_in_marketplace(marketplace_id, who) == true {
+					return true;
+				}
 			}
 		}
+		false
+	}
 
-		Err(Error::<T>::ItemNotForSale.into())
+	//Ensures that caller is from the marketplace
+	fn is_caller_in_marketplace(marketplace_id: &[u8; 32], who: T::AccountId) -> bool {
+		//This works since is_authorized checks if "who" has the permission "EnlistBuyOffer" in the given marketplace
+		//and the permission is set when the user first joins the marketplace
+		if Self::is_authorized(who, marketplace_id, Permission::EnlistBuyOffer).is_ok() {
+			return true;
+		}
+		false
 	}
 
 	fn _delete_all_sell_orders_for_this_item(
