@@ -228,6 +228,8 @@ pub mod pallet {
 		MemberGroupDoesNotExist,
 		/// Member group already exits
 		MemberGroupAlreadyExists,
+		/// Can not add member as group owner
+		CanNotAddMemberAsGroupOwner,
 	}
 
 	#[pallet::call]
@@ -400,6 +402,9 @@ pub mod pallet {
 			let _ = <SharedDocs<T>>::clear(1000, None);
 			let _ = <SharedDocsByTo<T>>::clear(1000, None);
 			let _ = <SharedDocsByFrom<T>>::clear(1000, None);
+			let _ = <Groups<T>>::clear(1000, None);
+			let _ = <GroupMembers<T>>::clear(1000, None);
+			let _ = <MemberGroups<T>>::clear(1000, None);
 			Ok(())
 		}
 	}

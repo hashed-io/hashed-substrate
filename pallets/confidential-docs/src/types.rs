@@ -117,7 +117,8 @@ impl<T: Config> GroupMember<T> {
 	}
 
 	pub fn can_remove_group_member(&self, group_member: &GroupMember<T>) -> bool {
-		self.role == GroupRole::Owner
-			|| (self.role == GroupRole::Admin && group_member.authorizer == self.member)
+		group_member.role != GroupRole::Owner &&
+		(self.role == GroupRole::Owner
+			|| (self.role == GroupRole::Admin && group_member.authorizer == self.member))
 	}
 }

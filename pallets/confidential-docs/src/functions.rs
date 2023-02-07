@@ -145,7 +145,6 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		group_member.authorizer = authorizer.clone();
 		let GroupMember { ref group, ref member, .. } = group_member;
-		ensure!(<Groups<T>>::contains_key(group), Error::<T>::GroupDoesNotExist);
 		Self::validate_group_member(&group_member)?;
 		let authorizer =
 			GroupMembers::<T>::get(group, &authorizer).ok_or_else(|| Error::<T>::NoPermission)?;
@@ -181,8 +180,7 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 		GroupMembers::<T>::remove(&group, &member);
-		Self::store_group_member(group_member.clone())?;
-		Self::deposit_event(Event::GroupMemberAdded(group_member));
+		Self::deposit_event(Event::GroupMemberRemoved(group_member));
 		Ok(())
 	}
 
@@ -196,11 +194,12 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn validate_group_member(group_member: &GroupMember<T>) -> DispatchResult {
-		let GroupMember { authorizer, group, cid, member, .. } = group_member;
+		let GroupMember { authorizer, group, cid, member, role, .. } = group_member;
 		ensure!(<Groups<T>>::contains_key(group), Error::<T>::GroupDoesNotExist);
 		Self::validate_cid(cid)?;
 		Self::validate_has_public_key(authorizer)?;
 		Self::validate_has_public_key(member)?;
+		ensure!(*role != GroupRole::Owner, Error::<T>::CanNotAddMemberAsGroupOwner);
 		Ok(())
 	}
 

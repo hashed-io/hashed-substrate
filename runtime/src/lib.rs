@@ -699,6 +699,9 @@ parameter_types! {
 	pub const DocNameMaxLen: u32 = 50;
 	pub const DocDescMinLen: u32 = 5;
 	pub const DocDescMaxLen: u32 = 100;
+	pub const GroupNameMinLen: u32 = 3;
+	pub const GroupNameMaxLen: u32 = 50;
+	pub const MaxMemberGroups: u32 = 100;
 }
 
 impl pallet_confidential_docs::Config for Runtime {
@@ -714,6 +717,9 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
+	type GroupNameMinLen = GroupNameMinLen;
+	type GroupNameMaxLen = GroupNameMaxLen;
+	type MaxMemberGroups = MaxMemberGroups;
 }
 
 
