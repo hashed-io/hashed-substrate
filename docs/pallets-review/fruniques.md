@@ -1,3 +1,9 @@
+# Fruniques pallet
+
+## Spawn mechanism
+
+Taken from #1 
+
 `Fruniques` is a stateful pallet. It needs to store additional data to maintain various relationships and state. We need to design/build the data structure for this additional state, as described below.
 
 There are a few NFT protocols in the Polkadot ecosystem: https://wiki.polkadot.network/docs/learn-nft
