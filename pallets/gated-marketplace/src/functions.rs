@@ -363,7 +363,6 @@ impl<T: Config> Pallet<T> {
 
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBuyOffer)?;
 
 		//ensure the collection exists
 		//For this case user doesn't need to be the owner of the collection
@@ -1052,33 +1051,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn _is_this_item_for_sell(
-		collection_id: T::CollectionId,
-		item_id: T::ItemId,
-		marketplace_id: [u8; 32],
-	) -> DispatchResult {
-		//First we check if the item has is for sale, if not, return error
-		ensure!(
-			<OffersByItem<T>>::contains_key(collection_id, item_id),
-			Error::<T>::ItemNotForSale
-		);
-
-		//ensure the item can receive buy offers on the selected marketplace
-		let offers = <OffersByItem<T>>::get(collection_id, item_id);
-
-		for offer in offers {
-			let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
-			//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-			if offer_info.marketplace_id == marketplace_id
-				&& offer_info.offer_type == OfferType::SellOrder
-			{
-				return Ok(());
-			}
-		}
-
-		Err(Error::<T>::ItemNotForSale.into())
-	}
-
 	fn can_this_item_receive_buy_orders(
 		marketplace_id: &[u8; 32],
 		buyer: T::AccountId,
@@ -1088,12 +1060,7 @@ impl<T: Config> Pallet<T> {
 		//First we check if the buyer is authorized to buy on this marketplace
 		Self::is_authorized(buyer, marketplace_id, Permission::EnlistBuyOffer)?;
 
-		//If the item is for sale already it means that the owner is also in the marketplace
-		if Self::_is_this_item_for_sell(*class_id, *instance_id, *marketplace_id).is_ok() {
-			return Ok(());
-		}
-
-		//If the item is not for sale, we need to check if the owner is in the marketplace
+		//We need to check if the owner is in the marketplace
 		if let Some(owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
 			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok()
 				{
