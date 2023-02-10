@@ -154,8 +154,9 @@ fn set_vault_works() {
 		));
 		// Read pallet storage and assert an expected result.
 		let vault = Vault { cid, owner };
-		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault));
+		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault.clone()));
 		assert_eq!(ConfidentialDocs::public_keys(owner), Some(public_key));
+		System::assert_has_event(Event::<Test>::VaultStored(user_id, public_key, vault).into());
 
 		let public_key = generate_public_key("2");
 		let cid = generate_cid("2");
@@ -167,9 +168,9 @@ fn set_vault_works() {
 		));
 		// Read pallet storage and assert an expected result.
 		let vault = Vault { cid, owner };
-		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault));
+		assert_eq!(ConfidentialDocs::vaults(user_id), Some(vault.clone()));
 		assert_eq!(ConfidentialDocs::public_keys(owner), Some(public_key));
-		// assert_eq!(last_event(), Event::VaultStored(user_id, public_key, ))
+		System::assert_has_event(Event::<Test>::VaultStored(user_id, public_key, vault).into());
 	});
 }
 
@@ -243,6 +244,8 @@ fn set_owned_document_works() {
 		let owned_docs = ConfidentialDocs::owned_docs_by_owner(owner);
 		let expected_cid_vec = vec![doc1.cid.clone()];
 		assert_eq!(owned_docs.into_inner(), expected_cid_vec);
+		System::assert_has_event(Event::<Test>::OwnedDocStored(doc1.clone()).into());
+
 		doc1.name = generate_doc_name("2");
 		doc1.description = generate_doc_desc("2");
 		assert_ok!(ConfidentialDocs::set_owned_document(
@@ -252,6 +255,7 @@ fn set_owned_document_works() {
 		assert_eq!(ConfidentialDocs::owned_docs(&doc1.cid), Some(doc1.clone()));
 		let owned_docs = ConfidentialDocs::owned_docs_by_owner(owner);
 		assert_eq!(owned_docs.into_inner(), expected_cid_vec);
+		System::assert_has_event(Event::<Test>::OwnedDocStored(doc1).into());
 	});
 }
 
@@ -334,13 +338,17 @@ fn remove_owned_document_works() {
 			RuntimeOrigin::signed(owner),
 			doc1.cid.clone()
 		));
+
 		assert_owned_doc_not_exists(&doc1.cid, owner);
+		System::assert_has_event(Event::<Test>::OwnedDocRemoved(doc1).into());
+
 		assert_owned_doc(&doc2);
 		assert_ok!(ConfidentialDocs::remove_owned_document(
 			RuntimeOrigin::signed(owner),
 			doc2.cid.clone()
 		));
 		assert_owned_doc_not_exists(&doc2.cid, owner);
+		System::assert_has_event(Event::<Test>::OwnedDocRemoved(doc2).into());
 	});
 }
 
@@ -393,6 +401,7 @@ fn share_document_works() {
 		let expected_cid_from_vec = vec![shared_doc1.cid.clone()];
 		let shared_docs_from = ConfidentialDocs::shared_docs_by_from(from);
 		assert_eq!(shared_docs_from.into_inner(), expected_cid_from_vec);
+		System::assert_has_event(Event::<Test>::SharedDocStored(shared_doc1).into());
 
 		let from = 3;
 		setup_vault(3);
@@ -408,6 +417,7 @@ fn share_document_works() {
 		let expected_cid_from_vec = vec![shared_doc2.cid.clone()];
 		let shared_docs_from = ConfidentialDocs::shared_docs_by_from(from);
 		assert_eq!(shared_docs_from.into_inner(), expected_cid_from_vec);
+		System::assert_has_event(Event::<Test>::SharedDocStored(shared_doc2).into());
 	});
 }
 
@@ -522,6 +532,8 @@ fn update_shared_document_metadata_works() {
 			shared_doc1.clone()
 		));
 		assert_shared_doc(&shared_doc1);
+		System::assert_has_event(Event::<Test>::SharedDocUpdated(shared_doc1).into());
+
 	});
 }
 
@@ -590,6 +602,7 @@ fn remove_shared_document_works() {
 			shared_doc2.cid.clone()
 		));
 		assert_shared_doc_not_exists(&shared_doc2);
+		System::assert_has_event(Event::<Test>::SharedDocRemoved(shared_doc1).into());
 	});
 }
 
@@ -667,12 +680,7 @@ fn create_group_works() {
 		let expected_member_groups = vec![group_id];
 		assert_eq!(ConfidentialDocs::member_groups(creator).into_inner(), expected_member_groups);
 		assert_eq!(ConfidentialDocs::public_keys(group_id), Some(public_key));
-		// println!("System events: {:?}", System::events());
-		// assert_eq!(System::events().len(), 2);
-		// assert_eq!(
-		// 	System::events()[1].event,
-		// 	RuntimeEvent::ConfidentialDocs(Event::<Test>::GroupCreated(group))
-		// );
+		System::assert_has_event(Event::<Test>::GroupCreated(group).into());
 	});
 }
 
@@ -761,15 +769,11 @@ fn add_group_member_works() {
 			RuntimeOrigin::signed(creator),
 			group_member.clone()
 		));
-		assert_eq!(ConfidentialDocs::group_members(group, member), Some(group_member));
+		assert_eq!(ConfidentialDocs::group_members(group, member), Some(group_member.clone()));
 		let expected_member_groups = vec![group];
 		assert_eq!(ConfidentialDocs::member_groups(member).into_inner(), expected_member_groups);
-		// println!("System events: {:?}", System::events());
-		// assert_eq!(System::events().len(), 2);
-		// assert_eq!(
-		// 	System::events()[1].event,
-		// 	RuntimeEvent::ConfidentialDocs(Event::<Test>::GroupCreated(group))
-		// );
+
+		System::assert_has_event(Event::<Test>::GroupMemberAdded(group_member).into());
 	});
 }
 
@@ -941,7 +945,7 @@ fn remove_group_member_works() {
 		setup_group(creator, group);
 		let member = 3;
 		setup_vault(member);
-		add_group_member(creator, group, member, GroupRole::Admin);
+		let group_member = add_group_member(creator, group, member, GroupRole::Admin);
 
 		assert_ok!(ConfidentialDocs::remove_group_member(
 			RuntimeOrigin::signed(creator),
@@ -951,12 +955,33 @@ fn remove_group_member_works() {
 		assert_eq!(ConfidentialDocs::group_members(group, member), None);
 		let expected_member_groups = Vec::<<Test as system::Config>::AccountId>::new();
 		assert_eq!(ConfidentialDocs::member_groups(member).into_inner(), expected_member_groups);
-		// println!("System events: {:?}", System::events());
-		// assert_eq!(System::events().len(), 2);
-		// assert_eq!(
-		// 	System::events()[1].event,
-		// 	RuntimeEvent::ConfidentialDocs(Event::<Test>::GroupCreated(group))
-		// );
+		System::assert_has_event(Event::<Test>::GroupMemberRemoved(group_member).into());
+	});
+}
+
+#[test]
+fn remove_group_member_works_for_admin_removing_member_he_added() {
+	new_test_ext().execute_with(|| {
+		let creator = 1;
+		setup_vault(creator);
+		let group = 2;
+		setup_group(creator, group);
+		let member_authorizer = 3;
+		setup_vault(member_authorizer);
+		add_group_member(creator, group, member_authorizer, GroupRole::Admin);
+		let member_to_remove = 4;
+		setup_vault(member_to_remove);
+		let group_member = add_group_member(member_authorizer, group, member_to_remove, GroupRole::Member);
+
+		assert_ok!(ConfidentialDocs::remove_group_member(
+			RuntimeOrigin::signed(member_authorizer),
+			group,
+			member_to_remove
+		));
+		assert_eq!(ConfidentialDocs::group_members(group, member_to_remove), None);
+		let expected_member_groups = Vec::<<Test as system::Config>::AccountId>::new();
+		assert_eq!(ConfidentialDocs::member_groups(member_to_remove).into_inner(), expected_member_groups);
+		System::assert_has_event(Event::<Test>::GroupMemberRemoved(group_member).into());
 	});
 }
 
@@ -977,18 +1002,93 @@ fn remove_group_member_should_fail_for_non_existant_group() {
 }
 
 #[test]
-fn remove_group_member_should_fail_for_non_member_authorizer() {
+fn remove_group_member_should_fail_for_trying_to_remove_non_member() {
 	new_test_ext().execute_with(|| {
 		let creator = 1;
 		setup_vault(creator);
-		let non_member = 4;
 		let group = 2;
-		let member = 3;
-		setup_vault(member);
+		setup_group(creator, group);
+		let non_member = 3;
 
 		assert_noop!(
-			ConfidentialDocs::remove_group_member(RuntimeOrigin::signed(creator), group, member),
-			Error::<Test>::GroupDoesNotExist
+			ConfidentialDocs::remove_group_member(
+				RuntimeOrigin::signed(creator),
+				group,
+				non_member
+			),
+			Error::<Test>::GroupMemberDoesNotExist
 		);
 	});
 }
+
+#[test]
+fn remove_group_member_should_fail_for_trying_to_remove_owner() {
+	new_test_ext().execute_with(|| {
+		let creator = 1;
+		setup_vault(creator);
+		let group = 2;
+		setup_group(creator, group);
+
+		assert_noop!(
+			ConfidentialDocs::remove_group_member(
+				RuntimeOrigin::signed(creator),
+				group,
+				creator
+			),
+			Error::<Test>::NoPermission
+		);
+	});
+}
+
+#[test]
+fn remove_group_member_should_fail_for_role_member_as_authorizer() {
+	new_test_ext().execute_with(|| {
+		let creator = 1;
+		setup_vault(creator);
+		let group = 2;
+		setup_group(creator, group);
+		let member_authorizer = 3;
+		setup_vault(member_authorizer);
+		add_group_member(creator, group, member_authorizer, GroupRole::Member);
+		let member_to_remove = 4;
+		setup_vault(member_to_remove);
+		add_group_member(creator, group, member_to_remove, GroupRole::Member);
+
+		assert_noop!(
+			ConfidentialDocs::remove_group_member(
+				RuntimeOrigin::signed(member_authorizer),
+				group,
+				member_to_remove
+			),
+			Error::<Test>::NoPermission
+		);
+	});
+}
+
+
+#[test]
+fn remove_group_member_should_fail_for_admin_removing_member_he_did_not_add() {
+	new_test_ext().execute_with(|| {
+		let creator = 1;
+		setup_vault(creator);
+		let group = 2;
+		setup_group(creator, group);
+		let member_authorizer = 3;
+		setup_vault(member_authorizer);
+		add_group_member(creator, group, member_authorizer, GroupRole::Admin);
+		let member_to_remove = 4;
+		setup_vault(member_to_remove);
+		add_group_member(creator, group, member_to_remove, GroupRole::Member);
+
+		assert_noop!(
+			ConfidentialDocs::remove_group_member(
+				RuntimeOrigin::signed(member_authorizer),
+				group,
+				member_to_remove
+			),
+			Error::<Test>::NoPermission
+		);
+	});
+}
+
+
