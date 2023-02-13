@@ -1,4 +1,4 @@
-# Title of changes made
+# Title of changes made (change this line)
 
 ## Overview
 
@@ -9,7 +9,7 @@ Feel free to include "before and after" examples if appropriate. (i.e. When work
 ### Tickets
 
 List the tickets of the PR linked
-- [] Fix #NUM
+- [ ] Fix #NUM
 
 where NUM is the number of the ticket
 
