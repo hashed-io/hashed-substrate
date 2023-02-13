@@ -1192,9 +1192,6 @@
 <a href="#1192" id="1192">1192</a>
 <a href="#1193" id="1193">1193</a>
 <a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1557,12 +1554,9 @@
 		price: BalanceOf&lt;T&gt;,
 		percentage: u32,
 	) -&gt; DispatchResult {
-		<span class="comment">//ensure the item is for sale, if not, return error
-		</span><span class="self">Self</span>::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)<span class="question-mark">?</span>;
 
 		<span class="comment">//ensure the marketplace exists
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
-		<span class="self">Self</span>::is_authorized(authority.clone(), <span class="kw-2">&amp;</span>marketplace_id, Permission::EnlistBuyOffer)<span class="question-mark">?</span>;
 
 		<span class="comment">//ensure the collection exists
 		//For this case user doesn&#39;t need to be the owner of the collection
@@ -1572,6 +1566,14 @@
 		} <span class="kw">else </span>{
 			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CollectionNotFound.into());
 		}
+
+		<span class="comment">//ensure the holder of NFT is in the same marketplace as the caller making the offer
+		</span><span class="self">Self</span>::can_this_item_receive_buy_orders(
+			<span class="kw-2">&amp;</span>marketplace_id,
+			authority.clone(),
+			<span class="kw-2">&amp;</span>collection_id,
+			<span class="kw-2">&amp;</span>item_id
+		)<span class="question-mark">?</span>;
 
 		<span class="comment">//ensure user has enough balance to create the offer
 		</span><span class="kw">let </span>total_user_balance = T::Currency::total_balance(<span class="kw-2">&amp;</span>authority);
@@ -2244,30 +2246,22 @@
 	}
 
 	<span class="kw">fn </span>can_this_item_receive_buy_orders(
-		collection_id: T::CollectionId,
-		item_id: T::ItemId,
-		marketplace_id: [u8; <span class="number">32</span>],
+		marketplace_id: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>],
+		buyer: T::AccountId,
+		class_id: <span class="kw-2">&amp;</span>T::CollectionId,
+		instance_id: <span class="kw-2">&amp;</span>T::ItemId,
 	) -&gt; DispatchResult {
-		<span class="comment">//First we check if the item has is for sale, if not, return error
-		</span><span class="macro">ensure!</span>(
-			&lt;OffersByItem&lt;T&gt;&gt;::contains_key(collection_id, item_id),
-			Error::&lt;T&gt;::ItemNotForSale
-		);
+		<span class="comment">//First we check if the buyer is authorized to buy on this marketplace
+		</span><span class="self">Self</span>::is_authorized(buyer, marketplace_id, Permission::EnlistBuyOffer)<span class="question-mark">?</span>;
 
-		<span class="comment">//ensure the item can receive buy offers on the selected marketplace
-		</span><span class="kw">let </span>offers = &lt;OffersByItem&lt;T&gt;&gt;::get(collection_id, item_id);
-
-		<span class="kw">for </span>offer <span class="kw">in </span>offers {
-			<span class="kw">let </span>offer_info = &lt;OffersInfo&lt;T&gt;&gt;::get(offer).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-			<span class="comment">//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-			</span><span class="kw">if </span>offer_info.marketplace_id == marketplace_id
-				&amp;&amp; offer_info.offer_type == OfferType::SellOrder
-			{
-				<span class="kw">return </span><span class="prelude-val">Ok</span>(());
+		<span class="comment">//We need to check if the owner is in the marketplace
+		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(owner) = pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id) {
+			<span class="kw">if </span><span class="self">Self</span>::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok()
+				{
+					<span class="kw">return </span><span class="prelude-val">Ok</span>(());
+				}
 			}
-		}
-
-		<span class="prelude-val">Err</span>(Error::&lt;T&gt;::ItemNotForSale.into())
+		<span class="prelude-val">Err</span>(Error::&lt;T&gt;::OwnerNotInMarketplace.into())
 	}
 
 	<span class="kw">fn </span>_delete_all_sell_orders_for_this_item(
