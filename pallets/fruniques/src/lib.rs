@@ -115,6 +115,8 @@ pub mod pallet {
 		FruniqueFrozen,
 		// Frunique already redeemed
 		FruniqueAlreadyRedeemed,
+		//User is not in a given collection yet
+		UserNotInCollection,
 	}
 
 	#[pallet::storage]
@@ -280,11 +282,19 @@ pub mod pallet {
 			attributes: Option<Attributes<T>>,
 			parent_info_call: Option<ParentInfoCall<T>>,
 		) -> DispatchResult {
+			//Ensure the collection exists
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
+			// Ensure the user is in the collection
 			let user: T::AccountId = ensure_signed(origin.clone())?;
-			Self::is_authorized(user.clone(), class_id, Permission::Mint)?;
+			ensure!(
+				Self::is_authorized(
+					user.clone(), 
+					class_id, 
+					Permission::Mint).is_ok(), 
+					Error::<T>::UserNotInCollection
+				);
 
-			let owner: T::AccountId = ensure_signed(origin.clone())?;
+			let owner = user.clone();
 
 			if let Some(parent_info_call) = parent_info_call.clone() {
 				ensure!(
@@ -298,14 +308,19 @@ pub mod pallet {
 					),
 					Error::<T>::FruniqueNotFound
 				);
-
 				ensure!(
 					!<FruniqueInfo<T>>::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
 						.unwrap()
 						.redeemed,
 					Error::<T>::ParentAlreadyRedeemed
 				);
-				Self::is_authorized(user, parent_info_call.collection_id, Permission::Mint)?;
+				ensure!(
+					Self::is_authorized(
+						user, 
+						parent_info_call.collection_id, 
+						Permission::Mint).is_ok(),
+						Error::<T>::UserNotInCollection
+					);
 
 				let parent_info = ParentInfo {
 					collection_id: parent_info_call.collection_id,
