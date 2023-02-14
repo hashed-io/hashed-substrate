@@ -118,6 +118,7 @@ pub enum Permission {
 	TakeBuyOffer,
 	AskForRedemption,
 	AcceptRedemption,
+	EnlistBlockedUser,
 }
 
 impl Permission {
@@ -136,6 +137,7 @@ impl Permission {
 			Self::TakeBuyOffer => "TakeBuyOffer".as_bytes().to_vec(),
 			Self::AskForRedemption => "AskForRedemption".as_bytes().to_vec(),
 			Self::AcceptRedemption => "AcceptRedemption".as_bytes().to_vec(),
+			Self::EnlistBlockedUser => "EnlistBlockedUser".as_bytes().to_vec(),
 		}
 	}
 
@@ -152,6 +154,7 @@ impl Permission {
 			UpdateLabel.to_vec(),
 			RemoveMarketplace.to_vec(),
 			AcceptRedemption.to_vec(),
+			EnlistBlockedUser.to_vec(),
 		]
 		.to_vec();
 		admin_permissions.append(&mut Permission::participant_permissions());

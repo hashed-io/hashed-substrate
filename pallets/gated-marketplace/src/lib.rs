@@ -65,6 +65,8 @@ pub mod pallet {
 		type MaxMarketsPerItem: Get<u32>;
 		#[pallet::constant]
 		type MaxOffersPerMarket: Get<u32>;
+		#[pallet::constant]
+		type MaxBlockedUsersPerMarket: Get<u32>;
 
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 	}
@@ -187,6 +189,17 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn get_blocked_accounts)]
+	pub(super) type BlockedUsersByMarketplace<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		MarketplaceId,                                
+		BoundedVec<T::AccountId, T::MaxBlockedUsersPerMarket>, // blocked accounts
+		ValueQuery,
+	>;
+	
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -218,6 +231,10 @@ pub mod pallet {
 		RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
 		/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
 		RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
+		/// User was blocked. [marketplace_id, account]
+		UserBlocked(MarketplaceId, T::AccountId),
+		/// User was unblocked. [marketplace_id, account]
+		UserUnblocked(MarketplaceId, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -309,6 +326,8 @@ pub mod pallet {
 		RedemptionRequestAlreadyExists,
 		/// The redemption in question is already redeemed
 		RedemptionRequestAlreadyRedeemed,
+		/// User is blocked
+		UserIsBlocked,
 	}
 
 	#[pallet::call]
@@ -342,7 +361,12 @@ pub mod pallet {
 			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
 			Self::do_create_marketplace(who, admin, m)
 		}
-
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn block_user(origin: OriginFor<T>, marketplace_id: MarketplaceId, user: T::AccountId) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_block_user(who,marketplace_id, user)?;
+			Ok(())
+		}
 		/// Apply to a marketplace.
 		///
 		/// Applies to the selected marketplace.
