@@ -22,14 +22,9 @@ fn create_label(label: &str) -> BoundedVec<u8, LabelMaxLen> {
 
 fn get_marketplace_id(label: &str, fee: u32, creator: u64) -> [u8; 32] {
 	let fee = Permill::from_percent(fee);
-	let marketplace = Marketplace::<Test> {
-		label: create_label(label),
-		fee,
-		creator,
-	};
+	let marketplace = Marketplace::<Test> { label: create_label(label), fee, creator };
 
 	marketplace.using_encoded(blake2_256)
-
 }
 
 fn default_feedback() -> BoundedVec<u8, MaxFeedbackLen> {
@@ -2027,7 +2022,6 @@ fn enlist_buy_offer_works() {
 	});
 }
 
-
 #[test]
 fn enlist_buy_offer_owner_cannnot_create_buy_offers_for_their_own_items_shouldnt_work() {
 	new_test_ext().execute_with(|| {
@@ -2753,5 +2747,83 @@ fn remove_offer_status_is_closed_shouldnt_work() {
 			GatedMarketplace::remove_offer(RuntimeOrigin::signed(2), offer_id2),
 			Error::<Test>::CannotDeleteOffer
 		);
+	});
+}
+
+#[test]
+fn block_user_works() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+		Balances::make_free_balance_be(&3, 1300);
+		assert_ok!(GatedMarketplace::create_marketplace(
+			RuntimeOrigin::signed(1),
+			1,
+			create_label("my marketplace"),
+			500
+		));
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+
+		assert_ok!(GatedMarketplace::apply(
+			RuntimeOrigin::signed(2),
+			m_id,
+			create_application_fields(2),
+			None
+		));
+		assert_ok!(GatedMarketplace::apply(
+			RuntimeOrigin::signed(3),
+			m_id,
+			create_application_fields(2),
+			None
+		));
+		assert_eq!(
+			GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending).len(),
+			2
+		);
+		assert_ok!(GatedMarketplace::enroll(
+			RuntimeOrigin::signed(1),
+			m_id,
+			AccountOrApplication::Account(3),
+			true,
+			default_feedback()
+		));
+		assert_eq!(GatedMarketplace::applications_by_account(2, m_id).len(), 1);
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_noop!(
+			GatedMarketplace::apply(
+				RuntimeOrigin::signed(2),
+				m_id,
+				create_application_fields(2),
+				None
+			),
+			Error::<Test>::UserIsBlocked
+		);
+		assert_noop!(
+			GatedMarketplace::enroll(
+				RuntimeOrigin::signed(1),
+				m_id,
+				AccountOrApplication::Account(2),
+				true,
+				default_feedback()
+			),
+			Error::<Test>::UserIsBlocked
+		);
+		assert_noop!(
+			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 3),
+			Error::<Test>::UserAlreadyParticipant
+		);
+		assert_eq!(GatedMarketplace::get_blocked_accounts(m_id).iter().next().unwrap().clone(), 2);
+		assert_eq!(
+			GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending).len(),
+			0
+		);
+		assert_eq!(GatedMarketplace::applications_by_account(2, m_id).len(), 0);
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::apply(
+			RuntimeOrigin::signed(2),
+			m_id,
+			create_application_fields(2),
+			None
+		));
 	});
 }

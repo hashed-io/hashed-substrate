@@ -179,6 +179,8 @@ impl<T: Config> Pallet<T> {
 				})
 				.ok_or(Error::<T>::ApplicationNotFound)?,
 		};
+		// ensure the account is not blocked
+		ensure!(!Self::is_user_blocked(applicant.clone(), marketplace_id), Error::<T>::UserIsBlocked);
 		Self::change_applicant_status(applicant, marketplace_id, next_status, feedback)?;
 
 		Self::deposit_event(Event::ApplicationProcessed(
