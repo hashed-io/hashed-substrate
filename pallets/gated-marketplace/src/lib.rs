@@ -328,6 +328,10 @@ pub mod pallet {
 		RedemptionRequestAlreadyRedeemed,
 		/// User is blocked
 		UserIsBlocked,
+		/// The number of blocked users has reached the limit
+		ExceedMaxBlockedUsers,
+		/// User is already a participant in the marketplace
+		UserAlreadyParticipant,
 	}
 
 	#[pallet::call]
@@ -361,11 +365,22 @@ pub mod pallet {
 			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
 			Self::do_create_marketplace(who, admin, m)
 		}
+		/// block/unblock a user from apllying to a marketplace.
+		///
+		/// Blocks a user from applying to a marketplace or unblocks it if user is already blocked.
+		/// 
+		/// ### Parameters:
+		/// - `origin`: The admin of the marketplace.
+		/// - `marketplace_id`: The id of the marketplace to block/unblock the user.
+		/// - `user`: The id of the user to block/unblock.`
+		/// 
+		/// ### Considerations:
+		/// - Once a user is blocked, it cannot apply to the marketplace until it is unblocked.
+		/// - Once a user is blocked its application to the given marketplace is deleted. 
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn block_user(origin: OriginFor<T>, marketplace_id: MarketplaceId, user: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_block_user(who,marketplace_id, user)?;
-			Ok(())
+			Self::do_block_user(who,marketplace_id, user)
 		}
 		/// Apply to a marketplace.
 		///

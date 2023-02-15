@@ -839,24 +839,34 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		// ensure the origin is owner or admin
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
-		// ensure the user is not already blocked
+		//ensure the user is not already a participant of the marketplace
+		ensure!(
+			Self::is_authorized(
+				user.clone(), 
+				&marketplace_id,
+				 Permission::EnlistBuyOffer
+				).is_err(), 
+				Error::<T>::UserAlreadyParticipant
+			);
+		// check if the user is already blocked
 		if Self::try_unblock_user(user.clone(), marketplace_id).is_err() {
 			// if the user is not blocked, block it
 			<BlockedUsersByMarketplace<T>>::try_mutate(marketplace_id, |blocked_list| blocked_list.try_push(user.clone()))
-			.map_err(|_| Error::<T>::OfferStorageError)?;
+				.map_err(|_| Error::<T>::ExceedMaxBlockedUsers)?;
 			Self::deposit_event(Event::UserBlocked(marketplace_id, user.clone()));
 			if let Ok(application_id) = <ApplicationsByAccount<T>>::try_get(user.clone(), marketplace_id){
 					// remove application information
+					if let Ok(application) = <Applications<T>>::try_get(application_id){
+						Self::remove_from_applicants_lists(user.clone(), application.status, marketplace_id)?;
+					}
 					<Applications<T>>::remove(application_id);
-					<ApplicationsByAccount<T>>::remove(user, marketplace_id);
-					<ApplicantsByMarketplace<T>>::remove(marketplace_id, ApplicationStatus::Rejected);
+					<ApplicationsByAccount<T>>::remove(user.clone(), marketplace_id);
 				}
 			return Ok(());
 		}
 		Self::deposit_event(Event::UserUnblocked(marketplace_id, user));
 		Ok(())
 	}
-
 
 	fn try_unblock_user(
 		user: T::AccountId,
