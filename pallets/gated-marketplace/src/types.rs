@@ -260,7 +260,6 @@ pub struct OfferData<T: Config> {
 	pub fee: BalanceOf<T>,
 	pub status: OfferStatus,
 	pub creation_date: u64,
-	pub expiration_date: u64,
 	pub offer_type: OfferType,
 	pub buyer: Option<(T::AccountId, [u8; 32])>,
 }

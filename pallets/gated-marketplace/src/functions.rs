@@ -204,6 +204,12 @@ impl<T: Config> Pallet<T> {
 		//ensure the account is not already an authority
 		// handled by <T as pallet::Config>::Rbac::assign_role_to_user
 		//ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
+		
+		// ensure the account is not blocked
+		ensure!(
+			!Self::is_user_blocked(account.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		match authority_type {
 			MarketplaceRole::Owner => {
 				ensure!(!Self::owner_exist(marketplace_id), Error::<T>::OnlyOneOwnerIsAllowed);
@@ -308,11 +314,11 @@ impl<T: Config> Pallet<T> {
 		Self::is_the_offer_valid(price, Permill::from_percent(percentage))?;
 
 		//Add timestamp to the offer
-		let (timestamp, timestamp2) =
+		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
 		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
 			.using_encoded(blake2_256);
 
 		//create offer structure
@@ -328,8 +334,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: timestamp,
-			expiration_date: timestamp2,
+			creation_date: creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::SellOrder,
 			buyer: None,
@@ -393,11 +398,11 @@ impl<T: Config> Pallet<T> {
 		Self::is_the_offer_valid(price, Permill::from_percent(percentage))?;
 
 		//Add timestamp to the offer
-		let (timestamp, timestamp2) =
+		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
 		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
 			.using_encoded(blake2_256);
 
 		//create offer structure
@@ -411,8 +416,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: timestamp,
-			expiration_date: timestamp2,
+			creation_date: creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::BuyOrder,
 			buyer: None,
@@ -839,6 +843,8 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 		user: T::AccountId,
 	) -> DispatchResult {
+		// ensure the marketplace exists
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 		// ensure the origin is owner or admin
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
 		//ensure the user is not already a participant of the marketplace
@@ -1027,6 +1033,11 @@ impl<T: Config> Pallet<T> {
 		account: T::AccountId,
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
+		//check if user is blocked
+		ensure!(
+			!Self::is_user_blocked(account.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
 			.map_err(|_| Error::<T>::ApplicationIdNotFound)?;
 
@@ -1050,11 +1061,10 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
+	fn get_timestamp_in_milliseconds() -> Option<u64> {
 		let timestamp: u64 = T::Timestamp::now().into();
-		let timestamp2 = timestamp + (7 * 24 * 60 * 60 * 1000);
 
-		Some((timestamp, timestamp2))
+		Some(timestamp)
 	}
 
 	fn _is_offer_status(offer_id: [u8; 32], offer_status: OfferStatus) -> bool {
