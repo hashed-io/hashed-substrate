@@ -13,6 +13,9 @@ A simple description of the project
   - [Order Part of an NFT](#order-part-of-an-nft)
   - [Complete/Confirm Order](#completeconfirm-order)
   - [Order Settlement](#order-settlement)
+  - [Approve Redemption Specialists](#approve-redemption-specialists)
+  - [Request Redemption](#request-redemption)
+  - [Asset Manager](#asset-manager)
   - [Code Contributors](#code-contributors)
 
 ## Setup
@@ -35,6 +38,22 @@ To complete the order, you need to call the extrinsic `take_sell_offer` with the
 ## Order Settlement
 
 To check the fees where distributed we can see it on the block transactions, that should indicate that there is a transfer to the owner of the marketplace and the creator of the order receive the price less the fees.
+
+In this example we sold a NFT for 10 currency units, so whe admin of the market receives 1 unit and the rest is of the price is for the seller.
+
+![Marketplace fees](gatedmarketplace-fees.png "Marketplace fees")
+
+## Approve Redemption Specialists
+
+The redemption specialists are users that are in charge of making all the IRL process related to the exchange of the tax credit, for the moment the admin of the marketplace takes this responsibility.
+
+## Request Redemption
+
+When a customer buys a tax credit, the customer is allowed to make a request to redeem the NFT, this process takes place on the marketplace, as the redemption specialist should take the responsibility of making the transaction in real life. Also redeeming a NFT causes to lose the ability to spawn new items and freezes it just to say that the NFT does not have any value left.
+
+## Asset Manager
+
+The asset manager is responsible for actually making the transaction, at the moment, the marketplace takes the responsibility of making the transaction as it changes the storage maps in order to move the NFT information into a redeemed version of it.
 
 ## Code Contributors
 
