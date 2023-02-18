@@ -15,6 +15,9 @@ if [[ ($1 != 'hashed' && $1 != 'luhn' && $1 != 'md5') ]]; then
     exit 1
 fi
 
+SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+BASE_PATH="$(dirname "${SCRIPT_PATH}")"
+RESOURCES_PATH="$BASE_PATH/resources"
 #cargo build --release
 
 collator_args=(
@@ -27,7 +30,7 @@ collator_args=(
     --rpc-external
     --rpc-cors all
     --rpc-methods unsafe
-    --chain $1
+    --chain $RESOURCES_PATH/$1-collator-raw-spec.json
 )
 if [[ ! -z ${NODEKEY} ]]; then
     collator_args+=(--node-key ${NODEKEY})
@@ -40,7 +43,7 @@ fi
 relay_args=(
     --execution wasm
     --base-path $2/relay-data/
-    --chain /var/www/hashed-substrate/resources/polkadot.json
+    --chain $RESOURCES_PATH/polkadot.json
     --port 30333
     --ws-port 9944
     --ws-external
@@ -51,8 +54,9 @@ relay_args=(
     --pruning 10000
 )
 
-collator_args+=($chain_spec)
+# collator_args+=($chain_spec)
 
 #/target/release/hashed key insert --base-path ./collator-data $chain_spec --scheme sr25519 --suri "${MNEMO}" --key-type aura
 # echo "${collator_args[@]}" -- "${relay_args[@]}"
-/var/www/hashed-substrate/target/release/hashed-parachain "${collator_args[@]}" -- "${relay_args[@]}"
+
+$BASE_PATH/target/release/hashed-parachain "${collator_args[@]}" -- "${relay_args[@]}"
