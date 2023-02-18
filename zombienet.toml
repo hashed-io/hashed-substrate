@@ -1,0 +1,23 @@
+[relaychain]
+default_command = "polkadot"
+default_args = [ "-lparachain=debug" ]
+
+chain = "polkadot-local"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+
+[[parachains]]
+id = 100
+cumulus_based = true
+
+  [parachains.collator]
+  name = "pba-collator"
+  validator = true
+  command = "./target/release/hashed-parachain"
+  args = ["--force-authoring"]
