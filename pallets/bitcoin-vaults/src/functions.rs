@@ -92,9 +92,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_propose(proposal: Proposal<T>)->DispatchResult{
-        let vault =  <Vaults<T>>::get(proposal.vault_id).ok_or(Error::<T>::VaultNotFound)?;
-        ensure!(vault.is_vault_member(&proposal.proposer),Error::<T>::SignerPermissionsNeeded);
-        ensure!(vault.is_valid(), Error::<T>::InvalidVault);
+        Self::vault_comprobations(proposal.vault_id, &proposal.proposer)?;
         let proposal_id = proposal.using_encoded(blake2_256);
         ensure!(!<Proposals<T>>::contains_key(&proposal_id), Error::<T>::AlreadyProposed);
         <Proposals<T>>::insert(proposal_id, proposal.clone());
@@ -156,6 +154,43 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
+    pub fn do_create_proof(signer: T::AccountId, vault_id: [u8; 32], message: Description<T>,psbt: PSBT<T>) -> DispatchResult {
+        Self::vault_comprobations(vault_id,&signer)?;
+
+        let new_proof = ProofOfReserve::<T>{
+            status: ProposalStatus::Pending,
+            message: message,
+            psbt: psbt,
+            signed_psbts: BoundedVec::<ProposalSignatures<T>, T::MaxCosignersPerVault>::default()
+        };
+        <ProofOfReserves<T>>::insert(vault_id, new_proof);
+        Ok(())
+    }
+
+    pub fn do_save_proof_psbt(signer: T::AccountId, vault_id: [u8; 32], psbt: PSBT<T>, is_finalized: bool) -> DispatchResult{
+        Self::vault_comprobations(vault_id,&signer)?;
+        let signature: ProposalSignatures<T> = ProposalSignatures{
+            signer: signer.clone(),
+            signature: psbt,
+        };
+        
+        <ProofOfReserves<T>>::try_mutate::<_,(),DispatchError,_>(vault_id, |maybe_proof|{
+            maybe_proof.as_ref().ok_or(Error::<T>::ProofNotFound)?;
+            if let Some(proof) = maybe_proof {
+                let signed_already = proof.signed_psbts.iter().find(|&signature|{ signature.signer ==signer }).is_some();
+                ensure!(!signed_already, Error::<T>::AlreadySigned);
+                proof.signed_psbts.try_push(signature).map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
+                // this should never fail, earlier vault comprobations ensure it:
+                if proof.signed_psbts.len() as u32 >= <Vaults<T>>::get(vault_id).unwrap().threshold {
+					proof.status.clone_from( if is_finalized { &ProposalStatus::Finalized } else { &ProposalStatus::ReadyToFinalize(false)});
+				}
+            }
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
     /*---- Utilities ----*/
 
     // check if the xpub is free to take/update or if its owned by the account
@@ -174,6 +209,13 @@ impl<T: Config> Pallet<T> {
         }
         // new xpub registry: available
         XpubStatus::Free
+    }
+
+    pub fn vault_comprobations(vault_id: [u8; 32], signer: &T::AccountId) -> DispatchResult{
+        let vault =  <Vaults<T>>::get(vault_id).ok_or(Error::<T>::VaultNotFound)?;
+        ensure!(vault.is_vault_member(signer),Error::<T>::SignerPermissionsNeeded);
+        ensure!(vault.is_valid(), Error::<T>::InvalidVault);
+        Ok(())
     }
 
     /*---- Offchain extrinsics ----*/

@@ -174,6 +174,8 @@ pub mod pallet {
 		InvalidProposal,
 		/// This vault cant take proposals due to structural failures
 		InvalidVault,
+		/// The proof of reserve was not found
+		ProofNotFound,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -214,6 +216,7 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// Stores vaults
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
 	pub(super) type Vaults<T: Config> = StorageMap<
@@ -232,6 +235,18 @@ pub mod pallet {
 		T::AccountId,                              // signer
 		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
+	>;
+
+	/// Stores vaults proof-of-reserve 
+	/// 
+	#[pallet::storage]
+	#[pallet::getter(fn proof_of_reserve)]
+	pub(super) type ProofOfReserves<T: Config> = StorageMap<
+		_,
+		Identity,
+		[u8; 32], //vault_id
+		ProofOfReserve<T>,
+		OptionQuery,
 	>;
 
 	#[pallet::type_value]
@@ -592,6 +607,30 @@ pub mod pallet {
 			Self::do_finalize_psbt(who, proposal_id, true)
 		}
 
+
+		/// Create Proof of Reserve
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn create_proof(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			message: Description<T>,
+			psbt: PSBT<T>
+		) -> DispatchResult{
+			let who = ensure_signed(origin.clone())?;
+			Self::do_create_proof(who, vault_id, message,psbt)
+		}
+
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn save_proof_psbt(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			psbt: PSBT<T>,
+			is_finalized: bool,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_save_proof_psbt(who, vault_id, psbt, is_finalized)
+		}
+
 		/// Kill almost all storage
 		///
 		/// Use with caution!
@@ -606,6 +645,7 @@ pub mod pallet {
 			let _ = <ProposalsByVault<T>>::clear(1000, None);
 			let _ = <Vaults<T>>::clear(1000, None);
 			let _ = <VaultsBySigner<T>>::clear(1000, None);
+			let _ = <ProofOfReserves<T>>::clear(1000,None);
 			Ok(())
 		}
 
