@@ -1,0 +1,81 @@
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chaos-n5-network
+  namespace: hashed-network
+spec:
+  replicas: 1
+  serviceName: chaos-n5-network-headless
+  selector:
+    matchLabels:
+      app: chaos-n5-network
+  template:
+    metadata:
+      namespace: hashed-network
+      labels:
+        app: chaos-n5-network
+    spec:
+      containers:
+      - name: chaos-n5-network
+        imagePullPolicy: IfNotPresent
+        image: sebastianmontero/hashed-chaos-chain-node:9ffd92c30fedda4bcaee6237de5ed2b989877742
+        command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
+        args: ["/var/www/hashed-substrate/resources/chaos-raw-spec.json", "/var/www/hashed/node-data"]
+        volumeMounts:
+          - name: chaos-n5-pvc
+            mountPath:  /var/www/hashed/node-data
+        env:
+          - name: BOOTNODES
+            value: ""
+          - name: MNEMO
+            valueFrom:
+              secretKeyRef:
+                name: chaos-n5-secrets
+                key: MNEMO
+                optional: false
+          - name: NODEKEY
+            valueFrom:
+              secretKeyRef:
+                name: chaos-n5-secrets
+                key: NODEKEY
+                optional: false
+        resources:
+          limits:
+            memory: "3G"
+            cpu: "1.5"
+        ports:
+        - containerPort: 9933
+        - containerPort: 9944
+        - containerPort: 30333
+  volumeClaimTemplates:
+  - metadata:
+      name: chaos-n5-pvc
+      namespace: hashed-network
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  chaos-n5-network
+  namespace: hashed-network
+spec:
+  selector:
+    app:  chaos-n5-network
+  type:  ClusterIP
+  ports:
+  - name:  p2p-port
+    port:  30333
+    targetPort:  30333
+  - name:  ws-port
+    port:  9944
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9933
+    targetPort:  9933
