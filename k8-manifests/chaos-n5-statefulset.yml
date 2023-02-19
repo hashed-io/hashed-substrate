@@ -27,7 +27,7 @@ spec:
             mountPath:  /var/www/hashed/node-data
         env:
           - name: BOOTNODES
-            value: ""
+            value: "/dns/n4-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm"
           - name: MNEMO
             valueFrom:
               secretKeyRef:

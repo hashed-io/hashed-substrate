@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# DEBUG BOOTNODES
+# export RUST_LOG="sub-libp2p=trace"
 
 usage="./run-node.sh <chainspec> <data-path>"
 if [ $# -ne 2 ]; then
