@@ -193,9 +193,9 @@ pub mod pallet {
 	#[pallet::getter(fn get_blocked_accounts)]
 	pub(super) type BlockedUsersByMarketplace<T: Config> = StorageMap<
 		_,
-		Blake2_128Concat,
+		Identity,
 		MarketplaceId,                                
-		BoundedVec<T::AccountId, T::MaxBlockedUsersPerMarket>, // blocked accounts
+		BoundedVec<T::AccountId, T::MaxBlockedUsersPerMarket>, // Blocked accounts
 		ValueQuery,
 	>;
 	
@@ -332,6 +332,10 @@ pub mod pallet {
 		ExceedMaxBlockedUsers,
 		/// User is already a participant in the marketplace
 		UserAlreadyParticipant,
+		/// User is not blocked
+		UserIsNotBlocked,
+		/// User is already blocked
+		UserAlreadyBlocked,
 	}
 
 	#[pallet::call]
@@ -365,9 +369,10 @@ pub mod pallet {
 			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
 			Self::do_create_marketplace(who, admin, m)
 		}
-		/// block/unblock a user from apllying to a marketplace.
+
+		/// Block or Unblock a user from apllying to a marketplace.
 		///
-		/// Blocks a user from applying to a marketplace or unblocks it if user is already blocked.
+		/// Blocks or Unblocks a user from applying to a marketplace.
 		/// 
 		/// ### Parameters:
 		/// - `origin`: The admin of the marketplace.
@@ -375,13 +380,20 @@ pub mod pallet {
 		/// - `user`: The id of the user to block/unblock.`
 		/// 
 		/// ### Considerations:
-		/// - Once a user is blocked, it cannot apply to the marketplace until it is unblocked.
-		/// - Once a user is blocked its application to the given marketplace is deleted. 
+		/// - Once a user is blocked, the user won't be able to join the marketplace until unblocked.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn block_user(origin: OriginFor<T>, marketplace_id: MarketplaceId, user: T::AccountId) -> DispatchResult {
+		pub fn block_user(origin: OriginFor<T>, marketplace_id: MarketplaceId, block_args: BlockUserArgs<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_block_user(who,marketplace_id, user)
+			match block_args {
+				BlockUserArgs::BlockUser (user) => {
+					return Self::do_block_user(who, marketplace_id, user);
+				}
+				BlockUserArgs::UnblockUser (user) => {
+					return Self::do_unblock_user(who, marketplace_id, user);
+				} 
+			}
 		}
+
 		/// Apply to a marketplace.
 		///
 		/// Applies to the selected marketplace.

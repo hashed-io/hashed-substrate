@@ -2770,7 +2770,7 @@ fn block_user_should_prevent_application() {
 			create_application_fields(2),
 			None
 		));
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
 			GatedMarketplace::apply(
 				RuntimeOrigin::signed(2),
@@ -2802,7 +2802,7 @@ fn block_user_should_prevent_invite() {
 			create_application_fields(2),
 			None
 		));
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
 			GatedMarketplace::invite(
 				RuntimeOrigin::signed(1),
@@ -2843,7 +2843,7 @@ fn block_user_should_prevent_reapply() {
 			false,
 			default_feedback()
 		));
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
 			GatedMarketplace::reapply(
 				RuntimeOrigin::signed(2),
@@ -2870,7 +2870,7 @@ fn block_user_should_prevent_add_authority() {
 		));
 		let m_id = get_marketplace_id("my marketplace", 500, 1);
 
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
 			GatedMarketplace::add_authority(RuntimeOrigin::signed(1),2, MarketplaceRole::Participant, m_id),
 			Error::<Test>::UserIsBlocked
@@ -2879,7 +2879,7 @@ fn block_user_should_prevent_add_authority() {
 }
 
 #[test]
-fn block_user_should_delete_application_data() {
+fn unblock_user_should_work() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2892,36 +2892,7 @@ fn block_user_should_delete_application_data() {
 		));
 		let m_id = get_marketplace_id("my marketplace", 500, 1);
 
-		assert_ok!(GatedMarketplace::apply(
-			RuntimeOrigin::signed(2),
-			m_id,
-			create_application_fields(2),
-			None
-		));
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
-		assert_eq!(GatedMarketplace::applications_by_account(2, m_id).len(), 0);
-		assert_eq!(
-			GatedMarketplace::applicants_by_marketplace(m_id, ApplicationStatus::Pending).len(),
-			0
-		);
-	});
-}
-
-#[test]
-fn block_user_should_unblock_if_blocked_already() {
-	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
-
-		assert_ok!(GatedMarketplace::create_marketplace(
-			RuntimeOrigin::signed(1),
-			1,
-			create_label("my marketplace"),
-			500
-		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
-
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
 			GatedMarketplace::apply(
 				RuntimeOrigin::signed(2),
@@ -2932,7 +2903,7 @@ fn block_user_should_unblock_if_blocked_already() {
 			Error::<Test>::UserIsBlocked
 		);
 		assert_eq!(GatedMarketplace::get_blocked_accounts(m_id).iter().next().unwrap().clone(), 2);
-		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2));
+		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::UnblockUser(2)));
 		assert_eq!(GatedMarketplace::get_blocked_accounts(m_id).len(), 0);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(2),
@@ -2966,11 +2937,43 @@ fn block_user_should_not_work_if_not_admin() {
 		));
 
 		assert_noop!(
-			GatedMarketplace::block_user(RuntimeOrigin::signed(2), m_id, 3),
+			GatedMarketplace::block_user(RuntimeOrigin::signed(2), m_id, BlockUserArgs::BlockUser(3)),
 			RbacErr::NotAuthorized
 		);
 		assert_noop!(
-			GatedMarketplace::block_user(RuntimeOrigin::signed(3), m_id, 4),
+			GatedMarketplace::block_user(RuntimeOrigin::signed(3), m_id, BlockUserArgs::BlockUser(4)),
+			RbacErr::NotAuthorized
+		);
+	});
+}
+#[test]
+fn unblock_user_should_not_work_if_not_admin() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+		Balances::make_free_balance_be(&3, 1300);
+		Balances::make_free_balance_be(&4, 1300);
+
+		assert_ok!(GatedMarketplace::create_marketplace(
+			RuntimeOrigin::signed(1),
+			1,
+			create_label("my marketplace"),
+			500
+		));
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		assert_ok!(GatedMarketplace::add_authority(
+			RuntimeOrigin::signed(1),
+			2,
+			MarketplaceRole::Participant,
+			m_id
+		));
+
+		assert_noop!(
+			GatedMarketplace::block_user(RuntimeOrigin::signed(2), m_id, BlockUserArgs::UnblockUser(3)),
+			RbacErr::NotAuthorized
+		);
+		assert_noop!(
+			GatedMarketplace::block_user(RuntimeOrigin::signed(3), m_id, BlockUserArgs::UnblockUser(4)),
 			RbacErr::NotAuthorized
 		);
 	});
@@ -2984,7 +2987,21 @@ fn block_user_should_not_work_if_marketplace_does_not_exist() {
 
 		let m_id = get_marketplace_id("my marketplace", 500, 1);
 		assert_noop!(
-			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2),
+			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)),
+			Error::<Test>::MarketplaceNotFound
+		);
+	});
+}
+
+#[test]
+fn unblock_user_should_not_work_if_marketplace_does_not_exist() {
+	new_test_ext().execute_with(|| {
+		Balances::make_free_balance_be(&1, 100);
+		Balances::make_free_balance_be(&2, 1300);
+
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		assert_noop!(
+			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::UnblockUser(2)),
 			Error::<Test>::MarketplaceNotFound
 		);
 	});
@@ -3018,7 +3035,7 @@ fn block_user_should_not_work_if_user_is_already_participant() {
 			default_feedback()
 		));
 		assert_noop!(
-			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, 2),
+			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)),
 			Error::<Test>::UserAlreadyParticipant
 		);
 	});

@@ -78,14 +78,15 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		// marketplace exists?
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// Ensure the user is not blocked
+		ensure!(
+			!Self::is_user_blocked(applicant.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		// The user only can apply once by marketplace
 		ensure!(
 			!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id),
 			Error::<T>::AlreadyApplied
-		);
-		ensure!(
-			!Self::is_user_blocked(applicant.clone(), marketplace_id),
-			Error::<T>::UserIsBlocked
 		);
 		// Generate application Id
 		let app_id =
@@ -119,14 +120,15 @@ impl<T: Config> Pallet<T> {
 		custodian_fields: Option<CustodianFields<T>>,
 	) -> DispatchResult {
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// Ensure the user is not blocked
+		ensure!(
+			!Self::is_user_blocked(new_user.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		// The user only can apply once by marketplace
 		ensure!(
 			!<ApplicationsByAccount<T>>::contains_key(new_user.clone(), marketplace_id),
 			Error::<T>::AlreadyApplied
-		);
-		ensure!(
-			!Self::is_user_blocked(new_user.clone(), marketplace_id),
-			Error::<T>::UserIsBlocked
 		);
 		// ensure the origin is owner or admin
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::Enroll)?;
@@ -180,7 +182,10 @@ impl<T: Config> Pallet<T> {
 				.ok_or(Error::<T>::ApplicationNotFound)?,
 		};
 		// ensure the account is not blocked
-		ensure!(!Self::is_user_blocked(applicant.clone(), marketplace_id), Error::<T>::UserIsBlocked);
+		ensure!(
+			!Self::is_user_blocked(applicant.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		Self::change_applicant_status(applicant, marketplace_id, next_status, feedback)?;
 
 		Self::deposit_event(Event::ApplicationProcessed(
@@ -204,12 +209,9 @@ impl<T: Config> Pallet<T> {
 		//ensure the account is not already an authority
 		// handled by <T as pallet::Config>::Rbac::assign_role_to_user
 		//ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
-		
+
 		// ensure the account is not blocked
-		ensure!(
-			!Self::is_user_blocked(account.clone(), marketplace_id),
-			Error::<T>::UserIsBlocked
-		);
+		ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
 		match authority_type {
 			MarketplaceRole::Owner => {
 				ensure!(!Self::owner_exist(marketplace_id), Error::<T>::OnlyOneOwnerIsAllowed);
@@ -334,7 +336,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: creation_date,
+			creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::SellOrder,
 			buyer: None,
@@ -416,7 +418,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: creation_date,
+			creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::BuyOrder,
 			buyer: None,
@@ -845,75 +847,68 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		// ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-		// ensure the origin is owner or admin
+		// ensure the origin is authorized to block users
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
 		//ensure the user is not already a participant of the marketplace
 		ensure!(
-			Self::is_authorized(
-				user.clone(), 
-				&marketplace_id,
-				 Permission::EnlistBuyOffer
-				).is_err(), 
-				Error::<T>::UserAlreadyParticipant
-			);
-		// check if the user is already blocked
-		if Self::try_unblock_user(user.clone(), marketplace_id).is_err() {
-			// if the user is not blocked, block it
-			<BlockedUsersByMarketplace<T>>::try_mutate(marketplace_id, |blocked_list| blocked_list.try_push(user.clone()))
-				.map_err(|_| Error::<T>::ExceedMaxBlockedUsers)?;
-			Self::deposit_event(Event::UserBlocked(marketplace_id, user.clone()));
-			if let Ok(application_id) = <ApplicationsByAccount<T>>::try_get(user.clone(), marketplace_id){
-					// remove application information
-					if let Ok(application) = <Applications<T>>::try_get(application_id){
-						Self::remove_from_applicants_lists(user.clone(), application.status, marketplace_id)?;
-					}
-					<Applications<T>>::remove(application_id);
-					<ApplicationsByAccount<T>>::remove(user.clone(), marketplace_id);
-				}
-			return Ok(());
-		}
-		Self::deposit_event(Event::UserUnblocked(marketplace_id, user));
+			Self::has_role(user.clone(), &marketplace_id, MarketplaceRole::Participant).is_err(),
+			Error::<T>::UserAlreadyParticipant
+		);
+		// if the user is not blocked, block it
+		//ensure the user is not already blocked
+		ensure!(
+			!Self::is_user_blocked(user.clone(), marketplace_id),
+			Error::<T>::UserAlreadyBlocked
+		);
+
+		// insert the user in the blocked list
+		<BlockedUsersByMarketplace<T>>::try_mutate(marketplace_id, |blocked_list| {
+			blocked_list.try_push(user.clone())
+		})
+		.map_err(|_| Error::<T>::ExceedMaxBlockedUsers)?;
+
+		Self::deposit_event(Event::UserBlocked(marketplace_id, user.clone()));
 		Ok(())
 	}
 
-	fn try_unblock_user(
-		user: T::AccountId,
+	pub fn do_unblock_user(
+		authority: T::AccountId,
 		marketplace_id: [u8; 32],
+		user: T::AccountId,
 	) -> DispatchResult {
+		// ensure the marketplace exists
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// ensure the origin is authorized to block users
+		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
+		//ensure the user is not already a participant of the marketplace
+		ensure!(
+			Self::has_role(user.clone(), &marketplace_id, MarketplaceRole::Participant).is_err(),
+			Error::<T>::UserAlreadyParticipant
+		);
+		//ensure the user is blocked
+		ensure!(Self::is_user_blocked(user.clone(), marketplace_id), Error::<T>::UserIsNotBlocked);
+
+		// remove the user from the block list
 		<BlockedUsersByMarketplace<T>>::try_mutate::<_, _, DispatchError, _>(
 			marketplace_id,
-			|blocked_users| {
-				let user_index = blocked_users
+			|blocked_list| {
+				let user_index = blocked_list
 					.iter()
 					.position(|a| *a == user.clone())
 					.ok_or(Error::<T>::UserNotFound)?;
-				blocked_users.remove(user_index);
+				blocked_list.remove(user_index);
 				Ok(())
 			},
-		)
+		)?;
+		Self::deposit_event(Event::UserUnblocked(marketplace_id, user.clone()));
+		Ok(())
 	}
 
-	fn is_user_blocked(
-		user: T::AccountId,
-		marketplace_id: [u8; 32],
-	) -> bool {
-		if <BlockedUsersByMarketplace<T>>::try_mutate::<_, _, DispatchError, _>(
-			marketplace_id,
-			|blocked_users| {
-				let check = blocked_users
-					.iter()
-					.position(|a| *a == user.clone())
-					.is_some();
-				if check {
-					Ok(())
-				} else {
-					Err(Error::<T>::UserNotFound.into())
-				}
-				
-			},).is_ok() {
-				return true;
-			}
-		false
+	fn is_user_blocked(user: T::AccountId, marketplace_id: [u8; 32]) -> bool {
+		<BlockedUsersByMarketplace<T>>::get(marketplace_id)
+			.iter()
+			.find(|a| **a == user.clone())
+			.is_some()
 	}
 
 	fn is_authorized(
@@ -926,6 +921,19 @@ impl<T: Config> Pallet<T> {
 			Self::pallet_id(),
 			marketplace_id,
 			&permission.id(),
+		)
+	}
+
+	fn has_role(
+		account: T::AccountId,
+		marketplace_id: &[u8; 32],
+		role: MarketplaceRole,
+	) -> DispatchResult {
+		<T as pallet::Config>::Rbac::has_role(
+			account,
+			Self::pallet_id(),
+			marketplace_id,
+			[role.id()].to_vec(),
 		)
 	}
 
@@ -1034,10 +1042,7 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
 		//check if user is blocked
-		ensure!(
-			!Self::is_user_blocked(account.clone(), marketplace_id),
-			Error::<T>::UserIsBlocked
-		);
+		ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
 		let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
 			.map_err(|_| Error::<T>::ApplicationIdNotFound)?;
 
@@ -1205,7 +1210,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-pub fn do_ask_for_redeem(
+	pub fn do_ask_for_redeem(
 		who: T::AccountId,
 		marketplace: MarketplaceId,
 		collection_id: T::CollectionId,

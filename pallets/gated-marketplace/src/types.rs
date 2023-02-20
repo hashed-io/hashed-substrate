@@ -50,6 +50,14 @@ pub enum RedeemArgs<T: Config> {
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
+pub enum BlockUserArgs<T: Config> {
+	BlockUser (T::AccountId),
+	UnblockUser (T::AccountId),
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
 pub enum AccountOrApplication<T: Config> {
 	Account(T::AccountId),
 	Application([u8; 32]),
