@@ -19,7 +19,7 @@ spec:
       containers:
       - name: chaos-n5-network
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-chaos-chain-node:9ffd92c30fedda4bcaee6237de5ed2b989877742
+        image: sebastianmontero/hashed-chaos-chain-node:fbc1cc6940cf4588930523dd64737bea2fb4f1ad
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["/var/www/hashed-substrate/resources/chaos-raw-spec.json", "/var/www/hashed/node-data"]
         volumeMounts:
