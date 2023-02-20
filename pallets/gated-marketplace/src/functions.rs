@@ -1059,8 +1059,8 @@ impl<T: Config> Pallet<T> {
 			ApplicationStatus::Rejected => {
 				//If status is Rejected, we need to delete the previous application from all the storage sources.
 				<Applications<T>>::remove(application_id);
-				<ApplicationsByAccount<T>>::remove(account, marketplace_id);
-				<ApplicantsByMarketplace<T>>::remove(marketplace_id, ApplicationStatus::Rejected);
+				<ApplicationsByAccount<T>>::remove(account.clone(), marketplace_id);
+				Self::remove_from_applicants_lists(account, ApplicationStatus::Rejected, marketplace_id)?;
 			},
 		}
 		Ok(())
