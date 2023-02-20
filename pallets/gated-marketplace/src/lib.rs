@@ -332,10 +332,15 @@ pub mod pallet {
 		ExceedMaxBlockedUsers,
 		/// User is already a participant in the marketplace
 		UserAlreadyParticipant,
+<<<<<<< HEAD
 		/// User is not blocked
 		UserIsNotBlocked,
 		/// User is already blocked
 		UserAlreadyBlocked,
+=======
+		/// The owner of the NFT is not in the marketplace
+		OwnerNotInMarketplace,
+>>>>>>> 85ce8fda067ed2c8b898b7a8acafdcb09b04c530
 	}
 
 	#[pallet::call]
