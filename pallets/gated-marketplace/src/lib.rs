@@ -90,13 +90,8 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn applications)]
-	pub(super) type Applications<T: Config> = StorageMap<
-		_,
-		Identity,
-		ApplicationId,
-		Application<T>,
-		OptionQuery,
-	>;
+	pub(super) type Applications<T: Config> =
+		StorageMap<_, Identity, ApplicationId, Application<T>, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn applications_by_account)]
@@ -141,7 +136,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::CollectionId, //collection_id
 		Blake2_128Concat,
-		T::ItemId,                                   //item_id
+		T::ItemId,                                  //item_id
 		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
@@ -151,7 +146,7 @@ pub mod pallet {
 	pub(super) type OffersByAccount<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId,                                // account_id
+		T::AccountId,                               // account_id
 		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
@@ -194,11 +189,10 @@ pub mod pallet {
 	pub(super) type BlockedUsersByMarketplace<T: Config> = StorageMap<
 		_,
 		Identity,
-		MarketplaceId,                                
+		MarketplaceId,
 		BoundedVec<T::AccountId, T::MaxBlockedUsersPerMarket>, // Blocked accounts
 		ValueQuery,
 	>;
-	
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -332,15 +326,12 @@ pub mod pallet {
 		ExceedMaxBlockedUsers,
 		/// User is already a participant in the marketplace
 		UserAlreadyParticipant,
-<<<<<<< HEAD
 		/// User is not blocked
 		UserIsNotBlocked,
 		/// User is already blocked
 		UserAlreadyBlocked,
-=======
 		/// The owner of the NFT is not in the marketplace
 		OwnerNotInMarketplace,
->>>>>>> 85ce8fda067ed2c8b898b7a8acafdcb09b04c530
 	}
 
 	#[pallet::call]
@@ -371,31 +362,35 @@ pub mod pallet {
 			fee: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
-			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
+			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone() };
 			Self::do_create_marketplace(who, admin, m)
 		}
 
 		/// Block or Unblock a user from apllying to a marketplace.
 		///
 		/// Blocks or Unblocks a user from applying to a marketplace.
-		/// 
+		///
 		/// ### Parameters:
 		/// - `origin`: The admin of the marketplace.
 		/// - `marketplace_id`: The id of the marketplace to block/unblock the user.
 		/// - `user`: The id of the user to block/unblock.`
-		/// 
+		///
 		/// ### Considerations:
 		/// - Once a user is blocked, the user won't be able to join the marketplace until unblocked.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn block_user(origin: OriginFor<T>, marketplace_id: MarketplaceId, block_args: BlockUserArgs<T>) -> DispatchResult {
+		pub fn block_user(
+			origin: OriginFor<T>,
+			marketplace_id: MarketplaceId,
+			block_args: BlockUserArgs<T>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			match block_args {
-				BlockUserArgs::BlockUser (user) => {
+				BlockUserArgs::BlockUser(user) => {
 					return Self::do_block_user(who, marketplace_id, user);
-				}
-				BlockUserArgs::UnblockUser (user) => {
+				},
+				BlockUserArgs::UnblockUser(user) => {
 					return Self::do_unblock_user(who, marketplace_id, user);
-				} 
+				},
 			}
 		}
 
@@ -778,10 +773,10 @@ pub mod pallet {
 			match redeem {
 				RedeemArgs::AskForRedemption { collection_id, item_id } => {
 					return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id);
-				}
-				RedeemArgs::AcceptRedemption ( redemption_id ) => {
+				},
+				RedeemArgs::AcceptRedemption(redemption_id) => {
 					return Self::do_accept_redeem(who, marketplace, redemption_id);
-				}
+				},
 			}
 		}
 
