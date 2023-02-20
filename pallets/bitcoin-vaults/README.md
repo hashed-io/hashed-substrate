@@ -369,6 +369,10 @@ ProposalStored([u8;32],T::AccountId),
 ProposalRemoved([u8;32],T::AccountId),
 /// A proposal tx has been inserted by an OCW
 ProposalTxIdStored([u8;32])
+/// A proof of reserve was stored for the vault
+ProofOfReserveStored([u8; 32]),
+/// A psbt was stored for the vaults Proof of reserve
+ProofPSBTStored([u8; 32]),
 ```
 
 ## Errors
@@ -423,6 +427,8 @@ NotEnoughSignatures,
 InvalidProposal,
 /// This vault cant take proposals due to structural failures
 InvalidVault,
+/// The proof of reserve was not found
+ProofNotFound
 ```
 
 ## Assumptions
@@ -430,7 +436,7 @@ InvalidVault,
 Below are assumptions that must be held when using this module.  If any of
 them are violated, the behavior of this module is undefined.
 
-- The pallet relies on the remote endpoint `bdk-services` to generate descriptors, proposals, and next adressesss.
+- The pallet relies on the remote endpoint `bdk-services` to generate descriptors, proposals, and next adressess.
 
 
 License: Apache-2.0

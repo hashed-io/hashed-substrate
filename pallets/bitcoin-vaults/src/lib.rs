@@ -119,6 +119,10 @@ pub mod pallet {
 		ProposalFinalized([u8; 32], T::AccountId),
 		/// A proposal tx has been inserted by an OCW
 		ProposalTxIdStored([u8; 32]),
+		/// A proof of reserve was stored for the vault
+		ProofOfReserveStored([u8; 32]),
+		/// A psbt was stored for the vaults Proof of reserve
+		ProofPSBTStored([u8; 32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -237,8 +241,8 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
-	/// Stores vaults proof-of-reserve 
-	/// 
+	/// Stores vaults proof-of-reserve
+	///
 	#[pallet::storage]
 	#[pallet::getter(fn proof_of_reserve)]
 	pub(super) type ProofOfReserves<T: Config> = StorageMap<
@@ -607,19 +611,41 @@ pub mod pallet {
 			Self::do_finalize_psbt(who, proposal_id, true)
 		}
 
-
 		/// Create Proof of Reserve
+		///
+		/// Stores a PoR for a defined vault.
+		///
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proof will be inserted
+		/// - `message`: the message to be taken into account to generate the PoR PSBT
+		/// - `psbt`: the psbt generated from bdk
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault can only have a PoR at a time.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_proof(
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
 			message: Description<T>,
-			psbt: PSBT<T>
-		) -> DispatchResult{
+			psbt: PSBT<T>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			Self::do_create_proof(who, vault_id, message,psbt)
+			Self::do_create_proof(who, vault_id, message, psbt)
 		}
 
+		/// Save Proof of reserve PSBT
+		///
+		/// Updates the PoR with a new PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		/// - `ìs_finalized`: the PoR was broadcasted (or not)
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn save_proof_psbt(
 			origin: OriginFor<T>,
@@ -645,7 +671,7 @@ pub mod pallet {
 			let _ = <ProposalsByVault<T>>::clear(1000, None);
 			let _ = <Vaults<T>>::clear(1000, None);
 			let _ = <VaultsBySigner<T>>::clear(1000, None);
-			let _ = <ProofOfReserves<T>>::clear(1000,None);
+			let _ = <ProofOfReserves<T>>::clear(1000, None);
 			Ok(())
 		}
 
