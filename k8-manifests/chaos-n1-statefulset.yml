@@ -19,7 +19,7 @@ spec:
       containers:
       - name: chaos-n1-network
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-chaos-chain-node:fbc1cc6940cf4588930523dd64737bea2fb4f1ad
+        image: sebastianmontero/hashed-chaos-chain-node:64b24861ba2e264754878138ad989fbd1daf3028
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["/var/www/hashed-substrate/resources/chaos-raw-spec.json", "/var/www/hashed/node-data"]
         volumeMounts:
@@ -29,7 +29,7 @@ spec:
           - name: RUST_LOG
             value: "sub-libp2p=trace"
           - name: BOOTNODES
-            value: "/dns/n4-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm"
+            value: "/dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
             # value: "/dns/n4-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm /dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
           - name: MNEMO
             valueFrom:
