@@ -18,7 +18,7 @@ spec:
       containers:
       - name: hashed-collator-2
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-collator:a5c7ebec6dc75064fc20b7992b03d7ff097f36f3
+        image: sebastianmontero/hashed-substrate-collator:06507ad6af8293dfc6ed9dc12d3ffcfa3d03a92d
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["hashed", "/var/www/hashed/hashed"]
         volumeMounts:
@@ -26,7 +26,7 @@ spec:
             mountPath:  /var/www/hashed/hashed
         env:
           - name: BOOTNODES
-            value: "/dns/hashed-collator-1.hashed-network.svc.cluster.local/tcp/40333/p2p/12D3KooWFN7Rbsx6HTXofKBtj7MbwnGs2DTCXcXXdbvf6265o4Nm"
+            value: "/dns/hashed-collator-1.hashed-network.svc.cluster.local/tcp/40333/p2p/12D3KooWKDktwLZm3PLRAVz2BXYizQgKxLn48MF2FM88wgKStZkg"
           # - name: RUST_LOG
           #   value: "db=trace,sync=trace"
           # - name: NODEKEY
