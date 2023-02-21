@@ -2751,7 +2751,7 @@ fn remove_offer_status_is_closed_shouldnt_work() {
 }
 
 #[test]
-fn block_user_should_prevent_application() {
+fn block_user_should_prevent_application_works() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2817,7 +2817,7 @@ fn block_user_should_prevent_invite() {
 }
 
 #[test]
-fn block_user_should_prevent_reapply() {
+fn block_user_should_prevent_reapply_works() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2857,7 +2857,7 @@ fn block_user_should_prevent_reapply() {
 }
 
 #[test]
-fn block_user_should_prevent_add_authority() {
+fn block_user_should_prevent_add_authority_works() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);

@@ -376,7 +376,7 @@ impl<T: Config> Pallet<T> {
 		price: BalanceOf<T>,
 		percentage: u32,
 	) -> DispatchResult {
-
+		
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -394,7 +394,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			authority.clone(),
 			&collection_id,
-			&item_id
+			&item_id,
 		)?;
 
 		//ensure user has enough balance to create the offer
@@ -853,14 +853,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 		// ensure the origin is authorized to block users
-		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
-		//ensure the user is not already a participant of the marketplace
-		ensure!(
-			Self::has_role(user.clone(), &marketplace_id, MarketplaceRole::Participant).is_err(),
-			Error::<T>::UserAlreadyParticipant
-		);
-		// if the user is not blocked, block it
-		//ensure the user is not already blocked
+		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
+		// ensure the user is not already a participant of the marketplace
+		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		// ensure the user is not already blocked
 		ensure!(
 			!Self::is_user_blocked(user.clone(), marketplace_id),
 			Error::<T>::UserAlreadyBlocked
@@ -884,13 +880,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 		// ensure the origin is authorized to block users
-		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBlockedUser)?;
-		//ensure the user is not already a participant of the marketplace
-		ensure!(
-			Self::has_role(user.clone(), &marketplace_id, MarketplaceRole::Participant).is_err(),
-			Error::<T>::UserAlreadyParticipant
-		);
-		//ensure the user is blocked
+		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
+		// ensure the user is not already a participant of the marketplace
+		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		// ensure the user is blocked
 		ensure!(Self::is_user_blocked(user.clone(), marketplace_id), Error::<T>::UserIsNotBlocked);
 
 		// remove the user from the block list
@@ -910,10 +903,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn is_user_blocked(user: T::AccountId, marketplace_id: [u8; 32]) -> bool {
-		<BlockedUsersByMarketplace<T>>::get(marketplace_id)
-			.iter()
-			.find(|a| **a == user.clone())
-			.is_some()
+		<BlockedUsersByMarketplace<T>>::get(marketplace_id).contains(&user)
 	}
 
 	fn is_authorized(
@@ -929,17 +919,10 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 
-	fn has_role(
-		account: T::AccountId,
-		marketplace_id: &[u8; 32],
-		role: MarketplaceRole,
-	) -> DispatchResult {
-		<T as pallet::Config>::Rbac::has_role(
-			account,
-			Self::pallet_id(),
-			marketplace_id,
-			[role.id()].to_vec(),
-		)
+	/// Let us know if the selected account has at least one role in the marketplace.
+	fn has_any_role(account: T::AccountId, marketplace_id: &[u8; 32]) -> bool {
+		let pallet_id = Self::pallet_id();
+		<T as pallet::Config>::Rbac::has_any_role(account, pallet_id, marketplace_id)
 	}
 
 	///Lets us know if the selected user is an admin.
@@ -1065,7 +1048,11 @@ impl<T: Config> Pallet<T> {
 				//If status is Rejected, we need to delete the previous application from all the storage sources.
 				<Applications<T>>::remove(application_id);
 				<ApplicationsByAccount<T>>::remove(account.clone(), marketplace_id);
-				Self::remove_from_applicants_lists(account, ApplicationStatus::Rejected, marketplace_id)?;
+				Self::remove_from_applicants_lists(
+					account,
+					ApplicationStatus::Rejected,
+					marketplace_id,
+				)?;
 			},
 		}
 		Ok(())
@@ -1162,11 +1149,10 @@ impl<T: Config> Pallet<T> {
 
 		//We need to check if the owner is in the marketplace
 		if let Some(owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
-			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok()
-				{
-					return Ok(());
-				}
+			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok() {
+				return Ok(());
 			}
+		}
 		Err(Error::<T>::OwnerNotInMarketplace.into())
 	}
 

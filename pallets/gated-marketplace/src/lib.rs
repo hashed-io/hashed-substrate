@@ -385,11 +385,9 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			match block_args {
-				BlockUserArgs::BlockUser(user) => {
-					return Self::do_block_user(who, marketplace_id, user);
-				},
+				BlockUserArgs::BlockUser(user) => Self::do_block_user(who, marketplace_id, user),
 				BlockUserArgs::UnblockUser(user) => {
-					return Self::do_unblock_user(who, marketplace_id, user);
+					Self::do_unblock_user(who, marketplace_id, user)
 				},
 			}
 		}

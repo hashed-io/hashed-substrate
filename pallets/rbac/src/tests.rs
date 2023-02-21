@@ -151,6 +151,10 @@ fn get_role_users_len(scope_id : &ScopeId, role_id: &RoleId)-> usize{
 	RBAC::get_role_users_len(pallet_name(), scope_id, role_id)
 }
 
+fn has_any_role(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId) -> bool {
+	RBAC::has_any_role(user, pallet, scope_id)
+}
+
 #[test]
 fn create_scope_works() {
 	new_test_ext().execute_with(|| {
@@ -825,5 +829,17 @@ fn get_role_users_len_should_work() {
 		assign_role_to_user(1, &scope_id, role_id);
 
 		assert_eq!(get_role_users_len(&scope_id, &role_id), 2);
+	});
+}
+
+#[test]
+fn has_any_role_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let role_ids = create_and_set_roles(gen_roles(2));
+		let pallet_id = pallet_name();
+		assert_eq!(has_any_role(0, pallet_id.clone(), &scope_id), false);
+		assign_role_to_user(0, &scope_id, *role_ids.get(0).unwrap());
+		assert_eq!(has_any_role(0, pallet_id, &scope_id), true);
 	});
 }
