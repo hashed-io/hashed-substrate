@@ -90,8 +90,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn applications)]
-	pub(super) type Applications<T: Config> =
-		StorageMap<_, Identity, ApplicationId, Application<T>, OptionQuery>;
+	pub(super) type Applications<T: Config> = StorageMap<
+		_,
+		Identity,
+		ApplicationId,
+		Application<T>,
+		OptionQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn applications_by_account)]
@@ -385,7 +390,9 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			match block_args {
-				BlockUserArgs::BlockUser(user) => Self::do_block_user(who, marketplace_id, user),
+				BlockUserArgs::BlockUser(user) => {
+					Self::do_block_user(who, marketplace_id, user)
+				},
 				BlockUserArgs::UnblockUser(user) => {
 					Self::do_unblock_user(who, marketplace_id, user)
 				},

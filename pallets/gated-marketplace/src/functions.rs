@@ -922,7 +922,7 @@ impl<T: Config> Pallet<T> {
 	/// Let us know if the selected account has at least one role in the marketplace.
 	fn has_any_role(account: T::AccountId, marketplace_id: &[u8; 32]) -> bool {
 		let pallet_id = Self::pallet_id();
-		<T as pallet::Config>::Rbac::has_any_role(account, pallet_id, marketplace_id)
+		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(account, pallet_id, marketplace_id)
 	}
 
 	///Lets us know if the selected user is an admin.

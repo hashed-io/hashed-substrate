@@ -2751,7 +2751,7 @@ fn remove_offer_status_is_closed_shouldnt_work() {
 }
 
 #[test]
-fn block_user_should_prevent_application_works() {
+fn block_user_application_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2783,7 +2783,7 @@ fn block_user_should_prevent_application_works() {
 	});
 }
 #[test]
-fn block_user_should_prevent_invite() {
+fn block_user_invite_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2817,7 +2817,7 @@ fn block_user_should_prevent_invite() {
 }
 
 #[test]
-fn block_user_should_prevent_reapply_works() {
+fn block_user_reapply_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2857,7 +2857,7 @@ fn block_user_should_prevent_reapply_works() {
 }
 
 #[test]
-fn block_user_should_prevent_add_authority_works() {
+fn block_user_add_authority_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2915,7 +2915,7 @@ fn unblock_user_should_work() {
 }
 
 #[test]
-fn block_user_should_not_work_if_not_admin() {
+fn block_user_while_not_admin_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2947,7 +2947,7 @@ fn block_user_should_not_work_if_not_admin() {
 	});
 }
 #[test]
-fn unblock_user_should_not_work_if_not_admin() {
+fn unblock_user_while_not_admin_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2980,7 +2980,7 @@ fn unblock_user_should_not_work_if_not_admin() {
 }
 
 #[test]
-fn block_user_should_not_work_if_marketplace_does_not_exist() {
+fn block_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -2994,7 +2994,7 @@ fn block_user_should_not_work_if_marketplace_does_not_exist() {
 }
 
 #[test]
-fn unblock_user_should_not_work_if_marketplace_does_not_exist() {
+fn unblock_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
@@ -3008,7 +3008,7 @@ fn unblock_user_should_not_work_if_marketplace_does_not_exist() {
 }
 
 #[test]
-fn block_user_should_not_work_if_user_is_already_participant() {
+fn block_user_while_user_is_a_member_of_marketplace_should_fail() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
