@@ -19,7 +19,7 @@ spec:
       containers:
       - name: inova-n2-network
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-node:0e83482bfce70e5392aaa9101a16bd1b8c9ef1bd
+        image: sebastianmontero/hashed-inova-chain-node:cb66db82dbc4890f507dca1a1627ca7b7a39847a
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
         args: ["/var/www/hashed-substrate/resources/inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
