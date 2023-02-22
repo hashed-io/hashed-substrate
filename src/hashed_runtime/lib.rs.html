@@ -1074,6 +1074,7 @@
 <a href="#1074" id="1074">1074</a>
 <a href="#1075" id="1075">1075</a>
 <a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1105,7 +1106,10 @@
 <span class="comment">// A few exports that help ease life for downstream crates.
 </span><span class="kw">pub use </span>frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse, OnRuntimeUpgrade},
+	traits::{
+		AsEnsureOriginWithArg, ConstU128, EitherOfDiverse, KeyOwnerProofSystem, OnRuntimeUpgrade,
+		Randomness, StorageInfo,
+	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight,
@@ -1201,7 +1205,7 @@
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	</span>spec_version: <span class="number">144</span>,
+	</span>spec_version: <span class="number">145</span>,
 	impl_version: <span class="number">1</span>,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: <span class="number">1</span>,
@@ -1482,7 +1486,7 @@
 }
 
 <span class="kw">type </span>CouncilCollective = pallet_collective::Instance1;
-<span class="kw">impl </span>pallet_collective::Config&lt;CouncilCollective&gt;  <span class="kw">for </span>Runtime {
+<span class="kw">impl </span>pallet_collective::Config&lt;CouncilCollective&gt; <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>RuntimeOrigin = RuntimeOrigin;
 	<span class="kw">type </span>Proposal = RuntimeCall;
 	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
@@ -1651,7 +1655,6 @@
 	<span class="kw">type </span>ChildMaxLen = ChildMaxLen;
 	<span class="kw">type </span>MaxParentsInCollection = MaxParentsInCollection;
 	<span class="comment">// type PalletId = FruniquesPalletId;
-
 </span>}
 
 <span class="macro">parameter_types! </span>{
@@ -1710,8 +1713,6 @@
 	<span class="kw">type </span>TransferAmount = TransferAmount;
 }
 
-
-
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>LabelMaxLen:u32 = <span class="number">32</span>;
 	<span class="kw">pub const </span>MaxAuthsPerMarket:u32 = <span class="number">3</span>; <span class="comment">// 1 of each role (1 owner, 1 admin, etc.)
@@ -1733,7 +1734,7 @@
 	<span class="kw">type </span>LabelMaxLen = LabelMaxLen;
 	<span class="kw">type </span>NotesMaxLen = NotesMaxLen;
 	<span class="kw">type </span>MaxFeedbackLen = MaxFeedbackLen;
-	<span class="kw">type </span>NameMaxLen= NameMaxLen;
+	<span class="kw">type </span>NameMaxLen = NameMaxLen;
 	<span class="kw">type </span>MaxFiles = MaxFiles;
 	<span class="kw">type </span>MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	<span class="kw">type </span>MaxMarketsPerItem = MaxMarketsPerItem;
@@ -1763,7 +1764,7 @@
 	<span class="kw">type </span>PSBTMaxLen = PSBTMaxLen;
 	<span class="kw">type </span>MaxVaultsPerUser = MaxVaultsPerUser;
 	<span class="kw">type </span>MaxCosignersPerVault = MaxCosignersPerVault;
-	<span class="kw">type </span>VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	<span class="kw">type </span>VaultDescriptionMaxLen = VaultDescriptionMaxLen;
 	<span class="kw">type </span>OutputDescriptorMaxLen = OutputDescriptorMaxLen;
 	<span class="kw">type </span>MaxProposalsPerVault = MaxProposalsPerVault;
 }
@@ -1793,7 +1794,6 @@
 	<span class="kw">type </span>DocDescMaxLen = DocDescMaxLen;
 }
 
-
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>MaxScopesPerPallet: u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxRolesPerPallet: u32 = <span class="number">50</span>;
@@ -1822,58 +1822,59 @@
 	<span class="kw">pub const </span>CollectionSymbolLimit: u32 = <span class="number">100</span>;
 }
 
-<span class="kw">use </span>sp_runtime::SaturatedConversion;
 <span class="kw">use </span>codec::Encode;
+<span class="kw">use </span>sp_runtime::SaturatedConversion;
 <span class="comment">//use sp_runtime::generic::SignedPayload as OtherSignedPayload;
 </span><span class="kw">impl</span>&lt;LocalCall&gt; frame_system::offchain::CreateSignedTransaction&lt;LocalCall&gt; <span class="kw">for </span>Runtime
 <span class="kw">where
 	</span>RuntimeCall: From&lt;LocalCall&gt;,
 {
-    <span class="kw">fn </span>create_transaction&lt;C: frame_system::offchain::AppCrypto&lt;<span class="self">Self</span>::Public, <span class="self">Self</span>::Signature&gt;&gt;(
-        call: RuntimeCall,
-        public: &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer,
-        account: AccountId,
-        index: Index,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(RuntimeCall, &lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload)&gt; {
-        <span class="kw">let </span>period = BlockHashCount::get() <span class="kw">as </span>u64;
-        <span class="kw">let </span>current_block = System::block_number()
-            .saturated_into::&lt;u64&gt;()
-            .saturating_sub(<span class="number">1</span>);
-        <span class="kw">let </span>tip = <span class="number">0</span>;
-        <span class="kw">let </span>extra: SignedExtra = (
+	<span class="kw">fn </span>create_transaction&lt;C: frame_system::offchain::AppCrypto&lt;<span class="self">Self</span>::Public, <span class="self">Self</span>::Signature&gt;&gt;(
+		call: RuntimeCall,
+		public: &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer,
+		account: AccountId,
+		index: Index,
+	) -&gt; <span class="prelude-ty">Option</span>&lt;(
+		RuntimeCall,
+		&lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload,
+	)&gt; {
+		<span class="kw">let </span>period = BlockHashCount::get() <span class="kw">as </span>u64;
+		<span class="kw">let </span>current_block = System::block_number().saturated_into::&lt;u64&gt;().saturating_sub(<span class="number">1</span>);
+		<span class="kw">let </span>tip = <span class="number">0</span>;
+		<span class="kw">let </span>extra: SignedExtra = (
 			frame_system::CheckNonZeroSender::&lt;Runtime&gt;::new(),
-            frame_system::CheckSpecVersion::&lt;Runtime&gt;::new(),
-            frame_system::CheckTxVersion::&lt;Runtime&gt;::new(),
-            frame_system::CheckGenesis::&lt;Runtime&gt;::new(),
-            frame_system::CheckEra::&lt;Runtime&gt;::from(generic::Era::mortal(period, current_block)),
-            frame_system::CheckNonce::&lt;Runtime&gt;::from(index),
-            frame_system::CheckWeight::&lt;Runtime&gt;::new(),
-            pallet_transaction_payment::ChargeTransactionPayment::&lt;Runtime&gt;::from(tip),
-        );
+			frame_system::CheckSpecVersion::&lt;Runtime&gt;::new(),
+			frame_system::CheckTxVersion::&lt;Runtime&gt;::new(),
+			frame_system::CheckGenesis::&lt;Runtime&gt;::new(),
+			frame_system::CheckEra::&lt;Runtime&gt;::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::&lt;Runtime&gt;::from(index),
+			frame_system::CheckWeight::&lt;Runtime&gt;::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::&lt;Runtime&gt;::from(tip),
+		);
 
-        <span class="kw">let </span>raw_payload = SignedPayload::new(call, extra)
-            .map_err(|e| {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to create signed payload: {:?}&quot;</span>, e);
-            })
-            .ok()<span class="question-mark">?</span>;
-        <span class="kw">let </span>signature = raw_payload.using_encoded(|payload| C::sign(payload, public))<span class="question-mark">?</span>;
-        <span class="kw">let </span>address = account;
-        <span class="kw">let </span>(call, extra, <span class="kw">_</span>) = raw_payload.deconstruct();
-        <span class="prelude-val">Some</span>((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
-    }
+		<span class="kw">let </span>raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				<span class="macro">log::warn!</span>(<span class="string">&quot;Unable to create signed payload: {:?}&quot;</span>, e);
+			})
+			.ok()<span class="question-mark">?</span>;
+		<span class="kw">let </span>signature = raw_payload.using_encoded(|payload| C::sign(payload, public))<span class="question-mark">?</span>;
+		<span class="kw">let </span>address = account;
+		<span class="kw">let </span>(call, extra, <span class="kw">_</span>) = raw_payload.deconstruct();
+		<span class="prelude-val">Some</span>((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
+	}
 }
 
 <span class="kw">impl </span>frame_system::offchain::SigningTypes <span class="kw">for </span>Runtime {
-    <span class="kw">type </span>Public = &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer;
-    <span class="kw">type </span>Signature = Signature;
+	<span class="kw">type </span>Public = &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer;
+	<span class="kw">type </span>Signature = Signature;
 }
 
 <span class="kw">impl</span>&lt;C&gt; frame_system::offchain::SendTransactionTypes&lt;C&gt; <span class="kw">for </span>Runtime
 <span class="kw">where
 	</span>RuntimeCall: From&lt;C&gt;,
 {
-    <span class="kw">type </span>OverarchingCall = RuntimeCall;
-    <span class="kw">type </span>Extrinsic = UncheckedExtrinsic;
+	<span class="kw">type </span>OverarchingCall = RuntimeCall;
+	<span class="kw">type </span>Extrinsic = UncheckedExtrinsic;
 }
 <span class="macro">construct_runtime!</span>(
 	<span class="kw">pub enum </span>Runtime <span class="kw">where
@@ -1929,7 +1930,8 @@
 	pallet_transaction_payment::ChargeTransactionPayment&lt;Runtime&gt;,
 );
 <span class="doccomment">/// Unchecked extrinsic type as expected by this runtime.
-</span><span class="kw">pub type </span>UncheckedExtrinsic = generic::UncheckedExtrinsic&lt;Address, RuntimeCall, Signature, SignedExtra&gt;;
+</span><span class="kw">pub type </span>UncheckedExtrinsic =
+	generic::UncheckedExtrinsic&lt;Address, RuntimeCall, Signature, SignedExtra&gt;;
 <span class="doccomment">/// The payload being signed in transactions.
 </span><span class="kw">pub type </span>SignedPayload = generic::SignedPayload&lt;RuntimeCall, SignedExtra&gt;;
 <span class="doccomment">/// Executive: handles dispatch to the various modules.
