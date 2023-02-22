@@ -21,7 +21,7 @@ spec:
         imagePullPolicy: IfNotPresent
         image: sebastianmontero/hashed-substrate-node:0e83482bfce70e5392aaa9101a16bd1b8c9ef1bd
         command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
-        args: ["inovaSpecRaw.json", "/var/www/hashed/node-data"]
+        args: ["/var/www/hashed-substrate/resources/inovaSpecRaw.json", "/var/www/hashed/node-data"]
         volumeMounts:
           - name: inova-n2-pvc
             mountPath:  /var/www/hashed/node-data
