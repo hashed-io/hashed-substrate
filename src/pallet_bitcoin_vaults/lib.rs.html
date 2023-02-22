@@ -743,6 +743,72 @@
 <a href="#743" id="743">743</a>
 <a href="#744" id="744">744</a>
 <a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -864,6 +930,10 @@
 		</span>ProposalFinalized([u8; <span class="number">32</span>], T::AccountId),
 		<span class="doccomment">/// A proposal tx has been inserted by an OCW
 		</span>ProposalTxIdStored([u8; <span class="number">32</span>]),
+		<span class="doccomment">/// A proof of reserve was stored for the vault
+		</span>ProofOfReserveStored([u8; <span class="number">32</span>]),
+		<span class="doccomment">/// A psbt was stored for the vaults Proof of reserve
+		</span>ProofPSBTStored([u8; <span class="number">32</span>]),
 	}
 
 	<span class="comment">// Errors inform users that something went wrong.
@@ -919,6 +989,8 @@
 		</span>InvalidProposal,
 		<span class="doccomment">/// This vault cant take proposals due to structural failures
 		</span>InvalidVault,
+		<span class="doccomment">/// The proof of reserve was not found
+		</span>ProofNotFound,
 	}
 
 	<span class="comment">/*--- Onchain storage section ---*/
@@ -959,7 +1031,8 @@
 		</span>ValueQuery,
 	&gt;;
 
-	<span class="attr">#[pallet::storage]
+	<span class="doccomment">/// Stores vaults
+	</span><span class="attr">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>vaults)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
@@ -977,6 +1050,18 @@
 		T::AccountId,                              <span class="comment">// signer
 		</span>BoundedVec&lt;[u8; <span class="number">32</span>], T::MaxVaultsPerUser&gt;, <span class="comment">// vault ids
 		</span>ValueQuery,
+	&gt;;
+
+	<span class="doccomment">/// Stores vaults proof-of-reserve
+	///
+	</span><span class="attr">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>proof_of_reserve)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ProofOfReserves&lt;T: Config&gt; = StorageMap&lt;
+		<span class="kw">_</span>,
+		Identity,
+		[u8; <span class="number">32</span>], <span class="comment">//vault_id
+		</span>ProofOfReserve&lt;T&gt;,
+		OptionQuery,
 	&gt;;
 
 	<span class="attr">#[pallet::type_value]
@@ -1337,6 +1422,52 @@
 			<span class="self">Self</span>::do_finalize_psbt(who, proposal_id, <span class="bool-val">true</span>)
 		}
 
+		<span class="doccomment">/// Create Proof of Reserve
+		///
+		/// Stores a PoR for a defined vault.
+		///
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proof will be inserted
+		/// - `message`: the message to be taken into account to generate the PoR PSBT
+		/// - `psbt`: the psbt generated from bdk
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault can only have a PoR at a time.
+		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>create_proof(
+			origin: OriginFor&lt;T&gt;,
+			vault_id: [u8; <span class="number">32</span>],
+			message: Description&lt;T&gt;,
+			psbt: PSBT&lt;T&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_create_proof(who, vault_id, message, psbt)
+		}
+
+		<span class="doccomment">/// Save Proof of reserve PSBT
+		///
+		/// Updates the PoR with a new PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		/// - `ìs_finalized`: the PoR was broadcasted (or not)
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
+		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>save_proof_psbt(
+			origin: OriginFor&lt;T&gt;,
+			vault_id: [u8; <span class="number">32</span>],
+			psbt: PSBT&lt;T&gt;,
+			is_finalized: bool,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_save_proof_psbt(who, vault_id, psbt, is_finalized)
+		}
+
 		<span class="doccomment">/// Kill almost all storage
 		///
 		/// Use with caution!
@@ -1351,6 +1482,7 @@
 			<span class="kw">let _ </span>= &lt;ProposalsByVault&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;Vaults&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="kw">let _ </span>= &lt;VaultsBySigner&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;ProofOfReserves&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 			<span class="prelude-val">Ok</span>(())
 		}
 
@@ -1489,4 +1621,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0 (fc594f156 2023-01-24)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>

@@ -367,12 +367,31 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>sp_core::crypto::KeyTypeId;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
 <span class="kw">use </span>sp_runtime::{sp_std::vec::Vec};
 <span class="kw">use </span>frame_system::offchain::{SigningTypes, SignedPayload};
+
+<span class="kw">pub type </span>Description&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>Config&gt;::VaultDescriptionMaxLen&gt;;
+<span class="kw">pub type </span>PSBT&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>Config&gt;::PSBTMaxLen&gt;;
 <span class="comment">//pub type AccountId = &lt;&lt;Signature as Verify&gt;::Signer as IdentifyAccount&gt;::AccountId;
 /*--- Constants section ---*/
 //pub const BDK_SERVICES_URL: &amp;[u8] = b&quot;https://bdk.hashed.systems&quot;;
@@ -534,6 +553,19 @@
 		}
 	}
 }
+
+
+<span class="comment">// Struct for holding Proof of reserve information.
+</span><span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub struct </span>ProofOfReserve&lt;T: Config&gt; {
+	<span class="kw">pub </span>status: ProposalStatus,
+	<span class="kw">pub </span>message: Description&lt;T&gt;,
+	<span class="kw">pub </span>psbt: PSBT&lt;T&gt;,
+	<span class="kw">pub </span>signed_psbts: BoundedVec&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;,
+}
+
 
 <span class="attr">#[derive(
 	Encode,
@@ -736,4 +768,4 @@
         }
     }
 }</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0 (fc594f156 2023-01-24)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
