@@ -8,4 +8,9 @@
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "github.gitProtocol": "ssh",
+  "[rust]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4
+  },
 }
+

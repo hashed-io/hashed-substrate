@@ -22,9 +22,15 @@ fn create_label(label: &str) -> BoundedVec<u8, LabelMaxLen> {
 
 fn get_marketplace_id(label: &str, fee: u32, creator: u64) -> [u8; 32] {
 	let fee = Permill::from_percent(fee);
-	let marketplace = Marketplace::<Test> { label: create_label(label), fee, creator };
+
+	let marketplace = Marketplace::<Test> {
+		label: create_label(label),
+		fee,
+		creator,
+	};
 
 	marketplace.using_encoded(blake2_256)
+  
 }
 
 fn default_feedback() -> BoundedVec<u8, MaxFeedbackLen> {
