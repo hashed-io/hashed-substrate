@@ -856,3 +856,30 @@ fn user_that_doesnt_have_any_role_in_scope_should_fail() {
 		assert_eq!(does_user_have_any_role_in_scope(0, pallet_id.clone(), &scope_id), false);
 	});
 }
+
+#[test]
+fn user_that_have_any_role_while_on_multiple_scopes_should_work() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let scope_id_2 = create_scope(1);
+		let role_ids = create_and_set_roles(gen_roles(1));
+		let pallet_id = pallet_name();
+		let role_id = *role_ids.get(0).unwrap();
+		assign_role_to_user(0, &scope_id, role_id);
+		assign_role_to_user(0, &scope_id_2, role_id);
+		assert_eq!(does_user_have_any_role_in_scope(0, pallet_id.clone(), &scope_id), true);
+	});
+}
+
+#[test]
+fn user_that_have_any_role_while_not_matching_scope_should_fail() {
+	new_test_ext().execute_with(|| {
+		let scope_id = create_scope(0);
+		let scope_id_2 = create_scope(1);
+		let role_ids = create_and_set_roles(gen_roles(1));
+		let pallet_id = pallet_name();
+		let role_id = *role_ids.get(0).unwrap();
+		assign_role_to_user(0, &scope_id, role_id);
+		assert_eq!(does_user_have_any_role_in_scope(0, pallet_id.clone(), &scope_id_2), false);
+	});
+}

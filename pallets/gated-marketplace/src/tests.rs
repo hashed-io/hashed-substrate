@@ -2753,8 +2753,6 @@ fn remove_offer_status_is_closed_shouldnt_work() {
 #[test]
 fn block_user_application_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2785,8 +2783,6 @@ fn block_user_application_attempt_should_fail() {
 #[test]
 fn block_user_invite_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2819,8 +2815,6 @@ fn block_user_invite_attempt_should_fail() {
 #[test]
 fn block_user_reapply_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2859,8 +2853,6 @@ fn block_user_reapply_attempt_should_fail() {
 #[test]
 fn block_user_add_authority_attempt_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2881,8 +2873,6 @@ fn block_user_add_authority_attempt_should_fail() {
 #[test]
 fn unblock_user_should_work() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2917,10 +2907,6 @@ fn unblock_user_should_work() {
 #[test]
 fn block_user_while_not_admin_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
-		Balances::make_free_balance_be(&3, 1300);
-		Balances::make_free_balance_be(&4, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2949,10 +2935,6 @@ fn block_user_while_not_admin_should_fail() {
 #[test]
 fn unblock_user_while_not_admin_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
-		Balances::make_free_balance_be(&3, 1300);
-		Balances::make_free_balance_be(&4, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
@@ -2982,8 +2964,6 @@ fn unblock_user_while_not_admin_should_fail() {
 #[test]
 fn block_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		let m_id = get_marketplace_id("my marketplace", 500, 1);
 		assert_noop!(
@@ -2996,8 +2976,6 @@ fn block_user_while_marketplace_doesnt_exist_should_fail() {
 #[test]
 fn unblock_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		let m_id = get_marketplace_id("my marketplace", 500, 1);
 		assert_noop!(
@@ -3010,8 +2988,6 @@ fn unblock_user_while_marketplace_doesnt_exist_should_fail() {
 #[test]
 fn block_user_while_user_is_a_member_of_marketplace_should_fail() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
