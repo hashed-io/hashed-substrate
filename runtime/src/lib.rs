@@ -641,6 +641,7 @@ parameter_types! {
 	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
+	pub const MaxBlockedUsersPerMarket: u32 = 100;
 	pub const NotesMaxLen: u32 = 256;
 	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
@@ -654,6 +655,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
+	type MaxBlockedUsersPerMarket = MaxBlockedUsersPerMarket;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type MaxFeedbackLen = MaxFeedbackLen;

@@ -65,6 +65,8 @@ pub mod pallet {
 		type MaxMarketsPerItem: Get<u32>;
 		#[pallet::constant]
 		type MaxOffersPerMarket: Get<u32>;
+		#[pallet::constant]
+		type MaxBlockedUsersPerMarket: Get<u32>;
 
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 	}
@@ -139,7 +141,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::CollectionId, //collection_id
 		Blake2_128Concat,
-		T::ItemId,                                   //item_id
+		T::ItemId,                                  //item_id
 		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
@@ -149,7 +151,7 @@ pub mod pallet {
 	pub(super) type OffersByAccount<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId,                                // account_id
+		T::AccountId,                               // account_id
 		BoundedVec<OfferId, T::MaxOffersPerMarket>, // offer_id's
 		ValueQuery,
 	>;
@@ -187,6 +189,16 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn get_blocked_accounts)]
+	pub(super) type BlockedUsersByMarketplace<T: Config> = StorageMap<
+		_,
+		Identity,
+		MarketplaceId,
+		BoundedVec<T::AccountId, T::MaxBlockedUsersPerMarket>, // Blocked accounts
+		ValueQuery,
+	>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -218,6 +230,10 @@ pub mod pallet {
 		RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
 		/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
 		RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
+		/// User was blocked. [marketplace_id, account]
+		UserBlocked(MarketplaceId, T::AccountId),
+		/// User was unblocked. [marketplace_id, account]
+		UserUnblocked(MarketplaceId, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -309,6 +325,16 @@ pub mod pallet {
 		RedemptionRequestAlreadyExists,
 		/// The redemption in question is already redeemed
 		RedemptionRequestAlreadyRedeemed,
+		/// User is blocked
+		UserIsBlocked,
+		/// The number of blocked users has reached the limit
+		ExceedMaxBlockedUsers,
+		/// User is already a participant in the marketplace
+		UserAlreadyParticipant,
+		/// User is not blocked
+		UserIsNotBlocked,
+		/// User is already blocked
+		UserAlreadyBlocked,
 		/// The owner of the NFT is not in the marketplace
 		OwnerNotInMarketplace,
 	}
@@ -341,8 +367,36 @@ pub mod pallet {
 			fee: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
-			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
+			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone() };
 			Self::do_create_marketplace(who, admin, m)
+		}
+
+		/// Block or Unblock a user from apllying to a marketplace.
+		///
+		/// Blocks or Unblocks a user from applying to a marketplace.
+		///
+		/// ### Parameters:
+		/// - `origin`: The admin of the marketplace.
+		/// - `marketplace_id`: The id of the marketplace to block/unblock the user.
+		/// - `user`: The id of the user to block/unblock.`
+		///
+		/// ### Considerations:
+		/// - Once a user is blocked, the user won't be able to join the marketplace until unblocked.
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn block_user(
+			origin: OriginFor<T>,
+			marketplace_id: MarketplaceId,
+			block_args: BlockUserArgs<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			match block_args {
+				BlockUserArgs::BlockUser(user) => {
+					Self::do_block_user(who, marketplace_id, user)
+				},
+				BlockUserArgs::UnblockUser(user) => {
+					Self::do_unblock_user(who, marketplace_id, user)
+				},
+			}
 		}
 
 		/// Apply to a marketplace.
@@ -724,10 +778,10 @@ pub mod pallet {
 			match redeem {
 				RedeemArgs::AskForRedemption { collection_id, item_id } => {
 					return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id);
-				}
-				RedeemArgs::AcceptRedemption ( redemption_id ) => {
+				},
+				RedeemArgs::AcceptRedemption(redemption_id) => {
 					return Self::do_accept_redeem(who, marketplace, redemption_id);
-				}
+				},
 			}
 		}
 
