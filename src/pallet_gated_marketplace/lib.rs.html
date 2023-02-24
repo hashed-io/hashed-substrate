@@ -761,6 +761,60 @@
 <a href="#761" id="761">761</a>
 <a href="#762" id="762">762</a>
 <a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -828,6 +882,8 @@
 		</span><span class="kw">type </span>MaxMarketsPerItem: Get&lt;u32&gt;;
 		<span class="attr">#[pallet::constant]
 		</span><span class="kw">type </span>MaxOffersPerMarket: Get&lt;u32&gt;;
+		<span class="attr">#[pallet::constant]
+		</span><span class="kw">type </span>MaxBlockedUsersPerMarket: Get&lt;u32&gt;;
 
 		<span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
 	}
@@ -902,7 +958,7 @@
 		Blake2_128Concat,
 		T::CollectionId, <span class="comment">//collection_id
 		</span>Blake2_128Concat,
-		T::ItemId,                                   <span class="comment">//item_id
+		T::ItemId,                                  <span class="comment">//item_id
 		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
@@ -912,7 +968,7 @@
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByAccount&lt;T: Config&gt; = StorageMap&lt;
 		<span class="kw">_</span>,
 		Blake2_128Concat,
-		T::AccountId,                                <span class="comment">// account_id
+		T::AccountId,                               <span class="comment">// account_id
 		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
 		</span>ValueQuery,
 	&gt;;
@@ -950,6 +1006,16 @@
 		OptionQuery,
 	&gt;;
 
+	<span class="attr">#[pallet::storage]
+	#[pallet::getter(<span class="kw">fn </span>get_blocked_accounts)]
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>BlockedUsersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
+		<span class="kw">_</span>,
+		Identity,
+		MarketplaceId,
+		BoundedVec&lt;T::AccountId, T::MaxBlockedUsersPerMarket&gt;, <span class="comment">// Blocked accounts
+		</span>ValueQuery,
+	&gt;;
+
 	<span class="attr">#[pallet::event]
 	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
 	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
@@ -981,6 +1047,10 @@
 		</span>RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
 		<span class="doccomment">/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
 		</span>RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
+		<span class="doccomment">/// User was blocked. [marketplace_id, account]
+		</span>UserBlocked(MarketplaceId, T::AccountId),
+		<span class="doccomment">/// User was unblocked. [marketplace_id, account]
+		</span>UserUnblocked(MarketplaceId, T::AccountId),
 	}
 
 	<span class="comment">// Errors inform users that something went wrong.
@@ -1072,6 +1142,16 @@
 		</span>RedemptionRequestAlreadyExists,
 		<span class="doccomment">/// The redemption in question is already redeemed
 		</span>RedemptionRequestAlreadyRedeemed,
+		<span class="doccomment">/// User is blocked
+		</span>UserIsBlocked,
+		<span class="doccomment">/// The number of blocked users has reached the limit
+		</span>ExceedMaxBlockedUsers,
+		<span class="doccomment">/// User is already a participant in the marketplace
+		</span>UserAlreadyParticipant,
+		<span class="doccomment">/// User is not blocked
+		</span>UserIsNotBlocked,
+		<span class="doccomment">/// User is already blocked
+		</span>UserAlreadyBlocked,
 		<span class="doccomment">/// The owner of the NFT is not in the marketplace
 		</span>OwnerNotInMarketplace,
 	}
@@ -1104,8 +1184,36 @@
 			fee: u32,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
-			</span><span class="kw">let </span>m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone(), };
+			</span><span class="kw">let </span>m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone() };
 			<span class="self">Self</span>::do_create_marketplace(who, admin, m)
+		}
+
+		<span class="doccomment">/// Block or Unblock a user from apllying to a marketplace.
+		///
+		/// Blocks or Unblocks a user from applying to a marketplace.
+		///
+		/// ### Parameters:
+		/// - `origin`: The admin of the marketplace.
+		/// - `marketplace_id`: The id of the marketplace to block/unblock the user.
+		/// - `user`: The id of the user to block/unblock.`
+		///
+		/// ### Considerations:
+		/// - Once a user is blocked, the user won&#39;t be able to join the marketplace until unblocked.
+		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>block_user(
+			origin: OriginFor&lt;T&gt;,
+			marketplace_id: MarketplaceId,
+			block_args: BlockUserArgs&lt;T&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+			<span class="kw">match </span>block_args {
+				BlockUserArgs::BlockUser(user) =&gt; {
+					<span class="self">Self</span>::do_block_user(who, marketplace_id, user)
+				},
+				BlockUserArgs::UnblockUser(user) =&gt; {
+					<span class="self">Self</span>::do_unblock_user(who, marketplace_id, user)
+				},
+			}
 		}
 
 		<span class="doccomment">/// Apply to a marketplace.
@@ -1487,10 +1595,10 @@
 			<span class="kw">match </span>redeem {
 				RedeemArgs::AskForRedemption { collection_id, item_id } =&gt; {
 					<span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id);
-				}
-				RedeemArgs::AcceptRedemption ( redemption_id ) =&gt; {
+				},
+				RedeemArgs::AcceptRedemption(redemption_id) =&gt; {
 					<span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id);
-				}
+				},
 			}
 		}
 

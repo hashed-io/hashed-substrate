@@ -136,6 +136,6 @@
     <span class="kw">fn </span>is_permission_linked_to_role(pallet: IdOrVec, role_id: <span class="kw-2">&amp;</span>RoleId, permission_id: <span class="kw-2">&amp;</span>PermissionId)-&gt; DispatchResult;
     <span class="kw">fn </span>get_role_users_len(pallet: IdOrVec, scope_id:<span class="kw-2">&amp;</span>ScopeId, role_id: <span class="kw-2">&amp;</span>RoleId) -&gt; usize;
     <span class="kw">fn </span>to_id(v: Vec&lt;u8&gt;)-&gt;[u8;<span class="number">32</span>];
-
+	<span class="kw">fn </span>does_user_have_any_role_in_scope(user: AccountId, pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId)-&gt; bool;
 }</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_rbac" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>

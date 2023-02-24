@@ -261,6 +261,16 @@
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
 <a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -306,8 +316,16 @@
 #[codec(mel_bound())]
 
 </span><span class="kw">pub enum </span>RedeemArgs&lt;T: Config&gt; {
-	AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId, },
-	AcceptRedemption (RedemptionId),
+	AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId },
+	AcceptRedemption(RedemptionId),
+}
+
+<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+</span><span class="kw">pub enum </span>BlockUserArgs&lt;T: Config&gt; {
+	BlockUser(T::AccountId),
+	UnblockUser(T::AccountId),
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
@@ -381,6 +399,7 @@
 	TakeBuyOffer,
 	AskForRedemption,
 	AcceptRedemption,
+	BlockUser,
 }
 
 <span class="kw">impl </span>Permission {
@@ -399,6 +418,7 @@
 			<span class="self">Self</span>::TakeBuyOffer =&gt; <span class="string">&quot;TakeBuyOffer&quot;</span>.as_bytes().to_vec(),
 			<span class="self">Self</span>::AskForRedemption =&gt; <span class="string">&quot;AskForRedemption&quot;</span>.as_bytes().to_vec(),
 			<span class="self">Self</span>::AcceptRedemption =&gt; <span class="string">&quot;AcceptRedemption&quot;</span>.as_bytes().to_vec(),
+			<span class="self">Self</span>::BlockUser =&gt; <span class="string">&quot;BlockUser&quot;</span>.as_bytes().to_vec(),
 		}
 	}
 
@@ -415,6 +435,7 @@
 			UpdateLabel.to_vec(),
 			RemoveMarketplace.to_vec(),
 			AcceptRedemption.to_vec(),
+			BlockUser.to_vec(),
 		]
 		.to_vec();
 		admin_permissions.append(<span class="kw-2">&amp;mut </span>Permission::participant_permissions());
@@ -520,7 +541,6 @@
 	<span class="kw">pub </span>fee: BalanceOf&lt;T&gt;,
 	<span class="kw">pub </span>status: OfferStatus,
 	<span class="kw">pub </span>creation_date: u64,
-	<span class="kw">pub </span>expiration_date: u64,
 	<span class="kw">pub </span>offer_type: OfferType,
 	<span class="kw">pub </span>buyer: <span class="prelude-ty">Option</span>&lt;(T::AccountId, [u8; <span class="number">32</span>])&gt;,
 }

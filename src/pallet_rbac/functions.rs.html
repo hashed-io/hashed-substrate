@@ -432,6 +432,18 @@
 <a href="#432" id="432">432</a>
 <a href="#433" id="433">433</a>
 <a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -780,7 +792,19 @@
         );
         <span class="prelude-val">Ok</span>(())
     }
-
+	<span class="doccomment">/// User any-role validation function
+	///
+	/// Checks if the user has at least one role in the given scope.
+	/// ### Parameters:
+	/// - `user`: The account to validate.
+	/// - `pallet_id`: The unique pallet identifier.
+	/// - `scope_id`: The scope context in which the role will be validated.
+		</span><span class="kw">fn </span>does_user_have_any_role_in_scope(account: T::AccountId, pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId) -&gt; bool {
+				<span class="kw">let </span>pallet_id = pallet.to_id();
+				UsersByScope::&lt;T&gt;::iter_prefix((pallet_id, scope_id)).any(|(<span class="kw">_</span>, users)| {
+				users.contains(<span class="kw-2">&amp;</span>account)
+			})
+		}
     <span class="doccomment">/// Scope validation
     ///
     /// Checks if the scope exists in that pallet.
@@ -865,6 +889,5 @@
         filtered_vec.dedup();
         vec.len() == filtered_vec.len()
     }
-}
-</code></pre></div>
+}</code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_rbac" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
