@@ -2802,5 +2802,55 @@ impl<T: Config> Pallet<T> {
         }
     }
 
+    // H O T F I X 
+    // DELETE AFTER FIXING THE ISSUE
+    pub fn do_reset_allen_drawdowns(project_id: ProjectId) -> DispatchResult{
+        // Ensure project exists
+        ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+
+        // Get all drawdowns for project
+        let drawdowns = <DrawdownsByProject<T>>::try_get(project_id).map_err(|_| Error::<T>::ProjectNotFound)?;
+
+        let mut developer_equity_drawdowns: Vec<DrawdownId> = vec![];
+
+        // Filter only the Developer Equity drawdowns for project
+        for drawdown_id in drawdowns.iter().cloned() {
+            let drawdown_data = <DrawdownsInfo<T>>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+            if drawdown_data.drawdown_type == DrawdownType::DeveloperEquity {
+                developer_equity_drawdowns.push(drawdown_id);
+            }
+        }
+
+        // Delete drawdown transactions
+        for drawdown_id in developer_equity_drawdowns.iter().cloned() {
+            // Get drawdown transactions 
+			let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+
+			// Delete drawdown transactions from TransactionsInfo
+            for transaction_id in drawdown_transactions {
+                <TransactionsInfo<T>>::remove(transaction_id);
+            }
+
+            // Delete drawdown transactions from TransactionsByDrawdown
+            <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
+        }
+
+        for drawdown_id in developer_equity_drawdowns.iter().cloned() {
+            // Delete all Developer Equity drawdowns for project
+            <DrawdownsInfo<T>>::remove(drawdown_id);
+
+            // Delete drawdown from DrawdownsByProject
+            <DrawdownsByProject<T>>::try_mutate::<_,_,DispatchError,_>(project_id, |drawdowns| {
+                drawdowns.retain(|drawdown| drawdown != &drawdown_id);
+                Ok(())
+            })?;
+        }
+
+        // Generate a new Developer Equity drawdown
+        Self::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, 1)?;
+
+        Ok(())
+    }
+
 // Do not code beyond this line
 }
