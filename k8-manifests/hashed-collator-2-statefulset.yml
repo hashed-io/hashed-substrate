@@ -26,9 +26,10 @@ spec:
             mountPath:  /var/www/hashed/hashed
         env:
           - name: BOOTNODES
-            value: "/dns/hashed-collator-1.hashed-network.svc.cluster.local/tcp/40333/p2p/12D3KooWKDktwLZm3PLRAVz2BXYizQgKxLn48MF2FM88wgKStZkg"
+            value: "/dns/hashed-collator-1.hashed-network.svc.cluster.local/tcp/40333/p2p/12D3KooWKDktwLZm3PLRAVz2BXYizQgKxLn48MF2FM88wgKStZkg /ip4/108.35.254.247/tcp/40334/p2p/12D3KooWQ6h7D1aPv7PbFHiqR4JUZTWTiLitmcyBFGnjv4VBV7My"
           # - name: RUST_LOG
-          #   value: "db=trace,sync=trace"
+          #   value: "sub-libp2p=trace"
+          # value: "db=trace,sync=trace"
           # - name: NODEKEY
           #   valueFrom:
           #     secretKeyRef:

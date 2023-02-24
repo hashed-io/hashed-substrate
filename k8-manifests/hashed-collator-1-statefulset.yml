@@ -24,7 +24,9 @@ spec:
         volumeMounts:
           - name: hashed-collator-1-pvc
             mountPath:  /var/www/hashed/hashed
-        # env:
+        env:
+          - name: BOOTNODES
+            value: "/ip4/108.35.254.247/tcp/40334/p2p/12D3KooWQ6h7D1aPv7PbFHiqR4JUZTWTiLitmcyBFGnjv4VBV7My"
           # - name: RUST_LOG
           #   value: "db=trace,sync=trace"
           # - name: NODEKEY
