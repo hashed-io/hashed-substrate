@@ -2804,6 +2804,56 @@
 <a href="#2804" id="2804">2804</a>
 <a href="#2805" id="2805">2805</a>
 <a href="#2806" id="2806">2806</a>
+<a href="#2807" id="2807">2807</a>
+<a href="#2808" id="2808">2808</a>
+<a href="#2809" id="2809">2809</a>
+<a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
+<a href="#2815" id="2815">2815</a>
+<a href="#2816" id="2816">2816</a>
+<a href="#2817" id="2817">2817</a>
+<a href="#2818" id="2818">2818</a>
+<a href="#2819" id="2819">2819</a>
+<a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
+<a href="#2825" id="2825">2825</a>
+<a href="#2826" id="2826">2826</a>
+<a href="#2827" id="2827">2827</a>
+<a href="#2828" id="2828">2828</a>
+<a href="#2829" id="2829">2829</a>
+<a href="#2830" id="2830">2830</a>
+<a href="#2831" id="2831">2831</a>
+<a href="#2832" id="2832">2832</a>
+<a href="#2833" id="2833">2833</a>
+<a href="#2834" id="2834">2834</a>
+<a href="#2835" id="2835">2835</a>
+<a href="#2836" id="2836">2836</a>
+<a href="#2837" id="2837">2837</a>
+<a href="#2838" id="2838">2838</a>
+<a href="#2839" id="2839">2839</a>
+<a href="#2840" id="2840">2840</a>
+<a href="#2841" id="2841">2841</a>
+<a href="#2842" id="2842">2842</a>
+<a href="#2843" id="2843">2843</a>
+<a href="#2844" id="2844">2844</a>
+<a href="#2845" id="2845">2845</a>
+<a href="#2846" id="2846">2846</a>
+<a href="#2847" id="2847">2847</a>
+<a href="#2848" id="2848">2848</a>
+<a href="#2849" id="2849">2849</a>
+<a href="#2850" id="2850">2850</a>
+<a href="#2851" id="2851">2851</a>
+<a href="#2852" id="2852">2852</a>
+<a href="#2853" id="2853">2853</a>
+<a href="#2854" id="2854">2854</a>
+<a href="#2855" id="2855">2855</a>
+<a href="#2856" id="2856">2856</a>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -5606,6 +5656,56 @@
         } <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(())
         }
+    }
+
+    <span class="comment">// H O T F I X 
+    // DELETE AFTER FIXING THE ISSUE
+    </span><span class="kw">pub fn </span>do_reset_allen_drawdowns(project_id: ProjectId) -&gt; DispatchResult{
+        <span class="comment">// Ensure project exists
+        </span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
+
+        <span class="comment">// Get all drawdowns for project
+        </span><span class="kw">let </span>drawdowns = &lt;DrawdownsByProject&lt;T&gt;&gt;::try_get(project_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>developer_equity_drawdowns: Vec&lt;DrawdownId&gt; = <span class="macro">vec!</span>[];
+
+        <span class="comment">// Filter only the Developer Equity drawdowns for project
+        </span><span class="kw">for </span>drawdown_id <span class="kw">in </span>drawdowns.iter().cloned() {
+            <span class="kw">let </span>drawdown_data = &lt;DrawdownsInfo&lt;T&gt;&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            <span class="kw">if </span>drawdown_data.drawdown_type == DrawdownType::DeveloperEquity {
+                developer_equity_drawdowns.push(drawdown_id);
+            }
+        }
+
+        <span class="comment">// Delete drawdown transactions
+        </span><span class="kw">for </span>drawdown_id <span class="kw">in </span>developer_equity_drawdowns.iter().cloned() {
+            <span class="comment">// Get drawdown transactions 
+			</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
+			<span class="comment">// Delete drawdown transactions from TransactionsInfo
+            </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+                &lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+            }
+
+            <span class="comment">// Delete drawdown transactions from TransactionsByDrawdown
+            </span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::remove(project_id, drawdown_id);
+        }
+
+        <span class="kw">for </span>drawdown_id <span class="kw">in </span>developer_equity_drawdowns.iter().cloned() {
+            <span class="comment">// Delete all Developer Equity drawdowns for project
+            </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::remove(drawdown_id);
+
+            <span class="comment">// Delete drawdown from DrawdownsByProject
+            </span>&lt;DrawdownsByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>,<span class="kw">_</span>,DispatchError,<span class="kw">_</span>&gt;(project_id, |drawdowns| {
+                drawdowns.retain(|drawdown| drawdown != <span class="kw-2">&amp;</span>drawdown_id);
+                <span class="prelude-val">Ok</span>(())
+            })<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// Generate a new Developer Equity drawdown
+        </span><span class="self">Self</span>::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, <span class="number">1</span>)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 
 <span class="comment">// Do not code beyond this line

@@ -1542,6 +1542,14 @@
 <a href="#1542" id="1542">1542</a>
 <a href="#1543" id="1543">1543</a>
 <a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -3046,6 +3054,14 @@
 			<span class="self">Self</span>::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
+		<span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="kw">pub fn </span>reset_allen_drawdowns(
+			origin: OriginFor&lt;T&gt;,
+			project_id: ProjectId,
+		) -&gt; DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_reset_allen_drawdowns(project_id)
+		}
 
 		<span class="doccomment">/// Kill all the stored data.
 		///
