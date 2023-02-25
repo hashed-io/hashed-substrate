@@ -395,6 +395,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			authority.clone(),
 			&collection_id,
+			&item_id
 		)?;
 
 		//ensure user has enough balance to create the offer
