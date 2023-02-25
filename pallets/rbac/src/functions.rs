@@ -346,7 +346,19 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         );
         Ok(())
     }
-
+	/// User any-role validation function
+	///
+	/// Checks if the user has at least one role in the given scope.
+	/// ### Parameters:
+	/// - `user`: The account to validate.
+	/// - `pallet_id`: The unique pallet identifier.
+	/// - `scope_id`: The scope context in which the role will be validated.
+		fn does_user_have_any_role_in_scope(account: T::AccountId, pallet: IdOrVec, scope_id: &ScopeId) -> bool {
+				let pallet_id = pallet.to_id();
+				UsersByScope::<T>::iter_prefix((pallet_id, scope_id)).any(|(_, users)| {
+				users.contains(&account)
+			})
+		}
     /// Scope validation
     ///
     /// Checks if the scope exists in that pallet.
