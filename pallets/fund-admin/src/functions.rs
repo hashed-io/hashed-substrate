@@ -2785,10 +2785,10 @@ impl<T: Config> Pallet<T> {
     fn send_funds(
         admin: T::AccountId,
         user: T::AccountId,
-    ) -> DispatchResult {        
+    ) -> DispatchResult {
         // Ensure admin has enough funds to perform transfer without reaping the account
         ensure!(T::Currency::free_balance(&admin) > T::Currency::minimum_balance(), Error::<T>::AdminHasNoFreeBalance);
-       
+
         //Ensure admin has enough funds to transfer & keep some balance to perform other operations
         ensure!(T::Currency::free_balance(&admin) > T::MinAdminBalance::get(), Error::<T>::InsufficientFundsToTransfer);
 
@@ -2802,7 +2802,7 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    // H O T F I X 
+    // H O T F I X
     // DELETE AFTER FIXING THE ISSUE
     pub fn do_reset_allen_drawdowns(project_id: ProjectId) -> DispatchResult{
         // Ensure project exists
@@ -2821,21 +2821,24 @@ impl<T: Config> Pallet<T> {
             }
         }
 
+        // ensure developer_equity_drawdowns is not empty
+        ensure!(!developer_equity_drawdowns.is_empty(), Error::<T>::EmptyTransactions);
+
         // Delete drawdown transactions
         for drawdown_id in developer_equity_drawdowns.iter().cloned() {
-            // Get drawdown transactions 
-			let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id).map_err(|_| Error::<T>::DrawdownNotFound)?;
+            // Get drawdown transactions
+            let drawdown_transactions = TransactionsByDrawdown::<T>::get(project_id, drawdown_id);
 
-			// Delete drawdown transactions from TransactionsInfo
-            for transaction_id in drawdown_transactions {
-                <TransactionsInfo<T>>::remove(transaction_id);
+            if drawdown_transactions.len() > 0 {
+                // Delete drawdown transactions from TransactionsInfo
+                for transaction_id in drawdown_transactions {
+                    <TransactionsInfo<T>>::remove(transaction_id);
+                }
+
+                // Delete drawdown transactions from TransactionsByDrawdown
+                <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
             }
 
-            // Delete drawdown transactions from TransactionsByDrawdown
-            <TransactionsByDrawdown<T>>::remove(project_id, drawdown_id);
-        }
-
-        for drawdown_id in developer_equity_drawdowns.iter().cloned() {
             // Delete all Developer Equity drawdowns for project
             <DrawdownsInfo<T>>::remove(drawdown_id);
 
