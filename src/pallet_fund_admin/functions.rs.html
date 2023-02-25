@@ -2854,6 +2854,9 @@
 <a href="#2854" id="2854">2854</a>
 <a href="#2855" id="2855">2855</a>
 <a href="#2856" id="2856">2856</a>
+<a href="#2857" id="2857">2857</a>
+<a href="#2858" id="2858">2858</a>
+<a href="#2859" id="2859">2859</a>
 </pre><pre class="rust"><code>
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>};
@@ -5641,10 +5644,10 @@
     <span class="kw">fn </span>send_funds(
         admin: T::AccountId,
         user: T::AccountId,
-    ) -&gt; DispatchResult {        
+    ) -&gt; DispatchResult {
         <span class="comment">// Ensure admin has enough funds to perform transfer without reaping the account
         </span><span class="macro">ensure!</span>(T::Currency::free_balance(<span class="kw-2">&amp;</span>admin) &gt; T::Currency::minimum_balance(), Error::&lt;T&gt;::AdminHasNoFreeBalance);
-       
+
         <span class="comment">//Ensure admin has enough funds to transfer &amp; keep some balance to perform other operations
         </span><span class="macro">ensure!</span>(T::Currency::free_balance(<span class="kw-2">&amp;</span>admin) &gt; T::MinAdminBalance::get(), Error::&lt;T&gt;::InsufficientFundsToTransfer);
 
@@ -5658,7 +5661,7 @@
         }
     }
 
-    <span class="comment">// H O T F I X 
+    <span class="comment">// H O T F I X
     // DELETE AFTER FIXING THE ISSUE
     </span><span class="kw">pub fn </span>do_reset_allen_drawdowns(project_id: ProjectId) -&gt; DispatchResult{
         <span class="comment">// Ensure project exists
@@ -5677,21 +5680,24 @@
             }
         }
 
+        <span class="comment">// ensure developer_equity_drawdowns is not empty
+        </span><span class="macro">ensure!</span>(!developer_equity_drawdowns.is_empty(), Error::&lt;T&gt;::EmptyTransactions);
+
         <span class="comment">// Delete drawdown transactions
         </span><span class="kw">for </span>drawdown_id <span class="kw">in </span>developer_equity_drawdowns.iter().cloned() {
-            <span class="comment">// Get drawdown transactions 
-			</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+            <span class="comment">// Get drawdown transactions
+            </span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::get(project_id, drawdown_id);
 
-			<span class="comment">// Delete drawdown transactions from TransactionsInfo
-            </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
-                &lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+            <span class="kw">if </span>drawdown_transactions.len() &gt; <span class="number">0 </span>{
+                <span class="comment">// Delete drawdown transactions from TransactionsInfo
+                </span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
+                    &lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+                }
+
+                <span class="comment">// Delete drawdown transactions from TransactionsByDrawdown
+                </span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::remove(project_id, drawdown_id);
             }
 
-            <span class="comment">// Delete drawdown transactions from TransactionsByDrawdown
-            </span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::remove(project_id, drawdown_id);
-        }
-
-        <span class="kw">for </span>drawdown_id <span class="kw">in </span>developer_equity_drawdowns.iter().cloned() {
             <span class="comment">// Delete all Developer Equity drawdowns for project
             </span>&lt;DrawdownsInfo&lt;T&gt;&gt;::remove(drawdown_id);
 
