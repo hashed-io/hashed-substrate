@@ -1278,6 +1278,7 @@
 <a href="#1278" id="1278">1278</a>
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1656,6 +1657,7 @@
 		price: BalanceOf&lt;T&gt;,
 		percentage: u32,
 	) -&gt; DispatchResult {
+
 		
 		<span class="comment">//ensure the marketplace exists
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
@@ -1674,7 +1676,7 @@
 			<span class="kw-2">&amp;</span>marketplace_id,
 			authority.clone(),
 			<span class="kw-2">&amp;</span>collection_id,
-			<span class="kw-2">&amp;</span>item_id,
+			<span class="kw-2">&amp;</span>item_id
 		)<span class="question-mark">?</span>;
 
 		<span class="comment">//ensure user has enough balance to create the offer
