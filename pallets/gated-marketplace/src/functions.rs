@@ -376,6 +376,7 @@ impl<T: Config> Pallet<T> {
 		price: BalanceOf<T>,
 		percentage: u32,
 	) -> DispatchResult {
+
 		
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -394,7 +395,6 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			authority.clone(),
 			&collection_id,
-			&item_id,
 		)?;
 
 		//ensure user has enough balance to create the offer
