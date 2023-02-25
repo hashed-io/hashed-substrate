@@ -30,8 +30,8 @@ spec:
           #   value: "peerset=trace"
             # value: "sub-libp2p=trace"
           - name: BOOTNODES
-            value: "/dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
-            # value: "/dns/n4-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm /dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
+            # value: "/dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
+            value: "/dns/n4-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJjJrH549Xa1BW5YizRmF6MKXvUYH2NQkf9HHvg61QXUm /dns/n5-main-network-service.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWJq9dP7q4S7fLEoHQtkgNGMnozqeLFtXhicAFW7U9TDkB"
           - name: MNEMO
             valueFrom:
               secretKeyRef:
