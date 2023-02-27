@@ -1502,6 +1502,14 @@ pub mod pallet {
 			Self::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn reset_allen_drawdowns(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_reset_allen_drawdowns(project_id)
+		}
 
 		/// Kill all the stored data.
 		///

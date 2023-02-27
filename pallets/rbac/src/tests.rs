@@ -150,6 +150,10 @@ fn get_role_users_len(scope_id : &ScopeId, role_id: &RoleId)-> usize{
 	RBAC::get_role_users_len(pallet_name(), scope_id, role_id)
 }
 
+fn does_user_have_any_role_in_scope(user: AccountId, pallet_id: IdOrVec, scope_id : &ScopeId) -> bool {
+	RBAC::does_user_have_any_role_in_scope(user, pallet_id, scope_id)
+}
+
 #[test]
 fn create_scope_works() {
 	new_test_ext().execute_with(|| {
