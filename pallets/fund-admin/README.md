@@ -1708,235 +1708,251 @@ BankDocumentsDeleted(ProjectId, DrawdownId)
 ## Errors
 
 ```rust
-/// No value was found for the global scope
-NoGlobalScopeValueWasFound
-/// Project ID is already in use
-ProjectIdAlreadyInUse
-/// Timestamp was not genereated correctly
-TimestampError
-/// Completion date must be later than creation date
-CompletionDateMustBeLater
-/// User is already registered in the site
-UserAlreadyRegistered
-/// Project was not found
-ProjectNotFound
-/// Project is not active anymore
-ProjectIsAlreadyCompleted
-/// Can not delete a completed project
-CannotDeleteCompletedProject
-/// User is not registered
-UserNotRegistered
-/// User has been already added to the project
-UserAlreadyAssignedToProject
-/// Max number of users per project reached
-MaxUsersPerProjectReached
-/// Max number of projects per user reached
-MaxProjectsPerUserReached
-/// User is not assigned to the project
-UserNotAssignedToProject
-/// Can not register administrator role
-CannotRegisterAdminRole
-/// Max number of builders per project reached
-MaxBuildersPerProjectReached
-/// Max number of investors per project reached
-MaxInvestorsPerProjectReached
-/// Max number of issuers per project reached
-MaxIssuersPerProjectReached
-/// Max number of regional centers per project reached
-MaxRegionalCenterPerProjectReached
-/// Can not remove administrator role
-CannotRemoveAdminRole
-/// Can not add admin role at user project assignment
-CannotAddAdminRole
-/// User can not have more than one role at the same time
-UserCannotHaveMoreThanOneRole
-/// Expenditure not found
-ExpenditureNotFound
-/// Expenditure already exist
-ExpenditureAlreadyExists
-/// Max number of expenditures per project reached
-MaxExpendituresPerProjectReached
-/// Field name can not be empty
-EmptyExpenditureName
-/// Expenditure does not belong to the project
-ExpenditureDoesNotBelongToProject
-/// Drowdown id is not found
-DrawdownNotFound
-/// Invalid amount
-InvalidAmount
-/// Documents field is empty
-DocumentsIsEmpty
-/// Transaction id is not found
-TransactionNotFound
-/// Transaction already exist
-TransactionAlreadyExists
-/// Max number of transactions per drawdown reached
-MaxTransactionsPerDrawdownReached
-/// Drawdown already exist
-DrawdownAlreadyExists
-/// Max number of drawdowns per project reached
-MaxDrawdownsPerProjectReached
-/// Max number of status changes per drawdown reached
-MaxStatusChangesPerDrawdownReached
-/// Can not modify a completed drawdown
-CannotEditDrawdown
-/// Can not perform any action on a submitted transaction
-CannotPerformActionOnSubmittedTransaction
-/// Can not perform any action on a approved transaction
-CannotPerformActionOnApprovedTransaction
-/// Can not perform any action on a confirmed transaction
-CannotPerformActionOnConfirmedTransaction
-/// Can not perform any action on a submitted drawdown
-CannotPerformActionOnSubmittedDrawdown
-/// Can not perform any action on a approved drawdown
-CannotPerformActionOnApprovedDrawdown
-/// Can not perform any action on a confirmed drawdown
-CannotPerformActionOnConfirmedDrawdown
-/// Transaction is already completed
-TransactionIsAlreadyCompleted
-/// User does not have the specified role
-UserDoesNotHaveRole
-/// Transactions vector is empty
-EmptyTransactions
-/// Transaction ID was not found in do_execute_transaction
-TransactionIdRequired
-/// Drawdown can not be submitted if does not has any transactions
-DrawdownHasNoTransactions
-/// Cannot submit transaction
-CannotSubmitTransaction
-/// Drawdown can not be approved if is not in submitted status
-DrawdownIsNotInSubmittedStatus
-/// Transactions is not in submitted status
-TransactionIsNotInSubmittedStatus
-/// Array of expenditures is empty
-EmptyExpenditures
-/// Expenditure name is required
-ExpenditureNameRequired
-/// Expenditure type is required
-ExpenditureTypeRequired
-/// Expenditure amount is required
-ExpenditureAmountRequired
-/// Expenditure id is required
-ExpenditureIdRequired
-/// User name is required
-UserNameRequired
-/// User role is required
-UserRoleRequired
-/// Amount is required
-AmountRequired
-/// Can not delete a user if the user is assigned to a project
-UserHasAssignedProjects
-/// Can not send a drawdown to submitted status if it has no transactions
-NoTransactionsToSubmit
-/// Bulk upload description is required
-BulkUploadDescriptionRequired
-/// Bulk upload documents are required
-BulkUploadDocumentsRequired
-/// Administrator can not delete themselves
-AdministratorsCannotDeleteThemselves
-/// No feedback was provided for bulk upload
-NoFeedbackProvidedForBulkUpload
-/// NO feedback for EN5 drawdown was provided
-EB5MissingFeedback
-/// Inflation rate extrinsic is missing an array of project ids
-InflationRateMissingProjectIds
-/// Inflation rate was not provided
-InflationRateRequired
-/// Inflation rate has been already set for the selected project
-InflationRateAlreadySet
-/// Inflation rate was not set for the selected project
-InflationRateNotSet
-/// Bulkupload drawdowns are only allowed for Construction Loan & Developer Equity
-DrawdownTypeNotSupportedForBulkUpload
-/// Cannot edit user role if the user is assigned to a project
-UserHasAssignedProjectsCannotUpdateRole
-/// Cannot delete user if the user is assigned to a project
-UserHasAssignedProjectsCannotDelete
-/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
-DrawdownStatusNotSupportedForBulkUpload
-/// Cannot submit a drawdown if the drawdown status isn't in draft or rejected
-DrawdownIsNotInDraftOrRejectedStatus
-/// Only investors can update/edit their documents
-UserIsNotAnInvestor
-/// Max number of projects per investor has been reached
-MaxProjectsPerInvestorReached
-/// Jobs eligibles array is empty
-JobEligiblesEmpty
-/// JOb eligible name is required
-JobEligiblesNameIsRequired
-/// Job eligible id already exists
-JobEligibleIdAlreadyExists
-/// Max number of job eligibles per project reached
-MaxJobEligiblesPerProjectReached
-/// Job eligible id not found
-JobEligibleNotFound
-/// Jopb eligible does not belong to the project
-JobEligibleDoesNotBelongToProject
-/// Job eligible name is required
-JobEligibleNameRequired
-/// Job eligible amount is required
-JobEligibleAmountRequired
-/// Job eligible id is required
-JobEligibleIdRequired
-/// Revenue id was not found
-RevenueNotFound
-/// Transactions revenue array is empty
-RevenueTransactionsEmpty
-/// Revenue transaction is not in submitted status
-RevenueTransactionNotSubmitted
-/// Revenue can not be edited
-CannotEditRevenue
-/// Revenue transaction id already exists
-RevenueTransactionIdAlreadyExists
-/// Max number of transactions per revenue reached
-MaxTransactionsPerRevenueReached
-/// Revenue transaction id not found
-RevenueTransactionNotFound
-/// Revenue transaction can not be edited
-CannotEditRevenueTransaction
-/// Max number of status changes per revenue reached
-MaxStatusChangesPerRevenueReached
-/// Can not perform any action on a submitted revenue
-CannotPerformActionOnSubmittedRevenue
-/// Can not perform any action on a approved revenue
-CannotPerformActionOnApprovedRevenue
-/// Can not perform any action on a submitted revenue transaction
-CannotPerformActionOnApprovedRevenueTransaction
-/// Can not perform any action on a approved revenue transaction
-CannotPerformActionOnSubmittedRevenueTransaction
-/// Revenue amoun is required
-RevenueAmountRequired
-/// Revenue transaction id is required
-RevenueTransactionIdRequired
-/// Revenue Id already exists
-RevenueIdAlreadyExists
-/// Maximun number of revenues per project reached
-MaxRevenuesPerProjectReached
-/// Can not send a revenue to submitted status if it has no transactions
-RevenueHasNoTransactions
-/// Revenue is not in submitted status
-RevenueIsNotInSubmittedStatus
-/// Revenue transaction is not in submitted status
-RevenueTransactionIsNotInSubmittedStatus
-/// The revenue is not in submitted status
-RevenueNotSubmitted
-/// Can not upload bank confirming documents if the drawdown is not in Approved status
-DrawdownNotApproved
-/// Drawdown is not in Confirmed status
-DrawdownNotConfirmed
-/// Drawdown is not in Submitted status
-DrawdownNotSubmitted
-/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
-DrawdownHasAlreadyBankConfirmingDocuments
-/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
-DrawdownHasNoBankConfirmingDocuments
-/// Bank confirming documents are required
-BankConfirmingDocumentsNotProvided
-/// Banck confirming documents array is empty
-BankConfirmingDocumentsAreEmpty
-/// Only eb5 drawdowns are allowed to upload bank documentation
-OnlyEB5DrawdownsCanUploadBankDocuments
-/// The private group id is empty
-PrivateGroupIdIsEmpty
+		/// No value was found for the global scope
+		NoGlobalScopeValueWasFound,
+		/// Project ID is already in use
+		ProjectIdAlreadyInUse,
+		/// Timestamp was not genereated correctly
+		TimestampError,
+		/// Completion date must be later than creation date
+		CompletionDateMustBeLater,
+		/// User is already registered in the site
+		UserAlreadyRegistered,
+		/// Project was not found
+		ProjectNotFound,
+		/// Project is not active anymore
+		ProjectIsAlreadyCompleted,
+		/// Can not delete a completed project
+		CannotDeleteCompletedProject,
+		/// User is not registered
+		UserNotRegistered,
+		/// User has been already added to the project
+		UserAlreadyAssignedToProject,
+		/// Max number of users per project reached
+		MaxUsersPerProjectReached,
+		/// Max number of projects per user reached
+		MaxProjectsPerUserReached,
+		/// User is not assigned to the project
+		UserNotAssignedToProject,
+		/// Can not register administrator role
+		CannotRegisterAdminRole,
+		/// Max number of builders per project reached
+		MaxBuildersPerProjectReached,
+		/// Max number of investors per project reached
+		MaxInvestorsPerProjectReached,
+		/// Max number of issuers per project reached
+		MaxIssuersPerProjectReached,
+		/// Max number of regional centers per project reached
+		MaxRegionalCenterPerProjectReached,
+		/// Can not remove administrator role
+		CannotRemoveAdminRole,
+		/// Can not add admin role at user project assignment
+		CannotAddAdminRole,
+		/// User can not have more than one role at the same time
+		UserCannotHaveMoreThanOneRole,
+		/// Expenditure not found
+		ExpenditureNotFound,
+		/// Expenditure already exist
+		ExpenditureAlreadyExists,
+		/// Max number of expenditures per project reached
+		MaxExpendituresPerProjectReached,
+		/// Field name can not be empty
+		EmptyExpenditureName,
+		/// Expenditure does not belong to the project
+		ExpenditureDoesNotBelongToProject,
+		/// Drowdown id is not found
+		DrawdownNotFound,
+		/// Invalid amount
+		InvalidAmount,
+		/// Documents field is empty
+		DocumentsEmpty,
+		/// Transaction id is not found
+		TransactionNotFound,
+		/// Transaction already exist
+		TransactionAlreadyExists,
+		/// Max number of transactions per drawdown reached
+		MaxTransactionsPerDrawdownReached,
+		/// Drawdown already exist
+		DrawdownAlreadyExists,
+		/// Max number of drawdowns per project reached
+		MaxDrawdownsPerProjectReached,
+		/// Max number of status changes per drawdown reached
+		MaxStatusChangesPerDrawdownReached,
+		/// Can not modify a completed drawdown
+		CannotEditDrawdown,
+		/// Can not perform any action on a submitted transaction
+		CannotPerformActionOnSubmittedTransaction,
+		/// Can not perform any action on a approved transaction
+		CannotPerformActionOnApprovedTransaction,
+		/// Can not perform any action on a confirmed transaction
+		CannotPerformActionOnConfirmedTransaction,
+		/// Can not perform any action on a submitted drawdown
+		CannotPerformActionOnSubmittedDrawdown,
+		/// Can not perform any action on a approved drawdown
+		CannotPerformActionOnApprovedDrawdown,
+		/// Can not perform any action on a confirmed drawdown
+		CannotPerformActionOnConfirmedDrawdown,
+		/// Transaction is already completed
+		TransactionIsAlreadyCompleted,
+		/// User does not have the specified role
+		UserDoesNotHaveRole,
+		/// Transactions vector is empty
+		EmptyTransactions,
+		/// Transactions are required for the current workflow
+		TransactionsRequired,
+		/// Transaction ID was not found in do_execute_transaction
+		TransactionIdRequired,
+		/// Drawdown can not be submitted if does not has any transactions
+		DrawdownHasNoTransactions,
+		/// Cannot submit transaction
+		CannotSubmitTransaction,
+		/// Drawdown can not be approved if is not in submitted status
+		DrawdownIsNotInSubmittedStatus,
+		/// Transactions is not in submitted status
+		TransactionIsNotInSubmittedStatus,
+		/// Array of expenditures is empty
+		EmptyExpenditures,
+		/// Expenditure name is required
+		ExpenditureNameRequired,
+		/// Expenditure type is required
+		ExpenditureTypeRequired,
+		/// Expenditure amount is required
+		ExpenditureAmountRequired,
+		/// Expenditure id is required
+		ExpenditureIdRequired,
+		/// User name is required
+		UserNameRequired,
+		/// User role is required
+		UserRoleRequired,
+		/// Amount is required
+		AmountRequired,
+		/// Can not delete a user if the user is assigned to a project
+		UserHasAssignedProjects,
+		/// Can not send a drawdown to submitted status if it has no transactions
+		NoTransactionsToSubmit,
+		/// Bulk upload description is required
+		BulkUploadDescriptionRequired,
+		/// Bulk upload documents are required
+		BulkUploadDocumentsRequired,
+		/// Administrator can not delete themselves
+		AdministratorsCannotDeleteThemselves,
+		/// No feedback was provided for bulk upload
+		NoFeedbackProvidedForBulkUpload,
+		/// Bulkupload feedback is empty
+		EmptyBulkUploadFeedback,
+		/// NO feedback for EN5 drawdown was provided
+		EB5MissingFeedback,
+		/// EB5 feedback is empty
+		EmptyEb5Feedback,
+		/// Inflation rate extrinsic is missing an array of project ids
+		ProjectsInflationRateEmpty,
+		/// Inflation rate was not provided
+		InflationRateRequired,
+		/// Inflation rate has been already set for the selected project
+		InflationRateAlreadySet,
+		/// Inflation rate was not set for the selected project
+		InflationRateNotSet,
+		/// Bulkupload drawdowns are only allowed for Construction Loan & Developer Equity
+		DrawdownTypeNotSupportedForBulkUpload,
+		/// Cannot edit user role if the user is assigned to a project
+		UserHasAssignedProjectsCannotUpdateRole,
+		/// Cannot delete user if the user is assigned to a project
+		UserHasAssignedProjectsCannotDelete,
+		/// Cannot send a bulkupload drawdown if the drawdown status isn't in draft or rejected
+		DrawdownStatusNotSupportedForBulkUpload,
+		/// Cannot submit a drawdown if the drawdown status isn't in draft or rejected
+		DrawdownIsNotInDraftOrRejectedStatus,
+		/// Only investors can update/edit their documents
+		UserIsNotAnInvestor,
+		/// Max number of projects per investor has been reached
+		MaxProjectsPerInvestorReached,
+		/// Jobs eligibles array is empty
+		JobEligiblesEmpty,
+		/// JOb eligible name is empty
+		JobEligiblesNameRequired,
+		/// Job eligible id already exists
+		JobEligibleIdAlreadyExists,
+		/// Max number of job eligibles per project reached
+		MaxJobEligiblesPerProjectReached,
+		/// Job eligible id not found
+		JobEligibleNotFound,
+		/// Jopb eligible does not belong to the project
+		JobEligibleDoesNotBelongToProject,
+		/// Job eligible name is required
+		JobEligibleNameRequired,
+		/// Job eligible amount is required
+		JobEligibleAmountRequired,
+		/// Job eligible id is required
+		JobEligibleIdRequired,
+		/// Revenue id was not found
+		RevenueNotFound,
+		/// Transactions revenue array is empty
+		RevenueTransactionsEmpty,
+		/// An array of revenue transactions is required
+		RevenueTransactionsRequired,
+		/// Revenue transaction is not in submitted status
+		RevenueTransactionNotSubmitted,
+		/// Revenue can not be edited
+		CannotEditRevenue,
+		/// Revenue transaction id already exists
+		RevenueTransactionIdAlreadyExists,
+		/// Max number of transactions per revenue reached
+		MaxTransactionsPerRevenueReached,
+		/// Revenue transaction id not found
+		RevenueTransactionNotFound,
+		/// Revenue transaction can not be edited
+		CannotEditRevenueTransaction,
+		/// Max number of status changes per revenue reached
+		MaxStatusChangesPerRevenueReached,
+		/// Can not perform any action on a submitted revenue
+		CannotPerformActionOnSubmittedRevenue,
+		/// Can not perform any action on a approved revenue
+		CannotPerformActionOnApprovedRevenue,
+		/// Can not perform any action on a submitted revenue transaction
+		CannotPerformActionOnApprovedRevenueTransaction,
+		/// Can not perform any action on a approved revenue transaction
+		CannotPerformActionOnSubmittedRevenueTransaction,
+		/// Revenue amoun is required
+		RevenueAmountRequired,
+		/// Revenue transaction id is required
+		RevenueTransactionIdRequired,
+		/// Revenue Id already exists
+		RevenueIdAlreadyExists,
+		/// Maximun number of revenues per project reached
+		MaxRevenuesPerProjectReached,
+		/// Can not send a revenue to submitted status if it has no transactions
+		RevenueHasNoTransactions,
+		/// Revenue is not in submitted status
+		RevenueIsNotInSubmittedStatus,
+		/// Revenue transaction is not in submitted status
+		RevenueTransactionIsNotInSubmittedStatus,
+		/// Revenue transactions feedback is empty
+		RevenueTransactionsFeedbackEmpty,
+		/// The revenue is not in submitted status
+		RevenueNotSubmitted,
+		/// Can not upload bank confirming documents if the drawdown is not in Approved status
+		DrawdowMustBeInApprovedStatus,
+		/// Drawdown is not in Confirmed status
+		DrawdowMustBeInConfirmedStatus,
+		/// Drawdown is not in Submitted status
+		DrawdownNotSubmitted,
+		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
+		DrawdownHasAlreadyBankConfirmingDocuments,
+		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
+		DrawdownHasNoBankConfirmingDocuments,
+		/// Bank confirming documents are required
+		BankConfirmingDocumentsNotProvided,
+		/// Banck confirming documents array is empty
+		BankConfirmingDocumentsEmpty,
+		/// Only eb5 drawdowns are allowed to upload bank documentation
+		OnlyEB5DrawdownsCanUploadBankDocuments,
+		/// The private group id is empty
+		PrivateGroupIdEmpty,
+		/// Maximun number of registrations at a time reached
+		MaxRegistrationsAtATimeReached,
+		/// Administrator account has insuficiente balance to register a new user
+		AdminHasNoFreeBalance,
+		/// Administrator account has insuficiente balance to register a new user
+		InsufficientFundsToTransfer
 ``` 
 

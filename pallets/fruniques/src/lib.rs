@@ -105,8 +105,25 @@ pub mod pallet {
 		FruniqueAlreadyExists,
 		// Frunique already verified
 		FruniqueAlreadyVerified,
+		// Too many fruniques roots
 		FruniqueRootsOverflow,
+		// The frunique parent is frozen
+		ParentFrozen,
+		// Frunique parent already redeemed
+		ParentAlreadyRedeemed,
+		// Frunique if frozen
+		FruniqueFrozen,
+		// Frunique already redeemed
+		FruniqueAlreadyRedeemed,
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn freezer)]
+	/// Keeps track of the number of collections in existence.
+	pub(super) type Freezer<T: Config> = StorageValue<
+		_,
+		T::AccountId, // Sudo account
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection)]
@@ -129,16 +146,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn frunique_roots)]
-	pub(super) type FruniqueRoots<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::CollectionId,
-		Roots<T>,
-		ValueQuery,
-	>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn frunique_info)]
 	pub(super) type FruniqueInfo<T: Config> = StorageDoubleMap<
 		_,
@@ -151,8 +158,19 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn frunique_roots)]
+	pub(super) type FruniqueRoots<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::CollectionId,
+		Blake2_128Concat,
+		T::ItemId,
+		bool,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn frunique_verified)]
-	/// Keeps track of verified fruniques.
 	pub(super) type FruniqueVerified<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -160,7 +178,19 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::ItemId,
 		bool,
-		ValueQuery,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn frunique_redeemed)]
+	pub(super) type FruniqueRedeemed<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::CollectionId,
+		Blake2_128Concat,
+		T::ItemId,
+		bool,
+		OptionQuery,
 	>;
 
 	#[pallet::call]
@@ -169,10 +199,12 @@ pub mod pallet {
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+		pub fn initial_setup(origin: OriginFor<T>, freezer: T::AccountId) -> DispatchResult {
 			//Transfer the balance
-			// T::Currency::transfer(&buyer, &Self::pallet_account(), , KeepAlive)?;
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
+
+			<Freezer<T>>::put(freezer);
+
 			Self::do_initial_setup()?;
 			Ok(())
 		}
@@ -190,6 +222,7 @@ pub mod pallet {
 			metadata: CollectionDescription<T>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
+			// let admin: T::AccountId = frame_system::RawOrigin::Root.into();
 
 			Self::do_create_collection(origin, metadata, admin.clone())?;
 
@@ -259,8 +292,18 @@ pub mod pallet {
 					Error::<T>::CollectionNotFound
 				);
 				ensure!(
-					Self::instance_exists(&parent_info_call.collection_id, &parent_info_call.parent_id),
+					Self::instance_exists(
+						&parent_info_call.collection_id,
+						&parent_info_call.parent_id
+					),
 					Error::<T>::FruniqueNotFound
+				);
+
+				ensure!(
+					!<FruniqueInfo<T>>::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
+						.unwrap()
+						.redeemed,
+					Error::<T>::ParentAlreadyRedeemed
 				);
 				Self::is_authorized(user, parent_info_call.collection_id, Permission::Mint)?;
 
@@ -296,6 +339,16 @@ pub mod pallet {
 			ensure!(Self::instance_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
 			let owner: T::AccountId = ensure_signed(origin.clone())?;
+
+			<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
+				class_id,
+				instance_id,
+				|frunique_data| -> DispatchResult {
+					let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+					frunique.verified = true;
+					Ok(())
+				},
+			)?;
 
 			<FruniqueVerified<T>>::insert(class_id, instance_id, true);
 
@@ -401,9 +454,12 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			<Freezer<T>>::kill();
 			<NextCollection<T>>::put(0);
 			let _ = <NextFrunique<T>>::clear(1000, None);
 			let _ = <FruniqueVerified<T>>::clear(1000, None);
+			let _ = <FruniqueRoots<T>>::clear(1000, None);
+			let _ = <FruniqueRedeemed<T>>::clear(1000, None);
 			let _ = <FruniqueInfo<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;

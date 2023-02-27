@@ -514,10 +514,14 @@ pub mod pallet {
 		AdministratorsCannotDeleteThemselves,
 		/// No feedback was provided for bulk upload
 		NoFeedbackProvidedForBulkUpload,
+		/// Bulkupload feedback is empty
+		EmptyBulkUploadFeedback,
 		/// NO feedback for EN5 drawdown was provided
 		EB5MissingFeedback,
+		/// EB5 feedback is empty
+		EmptyEb5Feedback,
 		/// Inflation rate extrinsic is missing an array of project ids
-		InflationRateMissingProjectIds,
+		ProjectsInflationRateEmpty,
 		/// Inflation rate was not provided
 		InflationRateRequired,
 		/// Inflation rate has been already set for the selected project
@@ -560,6 +564,8 @@ pub mod pallet {
 		RevenueNotFound,
 		/// Transactions revenue array is empty
 		RevenueTransactionsEmpty,
+		/// An array of revenue transactions is required
+		RevenueTransactionsRequired,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionNotSubmitted,
 		/// Revenue can not be edited
@@ -596,12 +602,14 @@ pub mod pallet {
 		RevenueIsNotInSubmittedStatus,
 		/// Revenue transaction is not in submitted status
 		RevenueTransactionIsNotInSubmittedStatus,
+		/// Revenue transactions feedback is empty
+		RevenueTransactionsFeedbackEmpty,
 		/// The revenue is not in submitted status
 		RevenueNotSubmitted,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
-		DrawdownNotApproved,
+		DrawdowMustBeInApprovedStatus,
 		/// Drawdown is not in Confirmed status
-		DrawdownNotConfirmed,
+		DrawdowMustBeInConfirmedStatus,
 		/// Drawdown is not in Submitted status
 		DrawdownNotSubmitted,
 		/// Can not insert (CUDAction: Create) bank confmirng documents if the drawdown has already bank confirming documents
@@ -611,7 +619,7 @@ pub mod pallet {
 		/// Bank confirming documents are required
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
-		BankConfirmingDocumentsAreEmpty,
+		BankConfirmingDocumentsEmpty,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
 		/// The private group id is empty
@@ -1139,6 +1147,9 @@ pub mod pallet {
 			// Match bulkupload parameter
 			match bulkupload {
 				Some(approval) => {
+					// Ensure admin permissions
+					Self::is_authorized(who.clone(), &project_id, ProxyPermission::ApproveDrawdown)?;
+					
 					// Execute bulkupload flow (construction loan & developer equity)
 					match approval {
 						false => {
@@ -1152,7 +1163,6 @@ pub mod pallet {
 
 							// 2. Do submit drawdown
 							Self::do_submit_drawdown(who, project_id, drawdown_id)
-
 						},
 						true  => {
 							// 1.Execute transactions if provided
@@ -1221,10 +1231,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			drawdown_id: DrawdownId,
-			transactions_feedback: Option<BoundedVec<(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime>>,
+			transactions_feedback: Option<TransactionsFeedback<T>>,
 			drawdown_feedback: Option<FieldDescription>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
@@ -1288,7 +1295,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
-			projects: BoundedVec<(ProjectId, Option<InflationRate>, CUDAction), T::MaxRegistrationsAtTime>,
+			projects: ProjectsInflation<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -1352,21 +1359,22 @@ pub mod pallet {
 						who,
 						project_id,
 						revenue_id,
-						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsEmpty)?,
+						revenue_transactions.ok_or(Error::<T>::RevenueTransactionsRequired)?,
 					)
 				},
 				// Submit revenue transactions
 				true => {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
+						// Ensure transactions are not empty
+						ensure!(!mod_revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsEmpty);
+
 						// Do execute transactions
-						if mod_revenue_transactions.len() > 0 {
-							Self::do_execute_revenue_transactions(
-								who.clone(),
-								project_id,
-								revenue_id,
-								mod_revenue_transactions)?;
-						}
+						Self::do_execute_revenue_transactions(
+							who.clone(),
+							project_id,
+							revenue_id,
+							mod_revenue_transactions)?;
 					}
 
 					// Do submit revenue
@@ -1427,10 +1435,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			project_id: ProjectId,
 			revenue_id: RevenueId,
-			revenue_transactions_feedback: BoundedVec<(
-				TransactionId,
-				FieldDescription
-			), T::MaxRegistrationsAtTime>,
+			revenue_transactions_feedback: TransactionsFeedback<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 

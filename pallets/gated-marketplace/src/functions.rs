@@ -346,6 +346,8 @@ impl<T: Config> Pallet<T> {
 		<OffersByMarketplace<T>>::try_mutate(marketplace_id, |offers| offers.try_push(offer_id))
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
+		pallet_fruniques::Pallet::<T>::do_freeze(&collection_id, item_id)?;
+
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
 		Ok(())
 	}
@@ -358,12 +360,9 @@ impl<T: Config> Pallet<T> {
 		price: BalanceOf<T>,
 		percentage: u32,
 	) -> DispatchResult {
-		//ensure the item is for sale, if not, return error
-		Self::can_this_item_receive_buy_orders(collection_id, item_id, marketplace_id)?;
 
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
-		Self::is_authorized(authority.clone(), &marketplace_id, Permission::EnlistBuyOffer)?;
 
 		//ensure the collection exists
 		//For this case user doesn't need to be the owner of the collection
@@ -373,6 +372,14 @@ impl<T: Config> Pallet<T> {
 		} else {
 			return Err(Error::<T>::CollectionNotFound.into());
 		}
+
+		//ensure the holder of NFT is in the same marketplace as the caller making the offer
+		Self::can_this_item_receive_buy_orders(
+			&marketplace_id,
+			authority.clone(),
+			&collection_id,
+			&item_id
+		)?;
 
 		//ensure user has enough balance to create the offer
 		let total_user_balance = T::Currency::total_balance(&authority);
@@ -469,6 +476,7 @@ impl<T: Config> Pallet<T> {
 		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
 		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
+		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer
 			pallet_uniques::Pallet::<T>::do_transfer(
@@ -565,6 +573,7 @@ impl<T: Config> Pallet<T> {
 			offer_data.fee,
 			KeepAlive,
 		)?;
+		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
 			//Use uniques transfer function to transfer the item to the buyer
@@ -634,6 +643,10 @@ impl<T: Config> Pallet<T> {
 			offer_data.item_id,
 			offer_id,
 		)?;
+
+		if offer_data.offer_type == OfferType::SellOrder {
+			pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
+		}
 
 		//remove the offer from OfferInfo
 		<OffersInfo<T>>::remove(offer_id);
@@ -1039,30 +1052,22 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn can_this_item_receive_buy_orders(
-		collection_id: T::CollectionId,
-		item_id: T::ItemId,
-		marketplace_id: [u8; 32],
+		marketplace_id: &[u8; 32],
+		buyer: T::AccountId,
+		class_id: &T::CollectionId,
+		instance_id: &T::ItemId,
 	) -> DispatchResult {
-		//First we check if the item has is for sale, if not, return error
-		ensure!(
-			<OffersByItem<T>>::contains_key(collection_id, item_id),
-			Error::<T>::ItemNotForSale
-		);
+		//First we check if the buyer is authorized to buy on this marketplace
+		Self::is_authorized(buyer, marketplace_id, Permission::EnlistBuyOffer)?;
 
-		//ensure the item can receive buy offers on the selected marketplace
-		let offers = <OffersByItem<T>>::get(collection_id, item_id);
-
-		for offer in offers {
-			let offer_info = <OffersInfo<T>>::get(offer).ok_or(Error::<T>::OfferNotFound)?;
-			//ensure the offer_type is SellOrder, because this vector also contains buy offers.
-			if offer_info.marketplace_id == marketplace_id
-				&& offer_info.offer_type == OfferType::SellOrder
-			{
-				return Ok(());
+		//We need to check if the owner is in the marketplace
+		if let Some(owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
+			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok()
+				{
+					return Ok(());
+				}
 			}
-		}
-
-		Err(Error::<T>::ItemNotForSale.into())
+		Err(Error::<T>::OwnerNotInMarketplace.into())
 	}
 
 	fn _delete_all_sell_orders_for_this_item(
@@ -1097,10 +1102,92 @@ impl<T: Config> Pallet<T> {
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
 	) -> DispatchResult {
+		pallet_fruniques::Pallet::<T>::do_thaw(&collection_id, item_id)?;
 		<OffersByItem<T>>::remove(collection_id, item_id);
 		Ok(())
 	}
 
+	pub fn do_ask_for_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		collection_id: T::CollectionId,
+		item_id: T::ItemId,
+	) -> DispatchResult {
+		ensure!(<Marketplaces<T>>::contains_key(marketplace), Error::<T>::MarketplaceNotFound);
+		Self::is_authorized(who.clone(), &marketplace, Permission::AskForRedemption)?;
+		//ensure the collection exists
+		if let Some(a) = pallet_uniques::Pallet::<T>::owner(collection_id, item_id) {
+			ensure!(a == who, Error::<T>::NotOwner);
+		} else {
+			return Err(Error::<T>::CollectionNotFound.into());
+		}
+
+		let redemption_data: RedemptionData<T> = RedemptionData {
+			creator: who.clone(),
+			redeemed_by: None,
+			collection_id,
+			item_id,
+			is_redeemed: false,
+		};
+
+		// Gen market id
+		let redemption_id = redemption_data.using_encoded(blake2_256);
+		// ensure the generated id is unique
+		ensure!(
+			!<AskingForRedemption<T>>::contains_key(marketplace, redemption_id),
+			Error::<T>::RedemptionRequestAlreadyExists
+		);
+
+		<AskingForRedemption<T>>::insert(marketplace, redemption_id, redemption_data);
+		Self::deposit_event(Event::RedemptionRequested(marketplace, redemption_id, who));
+
+		Ok(())
+	}
+
+	pub fn do_accept_redeem(
+		who: T::AccountId,
+		marketplace: MarketplaceId,
+		redemption_id: RedemptionId,
+	) -> DispatchResult
+	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
+	{
+		ensure!(<Marketplaces<T>>::contains_key(marketplace), Error::<T>::MarketplaceNotFound);
+		Self::is_authorized(who.clone(), &marketplace, Permission::AcceptRedemption)?;
+
+		ensure!(
+			<AskingForRedemption<T>>::contains_key(marketplace, redemption_id),
+			Error::<T>::RedemptionRequestNotFound
+		);
+
+		<AskingForRedemption<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			marketplace,
+			redemption_id,
+			|redemption_data| -> DispatchResult {
+				let redemption_data =
+					redemption_data.as_mut().ok_or(Error::<T>::RedemptionRequestNotFound)?;
+				ensure!(
+					redemption_data.is_redeemed == false,
+					Error::<T>::RedemptionRequestAlreadyRedeemed
+				);
+				ensure!(
+					redemption_data.is_redeemed == false,
+					Error::<T>::RedemptionRequestAlreadyRedeemed
+				);
+				redemption_data.is_redeemed = true;
+				redemption_data.redeemed_by = Some(who.clone());
+				Self::deposit_event(Event::RedemptionAccepted(marketplace, redemption_id, who));
+				pallet_fruniques::Pallet::<T>::do_redeem(
+					redemption_data.collection_id,
+					redemption_data.item_id,
+				)?;
+
+				Ok(())
+			},
+		)?;
+
+		Ok(())
+	}
 	pub fn pallet_id() -> IdOrVec {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
