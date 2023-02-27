@@ -29,7 +29,10 @@ use frame_system::{EnsureRoot, EnsureSigned};
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{KeyOwnerProofSystem, Randomness, StorageInfo, ConstU128, AsEnsureOriginWithArg, EitherOfDiverse, OnRuntimeUpgrade},
+	traits::{
+		AsEnsureOriginWithArg, ConstU128, EitherOfDiverse, KeyOwnerProofSystem, OnRuntimeUpgrade,
+		Randomness, StorageInfo,
+	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, IdentityFee, Weight,
@@ -125,7 +128,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 144,
+	spec_version: 146,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -406,7 +409,7 @@ parameter_types! {
 }
 
 type CouncilCollective = pallet_collective::Instance1;
-impl pallet_collective::Config<CouncilCollective>  for Runtime {
+impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
@@ -575,7 +578,6 @@ impl pallet_fruniques::Config for Runtime {
 	type ChildMaxLen = ChildMaxLen;
 	type MaxParentsInCollection = MaxParentsInCollection;
 	// type PalletId = FruniquesPalletId;
-
 }
 
 parameter_types! {
@@ -634,13 +636,12 @@ impl pallet_fund_admin::Config for Runtime {
 	type TransferAmount = TransferAmount;
 }
 
-
-
 parameter_types! {
 	pub const LabelMaxLen:u32 = 32;
 	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
 	pub const MaxRolesPerAuth: u32 = 2;
 	pub const MaxApplicants: u32 = 10;
+	pub const MaxBlockedUsersPerMarket: u32 = 100;
 	pub const NotesMaxLen: u32 = 256;
 	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
@@ -654,10 +655,11 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
+	type MaxBlockedUsersPerMarket = MaxBlockedUsersPerMarket;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type MaxFeedbackLen = MaxFeedbackLen;
-	type NameMaxLen= NameMaxLen;
+	type NameMaxLen = NameMaxLen;
 	type MaxFiles = MaxFiles;
 	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
 	type MaxMarketsPerItem = MaxMarketsPerItem;
@@ -687,7 +689,7 @@ impl pallet_bitcoin_vaults::Config for Runtime {
 	type PSBTMaxLen = PSBTMaxLen;
 	type MaxVaultsPerUser = MaxVaultsPerUser;
 	type MaxCosignersPerVault = MaxCosignersPerVault;
-	type VaultDescriptionMaxLen =VaultDescriptionMaxLen;
+	type VaultDescriptionMaxLen = VaultDescriptionMaxLen;
 	type OutputDescriptorMaxLen = OutputDescriptorMaxLen;
 	type MaxProposalsPerVault = MaxProposalsPerVault;
 }
@@ -716,7 +718,6 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
 }
-
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
@@ -750,58 +751,59 @@ parameter_types! {
 	pub const CollectionSymbolLimit: u32 = 100;
 }
 
-use sp_runtime::SaturatedConversion;
 use codec::Encode;
+use sp_runtime::SaturatedConversion;
 //use sp_runtime::generic::SignedPayload as OtherSignedPayload;
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
 where
 	RuntimeCall: From<LocalCall>,
 {
-    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
-        call: RuntimeCall,
-        public: <Signature as sp_runtime::traits::Verify>::Signer,
-        account: AccountId,
-        index: Index,
-    ) -> Option<(RuntimeCall, <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload)> {
-        let period = BlockHashCount::get() as u64;
-        let current_block = System::block_number()
-            .saturated_into::<u64>()
-            .saturating_sub(1);
-        let tip = 0;
-        let extra: SignedExtra = (
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: RuntimeCall,
+		public: <Signature as sp_runtime::traits::Verify>::Signer,
+		account: AccountId,
+		index: Index,
+	) -> Option<(
+		RuntimeCall,
+		<UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
+	)> {
+		let period = BlockHashCount::get() as u64;
+		let current_block = System::block_number().saturated_into::<u64>().saturating_sub(1);
+		let tip = 0;
+		let extra: SignedExtra = (
 			frame_system::CheckNonZeroSender::<Runtime>::new(),
-            frame_system::CheckSpecVersion::<Runtime>::new(),
-            frame_system::CheckTxVersion::<Runtime>::new(),
-            frame_system::CheckGenesis::<Runtime>::new(),
-            frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
-            frame_system::CheckNonce::<Runtime>::from(index),
-            frame_system::CheckWeight::<Runtime>::new(),
-            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
-        );
+			frame_system::CheckSpecVersion::<Runtime>::new(),
+			frame_system::CheckTxVersion::<Runtime>::new(),
+			frame_system::CheckGenesis::<Runtime>::new(),
+			frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::<Runtime>::from(index),
+			frame_system::CheckWeight::<Runtime>::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+		);
 
-        let raw_payload = SignedPayload::new(call, extra)
-            .map_err(|e| {
-                log::warn!("Unable to create signed payload: {:?}", e);
-            })
-            .ok()?;
-        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
-        let address = account;
-        let (call, extra, _) = raw_payload.deconstruct();
-        Some((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
-    }
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				log::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+		let address = account;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
+	}
 }
 
 impl frame_system::offchain::SigningTypes for Runtime {
-    type Public = <Signature as sp_runtime::traits::Verify>::Signer;
-    type Signature = Signature;
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
 }
 
 impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
 where
 	RuntimeCall: From<C>,
 {
-    type OverarchingCall = RuntimeCall;
-    type Extrinsic = UncheckedExtrinsic;
+	type OverarchingCall = RuntimeCall;
+	type Extrinsic = UncheckedExtrinsic;
 }
 construct_runtime!(
 	pub enum Runtime where
@@ -857,7 +859,8 @@ pub type SignedExtra = (
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
+pub type UncheckedExtrinsic =
+	generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 /// The payload being signed in transactions.
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
