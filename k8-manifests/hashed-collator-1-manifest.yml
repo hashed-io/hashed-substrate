@@ -48,9 +48,12 @@ spec:
         #         key: N4NODEKEY
         #         optional: false
         resources:
+          requests:
+            memory: "8G"
+            cpu: "2"
           limits:
-            memory: "4G"
-            cpu: "1.5"
+            memory: "8G"
+            cpu: "2"
         ports:
         - containerPort: 9933
         - containerPort: 9944
