@@ -315,10 +315,10 @@ impl<T: Config> Pallet<T> {
 		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
 		let item = Self::u32_to_instance_id(nex_item);
 
-		Self::do_mint(collection, owner, metadata.clone(), attributes)?;
+		Self::do_mint(collection, owner.clone(), metadata.clone(), attributes)?;
 
 		if let Some(ref parent_info) = parent_info {
-			return Self::do_nft_division(collection, item, metadata, parent_info);
+			return Self::do_nft_division(collection, item, metadata, parent_info, owner);
 		}
 
 		let frunique_data = FruniqueData {
@@ -329,6 +329,8 @@ impl<T: Config> Pallet<T> {
 			verified: false,
 			frozen: false,
 			redeemed: false,
+			spawnedBy: Some(owner.clone()),
+			verifiedBy: None,
 		};
 
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
@@ -343,6 +345,7 @@ impl<T: Config> Pallet<T> {
 		item: T::ItemId,
 		metadata: CollectionDescription<T>,
 		parent_info: &ParentInfo<T>,
+		user: T::AccountId,
 	) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
@@ -379,6 +382,8 @@ impl<T: Config> Pallet<T> {
 			verified: false,
 			frozen: false,
 			redeemed: false,
+			spawnedBy: Some(user.clone()),
+			verifiedBy: None,
 		};
 
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);

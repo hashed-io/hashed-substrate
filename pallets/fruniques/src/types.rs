@@ -115,11 +115,13 @@ pub struct FruniqueData<T: Config> {
 	pub frozen: bool,
 	pub verified: bool,
 	pub redeemed: bool,
+	pub spawnedBy: Option<T::AccountId>,
+	pub verifiedBy: Option<T::AccountId>,
 }
 
 impl<T: Config> FruniqueData<T> {
 	pub fn new(metadata: CollectionDescription<T>) -> Self {
-		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None, frozen: false, verified: false, redeemed: false }
+		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None, frozen: false, verified: false, redeemed: false, spawnedBy: None , verifiedBy: None }
 	}
 }
 
@@ -197,6 +199,8 @@ pub enum Permission {
 	Transfer,
 	/// Allow a user to collaborate on a collection
 	InviteCollaborator,
+	/// Verify spawned NFTs
+	Verify,
 }
 
 impl Permission {
@@ -207,6 +211,7 @@ impl Permission {
 			Self::Burn => "Burn".as_bytes().to_vec(),
 			Self::Transfer => "Transfer".as_bytes().to_vec(),
 			Self::InviteCollaborator => "InviteCollaborator".as_bytes().to_vec(),
+			Self::Verify => "Verify".as_bytes().to_vec(),
 		}
 	}
 
@@ -221,13 +226,13 @@ impl Permission {
 
 	pub fn owner_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
-		[Mint.to_vec(), Burn.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec()].to_vec()
+		[Mint.to_vec(), Burn.to_vec(), Transfer.to_vec(), InviteCollaborator.to_vec(), Verify.to_vec()].to_vec()
 	}
 
 	pub fn admin_permissions() -> Vec<Vec<u8>> {
 		use crate::types::Permission::*;
 		let mut admin_permissions =
-			[Mint.to_vec(), Burn.to_vec(), InviteCollaborator.to_vec()].to_vec();
+			[Mint.to_vec(), Burn.to_vec(), InviteCollaborator.to_vec(), Verify.to_vec()].to_vec();
 		admin_permissions.append(&mut Permission::holder_permissions());
 		admin_permissions
 	}
