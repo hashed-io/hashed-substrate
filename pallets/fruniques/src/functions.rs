@@ -329,8 +329,8 @@ impl<T: Config> Pallet<T> {
 			verified: false,
 			frozen: false,
 			redeemed: false,
-			spawnedBy: Some(owner.clone()),
-			verifiedBy: None,
+			spawned_by: Some(owner.clone()),
+			verified_by: None,
 		};
 
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);
@@ -382,8 +382,8 @@ impl<T: Config> Pallet<T> {
 			verified: false,
 			frozen: false,
 			redeemed: false,
-			spawnedBy: Some(user.clone()),
-			verifiedBy: None,
+			spawned_by: Some(user.clone()),
+			verified_by: None,
 		};
 
 		<FruniqueInfo<T>>::insert(collection, item, frunique_data);

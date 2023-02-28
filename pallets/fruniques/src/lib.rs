@@ -368,11 +368,11 @@ pub mod pallet {
 				instance_id,
 				|frunique_data| -> DispatchResult {
 					let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
-					if frunique.verified == true || frunique.verifiedBy.is_some() {
+					if frunique.verified == true || frunique.verified_by.is_some() {
 						return Err(Error::<T>::FruniqueAlreadyVerified.into());
 					}
 					frunique.verified = true;
-					frunique.verifiedBy = Some(caller.clone());
+					frunique.verified_by = Some(caller.clone());
 					Ok(())
 				},
 			)?;

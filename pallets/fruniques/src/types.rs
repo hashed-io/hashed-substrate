@@ -115,13 +115,13 @@ pub struct FruniqueData<T: Config> {
 	pub frozen: bool,
 	pub verified: bool,
 	pub redeemed: bool,
-	pub spawnedBy: Option<T::AccountId>,
-	pub verifiedBy: Option<T::AccountId>,
+	pub spawned_by: Option<T::AccountId>,
+	pub verified_by: Option<T::AccountId>,
 }
 
 impl<T: Config> FruniqueData<T> {
 	pub fn new(metadata: CollectionDescription<T>) -> Self {
-		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None, frozen: false, verified: false, redeemed: false, spawnedBy: None , verifiedBy: None }
+		Self { metadata, weight: Permill::from_percent(100), parent: None, children: None, frozen: false, verified: false, redeemed: false, spawned_by: None , verified_by: None }
 	}
 }
 
