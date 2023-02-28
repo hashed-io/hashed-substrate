@@ -288,6 +288,7 @@ pub mod pallet {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			// Ensure the user is in the collection
 			let user: T::AccountId = ensure_signed(origin.clone())?;
+
 			// Ensure the user has the mint permission
 			ensure!(
 				Self::is_authorized(
