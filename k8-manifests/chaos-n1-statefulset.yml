@@ -46,8 +46,8 @@ spec:
                 optional: false
         resources:
           limits:
-            memory: "3G"
-            cpu: "1.5"
+            memory: "5G"
+            cpu: "2"
         ports:
         - containerPort: 9933
         - containerPort: 9944
