@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: copy-pod
+  namespace: hashed-network
+spec:
+  restartPolicy: OnFailure
+  containers:
+  - name: copy-container
+    image: ubuntu:20.04
+    command: ["/bin/bash", "-c", "cp /mnt/pv-n5/chaos-bk.tar.gz /mnt/pv-n4/"]
+    volumeMounts:
+    - name: pv-volume-n5
+      mountPath: /mnt/pv-n5
+    - name: pv-volume-n4
+      mountPath: /mnt/pv-n4
+    resources:
+      requests:
+        cpu: 2
+        memory: "4G"
+      limits:
+        cpu: 2
+        memory: "4G"
+  volumes:
+  - name: pv-volume-n5
+    persistentVolumeClaim:
+      claimName: chaos-n5-pvc-chaos-n5-network-0
+  - name: pv-volume-n4
+    persistentVolumeClaim:
+      claimName: chaos-n4-pvc-chaos-n4-network-0

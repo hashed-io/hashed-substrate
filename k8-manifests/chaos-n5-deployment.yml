@@ -1,0 +1,73 @@
+# NOTE: Had to use a deployment because had to pre-populate the pv with the block history
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-n5-network
+  namespace: hashed-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chaos-n5-network
+  template:
+    metadata:
+      namespace: hashed-network
+      labels:
+        app: chaos-n5-network
+    spec:
+      containers:
+      - name: chaos-n5-network
+        imagePullPolicy: IfNotPresent
+        image: sebastianmontero/hashed-chaos-chain-node:24e037e7832107dfa6f4891d49df6d2fe42f742c
+        command: ["/var/www/hashed-substrate/scripts/run-node.sh"]
+        args: ["/var/www/hashed-substrate/resources/chaos-raw-spec.json", "/var/www/hashed/node-data"]
+        volumeMounts:
+          - name: chaos-n5-pvc
+            mountPath:  /var/www/hashed/node-data
+        env:
+          - name: BOOTNODES
+            value: "/dns/chaos-n1-network.hashed-network.svc.cluster.local/tcp/30333/p2p/12D3KooWQxwQyQ3BaCs5tweoTmHNWHbpHePZt6P9SscBps1FWsUc"
+          - name: MNEMO
+            valueFrom:
+              secretKeyRef:
+                name: chaos-n5-secrets
+                key: MNEMO
+                optional: false
+          - name: NODEKEY
+            valueFrom:
+              secretKeyRef:
+                name: chaos-n5-secrets
+                key: NODEKEY
+                optional: false
+        resources:
+          limits:
+            memory: "5G"
+            cpu: "2"
+        ports:
+        - containerPort: 9933
+        - containerPort: 9944
+        - containerPort: 30333
+      volumes:
+      - name: chaos-n5-pvc
+        persistentVolumeClaim:
+          claimName: chaos-n5-pvc-chaos-n5-network-0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  chaos-n5-network
+  namespace: hashed-network
+spec:
+  selector:
+    app:  chaos-n5-network
+  type:  ClusterIP
+  ports:
+  - name:  p2p-port
+    port:  30333
+    targetPort:  30333
+  - name:  ws-port
+    port:  9944
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9933
+    targetPort:  9933

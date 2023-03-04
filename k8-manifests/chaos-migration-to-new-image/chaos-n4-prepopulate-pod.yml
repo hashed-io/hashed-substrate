@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: prepopulate-pod-n4
+  namespace: hashed-network
+spec:
+  containers:
+  - name: prepopulate-container
+    image: ubuntu:20.04
+    command: ["sleep", "infinity"]
+    volumeMounts:
+    - name: pv-volume
+      mountPath: /mnt/pv
+    resources:
+      requests:
+        cpu: 2
+        memory: "4G"
+      limits:
+        cpu: 2
+        memory: "4G"
+  volumes:
+  - name: pv-volume
+    persistentVolumeClaim:
+      claimName: chaos-n4-pvc-chaos-n4-network-0

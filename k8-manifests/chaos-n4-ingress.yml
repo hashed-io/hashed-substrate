@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: chaos-n5-network
+  name: chaos-n4-network
   namespace: hashed-network
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -9,30 +9,30 @@ metadata:
 spec:
   tls:
   - hosts:
-    - n5.main.hashed.systems
-    secretName: chaos-n5-network
+    - n4.main.hashed.systems
+    secretName: chaos-n4-network
   rules:
-  - host: n5.main.hashed.systems
+  - host: n4.main.hashed.systems
     http:
       paths:
       - pathType: Prefix
         path: /p2p/
         backend:
           service:
-            name: chaos-n5-network
+            name: chaos-n4-network
             port:
               number: 30333
       - pathType: Prefix
         path: /
         backend:
           service:
-            name: chaos-n5-network
+            name: chaos-n4-network
             port:
               number: 9944
       - pathType: Prefix
         path: /rpc/
         backend:
           service:
-            name: chaos-n5-network
+            name: chaos-n4-network
             port:
               number: 9933
