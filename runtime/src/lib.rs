@@ -128,7 +128,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 146,
+	spec_version: 147,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -702,6 +702,9 @@ parameter_types! {
 	pub const DocNameMaxLen: u32 = 50;
 	pub const DocDescMinLen: u32 = 5;
 	pub const DocDescMaxLen: u32 = 100;
+	pub const GroupNameMinLen: u32 = 3;
+	pub const GroupNameMaxLen: u32 = 50;
+	pub const MaxMemberGroups: u32 = 100;
 }
 
 impl pallet_confidential_docs::Config for Runtime {
@@ -717,6 +720,9 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
+	type GroupNameMinLen = GroupNameMinLen;
+	type GroupNameMaxLen = GroupNameMaxLen;
+	type MaxMemberGroups = MaxMemberGroups;
 }
 
 parameter_types! {

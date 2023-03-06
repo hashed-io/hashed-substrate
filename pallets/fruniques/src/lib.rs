@@ -117,6 +117,9 @@ pub mod pallet {
 		FruniqueAlreadyRedeemed,
 		//User is not in a given collection yet
 		UserNotInCollection,
+		//User is not authorized to perform this action
+		NotAuthorized,
+
 	}
 
 	#[pallet::storage]
@@ -286,6 +289,8 @@ pub mod pallet {
 			ensure!(Self::collection_exists(&class_id), Error::<T>::CollectionNotFound);
 			// Ensure the user is in the collection
 			let user: T::AccountId = ensure_signed(origin.clone())?;
+
+			// Ensure the user has the mint permission
 			ensure!(
 				Self::is_authorized(
 					user.clone(), 
@@ -306,7 +311,7 @@ pub mod pallet {
 						&parent_info_call.collection_id,
 						&parent_info_call.parent_id
 					),
-					Error::<T>::FruniqueNotFound
+					Error::<T>::ParentNotFound
 				);
 				ensure!(
 					!<FruniqueInfo<T>>::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
@@ -316,7 +321,7 @@ pub mod pallet {
 				);
 				ensure!(
 					Self::is_authorized(
-						user, 
+						user.clone(), 
 						parent_info_call.collection_id, 
 						Permission::Mint).is_ok(),
 						Error::<T>::UserNotInCollection
@@ -350,24 +355,33 @@ pub mod pallet {
 			class_id: CollectionId,
 			instance_id: ItemId,
 		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			// Ensure the frunique exists.
 			ensure!(Self::instance_exists(&class_id, &instance_id), Error::<T>::FruniqueNotFound);
 
-			let owner: T::AccountId = ensure_signed(origin.clone())?;
+			// Ensure the caller has the permission to verify the frunique.
+			let caller: T::AccountId = ensure_signed(origin.clone())?;
+			ensure!(
+				Self::is_authorized(caller.clone(), class_id, Permission::Verify).is_ok(),
+				Error::<T>::NotAuthorized
+			);
 
 			<FruniqueInfo<T>>::try_mutate::<_, _, _, DispatchError, _>(
 				class_id,
 				instance_id,
 				|frunique_data| -> DispatchResult {
 					let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+					if frunique.verified == true || frunique.verified_by.is_some() {
+						return Err(Error::<T>::FruniqueAlreadyVerified.into());
+					}
 					frunique.verified = true;
+					frunique.verified_by = Some(caller.clone());
 					Ok(())
 				},
 			)?;
 
 			<FruniqueVerified<T>>::insert(class_id, instance_id, true);
 
-			Self::deposit_event(Event::FruniqueVerified(owner, class_id, instance_id));
+			Self::deposit_event(Event::FruniqueVerified(caller, class_id, instance_id));
 
 			Ok(())
 		}

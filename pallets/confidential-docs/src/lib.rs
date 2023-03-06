@@ -14,21 +14,20 @@ mod tests;
 // #[cfg(feature = "runtime-benchmarks")]
 // mod benchmarking;
 
-pub mod types;
 mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
 	//! Provides the backend services and metadata storage for the confidential docs solution
+	use crate::types::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use crate::types::*;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -54,13 +53,21 @@ pub mod pallet {
 		/// Maximum length for a document description
 		#[pallet::constant]
 		type DocDescMaxLen: Get<u32>;
+		/// Minimum length for a groupName
+		#[pallet::constant]
+		type GroupNameMinLen: Get<u32>;
+		/// Maximum length for a groupName
+		#[pallet::constant]
+		type GroupNameMaxLen: Get<u32>;
+		/// Maximum groups a user can belong to
+		#[pallet::constant]
+		type MaxMemberGroups: Get<u32>;
 	}
 
 	#[pallet::pallet]
 	#[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
-
 
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
@@ -69,79 +76,78 @@ pub mod pallet {
 		Blake2_256,
 		UserId, //user identifier
 		Vault<T>,
-		OptionQuery
+		OptionQuery,
 	>;
 
-  #[pallet::storage]
+	#[pallet::storage]
 	#[pallet::getter(fn public_keys)]
-	pub(super) type PublicKeys<T: Config> = StorageMap<
-		_,
-		Blake2_256,
-		T::AccountId,
-		PublicKey,
-		OptionQuery
-	>;
+	pub(super) type PublicKeys<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, PublicKey, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn users_ids)]
-	pub(super) type UserIds<T: Config> = StorageMap<
-		_,
-		Identity,
-		[u8; 32],
-		UserId,
-		OptionQuery,
-	>;
+	pub(super) type UserIds<T: Config> = StorageMap<_, Identity, [u8; 32], UserId, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn owned_docs)]
-	pub(super) type OwnedDocs<T: Config> = StorageMap<
-		_,
-		Blake2_256,
-		CID,
-		OwnedDoc<T>,
-		OptionQuery
-	>;
+	pub(super) type OwnedDocs<T: Config> = StorageMap<_, Blake2_256, CID, OwnedDoc<T>, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn owned_docs_by_owner)]
-	pub(super) type OwnedDocsByOwner<T: Config> = StorageMap<
-		_,
-		Blake2_256,
-		T::AccountId,
-		BoundedVec<CID, T::MaxOwnedDocs>,
-		ValueQuery
-	>;
+	pub(super) type OwnedDocsByOwner<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, BoundedVec<CID, T::MaxOwnedDocs>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn shared_docs)]
-	pub(super) type SharedDocs<T: Config> = StorageMap<
+	pub(super) type SharedDocs<T: Config> =
+		StorageMap<_, Blake2_256, CID, SharedDoc<T>, OptionQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn shared_docs_by_to)]
+	pub(super) type SharedDocsByTo<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, BoundedVec<CID, T::MaxSharedToDocs>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn shared_docs_by_from)]
+	pub(super) type SharedDocsByFrom<T: Config> =
+		StorageMap<_, Blake2_256, T::AccountId, BoundedVec<CID, T::MaxSharedFromDocs>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn groups)]
+	pub(super) type Groups<T: Config> = StorageMap<
 		_,
 		Blake2_256,
-		CID,
-		SharedDoc<T>,
+		// Group Account Id
+		T::AccountId,
+		Group<T>,
 		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn shared_docs_by_to)]
-	pub(super) type SharedDocsByTo<T: Config> = StorageMap<
+	#[pallet::getter(fn group_members)]
+	pub(super) type GroupMembers<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_256,
+		// Group Account Id
 		T::AccountId,
-		BoundedVec<CID, T::MaxSharedToDocs>,
-		ValueQuery
+		Blake2_256,
+		// Member Account Id
+		T::AccountId,
+		GroupMember<T>,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn shared_docs_by_from)]
-	pub(super) type SharedDocsByFrom<T: Config> = StorageMap<
+	#[pallet::getter(fn member_groups)]
+	pub(super) type MemberGroups<T: Config> = StorageMap<
 		_,
 		Blake2_256,
+		// Member Account Id
 		T::AccountId,
-		BoundedVec<CID, T::MaxSharedFromDocs>,
-		ValueQuery
+		// Group Account Ids
+		BoundedVec<T::AccountId, T::MaxMemberGroups>,
+		ValueQuery,
 	>;
-
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -158,6 +164,12 @@ pub mod pallet {
 		SharedDocUpdated(SharedDoc<T>),
 		/// Shared confidential document removed
 		SharedDocRemoved(SharedDoc<T>),
+		/// Group created
+		GroupCreated(Group<T>),
+		/// Group Member added
+		GroupMemberAdded(GroupMember<T>),
+		/// Group Member Removed
+		GroupMemberRemoved(GroupMember<T>),
 	}
 
 	#[pallet::error]
@@ -168,6 +180,8 @@ pub mod pallet {
 		DocNameTooShort,
 		/// Document Desc is too short
 		DocDescTooShort,
+		/// Group Name is too short
+		GroupNameTooShort,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
 		/// Origin is not the owner of the user id
@@ -188,6 +202,8 @@ pub mod pallet {
 		DocNotFound,
 		/// The document has already been shared
 		DocAlreadyShared,
+		/// The group already exits
+		GroupAlreadyExists,
 		/// Shared with self
 		DocSharedWithSelf,
 		/// Account has no public key
@@ -198,13 +214,26 @@ pub mod pallet {
 		ExceedMaxSharedToDocs,
 		/// Max documents shared with the "from" account has been exceeded
 		ExceedMaxSharedFromDocs,
-
-
+		/// Max groups an account can have has been exceeded
+		ExceedMaxMemberGroups,
+		/// Group does not exist
+		GroupDoesNotExist,
+		/// User does not have permission to perform the operation
+		NoPermission,
+		/// User already a group member
+		UserAlreadyGroupMember,
+		/// Group member does not exist
+		GroupMemberDoesNotExist,
+		/// Member group does not exist
+		MemberGroupDoesNotExist,
+		/// Member group already exits
+		MemberGroupAlreadyExists,
+		/// Can not add member as group owner
+		CanNotAddMemberAsGroupOwner,
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// Create/Update a vault
 		///
 		/// Creates/Updates the calling user's vault and sets their public cipher key
@@ -216,7 +245,12 @@ pub mod pallet {
 		/// - `public key`: The users cipher public key
 		/// - `cid`: The IPFS CID that contains the vaults data
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn set_vault(origin: OriginFor<T>, user_id: UserId, public_key: PublicKey, cid: CID) -> DispatchResult {
+		pub fn set_vault(
+			origin: OriginFor<T>,
+			user_id: UserId,
+			public_key: PublicKey,
+			cid: CID,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_set_vault(who, user_id, public_key, cid)
 		}
@@ -269,11 +303,13 @@ pub mod pallet {
 		/// - `origin`: The "to" user of the shared document
 		/// - `shared_doc`: Metadata related to the shared document
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn update_shared_document_metadata(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
+		pub fn update_shared_document_metadata(
+			origin: OriginFor<T>,
+			shared_doc: SharedDoc<T>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_update_shared_document_metadata(who, shared_doc)
 		}
-
 
 		/// Remove a shared document
 		///
@@ -289,6 +325,62 @@ pub mod pallet {
 			Self::do_remove_shared_document(who, cid)
 		}
 
+		/// Create a group
+		///
+		/// Creates a group that enables the sharing of documents with multiple users
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is creating the group
+		/// - `group`: AccountId of the group
+		/// - `name`: Name of the group
+		/// - `public_key`: Public key of the group
+		/// - `cid`: cid of the document containing the private key of the group
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn create_group(
+			origin: OriginFor<T>,
+			group: T::AccountId,
+			name: GroupName<T>,
+			public_key: PublicKey,
+			cid: CID,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_create_group(who, group, name, public_key, cid)
+		}
+
+		/// Add group member
+		///
+		/// Adds a member to a group only the owner and admins can add members
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is adding the member to the group
+		/// - `group_member`: GroupMember object containg the details of the member
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn add_group_member(
+			origin: OriginFor<T>,
+			group_member: GroupMember<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_add_group_member(who, group_member)
+		}
+
+		/// Remove group member
+		///
+		/// Removes a member from a group the owner can remove any member, an admin only users
+		/// added by them selfs
+		/// .
+		/// ### Parameters:
+		/// - `origin`: The user that is removing the member from the group
+		/// - `group`: AccountId of the group
+		/// - `member`: AccountId of the user to remove from the group
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn remove_group_member(
+			origin: OriginFor<T>,
+			group: T::AccountId,
+			member: T::AccountId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			Self::do_remove_group_member(who, group, member)
+		}
 
 		/// Kill all the stored data.
 		///
@@ -301,9 +393,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn kill_storage(
-			origin: OriginFor<T>,
-		) -> DispatchResult{
+		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			let _ = <Vaults<T>>::clear(1000, None);
 			let _ = <PublicKeys<T>>::clear(1000, None);
@@ -312,6 +402,9 @@ pub mod pallet {
 			let _ = <SharedDocs<T>>::clear(1000, None);
 			let _ = <SharedDocsByTo<T>>::clear(1000, None);
 			let _ = <SharedDocsByFrom<T>>::clear(1000, None);
+			let _ = <Groups<T>>::clear(1000, None);
+			let _ = <GroupMembers<T>>::clear(1000, None);
+			let _ = <MemberGroups<T>>::clear(1000, None);
 			Ok(())
 		}
 	}
