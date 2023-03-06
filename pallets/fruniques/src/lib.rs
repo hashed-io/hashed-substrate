@@ -119,6 +119,7 @@ pub mod pallet {
 		UserNotInCollection,
 		//User is not authorized to perform this action
 		NotAuthorized,
+
 	}
 
 	#[pallet::storage]
