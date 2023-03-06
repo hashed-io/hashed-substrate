@@ -482,6 +482,19 @@
 <a href="#482" id="482">482</a>
 <a href="#483" id="483">483</a>
 <a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -601,6 +614,8 @@
 		</span>FruniqueAlreadyRedeemed,
 		<span class="comment">//User is not in a given collection yet
 		</span>UserNotInCollection,
+		<span class="comment">//User is not authorized to perform this action
+		</span>NotAuthorized,
 	}
 
 	<span class="attr">#[pallet::storage]
@@ -770,7 +785,9 @@
 			</span><span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>class_id), Error::&lt;T&gt;::CollectionNotFound);
 			<span class="comment">// Ensure the user is in the collection
 			</span><span class="kw">let </span>user: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(
+
+			<span class="comment">// Ensure the user has the mint permission
+			</span><span class="macro">ensure!</span>(
 				<span class="self">Self</span>::is_authorized(
 					user.clone(), 
 					class_id, 
@@ -790,7 +807,7 @@
 						<span class="kw-2">&amp;</span>parent_info_call.collection_id,
 						<span class="kw-2">&amp;</span>parent_info_call.parent_id
 					),
-					Error::&lt;T&gt;::FruniqueNotFound
+					Error::&lt;T&gt;::ParentNotFound
 				);
 				<span class="macro">ensure!</span>(
 					!&lt;FruniqueInfo&lt;T&gt;&gt;::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
@@ -800,7 +817,7 @@
 				);
 				<span class="macro">ensure!</span>(
 					<span class="self">Self</span>::is_authorized(
-						user, 
+						user.clone(), 
 						parent_info_call.collection_id, 
 						Permission::Mint).is_ok(),
 						Error::&lt;T&gt;::UserNotInCollection
@@ -834,24 +851,33 @@
 			class_id: CollectionId,
 			instance_id: ItemId,
 		) -&gt; DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
+			<span class="comment">// Ensure the frunique exists.
+			</span><span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>class_id, <span class="kw-2">&amp;</span>instance_id), Error::&lt;T&gt;::FruniqueNotFound);
 
-			<span class="kw">let </span>owner: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="comment">// Ensure the caller has the permission to verify the frunique.
+			</span><span class="kw">let </span>caller: T::AccountId = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="macro">ensure!</span>(
+				<span class="self">Self</span>::is_authorized(caller.clone(), class_id, Permission::Verify).is_ok(),
+				Error::&lt;T&gt;::NotAuthorized
+			);
 
 			&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
 				class_id,
 				instance_id,
 				|frunique_data| -&gt; DispatchResult {
 					<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+					<span class="kw">if </span>frunique.verified == <span class="bool-val">true </span>|| frunique.verified_by.is_some() {
+						<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::FruniqueAlreadyVerified.into());
+					}
 					frunique.verified = <span class="bool-val">true</span>;
+					frunique.verified_by = <span class="prelude-val">Some</span>(caller.clone());
 					<span class="prelude-val">Ok</span>(())
 				},
 			)<span class="question-mark">?</span>;
 
 			&lt;FruniqueVerified&lt;T&gt;&gt;::insert(class_id, instance_id, <span class="bool-val">true</span>);
 
-			<span class="self">Self</span>::deposit_event(Event::FruniqueVerified(owner, class_id, instance_id));
+			<span class="self">Self</span>::deposit_event(Event::FruniqueVerified(caller, class_id, instance_id));
 
 			<span class="prelude-val">Ok</span>(())
 		}

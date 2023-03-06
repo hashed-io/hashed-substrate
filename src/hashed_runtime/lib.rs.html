@@ -1077,6 +1077,12 @@
 <a href="#1077" id="1077">1077</a>
 <a href="#1078" id="1078">1078</a>
 <a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1781,6 +1787,9 @@
 	<span class="kw">pub const </span>DocNameMaxLen: u32 = <span class="number">50</span>;
 	<span class="kw">pub const </span>DocDescMinLen: u32 = <span class="number">5</span>;
 	<span class="kw">pub const </span>DocDescMaxLen: u32 = <span class="number">100</span>;
+	<span class="kw">pub const </span>GroupNameMinLen: u32 = <span class="number">3</span>;
+	<span class="kw">pub const </span>GroupNameMaxLen: u32 = <span class="number">50</span>;
+	<span class="kw">pub const </span>MaxMemberGroups: u32 = <span class="number">100</span>;
 }
 
 <span class="kw">impl </span>pallet_confidential_docs::Config <span class="kw">for </span>Runtime {
@@ -1796,6 +1805,9 @@
 	<span class="kw">type </span>DocNameMaxLen = DocNameMaxLen;
 	<span class="kw">type </span>DocDescMinLen = DocDescMinLen;
 	<span class="kw">type </span>DocDescMaxLen = DocDescMaxLen;
+	<span class="kw">type </span>GroupNameMinLen = GroupNameMinLen;
+	<span class="kw">type </span>GroupNameMaxLen = GroupNameMaxLen;
+	<span class="kw">type </span>MaxMemberGroups = MaxMemberGroups;
 }
 
 <span class="macro">parameter_types! </span>{
