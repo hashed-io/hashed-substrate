@@ -28,7 +28,6 @@ parameter_types! {
 	pub const SS58Prefix: u8 = 42;
 }
 
-
 impl system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
@@ -64,8 +63,10 @@ parameter_types! {
 	pub const DocNameMaxLen: u32 = 30;
 	pub const DocDescMinLen: u32 = 5;
 	pub const DocDescMaxLen: u32 = 100;
+	pub const GroupNameMinLen: u32 = 3;
+	pub const GroupNameMaxLen: u32 = 30;
+	pub const MaxMemberGroups: u32 = 100;
 }
-
 
 impl pallet_confidential_docs::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
@@ -77,10 +78,15 @@ impl pallet_confidential_docs::Config for Test {
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
-	
+	type GroupNameMinLen = GroupNameMinLen;
+	type GroupNameMaxLen = GroupNameMaxLen;
+	type MaxMemberGroups = MaxMemberGroups;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	let mut ext: sp_io::TestExternalities = storage.into();
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }
