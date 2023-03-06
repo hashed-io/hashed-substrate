@@ -497,6 +497,11 @@
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -814,10 +819,10 @@
 		<span class="kw">let </span>nex_item: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(collection).unwrap_or(<span class="number">0</span>);
 		<span class="kw">let </span>item = <span class="self">Self</span>::u32_to_instance_id(nex_item);
 
-		<span class="self">Self</span>::do_mint(collection, owner, metadata.clone(), attributes)<span class="question-mark">?</span>;
+		<span class="self">Self</span>::do_mint(collection, owner.clone(), metadata.clone(), attributes)<span class="question-mark">?</span>;
 
 		<span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>parent_info) = parent_info {
-			<span class="kw">return </span><span class="self">Self</span>::do_nft_division(collection, item, metadata, parent_info);
+			<span class="kw">return </span><span class="self">Self</span>::do_nft_division(collection, item, metadata, parent_info, owner);
 		}
 
 		<span class="kw">let </span>frunique_data = FruniqueData {
@@ -828,6 +833,8 @@
 			verified: <span class="bool-val">false</span>,
 			frozen: <span class="bool-val">false</span>,
 			redeemed: <span class="bool-val">false</span>,
+			spawned_by: <span class="prelude-val">Some</span>(owner.clone()),
+			verified_by: <span class="prelude-val">None</span>,
 		};
 
 		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
@@ -842,6 +849,7 @@
 		item: T::ItemId,
 		metadata: CollectionDescription&lt;T&gt;,
 		parent_info: <span class="kw-2">&amp;</span>ParentInfo&lt;T&gt;,
+		user: T::AccountId,
 	) -&gt; DispatchResult
 	<span class="kw">where
 		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
@@ -878,6 +886,8 @@
 			verified: <span class="bool-val">false</span>,
 			frozen: <span class="bool-val">false</span>,
 			redeemed: <span class="bool-val">false</span>,
+			spawned_by: <span class="prelude-val">Some</span>(user.clone()),
+			verified_by: <span class="prelude-val">None</span>,
 		};
 
 		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
