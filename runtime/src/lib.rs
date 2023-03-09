@@ -730,7 +730,7 @@ parameter_types! {
 }
 impl pallet_rbac::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type SudoOrigin = EitherOfDiverse<
+	type RemoveOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
 	>;

@@ -30,7 +30,7 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		// ideally sudo or council
-		type SudoOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		#[pallet::constant]
 		type MaxScopesPerPallet: Get<u32>;
@@ -203,18 +203,16 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
-		// TODO: Add docs (here and in readme)
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_create_and_set_roles(origin: OriginFor<T>, pallet: IdOrVec, roles: Vec<Vec<u8>>) -> DispatchResult{
-			ensure!(T::SudoOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
+			ensure!(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
 			Self::create_and_set_roles(pallet, roles)?;
-			// TODO: emit event on success
 			Ok(())
 		}
 
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_remove_role_from_user(origin: OriginFor<T>, user: T::AccountId, pallet: IdOrVec, scope_id: ScopeId, role_id: RoleId) -> DispatchResult{
-			ensure!(T::SudoOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
+			ensure!(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
 			Self::remove_role_from_user(user, pallet, &scope_id, role_id)?;
 			// TODO: emit event on success
 			Ok(())
@@ -222,14 +220,14 @@ pub mod pallet {
 
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_create_and_set_permissions(origin: OriginFor<T>, pallet: IdOrVec, role_id: RoleId, permissions: Vec<Vec<u8>>) -> DispatchResult{
-			ensure!(T::SudoOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
+			ensure!(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
 			Self::create_and_set_permissions(pallet, role_id, permissions)?;
 			Ok(())
 		}
 
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_assign_role_to_user(origin: OriginFor<T>, user: T::AccountId, pallet: IdOrVec , scope_id: ScopeId, role_id: RoleId) -> DispatchResult{
-			ensure!(T::SudoOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
+			ensure!(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::<T>::NotAuthorized);
 			Self::assign_role_to_user(user, pallet , &scope_id, role_id)?;
 			Ok(())
 		}
