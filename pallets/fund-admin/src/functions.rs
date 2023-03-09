@@ -3312,6 +3312,10 @@ impl<T: Config> Pallet<T> {
 		let transactions = TransactionsByDrawdown::<T>::get(project_id, drawdown_id);
 		ensure!(transactions.contains(&transaction_id), Error::<T>::TransactionNotFound);
 
+		let transaction_data =
+			<TransactionsInfo<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+		ensure!(transaction_data.amount == 0, Error::<T>::InvalidTransactionAmount);
 		// Delete transaction from TransactionsInfo
 		<TransactionsInfo<T>>::remove(transaction_id);
 
