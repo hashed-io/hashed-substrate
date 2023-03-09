@@ -22,6 +22,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Update dependencies
+        run : sudo apt update
+
       - name: Set-Up
         run: sudo apt install -y git clang curl libssl-dev llvm libudev-dev protobuf-compiler
 
