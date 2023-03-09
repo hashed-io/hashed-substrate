@@ -3315,7 +3315,8 @@ impl<T: Config> Pallet<T> {
 		let transaction_data =
 			<TransactionsInfo<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
-		ensure!(transaction_data.amount == 0, Error::<T>::InvalidTransactionAmount);
+		ensure!(transaction_data.amount == 0, Error::<T>::TransactionInUse);
+
 		// Delete transaction from TransactionsInfo
 		<TransactionsInfo<T>>::remove(transaction_id);
 

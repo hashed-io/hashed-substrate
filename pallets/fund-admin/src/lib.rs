@@ -441,7 +441,7 @@ pub mod pallet {
 		EmptyExpenditureName,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
-		/// Drowdown id is not found
+		/// Drawdown id is not found
 		DrawdownNotFound,
 		/// Invalid amount
 		InvalidAmount,
@@ -451,6 +451,8 @@ pub mod pallet {
 		TransactionNotFound,
 		/// Transaction already exist
 		TransactionAlreadyExists,
+		/// Transaction is already in a drawdown
+		TransactionInUse,
 		/// Max number of transactions per drawdown reached
 		MaxTransactionsPerDrawdownReached,
 		/// Drawdown already exist
