@@ -887,10 +887,17 @@ impl<T: Config> Pallet<T> {
 			for transaction in transactions {
 				let transaction_data = <TransactionsInfo<T>>::get(transaction)
 					.ok_or(Error::<T>::TransactionNotFound)?;
-				ensure!(
-					transaction_data.expenditure_id != expenditure_id,
-					Error::<T>::ExpenditureInTransaction
-				);
+
+				if transaction_data.expenditure_id == expenditure_id {
+					// TODO delete transaction
+					ensure!(transaction_data.amount == 0, Error::<T>::ExpenditureInTransaction);
+
+					Self::do_force_delete_transaction(
+						expenditure_data.project_id,
+						drawdown,
+						transaction,
+					)?;
+				}
 			}
 		}
 
