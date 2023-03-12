@@ -26,9 +26,9 @@ spec:
             mountPath:  /var/www/hashed/hashed
         env:
           - name: BOOTNODES
-            value: "/dns/c2.p2p.hashed.network/tcp/443/ws/p2p/12D3KooWBdoiZsvYnYnWEdefordNhwSaueiiFmuKnZewomkps4sz"
-          - name: RUST_LOG
-            value: "sub-libp2p=trace"
+            value: "/dns/c2.hashed.network/tcp/443/ws/p2p/12D3KooWBdoiZsvYnYnWEdefordNhwSaueiiFmuKnZewomkps4sz"
+          # - name: RUST_LOG
+          #   value: "sub-libp2p=trace"
           # - name: RUST_LOG
           #   value: "db=trace,sync=trace,sub-libp2p=trace"
           # - name: NODEKEY

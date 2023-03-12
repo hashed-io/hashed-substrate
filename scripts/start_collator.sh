@@ -24,7 +24,6 @@ collator_args=(
     --collator
     --base-path $2/collator-data/
     --force-authoring
-    --port 40333
     --ws-port 9946
     --ws-external
     --rpc-external
@@ -42,6 +41,12 @@ fi
 
 if [[ ! -z ${PUBLIC_ADDR} ]]; then
     collator_args+=(--public-addr ${PUBLIC_ADDR})
+fi
+
+if [[ ! -z ${LISTEN_ADDR} ]]; then
+    collator_args+=(--listen-addr ${LISTEN_ADDR})
+else
+    collator_args+=(--port 40333)
 fi
 
 relay_args=(
