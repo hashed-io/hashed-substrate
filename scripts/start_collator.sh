@@ -40,6 +40,10 @@ if [[ ! -z ${BOOTNODES} ]]; then
     collator_args+=(--bootnodes ${BOOTNODES})
 fi
 
+if [[ ! -z ${PUBLIC_ADDR} ]]; then
+    collator_args+=(--public-addr ${PUBLIC_ADDR})
+fi
+
 relay_args=(
     --execution wasm
     --base-path $2/relay-data/
