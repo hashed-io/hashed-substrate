@@ -18,7 +18,7 @@ spec:
       containers:
       - name: hashed-collator-2
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-collator:06507ad6af8293dfc6ed9dc12d3ffcfa3d03a92d
+        image: sebastianmontero/hashed-substrate-collator:797e42e73f9fa11748271a9c42e23c632d61870e
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["hashed", "/var/www/hashed/hashed"]
         volumeMounts:
@@ -27,6 +27,8 @@ spec:
         env:
           - name: BOOTNODES
             value: "/dns/hashed-collator-1.hashed-network.svc.cluster.local/tcp/40333/p2p/12D3KooWKDktwLZm3PLRAVz2BXYizQgKxLn48MF2FM88wgKStZkg /ip4/108.35.254.247/tcp/40334/p2p/12D3KooWQ6h7D1aPv7PbFHiqR4JUZTWTiLitmcyBFGnjv4VBV7My"
+          - name: LISTEN_ADDR
+            value: "/ip4/0.0.0.0/tcp/40333/ws"
           # - name: RUST_LOG
           #   value: "sub-libp2p=trace"
           # value: "db=trace,sync=trace"
