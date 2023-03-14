@@ -13,10 +13,10 @@ spec:
       mountPath: /mnt/pv
     resources:
       requests:
-        cpu: 2
+        cpu: "1"
         memory: "4G"
       limits:
-        cpu: 2
+        cpu: "1"
         memory: "4G"
   volumes:
   - name: pv-volume
