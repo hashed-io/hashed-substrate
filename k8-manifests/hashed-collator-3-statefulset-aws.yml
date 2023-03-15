@@ -26,7 +26,7 @@ spec:
             mountPath:  /var/www/hashed/hashed
         env:
           - name: BOOTNODES
-            value: "/dns/c2.p2p.hashed.network/tcp/443/p2p/12D3KooWBdoiZsvYnYnWEdefordNhwSaueiiFmuKnZewomkps4sz"
+            value: "/dns/c2.p2p.hashed.network/tcp/443/wss/p2p/12D3KooWBdoiZsvYnYnWEdefordNhwSaueiiFmuKnZewomkps4sz"
           - name: LISTEN_ADDR
             value: "/ip4/0.0.0.0/tcp/40333/ws"
           - name: RUST_LOG
