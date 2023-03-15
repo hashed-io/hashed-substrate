@@ -197,7 +197,6 @@ impl<T: Config> Pallet<T> {
 		signer: T::AccountId,
 		vault_id: [u8; 32],
 		psbt: PSBT<T>,
-		is_finalized: bool,
 	) -> DispatchResult {
 		Self::vault_comprobations(vault_id, &signer)?;
 		let signature: ProposalSignatures<T> =
@@ -219,16 +218,34 @@ impl<T: Config> Pallet<T> {
 				// this should never fail, earlier vault comprobations ensure it:
 				if proof.signed_psbts.len() as u32 >= <Vaults<T>>::get(vault_id).unwrap().threshold
 				{
-					proof.status.clone_from(if is_finalized {
-						&ProposalStatus::Finalized
-					} else {
-						&ProposalStatus::ReadyToFinalize(false)
-					});
+					// set ReadyToFinalize when the threshold is reached
+					proof.status.clone_from(&ProposalStatus::ReadyToFinalize(true));
 				}
 			}
 			Ok(())
 		})?;
 		Self::deposit_event(Event::ProofPSBTStored(vault_id));
+		Ok(())
+	}
+
+	pub fn do_finalize_proof(
+		signer: T::AccountId,
+		vault_id: [u8; 32],
+		final_proof: PSBT<T>,
+	) -> DispatchResult {
+		Self::vault_comprobations(vault_id, &signer)?;
+		<ProofOfReserves<T>>::try_mutate::<_, (), DispatchError, _>(vault_id, |maybe_proof| {
+			maybe_proof.as_ref().ok_or(Error::<T>::ProofNotFound)?;
+			if let Some(proof) = maybe_proof {
+				ensure!(!proof.is_already_broadcasted(), Error::<T>::AlreadyBroadcasted);
+				ensure!(proof.can_be_finalized(), Error::<T>::NotEnoughSignatures);
+				proof.psbt.clone_from(&final_proof);
+				proof.status.clone_from(&proof.status.next_status());
+			}
+			Ok(())
+		})?;
+		Self::deposit_event(Event::ProofFinalized(vault_id));
+
 		Ok(())
 	}
 
