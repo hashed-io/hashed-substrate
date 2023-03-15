@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 
 use hashed_parachain_runtime::{AccountId, AuraId, Signature, SudoConfig, EXISTENTIAL_DEPOSIT};
-use sc_chain_spec::{ChainSpecExtension};
+use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::traits::IdentifyAccount;
 
 pub mod hashed;
 pub mod luhn;
@@ -52,7 +52,7 @@ fn _get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Publi
 		.public()
 }
 
-type AccountPublic = <Signature as Verify>::Signer;
+type AccountPublic = <Signature as sp_runtime::traits::Verify>::Signer;
 
 /// Generate collator keys from seed.
 ///
@@ -223,8 +223,8 @@ fn testnet_genesis(
 				.into_iter()
 				.map(|(acc, aura)| {
 					(
-						acc.clone(),                 // account id
-						acc,                         // validator id
+						acc.clone(),        // account id
+						acc,                // validator id
 						session_keys(aura), // session keys
 					)
 				})

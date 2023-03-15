@@ -4,6 +4,9 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::{sp_std::vec::Vec};
 use frame_system::offchain::{SigningTypes, SignedPayload};
+
+pub type Description<T> = BoundedVec<u8, <T as Config>::VaultDescriptionMaxLen>;
+pub type PSBT<T> = BoundedVec<u8, <T as Config>::PSBTMaxLen>;
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 /*--- Constants section ---*/
 //pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems";
@@ -165,6 +168,19 @@ impl<T: Config> Clone for Proposal<T>{
 		}
 	}
 }
+
+
+// Struct for holding Proof of reserve information.
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct ProofOfReserve<T: Config> {
+	pub status: ProposalStatus,
+	pub message: Description<T>,
+	pub psbt: PSBT<T>,
+	pub signed_psbts: BoundedVec<ProposalSignatures<T>, T::MaxCosignersPerVault>,
+}
+
 
 #[derive(
 	Encode,

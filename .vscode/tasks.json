@@ -4,18 +4,58 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "Run ",
+        "label": "Test",
         "type": "shell",
         "command": "cargo",
         "args": [
           "run",
           "--release",
+          "--bin",
+          "hashed",
           "--",
           "--dev"
         ],
         "group": {
-          "kind": "build",
+          "kind": "test",
           "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        },
+        "problemMatcher": [
+          {
+            "owner": "rust",
+            "fileLocation": [
+              "relative",
+              "${workspaceRoot}"
+            ],
+            "pattern": {
+              "regexp": "^(.*):(\\d+):(\\d+):\\s+(\\d+):(\\d+)\\s+(warning|error):\\s+(.*)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "endLine": 4,
+              "endColumn": 5,
+              "severity": 6,
+              "message": 7
+            }
+          }
+        ]
+      },
+      {
+        "label": "Compile",
+        "type": "shell",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--release",
+          "-p",
+          "hashed-runtime",
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": false
         },
         "presentation": {
           "reveal": "always",

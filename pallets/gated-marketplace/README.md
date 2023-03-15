@@ -9,7 +9,7 @@ Create marketplaces that require previous authorization before placing sell and 
     - [Getters](#getters)
   - [Usage](#usage)
     - [Polkadot-js CLI](#polkadot-js-cli)
-      - [Submit initial role setup (needs sudo](#submit-initial-role-setup-needs-sudo)
+      - [Submit initial role setup (needs sudo)](#submit-initial-role-setup-needs-sudo)
       - [Create a marketplace](#create-a-marketplace)
       - [Get a marketplace](#get-a-marketplace)
       - [Get what roles does an account have on a marketplace](#get-what-roles-does-an-account-have-on-a-marketplace)
@@ -110,15 +110,15 @@ This module allows to:
 ### Getters
 |Name| Type |
 |--|--|
-|`marketplaces`| storage map|
-|`applications`| storage map|
-|`applications_by_account`|double storage map|
-|`applicants_by_marketplace`|double storage map|
-|`custodians`|double storage map|
-|`offers_info` |storage map|
-|`offers_by_item`|double storage map|
-|`offers_by_account`|storage map|
-|`offers_by_marketplace`|storage map|
+|`marketplaces`| storagemap|
+|`applications`| storagemap|
+|`applications_by_account`|double storagemap|
+|`applicants_by_marketplace`|double storagemap|
+|`custodians`|double storagemap|
+|`offers_info` |storagemap|
+|`offers_by_item`|double storagemap|
+|`offers_by_account`|storagemap|
+|`offers_by_marketplace`|storagemap|
 
 
 ## Usage
@@ -149,7 +149,7 @@ The following examples will be using these prefunded accounts and testing data:
 
 ### Polkadot-js CLI
 
-#### Submit initial role setup (needs sudo
+#### Submit initial role setup (needs sudo)
 ```bash
 polkadot-js-api tx.gatedMarketplace.initialSetup --sudo --seed "//Alice"
 ```

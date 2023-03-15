@@ -7,7 +7,7 @@ members = [
     'pallets/rbac',
     'pallets/fruniques',
     'pallets/gated-marketplace',
-    'parachain-runtime',
+    # 'parachain-runtime',
     'runtime',
 ]
 [profile.release]

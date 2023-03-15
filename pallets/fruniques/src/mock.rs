@@ -22,18 +22,21 @@ construct_runtime!(
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
+		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
 	}
 );
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const ChildMaxLen: u32 = 10;
+	pub const MaxParentsInCollection: u32 = 100;
 }
+
 impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
-	type Origin = Origin;
-	type Call = Call;
+	type RuntimeOrigin = RuntimeOrigin;
+	type RuntimeCall = RuntimeCall;
 	type Index = u64;
 	type BlockNumber = u64;
 	type Hash = H256;
@@ -41,7 +44,7 @@ impl frame_system::Config for Test {
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
 	type DbWeight = ();
 	type Version = ();
@@ -56,9 +59,11 @@ impl frame_system::Config for Test {
 }
 
 impl pallet_fruniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type ChildMaxLen = ChildMaxLen;
+	type MaxParentsInCollection = MaxParentsInCollection;
+	type Rbac = RBAC;
 }
 
 parameter_types! {
@@ -73,7 +78,7 @@ parameter_types! {
 }
 
 impl pallet_uniques::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type CollectionId = u32;
 	type ItemId = u32;
 	type Currency = Balances;
@@ -102,7 +107,7 @@ parameter_types! {
 impl pallet_balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
@@ -111,7 +116,39 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = [u8; 8];
 }
 
+parameter_types! {
+	pub const MaxScopesPerPallet: u32 = 2;
+	pub const MaxRolesPerPallet: u32 = 6;
+	pub const RoleMaxLen: u32 = 25;
+	pub const PermissionMaxLen: u32 = 25;
+	pub const MaxPermissionsPerRole: u32 = 11;
+	pub const MaxRolesPerUser: u32 = 2;
+	pub const MaxUsersPerRole: u32 = 2;
+}
+impl pallet_rbac::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
+	type MaxScopesPerPallet = MaxScopesPerPallet;
+	type MaxRolesPerPallet = MaxRolesPerPallet;
+	type RoleMaxLen = RoleMaxLen;
+	type PermissionMaxLen = PermissionMaxLen;
+	type MaxPermissionsPerRole = MaxPermissionsPerRole;
+	type MaxRolesPerUser = MaxRolesPerUser;
+	type MaxUsersPerRole = MaxUsersPerRole;
+}
 // Build genesis storage according to the mock runtime.
 // pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 // 	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 // }
+// Build genesis storage according to the mock runtime.
+
+
+pub fn new_test_ext() -> sp_io::TestExternalities {
+	let balance_amount = 1_000_000 as u64;
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, balance_amount), (2, balance_amount), (3, balance_amount)],
+	}.assimilate_storage(&mut t).expect("assimilate_storage failed");
+	let mut t: sp_io::TestExternalities = t.into();
+	t.execute_with(|| Fruniques::do_initial_setup().expect("Error on configuring initial setup"));
+	t
+}

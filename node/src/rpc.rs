@@ -1,4 +1,3 @@
-
 //! A collection of node-specific RPC methods.
 //! Substrate provides the `sc-rpc` crate, which defines the core RPC layer
 //! used by Substrate nodes. This file extends those RPC definitions with
@@ -8,8 +7,8 @@
 
 use std::sync::Arc;
 
-use jsonrpsee::RpcModule;
 use hashed_runtime::{opaque::Block, AccountId, Balance, Index};
+use jsonrpsee::RpcModule;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
