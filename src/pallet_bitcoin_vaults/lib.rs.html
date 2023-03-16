@@ -825,6 +825,30 @@
 <a href="#825" id="825">825</a>
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -950,6 +974,8 @@
 		</span>ProofOfReserveStored([u8; <span class="number">32</span>]),
 		<span class="doccomment">/// A psbt was stored for the vaults Proof of reserve
 		</span>ProofPSBTStored([u8; <span class="number">32</span>]),
+		<span class="doccomment">/// All the cosigners signed the proof of reserve
+		</span>ProofFinalized([u8; <span class="number">32</span>]),
 	}
 
 	<span class="comment">// Errors inform users that something went wrong.
@@ -999,7 +1025,7 @@
 		</span>AlreadySigned,
 		<span class="doccomment">/// The proposal is already finalized or broadcasted
 		</span>PendingProposalRequired,
-		<span class="doccomment">/// The proposal signatures need to surpass the vault&#39;s threshold
+		<span class="doccomment">/// The proposal/Proof of reserve signatures need to surpass the vault&#39;s threshold
 		</span>NotEnoughSignatures,
 		<span class="doccomment">/// The proposal has structural failures
 		</span>InvalidProposal,
@@ -1007,6 +1033,8 @@
 		</span>InvalidVault,
 		<span class="doccomment">/// The proof of reserve was not found
 		</span>ProofNotFound,
+		<span class="doccomment">/// The proposal/proof of reserve was already previously broadcasted
+		</span>AlreadyBroadcasted,
 	}
 
 	<span class="comment">/*--- Onchain storage section ---*/
@@ -1479,7 +1507,6 @@
 		/// ### Parameters
 		/// - `vault_id`: the vault identifier in which the proof is
 		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
-		/// - `ìs_finalized`: the PoR was broadcasted (or not)
 		///
 		/// ### Considerations:
 		/// - Any vault member can perform this extrinsic
@@ -1490,10 +1517,31 @@
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
 			psbt: PSBT&lt;T&gt;,
-			is_finalized: bool,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_save_proof_psbt(who, vault_id, psbt, is_finalized)
+			<span class="self">Self</span>::do_save_proof_psbt(who, vault_id, psbt)
+		}
+
+		<span class="doccomment">/// Finalize proof of reserve
+		///
+		/// Updates the PoR with the final PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
+		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="kw">pub fn </span>finalize_proof(
+			origin: OriginFor&lt;T&gt;,
+			vault_id: [u8; <span class="number">32</span>],
+			psbt: PSBT&lt;T&gt;,
+		) -&gt; DispatchResult {
+			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+			<span class="self">Self</span>::do_finalize_proof(who, vault_id, psbt)
 		}
 
 		<span class="doccomment">/// Kill almost all storage
@@ -1501,7 +1549,7 @@
 		/// Use with caution!
 		///
 		/// Can only be called by root and removes All vaults and proposals
-		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
 		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
@@ -1519,7 +1567,7 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
 		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_descriptors(
 			origin: OriginFor&lt;T&gt;,
@@ -1561,7 +1609,7 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
 		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_psbts(
 			origin: OriginFor&lt;T&gt;,
@@ -1593,7 +1641,7 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
 		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_finalize_psbts(
 			origin: OriginFor&lt;T&gt;,

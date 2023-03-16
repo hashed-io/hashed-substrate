@@ -810,6 +810,23 @@
 <a href="#810" id="810">810</a>
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1009,7 +1026,6 @@
 		signer: T::AccountId,
 		vault_id: [u8; <span class="number">32</span>],
 		psbt: PSBT&lt;T&gt;,
-		is_finalized: bool,
 	) -&gt; DispatchResult {
 		<span class="self">Self</span>::vault_comprobations(vault_id, <span class="kw-2">&amp;</span>signer)<span class="question-mark">?</span>;
 		<span class="kw">let </span>signature: ProposalSignatures&lt;T&gt; =
@@ -1031,16 +1047,34 @@
 				<span class="comment">// this should never fail, earlier vault comprobations ensure it:
 				</span><span class="kw">if </span>proof.signed_psbts.len() <span class="kw">as </span>u32 &gt;= &lt;Vaults&lt;T&gt;&gt;::get(vault_id).unwrap().threshold
 				{
-					proof.status.clone_from(<span class="kw">if </span>is_finalized {
-						<span class="kw-2">&amp;</span>ProposalStatus::Finalized
-					} <span class="kw">else </span>{
-						<span class="kw-2">&amp;</span>ProposalStatus::ReadyToFinalize(<span class="bool-val">false</span>)
-					});
+					<span class="comment">// set ReadyToFinalize when the threshold is reached
+					</span>proof.status.clone_from(<span class="kw-2">&amp;</span>ProposalStatus::ReadyToFinalize(<span class="bool-val">true</span>));
 				}
 			}
 			<span class="prelude-val">Ok</span>(())
 		})<span class="question-mark">?</span>;
 		<span class="self">Self</span>::deposit_event(Event::ProofPSBTStored(vault_id));
+		<span class="prelude-val">Ok</span>(())
+	}
+
+	<span class="kw">pub fn </span>do_finalize_proof(
+		signer: T::AccountId,
+		vault_id: [u8; <span class="number">32</span>],
+		final_proof: PSBT&lt;T&gt;,
+	) -&gt; DispatchResult {
+		<span class="self">Self</span>::vault_comprobations(vault_id, <span class="kw-2">&amp;</span>signer)<span class="question-mark">?</span>;
+		&lt;ProofOfReserves&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(vault_id, |maybe_proof| {
+			maybe_proof.as_ref().ok_or(Error::&lt;T&gt;::ProofNotFound)<span class="question-mark">?</span>;
+			<span class="kw">if let </span><span class="prelude-val">Some</span>(proof) = maybe_proof {
+				<span class="macro">ensure!</span>(!proof.is_already_broadcasted(), Error::&lt;T&gt;::AlreadyBroadcasted);
+				<span class="macro">ensure!</span>(proof.can_be_finalized(), Error::&lt;T&gt;::NotEnoughSignatures);
+				proof.psbt.clone_from(<span class="kw-2">&amp;</span>final_proof);
+				proof.status.clone_from(<span class="kw-2">&amp;</span>proof.status.next_status());
+			}
+			<span class="prelude-val">Ok</span>(())
+		})<span class="question-mark">?</span>;
+		<span class="self">Self</span>::deposit_event(Event::ProofFinalized(vault_id));
+
 		<span class="prelude-val">Ok</span>(())
 	}
 
