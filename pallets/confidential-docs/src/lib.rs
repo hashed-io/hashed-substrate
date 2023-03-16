@@ -244,6 +244,7 @@ pub mod pallet {
 		/// native login or user id if using SSO
 		/// - `public key`: The users cipher public key
 		/// - `cid`: The IPFS CID that contains the vaults data
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_vault(
 			origin: OriginFor<T>,
@@ -262,6 +263,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The user that is creating/updating an owned document
 		/// - `owned_doc`: Metadata related to the owned document
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_owned_document(origin: OriginFor<T>, owned_doc: OwnedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -275,6 +277,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The owner of the document
 		/// - `cid`: of the document to be removed
+		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_owned_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -288,6 +291,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The user that is creating the shared document
 		/// - `shared_doc`: Metadata related to the shared document
+		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn share_document(origin: OriginFor<T>, shared_doc: SharedDoc<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -302,6 +306,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The "to" user of the shared document
 		/// - `shared_doc`: Metadata related to the shared document
+		#[pallet::call_index(5)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn update_shared_document_metadata(
 			origin: OriginFor<T>,
@@ -319,6 +324,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The "to" user of the shared document
 		/// - `cid`: of the document to be removed
+		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_shared_document(origin: OriginFor<T>, cid: CID) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -335,6 +341,7 @@ pub mod pallet {
 		/// - `name`: Name of the group
 		/// - `public_key`: Public key of the group
 		/// - `cid`: cid of the document containing the private key of the group
+		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_group(
 			origin: OriginFor<T>,
@@ -354,6 +361,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `origin`: The user that is adding the member to the group
 		/// - `group_member`: GroupMember object containg the details of the member
+		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn add_group_member(
 			origin: OriginFor<T>,
@@ -372,6 +380,7 @@ pub mod pallet {
 		/// - `origin`: The user that is removing the member from the group
 		/// - `group`: AccountId of the group
 		/// - `member`: AccountId of the user to remove from the group
+		#[pallet::call_index(9)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_group_member(
 			origin: OriginFor<T>,
@@ -392,6 +401,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
+		#[pallet::call_index(10)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;

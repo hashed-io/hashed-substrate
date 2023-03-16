@@ -119,7 +119,6 @@ pub mod pallet {
 		UserNotInCollection,
 		//User is not authorized to perform this action
 		NotAuthorized,
-
 	}
 
 	#[pallet::storage]
@@ -203,6 +202,7 @@ pub mod pallet {
 	where
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>, freezer: T::AccountId) -> DispatchResult {
 			//Transfer the balance
@@ -221,6 +221,7 @@ pub mod pallet {
 		/// ## Parameters
 		/// - `origin`: The origin of the transaction.
 		/// - `metadata`: The title of the collection.
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_collection(
 			origin: OriginFor<T>,
@@ -242,6 +243,7 @@ pub mod pallet {
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
 		/// - `attributes` must be a list of pairs of `key` and `value`.
+		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_attributes(
 			origin: OriginFor<T>,
@@ -277,6 +279,7 @@ pub mod pallet {
 		/// - `metadata` Title of the nft.
 		/// - `attributes` An array of attributes (key, value) to be added to the NFT.
 		/// - `parent_info` Optional value needed for the NFT division.
+		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(4))]
 		pub fn spawn(
 			origin: OriginFor<T>,
@@ -292,12 +295,9 @@ pub mod pallet {
 
 			// Ensure the user has the mint permission
 			ensure!(
-				Self::is_authorized(
-					user.clone(), 
-					class_id, 
-					Permission::Mint).is_ok(), 
-					Error::<T>::UserNotInCollection
-				);
+				Self::is_authorized(user.clone(), class_id, Permission::Mint).is_ok(),
+				Error::<T>::UserNotInCollection
+			);
 
 			let owner = user.clone();
 
@@ -314,18 +314,23 @@ pub mod pallet {
 					Error::<T>::ParentNotFound
 				);
 				ensure!(
-					!<FruniqueInfo<T>>::try_get(parent_info_call.collection_id, parent_info_call.parent_id)
-						.unwrap()
-						.redeemed,
+					!<FruniqueInfo<T>>::try_get(
+						parent_info_call.collection_id,
+						parent_info_call.parent_id
+					)
+					.unwrap()
+					.redeemed,
 					Error::<T>::ParentAlreadyRedeemed
 				);
 				ensure!(
 					Self::is_authorized(
-						user.clone(), 
-						parent_info_call.collection_id, 
-						Permission::Mint).is_ok(),
-						Error::<T>::UserNotInCollection
-					);
+						user.clone(),
+						parent_info_call.collection_id,
+						Permission::Mint
+					)
+					.is_ok(),
+					Error::<T>::UserNotInCollection
+				);
 
 				let parent_info = ParentInfo {
 					collection_id: parent_info_call.collection_id,
@@ -349,6 +354,7 @@ pub mod pallet {
 		/// - `origin` must be signed by the owner of the frunique.
 		/// - `class_id` must be a valid class of the asset class.
 		/// - `instance_id` must be a valid instance of the asset class.
+		#[pallet::call_index(5)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn verify(
 			origin: OriginFor<T>,
@@ -395,6 +401,7 @@ pub mod pallet {
 		/// This functions enables the owner of a collection to invite a user to become a collaborator.
 		/// The user will be able to create NFTs in the collection.
 		/// The user will be able to add attributes to the NFTs in the collection.
+		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn invite(
 			origin: OriginFor<T>,
@@ -421,6 +428,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it's not expected to be used in production as it can lead to unexpected results.
+		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn force_set_counter(
 			origin: OriginFor<T>,
@@ -452,6 +460,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
 		/// This function it's not expected to be used in production as it can lead to unexpected results.
+		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn force_destroy_collection(
 			origin: OriginFor<T>,
@@ -480,6 +489,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
+		#[pallet::call_index(9)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;

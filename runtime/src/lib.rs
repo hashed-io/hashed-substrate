@@ -30,11 +30,13 @@ use frame_system::{EnsureRoot, EnsureSigned};
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		AsEnsureOriginWithArg, ConstU128, EitherOfDiverse, KeyOwnerProofSystem, OnRuntimeUpgrade,
-		Randomness, StorageInfo,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, ConstU64, ConstU8, EitherOfDiverse,
+		KeyOwnerProofSystem, OnRuntimeUpgrade, Randomness, StorageInfo,
 	},
 	weights::{
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+		constants::{
+			BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
+		},
 		ConstantMultiplier, IdentityFee, Weight,
 	},
 	PalletId, StorageValue,
@@ -128,7 +130,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 148,
+	spec_version: 151,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -166,7 +168,7 @@ parameter_types! {
 	/// We allow for 2 seconds of compute with a 6 second average block time.
 	pub BlockWeights: frame_system::limits::BlockWeights =
 		frame_system::limits::BlockWeights::with_sensible_defaults(
-			(2u64 * WEIGHT_PER_SECOND).set_proof_size(u64::MAX),
+			Weight::from_parts(2u64 * WEIGHT_REF_TIME_PER_SECOND, u64::MAX),
 			NORMAL_DISPATCH_RATIO,
 		);
 	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
@@ -232,6 +234,7 @@ impl pallet_randomness_collective_flip::Config for Runtime {}
 
 parameter_types! {
 	pub const MaxAuthorities: u32 = 32;
+	pub const MaxSetIdSessionEntries: u32 = 0;
 }
 
 impl pallet_aura::Config for Runtime {
@@ -257,6 +260,7 @@ impl pallet_grandpa::Config for Runtime {
 
 	type WeightInfo = ();
 	type MaxAuthorities = MaxAuthorities;
+	type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
 parameter_types! {
@@ -519,6 +523,7 @@ parameter_types! {
 	pub const StringLimit: u32 = 50;
 	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
 	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+	pub const RemoveItemsLimit: u32 = 1000;
 }
 
 impl pallet_assets::Config for Runtime {
@@ -537,6 +542,9 @@ impl pallet_assets::Config for Runtime {
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = ();
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = ();
 }
 
 parameter_types! {
@@ -1019,6 +1027,12 @@ impl_runtime_apis! {
 			len: u32,
 		) -> pallet_transaction_payment::FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
+		}
+		fn query_weight_to_fee(weight: Weight) -> Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		fn query_length_to_fee(length: u32) -> Balance {
+			TransactionPayment::length_to_fee(length)
 		}
 	}
 
