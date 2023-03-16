@@ -682,6 +682,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - Any vault member can perform this extrinsic
 		/// - A vault signer can only sabe its PSBT once.
+		#[pallet::call_index(13)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn finalize_proof(
 			origin: OriginFor<T>,
@@ -697,7 +698,7 @@ pub mod pallet {
 		/// Use with caution!
 		///
 		/// Can only be called by root and removes All vaults and proposals
-		#[pallet::call_index(13)]
+		#[pallet::call_index(14)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
@@ -715,7 +716,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		#[pallet::call_index(14)]
+		#[pallet::call_index(15)]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
@@ -757,7 +758,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		#[pallet::call_index(15)]
+		#[pallet::call_index(16)]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_psbts(
 			origin: OriginFor<T>,
@@ -789,7 +790,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		#[pallet::call_index(16)]
+		#[pallet::call_index(17)]
 		#[pallet::weight(0)]
 		pub fn ocw_finalize_psbts(
 			origin: OriginFor<T>,
