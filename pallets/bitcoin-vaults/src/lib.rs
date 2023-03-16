@@ -123,6 +123,8 @@ pub mod pallet {
 		ProofOfReserveStored([u8; 32]),
 		/// A psbt was stored for the vaults Proof of reserve
 		ProofPSBTStored([u8; 32]),
+		/// All the cosigners signed the proof of reserve
+		ProofFinalized([u8; 32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -172,7 +174,7 @@ pub mod pallet {
 		AlreadySigned,
 		/// The proposal is already finalized or broadcasted
 		PendingProposalRequired,
-		/// The proposal signatures need to surpass the vault's threshold
+		/// The proposal/Proof of reserve signatures need to surpass the vault's threshold
 		NotEnoughSignatures,
 		/// The proposal has structural failures
 		InvalidProposal,
@@ -180,6 +182,8 @@ pub mod pallet {
 		InvalidVault,
 		/// The proof of reserve was not found
 		ProofNotFound,
+		/// The proposal/proof of reserve was already previously broadcasted
+		AlreadyBroadcasted,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -652,7 +656,6 @@ pub mod pallet {
 		/// ### Parameters
 		/// - `vault_id`: the vault identifier in which the proof is
 		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
-		/// - `ìs_finalized`: the PoR was broadcasted (or not)
 		///
 		/// ### Considerations:
 		/// - Any vault member can perform this extrinsic
@@ -663,10 +666,30 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			vault_id: [u8; 32],
 			psbt: PSBT<T>,
-			is_finalized: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			Self::do_save_proof_psbt(who, vault_id, psbt, is_finalized)
+			Self::do_save_proof_psbt(who, vault_id, psbt)
+		}
+
+		/// Finalize proof of reserve
+		///
+		/// Updates the PoR with the final PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn finalize_proof(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			psbt: PSBT<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_proof(who, vault_id, psbt)
 		}
 
 		/// Kill almost all storage
