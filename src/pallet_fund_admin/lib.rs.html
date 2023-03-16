@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fund-admin/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_fund_admin/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/fund-admin/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pallet_fund_admin/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1621,6 +1621,29 @@
 <a href="#1621" id="1621">1621</a>
 <a href="#1622" id="1622">1622</a>
 <a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -2274,7 +2297,8 @@
 		/// # Considerations:
 		/// - This function can only be called once
 		/// - This function can only be called usinf the sudo pallet
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
@@ -2294,7 +2318,8 @@
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - This function grants administrator permissions to the user from the rbac pallet
 		/// - administrator role have global scope permissions
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>sudo_add_administrator(
 			origin: OriginFor&lt;T&gt;,
 			admin: T::AccountId,
@@ -2320,7 +2345,8 @@
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site,
 		/// but they can add themselves back
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>sudo_remove_administrator(
 			origin: OriginFor&lt;T&gt;,
 			admin: T::AccountId,
@@ -2361,7 +2387,8 @@
 		/// - WARNING: This function only registers, updates, or deletes users from the site.
 		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
 		/// a user from a selected project.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>users(origin: OriginFor&lt;T&gt;, users: Users&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin need to be an admin
 
@@ -2384,7 +2411,8 @@
 		/// - This function will be called by the user account itself
 		/// - ALL parameters are optional because depends on what is being edited
 		/// - ONLY the investor role can edit or update the documents
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>users_edit_user(
 			origin: OriginFor&lt;T&gt;,
 			name: <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
@@ -2444,7 +2472,8 @@
 		/// # Note:
 		/// WARNING: If users are provided, the function will assign the users to the project, granting them
 		/// permissions in the rbac pallet.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>projects_create_project(
 			origin: OriginFor&lt;T&gt;,
 			title: FieldName,
@@ -2501,7 +2530,8 @@
 		/// * projects_assign_user
 		/// - Project can only be edited in the Started status
 		/// - Completion date must be greater than creation date
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>projects_edit_project(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2543,7 +2573,8 @@
 		/// # Note:
 		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
 		/// BE CAREFUL.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>projects_delete_project(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2587,7 +2618,8 @@
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Do not perform multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>projects_assign_user(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2636,7 +2668,8 @@
 		/// expenditure and update another one at the same time.
 		/// - Do not perform multiple actions over the same expenditure in the same call, it could
 		/// result in an unexpected behavior.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>expenditures_and_job_eligibles(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2696,7 +2729,8 @@
 		/// - After a drawdown is submitted, it can not be updated or deleted.
 		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given drawdown.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>submit_drawdown(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2780,7 +2814,8 @@
 		/// - The drawdown status will be updated to &quot;Approved&quot; after the extrinsic is executed.
 		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
 		/// new drawdown version uploaded by the builder.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>approve_drawdown(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2878,7 +2913,8 @@
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
 		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
 		/// There is no way to reject a single transaction.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>reject_drawdown(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2917,7 +2953,8 @@
 		/// - Bulkuploads does not allow individual transactions.
 		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>up_bulkupload(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -2957,7 +2994,8 @@
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the &quot;started&quot; status.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>inflation_rate(
 			origin: OriginFor&lt;T&gt;,
 			projects: ProjectsInflation&lt;T&gt;,
@@ -3006,7 +3044,8 @@
 		/// - After a revenue is submitted, it can not be updated or deleted.
 		/// - After a revenue is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given revenue.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>submit_revenue(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3068,7 +3107,8 @@
 		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
 		/// new revenue version uploaded by the builder.
 		/// - The revenue status will be updated to Approved.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>approve_revenue(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3098,7 +3138,8 @@
 		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
 		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
 		/// There is no way to reject a single revenue transaction.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">18</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>reject_revenue(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3134,7 +3175,8 @@
 		/// - Delete action will remove the existing confirming documents. It will also update the
 		/// drawdown status to &quot;Approved&quot; and the status of all of its transactions to &quot;Approved&quot;.
 		/// It does a rollback of the drawdown.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">19</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>bank_confirming_documents(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3165,7 +3207,8 @@
 		/// - The drawdown status will be rolled back to &quot;Draft&quot;.
 		/// - All of its transactions will be deleted.
 		/// - The whole drawdown will be reset to its initial state, so be careful when using this
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">20</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>reset_drawdown(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3176,7 +3219,8 @@
 			<span class="self">Self</span>::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
-		<span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		<span class="attr">#[pallet::call_index(<span class="number">21</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>reset_allen_drawdowns(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3195,7 +3239,8 @@
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">22</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="kw">let _ </span>= &lt;GlobalScope&lt;T&gt;&gt;::kill();
@@ -3232,7 +3277,8 @@
 		///
 		/// ### Considerations:
 		/// - This function is only available with sudo access.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">23</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>force_delete_transaction(
 			origin: OriginFor&lt;T&gt;,
 			project_id: ProjectId,
@@ -3245,4 +3291,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fund_admin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fund_admin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

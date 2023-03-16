@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/gated-marketplace/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pallet_gated_marketplace/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -815,6 +815,25 @@
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
 <a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -907,13 +926,8 @@
 
 	<span class="attr">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>applications)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		ApplicationId,
-		Application&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; =
+		StorageMap&lt;<span class="kw">_</span>, Identity, ApplicationId, Application&lt;T&gt;, OptionQuery&gt;;
 
 	<span class="attr">#[pallet::storage]
 	#[pallet::getter(<span class="kw">fn </span>applications_by_account)]
@@ -1161,7 +1175,8 @@
 	<span class="kw">where
 		</span>T: pallet_uniques::Config&lt;CollectionId = u32, ItemId = u32&gt;,
 	{
-		<span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+		<span class="attr">#[pallet::call_index(<span class="number">0</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
 		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
@@ -1176,7 +1191,8 @@
 		/// - `origin`: The owner of the marketplace.
 		/// - `admin`: The admin of the marketplace.
 		/// - `label`: The name of the marketplace.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_marketplace(
 			origin: OriginFor&lt;T&gt;,
 			admin: T::AccountId,
@@ -1199,7 +1215,8 @@
 		///
 		/// ### Considerations:
 		/// - Once a user is blocked, the user won&#39;t be able to join the marketplace until unblocked.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>block_user(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: MarketplaceId,
@@ -1207,9 +1224,7 @@
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="kw">match </span>block_args {
-				BlockUserArgs::BlockUser(user) =&gt; {
-					<span class="self">Self</span>::do_block_user(who, marketplace_id, user)
-				},
+				BlockUserArgs::BlockUser(user) =&gt; <span class="self">Self</span>::do_block_user(who, marketplace_id, user),
 				BlockUserArgs::UnblockUser(user) =&gt; {
 					<span class="self">Self</span>::do_unblock_user(who, marketplace_id, user)
 				},
@@ -1231,7 +1246,8 @@
 		/// - The custodian account is optional. You can apply to a marketplace without a
 		/// custodian account.
 		/// - All custodian fields are optional.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>apply(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1266,7 +1282,8 @@
 		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
 		/// - The custodian account is optional. You can replace the previous custodian.
 		/// - Since we know the application exists, we can check the current status of the application.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>reapply(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1308,7 +1325,8 @@
 		/// because some fields changes.
 		/// - If you select `Account` you need to enter the account to be accepted.
 		/// - If you select `Application` you need to enter the `application_id` to be accepted.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enroll(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1331,7 +1349,8 @@
 		///
 		/// ### Considerations:
 		/// - You can only invite users to a marketplace where you are the admin.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>invite(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1358,7 +1377,8 @@
 		/// ### Considerations:
 		/// If the user has already applied to the marketplace for that particular
 		/// authority type, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>add_authority(
 			origin: OriginFor&lt;T&gt;,
 			account: T::AccountId,
@@ -1384,7 +1404,8 @@
 		/// - This extrinsic doesn&#39;t remove the account from the marketplace,
 		/// it only removes the selected authority type for that account.
 		/// If the user doesn&#39;t have the selected authority type, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_authority(
 			origin: OriginFor&lt;T&gt;,
 			account: T::AccountId,
@@ -1411,7 +1432,8 @@
 		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
 		/// - The label must be less than or equal to `T::LabelMaxLen
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>update_label_marketplace(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1435,7 +1457,8 @@
 		/// ### Considerations:
 		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_marketplace(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1461,7 +1484,8 @@
 		/// - You can create only one sell order for each item per marketplace.
 		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
 		/// - If the selected collection doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enlist_sell_offer(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1496,7 +1520,8 @@
 		/// - You don&#39;t need to be the owner of the item to accept the sell order.
 		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
 		/// - If you don&#39;t have the enough balance to accept the sell order, it will throw an error.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -1517,7 +1542,8 @@
 		/// - Only open offers can be deleted.
 		/// - If you need to delete multiple offers for the same item, you need to
 		///  delete them one by one.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="comment">//Currently, we can only remove one offer at a time.
 			//TODO: Add support for removing multiple offers at a time.
@@ -1541,7 +1567,8 @@
 		/// - Any user can create a buy order in the marketplace.
 		/// - An item can receive multiple buy orders at a time.
 		/// - You need to have the enough balance to create the buy order.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>enlist_buy_offer(
 			origin: OriginFor&lt;T&gt;,
 			marketplace_id: [u8; <span class="number">32</span>],
@@ -1578,14 +1605,24 @@
 		/// - When an offer is accepted, all the other offers for this item are closed.
 		/// - The buyer needs to have the enough balance to accept the buy order.
 		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
 			<span class="self">Self</span>::do_take_buy_offer(who, offer_id)
 		}
 
-		<span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		<span class="doccomment">/// Redeem an item.
+		/// This extrinsic is called by the owner of the item who wants to redeem the item.
+		/// The owner of the item can ask for redemption or accept redemption.
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `marketplace_id`: The id of the marketplace where we want to redeem the item.
+		/// - `redeem`: The type of redemption.
+
+		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>redeem(
 			origin: OriginFor&lt;T&gt;,
 			marketplace: MarketplaceId,
@@ -1614,7 +1651,8 @@
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="kw">let _ </span>= &lt;Marketplaces&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
@@ -1633,4 +1671,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_gated_marketplace" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_gated_marketplace" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

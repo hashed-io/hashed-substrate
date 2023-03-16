@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `collator/src/service.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>service.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../hashed_parachain/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `collator/src/service.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>service.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hashed_parachain/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -420,23 +420,6 @@
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 </span><span class="comment">// std
@@ -453,24 +436,22 @@
 };
 <span class="kw">use </span>cumulus_client_network::BlockAnnounceValidator;
 <span class="kw">use </span>cumulus_client_service::{
-	prepare_node_config, start_collator, start_full_node,
+	build_relay_chain_interface, prepare_node_config, start_collator, start_full_node,
 	StartCollatorParams, StartFullNodeParams,
 };
 <span class="kw">use </span>cumulus_primitives_core::ParaId;
-<span class="kw">use </span>cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
-<span class="kw">use </span>cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
-<span class="kw">use </span>cumulus_relay_chain_minimal_node::build_minimal_relay_chain_node;
+<span class="kw">use </span>cumulus_relay_chain_interface::RelayChainInterface;
 
 <span class="comment">// Substrate Imports
-</span><span class="kw">use </span>sc_executor::NativeElseWasmExecutor;
+</span><span class="kw">use </span>frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE;
+<span class="kw">use </span>sc_consensus::ImportQueue;
+<span class="kw">use </span>sc_executor::NativeElseWasmExecutor;
 <span class="kw">use </span>sc_network::NetworkService;
 <span class="kw">use </span>sc_network_common::service::NetworkBlock;
 <span class="kw">use </span>sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 <span class="kw">use </span>sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 <span class="kw">use </span>sp_keystore::SyncCryptoStorePtr;
 <span class="kw">use </span>substrate_prometheus_endpoint::Registry;
-
-<span class="kw">use </span>polkadot_service::CollatorPair;
 
 <span class="doccomment">/// Native executor type.
 </span><span class="kw">pub struct </span>ParachainNativeExecutor;
@@ -493,7 +474,7 @@
 
 <span class="kw">type </span>ParachainBackend = TFullBackend&lt;Block&gt;;
 
-<span class="kw">type </span>ParachainBlockImport = TParachainBlockImport&lt;Arc&lt;ParachainClient&gt;&gt;;
+<span class="kw">type </span>ParachainBlockImport = TParachainBlockImport&lt;Block, Arc&lt;ParachainClient&gt;, ParachainBackend&gt;;
 
 <span class="doccomment">/// Starts a `ServiceBuilder` for a full service.
 ///
@@ -553,7 +534,7 @@
 		client.clone(),
 	);
 
-	<span class="kw">let </span>block_import = ParachainBlockImport::new(client.clone());
+	<span class="kw">let </span>block_import = ParachainBlockImport::new(client.clone(), backend.clone());
 
 	<span class="kw">let </span>import_queue = build_import_queue(
 		client.clone(),
@@ -575,27 +556,6 @@
 	})
 }
 
-<span class="kw">async fn </span>build_relay_chain_interface(
-	polkadot_config: Configuration,
-	parachain_config: <span class="kw-2">&amp;</span>Configuration,
-	telemetry_worker_handle: <span class="prelude-ty">Option</span>&lt;TelemetryWorkerHandle&gt;,
-	task_manager: <span class="kw-2">&amp;mut </span>TaskManager,
-	collator_options: CollatorOptions,
-	hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
-) -&gt; RelayChainResult&lt;(Arc&lt;(<span class="kw">dyn </span>RelayChainInterface + <span class="lifetime">&#39;static</span>)&gt;, <span class="prelude-ty">Option</span>&lt;CollatorPair&gt;)&gt; {
-	<span class="kw">match </span>collator_options.relay_chain_rpc_url {
-		<span class="prelude-val">Some</span>(relay_chain_url) =&gt;
-			build_minimal_relay_chain_node(polkadot_config, task_manager, relay_chain_url).<span class="kw">await</span>,
-		<span class="prelude-val">None </span>=&gt; build_inprocess_relay_chain(
-			polkadot_config,
-			parachain_config,
-			telemetry_worker_handle,
-			task_manager,
-			hwbench,
-		),
-	}
-}
-
 <span class="doccomment">/// Start a node with the given parachain `Configuration` and relay chain `Configuration`.
 ///
 /// This is the actual implementation that is abstract over the executor and the runtime api.
@@ -604,7 +564,7 @@
 	parachain_config: Configuration,
 	polkadot_config: Configuration,
 	collator_options: CollatorOptions,
-	id: ParaId,
+	para_id: ParaId,
 	hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
 ) -&gt; sc_service::error::Result&lt;(TaskManager, Arc&lt;ParachainClient&gt;)&gt; {
 	<span class="kw">let </span>parachain_config = prepare_node_config(parachain_config);
@@ -625,18 +585,16 @@
 		hwbench.clone(),
 	)
 	.<span class="kw">await
-	</span>.map_err(|e| <span class="kw">match </span>e {
-		RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) =&gt; x,
-		s =&gt; s.to_string().into(),
-	})<span class="question-mark">?</span>;
+	</span>.map_err(|e| sc_service::Error::Application(Box::new(e) <span class="kw">as </span>Box&lt;<span class="kw">_</span>&gt;))<span class="question-mark">?</span>;
 
-	<span class="kw">let </span>block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
+	<span class="kw">let </span>block_announce_validator =
+		BlockAnnounceValidator::new(relay_chain_interface.clone(), para_id);
 
 	<span class="kw">let </span>force_authoring = parachain_config.force_authoring;
 	<span class="kw">let </span>validator = parachain_config.role.is_authority();
 	<span class="kw">let </span>prometheus_registry = parachain_config.prometheus_registry().cloned();
 	<span class="kw">let </span>transaction_pool = params.transaction_pool.clone();
-	<span class="kw">let </span>import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
+	<span class="kw">let </span>import_queue_service = params.import_queue.service();
 
 	<span class="kw">let </span>(network, system_rpc_tx, tx_handler_controller, start_network) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
@@ -644,7 +602,7 @@
 			client: client.clone(),
 			transaction_pool: transaction_pool.clone(),
 			spawn_handle: task_manager.spawn_handle(),
-			import_queue: import_queue.clone(),
+			import_queue: params.import_queue,
 			block_announce_validator_builder: <span class="prelude-val">Some</span>(Box::new(|<span class="kw">_</span>| {
 				Box::new(block_announce_validator)
 			})),
@@ -682,7 +640,7 @@
 		task_manager: <span class="kw-2">&amp;mut </span>task_manager,
 		config: parachain_config,
 		keystore: params.keystore_container.sync_keystore(),
-		backend: backend.clone(),
+		backend,
 		network: network.clone(),
 		system_rpc_tx,
 		tx_handler_controller,
@@ -691,6 +649,14 @@
 
 	<span class="kw">if let </span><span class="prelude-val">Some</span>(hwbench) = hwbench {
 		sc_sysinfo::print_hwbench(<span class="kw-2">&amp;</span>hwbench);
+		<span class="comment">// Here you can check whether the hardware meets your chains&#39; requirements. Putting a link
+		// in there and swapping out the requirements for your own are probably a good idea. The
+		// requirements for a para-chain are dictated by its relay-chain.
+		</span><span class="kw">if </span>!SUBSTRATE_REFERENCE_HARDWARE.check_hardware(<span class="kw-2">&amp;</span>hwbench) &amp;&amp; validator {
+			<span class="macro">log::warn!</span>(
+				<span class="string">&quot;⚠️  The hardware does not meet the minimal requirements for role &#39;Authority&#39;.&quot;
+			</span>);
+		}
 
 		<span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>telemetry) = telemetry {
 			<span class="kw">let </span>telemetry_handle = telemetry.handle();
@@ -721,12 +687,12 @@
 			network,
 			params.keystore_container.sync_keystore(),
 			force_authoring,
-			id,
+			para_id,
 		)<span class="question-mark">?</span>;
 
 		<span class="kw">let </span>spawner = task_manager.spawn_handle();
 		<span class="kw">let </span>params = StartCollatorParams {
-			para_id: id,
+			para_id,
 			block_status: client.clone(),
 			announce_block,
 			client: client.clone(),
@@ -734,7 +700,7 @@
 			relay_chain_interface,
 			spawner,
 			parachain_consensus,
-			import_queue,
+			import_queue: import_queue_service,
 			collator_key: collator_key.expect(<span class="string">&quot;Command line arguments do not allow this. qed&quot;</span>),
 			relay_chain_slot_duration,
 		};
@@ -745,10 +711,10 @@
 			client: client.clone(),
 			announce_block,
 			task_manager: <span class="kw-2">&amp;mut </span>task_manager,
-			para_id: id,
+			para_id,
 			relay_chain_interface,
 			relay_chain_slot_duration,
-			import_queue,
+			import_queue: import_queue_service,
 		};
 
 		start_full_node(params)<span class="question-mark">?</span>;
@@ -808,7 +774,7 @@
 	sync_oracle: Arc&lt;NetworkService&lt;Block, Hash&gt;&gt;,
 	keystore: SyncCryptoStorePtr,
 	force_authoring: bool,
-	id: ParaId,
+	para_id: ParaId,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>ParachainConsensus&lt;Block&gt;&gt;, sc_service::Error&gt; {
 	<span class="kw">let </span>slot_duration = cumulus_client_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
 
@@ -830,7 +796,7 @@
 						relay_parent,
 						<span class="kw-2">&amp;</span>relay_chain_interface,
 						<span class="kw-2">&amp;</span>validation_data,
-						id,
+						para_id,
 					)
 					.<span class="kw">await</span>;
 				<span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::from_system_time();
@@ -871,10 +837,10 @@
 	parachain_config: Configuration,
 	polkadot_config: Configuration,
 	collator_options: CollatorOptions,
-	id: ParaId,
+	para_id: ParaId,
 	hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
 ) -&gt; sc_service::error::Result&lt;(TaskManager, Arc&lt;ParachainClient&gt;)&gt; {
-	start_node_impl(parachain_config, polkadot_config, collator_options, id, hwbench).<span class="kw">await
+	start_node_impl(parachain_config, polkadot_config, collator_options, para_id, hwbench).<span class="kw">await
 </span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

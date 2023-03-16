@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `pallets/bitcoin-vaults/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pallet_bitcoin_vaults/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -809,6 +809,22 @@
 <a href="#809" id="809">809</a>
 <a href="#810" id="810">810</a>
 <a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1151,7 +1167,8 @@
 		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
 		</span><span class="kw">pub fn </span>set_xpub(origin: OriginFor&lt;T&gt;, xpub: BoundedVec&lt;u8, T::XPubLen&gt;) -&gt; DispatchResult {
 			<span class="comment">// Check that the extrinsic was signed and get the signer.
 			</span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
@@ -1192,7 +1209,8 @@
 		///
 		/// This tx does not takes any parameters.
 		///
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
 		</span><span class="kw">pub fn </span>remove_xpub(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 			<span class="comment">// The xpub must exists
@@ -1227,7 +1245,8 @@
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
 		///
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_vault(
 			origin: OriginFor&lt;T&gt;,
 			threshold: u32,
@@ -1276,7 +1295,8 @@
 		/// ### Considerations:
 		/// - Only the vault owner can perform this extrinsic
 		///
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_vault(origin: OriginFor&lt;T&gt;, vault_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
@@ -1295,7 +1315,8 @@
 		///
 		/// ### Considerations
 		/// - Please ensure the recipient address is a valid mainnet address.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>propose(
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
@@ -1329,7 +1350,8 @@
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
 		///
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>remove_proposal(origin: OriginFor&lt;T&gt;, proposal_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 			<span class="kw">let </span>proposal = &lt;Proposals&lt;T&gt;&gt;::get(proposal_id).ok_or(Error::&lt;T&gt;::ProposalNotFound)<span class="question-mark">?</span>;
@@ -1351,7 +1373,8 @@
 		/// ### Considerations
 		/// - Ensure the new url is valid.
 		/// - The url has a maximum length of 32 bytes
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>set_bdk_url(
 			origin: OriginFor&lt;T&gt;,
 			new_url: BoundedVec&lt;u8, ConstU32&lt;<span class="number">32</span>&gt;&gt;,
@@ -1373,7 +1396,8 @@
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - A user can only sign a proposal once
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>save_psbt(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1395,7 +1419,8 @@
 		/// - If successful, this process cannot be undone
 		/// - The proposal must have a valid PSBT
 		/// - Any vault member can perform this extrinsic
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>finalize_psbt(
 			origin: OriginFor&lt;T&gt;,
 			proposal_id: [u8; <span class="number">32</span>],
@@ -1416,7 +1441,8 @@
 		/// - If successful, this process cannot be undone
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>broadcast_psbt(origin: OriginFor&lt;T&gt;, proposal_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 			<span class="self">Self</span>::do_finalize_psbt(who, proposal_id, <span class="bool-val">true</span>)
@@ -1434,7 +1460,8 @@
 		/// ### Considerations:
 		/// - Any vault member can perform this extrinsic
 		/// - A vault can only have a PoR at a time.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>create_proof(
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
@@ -1457,7 +1484,8 @@
 		/// ### Considerations:
 		/// - Any vault member can perform this extrinsic
 		/// - A vault signer can only sabe its PSBT once.
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>save_proof_psbt(
 			origin: OriginFor&lt;T&gt;,
 			vault_id: [u8; <span class="number">32</span>],
@@ -1473,7 +1501,8 @@
 		/// Use with caution!
 		///
 		/// Can only be called by root and removes All vaults and proposals
-		</span><span class="attr">#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
 			<span class="kw">let _ </span>= &lt;Xpubs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
@@ -1490,7 +1519,8 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_descriptors(
 			origin: OriginFor&lt;T&gt;,
 			payload: VaultsPayload&lt;T::Public&gt;,
@@ -1531,7 +1561,8 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_insert_psbts(
 			origin: OriginFor&lt;T&gt;,
 			payload: ProposalsPayload&lt;T::Public&gt;,
@@ -1562,7 +1593,8 @@
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
-		</span><span class="attr">#[pallet::weight(<span class="number">0</span>)]
+		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+		#[pallet::weight(<span class="number">0</span>)]
 		</span><span class="kw">pub fn </span>ocw_finalize_psbts(
 			origin: OriginFor&lt;T&gt;,
 			payload: ProposalsPayload&lt;T::Public&gt;, <span class="comment">// here the payload
@@ -1621,4 +1653,4 @@
 	}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

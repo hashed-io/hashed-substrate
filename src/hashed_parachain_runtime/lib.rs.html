@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `parachain-runtime/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../hashed_parachain_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `parachain-runtime/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hashed_parachain_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1324,6 +1324,44 @@
 <a href="#1324" id="1324">1324</a>
 <a href="#1325" id="1325">1325</a>
 <a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1354,18 +1392,20 @@
 <span class="kw">use </span>sp_version::RuntimeVersion;
 
 <span class="kw">use </span>frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
 	dispatch::DispatchClass,
+	parameter_types,
 	traits::{
-		AsEnsureOriginWithArg, ConstU128, ConstU32, EitherOfDiverse,
-		Everything, InstanceFilter, WithdrawReasons,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, EitherOfDiverse, Everything, InstanceFilter,
+		WithdrawReasons,
 	},
 	weights::{
-		constants::WEIGHT_PER_SECOND, ConstantMultiplier, Weight,
-		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
+		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
+		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
 	PalletId, RuntimeDebug,
 };
+
 <span class="kw">use </span>frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot, EnsureSigned,
@@ -1437,7 +1477,8 @@
 );
 
 <span class="doccomment">/// Unchecked extrinsic type as expected by this runtime.
-</span><span class="kw">pub type </span>UncheckedExtrinsic = generic::UncheckedExtrinsic&lt;Address, RuntimeCall, Signature, SignedExtra&gt;;
+</span><span class="kw">pub type </span>UncheckedExtrinsic =
+	generic::UncheckedExtrinsic&lt;Address, RuntimeCall, Signature, SignedExtra&gt;;
 
 <span class="doccomment">/// Extrinsic type that has already been checked.
 </span><span class="kw">pub type </span>CheckedExtrinsic = generic::CheckedExtrinsic&lt;AccountId, RuntimeCall, SignedExtra&gt;;
@@ -1552,7 +1593,10 @@
 </span><span class="kw">const </span>NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(<span class="number">75</span>);
 
 <span class="doccomment">/// We allow for 0.5 of a second of compute with a 12 second average block time.
-</span><span class="kw">const </span>MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND.div(<span class="number">2</span>);
+</span><span class="kw">const </span>MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
+	WEIGHT_REF_TIME_PER_SECOND.saturating_div(<span class="number">2</span>),
+	cumulus_primitives_core::relay_chain::MAX_POV_SIZE <span class="kw">as </span>u64,
+);
 
 <span class="doccomment">/// The version information used to identify this runtime when compiled natively.
 </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -1660,8 +1704,6 @@
 
 <span class="kw">impl </span>pallet_authorship::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>FindAuthor = pallet_session::FindAccountFromAuthorIndex&lt;<span class="self">Self</span>, Aura&gt;;
-	<span class="kw">type </span>UncleGenerations = UncleGenerations;
-	<span class="kw">type </span>FilterUncle = ();
 	<span class="kw">type </span>EventHandler = (CollatorSelection,);
 }
 
@@ -1803,10 +1845,7 @@
 					// | RuntimeCall::Elections(..)
 					</span>| RuntimeCall::Treasury(..)
 			),
-			ProxyType::Marketplaces =&gt; <span class="macro">matches!</span>(
-				c,
-				RuntimeCall::GatedMarketplace(..)
-			),
+			ProxyType::Marketplaces =&gt; <span class="macro">matches!</span>(c, RuntimeCall::GatedMarketplace(..)),
 		}
 	}
 	<span class="kw">fn </span>is_superset(<span class="kw-2">&amp;</span><span class="self">self</span>, o: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
@@ -2030,6 +2069,7 @@
 	<span class="kw">pub const </span>StringLimit: u32 = <span class="number">50</span>;
 	<span class="kw">pub const </span>MetadataDepositBase: Balance = <span class="number">10 </span>* DOLLARS;
 	<span class="kw">pub const </span>MetadataDepositPerByte: Balance = <span class="number">1 </span>* DOLLARS;
+	<span class="kw">pub const </span>RemoveItemsLimit: u32 = <span class="number">1000</span>;
 }
 
 <span class="kw">impl </span>pallet_assets::Config <span class="kw">for </span>Runtime {
@@ -2048,6 +2088,9 @@
 	<span class="kw">type </span>Freezer = ();
 	<span class="kw">type </span>Extra = ();
 	<span class="kw">type </span>WeightInfo = ();
+	<span class="kw">type </span>RemoveItemsLimit = RemoveItemsLimit;
+	<span class="kw">type </span>AssetIdParameter = u32;
+	<span class="kw">type </span>CallbackHandle = ();
 }
 
 <span class="macro">parameter_types! </span>{
@@ -2070,7 +2113,7 @@
 	<span class="kw">type </span>RuntimeCall = RuntimeCall;
 	<span class="kw">type </span>WhitelistOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>DispatchWhitelistedOrigin = EnsureRoot&lt;AccountId&gt;;
-	<span class="kw">type </span>PreimageProvider = Preimage;
+	<span class="kw">type </span>Preimages = Preimage;
 	<span class="kw">type </span>WeightInfo = pallet_whitelist::weights::SubstrateWeight&lt;Runtime&gt;;
 }
 
@@ -2160,6 +2203,7 @@
 	<span class="kw">type </span>ControllerOrigin = EnsureRoot&lt;AccountId&gt;;
 	<span class="kw">type </span>ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
 	<span class="kw">type </span>WeightInfo = ();
+	<span class="kw">type </span>PriceForSiblingDelivery = ();
 }
 
 <span class="kw">impl </span>cumulus_pallet_dmp_queue::Config <span class="kw">for </span>Runtime {
@@ -2245,7 +2289,10 @@
 		public: &lt;Signature <span class="kw">as </span>sp_runtime::traits::Verify&gt;::Signer,
 		account: AccountId,
 		index: Index,
-	) -&gt; <span class="prelude-ty">Option</span>&lt;(RuntimeCall, &lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload)&gt; {
+	) -&gt; <span class="prelude-ty">Option</span>&lt;(
+		RuntimeCall,
+		&lt;UncheckedExtrinsic <span class="kw">as </span>sp_runtime::traits::Extrinsic&gt;::SignaturePayload,
+	)&gt; {
 		<span class="kw">let </span>period = BlockHashCount::get() <span class="kw">as </span>u64;
 		<span class="kw">let </span>current_block = System::block_number().saturated_into::&lt;u64&gt;().saturating_sub(<span class="number">1</span>);
 		<span class="kw">let </span>tip = <span class="number">0</span>;
@@ -2388,7 +2435,7 @@
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event&lt;T&gt;} = <span class="number">11</span>,
 
 		<span class="comment">// Collator support. The order of these 4 are important and shall not change.
-		</span>Authorship: pallet_authorship::{Pallet, Call, Storage} = <span class="number">20</span>,
+		</span>Authorship: pallet_authorship::{Pallet, Storage} = <span class="number">20</span>,
 		CollatorSelection: pallet_collator_selection::{Pallet, Call, Storage, Event&lt;T&gt;, Config&lt;T&gt;} = <span class="number">21</span>,
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config&lt;T&gt;} = <span class="number">22</span>,
 		Aura: pallet_aura::{Pallet, Storage, Config&lt;T&gt;} = <span class="number">23</span>,
@@ -2549,6 +2596,35 @@
 		) -&gt; pallet_transaction_payment::FeeDetails&lt;Balance&gt; {
 			TransactionPayment::query_fee_details(uxt, len)
 		}
+		<span class="kw">fn </span>query_weight_to_fee(weight: Weight) -&gt; Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		<span class="kw">fn </span>query_length_to_fee(length: u32) -&gt; Balance {
+			TransactionPayment::length_to_fee(length)
+		}
+	}
+
+	<span class="kw">impl </span>pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi&lt;Block, Balance, RuntimeCall&gt;
+		<span class="kw">for </span>Runtime
+	{
+		<span class="kw">fn </span>query_call_info(
+			call: RuntimeCall,
+			len: u32,
+		) -&gt; pallet_transaction_payment::RuntimeDispatchInfo&lt;Balance&gt; {
+			TransactionPayment::query_call_info(call, len)
+		}
+		<span class="kw">fn </span>query_call_fee_details(
+			call: RuntimeCall,
+			len: u32,
+		) -&gt; pallet_transaction_payment::FeeDetails&lt;Balance&gt; {
+			TransactionPayment::query_call_fee_details(call, len)
+		}
+		<span class="kw">fn </span>query_weight_to_fee(weight: Weight) -&gt; Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		<span class="kw">fn </span>query_length_to_fee(length: u32) -&gt; Balance {
+			TransactionPayment::length_to_fee(length)
+		}
 	}
 
 	<span class="kw">impl </span>cumulus_primitives_core::CollectCollationInfo&lt;Block&gt; <span class="kw">for </span>Runtime {
@@ -2651,4 +2727,4 @@
 	CheckInherents = CheckInherents,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
