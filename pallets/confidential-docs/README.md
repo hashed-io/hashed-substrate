@@ -18,9 +18,15 @@ Provides the backend services and metadata storage for the confidential docs sol
       - [Get a shared confidential document by CID](#get-a-shared-confidential-document-by-cid)
       - [Update a shared confidential document's metadata](#update-a-shared-confidential-documents-metadata)
       - [Remove a shared confidential document](#remove-a-shared-confidential-document)
+      - [Create a group](#create-a-group)
+      - [Add a group member](#add-a-group-member)
+      - [Remove a group member](#remove-a-group-member)
+      - [Get a group](#get-a-group)
+      - [Get a group member](#get-a-group-member)
+      - [Get groups a member belongs to](#get-groups-a-member-belongs-to)
 ## Overview
 
-This module allows a user to: 
+This module allows a user to:
 - Create their vault. The vault stores the cipher private key used to cipher the user documents. The way the user vault is ciphered depends on the login method used by the user.
 - Create on owned confidential document that only the user has access to
 - Update the metadata of an owned confidential document
@@ -35,6 +41,9 @@ This module allows a user to:
 - `share_document` Creates a shared document
 - `update_shared_document_metadata` Updates share document metadata
 - `remove_shared_document` Removes a shared document
+- `create_group` Creates a group that enables the sharing of documents with multiple users
+- `add_group_member` Adds a member to a group only the owner and admins can add members
+- `remove_group_member` Removes a member from a group the owner can remove any member, an admin only users added by them selfs
 
 ### Getters
 - `vaults`
@@ -44,6 +53,9 @@ This module allows a user to:
 - `shared_docs`
 - `shared_docs_by_to`
 - `shared_docs_by_from`
+- `groups`
+- `group_members`
+- `member_groups`
 
 ## Usage
 
@@ -52,7 +64,7 @@ The following examples will be using these prefunded accounts and testing data:
 ```bash
 # Alice's mnemonic seed
 "//Alice"
-# Alice's public address 
+# Alice's public address
 "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
 
 # Bob's mnemonic seed
@@ -74,8 +86,8 @@ const vault = await api.query.confidentialDocs.vaults(userId);
   console.log(vault.toHuman());
 ```
 ```bash
-# Output should look like this: 
-{ 
+# Output should look like this:
+{
   cid: 'QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr',
   owner: '5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua'
 }
@@ -87,7 +99,7 @@ const publicKey = await api.query.confidentialDocs.publicKeys(address);
   console.log(markets.toHuman());
 ```
 ```bash
-# Output should look like this: 
+# Output should look like this:
 '0xabe44a53e2c1a5c7fa2f920338136d0ddc3aba23eacaf708e3871bc856a34b75'
 ```
 
@@ -107,7 +119,7 @@ const ownedDoc = await api.query.confidentialDocs.ownedDocs(cid);
   console.log(ownedDoc.toHuman());
 ```
 ```bash
-# Output should look like this: 
+# Output should look like this:
 {
   "cid": "QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr",
   "name": "name",
@@ -138,7 +150,7 @@ const sharedDoc = await api.query.confidentialDocs.sharedDocs(cid);
   console.log(sharedDoc.toHuman());
 ```
 ```bash
-# Output should look like this: 
+# Output should look like this:
 {
      "cid": "QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr",
      "name": "name",
@@ -160,4 +172,68 @@ const response = await api.tx.confidentialDocs.updateSharedDocumentMetadata({
 #### Remove a shared confidential document
 ```js
 const response = await api.tx.confidentialDocs.removeSharedDocument("QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr").signAndSend(alice);
+```
+
+#### Create a group
+```js
+const response = await api.tx.confidentialDocs.createGroup(group, name, public_key, cid).signAndSend(alice);
+```
+
+#### Add a group member
+```js
+const response = await api.tx.confidentialDocs.addGroupMember({
+     "cid": "QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr",
+     "group": "5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua",
+     "member": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG",
+     "authorizer": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG",
+     "role": "Member"
+}).signAndSend(alice);
+```
+
+#### Remove a group member
+```js
+const response = await api.tx.confidentialDocs.removeGroupMember(group, member).signAndSend(alice);
+```
+
+#### Get a group
+```js
+const group = await api.query.confidentialDocs.groups(group);
+  console.log(group.toHuman());
+```
+```bash
+# Output should look like this:
+{
+     "name": "name",
+     "group": "5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua",
+     "creator": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG"
+}
+```
+
+#### Get a group member
+```js
+const groupMember = await api.query.confidentialDocs.groupMembers(member);
+  console.log(groupMember.toHuman());
+```
+```bash
+# Output should look like this:
+{
+     "cid": "QmeHEb5TF4zkP2H6Mg5TcrvDs5egPCJgWFBB7YZaLmK7jr",
+     "group": "5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua",
+     "member": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG",
+     "authorizer": "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG",
+     "role": "Member"
+}
+```
+
+#### Get groups a member belongs to
+```js
+const memberGroups = await api.query.confidentialDocs.memberGroups(member);
+  console.log(memberGroups.toHuman());
+```
+```bash
+# Output should look like this:
+[
+  "5FSuxe2q7qCYKie8yqmM56U4ovD1YtBb3DoPzGKjwZ98vxua",
+  "5FWtfhKTuGKm9yWqzApwTfiUL4UPWukJzEcCTGYDiYHsdKaG"
+]
 ```

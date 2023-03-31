@@ -65,6 +65,7 @@ parameter_types! {
 	pub const MaxAuthsPerMarket: u32 = 3;
 	pub const MaxRolesPerAuth : u32 = 1;
 	pub const MaxApplicants: u32 = 3;
+	pub const MaxBlockedUsersPerMarket: u32 = 100;
 	pub const NotesMaxLen: u32 = 256;
 	pub const MaxFeedbackLen: u32 = 256;
 	pub const NameMaxLen: u32 = 100;
@@ -79,6 +80,7 @@ impl pallet_gated_marketplace::Config for Test {
 	type MaxAuthsPerMarket = MaxAuthsPerMarket;
 	type MaxRolesPerAuth = MaxRolesPerAuth;
 	type MaxApplicants = MaxApplicants;
+	type MaxBlockedUsersPerMarket = MaxBlockedUsersPerMarket;
 	type LabelMaxLen = LabelMaxLen;
 	type NotesMaxLen = NotesMaxLen;
 	type MaxFeedbackLen = MaxFeedbackLen;
@@ -159,7 +161,7 @@ parameter_types! {
 	pub const MaxRolesPerPallet: u32 = 6;
 	pub const RoleMaxLen: u32 = 25;
 	pub const PermissionMaxLen: u32 = 25;
-	pub const MaxPermissionsPerRole: u32 = 11;
+	pub const MaxPermissionsPerRole: u32 = 30;
 	pub const MaxRolesPerUser: u32 = 2;
 	pub const MaxUsersPerRole: u32 = 2;
 }

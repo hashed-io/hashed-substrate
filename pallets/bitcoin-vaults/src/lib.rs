@@ -119,6 +119,12 @@ pub mod pallet {
 		ProposalFinalized([u8; 32], T::AccountId),
 		/// A proposal tx has been inserted by an OCW
 		ProposalTxIdStored([u8; 32]),
+		/// A proof of reserve was stored for the vault
+		ProofOfReserveStored([u8; 32]),
+		/// A psbt was stored for the vaults Proof of reserve
+		ProofPSBTStored([u8; 32]),
+		/// All the cosigners signed the proof of reserve
+		ProofFinalized([u8; 32]),
 	}
 
 	// Errors inform users that something went wrong.
@@ -168,12 +174,16 @@ pub mod pallet {
 		AlreadySigned,
 		/// The proposal is already finalized or broadcasted
 		PendingProposalRequired,
-		/// The proposal signatures need to surpass the vault's threshold
+		/// The proposal/Proof of reserve signatures need to surpass the vault's threshold
 		NotEnoughSignatures,
 		/// The proposal has structural failures
 		InvalidProposal,
 		/// This vault cant take proposals due to structural failures
 		InvalidVault,
+		/// The proof of reserve was not found
+		ProofNotFound,
+		/// The proposal/proof of reserve was already previously broadcasted
+		AlreadyBroadcasted,
 	}
 
 	/*--- Onchain storage section ---*/
@@ -214,6 +224,7 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// Stores vaults
 	#[pallet::storage]
 	#[pallet::getter(fn vaults)]
 	pub(super) type Vaults<T: Config> = StorageMap<
@@ -232,6 +243,18 @@ pub mod pallet {
 		T::AccountId,                              // signer
 		BoundedVec<[u8; 32], T::MaxVaultsPerUser>, // vault ids
 		ValueQuery,
+	>;
+
+	/// Stores vaults proof-of-reserve
+	///
+	#[pallet::storage]
+	#[pallet::getter(fn proof_of_reserve)]
+	pub(super) type ProofOfReserves<T: Config> = StorageMap<
+		_,
+		Identity,
+		[u8; 32], //vault_id
+		ProofOfReserve<T>,
+		OptionQuery,
 	>;
 
 	#[pallet::type_value]
@@ -321,6 +344,7 @@ pub mod pallet {
 		/// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
 		/// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
 		/// a new one.
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn set_xpub(origin: OriginFor<T>, xpub: BoundedVec<u8, T::XPubLen>) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
@@ -362,6 +386,7 @@ pub mod pallet {
 		///
 		/// This tx does not takes any parameters.
 		///
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
 		pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
@@ -397,6 +422,7 @@ pub mod pallet {
 		/// ### Considerations
 		/// - Do not include the vault owner on the `cosigners` list.
 		///
+		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn create_vault(
 			origin: OriginFor<T>,
@@ -446,6 +472,7 @@ pub mod pallet {
 		/// ### Considerations:
 		/// - Only the vault owner can perform this extrinsic
 		///
+		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_vault(origin: OriginFor<T>, vault_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
@@ -465,6 +492,7 @@ pub mod pallet {
 		///
 		/// ### Considerations
 		/// - Please ensure the recipient address is a valid mainnet address.
+		#[pallet::call_index(5)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn propose(
 			origin: OriginFor<T>,
@@ -499,6 +527,7 @@ pub mod pallet {
 		/// ### Parameters:
 		/// - `proposal_id`: the proposal identifier
 		///
+		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn remove_proposal(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
@@ -521,6 +550,7 @@ pub mod pallet {
 		/// ### Considerations
 		/// - Ensure the new url is valid.
 		/// - The url has a maximum length of 32 bytes
+		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn set_bdk_url(
 			origin: OriginFor<T>,
@@ -543,6 +573,7 @@ pub mod pallet {
 		/// ### Considerations
 		/// - If successful, this process cannot be undone
 		/// - A user can only sign a proposal once
+		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn save_psbt(
 			origin: OriginFor<T>,
@@ -565,6 +596,7 @@ pub mod pallet {
 		/// - If successful, this process cannot be undone
 		/// - The proposal must have a valid PSBT
 		/// - Any vault member can perform this extrinsic
+		#[pallet::call_index(9)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn finalize_psbt(
 			origin: OriginFor<T>,
@@ -586,10 +618,79 @@ pub mod pallet {
 		/// - If successful, this process cannot be undone
 		/// - The proposal must be finalized already
 		/// - Any vault member can perform this extrinsic
+		#[pallet::call_index(10)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
 			Self::do_finalize_psbt(who, proposal_id, true)
+		}
+
+		/// Create Proof of Reserve
+		///
+		/// Stores a PoR for a defined vault.
+		///
+		/// ### Parameters:
+		/// - `vault_id`: the vault identifier in which the proof will be inserted
+		/// - `message`: the message to be taken into account to generate the PoR PSBT
+		/// - `psbt`: the psbt generated from bdk
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault can only have a PoR at a time.
+		#[pallet::call_index(11)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn create_proof(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			message: Description<T>,
+			psbt: PSBT<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_create_proof(who, vault_id, message, psbt)
+		}
+
+		/// Save Proof of reserve PSBT
+		///
+		/// Updates the PoR with a new PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
+		#[pallet::call_index(12)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn save_proof_psbt(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			psbt: PSBT<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_save_proof_psbt(who, vault_id, psbt)
+		}
+
+		/// Finalize proof of reserve
+		///
+		/// Updates the PoR with the final PSBT
+		///
+		/// ### Parameters
+		/// - `vault_id`: the vault identifier in which the proof is
+		/// - `psbt`: the new psbt to insert, the signer will be linked to it.
+		///
+		/// ### Considerations:
+		/// - Any vault member can perform this extrinsic
+		/// - A vault signer can only sabe its PSBT once.
+		#[pallet::call_index(13)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn finalize_proof(
+			origin: OriginFor<T>,
+			vault_id: [u8; 32],
+			psbt: PSBT<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			Self::do_finalize_proof(who, vault_id, psbt)
 		}
 
 		/// Kill almost all storage
@@ -597,6 +698,7 @@ pub mod pallet {
 		/// Use with caution!
 		///
 		/// Can only be called by root and removes All vaults and proposals
+		#[pallet::call_index(14)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
@@ -606,6 +708,7 @@ pub mod pallet {
 			let _ = <ProposalsByVault<T>>::clear(1000, None);
 			let _ = <Vaults<T>>::clear(1000, None);
 			let _ = <VaultsBySigner<T>>::clear(1000, None);
+			let _ = <ProofOfReserves<T>>::clear(1000, None);
 			Ok(())
 		}
 
@@ -613,6 +716,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
+		#[pallet::call_index(15)]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_descriptors(
 			origin: OriginFor<T>,
@@ -654,6 +758,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
+		#[pallet::call_index(16)]
 		#[pallet::weight(0)]
 		pub fn ocw_insert_psbts(
 			origin: OriginFor<T>,
@@ -685,6 +790,7 @@ pub mod pallet {
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
 		///
+		#[pallet::call_index(17)]
 		#[pallet::weight(0)]
 		pub fn ocw_finalize_psbts(
 			origin: OriginFor<T>,

@@ -17,6 +17,9 @@ jobs:
       - name: Rust versions
         run:  rustup show
 
+      - name: Update dependencies
+        run : sudo apt update
+
       - name: Set-Up
         run: sudo apt install -y git clang curl libssl-dev llvm libudev-dev protobuf-compiler
 

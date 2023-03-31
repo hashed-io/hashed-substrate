@@ -13,36 +13,40 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{pallet_prelude::{*, ValueQuery}, BoundedVec};
+	use frame_support::traits::{Currency, Time};
+	use frame_support::{
+		pallet_prelude::{ValueQuery, *},
+		BoundedVec,
+	};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
-	use frame_support::traits::{Currency, Time};
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
-	pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	pub type BalanceOf<T> =
+		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
-		+ Default
-		+ Scale<Self::BlockNumber, Output = Self::Moment>
-		+ Copy
-		+ MaxEncodedLen
-		+ scale_info::StaticTypeInfo
-		+ Into<u64>;
+			+ Default
+			+ Scale<Self::BlockNumber, Output = Self::Moment>
+			+ Copy
+			+ MaxEncodedLen
+			+ scale_info::StaticTypeInfo
+			+ Into<u64>;
 
 		type Timestamp: Time<Moment = Self::Moment>;
 
-		type Rbac : RoleBasedAccessControl<Self::AccountId>;
+		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		type Currency: Currency<Self::AccountId>;
-			
+
 		#[pallet::constant]
 		type MaxDocuments: Get<u32>;
 
@@ -115,8 +119,8 @@ pub mod pallet {
 	#[pallet::getter(fn global_scope)]
 	pub(super) type GlobalScope<T> = StorageValue<
 		_,
-		[u8;32], // Value global scope id
-		ValueQuery
+		[u8; 32], // Value global scope id
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -134,8 +138,8 @@ pub mod pallet {
 	pub(super) type ProjectsInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		ProjectData<T>,  // Value ProjectData<T>
+		ProjectId,      // Key project_id
+		ProjectData<T>, // Value ProjectData<T>
 		OptionQuery,
 	>;
 
@@ -144,8 +148,8 @@ pub mod pallet {
 	pub(super) type UsersByProject<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		BoundedVec<T::AccountId, T::MaxUserPerProject>,  // Value users
+		ProjectId,                                      // Key project_id
+		BoundedVec<T::AccountId, T::MaxUserPerProject>, // Value users
 		ValueQuery,
 	>;
 
@@ -154,8 +158,8 @@ pub mod pallet {
 	pub(super) type ProjectsByUser<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId, // Key account_id
-		BoundedVec<[u8;32], T::MaxProjectsPerUser>,  // Value projects
+		T::AccountId,                                // Key account_id
+		BoundedVec<[u8; 32], T::MaxProjectsPerUser>, // Value projects
 		ValueQuery,
 	>;
 
@@ -164,8 +168,8 @@ pub mod pallet {
 	pub(super) type ExpendituresInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		ExpenditureId, // Key expenditure_id
-		ExpenditureData,  // Value ExpenditureData<T>
+		ExpenditureId,   // Key expenditure_id
+		ExpenditureData, // Value ExpenditureData<T>
 		OptionQuery,
 	>;
 
@@ -174,8 +178,8 @@ pub mod pallet {
 	pub(super) type ExpendituresByProject<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		BoundedVec<[u8;32], T::MaxExpendituresPerProject>,  // Value expenditures
+		ProjectId,                                          // Key project_id
+		BoundedVec<[u8; 32], T::MaxExpendituresPerProject>, // Value expenditures
 		ValueQuery,
 	>;
 
@@ -184,8 +188,8 @@ pub mod pallet {
 	pub(super) type DrawdownsInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		DrawdownId, // Key drawdown id
-		DrawdownData<T>,  // Value DrawdownData<T>
+		DrawdownId,      // Key drawdown id
+		DrawdownData<T>, // Value DrawdownData<T>
 		OptionQuery,
 	>;
 
@@ -194,8 +198,8 @@ pub mod pallet {
 	pub(super) type DrawdownsByProject<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		BoundedVec<DrawdownId, T::MaxDrawdownsPerProject>,  // Value Drawdowns
+		ProjectId,                                         // Key project_id
+		BoundedVec<DrawdownId, T::MaxDrawdownsPerProject>, // Value Drawdowns
 		ValueQuery,
 	>;
 
@@ -204,8 +208,8 @@ pub mod pallet {
 	pub(super) type TransactionsInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		TransactionId, // Key transaction id
-		TransactionData<T>,  // Value TransactionData<T>
+		TransactionId,      // Key transaction id
+		TransactionData<T>, // Value TransactionData<T>
 		OptionQuery,
 	>;
 
@@ -216,9 +220,9 @@ pub mod pallet {
 		Identity,
 		ProjectId, //K1: project id
 		Identity,
-		DrawdownId, //K2: drawdown id
+		DrawdownId,                                               //K2: drawdown id
 		BoundedVec<TransactionId, T::MaxTransactionsPerDrawdown>, // Value transactions
-		ValueQuery
+		ValueQuery,
 	>;
 
 	#[pallet::storage]
@@ -226,8 +230,8 @@ pub mod pallet {
 	pub(super) type JobEligiblesInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		JobEligibleId, // Key transaction id
-		JobEligibleData,  // Value JobEligibleData
+		JobEligibleId,   // Key transaction id
+		JobEligibleData, // Value JobEligibleData
 		OptionQuery,
 	>;
 
@@ -236,8 +240,8 @@ pub mod pallet {
 	pub(super) type JobEligiblesByProject<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		BoundedVec<JobEligibleId, T::MaxJobEligiblesByProject>,  // Value job eligibles
+		ProjectId,                                              // Key project_id
+		BoundedVec<JobEligibleId, T::MaxJobEligiblesByProject>, // Value job eligibles
 		ValueQuery,
 	>;
 
@@ -246,8 +250,8 @@ pub mod pallet {
 	pub(super) type RevenuesInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		RevenueId, // Key revenue id
-		RevenueData<T>,  // Value RevenueData<T>
+		RevenueId,      // Key revenue id
+		RevenueData<T>, // Value RevenueData<T>
 		OptionQuery,
 	>;
 
@@ -256,8 +260,8 @@ pub mod pallet {
 	pub(super) type RevenuesByProject<T: Config> = StorageMap<
 		_,
 		Identity,
-		ProjectId, // Key project_id
-		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>,  // Value Revenues
+		ProjectId,                                        // Key project_id
+		BoundedVec<RevenueId, T::MaxDrawdownsPerProject>, // Value Revenues
 		ValueQuery,
 	>;
 
@@ -266,8 +270,8 @@ pub mod pallet {
 	pub(super) type RevenueTransactionsInfo<T: Config> = StorageMap<
 		_,
 		Identity,
-		RevenueTransactionId, // Key revenue transaction id
-		RevenueTransactionData<T>,  // Value RevenueTransactionData<T>
+		RevenueTransactionId,      // Key revenue transaction id
+		RevenueTransactionData<T>, // Value RevenueTransactionData<T>
 		OptionQuery,
 	>;
 
@@ -278,11 +282,10 @@ pub mod pallet {
 		Identity,
 		ProjectId, //K1: project id
 		Identity,
-		RevenueId, //K2: revenue id
+		RevenueId,                                                      //K2: revenue id
 		BoundedVec<RevenueTransactionId, T::MaxTransactionsPerRevenue>, // Value revenue transactions
-		ValueQuery
+		ValueQuery,
 	>;
-
 
 	// E V E N T S
 	// ------------------------------------------------------------------------------------------------------------
@@ -430,13 +433,15 @@ pub mod pallet {
 		ExpenditureNotFound,
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
+		/// Expenditure is already in a transaction
+		ExpenditureInTransaction,
 		/// Max number of expenditures per project reached
 		MaxExpendituresPerProjectReached,
 		/// Field name can not be empty
 		EmptyExpenditureName,
 		/// Expenditure does not belong to the project
 		ExpenditureDoesNotBelongToProject,
-		/// Drowdown id is not found
+		/// Drawdown id is not found
 		DrawdownNotFound,
 		/// Invalid amount
 		InvalidAmount,
@@ -446,6 +451,8 @@ pub mod pallet {
 		TransactionNotFound,
 		/// Transaction already exist
 		TransactionAlreadyExists,
+		/// Transaction is already in a drawdown
+		TransactionInUse,
 		/// Max number of transactions per drawdown reached
 		MaxTransactionsPerDrawdownReached,
 		/// Drawdown already exist
@@ -629,7 +636,7 @@ pub mod pallet {
 		/// Administrator account has insuficiente balance to register a new user
 		AdminHasNoFreeBalance,
 		/// Administrator account has insuficiente balance to register a new user
-		InsufficientFundsToTransfer
+		InsufficientFundsToTransfer,
 	}
 
 	// E X T R I N S I C S
@@ -644,10 +651,9 @@ pub mod pallet {
 		/// # Considerations:
 		/// - This function can only be called once
 		/// - This function can only be called usinf the sudo pallet
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn initial_setup(
-			origin: OriginFor<T>,
-		) -> DispatchResult {
+		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_initial_setup()?;
 			Ok(())
@@ -666,6 +672,7 @@ pub mod pallet {
 		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
 		/// - This function grants administrator permissions to the user from the rbac pallet
 		/// - administrator role have global scope permissions
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_add_administrator(
 			origin: OriginFor<T>,
@@ -692,16 +699,16 @@ pub mod pallet {
 		/// # Note:
 		/// WARNING: Administrators can remove themselves from the site,
 		/// but they can add themselves back
+		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn sudo_remove_administrator(
 			origin: OriginFor<T>,
-			admin: T::AccountId
+			admin: T::AccountId,
 		) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_sudo_remove_administrator(admin)?;
 			Ok(())
 		}
-
 
 		// U S E R S
 		// --------------------------------------------------------------------------------------------
@@ -734,11 +741,9 @@ pub mod pallet {
 		/// - WARNING: This function only registers, updates, or deletes users from the site.
 		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
 		/// a user from a selected project.
+		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn users(
-			origin: OriginFor<T>,
-			users: Users<T>,
-		) -> DispatchResult {
+		pub fn users(origin: OriginFor<T>, users: Users<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
 			Self::do_execute_users(who, users)
@@ -760,13 +765,14 @@ pub mod pallet {
 		/// - This function will be called by the user account itself
 		/// - ALL parameters are optional because depends on what is being edited
 		/// - ONLY the investor role can edit or update the documents
+		#[pallet::call_index(5)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn users_edit_user(
 			origin: OriginFor<T>,
 			name: Option<FieldName>,
 			image: Option<CID>,
 			email: Option<FieldName>,
-			documents: Option<Documents<T>>
+			documents: Option<Documents<T>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -820,6 +826,7 @@ pub mod pallet {
 		/// # Note:
 		/// WARNING: If users are provided, the function will assign the users to the project, granting them
 		/// permissions in the rbac pallet.
+		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_create_project(
 			origin: OriginFor<T>,
@@ -837,7 +844,20 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_create_project(who, title, description, image, address, banks, creation_date, completion_date, expenditures, job_eligibles, users, private_group_id)
+			Self::do_create_project(
+				who,
+				title,
+				description,
+				image,
+				address,
+				banks,
+				creation_date,
+				completion_date,
+				expenditures,
+				job_eligibles,
+				users,
+				private_group_id,
+			)
 		}
 
 		/// Edits a project.
@@ -864,6 +884,7 @@ pub mod pallet {
 		/// * projects_assign_user
 		/// - Project can only be edited in the Started status
 		/// - Completion date must be greater than creation date
+		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_edit_project(
 			origin: OriginFor<T>,
@@ -878,7 +899,17 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_edit_project(who, project_id, title, description, image, address, banks, creation_date, completion_date)
+			Self::do_edit_project(
+				who,
+				project_id,
+				title,
+				description,
+				image,
+				address,
+				banks,
+				creation_date,
+				completion_date,
+			)
 		}
 
 		/// Deletes a project.
@@ -896,6 +927,7 @@ pub mod pallet {
 		/// # Note:
 		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
 		/// BE CAREFUL.
+		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_delete_project(
 			origin: OriginFor<T>,
@@ -940,6 +972,7 @@ pub mod pallet {
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
 		/// - Warning: Do not perform multiple actions over the same user in the same call, it could
 		/// result in an unexpected behavior.
+		#[pallet::call_index(9)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_assign_user(
 			origin: OriginFor<T>,
@@ -989,6 +1022,7 @@ pub mod pallet {
 		/// expenditure and update another one at the same time.
 		/// - Do not perform multiple actions over the same expenditure in the same call, it could
 		/// result in an unexpected behavior.
+		#[pallet::call_index(10)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn expenditures_and_job_eligibles(
 			origin: OriginFor<T>,
@@ -1049,6 +1083,7 @@ pub mod pallet {
 		/// - After a drawdown is submitted, it can not be updated or deleted.
 		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given drawdown.
+		#[pallet::call_index(11)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn submit_drawdown(
 			origin: OriginFor<T>,
@@ -1082,7 +1117,7 @@ pub mod pallet {
 							who.clone(),
 							project_id,
 							drawdown_id,
-							mod_transactions
+							mod_transactions,
 						)?;
 					}
 
@@ -1090,7 +1125,6 @@ pub mod pallet {
 					Self::do_submit_drawdown(who, project_id, drawdown_id)
 				},
 			}
-
 		}
 
 		/// Approve a drawdown
@@ -1134,6 +1168,7 @@ pub mod pallet {
 		/// - The drawdown status will be updated to "Approved" after the extrinsic is executed.
 		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
 		/// new drawdown version uploaded by the builder.
+		#[pallet::call_index(12)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn approve_drawdown(
 			origin: OriginFor<T>,
@@ -1148,8 +1183,12 @@ pub mod pallet {
 			match bulkupload {
 				Some(approval) => {
 					// Ensure admin permissions
-					Self::is_authorized(who.clone(), &project_id, ProxyPermission::ApproveDrawdown)?;
-					
+					Self::is_authorized(
+						who.clone(),
+						&project_id,
+						ProxyPermission::ApproveDrawdown,
+					)?;
+
 					// Execute bulkupload flow (construction loan & developer equity)
 					match approval {
 						false => {
@@ -1164,18 +1203,22 @@ pub mod pallet {
 							// 2. Do submit drawdown
 							Self::do_submit_drawdown(who, project_id, drawdown_id)
 						},
-						true  => {
+						true => {
 							// 1.Execute transactions if provided
 							if let Some(mod_transactions) = transactions {
 								// Ensure transactions are not empty
-								ensure!(!mod_transactions.is_empty(), Error::<T>::EmptyTransactions);
-								
+								ensure!(
+									!mod_transactions.is_empty(),
+									Error::<T>::EmptyTransactions
+								);
+
 								// Do execute transactions
 								Self::do_execute_transactions(
 									who.clone(),
 									project_id,
 									drawdown_id,
-									mod_transactions)?;
+									mod_transactions,
+								)?;
 
 								// 2. Submit drawdown
 								Self::do_submit_drawdown(who.clone(), project_id, drawdown_id)?;
@@ -1185,14 +1228,12 @@ pub mod pallet {
 							Self::do_approve_drawdown(who, project_id, drawdown_id)
 						},
 					}
-
 				},
 				None => {
 					// Execute normal flow (EB5)
 					Self::do_approve_drawdown(who, project_id, drawdown_id)
-				}
+				},
 			}
-
 		}
 
 		/// Reject a drawdown
@@ -1226,6 +1267,7 @@ pub mod pallet {
 		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
 		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
 		/// There is no way to reject a single transaction.
+		#[pallet::call_index(13)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reject_drawdown(
 			origin: OriginFor<T>,
@@ -1236,7 +1278,13 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be an admin
 
-			Self::do_reject_drawdown(who, project_id, drawdown_id, transactions_feedback, drawdown_feedback)
+			Self::do_reject_drawdown(
+				who,
+				project_id,
+				drawdown_id,
+				transactions_feedback,
+				drawdown_feedback,
+			)
 		}
 
 		/// Bulk upload drawdowns.
@@ -1259,6 +1307,7 @@ pub mod pallet {
 		/// - Bulkuploads does not allow individual transactions.
 		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
+		#[pallet::call_index(14)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn up_bulkupload(
 			origin: OriginFor<T>,
@@ -1270,7 +1319,14 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin need to be a builder
 
-			Self::do_up_bulk_upload(who, project_id, drawdown_id, description, total_amount, documents)
+			Self::do_up_bulk_upload(
+				who,
+				project_id,
+				drawdown_id,
+				description,
+				total_amount,
+				documents,
+			)
 		}
 
 		/// Modifies the inflation rate of a project.
@@ -1292,6 +1348,7 @@ pub mod pallet {
 		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
+		#[pallet::call_index(15)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn inflation_rate(
 			origin: OriginFor<T>,
@@ -1341,6 +1398,7 @@ pub mod pallet {
 		/// - After a revenue is submitted, it can not be updated or deleted.
 		/// - After a revenue is rejected, builders will use again this extrinsic to update the
 		/// transactions associated to a given revenue.
+		#[pallet::call_index(16)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn submit_revenue(
 			origin: OriginFor<T>,
@@ -1367,21 +1425,24 @@ pub mod pallet {
 					// Check if there are transactions to execute
 					if let Some(mod_revenue_transactions) = revenue_transactions {
 						// Ensure transactions are not empty
-						ensure!(!mod_revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsEmpty);
+						ensure!(
+							!mod_revenue_transactions.is_empty(),
+							Error::<T>::RevenueTransactionsEmpty
+						);
 
 						// Do execute transactions
 						Self::do_execute_revenue_transactions(
 							who.clone(),
 							project_id,
 							revenue_id,
-							mod_revenue_transactions)?;
+							mod_revenue_transactions,
+						)?;
 					}
 
 					// Do submit revenue
 					Self::do_submit_revenue(who, project_id, revenue_id)
 				},
 			}
-
 		}
 
 		/// Approve a revenue
@@ -1400,6 +1461,7 @@ pub mod pallet {
 		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
 		/// new revenue version uploaded by the builder.
 		/// - The revenue status will be updated to Approved.
+		#[pallet::call_index(17)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn approve_revenue(
 			origin: OriginFor<T>,
@@ -1430,6 +1492,7 @@ pub mod pallet {
 		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
 		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
 		/// There is no way to reject a single revenue transaction.
+		#[pallet::call_index(18)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reject_revenue(
 			origin: OriginFor<T>,
@@ -1466,6 +1529,7 @@ pub mod pallet {
 		/// - Delete action will remove the existing confirming documents. It will also update the
 		/// drawdown status to "Approved" and the status of all of its transactions to "Approved".
 		/// It does a rollback of the drawdown.
+		#[pallet::call_index(19)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn bank_confirming_documents(
 			origin: OriginFor<T>,
@@ -1476,7 +1540,13 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_bank_confirming_documents(who, project_id, drawdown_id, confirming_documents, action)
+			Self::do_bank_confirming_documents(
+				who,
+				project_id,
+				drawdown_id,
+				confirming_documents,
+				action,
+			)
 		}
 
 		/// The following extrinsic is used to cancel a drawdown submission.
@@ -1491,6 +1561,7 @@ pub mod pallet {
 		/// - The drawdown status will be rolled back to "Draft".
 		/// - All of its transactions will be deleted.
 		/// - The whole drawdown will be reset to its initial state, so be careful when using this
+		#[pallet::call_index(20)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn reset_drawdown(
 			origin: OriginFor<T>,
@@ -1502,6 +1573,15 @@ pub mod pallet {
 			Self::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
+		#[pallet::call_index(21)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn reset_allen_drawdowns(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_reset_allen_drawdowns(project_id)
+		}
 
 		/// Kill all the stored data.
 		///
@@ -1513,10 +1593,9 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
+		#[pallet::call_index(22)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn kill_storage(
-			origin: OriginFor<T>,
-		) -> DispatchResult{
+		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			let _ = <GlobalScope<T>>::kill();
 			let _ = <UsersInfo<T>>::clear(1000, None);
@@ -1540,5 +1619,28 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Force delete transaction.
+		///
+		/// This function is used to force delete a transaction.
+		/// Use it with caution!
+		///
+		/// ### Parameters:
+		/// - `origin`: The user who performs the action.
+		/// - `drawdown_id`: The drawdown id where the transaction exists.
+		/// - `transaction_id`: The transaction id to be deleted.
+		///
+		/// ### Considerations:
+		/// - This function is only available with sudo access.
+		#[pallet::call_index(23)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn force_delete_transaction(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			transaction_id: TransactionId,
+		) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			Self::do_force_delete_transaction(project_id, drawdown_id, transaction_id)
+		}
 	}
 }

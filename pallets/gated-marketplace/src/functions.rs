@@ -78,6 +78,11 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		// marketplace exists?
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// Ensure the user is not blocked
+		ensure!(
+			!Self::is_user_blocked(applicant.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		// The user only can apply once by marketplace
 		ensure!(
 			!<ApplicationsByAccount<T>>::contains_key(applicant.clone(), marketplace_id),
@@ -115,12 +120,16 @@ impl<T: Config> Pallet<T> {
 		custodian_fields: Option<CustodianFields<T>>,
 	) -> DispatchResult {
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// Ensure the user is not blocked
+		ensure!(
+			!Self::is_user_blocked(new_user.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		// The user only can apply once by marketplace
 		ensure!(
 			!<ApplicationsByAccount<T>>::contains_key(new_user.clone(), marketplace_id),
 			Error::<T>::AlreadyApplied
 		);
-
 		// ensure the origin is owner or admin
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::Enroll)?;
 
@@ -172,6 +181,11 @@ impl<T: Config> Pallet<T> {
 				})
 				.ok_or(Error::<T>::ApplicationNotFound)?,
 		};
+		// ensure the account is not blocked
+		ensure!(
+			!Self::is_user_blocked(applicant.clone(), marketplace_id),
+			Error::<T>::UserIsBlocked
+		);
 		Self::change_applicant_status(applicant, marketplace_id, next_status, feedback)?;
 
 		Self::deposit_event(Event::ApplicationProcessed(
@@ -195,6 +209,9 @@ impl<T: Config> Pallet<T> {
 		//ensure the account is not already an authority
 		// handled by <T as pallet::Config>::Rbac::assign_role_to_user
 		//ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
+
+		// ensure the account is not blocked
+		ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
 		match authority_type {
 			MarketplaceRole::Owner => {
 				ensure!(!Self::owner_exist(marketplace_id), Error::<T>::OnlyOneOwnerIsAllowed);
@@ -299,11 +316,11 @@ impl<T: Config> Pallet<T> {
 		Self::is_the_offer_valid(price, Permill::from_percent(percentage))?;
 
 		//Add timestamp to the offer
-		let (timestamp, timestamp2) =
+		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
 		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
 			.using_encoded(blake2_256);
 
 		//create offer structure
@@ -319,8 +336,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: timestamp,
-			expiration_date: timestamp2,
+			creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::SellOrder,
 			buyer: None,
@@ -361,6 +377,7 @@ impl<T: Config> Pallet<T> {
 		percentage: u32,
 	) -> DispatchResult {
 
+		
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -389,11 +406,11 @@ impl<T: Config> Pallet<T> {
 		Self::is_the_offer_valid(price, Permill::from_percent(percentage))?;
 
 		//Add timestamp to the offer
-		let (timestamp, timestamp2) =
+		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
 		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, timestamp, timestamp2)
+		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
 			.using_encoded(blake2_256);
 
 		//create offer structure
@@ -407,8 +424,7 @@ impl<T: Config> Pallet<T> {
 			price,
 			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
-			creation_date: timestamp,
-			expiration_date: timestamp2,
+			creation_date,
 			status: OfferStatus::Open,
 			offer_type: OfferType::BuyOrder,
 			buyer: None,
@@ -830,6 +846,67 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	pub fn do_block_user(
+		authority: T::AccountId,
+		marketplace_id: [u8; 32],
+		user: T::AccountId,
+	) -> DispatchResult {
+		// ensure the marketplace exists
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// ensure the origin is authorized to block users
+		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
+		// ensure the user is not already a participant of the marketplace
+		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		// ensure the user is not already blocked
+		ensure!(
+			!Self::is_user_blocked(user.clone(), marketplace_id),
+			Error::<T>::UserAlreadyBlocked
+		);
+
+		// insert the user in the blocked list
+		<BlockedUsersByMarketplace<T>>::try_mutate(marketplace_id, |blocked_list| {
+			blocked_list.try_push(user.clone())
+		})
+		.map_err(|_| Error::<T>::ExceedMaxBlockedUsers)?;
+
+		Self::deposit_event(Event::UserBlocked(marketplace_id, user.clone()));
+		Ok(())
+	}
+
+	pub fn do_unblock_user(
+		authority: T::AccountId,
+		marketplace_id: [u8; 32],
+		user: T::AccountId,
+	) -> DispatchResult {
+		// ensure the marketplace exists
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+		// ensure the origin is authorized to block users
+		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
+		// ensure the user is not already a participant of the marketplace
+		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		// ensure the user is blocked
+		ensure!(Self::is_user_blocked(user.clone(), marketplace_id), Error::<T>::UserIsNotBlocked);
+
+		// remove the user from the block list
+		<BlockedUsersByMarketplace<T>>::try_mutate::<_, _, DispatchError, _>(
+			marketplace_id,
+			|blocked_list| {
+				let user_index = blocked_list
+					.iter()
+					.position(|a| *a == user.clone())
+					.ok_or(Error::<T>::UserNotFound)?;
+				blocked_list.remove(user_index);
+				Ok(())
+			},
+		)?;
+		Self::deposit_event(Event::UserUnblocked(marketplace_id, user.clone()));
+		Ok(())
+	}
+
+	fn is_user_blocked(user: T::AccountId, marketplace_id: [u8; 32]) -> bool {
+		<BlockedUsersByMarketplace<T>>::get(marketplace_id).contains(&user)
+	}
+
 	fn is_authorized(
 		authority: T::AccountId,
 		marketplace_id: &[u8; 32],
@@ -841,6 +918,12 @@ impl<T: Config> Pallet<T> {
 			marketplace_id,
 			&permission.id(),
 		)
+	}
+
+	/// Let us know if the selected account has at least one role in the marketplace.
+	fn has_any_role(account: T::AccountId, marketplace_id: &[u8; 32]) -> bool {
+		let pallet_id = Self::pallet_id();
+		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(account, pallet_id, marketplace_id)
 	}
 
 	///Lets us know if the selected user is an admin.
@@ -947,6 +1030,8 @@ impl<T: Config> Pallet<T> {
 		account: T::AccountId,
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
+		//check if user is blocked
+		ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
 		let application_id = <ApplicationsByAccount<T>>::try_get(account.clone(), marketplace_id)
 			.map_err(|_| Error::<T>::ApplicationIdNotFound)?;
 
@@ -963,18 +1048,21 @@ impl<T: Config> Pallet<T> {
 			ApplicationStatus::Rejected => {
 				//If status is Rejected, we need to delete the previous application from all the storage sources.
 				<Applications<T>>::remove(application_id);
-				<ApplicationsByAccount<T>>::remove(account, marketplace_id);
-				<ApplicantsByMarketplace<T>>::remove(marketplace_id, ApplicationStatus::Rejected);
+				<ApplicationsByAccount<T>>::remove(account.clone(), marketplace_id);
+				Self::remove_from_applicants_lists(
+					account,
+					ApplicationStatus::Rejected,
+					marketplace_id,
+				)?;
 			},
 		}
 		Ok(())
 	}
 
-	fn get_timestamp_in_milliseconds() -> Option<(u64, u64)> {
+	fn get_timestamp_in_milliseconds() -> Option<u64> {
 		let timestamp: u64 = T::Timestamp::now().into();
-		let timestamp2 = timestamp + (7 * 24 * 60 * 60 * 1000);
 
-		Some((timestamp, timestamp2))
+		Some(timestamp)
 	}
 
 	fn _is_offer_status(offer_id: [u8; 32], offer_status: OfferStatus) -> bool {
@@ -1062,11 +1150,10 @@ impl<T: Config> Pallet<T> {
 
 		//We need to check if the owner is in the marketplace
 		if let Some(owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
-			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok()
-				{
-					return Ok(());
-				}
+			if Self::is_authorized(owner, marketplace_id, Permission::EnlistSellOffer).is_ok() {
+				return Ok(());
 			}
+		}
 		Err(Error::<T>::OwnerNotInMarketplace.into())
 	}
 
