@@ -72,7 +72,7 @@ pub mod pallet {
 
 		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn sign_up(origin: OriginFor<T>) -> DispatchResult {
+		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
 			Ok(())
 		}
 	}

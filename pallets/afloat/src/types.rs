@@ -11,7 +11,7 @@ pub type LongString = BoundedVec<u8, ConstU32<32>>;
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct User<T: Config> {
-	pub first_name: BoundedVec<u8, ConstU32<32>>
+	pub first_name: BoundedVec<u8, ConstU32<32>>,
 	pub last_name: BoundedVec<u8, ConstU32<32>>,
 	pub email: BoundedVec<u8, ConstU32<32>>,
 	pub lang_key: BoundedVec<u8, ConstU32<32>>,
@@ -24,4 +24,23 @@ pub struct User<T: Config> {
 	pub cpa_id: BoundedVec<u8, ConstU32<32>>,
 	pub tax_authority_id: u32, //! this is a number that represents the state of the user
 	pub lock_expiration_date: Option<T::Moment>,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum SignUpArgs {
+	buyer_or_seller {
+		first_name: LongString,
+		last_name: LongString,
+		email: LongString,
+		state: u32,
+	},
+	cpa {
+		first_name: LongString,
+		last_name: LongString,
+		email: LongString,
+		license_number: u32,
+		state: u32,
+	},
 }
