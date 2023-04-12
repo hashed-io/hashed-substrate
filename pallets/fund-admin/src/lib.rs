@@ -401,6 +401,8 @@ pub mod pallet {
 		ProjectNotFound,
 		/// Project is not active anymore
 		ProjectIsAlreadyCompleted,
+		/// Project has no drawdowns
+		ProjectHasNoDrawdowns,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
 		/// User is not registered
@@ -434,7 +436,7 @@ pub mod pallet {
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
 		/// Expenditure is already in a transaction
-		ExpenditureInTransaction,
+		ExpenditureHasNonZeroTransactions,
 		/// Max number of expenditures per project reached
 		MaxExpendituresPerProjectReached,
 		/// Field name can not be empty
@@ -493,6 +495,8 @@ pub mod pallet {
 		DrawdownIsNotInSubmittedStatus,
 		/// Transactions is not in submitted status
 		TransactionIsNotInSubmittedStatus,
+		/// Selected transaction does not belong to the current expenditure_id
+		TransactionDoesNotBelongToExpenditure,
 		/// Array of expenditures is empty
 		EmptyExpenditures,
 		/// Expenditure name is required
@@ -1617,30 +1621,6 @@ pub mod pallet {
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
-		}
-
-		/// Force delete transaction.
-		///
-		/// This function is used to force delete a transaction.
-		/// Use it with caution!
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `drawdown_id`: The drawdown id where the transaction exists.
-		/// - `transaction_id`: The transaction id to be deleted.
-		///
-		/// ### Considerations:
-		/// - This function is only available with sudo access.
-		#[pallet::call_index(23)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn force_delete_transaction(
-			origin: OriginFor<T>,
-			project_id: ProjectId,
-			drawdown_id: DrawdownId,
-			transaction_id: TransactionId,
-		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			Self::do_force_delete_transaction(project_id, drawdown_id, transaction_id)
 		}
 	}
 }
