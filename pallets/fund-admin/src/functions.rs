@@ -875,31 +875,11 @@ impl<T: Config> Pallet<T> {
 
 	fn do_delete_expenditure(expenditure_id: ExpenditureId) -> DispatchResult {
 		// Ensure expenditure_id exists & get expenditure data
-		let expenditure_data =
-			<ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
-		// TODO check if expenditure is in transactions
-		let drawdowns = <DrawdownsByProject<T>>::get(expenditure_data.project_id);
+		let expenditure_data = ExpendituresInfo::<T>::get(&expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
-		// TODO update this to delete it if the balance is always 0
-		for drawdown in drawdowns {
-			let transactions =
-				<TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown);
-			for transaction in transactions {
-				let transaction_data = <TransactionsInfo<T>>::get(transaction)
-					.ok_or(Error::<T>::TransactionNotFound)?;
-
-				if transaction_data.expenditure_id == expenditure_id {
-					// TODO delete transaction
-					ensure!(transaction_data.amount == 0, Error::<T>::ExpenditureInTransaction);
-
-					Self::do_force_delete_transaction(
-						expenditure_data.project_id,
-						drawdown,
-						transaction,
-					)?;
-				}
-			}
-		}
+		Self::do_delete_expenditure_transactions(
+			expenditure_id,
+		)?;
 
 		// Delete expenditure data from ExpendituresInfo
 		<ExpendituresInfo<T>>::remove(expenditure_id);
@@ -912,6 +892,10 @@ impl<T: Config> Pallet<T> {
 				Ok(())
 			},
 		)?;
+
+		if ExpendituresByProject::<T>::try_get(expenditure_data.project_id).map_err(|_| Error::<T>::ExpenditureNotFound)?.is_empty() {
+			<ExpendituresByProject<T>>::remove(expenditure_data.project_id);
+		};
 
 		Self::deposit_event(Event::ExpenditureDeleted(expenditure_data.project_id, expenditure_id));
 		Ok(())
@@ -3230,6 +3214,7 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientFundsToTransfer
 		);
 
+		//TODO: Check if user has enough funds to receive transfer, refactor else arm
 		// If user has no funds, then transfer funds to user
 		if T::Currency::free_balance(&user) < T::Currency::minimum_balance() {
 			// Transfer funds to user
@@ -3298,46 +3283,53 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn do_force_delete_transaction(
-		project_id: ProjectId,
-		drawdown_id: DrawdownId,
-		transaction_id: TransactionId,
+	fn do_delete_expenditure_transactions(
+		expenditure_id: ExpenditureId,
 	) -> DispatchResult {
+		// Get expenditure data
+		let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+
 		// Ensure project exists
-		ensure!(<ProjectsInfo<T>>::contains_key(project_id), Error::<T>::ProjectNotFound);
+		ensure!(<ProjectsInfo<T>>::contains_key(expenditure_data.project_id), Error::<T>::ProjectNotFound);
 
-		// Ensure drawdown exists
-		ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
+		// Ensure project contains drawdowns and get drawdowns
+		let drawdowns = <DrawdownsByProject<T>>::try_get(expenditure_data.project_id).map_err(|_| Error::<T>::ProjectHasNoDrawdowns)?;
 
-		// Ensure transaction exists
-		ensure!(
-			<TransactionsInfo<T>>::contains_key(transaction_id),
-			Error::<T>::TransactionNotFound
-		);
+		for drawdown_id in drawdowns.iter().cloned() {
+			// Ensure drawdown exists
+			ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-		// Ensure transaction belongs to the drawdown
-		let transactions = TransactionsByDrawdown::<T>::get(project_id, drawdown_id);
-		ensure!(transactions.contains(&transaction_id), Error::<T>::TransactionNotFound);
+			// If drawdown has transactions, check that every transaction exists & its amount is zero
+			if <TransactionsByDrawdown<T>>::contains_key(expenditure_data.project_id, drawdown_id) {
+				for transaction_id in <TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown_id) {
+					// Ensure transaction exists & get transaction data
+					let transaction_data = <TransactionsInfo<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+					
+					// Ensure transaction belogns to the expenditure_id
+					ensure!(transaction_data.expenditure_id == expenditure_id, Error::<T>::TransactionDoesNotBelongToExpenditure);
+					// Ensure transaction amount is zero
+					ensure!(transaction_data.amount == 0, Error::<T>::ExpenditureHasNonZeroTransactions);
 
-		let transaction_data =
-			<TransactionsInfo<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+					// Delete transaction from TransactionsInfo
+					<TransactionsInfo<T>>::remove(transaction_id);
 
-		ensure!(transaction_data.amount == 0, Error::<T>::TransactionInUse);
-
-		// Delete transaction from TransactionsInfo
-		<TransactionsInfo<T>>::remove(transaction_id);
-
-		// Delete transaction from TransactionsByDrawdown
-		<TransactionsByDrawdown<T>>::try_mutate::<_, _, _, DispatchError, _>(
-			project_id,
-			drawdown_id,
-			|transactions| {
-				transactions.retain(|transaction| transaction != &transaction_id);
-				Ok(())
-			},
-		)?;
-
+					// Delete transaction from TransactionsByDrawdown
+					<TransactionsByDrawdown<T>>::try_mutate::<_, _, _, DispatchError, _>(
+						expenditure_data.project_id,
+						drawdown_id,
+						|transactions| {
+							transactions.retain(|transaction| transaction != &transaction_id);
+							Ok(())
+						},
+					)?;
+				}
+				
+				// Delete drawdown transactions whole entry from TransactionsByDrawdown
+				<TransactionsByDrawdown<T>>::remove(expenditure_data.project_id, drawdown_id);
+			}
+		}
 		Ok(())
 	}
+
 	// Do not code beyond this line
 }
