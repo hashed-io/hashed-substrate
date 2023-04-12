@@ -232,7 +232,7 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
 
-		//since users can self-enroll (and provide an address) the caller of this function must validate 
+		//since users can self-enroll, the caller of this function must validate 
 		//that the user is indeed the owner of the address by using ensure_signed
 	
 
@@ -248,7 +248,7 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-
+		
 		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
 		
@@ -363,7 +363,7 @@ impl<T: Config> Pallet<T> {
 			item_id,
 			creator: authority.clone(),
 			price,
-			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
+			fee: price * Permill::deconstruct(marketplace.sell_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
 			creation_date,
 			status: OfferStatus::Open,
@@ -451,7 +451,7 @@ impl<T: Config> Pallet<T> {
 			item_id,
 			creator: authority.clone(),
 			price,
-			fee: price * Permill::deconstruct(marketplace.fee).into() / 1_000_000u32.into(),
+			fee: price * Permill::deconstruct(marketplace.buy_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
 			creation_date,
 			status: OfferStatus::Open,

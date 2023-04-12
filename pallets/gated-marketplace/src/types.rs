@@ -23,7 +23,8 @@ use sp_runtime::Permill;
 #[codec(mel_bound())]
 pub struct Marketplace<T: Config> {
 	pub label: BoundedVec<u8, T::LabelMaxLen>,
-	pub fee: Permill,
+	pub buy_fee: Permill,
+	pub sell_fee: Permill,
 	pub creator: T::AccountId,
 }
 
