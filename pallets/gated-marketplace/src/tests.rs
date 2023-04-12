@@ -20,12 +20,14 @@ fn create_label(label: &str) -> BoundedVec<u8, LabelMaxLen> {
 	s.try_into().unwrap_or_default()
 }
 
-fn get_marketplace_id(label: &str, fee: u32, creator: u64) -> [u8; 32] {
-	let fee = Permill::from_percent(fee);
+fn get_marketplace_id(label: &str, buy_fee: u32, sell_fee:u32, creator: u64) -> [u8; 32] {
+	let buy_fee = Permill::from_percent(buy_fee);
+	let sell_fee = Permill::from_percent(sell_fee);
 
 	let marketplace = Marketplace::<Test> {
 		label: create_label(label),
-		fee,
+		buy_fee,
+		sell_fee,
 		creator,
 	};
 
@@ -126,35 +128,39 @@ fn create_marketplace_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 	});
 }
 
 #[test]
 fn duplicate_marketplaces_shouldnt_work() {
-	new_test_ext().execute_with(|| {
-		// Dispatch a signed extrinsic.
-		assert_ok!(GatedMarketplace::create_marketplace(
-			RuntimeOrigin::signed(1),
-			2,
-			create_label("my marketplace"),
-			500
-		));
-		assert_noop!(
-			GatedMarketplace::create_marketplace(
-				RuntimeOrigin::signed(1),
-				2,
-				create_label("my marketplace"),
-				500
-			),
-			Error::<Test>::MarketplaceAlreadyExists
-		);
-	});
-}
+    new_test_ext().execute_with(|| {
+        // Dispatch a signed extrinsic.
+        assert_ok!(GatedMarketplace::create_marketplace(
+            RuntimeOrigin::signed(1),
+            2,
+            create_label("my marketplace"),
+            500,
+            600
+        ));
+        assert_noop!(
+            GatedMarketplace::create_marketplace(
+                RuntimeOrigin::signed(1),
+                2,
+                create_label("my marketplace"),
+                500,
+                600
+            ),
+            Error::<Test>::MarketplaceAlreadyExists
+        );
+    });
 
+}
 #[test]
 fn exceeding_max_roles_per_auth_shouldnt_work() {
 	new_test_ext().execute_with(|| {
@@ -163,9 +169,11 @@ fn exceeding_max_roles_per_auth_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			m_label.clone(),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			2,
@@ -192,9 +200,11 @@ fn apply_to_marketplace_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -217,9 +227,11 @@ fn apply_with_custodian_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -243,9 +255,11 @@ fn apply_with_same_account_as_custodian_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::apply(
 				RuntimeOrigin::signed(3),
@@ -266,9 +280,11 @@ fn exceeding_max_applications_per_custodian_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -301,7 +317,9 @@ fn apply_to_nonexistent_marketplace_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
 		// No such marletplace exists:
 		let m_id = create_label("false marketplace").using_encoded(blake2_256);
@@ -325,9 +343,11 @@ fn apply_twice_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -354,9 +374,11 @@ fn exceeding_max_applicants_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -394,9 +416,11 @@ fn enroll_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -436,9 +460,11 @@ fn enroll_rejected_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -478,9 +504,11 @@ fn enroll_rejected_has_feedback_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -525,9 +553,11 @@ fn enroll_approved_has_feedback_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -572,9 +602,11 @@ fn change_enroll_status_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(4),
 			m_id,
@@ -608,9 +640,11 @@ fn non_authorized_user_enroll_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(3),
 			m_id,
@@ -639,9 +673,11 @@ fn enroll_nonexistent_application_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		// accept nonexisten application throws error (account version)
 		assert_noop!(
 			GatedMarketplace::enroll(
@@ -676,9 +712,11 @@ fn add_authority_appraiser_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -699,9 +737,11 @@ fn add_authority_admin_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -720,9 +760,11 @@ fn add_authority_redenmption_specialist_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -742,9 +784,11 @@ fn add_authority_owner_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::add_authority(
 				RuntimeOrigin::signed(1),
@@ -770,9 +814,11 @@ fn add_authority_cant_apply_twice_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -800,9 +846,11 @@ fn remove_authority_appraiser_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -827,9 +875,11 @@ fn remove_authority_admin_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -854,9 +904,11 @@ fn remove_authority_redemption_specialist_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -881,9 +933,11 @@ fn remove_authority_owner_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::remove_authority(
 				RuntimeOrigin::signed(1),
@@ -903,9 +957,11 @@ fn remove_authority_admin_by_admin_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -931,9 +987,11 @@ fn remove_authority_user_tries_to_remove_non_existent_role_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -959,9 +1017,11 @@ fn remove_authority_user_is_not_admin_or_owner_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -993,9 +1053,11 @@ fn remove_authority_only_owner_can_remove_admins_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -1020,9 +1082,11 @@ fn update_marketplace_marketplace_not_found_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);
 		assert_noop!(
@@ -1044,9 +1108,11 @@ fn update_marketplace_user_without_permission_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -1071,9 +1137,11 @@ fn update_label_marketplace_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		assert_ok!(GatedMarketplace::update_label_marketplace(
 			RuntimeOrigin::signed(1),
@@ -1093,9 +1161,11 @@ fn remove_marketplace_marketplace_not_found_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		let m_id_2 = create_label("not the first marketplace").using_encoded(blake2_256);
 		assert_noop!(
@@ -1112,9 +1182,11 @@ fn remove_marketplace_user_without_permission_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			3,
@@ -1135,9 +1207,11 @@ fn remove_marketplace_deletes_storage_from_marketplaces_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		assert_ok!(GatedMarketplace::remove_marketplace(RuntimeOrigin::signed(1), m_id));
 		assert!(GatedMarketplace::marketplaces(m_id).is_none());
@@ -1151,9 +1225,11 @@ fn remove_marketplace_deletes_storage_from_marketplaces_by_authority_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::add_authority(
@@ -1219,9 +1295,11 @@ fn remove_marketplace_deletes_storage_from_authorities_by_marketplace_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::add_authority(
@@ -1281,9 +1359,11 @@ fn remove_marketplace_deletes_storage_from_custodians_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1308,9 +1388,11 @@ fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_pend
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1356,9 +1438,11 @@ fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_appr
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1411,9 +1495,11 @@ fn remove_marketplace_deletes_storage_from_applicants_by_marketplace_status_reje
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1466,9 +1552,11 @@ fn remove_marketplace_deletes_storage_from_applicantions_by_account_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1511,9 +1599,11 @@ fn remove_marketplace_deletes_storage_from_applications_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1558,9 +1648,11 @@ fn reapply_user_has_never_applied_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		assert_noop!(
 			GatedMarketplace::reapply(
@@ -1581,9 +1673,11 @@ fn reapply_with_wrong_marketplace_id_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		let m_id2 = create_label("my marketplace2").using_encoded(blake2_256);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 		assert_noop!(
@@ -1605,9 +1699,11 @@ fn reapply_status_application_is_still_pendding_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1641,9 +1737,11 @@ fn reapply_status_application_is_already_approved_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1688,9 +1786,11 @@ fn reapply_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert!(GatedMarketplace::marketplaces(m_id).is_some());
 
 		assert_ok!(GatedMarketplace::apply(
@@ -1735,9 +1835,11 @@ fn enlist_sell_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1769,9 +1871,11 @@ fn enlist_sell_offer_item_does_not_exist_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1793,9 +1897,11 @@ fn enlist_sell_offer_item_already_enlisted_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1828,9 +1934,11 @@ fn enlist_sell_offer_not_owner_tries_to_enlist_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1852,9 +1960,11 @@ fn enlist_sell_offer_price_must_greater_than_zero_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1876,9 +1986,11 @@ fn enlist_sell_offer_price_must_greater_than_minimun_amount_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1907,9 +2019,11 @@ fn enlist_sell_offer_is_properly_stored_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1942,17 +2056,23 @@ fn enlist_sell_offer_two_marketplaces() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace2"),
-			500
+            500,
+            600
+
 		));
-		let m_id2 = get_marketplace_id("my marketplace2", 500, 1);
+		let m_id2 = get_marketplace_id("my marketplace2",500,600
+
+, 1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -1992,9 +2112,11 @@ fn enlist_buy_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2038,9 +2160,11 @@ fn enlist_buy_offer_owner_cannnot_create_buy_offers_for_their_own_items_shouldnt
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2074,9 +2198,11 @@ fn enlist_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2110,9 +2236,11 @@ fn enlist_buy_offer_price_must_greater_than_zero_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2147,9 +2275,11 @@ fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2216,9 +2346,11 @@ fn take_sell_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 
@@ -2251,9 +2383,11 @@ fn take_sell_offer_owner_cannnot_be_the_buyer_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2286,9 +2420,11 @@ fn take_sell_offer_id_does_not_exist_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2322,9 +2458,11 @@ fn take_sell_offer_buyer_does_not_have_enough_balance_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2357,9 +2495,11 @@ fn take_buy_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2406,9 +2546,11 @@ fn take_buy_offer_only_owner_can_accept_buy_offers_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2456,9 +2598,11 @@ fn take_buy_offer_id_does_not_exist_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2507,9 +2651,11 @@ fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2558,9 +2704,11 @@ fn remove_sell_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2593,9 +2741,11 @@ fn remove_buy_offer_works() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2639,9 +2789,11 @@ fn remove_offer_id_does_not_exist_sholdnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2676,9 +2828,11 @@ fn remove_offer_creator_doesnt_match_sholdnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2712,9 +2866,11 @@ fn remove_offer_status_is_closed_shouldnt_work() {
 			RuntimeOrigin::signed(1),
 			2,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(Fruniques::create_collection(RuntimeOrigin::signed(1), dummy_description()));
 		assert_ok!(Fruniques::spawn(RuntimeOrigin::signed(1), 0, dummy_description(), None, None));
@@ -2764,9 +2920,11 @@ fn block_user_application_attempt_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(2),
@@ -2794,9 +2952,11 @@ fn block_user_invite_attempt_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(2),
@@ -2826,9 +2986,11 @@ fn block_user_reapply_attempt_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(2),
@@ -2864,9 +3026,11 @@ fn block_user_add_authority_attempt_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
@@ -2884,9 +3048,11 @@ fn unblock_user_should_work() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)));
 		assert_noop!(
@@ -2918,9 +3084,11 @@ fn block_user_while_not_admin_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			2,
@@ -2946,9 +3114,11 @@ fn unblock_user_while_not_admin_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_ok!(GatedMarketplace::add_authority(
 			RuntimeOrigin::signed(1),
 			2,
@@ -2971,7 +3141,7 @@ fn unblock_user_while_not_admin_should_fail() {
 fn block_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
 
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::BlockUser(2)),
 			Error::<Test>::MarketplaceNotFound
@@ -2983,7 +3153,7 @@ fn block_user_while_marketplace_doesnt_exist_should_fail() {
 fn unblock_user_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
 
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::block_user(RuntimeOrigin::signed(1), m_id, BlockUserArgs::UnblockUser(2)),
 			Error::<Test>::MarketplaceNotFound
@@ -2999,9 +3169,11 @@ fn block_user_while_user_is_a_member_of_marketplace_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::apply(
 			RuntimeOrigin::signed(2),
@@ -3031,9 +3203,11 @@ fn self_enroll_should_work() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::self_enroll(
 			2,
@@ -3047,7 +3221,7 @@ fn self_enroll_should_work() {
 fn self_enroll_while_marketplace_doesnt_exist_should_fail() {
 	new_test_ext().execute_with(|| {
 
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 		assert_noop!(
 			GatedMarketplace::self_enroll(
 				2,
@@ -3066,9 +3240,11 @@ fn self_enroll_while_already_participant_should_fail() {
 			RuntimeOrigin::signed(1),
 			1,
 			create_label("my marketplace"),
-			500
+            500,
+            600
+
 		));
-		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
 		assert_ok!(GatedMarketplace::self_enroll(
 			2,
