@@ -755,37 +755,11 @@ impl pallet_rbac::Config for Runtime {
 	type MaxUsersPerRole = MaxUsersPerRole;
 }
 
-parameter_types! {
-	pub const LabelMaxLen:u32 = 32;
-	pub const MaxAuthsPerMarket:u32 = 3; // 1 of each role (1 owner, 1 admin, etc.)
-	pub const MaxRolesPerAuth: u32 = 2;
-	pub const MaxApplicants: u32 = 10;
-	pub const MaxBlockedUsersPerMarket: u32 = 100;
-	pub const NotesMaxLen: u32 = 256;
-	pub const MaxFeedbackLen: u32 = 256;
-	pub const NameMaxLen: u32 = 100;
-	pub const MaxFiles: u32 = 10;
-	pub const MaxApplicationsPerCustodian: u32 = 10;
-	pub const MaxMarketsPerItem: u32 = 10;
-	pub const MaxOffersPerMarket: u32 = 100;
-}
-
 impl pallet_afloat::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type MaxAuthsPerMarket = MaxAuthsPerMarket;
-	type MaxRolesPerAuth = MaxRolesPerAuth;
-	type MaxApplicants = MaxApplicants;
-	type MaxBlockedUsersPerMarket = MaxBlockedUsersPerMarket;
-	type LabelMaxLen = LabelMaxLen;
-	type NotesMaxLen = NotesMaxLen;
-	type MaxFeedbackLen = MaxFeedbackLen;
-	type NameMaxLen = NameMaxLen;
-	type MaxFiles = MaxFiles;
-	type MaxApplicationsPerCustodian = MaxApplicationsPerCustodian;
-	type MaxMarketsPerItem = MaxMarketsPerItem;
-	type MaxOffersPerMarket = MaxOffersPerMarket;
-	type Timestamp = Timestamp;
-	type Moment = Moment;
+	type Currency = Balances;
+	type TimeProvider = Timestamp;
+	type RemoveOrigin = EnsureRoot<AccountId>;
 	type Rbac = RBAC;
 }
 
@@ -884,6 +858,7 @@ construct_runtime!(
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
 		FundAdmin: pallet_fund_admin,
+		Afloat: pallet_afloat,
 	}
 );
 

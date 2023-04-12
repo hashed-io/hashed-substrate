@@ -62,11 +62,6 @@ pub mod pallet {
 		StorageOverflow,
 	}
 
-	#[pallet::storage]
-	#[pallet::getter(fn users)]
-	pub(super) type Users<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, User<T>, ValueQuery>;
-
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
 	// These functions materialize as "extrinsics", which are often compared to transactions.
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
@@ -90,7 +85,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			match args {
 				SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
-					let user = User {
+					let user: User<T> = User {
 						first_name,
 						last_name,
 						email,
@@ -105,10 +100,10 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					<Users<T>>::insert(who, user);
+					// <Users<T>>::insert(who, user);
 				},
 				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
-					let user = User {
+					let user: User<T> = User {
 						first_name,
 						last_name,
 						email,
@@ -123,7 +118,7 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					<Users<T>>::insert(who, user);
+					// <Users<T>>::insert(who, user);
 				},
 			}
 

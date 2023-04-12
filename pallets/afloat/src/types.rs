@@ -61,25 +61,6 @@ impl<T: Config> User<T> {
 	}
 }
 
-impl Default for User<T> {
-	fn default() -> Self {
-		Self {
-			first_name: BoundedVec::default(),
-			last_name: BoundedVec::default(),
-			email: BoundedVec::default(),
-			lang_key: BoundedVec::default(),
-			created_by: None,
-			created_date: None,
-			last_modified_by: None,
-			last_modified_date: None,
-			phone: None,
-			credits_needed: 0,
-			cpa_id: BoundedVec::default(),
-			tax_authority_id: 0,
-			lock_expiration_date: None,
-		}
-	}
-}
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
