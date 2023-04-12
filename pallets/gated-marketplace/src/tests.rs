@@ -3022,3 +3022,64 @@ fn block_user_while_user_is_a_member_of_marketplace_should_fail() {
 		);
 	});
 }
+
+#[test]
+fn self_enroll_should_work() {
+	new_test_ext().execute_with(|| {
+
+		assert_ok!(GatedMarketplace::create_marketplace(
+			RuntimeOrigin::signed(1),
+			1,
+			create_label("my marketplace"),
+			500
+		));
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+
+		assert_ok!(GatedMarketplace::self_enroll(
+			2,
+			m_id,
+		));
+
+	});
+}
+
+#[test]
+fn self_enroll_while_marketplace_doesnt_exist_should_fail() {
+	new_test_ext().execute_with(|| {
+
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+		assert_noop!(
+			GatedMarketplace::self_enroll(
+				2,
+				m_id,
+			),
+			Error::<Test>::MarketplaceNotFound
+		);
+	});
+}
+
+#[test]
+fn self_enroll_while_already_participant_should_fail() {
+	new_test_ext().execute_with(|| {
+
+		assert_ok!(GatedMarketplace::create_marketplace(
+			RuntimeOrigin::signed(1),
+			1,
+			create_label("my marketplace"),
+			500
+		));
+		let m_id = get_marketplace_id("my marketplace", 500, 1);
+
+		assert_ok!(GatedMarketplace::self_enroll(
+			2,
+			m_id,
+		));
+		assert_noop!(
+			GatedMarketplace::self_enroll(
+				2,
+				m_id,
+			),
+			Error::<Test>::UserAlreadyParticipant
+		);
+	});
+}

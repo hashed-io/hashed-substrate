@@ -226,6 +226,35 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+
+	pub fn self_enroll(
+		account: T::AccountId,
+		marketplace_id: [u8; 32],
+	) -> DispatchResult {
+
+		//since users can self-enroll (and provide an address) the caller of this function must validate 
+		//that the user is indeed the owner of the address by using ensure_signed
+	
+
+		//ensure the account is not already in the marketplace
+		ensure!(
+			!Self::has_any_role(account.clone(), &marketplace_id),
+			Error::<T>::UserAlreadyParticipant
+		);
+
+		// ensure the account is not blocked by the marketplace
+		ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
+
+		// ensure the marketplace exist
+		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+
+
+		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
+		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
+		
+		Ok(())
+	}
+
 	pub fn do_remove_authority(
 		authority: T::AccountId,
 		account: T::AccountId,
