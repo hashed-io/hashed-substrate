@@ -8,7 +8,7 @@ pub type ShortString = BoundedVec<u8, ConstU32<32>>;
 pub type LongString = BoundedVec<u8, ConstU32<32>>;
 pub type Date = u64;
 
-#[derive(Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct User<T: Config> {

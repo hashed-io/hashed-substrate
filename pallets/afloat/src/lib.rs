@@ -48,9 +48,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
 		SomethingStored(u32, T::AccountId),
+		NewUser(T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -62,9 +61,17 @@ pub mod pallet {
 		StorageOverflow,
 	}
 
-	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	// These functions materialize as "extrinsics", which are often compared to transactions.
-	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
+	#[pallet::storage]
+	#[pallet::getter(fn user_info)]
+	/// Keeps track of the number of fruniques in existence for a collection.
+	pub(super) type UserInfo<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		User<T>, // User<T> is a struct that contains all the user info
+		OptionQuery,
+	>;
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
@@ -100,7 +107,7 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					// <Users<T>>::insert(who, user);
+					<UserInfo<T>>::insert(who, user);
 				},
 				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
 					let user: User<T> = User {
@@ -118,7 +125,7 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					// <Users<T>>::insert(who, user);
+					<UserInfo<T>>::insert(who, user);
 				},
 			}
 
