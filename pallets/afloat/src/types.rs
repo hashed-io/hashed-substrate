@@ -19,7 +19,7 @@ pub struct User<T: Config> {
 	pub created_date: Option<T::Moment>,
 	pub last_modified_by: Option<T::AccountId>,
 	pub last_modified_date: Option<T::Moment>,
-	pub phone: BoundedVec<u8, ConstU32<32>>,
+	pub phone: Option<BoundedVec<u8, ConstU32<32>>>,
 	pub credits_needed: u32,
 	pub cpa_id: BoundedVec<u8, ConstU32<32>>,
 	pub tax_authority_id: u32, //! this is a number that represents the state of the user

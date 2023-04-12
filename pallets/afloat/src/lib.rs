@@ -73,6 +73,47 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			match args {
+				SignUpArgs::buyer_or_seller { first_name, last_name, email, state } => {
+					let user = User {
+						first_name,
+						last_name,
+						email,
+						lang_key: "en".as_bytes().to_vec(),
+						created_by: Some(who.clone()),
+						created_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						last_modified_by: Some(who.clone()),
+						last_modified_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						phone: None,
+						credits_needed: 0,
+						cpa_id: "0".as_bytes().to_vec(),
+						tax_authority_id: state,
+						lock_expiration_date: None,
+					};
+					Users::<T>::insert(who.clone(), user);
+				},
+				SignUpArgs::cpa { first_name, last_name, email, license_number, state } => {
+					let user = User {
+						first_name,
+						last_name,
+						email,
+						lang_key: "en".as_bytes().to_vec(),
+						created_by: Some(who.clone()),
+						created_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						last_modified_by: Some(who.clone()),
+						last_modified_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						phone: None,
+						credits_needed: 0,
+						cpa_id: license_number.to_string().as_bytes().to_vec(),
+						tax_authority_id: state,
+						lock_expiration_date: None,
+					};
+					Users::<T>::insert(who.clone(), user);
+				},
+			}
+
+			//! add this user to gatedMarketplace
 			Ok(())
 		}
 	}
