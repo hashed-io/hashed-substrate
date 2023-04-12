@@ -1,8 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
 
 #[cfg(test)]
@@ -11,22 +8,34 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+// mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-
+	use frame_support::pallet_prelude::ValueQuery;
 	use frame_support::pallet_prelude::*;
+	use frame_support::traits::Currency;
+	use frame_support::traits::UnixTime;
 	use frame_system::pallet_prelude::*;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
+	use crate::types::*;
+	use pallet_rbac::types::RoleBasedAccessControl;
+
+	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<
+		<T as frame_system::Config>::AccountId,
+	>>::Balance;
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
-		/// Because this pallet emits events, it depends on the runtime's definition of an event.
+	pub trait Config: frame_system::Config + pallet_gated_marketplace::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type TimeProvider: UnixTime;
+		type Rbac: RoleBasedAccessControl<Self::AccountId>;
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+		type Currency: Currency<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -53,6 +62,11 @@ pub mod pallet {
 		StorageOverflow,
 	}
 
+	#[pallet::storage]
+	#[pallet::getter(fn users)]
+	pub(super) type Users<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, User<T>, ValueQuery>;
+
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
 	// These functions materialize as "extrinsics", which are often compared to transactions.
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
@@ -75,45 +89,45 @@ pub mod pallet {
 		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			match args {
-				SignUpArgs::buyer_or_seller { first_name, last_name, email, state } => {
+				SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
 					let user = User {
 						first_name,
 						last_name,
 						email,
-						lang_key: "en".as_bytes().to_vec(),
+						lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
 						created_by: Some(who.clone()),
-						created_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						created_date: Some(T::TimeProvider::now().as_secs()),
 						last_modified_by: Some(who.clone()),
-						last_modified_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						last_modified_date: Some(T::TimeProvider::now().as_secs()),
 						phone: None,
 						credits_needed: 0,
-						cpa_id: "0".as_bytes().to_vec(),
+						cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					Users::<T>::insert(who.clone(), user);
+					<Users<T>>::insert(who, user);
 				},
-				SignUpArgs::cpa { first_name, last_name, email, license_number, state } => {
+				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
 					let user = User {
 						first_name,
 						last_name,
 						email,
-						lang_key: "en".as_bytes().to_vec(),
+						lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
 						created_by: Some(who.clone()),
-						created_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						created_date: Some(T::TimeProvider::now().as_secs()),
 						last_modified_by: Some(who.clone()),
-						last_modified_date: Some(<frame_system::Pallet<T>>::block_timestamp()),
+						last_modified_date: Some(T::TimeProvider::now().as_secs()),
 						phone: None,
 						credits_needed: 0,
-						cpa_id: license_number.to_string().as_bytes().to_vec(),
+						cpa_id: license_number,
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					Users::<T>::insert(who.clone(), user);
+					<Users<T>>::insert(who, user);
 				},
 			}
 
-			//! add this user to gatedMarketplace
+			// ! add this user to gatedMarketplace
 			Ok(())
 		}
 	}
