@@ -8,6 +8,8 @@ pub type ShortString = BoundedVec<u8, ConstU32<32>>;
 pub type LongString = BoundedVec<u8, ConstU32<32>>;
 pub type Date = u64;
 
+pub type MarketplaceId = [u8; 32];
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]

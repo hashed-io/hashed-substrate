@@ -62,6 +62,14 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
+	#[pallet::getter(fn marketplace_id)]
+	/// Keeps track of the number of collections in existence.
+	pub(super) type Marketplace<T: Config> = StorageValue<
+		_,
+		MarketplaceId, // Marketplace identifier
+	>;
+
+	#[pallet::storage]
 	#[pallet::getter(fn user_info)]
 	/// Keeps track of the number of fruniques in existence for a collection.
 	pub(super) type UserInfo<T: Config> = StorageMap<
@@ -77,12 +85,20 @@ pub mod pallet {
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+			// let marketplace: pallet_gated_marketplace::Pallet<T>::Marketplace<T> = Marketplace {
+			// 	label: ShortString::try_from(b"afloat".to_vec()).unwrap(),
+			// 	creator: origin.clone(),
+			// };
+
+			// let marketplace = Marketp
 			Ok(())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
+			<Marketplace<T>>::kill();
+			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
 		}
 
@@ -107,7 +123,8 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					<UserInfo<T>>::insert(who, user);
+					<UserInfo<T>>::insert(who.clone(), user);
+					Self::deposit_event(Event::NewUser(who));
 				},
 				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
 					let user: User<T> = User {
@@ -125,11 +142,12 @@ pub mod pallet {
 						tax_authority_id: state,
 						lock_expiration_date: None,
 					};
-					<UserInfo<T>>::insert(who, user);
+					<UserInfo<T>>::insert(who.clone(), user);
+					Self::deposit_event(Event::NewUser(who));
 				},
 			}
-
 			// ! add this user to gatedMarketplace
+
 			Ok(())
 		}
 	}
