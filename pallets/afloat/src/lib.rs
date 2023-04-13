@@ -8,12 +8,14 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+
 // mod functions;
-pub mod types;
+
+mod functions;
+mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::ValueQuery;
 	use frame_support::pallet_prelude::*;
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
@@ -64,17 +66,19 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
+		/// Marketplace ID is not set
+		MarketplaceIdNotSet,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
 	}
 
-	// #[pallet::storage]
-	// #[pallet::getter(fn marketplace_id)]
-	// /// Keeps track of the number of collections in existence.
-	// pub(super) type MarketplaceIds<T: Config> = StorageValue<
-	// 	_,
-	// 	MarketplaceIds, // Marketplace identifier
-	// >;
+	#[pallet::storage]
+	#[pallet::getter(fn marketplace_id)]
+	/// Keeps track of the id of the afloat's marketplace.
+	pub(super) type Marketplace<T: Config> = StorageValue<
+		_,
+		MarketplaceId, // Marketplace identifier
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn user_info)]
@@ -130,6 +134,15 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			if let Some(marketplace_id) = Self::marketplace_id() {
+				ensure!(
+					pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id)
+						== Ok(()),
+					Error::<T>::MarketplaceIdNotSet
+				);
+			} else {
+				ensure!(false, Error::<T>::MarketplaceIdNotSet);
+			}
 			match args {
 				SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
 					let user: User<T> = User {
