@@ -8,8 +8,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-mod functions;
-mod types;
+pub mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {

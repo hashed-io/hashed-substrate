@@ -18,11 +18,18 @@ pub mod pallet {
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::Permill;
+	use frame_support::sp_io::hashing::blake2_256;
+	use pallet_gated_marketplace::functions;
+	use pallet_gated_marketplace::types::*;
+
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
+
+
 
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<
 		<T as frame_system::Config>::AccountId,
@@ -61,13 +68,13 @@ pub mod pallet {
 		StorageOverflow,
 	}
 
-	#[pallet::storage]
-	#[pallet::getter(fn marketplace_id)]
-	/// Keeps track of the number of collections in existence.
-	pub(super) type Marketplace<T: Config> = StorageValue<
-		_,
-		MarketplaceId, // Marketplace identifier
-	>;
+	// #[pallet::storage]
+	// #[pallet::getter(fn marketplace_id)]
+	// /// Keeps track of the number of collections in existence.
+	// pub(super) type MarketplaceIds<T: Config> = StorageValue<
+	// 	_,
+	// 	MarketplaceIds, // Marketplace identifier
+	// >;
 
 	#[pallet::storage]
 	#[pallet::getter(fn user_info)]
@@ -80,27 +87,44 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	pub(super) type AfloatMarketPlaceId<T: Config> = StorageValue<_, [u8; 32]>;
+
+
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+
+
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
-			// let marketplace: pallet_gated_marketplace::Pallet<T>::Marketplace<T> = Marketplace {
-			// 	label: ShortString::try_from(b"afloat".to_vec()).unwrap(),
-			// 	creator: origin.clone(),
-			// };
-
-			// let marketplace = Marketp
+			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;	
+			let buy_fee = 2;
+			let sell_fee = 4;
+			let label = b"Afloat".to_vec();
+			let label_bounded: BoundedVec<u8, T::LabelMaxLen> = BoundedVec::try_from(label).expect("Label too long");
+			let who = ensure_signed(origin)?; // origin will be market owner
+			let m: Marketplace<T> = Marketplace {
+				label: label_bounded,
+				buy_fee: Permill::from_percent(buy_fee),
+				sell_fee: Permill::from_percent(sell_fee),
+				creator: who.clone(),
+			};
+			let marketplace_id = m.clone().using_encoded(blake2_256);
+			AfloatMarketPlaceId::<T>::put(marketplace_id);
+			pallet_gated_marketplace::Pallet::do_create_marketplace(who.clone(), who.clone(), m)?;
 			Ok(())
 		}
 
-		#[pallet::call_index(1)]
+/* 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			<Marketplace<T>>::kill();
 			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
-		}
+		} */
 
 		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
@@ -124,7 +148,7 @@ pub mod pallet {
 						lock_expiration_date: None,
 					};
 					<UserInfo<T>>::insert(who.clone(), user);
-					Self::deposit_event(Event::NewUser(who));
+					Self::deposit_event(Event::NewUser(who.clone()));
 				},
 				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
 					let user: User<T> = User {
@@ -143,11 +167,11 @@ pub mod pallet {
 						lock_expiration_date: None,
 					};
 					<UserInfo<T>>::insert(who.clone(), user);
-					Self::deposit_event(Event::NewUser(who));
+					Self::deposit_event(Event::NewUser(who.clone()));
 				},
 			}
-			// ! add this user to gatedMarketplace
-
+			let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+			pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id)?;
 			Ok(())
 		}
 	}
