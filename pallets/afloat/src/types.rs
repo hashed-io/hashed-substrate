@@ -4,42 +4,42 @@ use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
-pub type ShortString = BoundedVec<u8, ConstU32<32>>;
-pub type LongString = BoundedVec<u8, ConstU32<32>>;
+pub type ShortString = BoundedVec<u8, ConstU32<35>>;
+pub type LongString = BoundedVec<u8, ConstU32<255>>;
 pub type Date = u64;
 
-#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct User<T: Config> {
-	pub first_name: BoundedVec<u8, ConstU32<32>>,
-	pub last_name: BoundedVec<u8, ConstU32<32>>,
-	pub email: BoundedVec<u8, ConstU32<32>>,
-	pub lang_key: BoundedVec<u8, ConstU32<32>>,
+	pub first_name: ShortString,
+	pub last_name: ShortString,
+	pub email: LongString,
+	pub lang_key: ShortString,
 	pub created_by: Option<T::AccountId>,
 	pub created_date: Option<Date>,
 	pub last_modified_by: Option<T::AccountId>,
 	pub last_modified_date: Option<Date>,
-	pub phone: Option<BoundedVec<u8, ConstU32<32>>>,
+	pub phone: Option<ShortString>,
 	pub credits_needed: u32,
-	pub cpa_id: BoundedVec<u8, ConstU32<32>>,
+	pub cpa_id: ShortString,
 	pub tax_authority_id: u32,
 	pub lock_expiration_date: Option<Date>,
 }
 
 impl<T: Config> User<T> {
 	pub fn new(
-		first_name: BoundedVec<u8, ConstU32<32>>,
-		last_name: BoundedVec<u8, ConstU32<32>>,
-		email: BoundedVec<u8, ConstU32<32>>,
-		lang_key: BoundedVec<u8, ConstU32<32>>,
+		first_name: ShortString,
+		last_name: ShortString,
+		email: LongString,
+		lang_key: ShortString,
 		created_by: Option<T::AccountId>,
 		created_date: Option<Date>,
 		last_modified_by: Option<T::AccountId>,
 		last_modified_date: Option<Date>,
-		phone: Option<BoundedVec<u8, ConstU32<32>>>,
+		phone: Option<ShortString>,
 		credits_needed: u32,
-		cpa_id: BoundedVec<u8, ConstU32<32>>,
+		cpa_id: ShortString,
 		tax_authority_id: u32,
 		lock_expiration_date: Option<Date>,
 	) -> Self {
@@ -66,16 +66,16 @@ impl<T: Config> User<T> {
 #[codec(mel_bound())]
 pub enum SignUpArgs {
 	BuyerOrSeller {
-		first_name: LongString,
-		last_name: LongString,
+		first_name: ShortString,
+		last_name: ShortString,
 		email: LongString,
 		state: u32,
 	},
 	CPA {
-		first_name: LongString,
-		last_name: LongString,
+		first_name: ShortString,
+		last_name: ShortString,
 		email: LongString,
-		license_number: LongString,
+		license_number: ShortString,
 		state: u32,
 	},
 }

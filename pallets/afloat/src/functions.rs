@@ -17,17 +17,7 @@ use sp_runtime::traits::AccountIdConversion;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
-	// pub fn string_to_short_s
-
 	pub fn do_initial_setup(creator: T::AccountId) -> DispatchResult {
-		// let marketplace = Marketplace {
-		// 	label: BoundedVec<u8, T::LabelMaxLen>::try_from(b"afloat".to_vec()).unwrap(),
-		// 	buy_fee: Permill::from_percent(5),
-		// 	sell_fee: Permill::from_percent(5),
-		// 	creator,
-		// };
-
-		// let marketplace = Marketp
 		Ok(())
 	}
 }

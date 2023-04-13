@@ -113,7 +113,7 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
-			// <Marketplace<T>>::kill();
+			<AfloatMarketPlaceId<T>>::kill();
 			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
 		}
@@ -164,6 +164,12 @@ pub mod pallet {
 			}
 			let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 			pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(3)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn update_user_info(origin: OriginFor<T>, user: User<T>) -> DispatchResult {
 			Ok(())
 		}
 	}
