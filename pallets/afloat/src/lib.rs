@@ -9,7 +9,7 @@ mod mock;
 mod tests;
 
 // mod functions;
-mod types;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -27,7 +27,6 @@ pub mod pallet {
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
-	// use pallet_gated_marketplace::types::Marketplace;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
 
@@ -65,8 +64,6 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// Marketplece ID is not set
-		MarketplaceIdNotSet,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
 	}
@@ -131,28 +128,8 @@ pub mod pallet {
 
 		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn set_marketplace_id(origin: OriginFor<T>, id: MarketplaceId) -> DispatchResult {
-			// let marketplace: pallet_gated_marketplace::Pallet<T>::Marketplace<T> = Marketplace {
-			// 	label: ShortString::try_from(b"afloat".to_vec()).unwrap(),
-			// 	creator: origin.clone(),
-			// };
-
-			<Marketplace<T>>::put(id);
-			Ok(())
-		}
-
-		#[pallet::call_index(3)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			if let Some(marketplace_id) = Self::marketplace_id() {
-				let _ =
-					pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id);
-			} else {
-				ensure!(false, Error::<T>::MarketplaceIdNotSet);
-			}
-
 			match args {
 				SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
 					let user: User<T> = User {
@@ -172,7 +149,6 @@ pub mod pallet {
 					};
 					<UserInfo<T>>::insert(who.clone(), user);
 					Self::deposit_event(Event::NewUser(who.clone()));
-					Self::deposit_event(Event::NewUser(who.clone()));
 				},
 				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
 					let user: User<T> = User {
@@ -191,7 +167,6 @@ pub mod pallet {
 						lock_expiration_date: None,
 					};
 					<UserInfo<T>>::insert(who.clone(), user);
-					Self::deposit_event(Event::NewUser(who.clone()));
 					Self::deposit_event(Event::NewUser(who.clone()));
 				},
 			}
