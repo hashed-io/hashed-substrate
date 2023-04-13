@@ -87,23 +87,26 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
+		pub fn initial_setup(
+			origin: OriginFor<T>,
+			creator: T::AccountId,
+			admin: T::AccountId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
-			let buy_fee = 2;
-			let sell_fee = 4;
-			let label = b"Afloat".to_vec();
-			let label_bounded: BoundedVec<u8, T::LabelMaxLen> =
-				BoundedVec::try_from(label).expect("Label too long");
-			let who = ensure_signed(origin)?; // origin will be market owner
-			let m: Marketplace<T> = Marketplace {
-				label: label_bounded,
-				buy_fee: Permill::from_percent(buy_fee),
-				sell_fee: Permill::from_percent(sell_fee),
-				creator: who.clone(),
+
+			let label: BoundedVec<u8, T::LabelMaxLen> =
+				BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
+			let marketplace: Marketplace<T> = Marketplace {
+				label,
+				buy_fee: Permill::from_percent(2),
+				sell_fee: Permill::from_percent(4),
+				creator: creator.clone(),
 			};
-			let marketplace_id = m.clone().using_encoded(blake2_256);
+			let marketplace_id = marketplace.clone().using_encoded(blake2_256);
 			AfloatMarketPlaceId::<T>::put(marketplace_id);
-			pallet_gated_marketplace::Pallet::do_create_marketplace(who.clone(), who.clone(), m)?;
+			pallet_gated_marketplace::Pallet::do_create_marketplace(creator, admin, marketplace)?;
 			Ok(())
 		}
 
