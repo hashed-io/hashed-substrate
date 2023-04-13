@@ -8,12 +8,11 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-// mod functions;
+mod functions;
 mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::ValueQuery;
 	use frame_support::pallet_prelude::*;
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
@@ -22,7 +21,6 @@ pub mod pallet {
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
-	// use pallet_gated_marketplace::types::Marketplace;
 	use pallet_rbac::types::RoleBasedAccessControl;
 
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<
@@ -58,7 +56,7 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// Marketplece ID is not set
+		/// Marketplace ID is not set
 		MarketplaceIdNotSet,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
@@ -66,7 +64,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn marketplace_id)]
-	/// Keeps track of the number of collections in existence.
+	/// Keeps track of the id of the afloat's marketplace.
 	pub(super) type Marketplace<T: Config> = StorageValue<
 		_,
 		MarketplaceId, // Marketplace identifier
@@ -87,14 +85,8 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
-			// let marketplace: pallet_gated_marketplace::Pallet<T>::Marketplace<T> = Marketplace {
-			// 	label: ShortString::try_from(b"afloat".to_vec()).unwrap(),
-			// 	creator: origin.clone(),
-			// };
-
-			// let marketplace = Marketp
-			Ok(())
+		pub fn initial_setup(origin: OriginFor<T>, creator: T::AccountId) -> DispatchResult {
+			Self::do_initial_setup(creator)
 		}
 
 		#[pallet::call_index(1)]
@@ -123,8 +115,11 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			if let Some(marketplace_id) = Self::marketplace_id() {
-				let _ =
-					pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id);
+				ensure!(
+					pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id)
+						== Ok(()),
+					Error::<T>::MarketplaceIdNotSet
+				);
 			} else {
 				ensure!(false, Error::<T>::MarketplaceIdNotSet);
 			}
