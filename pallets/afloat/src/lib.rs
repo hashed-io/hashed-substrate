@@ -15,21 +15,18 @@ pub mod types;
 pub mod pallet {
 	use frame_support::pallet_prelude::ValueQuery;
 	use frame_support::pallet_prelude::*;
+	use frame_support::sp_io::hashing::blake2_256;
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::Permill;
-	use frame_support::sp_io::hashing::blake2_256;
 	use pallet_gated_marketplace::functions;
 	use pallet_gated_marketplace::types::*;
-
+	use sp_runtime::Permill;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
 	use pallet_rbac::types::RoleBasedAccessControl;
-
-
 
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<
 		<T as frame_system::Config>::AccountId,
@@ -68,14 +65,6 @@ pub mod pallet {
 		StorageOverflow,
 	}
 
-	// #[pallet::storage]
-	// #[pallet::getter(fn marketplace_id)]
-	// /// Keeps track of the number of collections in existence.
-	// pub(super) type MarketplaceIds<T: Config> = StorageValue<
-	// 	_,
-	// 	MarketplaceIds, // Marketplace identifier
-	// >;
-
 	#[pallet::storage]
 	#[pallet::getter(fn user_info)]
 	/// Keeps track of the number of fruniques in existence for a collection.
@@ -88,23 +77,23 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	pub(super) type AfloatMarketPlaceId<T: Config> = StorageValue<_, [u8; 32]>;
-
-
+	#[pallet::getter(fn marketplace_id)]
+	pub(super) type AfloatMarketPlaceId<T: Config> = StorageValue<
+		_,
+		MarketplaceId, // Afloat's marketplace id
+	>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
-
-
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
-			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;	
+			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 			let buy_fee = 2;
 			let sell_fee = 4;
 			let label = b"Afloat".to_vec();
-			let label_bounded: BoundedVec<u8, T::LabelMaxLen> = BoundedVec::try_from(label).expect("Label too long");
+			let label_bounded: BoundedVec<u8, T::LabelMaxLen> =
+				BoundedVec::try_from(label).expect("Label too long");
 			let who = ensure_signed(origin)?; // origin will be market owner
 			let m: Marketplace<T> = Marketplace {
 				label: label_bounded,
@@ -118,13 +107,13 @@ pub mod pallet {
 			Ok(())
 		}
 
-/* 		#[pallet::call_index(1)]
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
-			<Marketplace<T>>::kill();
+			// <Marketplace<T>>::kill();
 			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
-		} */
+		}
 
 		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
