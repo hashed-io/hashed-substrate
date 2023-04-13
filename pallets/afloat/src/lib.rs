@@ -169,7 +169,20 @@ pub mod pallet {
 
 		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn update_user_info(origin: OriginFor<T>, user: User<T>) -> DispatchResult {
+		pub fn update_user_info(
+			origin: OriginFor<T>,
+			address: T::AccountId,
+			first_name: ShortString,
+			last_name: ShortString,
+			email: LongString,
+			phone: Option<ShortString>,
+			credits_needed: u32,
+			cpa_id: ShortString,
+			state: u32,
+		) -> DispatchResult {
+			// TODO: Check if the user is editing himself or is an admin
+			let who = ensure_signed(origin)?;
+
 			Ok(())
 		}
 	}
