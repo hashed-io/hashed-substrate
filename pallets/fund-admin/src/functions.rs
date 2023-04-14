@@ -1,11 +1,9 @@
 use super::*;
-use frame_support::pallet_prelude::*;
-use frame_support::sp_io::hashing::blake2_256;
+use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256};
 use scale_info::prelude::vec;
 use sp_runtime::sp_std::vec::Vec; // vec primitive // vec![] macro
 
-use frame_support::traits::Currency;
-use frame_support::traits::ExistenceRequirement::KeepAlive;
+use frame_support::traits::{Currency, ExistenceRequirement::KeepAlive};
 
 use crate::types::*;
 use pallet_rbac::types::*;
@@ -875,11 +873,16 @@ impl<T: Config> Pallet<T> {
 
 	fn do_delete_expenditure(expenditure_id: ExpenditureId) -> DispatchResult {
 		// Ensure expenditure_id exists & get expenditure data
-		let expenditure_data = ExpendituresInfo::<T>::get(&expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+		let expenditure_data =
+			ExpendituresInfo::<T>::get(&expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
-		Self::do_delete_expenditure_transactions(
-			expenditure_id,
-		)?;
+		// Ensure expenditure_id is contained in ExpendituresByProject
+		ensure!(
+			<ExpendituresByProject<T>>::get(expenditure_data.project_id).contains(&expenditure_id),
+			Error::<T>::ExpenditureNotFoundForSelectedProjectId
+		);
+
+		Self::do_delete_expenditure_transactions(expenditure_id)?;
 
 		// Delete expenditure data from ExpendituresInfo
 		<ExpendituresInfo<T>>::remove(expenditure_id);
@@ -892,10 +895,6 @@ impl<T: Config> Pallet<T> {
 				Ok(())
 			},
 		)?;
-
-		if ExpendituresByProject::<T>::try_get(expenditure_data.project_id).map_err(|_| Error::<T>::ExpenditureNotFound)?.is_empty() {
-			<ExpendituresByProject<T>>::remove(expenditure_data.project_id);
-		};
 
 		Self::deposit_event(Event::ExpenditureDeleted(expenditure_data.project_id, expenditure_id));
 		Ok(())
@@ -1157,7 +1156,7 @@ impl<T: Config> Pallet<T> {
 			DrawdownType::EB5 => {
 				// Ensure drawdown has transactions
 				ensure!(
-					<TransactionsByDrawdown<T>>::contains_key(project_id, drawdown_id),
+					!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(),
 					Error::<T>::DrawdownHasNoTransactions
 				);
 
@@ -1481,6 +1480,12 @@ impl<T: Config> Pallet<T> {
 		let transaction_data =
 			TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
 
+		ensure!(
+			<TransactionsByDrawdown<T>>::get(transaction_data.project_id, transaction_data.drawdown_id)
+				.contains(&transaction_id),
+			Error::<T>::TransactionNotFoundForSelectedDrawdownId
+		);
+
 		// Ensure drawdown is deletable
 		Self::is_drawdown_editable(transaction_data.drawdown_id)?;
 
@@ -1531,9 +1536,10 @@ impl<T: Config> Pallet<T> {
 		// Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
 		let drawdown_data =
 			DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
 		ensure!(
-			drawdown_data.drawdown_type == DrawdownType::ConstructionLoan
-				|| drawdown_data.drawdown_type == DrawdownType::DeveloperEquity,
+			drawdown_data.drawdown_type == DrawdownType::ConstructionLoan ||
+				drawdown_data.drawdown_type == DrawdownType::DeveloperEquity,
 			Error::<T>::DrawdownTypeNotSupportedForBulkUpload
 		);
 
@@ -2016,6 +2022,15 @@ impl<T: Config> Pallet<T> {
 		// Ensure revenue transaction exists & get revenue transaction data
 		let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(revenue_transaction_id)
 			.ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+		// Ensure revenue transaction belongs to the given revenue
+		ensure!(
+			TransactionsByRevenue::<T>::get(
+				revenue_transaction_data.project_id,
+				revenue_transaction_data.revenue_id
+			).contains(&revenue_transaction_id),
+			Error::<T>::RevenueTransactionNotFoundForSelectedRevenueId
+		);
 
 		// Ensure revenue is deletable
 		Self::is_revenue_editable(revenue_transaction_data.revenue_id)?;
@@ -2555,7 +2570,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		match role {
 			ProxyRole::Administrator => {
-				return Err(Error::<T>::CannotRegisterAdminRole.into());
+				return Err(Error::<T>::CannotRegisterAdminRole.into())
 			},
 			ProxyRole::Builder => {
 				// Mutate project data
@@ -2663,7 +2678,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		match role {
 			ProxyRole::Administrator => {
-				return Err(Error::<T>::CannotRemoveAdminRole.into());
+				return Err(Error::<T>::CannotRemoveAdminRole.into())
 			},
 			ProxyRole::Builder => {
 				// Mutate project data
@@ -2674,7 +2689,7 @@ impl<T: Config> Pallet<T> {
 							builder.retain(|u| *u != user);
 						},
 						None => {
-							return Err(Error::<T>::UserNotAssignedToProject.into());
+							return Err(Error::<T>::UserNotAssignedToProject.into())
 						},
 					}
 					Ok(())
@@ -2689,7 +2704,7 @@ impl<T: Config> Pallet<T> {
 							investor.retain(|u| *u != user);
 						},
 						None => {
-							return Err(Error::<T>::UserNotAssignedToProject.into());
+							return Err(Error::<T>::UserNotAssignedToProject.into())
 						},
 					}
 					Ok(())
@@ -2704,7 +2719,7 @@ impl<T: Config> Pallet<T> {
 							issuer.retain(|u| *u != user);
 						},
 						None => {
-							return Err(Error::<T>::UserNotAssignedToProject.into());
+							return Err(Error::<T>::UserNotAssignedToProject.into())
 						},
 					}
 					Ok(())
@@ -2719,7 +2734,7 @@ impl<T: Config> Pallet<T> {
 							regional_center.retain(|u| *u != user);
 						},
 						None => {
-							return Err(Error::<T>::UserNotAssignedToProject.into());
+							return Err(Error::<T>::UserNotAssignedToProject.into())
 						},
 					}
 					Ok(())
@@ -2740,7 +2755,7 @@ impl<T: Config> Pallet<T> {
 
 		// Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
 		if user_data.role != role {
-			return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
+			return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into())
 		}
 
 		// Match user role
@@ -2789,26 +2804,21 @@ impl<T: Config> Pallet<T> {
 				match drawdown_data.status {
 					DrawdownStatus::Draft => Ok(()),
 					DrawdownStatus::Rejected => Ok(()),
-					DrawdownStatus::Submitted => {
-						Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into())
-					},
-					DrawdownStatus::Approved => {
-						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
-					},
-					DrawdownStatus::Confirmed => {
-						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
-					},
+					DrawdownStatus::Submitted =>
+						Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into()),
+					DrawdownStatus::Approved =>
+						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into()),
+					DrawdownStatus::Confirmed =>
+						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into()),
 				}
 			},
 			_ => {
 				// Match drawdown status
 				match drawdown_data.status {
-					DrawdownStatus::Approved => {
-						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
-					},
-					DrawdownStatus::Confirmed => {
-						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
-					},
+					DrawdownStatus::Approved =>
+						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into()),
+					DrawdownStatus::Confirmed =>
+						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into()),
 					_ => Ok(()),
 				}
 			},
@@ -2825,21 +2835,19 @@ impl<T: Config> Pallet<T> {
 		match transaction_data.status {
 			TransactionStatus::Draft => Ok(()),
 			TransactionStatus::Rejected => Ok(()),
-			TransactionStatus::Submitted => {
-				Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into())
-			},
-			TransactionStatus::Approved => {
-				Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into())
-			},
-			TransactionStatus::Confirmed => {
-				Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into())
-			},
+			TransactionStatus::Submitted =>
+				Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into()),
+			TransactionStatus::Approved =>
+				Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into()),
+			TransactionStatus::Confirmed =>
+				Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into()),
 		}
 	}
 
 	/// # Checks if the caller has the permission to perform an action
 	///
-	/// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
+	/// - This version of is_authorized checks if the caller is an Administrator and if so, it
+	///   checks the global scope
 	/// otherwise it checks the project scope
 	/// - This is useful for functions that are called by both administrators and project users
 	/// - Scope is always required. In workflows where the caller is an administrator,
@@ -3020,9 +3028,8 @@ impl<T: Config> Pallet<T> {
 		match revenue_data.status {
 			RevenueStatus::Draft => Ok(()),
 			RevenueStatus::Rejected => Ok(()),
-			RevenueStatus::Submitted => {
-				Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into())
-			},
+			RevenueStatus::Submitted =>
+				Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into()),
 			RevenueStatus::Approved => Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into()),
 		}
 	}
@@ -3039,12 +3046,10 @@ impl<T: Config> Pallet<T> {
 		match revenue_transaction_data.status {
 			RevenueTransactionStatus::Draft => Ok(()),
 			RevenueTransactionStatus::Rejected => Ok(()),
-			RevenueTransactionStatus::Submitted => {
-				Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into())
-			},
-			RevenueTransactionStatus::Approved => {
-				Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into())
-			},
+			RevenueTransactionStatus::Submitted =>
+				Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into()),
+			RevenueTransactionStatus::Approved =>
+				Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into()),
 		}
 	}
 
@@ -3221,7 +3226,7 @@ impl<T: Config> Pallet<T> {
 			T::Currency::transfer(&admin, &user, T::TransferAmount::get(), KeepAlive)?;
 			Ok(())
 		} else {
-			return Ok(());
+			return Ok(())
 		}
 	}
 
@@ -3283,32 +3288,45 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_delete_expenditure_transactions(
-		expenditure_id: ExpenditureId,
-	) -> DispatchResult {
+	fn do_delete_expenditure_transactions(expenditure_id: ExpenditureId) -> DispatchResult {
 		// Get expenditure data
-		let expenditure_data = <ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
+		let expenditure_data =
+			<ExpendituresInfo<T>>::get(expenditure_id).ok_or(Error::<T>::ExpenditureNotFound)?;
 
 		// Ensure project exists
-		ensure!(<ProjectsInfo<T>>::contains_key(expenditure_data.project_id), Error::<T>::ProjectNotFound);
+		ensure!(
+			<ProjectsInfo<T>>::contains_key(expenditure_data.project_id),
+			Error::<T>::ProjectNotFound
+		);
 
 		// Ensure project contains drawdowns and get drawdowns
-		let drawdowns = <DrawdownsByProject<T>>::try_get(expenditure_data.project_id).map_err(|_| Error::<T>::ProjectHasNoDrawdowns)?;
+		let drawdowns = <DrawdownsByProject<T>>::try_get(expenditure_data.project_id)
+			.map_err(|_| Error::<T>::ProjectHasNoDrawdowns)?;
 
 		for drawdown_id in drawdowns.iter().cloned() {
 			// Ensure drawdown exists
 			ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-			// If drawdown has transactions, check that every transaction exists & its amount is zero
+			// If drawdown has transactions, check that every transaction exists & its amount is
+			// zero
 			if <TransactionsByDrawdown<T>>::contains_key(expenditure_data.project_id, drawdown_id) {
-				for transaction_id in <TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown_id) {
+				for transaction_id in
+					<TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown_id).iter().cloned()
+				{
 					// Ensure transaction exists & get transaction data
-					let transaction_data = <TransactionsInfo<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
-					
+					let transaction_data = <TransactionsInfo<T>>::get(transaction_id)
+						.ok_or(Error::<T>::TransactionNotFound)?;
+
 					// Ensure transaction belogns to the expenditure_id
-					ensure!(transaction_data.expenditure_id == expenditure_id, Error::<T>::TransactionDoesNotBelongToExpenditure);
+					ensure!(
+						transaction_data.expenditure_id == expenditure_id,
+						Error::<T>::TransactionDoesNotBelongToExpenditure
+					);
 					// Ensure transaction amount is zero
-					ensure!(transaction_data.amount == 0, Error::<T>::ExpenditureHasNonZeroTransactions);
+					ensure!(
+						transaction_data.amount == 0,
+						Error::<T>::ExpenditureHasNonZeroTransactions
+					);
 
 					// Delete transaction from TransactionsInfo
 					<TransactionsInfo<T>>::remove(transaction_id);
@@ -3323,7 +3341,7 @@ impl<T: Config> Pallet<T> {
 						},
 					)?;
 				}
-				
+
 				// Delete drawdown transactions whole entry from TransactionsByDrawdown
 				<TransactionsByDrawdown<T>>::remove(expenditure_data.project_id, drawdown_id);
 			}
@@ -3331,5 +3349,20 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// V A L I D A T I O N S    I N P U T    D A T A
+	// ================================================================================================
+
+	// fn validate_field_name(field_name: FieldName) -> DispatchResult {
+	// 	// Ensure field name is not empty
+	// 	ensure!(!field_name.is_empty(), Error::<T>::EmptyFieldName);
+	// 	// Ensure field name is not grater than ConstU32<100>,
+	// 	// which is the maximum length of a field name
+	// 	ensure!(
+	// 		field_name.len() <= 100,
+	// 		Error::<T>::FieldNameTooLong
+	// 	);
+	// 	// ensure!(field_name.len() <= ConstU32<100>, Error::<T>::FieldNameTooLong);
+	// 	Ok(())
+	// }
 	// Do not code beyond this line
 }

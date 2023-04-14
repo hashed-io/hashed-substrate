@@ -2533,6 +2533,9 @@ fn expenditures_an_admin_can_delete_a_expenditure_containing_transactions_with_z
                 Some(del_expenditure_data),
                 None,
         ));
+
+        assert_eq!(ExpendituresByProject::<Test>::contains_key(project_id), true);
+        assert_eq!(ExpendituresInfo::<Test>::get(expenditure_id).is_some(), false);
     });
 }
 
@@ -2559,6 +2562,8 @@ fn expenditures_an_admin_can_delete_a_expenditure_containing_transactions_with_z
                 Some(transaction_data),
                 false,
             ));
+
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Draft);
     
             let del_expenditure_data = make_expenditure(
                 None,
@@ -2606,6 +2611,8 @@ fn expenditures_an_admin_can_delete_a_expenditure_containing_transactions_with_z
                 Some(transaction_data),
                 true,
             ));
+
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
     
             let del_expenditure_data = make_expenditure(
                 None,
@@ -2627,6 +2634,129 @@ fn expenditures_an_admin_can_delete_a_expenditure_containing_transactions_with_z
                 Error::<Test>::ExpenditureHasNonZeroTransactions
             );
 
+        });
+    }
+
+    #[test]
+    fn expenditures_an_admin_cannot_delete_a_expenditure_that_is_in_use_approved_status_should_fail(){
+        new_test_ext().execute_with(|| {
+            assert_ok!(make_default_full_project());
+
+            let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+            let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+            let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+            
+            let transaction_data = make_transaction(
+                Some(expenditure_id),
+                Some(10000),
+                CUDAction::Create,
+                None,
+            );
+
+            assert_ok!(FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                true,
+            ));
+
+            assert_ok!(FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ));
+
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+    
+            let del_expenditure_data = make_expenditure(
+                None,
+                None,
+                None,
+                None,
+                None,
+                CUDAction::Delete,
+                Some(expenditure_id),
+            );
+
+            assert_noop!(
+                FundAdmin::expenditures_and_job_eligibles(
+                    RuntimeOrigin::signed(1),
+                    project_id,
+                    Some(del_expenditure_data),
+                    None,
+                ),
+                Error::<Test>::ExpenditureHasNonZeroTransactions
+            );
+
+        });
+    }
+
+    #[test]
+    fn expenditures_an_admin_cannot_delete_a_expenditure_that_is_in_use_confirmed_status_should_fail(){
+        new_test_ext().execute_with(|| {
+            assert_ok!(make_default_full_project());
+
+            let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+            let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+            let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+            
+            let transaction_data = make_transaction(
+                Some(expenditure_id),
+                Some(10000),
+                CUDAction::Create,
+                None,
+            );
+
+            assert_ok!(FundAdmin::submit_drawdown(
+                RuntimeOrigin::signed(2),
+                project_id,
+                drawdown_id,
+                Some(transaction_data),
+                true,
+            ));
+
+            assert_ok!(FundAdmin::approve_drawdown(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                None,
+                None,
+            ));
+    
+            let del_expenditure_data = make_expenditure(
+                None,
+                None,
+                None,
+                None,
+                None,
+                CUDAction::Delete,
+                Some(expenditure_id),
+            );
+
+            let bank_documents = make_documents(1);
+
+            assert_ok!(FundAdmin::bank_confirming_documents(
+                RuntimeOrigin::signed(1),
+                project_id,
+                drawdown_id,
+                Some(bank_documents.clone()),
+                CUDAction::Create,
+            ));
+
+            assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+
+            assert_noop!(
+                FundAdmin::expenditures_and_job_eligibles(
+                    RuntimeOrigin::signed(1),
+                    project_id,
+                    Some(del_expenditure_data),
+                    None,
+                ),
+                Error::<Test>::ExpenditureHasNonZeroTransactions
+            );
         });
     }
     
