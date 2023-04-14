@@ -34,25 +34,26 @@ impl<T: Config> Pallet<T> {
 					tax_authority_id: 1,
 					lock_expiration_date: None,
 				};
-		<UserInfo<T>>::insert(creator, creator_user);
+		<UserInfo<T>>::insert(creator.clone(), creator_user);
 
-		let admin_user: User<T> = User {
-					first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-					last_name: ShortString::try_from(b"Admin".to_vec()).unwrap(),
-					email: LongString::try_from(b"".to_vec()).unwrap(),
-					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
-					created_by: Some(admin.clone()),
-					created_date: Some(T::TimeProvider::now().as_secs()),
-					last_modified_by: Some(admin.clone()),
-					last_modified_date: Some(T::TimeProvider::now().as_secs()),
-					phone: None,
-					credits_needed: 0,
-					cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
-					tax_authority_id: 1,
-					lock_expiration_date: None,
-				};
-
-		<UserInfo<T>>::insert(admin, admin_user);
+		if admin != creator {
+			let admin_user: User<T> = User {
+				first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+				last_name: ShortString::try_from(b"Admin".to_vec()).unwrap(),
+				email: LongString::try_from(b"".to_vec()).unwrap(),
+				lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
+				created_by: Some(admin.clone()),
+				created_date: Some(T::TimeProvider::now().as_secs()),
+				last_modified_by: Some(admin.clone()),
+				last_modified_date: Some(T::TimeProvider::now().as_secs()),
+				phone: None,
+				credits_needed: 0,
+				cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
+				tax_authority_id: 1,
+				lock_expiration_date: None,
+			};
+			<UserInfo<T>>::insert(admin, admin_user);
+		}
 
 		Ok(())
 	}
