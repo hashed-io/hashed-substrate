@@ -106,6 +106,8 @@ pub mod pallet {
 
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
+			Self::do_initial_setup(creator.clone(), admin.clone())?;
+
 			let label: BoundedVec<u8, T::LabelMaxLen> =
 				BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
 			let marketplace: Marketplace<T> = Marketplace {

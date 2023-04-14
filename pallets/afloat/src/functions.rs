@@ -18,7 +18,42 @@ use sp_runtime::traits::AccountIdConversion;
 use sp_runtime::{sp_std::vec::Vec, Permill};
 
 impl<T: Config> Pallet<T> {
-	pub fn do_initial_setup(creator: T::AccountId) -> DispatchResult {
+	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
+		let creator_user: User<T> = User {
+					first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+					last_name: ShortString::try_from(b"Creator".to_vec()).unwrap(),
+					email: LongString::try_from(b"".to_vec()).unwrap(),
+					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
+					created_by: Some(creator.clone()),
+					created_date: Some(T::TimeProvider::now().as_secs()),
+					last_modified_by: Some(creator.clone()),
+					last_modified_date: Some(T::TimeProvider::now().as_secs()),
+					phone: None,
+					credits_needed: 0,
+					cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
+					tax_authority_id: 1,
+					lock_expiration_date: None,
+				};
+		<UserInfo<T>>::insert(creator, creator_user);
+
+		let admin_user: User<T> = User {
+					first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+					last_name: ShortString::try_from(b"Admin".to_vec()).unwrap(),
+					email: LongString::try_from(b"".to_vec()).unwrap(),
+					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
+					created_by: Some(admin.clone()),
+					created_date: Some(T::TimeProvider::now().as_secs()),
+					last_modified_by: Some(admin.clone()),
+					last_modified_date: Some(T::TimeProvider::now().as_secs()),
+					phone: None,
+					credits_needed: 0,
+					cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
+					tax_authority_id: 1,
+					lock_expiration_date: None,
+				};
+
+		<UserInfo<T>>::insert(admin, admin_user);
+
 		Ok(())
 	}
 
