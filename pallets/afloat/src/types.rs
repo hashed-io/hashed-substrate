@@ -64,6 +64,23 @@ impl<T: Config> User<T> {
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
+pub enum UpdateUserArgs {
+	Edit {
+		first_name: Option<ShortString>,
+		last_name: Option<ShortString>,
+		email: Option<LongString>,
+		lang_key: Option<ShortString>,
+		phone: Option<Option<ShortString>>,
+		credits_needed: Option<u32>,
+		cpa_id: Option<ShortString>,
+		state: Option<u32>,
+	},
+	Delete {},
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
 pub enum SignUpArgs {
 	BuyerOrSeller {
 		first_name: ShortString,

@@ -8,7 +8,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-// mod functions;
+mod functions;
 pub mod types;
 
 #[frame_support::pallet]
@@ -63,6 +63,10 @@ pub mod pallet {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		/// Marketplace not initialized
+		MarketplaceNotInitialized,
+		/// User not found
+		UserNotFound,
 	}
 
 	#[pallet::storage]
@@ -122,49 +126,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn sign_up(origin: OriginFor<T>, args: SignUpArgs) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			match args {
-				SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
-					let user: User<T> = User {
-						first_name,
-						last_name,
-						email,
-						lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
-						created_by: Some(who.clone()),
-						created_date: Some(T::TimeProvider::now().as_secs()),
-						last_modified_by: Some(who.clone()),
-						last_modified_date: Some(T::TimeProvider::now().as_secs()),
-						phone: None,
-						credits_needed: 0,
-						cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
-						tax_authority_id: state,
-						lock_expiration_date: None,
-					};
-					<UserInfo<T>>::insert(who.clone(), user);
-					Self::deposit_event(Event::NewUser(who.clone()));
-				},
-				SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
-					let user: User<T> = User {
-						first_name,
-						last_name,
-						email,
-						lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
-						created_by: Some(who.clone()),
-						created_date: Some(T::TimeProvider::now().as_secs()),
-						last_modified_by: Some(who.clone()),
-						last_modified_date: Some(T::TimeProvider::now().as_secs()),
-						phone: None,
-						credits_needed: 0,
-						cpa_id: license_number,
-						tax_authority_id: state,
-						lock_expiration_date: None,
-					};
-					<UserInfo<T>>::insert(who.clone(), user);
-					Self::deposit_event(Event::NewUser(who.clone()));
-				},
-			}
-			let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-			pallet_gated_marketplace::Pallet::<T>::self_enroll(who.clone(), marketplace_id)?;
-			Ok(())
+			Self::do_create_user(who.clone(), who, args)
 		}
 
 		#[pallet::call_index(3)]
@@ -172,16 +134,21 @@ pub mod pallet {
 		pub fn update_user_info(
 			origin: OriginFor<T>,
 			address: T::AccountId,
-			first_name: ShortString,
-			last_name: ShortString,
-			email: LongString,
-			phone: Option<ShortString>,
-			credits_needed: u32,
-			cpa_id: ShortString,
-			state: u32,
+			args: UpdateUserArgs,
 		) -> DispatchResult {
 			// TODO: Check if the user is editing himself or is an admin
 			let who = ensure_signed(origin)?;
+
+			ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
+
+			<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(address.clone(), |user| {
+				let user = user.as_mut().ok_or(Error::<T>::UserNotFound)?;
+
+				user.last_modified_date = Some(T::TimeProvider::now().as_secs());
+				user.last_modified_by = Some(who.clone());
+
+				Ok(())
+			})?;
 
 			Ok(())
 		}
