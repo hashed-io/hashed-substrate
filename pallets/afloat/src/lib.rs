@@ -54,6 +54,8 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		SomethingStored(u32, T::AccountId),
 		NewUser(T::AccountId),
+		UserEdited(T::AccountId),
+		UserDeleted(T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -67,6 +69,10 @@ pub mod pallet {
 		MarketplaceNotInitialized,
 		/// User not found
 		UserNotFound,
+		/// User already exists
+		UserAlreadyExists,
+		/// Failed to edit user account
+		FailedToEditUserAccount,
 	}
 
 	#[pallet::storage]
@@ -139,16 +145,14 @@ pub mod pallet {
 			// TODO: Check if the user is editing himself or is an admin
 			let who = ensure_signed(origin)?;
 
-			ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
-
-			<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(address.clone(), |user| {
-				let user = user.as_mut().ok_or(Error::<T>::UserNotFound)?;
-
-				user.last_modified_date = Some(T::TimeProvider::now().as_secs());
-				user.last_modified_by = Some(who.clone());
-
-				Ok(())
-			})?;
+			match args {
+				UpdateUserArgs::Edit { first_name, last_name, email, lang_key, phone, credits_needed, cpa_id, state } => {
+					Self::do_edit_user(who, address, first_name, last_name, email, lang_key, phone, credits_needed, cpa_id, state)?;
+				}
+				UpdateUserArgs::Delete => {
+					Self::do_delete_user(who, address)?;
+				}
+			}
 
 			Ok(())
 		}

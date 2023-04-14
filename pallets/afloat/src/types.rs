@@ -75,7 +75,7 @@ pub enum UpdateUserArgs {
 		cpa_id: Option<ShortString>,
 		state: Option<u32>,
 	},
-	Delete {},
+	Delete,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
