@@ -68,6 +68,8 @@ pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
 pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
 pallet-afloat = { default-features = false, path = "../pallets/afloat" }
+pallet-mapped-assets = { default-features = false, path = "../pallets/mapped-assets" }
+
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38" }
