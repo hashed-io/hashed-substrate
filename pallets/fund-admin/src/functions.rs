@@ -493,14 +493,24 @@ impl<T: Config> Pallet<T> {
 		Self::remove_project_role(project_id, user.clone(), role)?;
 
 		// Remove user from UsersByProject storagemap.
-		<UsersByProject<T>>::try_mutate::<_, _, DispatchError, _>(project_id, |users| {
+		<UsersByProject<T>>::try_mutate_exists::<_, _, DispatchError, _>(project_id,
+			|users_option| {
+			let users = users_option.as_mut().ok_or(Error::<T>::ProjectHasNoUsers)?;
 			users.retain(|u| u != &user);
+			if users.is_empty() {
+				users_option.clone_from(&None);
+			}
 			Ok(())
 		})?;
 
 		// Remove user from ProjectsByUser storagemap
-		<ProjectsByUser<T>>::try_mutate::<_, _, DispatchError, _>(user.clone(), |projects| {
-			projects.retain(|p| p != &project_id);
+		<ProjectsByUser<T>>::try_mutate_exists::<_, _, DispatchError, _>(user.clone(),
+		|projects_option| {
+			let projects = projects_option.as_mut().ok_or(Error::<T>::UserHasNoProjects)?;
+			projects.retain(|project| project != &project_id);
+			if projects.is_empty() {
+				projects_option.clone_from(&None);
+			}
 			Ok(())
 		})?;
 
@@ -630,25 +640,20 @@ impl<T: Config> Pallet<T> {
 			},
 			_ => {
 				// Can not delete a user if the user has assigned projects
-				let projects_by_user = <ProjectsByUser<T>>::get(user.clone());
 				ensure!(
-					projects_by_user.is_empty(),
+					<ProjectsByUser<T>>::get(user.clone()).is_empty(),
 					Error::<T>::UserHasAssignedProjectsCannotDelete
 				);
+
+				// Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs to
+				// unassign the user from all its projects.
+
+				// Remove user from UsersByProject storagemap. No longer required, the admnistator first needs to
+				// unassign the user from all its projects.
 
 				// Remove user from UsersInfo storagemap
 				<UsersInfo<T>>::remove(user.clone());
 
-				// Remove user from ProjectsByUser storagemap
-				<ProjectsByUser<T>>::remove(user.clone());
-
-				// Remove user from UsersByProject storagemap
-				for project in projects_by_user.iter().cloned() {
-					<UsersByProject<T>>::try_mutate::<_, _, DispatchError, _>(project, |users| {
-						users.retain(|u| u != &user);
-						Ok(())
-					})?;
-				}
 			},
 		}
 
@@ -888,10 +893,14 @@ impl<T: Config> Pallet<T> {
 		<ExpendituresInfo<T>>::remove(expenditure_id);
 
 		// Delete expenditure_id from ExpendituresByProject
-		<ExpendituresByProject<T>>::try_mutate::<_, _, DispatchError, _>(
+		<ExpendituresByProject<T>>::try_mutate_exists::<_, _, DispatchError, _>(
 			expenditure_data.project_id,
-			|expenditures| {
+			|expenditures_option| {
+				let expenditures = expenditures_option.as_mut().ok_or(Error::<T>::ProjectHasNoExpenditures)?;
 				expenditures.retain(|expenditure| expenditure != &expenditure_id);
+				if expenditures.is_empty() {
+					expenditures_option.clone_from(&None)
+				}
 				Ok(())
 			},
 		)?;
@@ -1001,7 +1010,7 @@ impl<T: Config> Pallet<T> {
 
 		// Get drawdown transactions
 		let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-			.map_err(|_| Error::<T>::DrawdownNotFound)?;
+			.map_err(|_| Error::<T>::DrawdownHasNoTransactions)?;
 
 		// Update each transaction status to submitted
 		for transaction_id in drawdown_transactions.iter().cloned() {
@@ -1076,7 +1085,7 @@ impl<T: Config> Pallet<T> {
 
 		// Get drawdown transactions
 		let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-			.map_err(|_| Error::<T>::DrawdownNotFound)?;
+			.map_err(|_| Error::<T>::DrawdownHasNoTransactions)?;
 
 		// Update each transaction status to approved
 		for transaction_id in drawdown_transactions.iter().cloned() {
@@ -1163,7 +1172,7 @@ impl<T: Config> Pallet<T> {
 				// Get drawdown transactions
 				let drawdown_transactions =
 					TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-						.map_err(|_| Error::<T>::DrawdownNotFound)?;
+						.map_err(|_| Error::<T>::DrawdownHasNoTransactions)?;
 
 				// Update each transaction status to rejected
 				for transaction_id in drawdown_transactions.iter().cloned() {
@@ -1492,12 +1501,15 @@ impl<T: Config> Pallet<T> {
 		// Ensure transaction is deletable
 		Self::is_transaction_editable(transaction_id)?;
 
-		// Remove transaction from TransactionsByDrawdown
-		<TransactionsByDrawdown<T>>::try_mutate::<_, _, _, DispatchError, _>(
+		<TransactionsByDrawdown<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
 			transaction_data.project_id,
 			transaction_data.drawdown_id,
-			|transactions| {
+			|transactions_option| {
+				let transactions = transactions_option.as_mut().ok_or(Error::<T>::DrawdownHasNoTransactions)?;
 				transactions.retain(|transaction| transaction != &transaction_id);
+				if transactions.is_empty() {
+					transactions_option.clone_from(&None);
+				}
 				Ok(())
 			},
 		)?;
@@ -1821,14 +1833,26 @@ impl<T: Config> Pallet<T> {
 		let job_eligible_data =
 			JobEligiblesInfo::<T>::get(job_eligible_id).ok_or(Error::<T>::JobEligibleNotFound)?;
 
+		// Ensure job_eligible_id is contained in JobEligiblesByProject
+		ensure!(
+			JobEligiblesByProject::<T>::contains_key(job_eligible_data.project_id),
+			Error::<T>::JobEligibleNotFoundForSelectedProjectId
+		);
+
+		Self::do_delete_job_eligible_transactions(job_eligible_id)?;
+
 		// Delete job eligible data from JobEligiblesInfo
 		<JobEligiblesInfo<T>>::remove(job_eligible_id);
 
 		// Delete job eligible id from JobEligiblesByProject
-		<JobEligiblesByProject<T>>::try_mutate::<_, _, DispatchError, _>(
+		<JobEligiblesByProject<T>>::try_mutate_exists::<_, _, DispatchError, _>(
 			job_eligible_data.project_id,
-			|job_eligibles| {
+			|job_eligibles_option| {
+				let job_eligibles = job_eligibles_option.as_mut().ok_or(Error::<T>::ProjectHasNoJobEligibles)?;
 				job_eligibles.retain(|job_eligible| job_eligible != &job_eligible_id);
+				if job_eligibles.is_empty() {
+					job_eligibles_option.clone_from(&None);
+				}
 				Ok(())
 			},
 		)?;
@@ -2039,12 +2063,18 @@ impl<T: Config> Pallet<T> {
 		Self::is_revenue_transaction_editable(revenue_transaction_id)?;
 
 		// Remove revenue transaction from TransactionsByRevenue
-		<TransactionsByRevenue<T>>::try_mutate::<_, _, _, DispatchError, _>(
+		<TransactionsByRevenue<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
 			revenue_transaction_data.project_id,
 			revenue_transaction_data.revenue_id,
-			|revenue_transactions| {
+			|revenue_transactions_option| {
+				let revenue_transactions = revenue_transactions_option
+					.as_mut()
+					.ok_or(Error::<T>::RevenueHasNoTransactions)?;
 				revenue_transactions
 					.retain(|revenue_transaction| revenue_transaction != &revenue_transaction_id);
+				if revenue_transactions.is_empty() {
+					revenue_transactions_option.clone_from(&None);
+				}
 				Ok(())
 			},
 		)?;
@@ -2382,7 +2412,7 @@ impl<T: Config> Pallet<T> {
 
 		// Get drawdown transactions
 		let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-			.map_err(|_| Error::<T>::DrawdownNotFound)?;
+			.map_err(|_| Error::<T>::DrawdownHasNoTransactions)?;
 
 		// Mutate individual drawdown transactions status to Confirmed
 		for transaction_id in drawdown_transactions.iter().cloned() {
@@ -2474,7 +2504,7 @@ impl<T: Config> Pallet<T> {
 
 		// Get drawdown transactions
 		let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-			.map_err(|_| Error::<T>::DrawdownNotFound)?;
+			.map_err(|_| Error::<T>::DrawdownHasNoTransactions)?;
 
 		// Mutate individual drawdown transactions status to Approved
 		for transaction_id in drawdown_transactions.iter().cloned() {
@@ -2758,13 +2788,14 @@ impl<T: Config> Pallet<T> {
 			return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into())
 		}
 
-		// Match user role
+		// Match user role. Check the max numbers of projects a user can be assigned to
 		match user_data.role {
 			ProxyRole::Administrator => {
 				// Can't assign an administrator role account to a project, admins are scoped globally
 				return Err(Error::<T>::CannotAddAdminRole.into());
 			},
 			ProxyRole::Investor => {
+				// Investors can be assigned to a maximum of 1 project
 				// Get how many projects the user is assigned to
 				let projects_count = <ProjectsByUser<T>>::get(user.clone()).len();
 				ensure!(
@@ -2773,6 +2804,7 @@ impl<T: Config> Pallet<T> {
 				);
 				Ok(())
 			},
+				// Builders, Issuers & Regional Centers don't have a limit on how many projects they can be assigned to
 			_ => Ok(()),
 		}
 	}
@@ -2937,20 +2969,22 @@ impl<T: Config> Pallet<T> {
 		// Ensure drawdown exists
 		ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-		// Get drawdown transactions
-		let drawdown_transactions = TransactionsByDrawdown::<T>::try_get(project_id, drawdown_id)
-			.map_err(|_| Error::<T>::DrawdownNotFound)?;
-
 		// Calculate drawdown total amount
 		let mut drawdown_total_amount: u64 = 0;
 
-		for transaction_id in drawdown_transactions.iter().cloned() {
-			// Get transaction data
-			let transaction_data = TransactionsInfo::<T>::get(transaction_id)
-				.ok_or(Error::<T>::TransactionNotFound)?;
+		if !TransactionsByDrawdown::<T>::get(project_id, drawdown_id).is_empty() {
+			// Get transactions by drawdown
+			let transactions_by_drawdown = TransactionsByDrawdown::<T>::get(project_id, drawdown_id);
 
-			// Add transaction amount to drawdown total amount
-			drawdown_total_amount += transaction_data.amount;
+			// Iterate through transactions
+			for transaction_id in transactions_by_drawdown.iter().cloned() {
+				// Get transaction data
+				let transaction_data =
+					TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+				// Add transaction amount to drawdown total amount
+				drawdown_total_amount += transaction_data.amount;
+			}
 		}
 
 		// Update drawdown total amount
@@ -3060,20 +3094,23 @@ impl<T: Config> Pallet<T> {
 		// Ensure revenue exists
 		ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
 
-		// Get revenue transactions
-		let revenue_transactions = TransactionsByRevenue::<T>::try_get(project_id, revenue_id)
-			.map_err(|_| Error::<T>::RevenueNotFound)?;
-
 		// Calculate revenue total amount
 		let mut revenue_total_amount: Amount = 0;
 
-		for transaction_id in revenue_transactions.iter().cloned() {
-			// Get revenue transaction data
-			let revenue_transaction_data = RevenueTransactionsInfo::<T>::get(transaction_id)
-				.ok_or(Error::<T>::RevenueTransactionNotFound)?;
+		if !TransactionsByRevenue::<T>::get(project_id, revenue_id).is_empty() {
+			// Get revenue transactions
+			let transactions_by_revenue = TransactionsByRevenue::<T>::get(project_id, revenue_id);
 
-			// Add transaction amount to revenue total amount
-			revenue_total_amount += revenue_transaction_data.amount;
+			// Iterate over revenue transactions
+			for revenue_transaction_id in transactions_by_revenue {
+				// Get revenue transaction data
+				let revenue_transaction_data =
+					RevenueTransactionsInfo::<T>::get(revenue_transaction_id)
+						.ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+				// Add revenue transaction amount to revenue total amount
+				revenue_total_amount += revenue_transaction_data.amount;
+			}
 		}
 
 		// Update revenue total amount
@@ -3241,7 +3278,7 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::ProjectNotFound
 		);
 
-		// Ensure project contains drawdowns and get drawdowns
+		// Ensure project contains drawdowns and get them
 		let drawdowns = <DrawdownsByProject<T>>::try_get(expenditure_data.project_id)
 			.map_err(|_| Error::<T>::ProjectHasNoDrawdowns)?;
 
@@ -3249,9 +3286,8 @@ impl<T: Config> Pallet<T> {
 			// Ensure drawdown exists
 			ensure!(<DrawdownsInfo<T>>::contains_key(drawdown_id), Error::<T>::DrawdownNotFound);
 
-			// If drawdown has transactions, check that every transaction exists & its amount is
-			// zero
-			if <TransactionsByDrawdown<T>>::contains_key(expenditure_data.project_id, drawdown_id) {
+			// If drawdown has transactions, check that every transaction exists & its amount is zero
+			if !<TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown_id).is_empty() {
 				for transaction_id in
 					<TransactionsByDrawdown<T>>::get(expenditure_data.project_id, drawdown_id).iter().cloned()
 				{
@@ -3259,33 +3295,89 @@ impl<T: Config> Pallet<T> {
 					let transaction_data = <TransactionsInfo<T>>::get(transaction_id)
 						.ok_or(Error::<T>::TransactionNotFound)?;
 
-					// Ensure transaction belogns to the expenditure_id
-					ensure!(
-						transaction_data.expenditure_id == expenditure_id,
-						Error::<T>::TransactionDoesNotBelongToExpenditure
-					);
-					// Ensure transaction amount is zero
-					ensure!(
-						transaction_data.amount == 0,
-						Error::<T>::ExpenditureHasNonZeroTransactions
-					);
+					if transaction_data.expenditure_id == expenditure_id {
+						// Ensure transaction amount is zero
+						ensure!(
+							transaction_data.amount == 0,
+							Error::<T>::ExpenditureHasNonZeroTransactions
+						);
 
-					// Delete transaction from TransactionsInfo
-					<TransactionsInfo<T>>::remove(transaction_id);
+						// Delete transaction from TransactionsInfo
+						<TransactionsInfo<T>>::remove(transaction_id);
 
-					// Delete transaction from TransactionsByDrawdown
-					<TransactionsByDrawdown<T>>::try_mutate::<_, _, _, DispatchError, _>(
-						expenditure_data.project_id,
-						drawdown_id,
-						|transactions| {
-							transactions.retain(|transaction| transaction != &transaction_id);
-							Ok(())
-						},
-					)?;
+						// Delete transaction from TransactionsByDrawdown
+						<TransactionsByDrawdown<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
+							expenditure_data.project_id,
+							drawdown_id,
+							|transactions_option| {
+								let transactions = transactions_option.as_mut().ok_or(Error::<T>::DrawdownHasNoTransactions)?;
+								transactions.retain(|transaction| transaction != &transaction_id);
+								if transactions.is_empty() {
+									transactions_option.clone_from(&None);
+								}
+								Ok(())
+							},
+						)?;
+					}
 				}
+			}
+		}
+		Ok(())
+	}
 
-				// Delete drawdown transactions whole entry from TransactionsByDrawdown
-				<TransactionsByDrawdown<T>>::remove(expenditure_data.project_id, drawdown_id);
+	fn do_delete_job_eligible_transactions(job_eligible_id: JobEligibleId,) -> DispatchResult {
+		// Get job eligible data
+		let job_eligible_data =
+			<JobEligiblesInfo<T>>::get(job_eligible_id).ok_or(Error::<T>::JobEligibleNotFound)?;
+
+		// Ensure project exists
+		ensure!(
+			<ProjectsInfo<T>>::contains_key(job_eligible_data.project_id),
+			Error::<T>::ProjectNotFound
+		);
+
+		// Ensure project contains revenues and get them
+		let revenues = <RevenuesByProject<T>>::try_get(job_eligible_data.project_id)
+			.map_err(|_| Error::<T>::ProjectHasNoRevenues)?;
+
+		for revenue_id in revenues.iter().cloned() {
+			// Ensure revenue exists
+			ensure!(<RevenuesInfo<T>>::contains_key(revenue_id), Error::<T>::RevenueNotFound);
+
+			// If revenue has transactions, check that every transaction exists & its amount is zero
+			if !<TransactionsByRevenue<T>>::get(job_eligible_data.project_id, revenue_id).is_empty() {
+				for transaction_id in
+					<TransactionsByRevenue<T>>::get(job_eligible_data.project_id, revenue_id).iter().cloned()
+				{
+					// Ensure transaction exists & get transaction data
+					let transaction_data = <RevenueTransactionsInfo<T>>::get(transaction_id)
+						.ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+					if transaction_data.job_eligible_id == job_eligible_id {
+						// Ensure transaction amount is zero
+						ensure!(
+							transaction_data.amount == 0,
+							Error::<T>::JobEligibleHasNonZeroTransactions
+						);
+
+						// Delete transaction from RevenueTransactionsInfo
+						<RevenueTransactionsInfo<T>>::remove(transaction_id);
+
+						// Delete transaction from TransactionsByRevenue
+						<TransactionsByRevenue<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
+							job_eligible_data.project_id,
+							revenue_id,
+							|transactions_option| {
+								let transactions = transactions_option.as_mut().ok_or(Error::<T>::RevenueHasNoTransactions)?;
+								transactions.retain(|transaction| transaction != &transaction_id);
+								if transactions.is_empty() {
+									transactions_option.clone_from(&None);
+								}
+								Ok(())
+							},
+						)?;
+					}
+				}
 			}
 		}
 		Ok(())
@@ -3293,18 +3385,43 @@ impl<T: Config> Pallet<T> {
 
 	// V A L I D A T I O N S    I N P U T    D A T A
 	// ================================================================================================
+    // fn bound<E,Len: Get<u32>>(vec: BoundedVec<E, Len>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
+    //     BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
+    // }
 
 	// fn validate_field_name(field_name: FieldName) -> DispatchResult {
-	// 	// Ensure field name is not empty
-	// 	ensure!(!field_name.is_empty(), Error::<T>::EmptyFieldName);
-	// 	// Ensure field name is not grater than ConstU32<100>,
-	// 	// which is the maximum length of a field name
-	// 	ensure!(
-	// 		field_name.len() <= 100,
-	// 		Error::<T>::FieldNameTooLong
-	// 	);
-	// 	// ensure!(field_name.len() <= ConstU32<100>, Error::<T>::FieldNameTooLong);
+	// 	Ensure field name is not empty
+	// 	let field_name_x: BoundedVec<_, _> =
+	// 	field_name.clone().into_inner().try_into().map_err(|_| Error::<T>::FieldNameTooLong)?;
+		
+	// 	let field_name = Self::bound::<_, _>(field_name, Error::<T>::FieldNameTooLong)?;
+	// 	ensure!(!field_name.is_empty(), Error::<T>::FieldNameIsEmpty);
+	// 	ensure!(field_name.is_empty(), Error::<T>::EmptyFieldName);
+	// 	Ensure field name is not grater than ConstU32<100>,
+	// 	which is the maximum length of a field name
+	// 	ensure!(field_name.len() == 5u32 as usize, Error::<T>::FieldNameTooLong);
 	// 	Ok(())
 	// }
+
+	// fn validate_field_description(field_description: FieldDescription) -> DispatchResult {
+	// 	// Ensure field description is not empty
+	// 	ensure!(!field_description.is_empty(), Error::<T>::EmptyFieldDescription);
+	// 	// Ensure field description is not grater than ConstU32<100>,
+	// 	// which is the maximum length of a field description
+	// 	ensure!(field_description.len() <= 400, Error::<T>::FieldDescriptionTooLong);
+	// 	Ok(())
+	// }
+
+	// fn validate_cid(cid: CID) -> DispatchResult {
+	// 	// Ensure cid is not empty
+	// 	ensure!(!cid.is_empty(), Error::<T>::EmptyCID);
+	// 	// Ensure cid is not grater than ConstU32<100>,
+	// 	// which is the maximum length of a cid
+	// 	ensure!(cid.len() <= 100, Error::<T>::CIDTooLong);
+	// 	Ok(())
+	// }
+
+
+
 	// Do not code beyond this line
 }

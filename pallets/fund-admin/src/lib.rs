@@ -407,6 +407,14 @@ pub mod pallet {
 		ProjectIsAlreadyCompleted,
 		/// Project has no drawdowns
 		ProjectHasNoDrawdowns,
+		/// Project has no expenditures
+		ProjectHasNoExpenditures,
+		/// Project has no users
+		ProjectHasNoUsers,
+		/// Project has no job eligibles
+		ProjectHasNoJobEligibles,
+		/// Project has no revenues
+		ProjectHasNoRevenues,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
 		/// User is not registered
@@ -503,8 +511,6 @@ pub mod pallet {
 		DrawdownIsNotInSubmittedStatus,
 		/// Transactions is not in submitted status
 		TransactionIsNotInSubmittedStatus,
-		/// Selected transaction does not belong to the current expenditure_id
-		TransactionDoesNotBelongToExpenditure,
 		/// Array of expenditures is empty
 		EmptyExpenditures,
 		/// Expenditure name is required
@@ -523,6 +529,8 @@ pub mod pallet {
 		AmountRequired,
 		/// Can not delete a user if the user is assigned to a project
 		UserHasAssignedProjects,
+		/// User has no projects assigned
+		UserHasNoProjects,
 		/// Can not send a drawdown to submitted status if it has no transactions
 		NoTransactionsToSubmit,
 		/// Bulk upload description is required
@@ -579,6 +587,10 @@ pub mod pallet {
 		JobEligibleAmountRequired,
 		/// Job eligible id is required
 		JobEligibleIdRequired,
+		/// Job eligible not found for the given project id
+		JobEligibleNotFoundForSelectedProjectId,
+		/// Job eligible has non zero transactions
+		JobEligibleHasNonZeroTransactions,
 		/// Revenue id was not found
 		RevenueNotFound,
 		/// Transactions revenue array is empty
