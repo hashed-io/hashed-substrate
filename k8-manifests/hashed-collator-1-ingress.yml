@@ -10,6 +10,7 @@ spec:
   tls:
   - hosts:
     - c1.hashed.network
+    - c1.p2p.hashed.network
     secretName: hashed-collator-1
   rules:
   - host: c1.hashed.network
@@ -50,3 +51,13 @@ spec:
             name: hashed-collator-1
             port:
               number: 9933
+  - host: c1.p2p.hashed.network
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: hashed-collator-1
+            port:
+              number: 40333
