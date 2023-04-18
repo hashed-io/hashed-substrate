@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: hashed-collator-2-pvc
+    namespace: hashed-network
+spec:
+  volumeMode: Filesystem
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hashed-collator-2
+  namespace: hashed-network
+spec:
+  selector:
+    matchLabels:
+      app: hashed-collator-2
+  template:
+    metadata:
+      labels:
+        app: hashed-collator-2
+    spec:
+      containers:
+      - name: hashed-collator-2
+        imagePullPolicy: Always
+        image: sebastianmontero/hashed-substrate-collator:db3f834438fd2daf59e3969af37ecc8cc46cf9be
+        command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
+        args: ["hashed", "/var/www/hashed/hashed"]
+        volumeMounts:
+          - name: hashed-db
+            mountPath:  /var/www/hashed/hashed
+        # env:
+        #   - name: MNEMO
+        #     valueFrom:
+        #       secretKeyRef:
+        #         name: hashedsecrets
+        #         key: N4MNEMO
+        #         optional: false
+        #   - name: NODEKEY
+        #     valueFrom:
+        #       secretKeyRef:
+        #         name: hashedsecrets
+        #         key: N4NODEKEY
+        #         optional: false
+        resources:
+          limits:
+            memory: "4G"
+            cpu: "1.5"
+        ports:
+        - containerPort: 9933
+        - containerPort: 9944
+        - containerPort: 9946
+        - containerPort: 30333
+        - containerPort: 40333
+      volumes:
+        - name: hashed-db
+          persistentVolumeClaim:
+            claimName: hashed-collator-2-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  hashed-collator-2
+  namespace: hashed-network
+spec:
+  selector:
+    app:  hashed-collator-2
+  type:  NodePort
+  ports:
+  - name:  collator-p2p-port
+    port:  40333
+    targetPort:  40333
+  - name:  collator-ws-port
+    port:  9946
+    targetPort:  9946
+  - name:  relay-p2p-port
+    port:  30333
+    targetPort:  30333
+  - name:  relay-ws-port
+    port:  9944
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9933
+    targetPort:  9933
+---
+# Uncomment if a persistent volume needs to be created manually
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: md5-persistent-volume
+#   namespace: hashed-network
+# spec:
+#   capacity:
+#     storage: 20Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /var/www/hashed/
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: minikube.k8s.io/hostname
+#               operator: In
+#               values:
+#               - minikube
