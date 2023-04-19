@@ -134,10 +134,10 @@ pub mod weights;
 
 mod extra_mutator;
 pub use extra_mutator::*;
-mod functions;
+pub mod functions;
 mod impl_fungibles;
 mod impl_stored_map;
-mod types;
+pub mod types;
 pub use types::*;
 
 use codec::HasCompact;

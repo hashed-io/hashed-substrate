@@ -31,6 +31,7 @@ pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "
 pallet-fruniques = { path = "../fruniques", default-features = false, version = "0.1.0-dev" }
 pallet-rbac = { path = "../rbac/", default-features = false, version = "4.0.0-dev" }
 pallet-gated-marketplace = { path = "../gated-marketplace/", default-features = false, version = "4.0.0-dev" }
+pallet-mapped-assets = { path = "../mapped-assets/", default-features = false, version = "4.0.0-dev" }
 
 [dev-dependencies]
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38" }

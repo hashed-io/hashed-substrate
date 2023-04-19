@@ -21,7 +21,9 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use pallet_gated_marketplace::functions;
 	use pallet_gated_marketplace::types::*;
+	use pallet_mapped_assets::types::*;
 	use sp_runtime::Permill;
+	use sp_runtime::traits::StaticLookup;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -34,7 +36,7 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_gated_marketplace::Config {
+	pub trait Config: frame_system::Config + pallet_gated_marketplace::Config + pallet_mapped_assets::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		type TimeProvider: UnixTime;
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
@@ -102,8 +104,16 @@ pub mod pallet {
 			creator: T::AccountId,
 			admin: T::AccountId,
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
+			let who = ensure_signed(origin.clone())?;
+			let asset_id: T::AssetId = Default::default();
+			let min_balance: T::Balance = T::Balance::from(1u32);
+			pallet_mapped_assets::Pallet::<T>::create(
+				origin,
+				asset_id,
+				T::Lookup::unlookup(creator.clone()),
+				min_balance,
+			); 
+			
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
 			Self::do_initial_setup(creator.clone(), admin.clone())?;

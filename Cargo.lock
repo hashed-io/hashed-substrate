@@ -5491,6 +5491,7 @@ dependencies = [
  "pallet-balances",
  "pallet-fruniques",
  "pallet-gated-marketplace",
+ "pallet-mapped-assets",
  "pallet-rbac",
  "pallet-timestamp",
  "pallet-uniques",
