@@ -3423,45 +3423,5 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// V A L I D A T I O N S    I N P U T    D A T A
-	// ================================================================================================
-    fn bound<E,Len: Get<u32>>(vec: BoundedVec<E, Len>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
-        BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
-    }
-
-	// fn validate_field_name(field_name: FieldName) -> DispatchResult {
-	// 	Ensure field name is not empty
-	// 	let field_name_x: BoundedVec<_, _> =
-	// 	field_name.clone().into_inner().try_into().map_err(|_| Error::<T>::FieldNameTooLong)?;
-		
-	// 	let field_name = Self::bound::<_, _>(field_name, Error::<T>::FieldNameTooLong)?;
-	// 	ensure!(!field_name.is_empty(), Error::<T>::FieldNameIsEmpty);
-	// 	ensure!(field_name.is_empty(), Error::<T>::EmptyFieldName);
-	// 	Ensure field name is not grater than ConstU32<100>,
-	// 	which is the maximum length of a field name
-	// 	ensure!(field_name.len() == 5u32 as usize, Error::<T>::FieldNameTooLong);
-	// 	Ok(())
-	// }
-
-	// fn validate_field_description(field_description: FieldDescription) -> DispatchResult {
-	// 	// Ensure field description is not empty
-	// 	ensure!(!field_description.is_empty(), Error::<T>::EmptyFieldDescription);
-	// 	// Ensure field description is not grater than ConstU32<100>,
-	// 	// which is the maximum length of a field description
-	// 	ensure!(field_description.len() <= 400, Error::<T>::FieldDescriptionTooLong);
-	// 	Ok(())
-	// }
-
-	// fn validate_cid(cid: CID) -> DispatchResult {
-	// 	// Ensure cid is not empty
-	// 	ensure!(!cid.is_empty(), Error::<T>::EmptyCID);
-	// 	// Ensure cid is not grater than ConstU32<100>,
-	// 	// which is the maximum length of a cid
-	// 	ensure!(cid.len() <= 100, Error::<T>::CIDTooLong);
-	// 	Ok(())
-	// }
-
-
-
 	// Do not code beyond this line
 }

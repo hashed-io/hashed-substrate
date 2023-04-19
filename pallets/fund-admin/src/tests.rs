@@ -6986,8 +6986,10 @@ fn reset_drawdown_a_builder_cannot_reset_an_approved_drawdown() {
     });
 }
 
-// E X C E D E D    B O U N D S
+// E X C E E D E D    B O U N D S
 // =================================================================================================
+// todo: Create helper functions to make boundedvecs that exceeds the bounds and use them
+// in the tests below.
 fn make_transaction_exceed_bounds(
     expenditure_id: Option<ExpenditureId>,
     expenditure_amount: Option<ExpenditureAmount>,
@@ -7044,11 +7046,9 @@ fn projects_register_a_project_with_a_long_name_should_fail() {
     new_test_ext().execute_with(|| {
         assert_ok!(register_administrator());
 
-        let very_long_name = "project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfjjwLÑWELẂEĹFWELJWELÑWELFHLCNWLĆWELFHWEILHWÉFHWĹFe_dqwdqwd_dqwdfqfQF_FQFQFQWFwerwef_fqfqwfqwfqfqwfqfgqwFQWDQDQDQWDQ.jpeg";
-
         assert_ok!(FundAdmin::projects_create_project(
             RuntimeOrigin::signed(1),
-            make_field_name(very_long_name),
+            make_field_name("project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfj.jpeg"),
             make_field_description("Project 1 description"),
             Some(make_field_name("project_image.jpeg")),
             make_field_name("New York"),
@@ -7063,7 +7063,7 @@ fn projects_register_a_project_with_a_long_name_should_fail() {
 
         assert_eq!(ProjectsInfo::<Test>::iter().count(), 1);
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().title, make_field_name("project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfjjwLÑWELẂEĹFWELJWELÑWELFHLCNWLĆWELFHWEILHWÉFHWĹFe_dqwdqwd_dqwdfqfQF_FQFQFQWFwerwef_fqfqwfqwfqfqwfqfgqwFQWDQDQDQWDQ.jpeg"));
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().title, make_field_name("project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfj.jpeg"));
         assert_eq!(ExpendituresInfo::<Test>::iter().count(), ExpendituresByProject::<Test>::get(project_id).len());
         let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
         for i in get_expenditure_ids {
