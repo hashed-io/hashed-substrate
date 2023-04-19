@@ -15,6 +15,16 @@ if [[ ($1 != 'hashed' && $1 != 'luhn' && $1 != 'md5') ]]; then
     exit 1
 fi
 
+relay_chain="polkadot"
+
+if [[ $1 == 'luhn' ]]; then
+    relay_chain="kusama"
+fi
+
+if [[ $1 == 'md5' ]]; then
+    relay_chain="rococo"
+fi
+
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BASE_PATH="$(dirname "${SCRIPT_PATH}")"
 RESOURCES_PATH="$BASE_PATH/resources"
@@ -52,7 +62,7 @@ fi
 relay_args=(
     --execution wasm
     --base-path $2/relay-data/
-    --chain $RESOURCES_PATH/polkadot.json
+    --chain $RESOURCES_PATH/${relay_chain}.json
     --port 30333
     --ws-port 9944
     --ws-external

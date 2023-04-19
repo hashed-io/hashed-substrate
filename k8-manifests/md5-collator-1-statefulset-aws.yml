@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: md5-collator-1
+  namespace: hashed-network
+spec:
+  replicas: 1
+  serviceName: md5-collator-1-headless
+  selector:
+    matchLabels:
+      app: md5-collator-1
+  template:
+    metadata:
+      namespace: hashed-network
+      labels:
+        app: md5-collator-1
+    spec:
+      containers:
+      - name: md5-collator-1
+        imagePullPolicy: IfNotPresent
+        image: sebastianmontero/hashed-substrate-collator:29695a7900625e48a7733280fd5461a42a9b7812
+        command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
+        args: ["md5", "/var/www/hashed/hashed"]
+        volumeMounts:
+          - name: md5-collator-1-pvc
+            mountPath:  /var/www/hashed/hashed
+        env:
+          - name: LISTEN_ADDR
+            value: "/ip4/0.0.0.0/tcp/40333/ws"
+          - name: PUBLIC_ADDR
+            value: "/dns/c1.md5.p2p.hashed.live/tcp/443/wss"
+          # - name: RUST_LOG
+          #   value: "sub-libp2p=trace"
+          # - name: RUST_LOG
+          #   value: "db=trace,sync=trace,sub-libp2p=trace"
+          # - name: NODEKEY
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: md5-collator-1-secrets
+          #       key: NODEKEY
+          #       optional: false
+        resources:
+          limits:
+            memory: "8G"
+            cpu: "2"
+          # requests:
+          #   ephemeral-storage: 25Gi
+        ports:
+        - containerPort: 9933
+        - containerPort: 9944
+        - containerPort: 9946
+        - containerPort: 30333
+        - containerPort: 40333
+  volumeClaimTemplates:
+  - metadata:
+      name: md5-collator-1-pvc
+      namespace: hashed-network
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 400Gi
+      storageClassName: gp2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  md5-collator-1
+  namespace: hashed-network
+spec:
+  selector:
+    app:  md5-collator-1
+  type:  ClusterIP
+  ports:
+  - name:  collator-p2p-port
+    port:  40333
+    targetPort:  40333
+  - name:  collator-ws-port
+    port:  9946
+    targetPort:  9946
+  - name:  relay-p2p-port
+    port:  30333
+    targetPort:  30333
+  - name:  relay-ws-port
+    port:  9944
+    targetPort:  9944
+  - name:  rpc-port
+    port:  9933
+    targetPort:  9933

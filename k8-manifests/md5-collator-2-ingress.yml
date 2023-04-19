@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: md5-collator-1
+  name: md5-collator-2
   namespace: hashed-network
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -9,55 +9,55 @@ metadata:
 spec:
   tls:
   - hosts:
-    - c1.md5.hashed.live
-    - c1.md5.p2p.hashed.live
-    secretName: md5-collator-1
+    - c2.md5.hashed.live
+    - c2.md5.p2p.hashed.live
+    secretName: md5-collator-2
   rules:
-  - host: c1.md5.hashed.live
+  - host: c2.md5.hashed.live
     http:
       paths:
       - pathType: Prefix
         path: /cp2p/
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 40333
       - pathType: Prefix
         path: /
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 9946
       - pathType: Prefix
         path: /rp2p/
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 30333
       - pathType: Prefix
         path: /rws/
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 9944
       - pathType: Prefix
         path: /rpc/
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 9933
-  - host: c1.md5.p2p.hashed.network
+  - host: c2.md5.p2p.hashed.network
     http:
       paths:
       - pathType: Prefix
         path: /
         backend:
           service:
-            name: md5-collator-1
+            name: md5-collator-2
             port:
               number: 40333
