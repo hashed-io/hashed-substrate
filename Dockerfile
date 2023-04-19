@@ -1,4 +1,4 @@
-FROM paritytech/ci-linux:production
+FROM paritytech/ci-linux:dafdd6fb-20230126
 
 WORKDIR /var/www
 
