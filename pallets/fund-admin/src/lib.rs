@@ -389,8 +389,22 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// FieldName is empty
 		EmptyFieldName,
+		/// FieldDescription is empty
+		EmptyFieldDescription,
 		/// FieldName is too long
 		FieldNameTooLong,
+		/// Array of users is empty
+		EmptyUsers,
+		/// CID is empty
+		EmptyFieldCID,
+		/// Array of banks is empty
+		EmptyFieldBanks,
+		/// The private group id is empty
+		PrivateGroupIdEmpty,
+		/// Array of users to be assigned to a project is empty
+		EmptyUsersAssignation,
+		/// Field address project is empty
+		EmptyProjectAddress,
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -525,6 +539,10 @@ pub mod pallet {
 		UserNameRequired,
 		/// User role is required
 		UserRoleRequired,
+		/// User image is required
+		UserImageRequired,
+		/// User email is required
+		UserEmailRequired,
 		/// Amount is required
 		AmountRequired,
 		/// Can not delete a user if the user is assigned to a project
@@ -655,8 +673,6 @@ pub mod pallet {
 		BankConfirmingDocumentsEmpty,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
-		/// The private group id is empty
-		PrivateGroupIdEmpty,
 		/// Maximun number of registrations at a time reached
 		MaxRegistrationsAtATimeReached,
 		/// Administrator account has insuficiente balance to register a new user

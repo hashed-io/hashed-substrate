@@ -85,6 +85,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_sudo_add_administrator(admin: T::AccountId, name: FieldName) -> DispatchResult {
+		// Ensure name is not empty
+		ensure!(!name.is_empty(), Error::<T>::EmptyFieldName);
 		// Create a administrator user account & register it in the rbac pallet
 		Self::sudo_register_admin(admin.clone(), name)?;
 
@@ -124,6 +126,19 @@ impl<T: Config> Pallet<T> {
 			&Self::get_global_scope(),
 			ProxyPermission::CreateProject,
 		)?;
+
+		// Validations
+		ensure!(!title.is_empty(), Error::<T>::EmptyFieldName);
+		ensure!(!description.is_empty(), Error::<T>::EmptyFieldDescription);
+		if let Some(image) = image.clone() {
+			ensure!(!image.is_empty(), Error::<T>::EmptyFieldCID);
+		}
+		ensure!(!address.is_empty(), Error::<T>::EmptyFieldName);
+		if let Some(banks) = banks.clone() {
+			ensure!(!banks.is_empty(), Error::<T>::EmptyFieldBanks);
+		}
+		ensure!(!address.is_empty(), Error::<T>::EmptyProjectAddress);
+		ensure!(!private_group_id.is_empty(), Error::<T>::PrivateGroupIdEmpty);
 
 		// Add timestamp
 		let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
@@ -224,18 +239,28 @@ impl<T: Config> Pallet<T> {
 			let project = project.as_mut().ok_or(Error::<T>::ProjectNotFound)?;
 
 			if let Some(title) = title {
+				// Ensure title is not empty
+				ensure!(!title.is_empty(), Error::<T>::EmptyFieldName);
 				project.title = title;
 			}
 			if let Some(description) = description {
+				// Ensure description is not empty
+				ensure!(!description.is_empty(), Error::<T>::EmptyFieldDescription);
 				project.description = description;
 			}
 			if let Some(image) = image {
+				// Ensure image is not empty
+				ensure!(!image.is_empty(), Error::<T>::EmptyFieldCID);
 				project.image = Some(image);
 			}
 			if let Some(address) = address {
+				// Ensure address is not empty
+				ensure!(!address.is_empty(), Error::<T>::EmptyProjectAddress);
 				project.address = address;
 			}
 			if let Some(banks) = banks {
+				// Ensure banks is not empty
+				ensure!(!banks.is_empty(), Error::<T>::EmptyFieldBanks);
 				project.banks = Some(banks);
 			}
 			if let Some(creation_date) = creation_date {
@@ -392,6 +417,9 @@ impl<T: Config> Pallet<T> {
 		// Ensure admin permissions
 		Self::is_authorized(admin.clone(), &project_id, ProxyPermission::AssignUsers)?;
 
+		// Ensure UsersAssignation is not empty
+		ensure!(!users.is_empty(), Error::<T>::EmptyUsersAssignation);
+
 		// Ensure project exists & is not completed
 		Self::is_project_completed(project_id)?;
 
@@ -532,6 +560,9 @@ impl<T: Config> Pallet<T> {
 			ProxyPermission::ExecuteUsers,
 		)?;
 
+		// Ensure users list is not empty
+		ensure!(!users.is_empty(), Error::<T>::EmptyUsers);
+
 		for user in users.iter().cloned() {
 			match user.3 {
 				CUDAction::Create => {
@@ -612,6 +643,8 @@ impl<T: Config> Pallet<T> {
 			let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
 			if let Some(mod_name) = name {
+				// Ensure name is not empty
+				ensure!(!mod_name.is_empty(), Error::<T>::UserNameRequired);
 				user_info.name = mod_name;
 			}
 			if let Some(mod_role) = role {
@@ -668,8 +701,7 @@ impl<T: Config> Pallet<T> {
 	/// that the user is registered. This is because permissions are granted to the
 	/// user's account when the user is assigned to a project.
 	///
-	/// WARNING: Editing your own user data does not allow you to change your role. If you want to
-	/// change your role. Only the administrator can do it usign the `users` extrinsic.
+	/// WARNING: Editing your own user data does not allow you to change your role. Only the administrator can do it usign the `users` extrinsic.
 	pub fn do_edit_user(
 		user: T::AccountId,
 		name: Option<FieldName>,
@@ -685,18 +717,26 @@ impl<T: Config> Pallet<T> {
 			let user_info = user_data.as_mut().ok_or(Error::<T>::UserNotRegistered)?;
 
 			if let Some(mod_name) = name {
+				// Ensure name is not empty
+				ensure!(!mod_name.is_empty(), Error::<T>::UserNameRequired);
 				user_info.name = mod_name;
 			}
 			if let Some(mod_image) = image {
+				// Ensure image is not empty
+				ensure!(!mod_image.is_empty(), Error::<T>::UserImageRequired);
 				user_info.image = mod_image;
 			}
 			if let Some(mod_email) = email {
+				// Ensure email is not empty
+				ensure!(!mod_email.is_empty(), Error::<T>::UserEmailRequired);
 				user_info.email = mod_email;
 			}
 			// Only investors can upload documents
 			if let Some(mod_documents) = documents {
 				// Ensure user is an investor
 				ensure!(user_info.role == ProxyRole::Investor, Error::<T>::UserIsNotAnInvestor);
+				// Ensure documents is not empty
+				ensure!(!mod_documents.is_empty(), Error::<T>::DocumentsEmpty);
 				user_info.documents = Some(mod_documents);
 			}
 			Ok(())
@@ -3385,9 +3425,9 @@ impl<T: Config> Pallet<T> {
 
 	// V A L I D A T I O N S    I N P U T    D A T A
 	// ================================================================================================
-    // fn bound<E,Len: Get<u32>>(vec: BoundedVec<E, Len>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
-    //     BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
-    // }
+    fn bound<E,Len: Get<u32>>(vec: BoundedVec<E, Len>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
+        BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
+    }
 
 	// fn validate_field_name(field_name: FieldName) -> DispatchResult {
 	// 	Ensure field name is not empty
