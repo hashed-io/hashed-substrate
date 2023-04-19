@@ -18,7 +18,7 @@ spec:
       containers:
       - name: md5-collator-2
         imagePullPolicy: IfNotPresent
-        image: sebastianmontero/hashed-substrate-collator:29695a7900625e48a7733280fd5461a42a9b7812
+        image: sebastianmontero/hashed-substrate-collator:3e17bdf232a041ad7914a678e28b85983b1f4647
         command: ["/var/www/hashed-substrate/scripts/start_collator.sh"]
         args: ["md5", "/var/www/hashed/hashed"]
         volumeMounts:
@@ -26,7 +26,7 @@ spec:
             mountPath:  /var/www/hashed/hashed
         env:
           - name: BOOTNODES
-            value: "/dns/md5-collator-2.hashed-network.svc.cluster.local/tcp/40333/ws/p2p/12D3KooWBdoiZsvYnYnWEdefordNhwSaueiiFmuKnZewomkps4sz"
+            value: "/dns/md5-collator-1.hashed-network.svc.cluster.local/tcp/40333/ws/p2p/12D3KooWD25baFFRAxHukWWRBZPWpb3RVNbEcXDbDvLipMnNb7C2"
           - name: LISTEN_ADDR
             value: "/ip4/0.0.0.0/tcp/40333/ws"
           - name: PUBLIC_ADDR
