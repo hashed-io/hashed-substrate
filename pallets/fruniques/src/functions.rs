@@ -264,7 +264,7 @@ impl<T: Config> Pallet<T> {
 		origin: OriginFor<T>,
 		metadata: CollectionDescription<T>,
 		admin: T::AccountId,
-	) -> Result<T::CollectionId, DispatchError>
+	) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::CollectionId: From<u32>,
 	{
@@ -296,7 +296,7 @@ impl<T: Config> Pallet<T> {
 
 		<NextCollection<T>>::put(Self::next_collection() + 1);
 
-		Ok(class_id)
+		Ok(())
 	}
 
 	// Create a new NFT for a given collection
@@ -478,22 +478,6 @@ impl<T: Config> Pallet<T> {
 		role: FruniqueRole,
 	) -> DispatchResult {
 		T::Rbac::assign_role_to_user(
-			user,
-			Self::pallet_id(),
-			&class_id.using_encoded(blake2_256),
-			role.id(),
-		)?;
-
-		Ok(())
-	}
-
-	// Helper function to remove RBAC roles for collections
-	pub fn remove_auth_from_frunique_collection(
-		user: T::AccountId,
-		class_id: T::CollectionId,
-		role: FruniqueRole,
-	) -> DispatchResult {
-		T::Rbac::remove_role_from_user(
 			user,
 			Self::pallet_id(),
 			&class_id.using_encoded(blake2_256),
