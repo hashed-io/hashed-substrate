@@ -3341,14 +3341,97 @@
 <a href="#3341" id="3341">3341</a>
 <a href="#3342" id="3342">3342</a>
 <a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a>
+<a href="#3355" id="3355">3355</a>
+<a href="#3356" id="3356">3356</a>
+<a href="#3357" id="3357">3357</a>
+<a href="#3358" id="3358">3358</a>
+<a href="#3359" id="3359">3359</a>
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a>
+<a href="#3363" id="3363">3363</a>
+<a href="#3364" id="3364">3364</a>
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
+<a href="#3391" id="3391">3391</a>
+<a href="#3392" id="3392">3392</a>
+<a href="#3393" id="3393">3393</a>
+<a href="#3394" id="3394">3394</a>
+<a href="#3395" id="3395">3395</a>
+<a href="#3396" id="3396">3396</a>
+<a href="#3397" id="3397">3397</a>
+<a href="#3398" id="3398">3398</a>
+<a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
+<a href="#3404" id="3404">3404</a>
+<a href="#3405" id="3405">3405</a>
+<a href="#3406" id="3406">3406</a>
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
+<a href="#3414" id="3414">3414</a>
+<a href="#3415" id="3415">3415</a>
+<a href="#3416" id="3416">3416</a>
+<a href="#3417" id="3417">3417</a>
+<a href="#3418" id="3418">3418</a>
+<a href="#3419" id="3419">3419</a>
+<a href="#3420" id="3420">3420</a>
+<a href="#3421" id="3421">3421</a>
+<a href="#3422" id="3422">3422</a>
+<a href="#3423" id="3423">3423</a>
+<a href="#3424" id="3424">3424</a>
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="kw">use </span>scale_info::prelude::vec;
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec; <span class="comment">// vec primitive // vec![] macro
 
-</span><span class="kw">use </span>frame_support::traits::Currency;
-<span class="kw">use </span>frame_support::traits::ExistenceRequirement::KeepAlive;
+</span><span class="kw">use </span>frame_support::traits::{Currency, ExistenceRequirement::KeepAlive};
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
@@ -3430,6 +3513,8 @@
 	}
 
 	<span class="kw">pub fn </span>do_sudo_add_administrator(admin: T::AccountId, name: FieldName) -&gt; DispatchResult {
+		<span class="comment">// Ensure name is not empty
+		</span><span class="macro">ensure!</span>(!name.is_empty(), Error::&lt;T&gt;::EmptyFieldName);
 		<span class="comment">// Create a administrator user account &amp; register it in the rbac pallet
 		</span><span class="self">Self</span>::sudo_register_admin(admin.clone(), name)<span class="question-mark">?</span>;
 
@@ -3469,6 +3554,19 @@
 			<span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
 			ProxyPermission::CreateProject,
 		)<span class="question-mark">?</span>;
+
+		<span class="comment">// Validations
+		</span><span class="macro">ensure!</span>(!title.is_empty(), Error::&lt;T&gt;::EmptyFieldName);
+		<span class="macro">ensure!</span>(!description.is_empty(), Error::&lt;T&gt;::EmptyFieldDescription);
+		<span class="kw">if let </span><span class="prelude-val">Some</span>(image) = image.clone() {
+			<span class="macro">ensure!</span>(!image.is_empty(), Error::&lt;T&gt;::EmptyFieldCID);
+		}
+		<span class="macro">ensure!</span>(!address.is_empty(), Error::&lt;T&gt;::EmptyFieldName);
+		<span class="kw">if let </span><span class="prelude-val">Some</span>(banks) = banks.clone() {
+			<span class="macro">ensure!</span>(!banks.is_empty(), Error::&lt;T&gt;::EmptyFieldBanks);
+		}
+		<span class="macro">ensure!</span>(!address.is_empty(), Error::&lt;T&gt;::EmptyProjectAddress);
+		<span class="macro">ensure!</span>(!private_group_id.is_empty(), Error::&lt;T&gt;::PrivateGroupIdEmpty);
 
 		<span class="comment">// Add timestamp
 		</span><span class="kw">let </span>timestamp = <span class="self">Self</span>::get_timestamp_in_milliseconds().ok_or(Error::&lt;T&gt;::TimestampError)<span class="question-mark">?</span>;
@@ -3569,18 +3667,28 @@
 			<span class="kw">let </span>project = project.as_mut().ok_or(Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(title) = title {
+				<span class="comment">// Ensure title is not empty
+				</span><span class="macro">ensure!</span>(!title.is_empty(), Error::&lt;T&gt;::EmptyFieldName);
 				project.title = title;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(description) = description {
+				<span class="comment">// Ensure description is not empty
+				</span><span class="macro">ensure!</span>(!description.is_empty(), Error::&lt;T&gt;::EmptyFieldDescription);
 				project.description = description;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(image) = image {
+				<span class="comment">// Ensure image is not empty
+				</span><span class="macro">ensure!</span>(!image.is_empty(), Error::&lt;T&gt;::EmptyFieldCID);
 				project.image = <span class="prelude-val">Some</span>(image);
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address {
+				<span class="comment">// Ensure address is not empty
+				</span><span class="macro">ensure!</span>(!address.is_empty(), Error::&lt;T&gt;::EmptyProjectAddress);
 				project.address = address;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(banks) = banks {
+				<span class="comment">// Ensure banks is not empty
+				</span><span class="macro">ensure!</span>(!banks.is_empty(), Error::&lt;T&gt;::EmptyFieldBanks);
 				project.banks = <span class="prelude-val">Some</span>(banks);
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(creation_date) = creation_date {
@@ -3737,6 +3845,9 @@
 		<span class="comment">// Ensure admin permissions
 		</span><span class="self">Self</span>::is_authorized(admin.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::AssignUsers)<span class="question-mark">?</span>;
 
+		<span class="comment">// Ensure UsersAssignation is not empty
+		</span><span class="macro">ensure!</span>(!users.is_empty(), Error::&lt;T&gt;::EmptyUsersAssignation);
+
 		<span class="comment">// Ensure project exists &amp; is not completed
 		</span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
@@ -3838,14 +3949,24 @@
 		</span><span class="self">Self</span>::remove_project_role(project_id, user.clone(), role)<span class="question-mark">?</span>;
 
 		<span class="comment">// Remove user from UsersByProject storagemap.
-		</span>&lt;UsersByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(project_id, |users| {
+		</span>&lt;UsersByProject&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(project_id,
+			|users_option| {
+			<span class="kw">let </span>users = users_option.as_mut().ok_or(Error::&lt;T&gt;::ProjectHasNoUsers)<span class="question-mark">?</span>;
 			users.retain(|u| u != <span class="kw-2">&amp;</span>user);
+			<span class="kw">if </span>users.is_empty() {
+				users_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+			}
 			<span class="prelude-val">Ok</span>(())
 		})<span class="question-mark">?</span>;
 
 		<span class="comment">// Remove user from ProjectsByUser storagemap
-		</span>&lt;ProjectsByUser&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(user.clone(), |projects| {
-			projects.retain(|p| p != <span class="kw-2">&amp;</span>project_id);
+		</span>&lt;ProjectsByUser&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(user.clone(),
+		|projects_option| {
+			<span class="kw">let </span>projects = projects_option.as_mut().ok_or(Error::&lt;T&gt;::UserHasNoProjects)<span class="question-mark">?</span>;
+			projects.retain(|project| project != <span class="kw-2">&amp;</span>project_id);
+			<span class="kw">if </span>projects.is_empty() {
+				projects_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+			}
 			<span class="prelude-val">Ok</span>(())
 		})<span class="question-mark">?</span>;
 
@@ -3866,6 +3987,9 @@
 			<span class="kw-2">&amp;</span><span class="self">Self</span>::get_global_scope(),
 			ProxyPermission::ExecuteUsers,
 		)<span class="question-mark">?</span>;
+
+		<span class="comment">// Ensure users list is not empty
+		</span><span class="macro">ensure!</span>(!users.is_empty(), Error::&lt;T&gt;::EmptyUsers);
 
 		<span class="kw">for </span>user <span class="kw">in </span>users.iter().cloned() {
 			<span class="kw">match </span>user.<span class="number">3 </span>{
@@ -3947,6 +4071,8 @@
 			<span class="kw">let </span>user_info = user_data.as_mut().ok_or(Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_name) = name {
+				<span class="comment">// Ensure name is not empty
+				</span><span class="macro">ensure!</span>(!mod_name.is_empty(), Error::&lt;T&gt;::UserNameRequired);
 				user_info.name = mod_name;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_role) = role {
@@ -3975,25 +4101,20 @@
 			},
 			<span class="kw">_ </span>=&gt; {
 				<span class="comment">// Can not delete a user if the user has assigned projects
-				</span><span class="kw">let </span>projects_by_user = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user.clone());
-				<span class="macro">ensure!</span>(
-					projects_by_user.is_empty(),
+				</span><span class="macro">ensure!</span>(
+					&lt;ProjectsByUser&lt;T&gt;&gt;::get(user.clone()).is_empty(),
 					Error::&lt;T&gt;::UserHasAssignedProjectsCannotDelete
 				);
 
-				<span class="comment">// Remove user from UsersInfo storagemap
+				<span class="comment">// Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs to
+				// unassign the user from all its projects.
+
+				// Remove user from UsersByProject storagemap. No longer required, the admnistator first needs to
+				// unassign the user from all its projects.
+
+				// Remove user from UsersInfo storagemap
 				</span>&lt;UsersInfo&lt;T&gt;&gt;::remove(user.clone());
 
-				<span class="comment">// Remove user from ProjectsByUser storagemap
-				</span>&lt;ProjectsByUser&lt;T&gt;&gt;::remove(user.clone());
-
-				<span class="comment">// Remove user from UsersByProject storagemap
-				</span><span class="kw">for </span>project <span class="kw">in </span>projects_by_user.iter().cloned() {
-					&lt;UsersByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(project, |users| {
-						users.retain(|u| u != <span class="kw-2">&amp;</span>user);
-						<span class="prelude-val">Ok</span>(())
-					})<span class="question-mark">?</span>;
-				}
 			},
 		}
 
@@ -4008,8 +4129,7 @@
 	/// that the user is registered. This is because permissions are granted to the
 	/// user&#39;s account when the user is assigned to a project.
 	///
-	/// WARNING: Editing your own user data does not allow you to change your role. If you want to
-	/// change your role. Only the administrator can do it usign the `users` extrinsic.
+	/// WARNING: Editing your own user data does not allow you to change your role. Only the administrator can do it usign the `users` extrinsic.
 	</span><span class="kw">pub fn </span>do_edit_user(
 		user: T::AccountId,
 		name: <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
@@ -4025,18 +4145,26 @@
 			<span class="kw">let </span>user_info = user_data.as_mut().ok_or(Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_name) = name {
+				<span class="comment">// Ensure name is not empty
+				</span><span class="macro">ensure!</span>(!mod_name.is_empty(), Error::&lt;T&gt;::UserNameRequired);
 				user_info.name = mod_name;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_image) = image {
+				<span class="comment">// Ensure image is not empty
+				</span><span class="macro">ensure!</span>(!mod_image.is_empty(), Error::&lt;T&gt;::UserImageRequired);
 				user_info.image = mod_image;
 			}
 			<span class="kw">if let </span><span class="prelude-val">Some</span>(mod_email) = email {
+				<span class="comment">// Ensure email is not empty
+				</span><span class="macro">ensure!</span>(!mod_email.is_empty(), Error::&lt;T&gt;::UserEmailRequired);
 				user_info.email = mod_email;
 			}
 			<span class="comment">// Only investors can upload documents
 			</span><span class="kw">if let </span><span class="prelude-val">Some</span>(mod_documents) = documents {
 				<span class="comment">// Ensure user is an investor
 				</span><span class="macro">ensure!</span>(user_info.role == ProxyRole::Investor, Error::&lt;T&gt;::UserIsNotAnInvestor);
+				<span class="comment">// Ensure documents is not empty
+				</span><span class="macro">ensure!</span>(!mod_documents.is_empty(), Error::&lt;T&gt;::DocumentsEmpty);
 				user_info.documents = <span class="prelude-val">Some</span>(mod_documents);
 			}
 			<span class="prelude-val">Ok</span>(())
@@ -4219,39 +4347,28 @@
 	<span class="kw">fn </span>do_delete_expenditure(expenditure_id: ExpenditureId) -&gt; DispatchResult {
 		<span class="comment">// Ensure expenditure_id exists &amp; get expenditure data
 		</span><span class="kw">let </span>expenditure_data =
-			&lt;ExpendituresInfo&lt;T&gt;&gt;::get(expenditure_id).ok_or(Error::&lt;T&gt;::ExpenditureNotFound)<span class="question-mark">?</span>;
-		<span class="comment">// TODO check if expenditure is in transactions
-		</span><span class="kw">let </span>drawdowns = &lt;DrawdownsByProject&lt;T&gt;&gt;::get(expenditure_data.project_id);
+			ExpendituresInfo::&lt;T&gt;::get(<span class="kw-2">&amp;</span>expenditure_id).ok_or(Error::&lt;T&gt;::ExpenditureNotFound)<span class="question-mark">?</span>;
 
-		<span class="comment">// TODO update this to delete it if the balance is always 0
-		</span><span class="kw">for </span>drawdown <span class="kw">in </span>drawdowns {
-			<span class="kw">let </span>transactions =
-				&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(expenditure_data.project_id, drawdown);
-			<span class="kw">for </span>transaction <span class="kw">in </span>transactions {
-				<span class="kw">let </span>transaction_data = &lt;TransactionsInfo&lt;T&gt;&gt;::get(transaction)
-					.ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+		<span class="comment">// Ensure expenditure_id is contained in ExpendituresByProject
+		</span><span class="macro">ensure!</span>(
+			&lt;ExpendituresByProject&lt;T&gt;&gt;::get(expenditure_data.project_id).contains(<span class="kw-2">&amp;</span>expenditure_id),
+			Error::&lt;T&gt;::ExpenditureNotFoundForSelectedProjectId
+		);
 
-				<span class="kw">if </span>transaction_data.expenditure_id == expenditure_id {
-					<span class="comment">// TODO delete transaction
-					</span><span class="macro">ensure!</span>(transaction_data.amount == <span class="number">0</span>, Error::&lt;T&gt;::ExpenditureInTransaction);
-
-					<span class="self">Self</span>::do_force_delete_transaction(
-						expenditure_data.project_id,
-						drawdown,
-						transaction,
-					)<span class="question-mark">?</span>;
-				}
-			}
-		}
+		<span class="self">Self</span>::do_delete_expenditure_transactions(expenditure_id)<span class="question-mark">?</span>;
 
 		<span class="comment">// Delete expenditure data from ExpendituresInfo
 		</span>&lt;ExpendituresInfo&lt;T&gt;&gt;::remove(expenditure_id);
 
 		<span class="comment">// Delete expenditure_id from ExpendituresByProject
-		</span>&lt;ExpendituresByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+		</span>&lt;ExpendituresByProject&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
 			expenditure_data.project_id,
-			|expenditures| {
+			|expenditures_option| {
+				<span class="kw">let </span>expenditures = expenditures_option.as_mut().ok_or(Error::&lt;T&gt;::ProjectHasNoExpenditures)<span class="question-mark">?</span>;
 				expenditures.retain(|expenditure| expenditure != <span class="kw-2">&amp;</span>expenditure_id);
+				<span class="kw">if </span>expenditures.is_empty() {
+					expenditures_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>)
+				}
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
@@ -4361,7 +4478,7 @@
 
 		<span class="comment">// Get drawdown transactions
 		</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 
 		<span class="comment">// Update each transaction status to submitted
 		</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
@@ -4436,7 +4553,7 @@
 
 		<span class="comment">// Get drawdown transactions
 		</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 
 		<span class="comment">// Update each transaction status to approved
 		</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
@@ -4516,14 +4633,14 @@
 			DrawdownType::EB5 =&gt; {
 				<span class="comment">// Ensure drawdown has transactions
 				</span><span class="macro">ensure!</span>(
-					&lt;TransactionsByDrawdown&lt;T&gt;&gt;::contains_key(project_id, drawdown_id),
+					!&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(project_id, drawdown_id).is_empty(),
 					Error::&lt;T&gt;::DrawdownHasNoTransactions
 				);
 
 				<span class="comment">// Get drawdown transactions
 				</span><span class="kw">let </span>drawdown_transactions =
 					TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-						.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+						.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 
 				<span class="comment">// Update each transaction status to rejected
 				</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
@@ -4840,18 +4957,27 @@
 		</span><span class="kw">let </span>transaction_data =
 			TransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
 
+		<span class="macro">ensure!</span>(
+			&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(transaction_data.project_id, transaction_data.drawdown_id)
+				.contains(<span class="kw-2">&amp;</span>transaction_id),
+			Error::&lt;T&gt;::TransactionNotFoundForSelectedDrawdownId
+		);
+
 		<span class="comment">// Ensure drawdown is deletable
 		</span><span class="self">Self</span>::is_drawdown_editable(transaction_data.drawdown_id)<span class="question-mark">?</span>;
 
 		<span class="comment">// Ensure transaction is deletable
 		</span><span class="self">Self</span>::is_transaction_editable(transaction_id)<span class="question-mark">?</span>;
 
-		<span class="comment">// Remove transaction from TransactionsByDrawdown
-		</span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+		&lt;TransactionsByDrawdown&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
 			transaction_data.project_id,
 			transaction_data.drawdown_id,
-			|transactions| {
+			|transactions_option| {
+				<span class="kw">let </span>transactions = transactions_option.as_mut().ok_or(Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 				transactions.retain(|transaction| transaction != <span class="kw-2">&amp;</span>transaction_id);
+				<span class="kw">if </span>transactions.is_empty() {
+					transactions_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+				}
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
@@ -4890,9 +5016,10 @@
 		<span class="comment">// Ensure only Construction loan &amp; developer equity drawdowns are able to call bulk upload extrinsic
 		</span><span class="kw">let </span>drawdown_data =
 			DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+
 		<span class="macro">ensure!</span>(
-			drawdown_data.drawdown_type == DrawdownType::ConstructionLoan
-				|| drawdown_data.drawdown_type == DrawdownType::DeveloperEquity,
+			drawdown_data.drawdown_type == DrawdownType::ConstructionLoan ||
+				drawdown_data.drawdown_type == DrawdownType::DeveloperEquity,
 			Error::&lt;T&gt;::DrawdownTypeNotSupportedForBulkUpload
 		);
 
@@ -5174,14 +5301,27 @@
 		</span><span class="kw">let </span>job_eligible_data =
 			JobEligiblesInfo::&lt;T&gt;::get(job_eligible_id).ok_or(Error::&lt;T&gt;::JobEligibleNotFound)<span class="question-mark">?</span>;
 
+		<span class="comment">// Ensure job_eligible_id is contained in JobEligiblesByProject
+		</span><span class="macro">ensure!</span>(
+			JobEligiblesByProject::&lt;T&gt;::get(job_eligible_data.project_id)
+				.contains(<span class="kw-2">&amp;</span>job_eligible_id), 
+				Error::&lt;T&gt;::JobEligibleNotFoundForSelectedProjectId
+		);
+
+		<span class="self">Self</span>::do_delete_job_eligible_transactions(job_eligible_id)<span class="question-mark">?</span>;
+
 		<span class="comment">// Delete job eligible data from JobEligiblesInfo
 		</span>&lt;JobEligiblesInfo&lt;T&gt;&gt;::remove(job_eligible_id);
 
 		<span class="comment">// Delete job eligible id from JobEligiblesByProject
-		</span>&lt;JobEligiblesByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+		</span>&lt;JobEligiblesByProject&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
 			job_eligible_data.project_id,
-			|job_eligibles| {
+			|job_eligibles_option| {
+				<span class="kw">let </span>job_eligibles = job_eligibles_option.as_mut().ok_or(Error::&lt;T&gt;::ProjectHasNoJobEligibles)<span class="question-mark">?</span>;
 				job_eligibles.retain(|job_eligible| job_eligible != <span class="kw-2">&amp;</span>job_eligible_id);
+				<span class="kw">if </span>job_eligibles.is_empty() {
+					job_eligibles_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+				}
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
@@ -5376,6 +5516,15 @@
 		</span><span class="kw">let </span>revenue_transaction_data = RevenueTransactionsInfo::&lt;T&gt;::get(revenue_transaction_id)
 			.ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
 
+		<span class="comment">// Ensure revenue transaction belongs to the given revenue
+		</span><span class="macro">ensure!</span>(
+			TransactionsByRevenue::&lt;T&gt;::get(
+				revenue_transaction_data.project_id,
+				revenue_transaction_data.revenue_id
+			).contains(<span class="kw-2">&amp;</span>revenue_transaction_id),
+			Error::&lt;T&gt;::RevenueTransactionNotFoundForSelectedRevenueId
+		);
+
 		<span class="comment">// Ensure revenue is deletable
 		</span><span class="self">Self</span>::is_revenue_editable(revenue_transaction_data.revenue_id)<span class="question-mark">?</span>;
 
@@ -5383,12 +5532,18 @@
 		</span><span class="self">Self</span>::is_revenue_transaction_editable(revenue_transaction_id)<span class="question-mark">?</span>;
 
 		<span class="comment">// Remove revenue transaction from TransactionsByRevenue
-		</span>&lt;TransactionsByRevenue&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+		</span>&lt;TransactionsByRevenue&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
 			revenue_transaction_data.project_id,
 			revenue_transaction_data.revenue_id,
-			|revenue_transactions| {
+			|revenue_transactions_option| {
+				<span class="kw">let </span>revenue_transactions = revenue_transactions_option
+					.as_mut()
+					.ok_or(Error::&lt;T&gt;::RevenueHasNoTransactions)<span class="question-mark">?</span>;
 				revenue_transactions
 					.retain(|revenue_transaction| revenue_transaction != <span class="kw-2">&amp;</span>revenue_transaction_id);
+				<span class="kw">if </span>revenue_transactions.is_empty() {
+					revenue_transactions_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+				}
 				<span class="prelude-val">Ok</span>(())
 			},
 		)<span class="question-mark">?</span>;
@@ -5726,7 +5881,7 @@
 
 		<span class="comment">// Get drawdown transactions
 		</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 
 		<span class="comment">// Mutate individual drawdown transactions status to Confirmed
 		</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
@@ -5818,7 +5973,7 @@
 
 		<span class="comment">// Get drawdown transactions
 		</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
 
 		<span class="comment">// Mutate individual drawdown transactions status to Approved
 		</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
@@ -5914,7 +6069,7 @@
 	) -&gt; DispatchResult {
 		<span class="kw">match </span>role {
 			ProxyRole::Administrator =&gt; {
-				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRegisterAdminRole.into());
+				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRegisterAdminRole.into())
 			},
 			ProxyRole::Builder =&gt; {
 				<span class="comment">// Mutate project data
@@ -6022,7 +6177,7 @@
 	) -&gt; DispatchResult {
 		<span class="kw">match </span>role {
 			ProxyRole::Administrator =&gt; {
-				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRemoveAdminRole.into());
+				<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotRemoveAdminRole.into())
 			},
 			ProxyRole::Builder =&gt; {
 				<span class="comment">// Mutate project data
@@ -6033,7 +6188,7 @@
 							builder.retain(|u| <span class="kw-2">*</span>u != user);
 						},
 						<span class="prelude-val">None </span>=&gt; {
-							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into());
+							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into())
 						},
 					}
 					<span class="prelude-val">Ok</span>(())
@@ -6048,7 +6203,7 @@
 							investor.retain(|u| <span class="kw-2">*</span>u != user);
 						},
 						<span class="prelude-val">None </span>=&gt; {
-							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into());
+							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into())
 						},
 					}
 					<span class="prelude-val">Ok</span>(())
@@ -6063,7 +6218,7 @@
 							issuer.retain(|u| <span class="kw-2">*</span>u != user);
 						},
 						<span class="prelude-val">None </span>=&gt; {
-							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into());
+							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into())
 						},
 					}
 					<span class="prelude-val">Ok</span>(())
@@ -6078,7 +6233,7 @@
 							regional_center.retain(|u| <span class="kw-2">*</span>u != user);
 						},
 						<span class="prelude-val">None </span>=&gt; {
-							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into());
+							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserNotAssignedToProject.into())
 						},
 					}
 					<span class="prelude-val">Ok</span>(())
@@ -6099,17 +6254,18 @@
 
 		<span class="comment">// Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
 		</span><span class="kw">if </span>user_data.role != role {
-			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserCannotHaveMoreThanOneRole.into());
+			<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserCannotHaveMoreThanOneRole.into())
 		}
 
-		<span class="comment">// Match user role
+		<span class="comment">// Match user role. Check the max numbers of projects a user can be assigned to
 		</span><span class="kw">match </span>user_data.role {
 			ProxyRole::Administrator =&gt; {
 				<span class="comment">// Can&#39;t assign an administrator role account to a project, admins are scoped globally
 				</span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotAddAdminRole.into());
 			},
 			ProxyRole::Investor =&gt; {
-				<span class="comment">// Get how many projects the user is assigned to
+				<span class="comment">// Investors can be assigned to a maximum of 1 project
+				// Get how many projects the user is assigned to
 				</span><span class="kw">let </span>projects_count = &lt;ProjectsByUser&lt;T&gt;&gt;::get(user.clone()).len();
 				<span class="macro">ensure!</span>(
 					projects_count &lt; T::MaxProjectsPerInvestor::get() <span class="kw">as </span>usize,
@@ -6117,7 +6273,8 @@
 				);
 				<span class="prelude-val">Ok</span>(())
 			},
-			<span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
+				<span class="comment">// Builders, Issuers &amp; Regional Centers don&#39;t have a limit on how many projects they can be assigned to
+			</span><span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
 		}
 	}
 
@@ -6148,26 +6305,21 @@
 				</span><span class="kw">match </span>drawdown_data.status {
 					DrawdownStatus::Draft =&gt; <span class="prelude-val">Ok</span>(()),
 					DrawdownStatus::Rejected =&gt; <span class="prelude-val">Ok</span>(()),
-					DrawdownStatus::Submitted =&gt; {
-						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedDrawdown.into())
-					},
-					DrawdownStatus::Approved =&gt; {
-						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into())
-					},
-					DrawdownStatus::Confirmed =&gt; {
-						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into())
-					},
+					DrawdownStatus::Submitted =&gt;
+						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedDrawdown.into()),
+					DrawdownStatus::Approved =&gt;
+						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into()),
+					DrawdownStatus::Confirmed =&gt;
+						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into()),
 				}
 			},
 			<span class="kw">_ </span>=&gt; {
 				<span class="comment">// Match drawdown status
 				</span><span class="kw">match </span>drawdown_data.status {
-					DrawdownStatus::Approved =&gt; {
-						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into())
-					},
-					DrawdownStatus::Confirmed =&gt; {
-						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into())
-					},
+					DrawdownStatus::Approved =&gt;
+						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedDrawdown.into()),
+					DrawdownStatus::Confirmed =&gt;
+						<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedDrawdown.into()),
 					<span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
 				}
 			},
@@ -6184,21 +6336,19 @@
 		</span><span class="kw">match </span>transaction_data.status {
 			TransactionStatus::Draft =&gt; <span class="prelude-val">Ok</span>(()),
 			TransactionStatus::Rejected =&gt; <span class="prelude-val">Ok</span>(()),
-			TransactionStatus::Submitted =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedTransaction.into())
-			},
-			TransactionStatus::Approved =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedTransaction.into())
-			},
-			TransactionStatus::Confirmed =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedTransaction.into())
-			},
+			TransactionStatus::Submitted =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedTransaction.into()),
+			TransactionStatus::Approved =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedTransaction.into()),
+			TransactionStatus::Confirmed =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnConfirmedTransaction.into()),
 		}
 	}
 
 	<span class="doccomment">/// # Checks if the caller has the permission to perform an action
 	///
-	/// - This version of is_authorized checks if the caller is an Administrator and if so, it checks the global scope
+	/// - This version of is_authorized checks if the caller is an Administrator and if so, it
+	///   checks the global scope
 	/// otherwise it checks the project scope
 	/// - This is useful for functions that are called by both administrators and project users
 	/// - Scope is always required. In workflows where the caller is an administrator,
@@ -6288,20 +6438,22 @@
 		<span class="comment">// Ensure drawdown exists
 		</span><span class="macro">ensure!</span>(&lt;DrawdownsInfo&lt;T&gt;&gt;::contains_key(drawdown_id), Error::&lt;T&gt;::DrawdownNotFound);
 
-		<span class="comment">// Get drawdown transactions
-		</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::try_get(project_id, drawdown_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-
 		<span class="comment">// Calculate drawdown total amount
 		</span><span class="kw">let </span><span class="kw-2">mut </span>drawdown_total_amount: u64 = <span class="number">0</span>;
 
-		<span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions.iter().cloned() {
-			<span class="comment">// Get transaction data
-			</span><span class="kw">let </span>transaction_data = TransactionsInfo::&lt;T&gt;::get(transaction_id)
-				.ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+		<span class="kw">if </span>!TransactionsByDrawdown::&lt;T&gt;::get(project_id, drawdown_id).is_empty() {
+			<span class="comment">// Get transactions by drawdown
+			</span><span class="kw">let </span>transactions_by_drawdown = TransactionsByDrawdown::&lt;T&gt;::get(project_id, drawdown_id);
 
-			<span class="comment">// Add transaction amount to drawdown total amount
-			</span>drawdown_total_amount += transaction_data.amount;
+			<span class="comment">// Iterate through transactions
+			</span><span class="kw">for </span>transaction_id <span class="kw">in </span>transactions_by_drawdown.iter().cloned() {
+				<span class="comment">// Get transaction data
+				</span><span class="kw">let </span>transaction_data =
+					TransactionsInfo::&lt;T&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+
+				<span class="comment">// Add transaction amount to drawdown total amount
+				</span>drawdown_total_amount += transaction_data.amount;
+			}
 		}
 
 		<span class="comment">// Update drawdown total amount
@@ -6379,9 +6531,8 @@
 		</span><span class="kw">match </span>revenue_data.status {
 			RevenueStatus::Draft =&gt; <span class="prelude-val">Ok</span>(()),
 			RevenueStatus::Rejected =&gt; <span class="prelude-val">Ok</span>(()),
-			RevenueStatus::Submitted =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenue.into())
-			},
+			RevenueStatus::Submitted =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenue.into()),
 			RevenueStatus::Approved =&gt; <span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenue.into()),
 		}
 	}
@@ -6398,12 +6549,10 @@
 		</span><span class="kw">match </span>revenue_transaction_data.status {
 			RevenueTransactionStatus::Draft =&gt; <span class="prelude-val">Ok</span>(()),
 			RevenueTransactionStatus::Rejected =&gt; <span class="prelude-val">Ok</span>(()),
-			RevenueTransactionStatus::Submitted =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenueTransaction.into())
-			},
-			RevenueTransactionStatus::Approved =&gt; {
-				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenueTransaction.into())
-			},
+			RevenueTransactionStatus::Submitted =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnSubmittedRevenueTransaction.into()),
+			RevenueTransactionStatus::Approved =&gt;
+				<span class="prelude-val">Err</span>(Error::&lt;T&gt;::CannotPerformActionOnApprovedRevenueTransaction.into()),
 		}
 	}
 
@@ -6414,20 +6563,23 @@
 		<span class="comment">// Ensure revenue exists
 		</span><span class="macro">ensure!</span>(&lt;RevenuesInfo&lt;T&gt;&gt;::contains_key(revenue_id), Error::&lt;T&gt;::RevenueNotFound);
 
-		<span class="comment">// Get revenue transactions
-		</span><span class="kw">let </span>revenue_transactions = TransactionsByRevenue::&lt;T&gt;::try_get(project_id, revenue_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::RevenueNotFound)<span class="question-mark">?</span>;
-
 		<span class="comment">// Calculate revenue total amount
 		</span><span class="kw">let </span><span class="kw-2">mut </span>revenue_total_amount: Amount = <span class="number">0</span>;
 
-		<span class="kw">for </span>transaction_id <span class="kw">in </span>revenue_transactions.iter().cloned() {
-			<span class="comment">// Get revenue transaction data
-			</span><span class="kw">let </span>revenue_transaction_data = RevenueTransactionsInfo::&lt;T&gt;::get(transaction_id)
-				.ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
+		<span class="kw">if </span>!TransactionsByRevenue::&lt;T&gt;::get(project_id, revenue_id).is_empty() {
+			<span class="comment">// Get revenue transactions
+			</span><span class="kw">let </span>transactions_by_revenue = TransactionsByRevenue::&lt;T&gt;::get(project_id, revenue_id);
 
-			<span class="comment">// Add transaction amount to revenue total amount
-			</span>revenue_total_amount += revenue_transaction_data.amount;
+			<span class="comment">// Iterate over revenue transactions
+			</span><span class="kw">for </span>revenue_transaction_id <span class="kw">in </span>transactions_by_revenue {
+				<span class="comment">// Get revenue transaction data
+				</span><span class="kw">let </span>revenue_transaction_data =
+					RevenueTransactionsInfo::&lt;T&gt;::get(revenue_transaction_id)
+						.ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
+
+				<span class="comment">// Add revenue transaction amount to revenue total amount
+				</span>revenue_total_amount += revenue_transaction_data.amount;
+			}
 		}
 
 		<span class="comment">// Update revenue total amount
@@ -6573,116 +6725,134 @@
 			Error::&lt;T&gt;::InsufficientFundsToTransfer
 		);
 
-		<span class="comment">// If user has no funds, then transfer funds to user
+		<span class="comment">//TODO: Check if user has enough funds to receive transfer, refactor else arm
+		// If user has no funds, then transfer funds to user
 		</span><span class="kw">if </span>T::Currency::free_balance(<span class="kw-2">&amp;</span>user) &lt; T::Currency::minimum_balance() {
 			<span class="comment">// Transfer funds to user
 			</span>T::Currency::transfer(<span class="kw-2">&amp;</span>admin, <span class="kw-2">&amp;</span>user, T::TransferAmount::get(), KeepAlive)<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		} <span class="kw">else </span>{
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(());
+			<span class="kw">return </span><span class="prelude-val">Ok</span>(())
 		}
 	}
 
-	<span class="comment">// H O T F I X
-	// DELETE AFTER FIXING THE ISSUE
-	</span><span class="kw">pub fn </span>do_reset_allen_drawdowns(project_id: ProjectId) -&gt; DispatchResult {
+	<span class="kw">fn </span>do_delete_expenditure_transactions(expenditure_id: ExpenditureId) -&gt; DispatchResult {
+		<span class="comment">// Get expenditure data
+		</span><span class="kw">let </span>expenditure_data =
+			&lt;ExpendituresInfo&lt;T&gt;&gt;::get(expenditure_id).ok_or(Error::&lt;T&gt;::ExpenditureNotFound)<span class="question-mark">?</span>;
+
 		<span class="comment">// Ensure project exists
-		</span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
-
-		<span class="comment">// Get all drawdowns for project
-		</span><span class="kw">let </span>drawdowns = &lt;DrawdownsByProject&lt;T&gt;&gt;::try_get(project_id)
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ProjectNotFound)<span class="question-mark">?</span>;
-
-		<span class="kw">let </span><span class="kw-2">mut </span>developer_equity_drawdowns: Vec&lt;DrawdownId&gt; = <span class="macro">vec!</span>[];
-
-		<span class="comment">// Filter only the Developer Equity drawdowns for project
-		</span><span class="kw">for </span>drawdown_id <span class="kw">in </span>drawdowns.iter().cloned() {
-			<span class="kw">let </span>drawdown_data =
-				&lt;DrawdownsInfo&lt;T&gt;&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
-			<span class="kw">if </span>drawdown_data.drawdown_type == DrawdownType::DeveloperEquity {
-				developer_equity_drawdowns.push(drawdown_id);
-			}
-		}
-
-		<span class="comment">// ensure developer_equity_drawdowns is not empty
-		</span><span class="macro">ensure!</span>(!developer_equity_drawdowns.is_empty(), Error::&lt;T&gt;::EmptyTransactions);
-
-		<span class="comment">// Delete drawdown transactions
-		</span><span class="kw">for </span>drawdown_id <span class="kw">in </span>developer_equity_drawdowns.iter().cloned() {
-			<span class="comment">// Get drawdown transactions
-			</span><span class="kw">let </span>drawdown_transactions = TransactionsByDrawdown::&lt;T&gt;::get(project_id, drawdown_id);
-
-			<span class="kw">if </span>drawdown_transactions.len() &gt; <span class="number">0 </span>{
-				<span class="comment">// Delete drawdown transactions from TransactionsInfo
-				</span><span class="kw">for </span>transaction_id <span class="kw">in </span>drawdown_transactions {
-					&lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
-				}
-
-				<span class="comment">// Delete drawdown transactions from TransactionsByDrawdown
-				</span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::remove(project_id, drawdown_id);
-			}
-
-			<span class="comment">// Delete all Developer Equity drawdowns for project
-			</span>&lt;DrawdownsInfo&lt;T&gt;&gt;::remove(drawdown_id);
-
-			<span class="comment">// Delete drawdown from DrawdownsByProject
-			</span>&lt;DrawdownsByProject&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-				project_id,
-				|drawdowns| {
-					drawdowns.retain(|drawdown| drawdown != <span class="kw-2">&amp;</span>drawdown_id);
-					<span class="prelude-val">Ok</span>(())
-				},
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="comment">// Generate a new Developer Equity drawdown
-		</span><span class="self">Self</span>::do_create_drawdown(project_id, DrawdownType::DeveloperEquity, <span class="number">1</span>)<span class="question-mark">?</span>;
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>do_force_delete_transaction(
-		project_id: ProjectId,
-		drawdown_id: DrawdownId,
-		transaction_id: TransactionId,
-	) -&gt; DispatchResult {
-		<span class="comment">// Ensure project exists
-		</span><span class="macro">ensure!</span>(&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(project_id), Error::&lt;T&gt;::ProjectNotFound);
-
-		<span class="comment">// Ensure drawdown exists
-		</span><span class="macro">ensure!</span>(&lt;DrawdownsInfo&lt;T&gt;&gt;::contains_key(drawdown_id), Error::&lt;T&gt;::DrawdownNotFound);
-
-		<span class="comment">// Ensure transaction exists
 		</span><span class="macro">ensure!</span>(
-			&lt;TransactionsInfo&lt;T&gt;&gt;::contains_key(transaction_id),
-			Error::&lt;T&gt;::TransactionNotFound
+			&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(expenditure_data.project_id),
+			Error::&lt;T&gt;::ProjectNotFound
 		);
 
-		<span class="comment">// Ensure transaction belongs to the drawdown
-		</span><span class="kw">let </span>transactions = TransactionsByDrawdown::&lt;T&gt;::get(project_id, drawdown_id);
-		<span class="macro">ensure!</span>(transactions.contains(<span class="kw-2">&amp;</span>transaction_id), Error::&lt;T&gt;::TransactionNotFound);
+		<span class="comment">// Ensure project contains drawdowns and get them
+		</span><span class="kw">let </span>drawdowns = &lt;DrawdownsByProject&lt;T&gt;&gt;::try_get(expenditure_data.project_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ProjectHasNoDrawdowns)<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>transaction_data =
-			&lt;TransactionsInfo&lt;T&gt;&gt;::get(transaction_id).ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
+		<span class="kw">for </span>drawdown_id <span class="kw">in </span>drawdowns.iter().cloned() {
+			<span class="comment">// Ensure drawdown exists
+			</span><span class="macro">ensure!</span>(&lt;DrawdownsInfo&lt;T&gt;&gt;::contains_key(drawdown_id), Error::&lt;T&gt;::DrawdownNotFound);
 
-		<span class="macro">ensure!</span>(transaction_data.amount == <span class="number">0</span>, Error::&lt;T&gt;::TransactionInUse);
+			<span class="comment">// If drawdown has transactions, check that every transaction exists &amp; its amount is zero
+			</span><span class="kw">if </span>!&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(expenditure_data.project_id, drawdown_id).is_empty() {
+				<span class="kw">for </span>transaction_id <span class="kw">in
+					</span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(expenditure_data.project_id, drawdown_id).iter().cloned()
+				{
+					<span class="comment">// Ensure transaction exists &amp; get transaction data
+					</span><span class="kw">let </span>transaction_data = &lt;TransactionsInfo&lt;T&gt;&gt;::get(transaction_id)
+						.ok_or(Error::&lt;T&gt;::TransactionNotFound)<span class="question-mark">?</span>;
 
-		<span class="comment">// Delete transaction from TransactionsInfo
-		</span>&lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+					<span class="kw">if </span>transaction_data.expenditure_id == expenditure_id {
+						<span class="comment">// Ensure transaction amount is zero
+						</span><span class="macro">ensure!</span>(
+							transaction_data.amount == <span class="number">0</span>,
+							Error::&lt;T&gt;::ExpenditureHasNonZeroTransactions
+						);
 
-		<span class="comment">// Delete transaction from TransactionsByDrawdown
-		</span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			project_id,
-			drawdown_id,
-			|transactions| {
-				transactions.retain(|transaction| transaction != <span class="kw-2">&amp;</span>transaction_id);
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
+						<span class="comment">// Delete transaction from TransactionsInfo
+						</span>&lt;TransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
 
+						<span class="comment">// Delete transaction from TransactionsByDrawdown
+						</span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+							expenditure_data.project_id,
+							drawdown_id,
+							|transactions_option| {
+								<span class="kw">let </span>transactions = transactions_option.as_mut().ok_or(Error::&lt;T&gt;::DrawdownHasNoTransactions)<span class="question-mark">?</span>;
+								transactions.retain(|transaction| transaction != <span class="kw-2">&amp;</span>transaction_id);
+								<span class="kw">if </span>transactions.is_empty() {
+									transactions_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+								}
+								<span class="prelude-val">Ok</span>(())
+							},
+						)<span class="question-mark">?</span>;
+					}
+				}
+			}
+		}
 		<span class="prelude-val">Ok</span>(())
 	}
+
+	<span class="kw">fn </span>do_delete_job_eligible_transactions(job_eligible_id: JobEligibleId,) -&gt; DispatchResult {
+		<span class="comment">// Get job eligible data
+		</span><span class="kw">let </span>job_eligible_data =
+			&lt;JobEligiblesInfo&lt;T&gt;&gt;::get(job_eligible_id).ok_or(Error::&lt;T&gt;::JobEligibleNotFound)<span class="question-mark">?</span>;
+
+		<span class="comment">// Ensure project exists
+		</span><span class="macro">ensure!</span>(
+			&lt;ProjectsInfo&lt;T&gt;&gt;::contains_key(job_eligible_data.project_id),
+			Error::&lt;T&gt;::ProjectNotFound
+		);
+
+		<span class="comment">// Ensure project contains revenues and get them
+		</span><span class="kw">let </span>revenues = &lt;RevenuesByProject&lt;T&gt;&gt;::try_get(job_eligible_data.project_id)
+			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ProjectHasNoRevenues)<span class="question-mark">?</span>;
+
+		<span class="kw">for </span>revenue_id <span class="kw">in </span>revenues.iter().cloned() {
+			<span class="comment">// Ensure revenue exists
+			</span><span class="macro">ensure!</span>(&lt;RevenuesInfo&lt;T&gt;&gt;::contains_key(revenue_id), Error::&lt;T&gt;::RevenueNotFound);
+
+			<span class="comment">// If revenue has transactions, check that every transaction exists &amp; its amount is zero
+			</span><span class="kw">if </span>!&lt;TransactionsByRevenue&lt;T&gt;&gt;::get(job_eligible_data.project_id, revenue_id).is_empty() {
+				<span class="kw">for </span>transaction_id <span class="kw">in
+					</span>&lt;TransactionsByRevenue&lt;T&gt;&gt;::get(job_eligible_data.project_id, revenue_id).iter().cloned()
+				{
+					<span class="comment">// Ensure transaction exists &amp; get transaction data
+					</span><span class="kw">let </span>transaction_data = &lt;RevenueTransactionsInfo&lt;T&gt;&gt;::get(transaction_id)
+						.ok_or(Error::&lt;T&gt;::RevenueTransactionNotFound)<span class="question-mark">?</span>;
+
+					<span class="kw">if </span>transaction_data.job_eligible_id == job_eligible_id {
+						<span class="comment">// Ensure transaction amount is zero
+						</span><span class="macro">ensure!</span>(
+							transaction_data.amount == <span class="number">0</span>,
+							Error::&lt;T&gt;::JobEligibleHasNonZeroTransactions
+						);
+
+						<span class="comment">// Delete transaction from RevenueTransactionsInfo
+						</span>&lt;RevenueTransactionsInfo&lt;T&gt;&gt;::remove(transaction_id);
+
+						<span class="comment">// Delete transaction from TransactionsByRevenue
+						</span>&lt;TransactionsByRevenue&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+							job_eligible_data.project_id,
+							revenue_id,
+							|transactions_option| {
+								<span class="kw">let </span>transactions = transactions_option.as_mut().ok_or(Error::&lt;T&gt;::RevenueHasNoTransactions)<span class="question-mark">?</span>;
+								transactions.retain(|transaction| transaction != <span class="kw-2">&amp;</span>transaction_id);
+								<span class="kw">if </span>transactions.is_empty() {
+									transactions_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+								}
+								<span class="prelude-val">Ok</span>(())
+							},
+						)<span class="question-mark">?</span>;
+					}
+				}
+			}
+		}
+		<span class="prelude-val">Ok</span>(())
+	}
+
 	<span class="comment">// Do not code beyond this line
 </span>}
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fund_admin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fund_admin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.2 (9eb3afe9e 2023-03-27)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
