@@ -1875,8 +1875,9 @@ impl<T: Config> Pallet<T> {
 
 		// Ensure job_eligible_id is contained in JobEligiblesByProject
 		ensure!(
-			JobEligiblesByProject::<T>::contains_key(job_eligible_data.project_id),
-			Error::<T>::JobEligibleNotFoundForSelectedProjectId
+			JobEligiblesByProject::<T>::get(job_eligible_data.project_id)
+				.contains(&job_eligible_id), 
+				Error::<T>::JobEligibleNotFoundForSelectedProjectId
 		);
 
 		Self::do_delete_job_eligible_transactions(job_eligible_id)?;
