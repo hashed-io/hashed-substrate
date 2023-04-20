@@ -285,6 +285,7 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
 </pre><pre class="rust"><code><span class="kw">use </span>hashed_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, GenesisConfig, GrandpaConfig, Signature,
 	SudoConfig, SystemConfig, NodeAuthorizationConfig, BitcoinVaultsConfig, WASM_BINARY,
@@ -570,6 +571,7 @@
 		bitcoin_vaults : BitcoinVaultsConfig{
 			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
 		},
+		mapped_assets: Default::default(),
 	}
 }
 </code></pre></div>

@@ -3,11 +3,13 @@ var sourcesIndex = JSON.parse('{\
 "hashed_parachain":["",[["chain_spec",[],["hashed.rs","md5.rs","mod.rs"]]],["cli.rs","command.rs","main.rs","rpc.rs","service.rs"]],\
 "hashed_parachain_runtime":["",[["weights",[],["block_weights.rs","extrinsic_weights.rs","mod.rs","paritydb_weights.rs","rocksdb_weights.rs"]]],["constants.rs","lib.rs","xcm_config.rs"]],\
 "hashed_runtime":["",[],["constants.rs","lib.rs"]],\
+"pallet_afloat":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_bitcoin_vaults":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_confidential_docs":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_fruniques":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_fund_admin":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_gated_marketplace":["",[],["functions.rs","lib.rs","types.rs"]],\
+"pallet_mapped_assets":["",[],["extra_mutator.rs","functions.rs","impl_fungibles.rs","impl_stored_map.rs","lib.rs","types.rs","weights.rs"]],\
 "pallet_rbac":["",[],["functions.rs","lib.rs","types.rs"]],\
 "pallet_template":["",[["migrations",[],["mod.rs","v2.rs"]]],["lib.rs"]]\
 }');
