@@ -283,5 +283,6 @@ fn testnet_genesis(
 		bitcoin_vaults : BitcoinVaultsConfig{
 			bdk_services_url : BDK_SERVICES_MAINNET_URL.as_bytes().to_vec(),
 		},
+		mapped_assets: Default::default(),
 	}
 }
