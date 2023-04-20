@@ -8,8 +8,11 @@ use frame_system::pallet_prelude::*;
 use scale_info::prelude::string::String;
 
 use pallet_gated_marketplace::types::Marketplace;
+use pallet_gated_marketplace::types::MarketplaceRole;
 use pallet_rbac::types::*;
-
+use pallet_fruniques::types::CollectionDescription;
+use pallet_fruniques::types::StringLimit;
+use pallet_fruniques::types::FruniqueRole;
 use frame_support::pallet_prelude::*;
 use frame_support::traits::EnsureOriginWithArg;
 use frame_support::PalletId;
@@ -127,6 +130,8 @@ impl<T: Config> Pallet<T> {
 		}
 
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+
+		Self::add_to_afloat_collection(user_address.clone(),FruniqueRole::Collaborator)?;
 		pallet_gated_marketplace::Pallet::<T>::self_enroll(user_address, marketplace_id)?;
 		Ok(())
 	}
@@ -216,8 +221,53 @@ impl<T: Config> Pallet<T> {
 	///
 	pub fn do_delete_user(_actor: T::AccountId, user_address: T::AccountId) -> DispatchResult {
 		ensure!(<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
+		
+		Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
+		Self::remove_from_afloat_marketplace(user_address.clone())?;
+
 		<UserInfo<T>>::remove(user_address.clone());
 		Self::deposit_event(Event::UserDeleted(user_address.clone()));
 		Ok(())
+	}
+
+	pub fn create_afloat_collection(origin: OriginFor<T>,
+		metadata: CollectionDescription<T>,
+		admin: T::AccountId, ) -> DispatchResult 
+		where
+		<T as pallet_uniques::Config>::CollectionId: From<u32>,
+		{
+
+		let collection_id = pallet_fruniques::Pallet::<T>::do_create_collection(
+			origin.clone(),
+			metadata,
+			admin.clone(),
+		);
+		if let Ok(collection_id) = collection_id {
+			AfloatCollectionId::<T>::put(collection_id);
+			Ok(())
+		} else {
+			return Err(Error::<T>::MarketplaceNotInitialized.into());
+		}
+	}
+
+	pub fn add_to_afloat_collection(invitee: T::AccountId, role: FruniqueRole) -> DispatchResult {
+		let collection_id = AfloatCollectionId::<T>::get().unwrap();
+		pallet_fruniques::Pallet::<T>::insert_auth_in_frunique_collection(invitee,
+		collection_id,
+		role
+		)
+	}
+
+	pub fn remove_from_afloat_collection(invitee: T::AccountId, role: FruniqueRole) -> DispatchResult {
+		let collection_id = AfloatCollectionId::<T>::get().unwrap();
+		pallet_fruniques::Pallet::<T>::remove_auth_from_frunique_collection(invitee,
+		collection_id,
+		role
+		)
+	}
+
+	pub fn remove_from_afloat_marketplace(invitee: T::AccountId) -> DispatchResult {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		pallet_gated_marketplace::Pallet::<T>::remove_from_market_lists(invitee, MarketplaceRole::Participant, marketplace_id)
 	}
 }

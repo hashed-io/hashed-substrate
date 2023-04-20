@@ -19,12 +19,15 @@ pub mod pallet {
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
 	use frame_system::pallet_prelude::*;
+	use frame_system::RawOrigin;
 	use pallet_gated_marketplace::functions;
 	use pallet_gated_marketplace::types::*;
 	use pallet_mapped_assets::types::*;
 	use sp_runtime::Permill;
 	use sp_runtime::traits::StaticLookup;
-
+	use pallet_fruniques::types::CollectionDescription;
+	use pallet_fruniques::types::StringLimit;
+	use pallet_fruniques::types::FruniqueRole;
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
@@ -36,7 +39,7 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_gated_marketplace::Config + pallet_mapped_assets::Config {
+	pub trait Config: frame_system::Config + pallet_gated_marketplace::Config + pallet_mapped_assets::Config + pallet_uniques::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		type TimeProvider: UnixTime;
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
@@ -95,25 +98,43 @@ pub mod pallet {
 		MarketplaceId, // Afloat's marketplace id
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn collection_id)]
+	pub(super) type AfloatCollectionId<T: Config> = StorageValue<
+		_,
+		<T as pallet_uniques::Config>::CollectionId, // Afloat's marketplace id
+	>;
+
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T> 
+	where
+	T: pallet_uniques::Config<CollectionId = CollectionId>
+	{
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn initial_setup(
 			origin: OriginFor<T>,
 			creator: T::AccountId,
 			admin: T::AccountId,
-		) -> DispatchResult {
+		) -> DispatchResult
+
+	{
 			let who = ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
 			let min_balance: T::Balance = T::Balance::from(1u32);
+			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
+
 			pallet_mapped_assets::Pallet::<T>::create(
-				origin,
+				origin.clone(),
 				asset_id,
 				T::Lookup::unlookup(creator.clone()),
 				min_balance,
-			); 
+			)?; 
+
+			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
 			
+			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())?;
+
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
 			Self::do_initial_setup(creator.clone(), admin.clone())?;
@@ -127,7 +148,9 @@ pub mod pallet {
 				creator: creator.clone(),
 			};
 			let marketplace_id = marketplace.clone().using_encoded(blake2_256);
+
 			AfloatMarketPlaceId::<T>::put(marketplace_id);
+			Self::add_to_afloat_collection(admin.clone(),FruniqueRole::Admin)?;
 			pallet_gated_marketplace::Pallet::do_create_marketplace(creator, admin, marketplace)?;
 			Ok(())
 		}

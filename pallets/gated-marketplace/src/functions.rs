@@ -816,7 +816,7 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 
-	fn remove_from_market_lists(
+	pub fn remove_from_market_lists(
 		account: T::AccountId,
 		author_type: MarketplaceRole,
 		marketplace_id: [u8; 32],
