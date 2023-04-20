@@ -13,9 +13,9 @@ mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::traits::{Currency, Time};
 	use frame_support::{
 		pallet_prelude::{ValueQuery, *},
+		traits::{Currency, Time},
 		BoundedVec,
 	};
 	use frame_system::pallet_prelude::*;
@@ -113,7 +113,7 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/*--- Onchain storage section ---*/
+	/* --- Onchain storage section --- */
 
 	#[pallet::storage]
 	#[pallet::getter(fn global_scope)]
@@ -387,6 +387,24 @@ pub mod pallet {
 	// ------------------------------------------------------------------------------------------------------------
 	#[pallet::error]
 	pub enum Error<T> {
+		/// FieldName is empty
+		EmptyFieldName,
+		/// FieldDescription is empty
+		EmptyFieldDescription,
+		/// FieldName is too long
+		FieldNameTooLong,
+		/// Array of users is empty
+		EmptyUsers,
+		/// CID is empty
+		EmptyFieldCID,
+		/// Array of banks is empty
+		EmptyFieldBanks,
+		/// The private group id is empty
+		PrivateGroupIdEmpty,
+		/// Array of users to be assigned to a project is empty
+		EmptyUsersAssignation,
+		/// Field address project is empty
+		EmptyProjectAddress,
 		/// No value was found for the global scope
 		NoGlobalScopeValueWasFound,
 		/// Project ID is already in use
@@ -401,6 +419,16 @@ pub mod pallet {
 		ProjectNotFound,
 		/// Project is not active anymore
 		ProjectIsAlreadyCompleted,
+		/// Project has no drawdowns
+		ProjectHasNoDrawdowns,
+		/// Project has no expenditures
+		ProjectHasNoExpenditures,
+		/// Project has no users
+		ProjectHasNoUsers,
+		/// Project has no job eligibles
+		ProjectHasNoJobEligibles,
+		/// Project has no revenues
+		ProjectHasNoRevenues,
 		/// Can not delete a completed project
 		CannotDeleteCompletedProject,
 		/// User is not registered
@@ -431,10 +459,12 @@ pub mod pallet {
 		UserCannotHaveMoreThanOneRole,
 		/// Expenditure not found
 		ExpenditureNotFound,
+		/// Expenditure not found for the selected project_id
+		ExpenditureNotFoundForSelectedProjectId,
 		/// Expenditure already exist
 		ExpenditureAlreadyExists,
 		/// Expenditure is already in a transaction
-		ExpenditureInTransaction,
+		ExpenditureHasNonZeroTransactions,
 		/// Max number of expenditures per project reached
 		MaxExpendituresPerProjectReached,
 		/// Field name can not be empty
@@ -449,6 +479,8 @@ pub mod pallet {
 		DocumentsEmpty,
 		/// Transaction id is not found
 		TransactionNotFound,
+		/// Transaction was not found for the selected Drawdown_id
+		TransactionNotFoundForSelectedDrawdownId,
 		/// Transaction already exist
 		TransactionAlreadyExists,
 		/// Transaction is already in a drawdown
@@ -507,10 +539,16 @@ pub mod pallet {
 		UserNameRequired,
 		/// User role is required
 		UserRoleRequired,
+		/// User image is required
+		UserImageRequired,
+		/// User email is required
+		UserEmailRequired,
 		/// Amount is required
 		AmountRequired,
 		/// Can not delete a user if the user is assigned to a project
 		UserHasAssignedProjects,
+		/// User has no projects assigned
+		UserHasNoProjects,
 		/// Can not send a drawdown to submitted status if it has no transactions
 		NoTransactionsToSubmit,
 		/// Bulk upload description is required
@@ -567,6 +605,10 @@ pub mod pallet {
 		JobEligibleAmountRequired,
 		/// Job eligible id is required
 		JobEligibleIdRequired,
+		/// Job eligible not found for the given project id
+		JobEligibleNotFoundForSelectedProjectId,
+		/// Job eligible has non zero transactions
+		JobEligibleHasNonZeroTransactions,
 		/// Revenue id was not found
 		RevenueNotFound,
 		/// Transactions revenue array is empty
@@ -583,6 +625,8 @@ pub mod pallet {
 		MaxTransactionsPerRevenueReached,
 		/// Revenue transaction id not found
 		RevenueTransactionNotFound,
+		/// Revenue transaction was not found for the selected revenue_id
+		RevenueTransactionNotFoundForSelectedRevenueId,
 		/// Revenue transaction can not be edited
 		CannotEditRevenueTransaction,
 		/// Max number of status changes per revenue reached
@@ -629,8 +673,6 @@ pub mod pallet {
 		BankConfirmingDocumentsEmpty,
 		/// Only eb5 drawdowns are allowed to upload bank documentation
 		OnlyEB5DrawdownsCanUploadBankDocuments,
-		/// The private group id is empty
-		PrivateGroupIdEmpty,
 		/// Maximun number of registrations at a time reached
 		MaxRegistrationsAtATimeReached,
 		/// Administrator account has insuficiente balance to register a new user
@@ -721,25 +763,30 @@ pub mod pallet {
 		/// - 0: The user account
 		/// - 1: The user name
 		/// - 2: The user role
-		/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.
+		/// - 3: The CUD operation to be performed on the user account. CUD action is ALWAYS
+		///   required.
 		///
 		/// # Considerations:
 		/// - Users parameters are optional because depends on the CUD action as follows:
 		/// * **Create**: The user account, user name, user role & CUD action are required
-		/// * **Update**: The user account & CUD action are required. The user name & user role are optionals.
+		/// * **Update**: The user account & CUD action are required. The user name & user role are
+		///   optionals.
 		/// * **Delete**: The user account & CUD action are required.
 		/// - This function can only be called by an administrator account
 		/// - Multiple users can be registered, updated, or deleted at the same time, but
 		/// the user account must be unique. Multiple actions over the same user account
 		/// in the same call, it could result in an unexpected behavior.
-		/// - If the user is already registered, the function will return an error: UserAlreadyRegistered
+		/// - If the user is already registered, the function will return an error:
+		///   UserAlreadyRegistered
 		/// - If the user is not registered, the function will return an error: UserNotFound
 		///
 		/// # Note:
-		/// - WARNING: It is possible to register, update, or delete administrators accounts using this extrinsic,
+		/// - WARNING: It is possible to register, update, or delete administrators accounts using
+		///   this extrinsic,
 		/// but administrators can not delete themselves.
 		/// - WARNING: This function only registers, updates, or deletes users from the site.
-		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or unassigning
+		/// - WARNING: The only way to grant or remove permissions of a user account is assigning or
+		///   unassigning
 		/// a user from a selected project.
 		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
@@ -791,7 +838,8 @@ pub mod pallet {
 		/// - address: The address of the project
 		/// - creation_date: The creation date of the project
 		/// - completion_date: The completion date of the project
-		/// - expenditures: The expenditures of the project. It is an array of tuples where each entry
+		/// - expenditures: The expenditures of the project. It is an array of tuples where each
+		///   entry
 		/// is a tuple of the following:
 		/// * 0: The expenditure name
 		/// * 1: The expenditure type
@@ -799,8 +847,10 @@ pub mod pallet {
 		/// * 3: The expenditure NAICS code
 		/// * 4: The expenditure jobs multiplier
 		/// * 5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.
-		/// * 6: The expenditure id. It is optional because it is only required when updating or deleting
-		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// * 6: The expenditure id. It is optional because it is only required when updating or
+		///   deleting
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of
+		///   tuples
 		/// where each entry is composed by:
 		/// * 0: The job eligible name
 		/// * 1: The amount of the job eligible
@@ -808,7 +858,8 @@ pub mod pallet {
 		/// * 3: The jobs multiplier of the job eligible
 		/// * 4: The job eligible action to be performed. (Create, Update or Delete)
 		/// * 5: The job eligible id. This is only used when updating or deleting a job eligible.
-		/// - users: The users who will be assigned to the project. It is an array of tuples where each entry
+		/// - users: The users who will be assigned to the project. It is an array of tuples where
+		///   each entry
 		/// is a tuple of the following:
 		/// * 0: The user account
 		/// * 1: The user role
@@ -816,16 +867,18 @@ pub mod pallet {
 		///
 		/// # Considerations:
 		/// - This function can only be called by an administrator account
-		/// - For users assignation, the user account must be registered. If the user is not registered,
+		/// - For users assignation, the user account must be registered. If the user is not
+		///   registered,
 		/// the function will return an error. ALL parameters are required.
-		/// - For expenditures, apart from the expenditure id, naics code & jopbs multiplier, ALL parameters are required because for this
+		/// - For expenditures, apart from the expenditure id, naics code & jopbs multiplier, ALL
+		///   parameters are required because for this
 		/// flow, the expenditures are always created. The naics code & the jobs multiplier
 		/// can be added later by the administrator.
 		/// - Creating a project will automatically create a scope for the project.
 		///
 		/// # Note:
-		/// WARNING: If users are provided, the function will assign the users to the project, granting them
-		/// permissions in the rbac pallet.
+		/// WARNING: If users are provided, the function will assign the users to the project,
+		/// granting them permissions in the rbac pallet.
 		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn projects_create_project(
@@ -925,7 +978,8 @@ pub mod pallet {
 		/// the function will return an error: ProjectNotFound
 		///
 		/// # Note:
-		/// - WARNING: Deleting a project will also delete ALL stored information associated with the project.
+		/// - WARNING: Deleting a project will also delete ALL stored information associated with
+		///   the project.
 		/// BE CAREFUL.
 		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
@@ -957,14 +1011,16 @@ pub mod pallet {
 		/// depending on the AssignAction.
 		/// - After a user is assigned to a project, the user will be able to perform actions
 		/// in the project depending on the role assigned to the user.
-		/// - After a user is unassigned from a project, the user will not be able to perform actions
+		/// - After a user is unassigned from a project, the user will not be able to perform
+		///   actions
 		/// in the project anymore.
 		/// - If the user is already assigned to the project, the function will return an error.
 		///
 		/// # Note:
 		/// - WARNING: ALL provided users needs to be registered in the site. If any of the users
 		/// is not registered, the function will return an error.
-		/// - Assigning or unassigning a user to a project will add or remove permissions to the user
+		/// - Assigning or unassigning a user to a project will add or remove permissions to the
+		///   user
 		/// from the RBAC pallet.
 		/// - Warning: Cannot assign a user to a project with a different role than the one they
 		/// have in UsersInfo. If the user has a different role, the function will return an error.
@@ -990,8 +1046,10 @@ pub mod pallet {
 		///
 		/// # Parameters:
 		/// - origin: The administrator account
-		/// - project_id: The selected project id where the expenditures will be created/updated/deleted
-		/// - expenditures: The expenditures to be created/updated/deleted. This is a vector of tuples
+		/// - project_id: The selected project id where the expenditures will be
+		///   created/updated/deleted
+		/// - expenditures: The expenditures to be created/updated/deleted. This is a vector of
+		///   tuples
 		/// where each entry is composed by:
 		/// * 0: The name of the expenditure
 		/// * 1: The expenditure type
@@ -1000,7 +1058,8 @@ pub mod pallet {
 		/// * 4: The jobs multiplier of the expenditure
 		/// * 5: The expenditure action to be performed. (Create, Update or Delete)
 		/// * 6: The expenditure id. This is only used when updating or deleting an expenditure.
-		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
+		/// - job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of
+		///   tuples
 		/// where each entry is composed by:
 		/// * 0: The job eligible name
 		/// * 1: The amount of the job eligible
@@ -1012,10 +1071,12 @@ pub mod pallet {
 		/// # Considerations:
 		/// - Naics code and jobs multiplier are always optional.
 		/// - This function can only be called by an administrator account
-		/// - This extrinsic allows multiple expenditures to be created/updated/deleted at the same time.
+		/// - This extrinsic allows multiple expenditures to be created/updated/deleted at the same
+		///   time.
 		/// - The project id is required because it is the only way to identify the project
 		/// - Expenditure parameters are optional because depends on the action to be performed:
-		/// * **Create**: Name, Type & Amount are required. Nacis code & Jobs multiplier are optional.
+		/// * **Create**: Name, Type & Amount are required. Nacis code & Jobs multiplier are
+		///   optional.
 		/// * **Update**: Except for the expenditure id & action, all parameters are optional.
 		/// * **Delete**: Only the expenditure id & action is required.
 		/// - Multiple actions can be performed at the same time. For example, you can create a new
@@ -1054,7 +1115,8 @@ pub mod pallet {
 		/// - origin: The user account who is creating the transactions
 		/// - project_id: The selected project id where the transactions will be created
 		/// - drawdown_id: The selected drawdown id where the transactions will be created
-		/// - transactions: The transactions to be created/updated/deleted. This entry is a vector of tuples
+		/// - transactions: The transactions to be created/updated/deleted. This entry is a vector
+		///   of tuples
 		/// where each entry is composed by:
 		/// * 0: The expenditure id where the transaction will be created
 		/// * 1: The amount of the transaction
@@ -1067,7 +1129,8 @@ pub mod pallet {
 		///
 		/// # Considerations:
 		/// - This function is only callable by a builder role account
-		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time.
+		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same
+		///   time.
 		/// - The project id and drawdown id are required for the reports.
 		/// - Transaction parameters are optional because depends on the action to be performed:
 		/// * **Create**: Expenditure id, Amount, Documents & action are required.
@@ -1078,7 +1141,8 @@ pub mod pallet {
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
 		/// result in an unexpected behavior.
-		/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not contain
+		/// - If a drawdown is submitted, all transactions must be submitted too. If the drawdown do
+		///   not contain
 		/// any transaction, it will return an error.
 		/// - After a drawdown is submitted, it can not be updated or deleted.
 		/// - After a drawdown is rejected, builders will use again this extrinsic to update the
@@ -1139,25 +1203,30 @@ pub mod pallet {
 		/// - origin: The administrator account who is approving the drawdown
 		/// - project_id: The selected project id where the drawdown will be approved
 		/// - drawdown_id: The selected drawdown id to be approved.
-		/// - bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a pseudo
+		/// - bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a
+		///   pseudo
 		/// draft status. If false, the drawdown will be approved directly.
-		/// - transactions: The transactions to be created/updated/deleted. This is a vector of tuples
+		/// - transactions: The transactions to be created/updated/deleted. This is a vector of
+		///   tuples
 		/// where each entry is composed by:
 		/// * 0: The expenditure id where the transaction will be created
 		/// * 1: The transaction amount
 		/// * 2: Documents associated to the transaction
 		/// * 3: The transaction action to be performed. (Create, Update or Delete)
 		/// * 4: The transaction id. This is only used when updating or deleting a transaction.
-		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same time
+		/// - This extrinsic allows multiple transactions to be created/updated/deleted at the same
+		///   time
 		/// (only for Construction Loan & Developer Equity drawdowns).
 		/// - Transaction parameters are optional because depends on the action to be performed:
 		/// * **Create**: Expenditure id, Amount, Documents & action are required.
 		/// * **Update**: Except for the transaction id & action, all parameters are optional.
 		/// * **Delete**: Only the transaction id & action are required.
 		/// - Multiple actions can be performed at the same time. For example, you can create a new
-		/// transaction and update another one at the same time (only for Construction Loan & Developer Equity drawdowns).
+		/// transaction and update another one at the same time (only for Construction Loan &
+		/// Developer Equity drawdowns).
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
-		/// result in an unexpected behavior (only for Construction Loan & Developer Equity drawdowns).
+		/// result in an unexpected behavior (only for Construction Loan & Developer Equity
+		/// drawdowns).
 		///
 		/// # Considerations:
 		/// - This function is only callable by an administrator account
@@ -1166,7 +1235,8 @@ pub mod pallet {
 		/// - After a drawdown is approved, it can not be updated or deleted.
 		/// - After a drawdown is approved, the next drawdown will be automatically created.
 		/// - The drawdown status will be updated to "Approved" after the extrinsic is executed.
-		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve the
+		/// - After a drawdown is rejected, administrators will use again this extrinsic to approve
+		///   the
 		/// new drawdown version uploaded by the builder.
 		#[pallet::call_index(12)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
@@ -1264,8 +1334,10 @@ pub mod pallet {
 		/// feedback for the WHOLE drawdown.
 		/// - After a builder re-submits a drawdown, the administrator will have to review
 		/// the drawdown again.
-		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
-		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
+		/// - After a builder re-submits a drawdown, the feedback field will be cleared
+		///   automatically.
+		/// - If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE
+		///   drawdown.
 		/// There is no way to reject a single transaction.
 		#[pallet::call_index(13)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
@@ -1303,7 +1375,8 @@ pub mod pallet {
 		/// - The drawdown will be automatically submitted.
 		/// - Only available for Construction Loan & Developer Equity drawdowns.
 		/// - After a builder uploads a drawdown, the administrator will have to review it.
-		/// - After a builder re-submits a drawdown, the feedback field will be cleared automatically.
+		/// - After a builder re-submits a drawdown, the feedback field will be cleared
+		///   automatically.
 		/// - Bulkuploads does not allow individual transactions.
 		/// - After a builder uploads a drawdown, the administrator will have to
 		/// insert each transaction manually.
@@ -1344,8 +1417,10 @@ pub mod pallet {
 		/// - This extrinsic allows multiple projects to be modified at the same time.
 		/// - The inflation rate can be created, updated or deleted.
 		/// - The inflation rate is optional because depends on the CUDAction parameter:
-		/// * **Create**: The inflation rate will be created. Project id, inflation rate and action are required.
-		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action are required.
+		/// * **Create**: The inflation rate will be created. Project id, inflation rate and action
+		///   are required.
+		/// * **Update**: The inflation rate will be updated. Project id, inflation rate and action
+		///   are required.
 		/// * **Delete**: The inflation rate will be deleted. Project id and action are required.
 		/// - The inflation rate can only be modified if the project is in the "started" status.
 		#[pallet::call_index(15)]
@@ -1376,24 +1451,30 @@ pub mod pallet {
 		/// * 1: The amount of the revenue transaction
 		/// * 2: Documents associated to the revenue transaction
 		/// * 3: The action to be performed on the revenue transaction (Create, Update or Delete)
-		/// * 4: The revenue transaction id. This is required only if the action is being updated or deleted.
-		/// - submit: If true, the array of revenue transactions will be submitted to the administrator.
+		/// * 4: The revenue transaction id. This is required only if the action is being updated or
+		///   deleted.
+		/// - submit: If true, the array of revenue transactions will be submitted to the
+		///   administrator.
 		/// If false, the array of revenue transactions will be saved as a draft.
 		///
 		/// # Considerations:
 		/// - This function is only callable by a builder role account
-		/// - This extrinsic allows multiple revenue transactions to be created/updated/deleted at the same time.
+		/// - This extrinsic allows multiple revenue transactions to be created/updated/deleted at
+		///   the same time.
 		/// - The project id and revenue id are required for the reports.
-		/// - revenue_transactions parameters are optional because depends on the action to be performed:
+		/// - revenue_transactions parameters are optional because depends on the action to be
+		///   performed:
 		/// * **Create**: Job eligible id, Amount, Documents & action are required.
-		/// * **Update**: Except for the revenue transaction id & action, all other parameters are optional.
+		/// * **Update**: Except for the revenue transaction id & action, all other parameters are
+		///   optional.
 		/// * **Delete**: Only the revenue transaction id & action are required.
 		/// - Multiple actions can be performed at the same time, but each must be performed on
 		/// a different transaction. For example, you can create a new
 		/// transaction and update another one at the same time.
 		/// - Do not perform multiple actions over the same transaction in the same call, it could
 		/// result in an unexpected behavior.
-		/// - If a revenue is submitted, all transactions must be submitted too. If the revenue do not contain
+		/// - If a revenue is submitted, all transactions must be submitted too. If the revenue do
+		///   not contain
 		/// any transaction, it will return an error.
 		/// - After a revenue is submitted, it can not be updated or deleted.
 		/// - After a revenue is rejected, builders will use again this extrinsic to update the
@@ -1458,7 +1539,8 @@ pub mod pallet {
 		/// not possible to approve a revenue without approving all of its transactions.
 		/// - After a revenue is approved, it can not be updated or deleted.
 		/// - After a revenue is approved, the next revenue will be created automatically.
-		/// - After a revenue is rejected, administrators will use again this extrinsic to approve the
+		/// - After a revenue is rejected, administrators will use again this extrinsic to approve
+		///   the rejected revenue
 		/// new revenue version uploaded by the builder.
 		/// - The revenue status will be updated to Approved.
 		#[pallet::call_index(17)]
@@ -1489,8 +1571,10 @@ pub mod pallet {
 		/// - All transactions associated to the revenue will be rejected too. It's
 		/// not possible to reject a revenue without rejecting all of its transactions.
 		/// - Administrator needs to provide a feedback for each rejected transaction.
-		/// - After a builder re-submits a revenue, the feedback field will be cleared automatically.
-		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
+		/// - After a builder re-submits a revenue, the feedback field will be cleared
+		///   automatically.
+		/// - If a single revenue transaction is wrong, the administrator WILL reject the WHOLE
+		///   revenue.
 		/// There is no way to reject a single revenue transaction.
 		#[pallet::call_index(18)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
@@ -1573,16 +1657,6 @@ pub mod pallet {
 			Self::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
-		#[pallet::call_index(21)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn reset_allen_drawdowns(
-			origin: OriginFor<T>,
-			project_id: ProjectId,
-		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			Self::do_reset_allen_drawdowns(project_id)
-		}
-
 		/// Kill all the stored data.
 		///
 		/// This function is used to kill ALL the stored data.
@@ -1617,30 +1691,6 @@ pub mod pallet {
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
-		}
-
-		/// Force delete transaction.
-		///
-		/// This function is used to force delete a transaction.
-		/// Use it with caution!
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `drawdown_id`: The drawdown id where the transaction exists.
-		/// - `transaction_id`: The transaction id to be deleted.
-		///
-		/// ### Considerations:
-		/// - This function is only available with sudo access.
-		#[pallet::call_index(23)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
-		pub fn force_delete_transaction(
-			origin: OriginFor<T>,
-			project_id: ProjectId,
-			drawdown_id: DrawdownId,
-			transaction_id: TransactionId,
-		) -> DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())?;
-			Self::do_force_delete_transaction(project_id, drawdown_id, transaction_id)
 		}
 	}
 }
