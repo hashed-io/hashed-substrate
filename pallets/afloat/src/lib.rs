@@ -78,6 +78,8 @@ pub mod pallet {
 		UserAlreadyExists,
 		/// Failed to edit user account
 		FailedToEditUserAccount,
+		// Failed to create fruniques collection
+		FailedToCreateFruniquesCollection,
 	}
 
 	#[pallet::storage]
@@ -102,7 +104,7 @@ pub mod pallet {
 	#[pallet::getter(fn collection_id)]
 	pub(super) type AfloatCollectionId<T: Config> = StorageValue<
 		_,
-		<T as pallet_uniques::Config>::CollectionId, // Afloat's marketplace id
+		<T as pallet_uniques::Config>::CollectionId, // Afloat's frunique collection id
 	>;
 
 	#[pallet::call]

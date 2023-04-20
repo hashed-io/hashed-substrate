@@ -246,7 +246,7 @@ impl<T: Config> Pallet<T> {
 			AfloatCollectionId::<T>::put(collection_id);
 			Ok(())
 		} else {
-			return Err(Error::<T>::MarketplaceNotInitialized.into());
+			return Err(Error::<T>::FailedToCreateFruniquesCollection.into());
 		}
 	}
 
