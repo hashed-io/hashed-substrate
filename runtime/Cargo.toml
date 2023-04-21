@@ -109,6 +109,7 @@ std = [
 	"pallet-rbac/std",
 	"pallet-confidential-docs/std",
 	"pallet-fund-admin/std",
+	"pallet-mapped-assets/std",
 	"pallet-afloat/std",
 	"sp-api/std",
 	"sp-block-builder/std",
