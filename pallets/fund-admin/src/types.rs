@@ -399,6 +399,9 @@ pub enum ProxyPermission {
     CancelDrawdownSubmission, // cancel_drawdown_submission: builder
     RecoveryDrawdown, // recovery_drawdown: admin
     RecoveryRevenue, // recovery_revenue: admin
+    RecoveryTransaction, // recovery_drawdown_transaction: admin
+    RecoveryRevenueTransaction, // recovery_revenue_transaction: admin
+    BulkUploadTransaction, // bulk_upload_transaction: admin
 }
 
 impl ProxyPermission {
@@ -426,6 +429,9 @@ impl ProxyPermission {
             Self::CancelDrawdownSubmission => "CancelDrawdownSubmission".as_bytes().to_vec(),
             Self::RecoveryDrawdown => "RecoveryDrawdown".as_bytes().to_vec(),
             Self::RecoveryRevenue => "RecoveryRevenue".as_bytes().to_vec(),
+            Self::RecoveryTransaction => "RecoveryTransaction".as_bytes().to_vec(),
+            Self::RecoveryRevenueTransaction => "RecoveryRevenueTransaction".as_bytes().to_vec(),
+            Self::BulkUploadTransaction => "BulkUploadTransaction".as_bytes().to_vec(),
         }
     }
 
@@ -458,6 +464,9 @@ impl ProxyPermission {
             CancelDrawdownSubmission.to_vec(),
             RecoveryDrawdown.to_vec(),
             RecoveryRevenue.to_vec(),
+            RecoveryTransaction.to_vec(),
+            RecoveryRevenueTransaction.to_vec(),
+            BulkUploadTransaction.to_vec(),
         ].to_vec()
     }
 
