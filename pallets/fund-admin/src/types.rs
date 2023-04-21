@@ -397,6 +397,8 @@ pub enum ProxyPermission {
     RejectRevenue, // reject_revenue: admin
     BankConfirming, // bank_confirming: admin
     CancelDrawdownSubmission, // cancel_drawdown_submission: builder
+    RecoveryDrawdown, // recovery_drawdown: admin
+    RecoveryRevenue, // recovery_revenue: admin
 }
 
 impl ProxyPermission {
@@ -422,6 +424,8 @@ impl ProxyPermission {
             Self::RejectRevenue => "RejectRevenue".as_bytes().to_vec(),
             Self::BankConfirming => "BankConfirming".as_bytes().to_vec(),
             Self::CancelDrawdownSubmission => "CancelDrawdownSubmission".as_bytes().to_vec(),
+            Self::RecoveryDrawdown => "RecoveryDrawdown".as_bytes().to_vec(),
+            Self::RecoveryRevenue => "RecoveryRevenue".as_bytes().to_vec(),
         }
     }
 
@@ -452,6 +456,8 @@ impl ProxyPermission {
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
             CancelDrawdownSubmission.to_vec(),
+            RecoveryDrawdown.to_vec(),
+            RecoveryRevenue.to_vec(),
         ].to_vec()
     }
 
