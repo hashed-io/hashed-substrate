@@ -1034,13 +1034,13 @@ impl<T: Config> Pallet<T> {
 		drawdown_id: DrawdownId,
 	) -> DispatchResult {
 		// Ensure user permissions
-		Self::is_authorized(user, &project_id, ProxyPermission::SubmitDrawdown)?;
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::SubmitDrawdown)?;
 
 		// Ensure project exists & is not completed
 		Self::is_project_completed(project_id)?;
 
 		// Check if drawdown exists & is editable
-		Self::is_drawdown_editable(drawdown_id)?;
+		Self::is_drawdown_editable(user, drawdown_id)?;
 
 		// Ensure drawdown has transactions
 		ensure!(
@@ -1365,7 +1365,7 @@ impl<T: Config> Pallet<T> {
 		transactions: Transactions<T>,
 	) -> DispatchResult {
 		// Ensure admin or builder permissions
-		Self::is_authorized(user, &project_id, ProxyPermission::ExecuteTransactions)?;
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::ExecuteTransactions)?;
 
 		// Ensure project exists & is not completed so helper private functions doesn't need to check it again
 		Self::is_project_completed(project_id)?;
@@ -1377,7 +1377,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(!transactions.is_empty(), Error::<T>::EmptyTransactions);
 
 		// Ensure if the selected drawdown is editable
-		Self::is_drawdown_editable(drawdown_id)?;
+		Self::is_drawdown_editable(user.clone(), drawdown_id)?;
 
 		for transaction in transactions.iter().cloned() {
 			match transaction.3 {
@@ -1391,6 +1391,8 @@ impl<T: Config> Pallet<T> {
 					)?;
 				},
 				CUDAction::Update => {
+					// Ensure transaction is editable
+					Self::is_transaction_editable(user.clone(), transaction.4.ok_or(Error::<T>::TransactionIdRequired)?)?;
 					Self::do_update_transaction(
 						transaction.1,
 						transaction.2,
@@ -1398,6 +1400,8 @@ impl<T: Config> Pallet<T> {
 					)?;
 				},
 				CUDAction::Delete => {
+					// Ensure transaction is editable
+					Self::is_transaction_editable(user.clone(), transaction.4.ok_or(Error::<T>::TransactionIdRequired)?)?;
 					Self::do_delete_transaction(
 						transaction.4.ok_or(Error::<T>::TransactionIdRequired)?,
 					)?;
@@ -1535,12 +1539,6 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::TransactionNotFoundForSelectedDrawdownId
 		);
 
-		// Ensure drawdown is deletable
-		Self::is_drawdown_editable(transaction_data.drawdown_id)?;
-
-		// Ensure transaction is deletable
-		Self::is_transaction_editable(transaction_id)?;
-
 		<TransactionsByDrawdown<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
 			transaction_data.project_id,
 			transaction_data.drawdown_id,
@@ -1577,13 +1575,13 @@ impl<T: Config> Pallet<T> {
 		documents: Documents<T>,
 	) -> DispatchResult {
 		// Ensure builder permissions
-		Self::is_authorized(user, &project_id, ProxyPermission::UpBulkupload)?;
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::UpBulkupload)?;
 
 		// Ensure project is not completed
 		Self::is_project_completed(project_id)?;
 
 		// Ensure drawdown is not completed
-		Self::is_drawdown_editable(drawdown_id)?;
+		Self::is_drawdown_editable(user, drawdown_id)?;
 
 		// Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
 		let drawdown_data =
@@ -2864,7 +2862,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn is_drawdown_editable(drawdown_id: DrawdownId) -> DispatchResult {
+	fn is_drawdown_editable(user: T::AccountId, drawdown_id: DrawdownId) -> DispatchResult {
 		// Get drawdown data & ensure drawdown exists
 		let drawdown_data =
 			DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
@@ -2875,30 +2873,67 @@ impl<T: Config> Pallet<T> {
 				// Match drawdown status
 				// Ensure drawdown is in draft or rejected status
 				match drawdown_data.status {
-					DrawdownStatus::Draft => Ok(()),
-					DrawdownStatus::Rejected => Ok(()),
-					DrawdownStatus::Submitted =>
+					DrawdownStatus::Draft => 
+						Ok(()),
+					DrawdownStatus::Rejected => 
+						Ok(()),
+					DrawdownStatus::Submitted => 
 						Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into()),
-					DrawdownStatus::Approved =>
-						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into()),
-					DrawdownStatus::Confirmed =>
-						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into()),
+					DrawdownStatus::Approved => {
+						// Ensure admin permissions
+						if Self::is_authorized(user.clone(), &drawdown_data.project_id, ProxyPermission::RecoveryDrawdown).is_ok() {
+							Ok(())
+						} else {
+							Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
+						}
+					},
+					DrawdownStatus::Confirmed => {
+						// Ensure admin permissions
+						if Self::is_authorized(user.clone(), &drawdown_data.project_id, ProxyPermission::RecoveryDrawdown).is_ok() {
+							Ok(())
+						} else {
+							Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
+						}
+					},
 				}
 			},
 			_ => {
 				// Match drawdown status
 				match drawdown_data.status {
-					DrawdownStatus::Approved =>
-						Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into()),
-					DrawdownStatus::Confirmed =>
-						Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into()),
-					_ => Ok(()),
+					DrawdownStatus::Draft => 
+						Ok(()),
+					DrawdownStatus::Rejected =>
+						Ok(()),
+					DrawdownStatus::Submitted => {
+						// Ensure admin permissions
+						if Self::is_authorized(user.clone(), &drawdown_data.project_id, ProxyPermission::BulkUploadTransaction).is_ok() {
+							Ok(())
+						} else {
+							Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into())
+						}
+					},
+					DrawdownStatus::Approved => {
+						// Ensure admin permissions
+						if Self::is_authorized(user.clone(), &drawdown_data.project_id, ProxyPermission::RecoveryDrawdown).is_ok() {
+							Ok(())
+						} else {
+							Err(Error::<T>::CannotPerformActionOnApprovedDrawdown.into())
+						}
+					},
+					DrawdownStatus::Confirmed =>{
+						// Ensure admin permissions
+						if Self::is_authorized(user.clone(), &drawdown_data.project_id, ProxyPermission::RecoveryDrawdown).is_ok() {
+							Ok(())
+						} else {
+							Err(Error::<T>::CannotPerformActionOnConfirmedDrawdown.into())
+						}
+					},
 				}
 			},
 		}
 	}
 
-	fn is_transaction_editable(transaction_id: TransactionId) -> DispatchResult {
+	fn is_transaction_editable(user: T::AccountId, transaction_id: TransactionId) -> DispatchResult {
 		// Get transaction data & ensure transaction exists
 		let transaction_data =
 			TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
@@ -2906,14 +2941,34 @@ impl<T: Config> Pallet<T> {
 		// Ensure transaction is in draft or rejected status
 		// Match transaction status
 		match transaction_data.status {
-			TransactionStatus::Draft => Ok(()),
-			TransactionStatus::Rejected => Ok(()),
-			TransactionStatus::Submitted =>
-				Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into()),
-			TransactionStatus::Approved =>
-				Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into()),
-			TransactionStatus::Confirmed =>
-				Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into()),
+			TransactionStatus::Draft => 
+				Ok(()),
+			TransactionStatus::Rejected => 
+				Ok(()),
+			TransactionStatus::Submitted => {
+				// Ensure admin permissions
+				if Self::is_authorized(user.clone(), &transaction_data.project_id, ProxyPermission::BulkUploadTransaction).is_ok() {
+					Ok(())
+				} else {
+					Err(Error::<T>::CannotPerformActionOnSubmittedTransaction.into())
+				}
+			},
+			TransactionStatus::Approved => {
+				// Ensure admin permissions
+				if Self::is_authorized(user.clone(), &transaction_data.project_id, ProxyPermission::RecoveryTransaction).is_ok() {
+					Ok(())
+				} else {
+					Err(Error::<T>::CannotPerformActionOnApprovedTransaction.into())
+				}
+			},
+			TransactionStatus::Confirmed => {
+				// Ensure admin permissions
+				if Self::is_authorized(user.clone(), &transaction_data.project_id, ProxyPermission::RecoveryTransaction).is_ok() {
+					Ok(())
+				} else {
+					Err(Error::<T>::CannotPerformActionOnConfirmedTransaction.into())
+				}
+			},
 		}
 	}
 
