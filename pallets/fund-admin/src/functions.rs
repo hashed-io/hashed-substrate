@@ -978,6 +978,7 @@ impl<T: Config> Pallet<T> {
 			description: None,
 			feedback: None,
 			status_changes: DrawdownStatusChanges::<T>::default(),
+			recovery_record: DrawdownRecoveryRecord::<T>::default(),
 			created_date: timestamp,
 			closed_date: 0,
 		};
@@ -3476,6 +3477,59 @@ impl<T: Config> Pallet<T> {
 				}
 			}
 		}
+		Ok(())
+	}
+
+	// E R R O R    R E C O V E R Y
+	// =================================================================================================
+	pub fn do_recovery_drawdown(
+		user: T::AccountId,
+		project_id: ProjectId,
+		drawdown_id: DrawdownId,
+		transactions: Transactions<T>,
+	) -> DispatchResult {
+		// Ensure user permissions
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::RecoveryDrawdown)?;
+
+		// Ensure project exists & is not completed
+		Self::is_project_completed(project_id)?;
+
+		// Check if drawdown exists & is editable
+		Self::is_drawdown_editable(user.clone(), drawdown_id)?;
+
+		// Ensure drawdown belongs to project
+		ensure!(
+			<DrawdownsByProject<T>>::get(project_id).contains(&drawdown_id),
+			Error::<T>::DrawdownDoesNotBelongToProject
+		);
+
+		// Ensure drawdown has transactions
+		ensure!(
+			!<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty(),
+			Error::<T>::DrawdownHasNoTransactions
+		);
+
+		// Do execute transactions
+		Self::do_execute_transactions(
+			user.clone(),
+			project_id,
+			drawdown_id,
+			transactions,
+		)?;
+
+		// Get timestamp
+		let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+		// Create a record in DrawdownsInfo
+		<DrawdownsInfo<T>>::try_mutate::<_, _, DispatchError, _>(drawdown_id, |drawdown_data| {
+			let drawdown = drawdown_data.as_mut().ok_or(Error::<T>::DrawdownNotFound)?;
+			drawdown
+				.recovery_record
+				.try_push((user, timestamp))
+				.map_err(|_| Error::<T>::MaxRecoveryChangesPerDrawdownReached)?;
+			Ok(())
+		})?;
+
 		Ok(())
 	}
 

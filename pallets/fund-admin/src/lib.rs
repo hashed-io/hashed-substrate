@@ -102,6 +102,9 @@ pub mod pallet {
 		type MaxStatusChangesPerRevenue: Get<u32>;
 
 		#[pallet::constant]
+		type MaxRecoveryChangesPerDrawdown: Get<u32>;
+
+		#[pallet::constant]
 		type MinAdminBalance: Get<BalanceOf<Self>>;
 
 		#[pallet::constant]
@@ -493,6 +496,8 @@ pub mod pallet {
 		MaxDrawdownsPerProjectReached,
 		/// Max number of status changes per drawdown reached
 		MaxStatusChangesPerDrawdownReached,
+		/// Max number of recovery chnages per drawdown reached
+		MaxRecoveryChangesPerDrawdownReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
 		/// Can not perform any action on a submitted transaction
@@ -667,6 +672,8 @@ pub mod pallet {
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
 		DrawdownHasNoBankConfirmingDocuments,
+		/// Drawdown id does not belong to the selected project
+		DrawdownDoesNotBelongToProject,
 		/// Bank confirming documents are required
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
@@ -1655,6 +1662,38 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_reset_drawdown(who, project_id, drawdown_id)
+		}
+
+        /// Execute a recovery drawdown on a project. This function can only be called by an admin. 
+		/// 
+        /// Parameters:
+        /// - `origin`: The administrator account who is executing the recovery drawdown
+        /// - `project_id`: The ID of the project from which the recovery drawdown will be executed
+        /// - `drawdown_id`: The ID of the drawdown from which the recovery drawdown will be executed
+        /// - `transactions`: The list of transactions that will be executed in the recovery drawdown
+        ///
+        /// # Errors
+        ///
+        /// This function returns an error if:
+        ///
+        /// - The transaction origin is not a signed message from an admin account.
+        /// - The project with the given ID does not exist.
+        /// - The drawdown with the given ID does not exist.
+        ///
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The drawdown status won't be changed
+		#[pallet::call_index(21)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn recovery_drawdown(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			transactions: Transactions<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_recovery_drawdown(who, project_id, drawdown_id, transactions)
 		}
 
 		/// Kill all the stored data.
