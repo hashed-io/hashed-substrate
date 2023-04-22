@@ -10,6 +10,8 @@ mod tests;
 
 mod functions;
 mod types;
+pub mod migration;
+use sp_std::prelude::*;
 
 #[frame_support::pallet]
 pub mod pallet {

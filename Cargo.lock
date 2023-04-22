@@ -5928,6 +5928,7 @@ name = "pallet-fund-admin"
 version = "4.0.0-dev"
 dependencies = [
  "frame-benchmarking",
+ "frame-executive",
  "frame-support",
  "frame-system",
  "log",
@@ -5939,6 +5940,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

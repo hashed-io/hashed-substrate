@@ -864,7 +864,7 @@ pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 ///
 /// Should be cleared after every release.
 pub type Migrations = (
-	// pallet_nicks::migration::v1::MigrateToV1<Runtime>,
+	pallet_fund_admin::migration::v1::MigrateToV1<Runtime>,
 );
 
 /// Executive: handles dispatch to the various modules.
