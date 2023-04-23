@@ -30,6 +30,8 @@ spec:
           - name: PUBLIC_ADDR
             value: "/dns/c1.md5.p2p.hashed.live/tcp/443/wss"
           # - name: RUST_LOG
+          #   value: "debug"
+          # - name: RUST_LOG
           #   value: "sub-libp2p=trace"
           # - name: RUST_LOG
           #   value: "db=trace,sync=trace,sub-libp2p=trace"
@@ -41,7 +43,7 @@ spec:
           #       optional: false
         resources:
           limits:
-            memory: "12G"
+            memory: "8G"
             cpu: "2"
           # requests:
           #   ephemeral-storage: 25Gi
@@ -51,6 +53,8 @@ spec:
         - containerPort: 9946
         - containerPort: 30333
         - containerPort: 40333
+      nodeSelector:
+        node.kubernetes.io/instance-type: t3.xlarge
   volumeClaimTemplates:
   - metadata:
       name: md5-collator-1-pvc
