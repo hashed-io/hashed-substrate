@@ -1,8 +1,6 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 
-use frame_support::sp_io::hashing::blake2_256;
-use sp_runtime::sp_std::vec::Vec;
 
 pub type ShortString = BoundedVec<u8, ConstU32<35>>;
 pub type LongString = BoundedVec<u8, ConstU32<255>>;

@@ -636,6 +636,7 @@ pub mod pallet {
 		/// Emits `Created` event when successful.
 		///
 		/// Weight: `O(1)`
+		#[pallet::call_index(0)]
 		#[pallet::weight(T::WeightInfo::create())]
 		pub fn create(
 			origin: OriginFor<T>,
@@ -695,6 +696,7 @@ pub mod pallet {
 		/// Emits `ForceCreated` event when successful.
 		///
 		/// Weight: `O(1)`
+		#[pallet::call_index(1)]
 		#[pallet::weight(T::WeightInfo::force_create())]
 		pub fn force_create(
 			origin: OriginFor<T>,
@@ -1615,7 +1617,7 @@ pub mod pallet {
 		/// Emits `Reserved` with the reserved amount.
 		///
 		/// Weight: `O(1)`
-
+		#[pallet::call_index(28)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn reserve(
 			origin: OriginFor<T>,
@@ -1643,7 +1645,7 @@ pub mod pallet {
 		/// Emits `Uneserved` with the reserved amount.
 		///
 		/// Weight: `O(1)`
-
+		#[pallet::call_index(29)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn unreserve(
 			origin: OriginFor<T>,
@@ -1670,7 +1672,7 @@ pub mod pallet {
 		/// Emits `BurnedReserve` with the reserved amount.
 		///
 		/// Weight: `O(1)`
-
+		#[pallet::call_index(30)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn burn_reserve(
 			origin: OriginFor<T>,

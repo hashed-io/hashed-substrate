@@ -13,20 +13,16 @@ pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::ValueQuery;
 	use frame_support::pallet_prelude::*;
 	use frame_support::sp_io::hashing::blake2_256;
 	use frame_support::traits::Currency;
 	use frame_support::traits::UnixTime;
 	use frame_system::pallet_prelude::*;
 	use frame_system::RawOrigin;
-	use pallet_gated_marketplace::functions;
 	use pallet_gated_marketplace::types::*;
-	use pallet_mapped_assets::types::*;
 	use sp_runtime::Permill;
 	use sp_runtime::traits::StaticLookup;
 	use pallet_fruniques::types::CollectionDescription;
-	use pallet_fruniques::types::StringLimit;
 	use pallet_fruniques::types::FruniqueRole;
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -121,7 +117,7 @@ pub mod pallet {
 		) -> DispatchResult
 
 	{
-			let who = ensure_signed(origin.clone())?;
+			ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
 			let min_balance: T::Balance = T::Balance::from(1u32);
 			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
@@ -160,6 +156,7 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
+			ensure_signed(origin.clone())?;
 			<AfloatMarketPlaceId<T>>::kill();
 			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
