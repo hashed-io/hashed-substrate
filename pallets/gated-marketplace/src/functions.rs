@@ -6,6 +6,7 @@ use pallet_rbac::types::*;
 use scale_info::prelude::vec; // vec![] macro
 use sp_runtime::sp_std::vec::Vec; // vec primitive
 
+use frame_support::traits::fungibles::Transfer;
 use frame_support::traits::Currency;
 use frame_support::traits::ExistenceRequirement::KeepAlive;
 use frame_support::traits::Time;
@@ -226,15 +227,9 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-
-	pub fn self_enroll(
-		account: T::AccountId,
-		marketplace_id: [u8; 32],
-	) -> DispatchResult {
-
-		//since users can self-enroll, the caller of this function must validate 
+	pub fn self_enroll(account: T::AccountId, marketplace_id: [u8; 32]) -> DispatchResult {
+		//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
 
 		//ensure the account is not already in the marketplace
 		ensure!(
@@ -248,10 +243,13 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-		
-		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
+		Self::insert_in_auth_market_lists(
+			account.clone(),
+			MarketplaceRole::Participant,
+			marketplace_id,
+		)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		Ok(())
 	}
 
@@ -362,6 +360,7 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			creator: authority.clone(),
+			// might require a storage migration
 			price,
 			fee: price * Permill::deconstruct(marketplace.sell_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
@@ -405,8 +404,6 @@ impl<T: Config> Pallet<T> {
 		price: BalanceOf<T>,
 		percentage: u32,
 	) -> DispatchResult {
-
-		
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -424,10 +421,11 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			authority.clone(),
 			&collection_id,
-			&item_id
+			&item_id,
 		)?;
 
 		//ensure user has enough balance to create the offer
+		// TODO: find a way to get users total asset balance
 		let total_user_balance = T::Currency::total_balance(&authority);
 		ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
@@ -450,6 +448,7 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			creator: authority.clone(),
+			// TODO: evaluate if the change will require a storage migration
 			price,
 			fee: price * Permill::deconstruct(marketplace.buy_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
@@ -509,6 +508,7 @@ impl<T: Config> Pallet<T> {
 		//ensure the offer is open and available
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
 		//TODO: Use free_balance instead of total_balance
+		// TODO: find a way to get buyer's total balance
 		//Get the buyer's balance
 		let total_amount_buyer = T::Currency::total_balance(&buyer);
 		//ensure the buyer has enough balance to buy the item
@@ -518,6 +518,7 @@ impl<T: Config> Pallet<T> {
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
 		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance
+		// TODO: replace transfer for T::MappedAssets::transfer(...);
 		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
 		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
@@ -602,6 +603,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
 
 		//TODO: Use free_balance instead of total_balance
+		// TODO: find a way to get users's total balance
 		//Get the buyer's balance
 		let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
 		//ensure the buy_offer_creator has enough balance to buy the item
@@ -611,6 +613,7 @@ impl<T: Config> Pallet<T> {
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
 		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance to the owner of the item
+		// TODO: replace transfer for T::MappedAssets::transfer(...);
 		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
 		T::Currency::transfer(
 			&offer_data.creator,
@@ -885,7 +888,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the origin is authorized to block users
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
 		// ensure the user is not already a participant of the marketplace
-		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		ensure!(
+			!Self::has_any_role(user.clone(), &marketplace_id),
+			Error::<T>::UserAlreadyParticipant
+		);
 		// ensure the user is not already blocked
 		ensure!(
 			!Self::is_user_blocked(user.clone(), marketplace_id),
@@ -912,7 +918,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the origin is authorized to block users
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
 		// ensure the user is not already a participant of the marketplace
-		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		ensure!(
+			!Self::has_any_role(user.clone(), &marketplace_id),
+			Error::<T>::UserAlreadyParticipant
+		);
 		// ensure the user is blocked
 		ensure!(Self::is_user_blocked(user.clone(), marketplace_id), Error::<T>::UserIsNotBlocked);
 
@@ -952,7 +961,11 @@ impl<T: Config> Pallet<T> {
 	/// Let us know if the selected account has at least one role in the marketplace.
 	fn has_any_role(account: T::AccountId, marketplace_id: &[u8; 32]) -> bool {
 		let pallet_id = Self::pallet_id();
-		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(account, pallet_id, marketplace_id)
+		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(
+			account,
+			pallet_id,
+			marketplace_id,
+		)
 	}
 
 	///Lets us know if the selected user is an admin.

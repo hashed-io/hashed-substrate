@@ -22,6 +22,7 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature,
 };
 
+use pallet_mapped_assets::DefaultCallback;
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -804,6 +805,33 @@ impl pallet_confidential_docs::Config for Runtime {
 	type MaxMemberGroups = MaxMemberGroups;
 }
 
+parameter_types! {
+	pub const MappedMaxReserves: u32 = 200;
+}
+
+impl pallet_mapped_assets::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = u128;
+	type AssetId = u32;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = ();
+	type MaxReserves = MappedMaxReserves;
+	type ReserveIdentifier = u32;
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = DefaultCallback;
+}
+
 impl pallet_remark::Config for Runtime {
 	type WeightInfo = pallet_remark::weights::SubstrateWeight<Self>;
 	type RuntimeEvent = RuntimeEvent;
@@ -1027,6 +1055,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type Timestamp = Timestamp;
 	type Moment = Moment;
 	type Rbac = RBAC;
+	type MappedAssets = MappedAssets;
 }
 
 parameter_types! {
@@ -1114,6 +1143,7 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 154,
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 155,
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
+		MappedAssets: pallet_mapped_assets::{Pallet, Call, Storage, Event<T>}  = 157,
 	}
 );
 

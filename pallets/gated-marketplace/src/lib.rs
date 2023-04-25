@@ -14,7 +14,7 @@ pub mod types;
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
-	use frame_support::traits::{Currency, Time};
+	use frame_support::traits::{tokens::fungibles::Transfer, Currency, Time};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
 	use sp_runtime::Permill;
@@ -27,6 +27,8 @@ pub mod pallet {
 	pub type BalanceOf<T> = <<T as pallet_uniques::Config>::Currency as Currency<
 		<T as frame_system::Config>::AccountId,
 	>>::Balance;
+	// TODO: replace BalanceOf with the mapped assets one
+	pub type BalanceOf2<T> = <T as pallet_mapped_assets::Config<()>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_fruniques::Config {
@@ -69,6 +71,7 @@ pub mod pallet {
 		type MaxBlockedUsersPerMarket: Get<u32>;
 
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
+		type MappedAssets: Transfer<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
