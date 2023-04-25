@@ -2,7 +2,7 @@
 use super::*;
 
 const LOG_TARGET: &str = "Fund Admin pallet migration: ";
-use frame_support::{pallet_prelude::*, log, traits::OnRuntimeUpgrade, storage_alias, Twox64Concat, Identity};
+use frame_support::{pallet_prelude::*, log, traits::OnRuntimeUpgrade, storage_alias, Identity};
 use sp_runtime::Saturating;
 
 use crate::types::*;
@@ -28,8 +28,7 @@ mod v0 {
 
 	// #[cfg(feature = "try-runtime")]
 	#[storage_alias]
-	//pub(super) type DrawdownsInfoOf<T: Config> = StorageMap<Pallet<T>, Twox64Concat, DrawdownId, DrawdownData<T>>;
-	pub(super) type DrawdownsInfoOf<T: Config> = StorageMap<Pallet<T>, Identity, DrawdownId, OldDrawdownData<T>>;
+	pub(super) type DrawdownsInfo<T: Config> = StorageMap<Pallet<T>, Identity, DrawdownId, OldDrawdownData<T>>;
 
 }
 
@@ -75,7 +74,7 @@ pub mod v1 {
 			if onchain_version == 0 && current_version == 1 {
 				// migrate to v1
 				// Very inefficient, mostly here for illustration purposes.
-				let count = v0::DrawdownsInfoOf::<T>::iter().count();
+				let count = v0::DrawdownsInfo::<T>::iter().count();
 				let mut translated = 0u64;
 	
 				DrawdownsInfo::<T>::translate::<
@@ -125,9 +124,9 @@ pub mod v1 {
 				"migration from version 0 to 1"
 			);
 
-			let prev_count = v0::DrawdownsInfoOf::<T>::iter().count();
-			let keys = v0::DrawdownsInfoOf::<T>::iter_keys().count() as u32;			
-			let decodable_drawdowns = v0::DrawdownsInfoOf::<T>::iter_values().count() as u32;
+			let prev_count = v0::DrawdownsInfo::<T>::iter().count();
+			let keys = v0::DrawdownsInfo::<T>::iter_keys().count() as u32;			
+			let decodable_drawdowns = v0::DrawdownsInfo::<T>::iter_values().count() as u32;
 			log::info!(
 				target: LOG_TARGET,
 				"pre_upgrade: {:?} names, {:?} decodable names, {:?} total",
@@ -136,7 +135,7 @@ pub mod v1 {
 				prev_count,
 			);
 			ensure!(
-				names == decodable_names,
+				keys == decodable_drawdowns,
 				"Not all values are decodable."
 			);
 
@@ -164,6 +163,8 @@ pub mod v1 {
 			);
 			crate::DrawdownsInfo::<T>::iter().for_each(|(_key, value)| {
 				assert!(value.recovery_record == DrawdownRecoveryRecord::<T>::default(),
+				"recovery record should be default value");
+				assert!(value.recovery_record.len() == 0,
 				"recovery record should be empty");
 			});
 			Ok(())
