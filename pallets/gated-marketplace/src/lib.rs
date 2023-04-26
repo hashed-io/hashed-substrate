@@ -8,8 +8,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-mod functions;
-mod types;
+pub mod functions;
+pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -361,10 +361,16 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			admin: T::AccountId,
 			label: BoundedVec<u8, T::LabelMaxLen>,
-			fee: u32,
+			buy_fee: u32,
+			sell_fee: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
-			let m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone() };
+			let m = Marketplace {
+				label,
+				buy_fee: Permill::from_percent(buy_fee),
+				sell_fee: Permill::from_percent(sell_fee),
+				creator: who.clone(),
+			};
 			Self::do_create_marketplace(who, admin, m)
 		}
 

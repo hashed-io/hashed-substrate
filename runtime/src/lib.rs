@@ -25,6 +25,7 @@ use sp_version::RuntimeVersion;
 pub mod constants;
 use constants::*;
 use frame_system::{EnsureRoot, EnsureSigned};
+use pallet_mapped_assets::DefaultCallback;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -130,7 +131,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 151,
+	spec_version: 153,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -676,6 +677,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type Moment = Moment;
 	type Rbac = RBAC;
 }
+
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
 	pub const PSBTMaxLen: u32  = 2048;
@@ -734,6 +736,34 @@ impl pallet_confidential_docs::Config for Runtime {
 }
 
 parameter_types! {
+	pub const MaxReserves: u32 = 200;
+}
+
+impl pallet_mapped_assets::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = u128;
+	type AssetId = u32;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = ();
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = u32;
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = DefaultCallback;
+}
+
+
+parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
 	pub const MaxRolesPerPallet: u32 = 50;
 	pub const RoleMaxLen: u32 = 50;
@@ -742,6 +772,7 @@ parameter_types! {
 	pub const MaxRolesPerUser: u32 = 10;
 	pub const MaxUsersPerRole: u32 = 2500;
 }
+
 impl pallet_rbac::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
@@ -751,6 +782,14 @@ impl pallet_rbac::Config for Runtime {
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
 	type MaxRolesPerUser = MaxRolesPerUser;
 	type MaxUsersPerRole = MaxUsersPerRole;
+}
+
+impl pallet_afloat::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type TimeProvider = Timestamp;
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type Rbac = RBAC;
 }
 
 parameter_types! {
@@ -848,6 +887,8 @@ construct_runtime!(
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
 		FundAdmin: pallet_fund_admin,
+		Afloat: pallet_afloat,
+		MappedAssets: pallet_mapped_assets,
 	}
 );
 
