@@ -2,6 +2,7 @@ use super::*;
 use crate::types::*;
 use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
+use frame_support::traits::tokens::AssetId;
 use pallet_rbac::types::*;
 use scale_info::prelude::vec; // vec![] macro
 use sp_runtime::sp_std::vec::Vec; // vec primitive
@@ -426,8 +427,8 @@ impl<T: Config> Pallet<T> {
 
 		//ensure user has enough balance to create the offer
 		// TODO: find a way to get users total asset balance
-		let total_user_balance = T::Currency::total_balance(&authority);
-		ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
+		//let total_user_balance = T::Currency::total_balance(&authority);
+		//ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
 		//ensure the price is valid
 		Self::is_the_offer_valid(price, Permill::from_percent(percentage))?;
@@ -510,17 +511,19 @@ impl<T: Config> Pallet<T> {
 		//TODO: Use free_balance instead of total_balance
 		// TODO: find a way to get buyer's total balance
 		//Get the buyer's balance
-		let total_amount_buyer = T::Currency::total_balance(&buyer);
+		//let total_amount_buyer = T::Currency::total_balance(&buyer);
 		//ensure the buyer has enough balance to buy the item
-		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+		//ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
 		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance
 		// TODO: replace transfer for T::MappedAssets::transfer(...);
-		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
+		T::MappedAssets::transfer(1.into(), &buyer, &owner_item, owners_cut, true)?;
+		//T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
+		T::MappedAssets::transfer(1.into(), &buyer, &marketplace.creator, offer_data.fee, true)?;
+		//T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 		if offer_data.percentage == Permill::from_percent(100) {
@@ -605,22 +608,32 @@ impl<T: Config> Pallet<T> {
 		//TODO: Use free_balance instead of total_balance
 		// TODO: find a way to get users's total balance
 		//Get the buyer's balance
-		let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
+		//let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
 		//ensure the buy_offer_creator has enough balance to buy the item
-		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+		//ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
 		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
 		//Transfer the balance to the owner of the item
 		// TODO: replace transfer for T::MappedAssets::transfer(...);
-		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
+		T::MappedAssets::transfer(1.into(), &offer_data.creator, &owner_item, owners_cut, true)?;
+		//T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
+		T::MappedAssets::transfer(
+			1.into(),
+			&offer_data.creator,
+			&marketplace.creator,
+			offer_data.fee,
+			true,
+		)?;
+		/*
 		T::Currency::transfer(
 			&offer_data.creator,
 			&marketplace.creator,
 			offer_data.fee,
 			KeepAlive,
 		)?;
+		*/
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
