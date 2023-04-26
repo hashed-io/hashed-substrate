@@ -3577,6 +3577,9 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
+		// Event
+		Self::deposit_event(Event::DrawdownErrorRecoveryExecuted(user, project_id, drawdown_id));
+
 		Ok(())
 	}
 
@@ -3652,7 +3655,10 @@ impl<T: Config> Pallet<T> {
 				.map_err(|_| Error::<T>::MaxRecoveryChangesReached)?;
 			Ok(())
 		})?;
-		
+
+		// Event
+		Self::deposit_event(Event::RevenueErrorRecoveryExecuted(project_id, revenue_id, user));
+
 		Ok(())
 	}
 

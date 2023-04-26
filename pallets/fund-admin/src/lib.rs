@@ -384,6 +384,10 @@ pub mod pallet {
 		BankDocumentsUpdated(ProjectId, DrawdownId),
 		/// Bank's confirming documents were deleted successfully
 		BankDocumentsDeleted(ProjectId, DrawdownId),
+		/// Error recovery for revenues was executed successfully
+		RevenueErrorRecoveryExecuted(ProjectId, RevenueId),
+		/// Error recovery for drawdowns was executed successfully
+		DrawdownErrorRecoveryExecuted(ProjectId, DrawdownId),
 	}
 
 	// E R R O R S
