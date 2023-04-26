@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"pallet_bitcoin_vaults":[["impl&lt;T:&nbsp;<a class=\"trait\" href=\"pallet_bitcoin_vaults/pallet/trait.Config.html\" title=\"trait pallet_bitcoin_vaults::pallet::Config\">Config</a>&gt; BlockNumberProvider for <a class=\"struct\" href=\"pallet_bitcoin_vaults/pallet/struct.Pallet.html\" title=\"struct pallet_bitcoin_vaults::pallet::Pallet\">Pallet</a>&lt;T&gt;"]]
+"pallet_bitcoin_vaults":[["impl&lt;T: <a class=\"trait\" href=\"pallet_bitcoin_vaults/pallet/trait.Config.html\" title=\"trait pallet_bitcoin_vaults::pallet::Config\">Config</a>&gt; BlockNumberProvider for <a class=\"struct\" href=\"pallet_bitcoin_vaults/pallet/struct.Pallet.html\" title=\"struct pallet_bitcoin_vaults::pallet::Pallet\">Pallet</a>&lt;T&gt;"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

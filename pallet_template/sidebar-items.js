@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["migrations","All migrations. All migrations of this pallet."],["pallet","The module that hosts all the FRAME types needed to add this pallet to a runtime."]]};
+window.SIDEBAR_ITEMS = {"mod":["migrations","pallet"]};

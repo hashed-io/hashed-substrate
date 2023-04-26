@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"pallet_bitcoin_vaults":[["impl RuntimeAppPublic for <a class=\"struct\" href=\"pallet_bitcoin_vaults/types/crypto/struct.Public.html\" title=\"struct pallet_bitcoin_vaults::types::crypto::Public\">Public</a><span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Public: RuntimePublic&lt;Signature = Signature&gt;,</span>"]]
+"pallet_bitcoin_vaults":[["impl RuntimeAppPublic for <a class=\"struct\" href=\"pallet_bitcoin_vaults/types/crypto/struct.Public.html\" title=\"struct pallet_bitcoin_vaults::types::crypto::Public\">Public</a><span class=\"where fmt-newline\">where\n    Public: RuntimePublic&lt;Signature = Signature&gt;,</span>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

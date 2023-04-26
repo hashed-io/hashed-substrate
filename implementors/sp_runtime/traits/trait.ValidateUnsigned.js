@@ -1,5 +1,5 @@
 (function() {var implementors = {
 "hashed_parachain_runtime":[["impl ValidateUnsigned for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.Runtime.html\" title=\"struct hashed_parachain_runtime::Runtime\">Runtime</a>"]],
 "hashed_runtime":[["impl ValidateUnsigned for <a class=\"struct\" href=\"hashed_runtime/struct.Runtime.html\" title=\"struct hashed_runtime::Runtime\">Runtime</a>"]],
-"pallet_bitcoin_vaults":[["impl&lt;T:&nbsp;<a class=\"trait\" href=\"pallet_bitcoin_vaults/pallet/trait.Config.html\" title=\"trait pallet_bitcoin_vaults::pallet::Config\">Config</a>&gt; ValidateUnsigned for <a class=\"struct\" href=\"pallet_bitcoin_vaults/pallet/struct.Pallet.html\" title=\"struct pallet_bitcoin_vaults::pallet::Pallet\">Pallet</a>&lt;T&gt;"]]
+"pallet_bitcoin_vaults":[["impl&lt;T: <a class=\"trait\" href=\"pallet_bitcoin_vaults/pallet/trait.Config.html\" title=\"trait pallet_bitcoin_vaults::pallet::Config\">Config</a>&gt; ValidateUnsigned for <a class=\"struct\" href=\"pallet_bitcoin_vaults/pallet/struct.Pallet.html\" title=\"struct pallet_bitcoin_vaults::pallet::Pallet\">Pallet</a>&lt;T&gt;"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

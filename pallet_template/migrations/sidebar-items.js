@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["v2","Version 2. Migrations to version [`2.0.0`], as denoted by the changelog."]]};
+window.SIDEBAR_ITEMS = {"mod":["v2"]};
