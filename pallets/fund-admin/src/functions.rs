@@ -3539,6 +3539,31 @@ impl<T: Config> Pallet<T> {
 			transactions,
 		)?;
 
+		// If the administrator adds more transactions to the given drawdown, update the added transaction to 
+		// the drawdown's transactions status
+		// Get drawdown transactions
+		if !<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty() {
+			// If a transaction is in a diffferent status than Approved or Confirmed, set it to the current drawdown status
+			for transaction_id in <TransactionsByDrawdown<T>>::get(project_id, drawdown_id).iter().cloned() {
+				let transaction_data =
+				TransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+				if transaction_data.status != TransactionStatus::Approved
+					&& transaction_data.status != TransactionStatus::Confirmed
+				{
+					<TransactionsInfo<T>>::try_mutate::<_, _, DispatchError, _>(
+						transaction_id,
+						|transaction_data| {
+							let transaction_data =
+								transaction_data.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+							transaction_data.status = Self::get_transaction_status_for_a_given_drawdown(drawdown_id)?;
+							Ok(())
+						},
+					)?;
+				}
+			}
+		}
+
 		// Get timestamp
 		let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -3590,6 +3615,31 @@ impl<T: Config> Pallet<T> {
 			transactions,
 		)?;
 
+		// If the administrator adds more transactions to the given revenue, update the added transaction to 
+		// the revenue's transactions status
+		// Get revenue transactions
+		if !<TransactionsByRevenue<T>>::get(project_id, revenue_id).is_empty() {
+			// If a transaction is in a diffferent status than Approved, set it to the current revenue status
+			for transaction_id in
+				<TransactionsByRevenue<T>>::get(project_id, revenue_id).iter().cloned()
+			{
+				let transaction_data =
+				RevenueTransactionsInfo::<T>::get(transaction_id).ok_or(Error::<T>::RevenueTransactionNotFound)?;
+
+				if transaction_data.status != RevenueTransactionStatus::Approved {
+					<RevenueTransactionsInfo<T>>::try_mutate::<_, _, DispatchError, _>(
+						transaction_id,
+						|transaction_data| {
+							let transaction_data =
+								transaction_data.as_mut().ok_or(Error::<T>::RevenueTransactionNotFound)?;
+							transaction_data.status = Self::get_transaction_status_for_a_given_revenue(revenue_id)?;
+							Ok(())
+						},
+					)?;
+				}
+			}
+		}
+
 		// Get timestamp
 		let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
@@ -3605,5 +3655,31 @@ impl<T: Config> Pallet<T> {
 		
 		Ok(())
 	}
+
+	fn get_transaction_status_for_a_given_drawdown(drawdown_id: DrawdownId) -> Result<TransactionStatus, DispatchError> {
+		// Get drawdown data
+		let drawdown_data = <DrawdownsInfo<T>>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
+
+		match drawdown_data.status {
+			DrawdownStatus::Draft => Ok(TransactionStatus::Draft),
+			DrawdownStatus::Submitted => Ok(TransactionStatus::Submitted),
+			DrawdownStatus::Approved => Ok(TransactionStatus::Approved),
+			DrawdownStatus::Rejected => Ok(TransactionStatus::Rejected),
+			DrawdownStatus::Confirmed => Ok(TransactionStatus::Confirmed),
+		}
+	}
+
+	fn get_transaction_status_for_a_given_revenue(revenue_id: RevenueId) -> Result<RevenueTransactionStatus, DispatchError> {
+		// Get revenue data
+		let revenue_data = <RevenuesInfo<T>>::get(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
+
+		match revenue_data.status {
+			RevenueStatus::Draft => Ok(RevenueTransactionStatus::Draft),
+			RevenueStatus::Submitted => Ok(RevenueTransactionStatus::Submitted),
+			RevenueStatus::Approved => Ok(RevenueTransactionStatus::Approved),
+			RevenueStatus::Rejected => Ok(RevenueTransactionStatus::Rejected),
+		}
+	}
+
 	// Do not code beyond this line
 }
