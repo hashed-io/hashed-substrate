@@ -1,6 +1,7 @@
 use super::*;
 use frame_support::pallet_prelude::*;
-
+use frame_support::sp_io::hashing::blake2_256;
+use sp_runtime::sp_std::vec::Vec;
 
 pub type ShortString = BoundedVec<u8, ConstU32<35>>;
 pub type LongString = BoundedVec<u8, ConstU32<255>>;
@@ -94,4 +95,78 @@ pub enum SignUpArgs {
 		license_number: ShortString,
 		state: u32,
 	},
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+pub enum AfloatRole {
+	Owner,
+	Admin,
+	BuyerOrSeller,
+	CPA,
+}
+
+impl Default for AfloatRole {
+	fn default() -> Self {
+		AfloatRole::BuyerOrSeller
+	}
+}
+
+impl AfloatRole {
+	pub fn to_vec(self) -> Vec<u8> {
+		match self {
+			Self::Owner => "Owner".as_bytes().to_vec(),
+			Self::Admin => "Admin".as_bytes().to_vec(),
+			Self::BuyerOrSeller => "BuyerOrSeller".as_bytes().to_vec(),
+			Self::CPA => "CPA".as_bytes().to_vec(),
+		}
+	}
+
+	pub fn id(&self) -> [u8; 32] {
+		self.to_vec().using_encoded(blake2_256)
+	}
+
+	pub fn enum_to_vec() -> Vec<Vec<u8>> {
+		use crate::types::AfloatRole::*;
+		[
+			Owner.to_vec(),
+			Admin.to_vec(),
+			BuyerOrSeller.to_vec(),
+			CPA.to_vec(),
+		]
+		.to_vec()
+	}
+}
+
+#[derive(
+	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
+pub enum Permission {
+	CreateUser,
+	EditUser,
+	DeleteUser,
+}
+
+impl Permission {
+	pub fn to_vec(self) -> Vec<u8> {
+		match self {
+			Self::CreateUser => "CreateUser".as_bytes().to_vec(),
+			Self::EditUser => "EditUser".as_bytes().to_vec(),
+			Self::DeleteUser => "DeleteUser".as_bytes().to_vec(),
+		}
+	}
+
+	pub fn id(&self) -> [u8; 32] {
+		self.to_vec().using_encoded(blake2_256)
+	}
+
+	pub fn admin_permissions() -> Vec<Vec<u8>> {
+		use crate::types::Permission::*;
+		let admin_permissions = [
+			CreateUser.to_vec(),
+			EditUser.to_vec(),
+			DeleteUser.to_vec(),
+		]
+		.to_vec();
+		admin_permissions
+	}
 }

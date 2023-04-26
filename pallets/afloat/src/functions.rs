@@ -8,9 +8,15 @@ use pallet_fruniques::types::CollectionDescription;
 use pallet_fruniques::types::FruniqueRole;
 use frame_support::pallet_prelude::*;
 // use frame_support::traits::OriginTrait;
+use pallet_rbac::types::IdOrVec;
+use pallet_rbac::types::RoleBasedAccessControl;
+use scale_info::prelude::vec; 
 
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
+
+		Self::initialize_rbac()?;
+
 		let creator_user: User<T> = User {
 					first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
 					last_name: ShortString::try_from(b"Creator".to_vec()).unwrap(),
@@ -27,6 +33,7 @@ impl<T: Config> Pallet<T> {
 					lock_expiration_date: None,
 				};
 		<UserInfo<T>>::insert(creator.clone(), creator_user);
+		Self::give_role_to_user(creator.clone(), AfloatRole::Owner)?;
 
 		if admin != creator {
 			let admin_user: User<T> = User {
@@ -44,9 +51,10 @@ impl<T: Config> Pallet<T> {
 				tax_authority_id: 1,
 				lock_expiration_date: None,
 			};
-			<UserInfo<T>>::insert(admin, admin_user);
+			<UserInfo<T>>::insert(admin.clone(), admin_user);
+			Self::give_role_to_user(admin, AfloatRole::Admin)?;
 		}
-
+	
 		Ok(())
 	}
 
@@ -95,6 +103,7 @@ impl<T: Config> Pallet<T> {
 					lock_expiration_date: None,
 				};
 				<UserInfo<T>>::insert(user_address.clone(), user);
+				Self::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)?;
 				Self::deposit_event(Event::NewUser(user_address.clone()));
 			},
 			SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
@@ -114,6 +123,7 @@ impl<T: Config> Pallet<T> {
 					lock_expiration_date: None,
 				};
 				<UserInfo<T>>::insert(user_address.clone(), user);
+				Self::give_role_to_user(user_address.clone(), AfloatRole::CPA)?;
 				Self::deposit_event(Event::NewUser(user_address.clone()));
 			},
 		}
@@ -122,6 +132,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::add_to_afloat_collection(user_address.clone(),FruniqueRole::Collaborator)?;
 		pallet_gated_marketplace::Pallet::<T>::self_enroll(user_address, marketplace_id)?;
+
 		Ok(())
 	}
 	/// Function for editing user information.
@@ -157,7 +168,6 @@ impl<T: Config> Pallet<T> {
 		cpa_id: Option<ShortString>,
 		state: Option<u32>,
 	) -> DispatchResult {
-		ensure!(<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
 
 		<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
 			let user = user.as_mut().ok_or(Error::<T>::FailedToEditUserAccount)?;
@@ -209,11 +219,17 @@ impl<T: Config> Pallet<T> {
 	/// Returns Ok(()) on success.
 	///
 	pub fn do_delete_user(_actor: T::AccountId, user_address: T::AccountId) -> DispatchResult {
-		ensure!(<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
-		
+
 		Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
 		Self::remove_from_afloat_marketplace(user_address.clone())?;
+			
+		let role = if Self::is_cpa(user_address.clone()) {
+			AfloatRole::CPA
+		} else {
+			AfloatRole::BuyerOrSeller
+		};
 
+		Self::remove_role_from_user(user_address.clone(), role)?;
 		<UserInfo<T>>::remove(user_address.clone());
 		Self::deposit_event(Event::UserDeleted(user_address.clone()));
 		Ok(())
@@ -258,5 +274,105 @@ impl<T: Config> Pallet<T> {
 	pub fn remove_from_afloat_marketplace(invitee: T::AccountId) -> DispatchResult {
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		pallet_gated_marketplace::Pallet::<T>::remove_from_market_lists(invitee, MarketplaceRole::Participant, marketplace_id)
+	}
+
+	pub fn pallet_id() -> IdOrVec {
+		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
+	}
+
+	pub fn is_admin_or_owner(account: T::AccountId) -> bool {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::has_role(
+			account.clone(),
+			Self::pallet_id(),
+			&marketplace_id,
+			[AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
+		)
+		.is_ok() 
+	}
+
+	pub fn is_cpa(account: T::AccountId) -> bool {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::has_role(
+			account.clone(),
+			Self::pallet_id(),
+			&marketplace_id,
+			[AfloatRole::CPA.id()].to_vec(),
+		)
+		.is_ok() 
+	}
+
+	pub fn give_role_to_user(
+		authority: T::AccountId,
+		role: AfloatRole,
+	) -> DispatchResult {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::assign_role_to_user(
+			authority,
+			Self::pallet_id(),
+			&marketplace_id,
+			role.id(),
+		)?;
+
+		Ok(())
+	}
+
+	pub fn remove_role_from_user(
+		authority: T::AccountId,
+		role: AfloatRole,
+	) -> DispatchResult {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::remove_role_from_user(
+			authority,
+			Self::pallet_id(),
+			&marketplace_id,
+			role.id(),
+		)?;
+
+		Ok(())
+	}
+
+	pub fn initialize_rbac() -> DispatchResult {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
+		let pallet_id = Self::pallet_id();
+		let super_roles = vec![AfloatRole::Owner.to_vec(), AfloatRole::Admin.to_vec()];
+		let super_role_ids =
+		<T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
+		let super_permissions = Permission::admin_permissions();
+		for super_role in super_role_ids {
+			<T as pallet::Config>::Rbac::create_and_set_permissions(
+				pallet_id.clone(),
+				super_role,
+				super_permissions.clone(),
+			)?;
+		}
+		let participant_roles = vec![AfloatRole::BuyerOrSeller.to_vec(), AfloatRole::CPA.to_vec()];
+		<T as pallet::Config>::Rbac::create_and_set_roles(
+			pallet_id.clone(),
+			participant_roles,
+		)?;
+
+		Ok(())
+	}
+
+	pub fn do_delete_all_users() -> DispatchResult {
+		UserInfo::<T>::iter_keys().try_for_each(|account_id| {
+			if !Self::is_admin_or_owner(account_id.clone()) {
+				Self::remove_from_afloat_collection(account_id.clone(), FruniqueRole::Collaborator)?;
+				Self::remove_from_afloat_marketplace(account_id.clone())?;
+	
+				let role = if Self::is_cpa(account_id.clone()) {
+					AfloatRole::CPA
+				} else {
+					AfloatRole::BuyerOrSeller
+				};
+	
+				Self::remove_role_from_user(account_id.clone(), role)?;
+				UserInfo::<T>::remove(account_id);
+			}
+			Ok::<(), DispatchError>(())
+		})?;
+		Ok(())
 	}
 }

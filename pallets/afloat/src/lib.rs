@@ -76,6 +76,12 @@ pub mod pallet {
 		FailedToEditUserAccount,
 		// Failed to create fruniques collection
 		FailedToCreateFruniquesCollection,
+		// Failed to remove Fruniques role
+		FailedToRemoveFruniquesRole,
+		// User is not authorized to perform this action
+		Unauthorized,
+		// Pallet has not ben initialized yet
+		NotInitialized,
 	}
 
 	#[pallet::storage]
@@ -135,7 +141,7 @@ pub mod pallet {
 
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
-			Self::do_initial_setup(creator.clone(), admin.clone())?;
+			
 
 			let label: BoundedVec<u8, T::LabelMaxLen> =
 				BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
@@ -149,16 +155,19 @@ pub mod pallet {
 
 			AfloatMarketPlaceId::<T>::put(marketplace_id);
 			Self::add_to_afloat_collection(admin.clone(),FruniqueRole::Admin)?;
-			pallet_gated_marketplace::Pallet::do_create_marketplace(creator, admin, marketplace)?;
+			pallet_gated_marketplace::Pallet::do_create_marketplace(creator.clone(), admin.clone(), marketplace)?;
+
+			Self::do_initial_setup(creator, admin)?;
+
 			Ok(())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
-			ensure_signed(origin.clone())?;
-			<AfloatMarketPlaceId<T>>::kill();
-			let _ = <UserInfo<T>>::clear(1000, None);
+			let who = ensure_signed(origin.clone())?;
+			ensure!(Self::is_admin_or_owner(who), Error::<T>::Unauthorized);
+			Self::do_delete_all_users()?;
 			Ok(())
 		}
 
@@ -176,8 +185,12 @@ pub mod pallet {
 			address: T::AccountId,
 			args: UpdateUserArgs,
 		) -> DispatchResult {
-			// TODO: Check if the user is editing himself or is an admin
+
 			let who = ensure_signed(origin)?;
+
+			ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
+			ensure!(!Self::is_admin_or_owner(address.clone()), Error::<T>::Unauthorized);
+			ensure!(who.clone() == address || Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 
 			match args {
 				UpdateUserArgs::Edit { first_name, last_name, email, lang_key, phone, credits_needed, cpa_id, state } => {
