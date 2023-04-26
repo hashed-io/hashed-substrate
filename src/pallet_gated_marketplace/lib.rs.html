@@ -834,6 +834,12 @@
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
 <a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -844,8 +850,8 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests;
 
-<span class="kw">mod </span>functions;
-<span class="kw">mod </span>types;
+<span class="kw">pub mod </span>functions;
+<span class="kw">pub mod </span>types;
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
@@ -1197,10 +1203,16 @@
 			origin: OriginFor&lt;T&gt;,
 			admin: T::AccountId,
 			label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
-			fee: u32,
+			buy_fee: u32,
+			sell_fee: u32,
 		) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
-			</span><span class="kw">let </span>m = Marketplace { label, fee: Permill::from_percent(fee), creator: who.clone() };
+			</span><span class="kw">let </span>m = Marketplace {
+				label,
+				buy_fee: Permill::from_percent(buy_fee),
+				sell_fee: Permill::from_percent(sell_fee),
+				creator: who.clone(),
+			};
 			<span class="self">Self</span>::do_create_marketplace(who, admin, m)
 		}
 

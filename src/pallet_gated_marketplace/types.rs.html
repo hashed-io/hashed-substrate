@@ -271,6 +271,7 @@
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -296,7 +297,8 @@
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Marketplace&lt;T: Config&gt; {
 	<span class="kw">pub </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
-	<span class="kw">pub </span>fee: Permill,
+	<span class="kw">pub </span>buy_fee: Permill,
+	<span class="kw">pub </span>sell_fee: Permill,
 	<span class="kw">pub </span>creator: T::AccountId,
 }
 

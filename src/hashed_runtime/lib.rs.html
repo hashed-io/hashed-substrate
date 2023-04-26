@@ -1097,6 +1097,47 @@
 <a href="#1097" id="1097">1097</a>
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1124,6 +1165,7 @@
 <span class="kw">pub mod </span>constants;
 <span class="kw">use </span>constants::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_system::{EnsureRoot, EnsureSigned};
+<span class="kw">use </span>pallet_mapped_assets::DefaultCallback;
 
 <span class="comment">// A few exports that help ease life for downstream crates.
 </span><span class="kw">pub use </span>frame_support::{
@@ -1229,7 +1271,7 @@
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	</span>spec_version: <span class="number">151</span>,
+	</span>spec_version: <span class="number">153</span>,
 	impl_version: <span class="number">1</span>,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: <span class="number">1</span>,
@@ -1775,6 +1817,7 @@
 	<span class="kw">type </span>Moment = Moment;
 	<span class="kw">type </span>Rbac = RBAC;
 }
+
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>XPubLen: u32 = XPUB_LEN;
 	<span class="kw">pub const </span>PSBTMaxLen: u32  = <span class="number">2048</span>;
@@ -1833,6 +1876,34 @@
 }
 
 <span class="macro">parameter_types! </span>{
+	<span class="kw">pub const </span>MaxReserves: u32 = <span class="number">200</span>;
+}
+
+<span class="kw">impl </span>pallet_mapped_assets::Config <span class="kw">for </span>Runtime {
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>Balance = u128;
+	<span class="kw">type </span>AssetId = u32;
+	<span class="kw">type </span>Currency = Balances;
+	<span class="kw">type </span>CreateOrigin = AsEnsureOriginWithArg&lt;EnsureSigned&lt;AccountId&gt;&gt;;
+	<span class="kw">type </span>ForceOrigin = EnsureRoot&lt;AccountId&gt;;
+	<span class="kw">type </span>AssetDeposit = AssetDeposit;
+	<span class="kw">type </span>AssetAccountDeposit = ConstU128&lt;DOLLARS&gt;;
+	<span class="kw">type </span>MetadataDepositBase = MetadataDepositBase;
+	<span class="kw">type </span>MetadataDepositPerByte = MetadataDepositPerByte;
+	<span class="kw">type </span>ApprovalDeposit = ApprovalDeposit;
+	<span class="kw">type </span>StringLimit = StringLimit;
+	<span class="kw">type </span>Freezer = ();
+	<span class="kw">type </span>Extra = ();
+	<span class="kw">type </span>WeightInfo = ();
+	<span class="kw">type </span>MaxReserves = MaxReserves;
+	<span class="kw">type </span>ReserveIdentifier = u32;
+	<span class="kw">type </span>RemoveItemsLimit = RemoveItemsLimit;
+	<span class="kw">type </span>AssetIdParameter = u32;
+	<span class="kw">type </span>CallbackHandle = DefaultCallback;
+}
+
+
+<span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>MaxScopesPerPallet: u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxRolesPerPallet: u32 = <span class="number">50</span>;
 	<span class="kw">pub const </span>RoleMaxLen: u32 = <span class="number">50</span>;
@@ -1841,6 +1912,7 @@
 	<span class="kw">pub const </span>MaxRolesPerUser: u32 = <span class="number">10</span>;
 	<span class="kw">pub const </span>MaxUsersPerRole: u32 = <span class="number">2500</span>;
 }
+
 <span class="kw">impl </span>pallet_rbac::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
 	<span class="kw">type </span>MaxScopesPerPallet = MaxScopesPerPallet;
@@ -1850,6 +1922,14 @@
 	<span class="kw">type </span>MaxPermissionsPerRole = MaxPermissionsPerRole;
 	<span class="kw">type </span>MaxRolesPerUser = MaxRolesPerUser;
 	<span class="kw">type </span>MaxUsersPerRole = MaxUsersPerRole;
+}
+
+<span class="kw">impl </span>pallet_afloat::Config <span class="kw">for </span>Runtime {
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>Currency = Balances;
+	<span class="kw">type </span>TimeProvider = Timestamp;
+	<span class="kw">type </span>RemoveOrigin = EnsureRoot&lt;AccountId&gt;;
+	<span class="kw">type </span>Rbac = RBAC;
 }
 
 <span class="macro">parameter_types! </span>{
@@ -1947,6 +2027,8 @@
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
 		FundAdmin: pallet_fund_admin,
+		Afloat: pallet_afloat,
+		MappedAssets: pallet_mapped_assets,
 	}
 );
 
