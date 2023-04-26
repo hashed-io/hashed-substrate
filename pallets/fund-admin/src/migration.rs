@@ -4,7 +4,6 @@ use super::*;
 const LOG_TARGET: &str = "\nFund Admin pallet migration ";
 use frame_support::{pallet_prelude::*, log, traits::OnRuntimeUpgrade, storage_alias, Identity};
 use sp_runtime::Saturating;
-use sp_std::vec::Vec;
 
 use crate::types::*;
 
@@ -45,14 +44,12 @@ mod v0 {
 	// #[cfg(feature = "try-runtime")]
 	#[storage_alias]
 	pub(super) type RevenuesInfo<T: Config> = StorageMap<Pallet<T>, Identity, RevenueId, OldRevenueData<T>>;
-
 }
 
 pub mod v1 {
     use super::*;
 	pub use super::v0::OldDrawdownData;
 	pub use super::v0::OldRevenueData;
-
 
 	impl<T: Config> OldDrawdownData<T> {
 		fn migrate_to_v1_drawdown(self) -> DrawdownData<T> {
@@ -254,7 +251,5 @@ pub mod v1 {
 			});
 			Ok(())
 		}
-
 	}
-
 }
