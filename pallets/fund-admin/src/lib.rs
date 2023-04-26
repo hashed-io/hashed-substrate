@@ -20,6 +20,8 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
+	use sp_runtime::sp_std::vec::Vec;
+	use scale_info::prelude::vec;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
@@ -1766,6 +1768,31 @@ pub mod pallet {
 			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
+			Ok(())
+		}
+
+		#[pallet::call_index(24)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn set_new_admin_permissions(origin: OriginFor<T>) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			// New permissions for fund admin administrator role
+			let admin_id: [u8;32] = ProxyRole::Administrator.id();
+			let pallet_id = Self::pallet_id();
+
+			let new_admin_permissions: Vec<Vec<u8>> = vec![
+				ProxyPermission::RecoveryDrawdown.to_vec(),
+				ProxyPermission::RecoveryRevenue.to_vec(),
+				ProxyPermission::RecoveryTransaction.to_vec(),
+				ProxyPermission::RecoveryRevenueTransaction.to_vec(),
+				ProxyPermission::BulkUploadTransaction.to_vec(),
+			];
+
+			T::Rbac::create_and_set_permissions(
+				pallet_id.clone(),
+				admin_id,
+				new_admin_permissions,
+			)?;
+			
 			Ok(())
 		}
 	}
