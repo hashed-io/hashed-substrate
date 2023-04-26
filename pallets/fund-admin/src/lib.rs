@@ -11,8 +11,6 @@ mod tests;
 mod functions;
 mod types;
 pub mod migration;
-use sp_std::prelude::*;
-
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -104,7 +102,7 @@ pub mod pallet {
 		type MaxStatusChangesPerRevenue: Get<u32>;
 
 		#[pallet::constant]
-		type MaxRecoveryChangesPerDrawdown: Get<u32>;
+		type MaxRecoveryChanges: Get<u32>;
 
 		#[pallet::constant]
 		type MinAdminBalance: Get<BalanceOf<Self>>;
@@ -499,7 +497,7 @@ pub mod pallet {
 		/// Max number of status changes per drawdown reached
 		MaxStatusChangesPerDrawdownReached,
 		/// Max number of recovery chnages per drawdown reached
-		MaxRecoveryChangesPerDrawdownReached,
+		MaxRecoveryChangesReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
 		/// Can not perform any action on a submitted transaction
@@ -664,6 +662,8 @@ pub mod pallet {
 		RevenueTransactionsFeedbackEmpty,
 		/// The revenue is not in submitted status
 		RevenueNotSubmitted,
+		/// The revenue id does not belong to the project
+		RevenueDoesNotBelongToProject,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
 		DrawdowMustBeInApprovedStatus,
 		/// Drawdown is not in Confirmed status
@@ -1697,6 +1697,37 @@ pub mod pallet {
 
 			Self::do_recovery_drawdown(who, project_id, drawdown_id, transactions)
 		}
+        /// Execute a recovery revenue on a project. This function can only be called by an admin.
+		/// 
+		/// Parameters:
+		/// - `origin`: The administrator account who is executing the recovery revenue
+		/// - `project_id`: The ID of the project from which the recovery revenue will be executed
+		/// - `revenue_id`: The ID of the revenue from which the recovery revenue will be executed
+		/// - `transactions`: The list of transactions that will be executed in the recovery revenue
+		///
+		/// # Errors
+		///
+		/// This function returns an error if:
+		///
+		/// - The transaction origin is not a signed message from an admin account.
+		/// - The project with the given ID does not exist.
+		/// - The revenue with the given ID does not exist.
+		///
+		/// ### Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The revenue status won't be changed
+		#[pallet::call_index(22)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn recovery_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			transactions: Transactions<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_recovery_revenue(who, project_id, revenue_id, transactions)
+		}
 
 		/// Kill all the stored data.
 		///
@@ -1708,7 +1739,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[pallet::call_index(22)]
+		#[pallet::call_index(23)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;

@@ -4,8 +4,6 @@ use frame_support::{
 	traits::{Get, StorageVersion},
 	weights::Weight,
 };
-#[warn(unused_imports)]
-use frame_support::sp_runtime::traits::Zero;
 
 /// The old prefix.
 pub const OLD_PREFIX: &[u8] = b"Template";

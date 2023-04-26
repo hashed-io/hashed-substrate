@@ -593,7 +593,7 @@ parameter_types! {
 	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
 	pub const MinAdminBalance: Balance = 10_000_000_000_000;
 	pub const TransferAmount: Balance = 10_000_000_000_000;
-	pub const MaxRecoveryChangesPerDrawdown:u32 = 1_000;
+	pub const MaxRecoveryChanges:u32 = 1_000;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -625,7 +625,7 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
 	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
-	type MaxRecoveryChangesPerDrawdown = MaxRecoveryChangesPerDrawdown;
+	type MaxRecoveryChanges = MaxRecoveryChanges;
 	type MinAdminBalance = MinAdminBalance;
 	type TransferAmount = TransferAmount;
 }

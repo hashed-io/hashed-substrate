@@ -62,7 +62,7 @@ pub type TransactionsFeedback<T> = BoundedVec<(
 pub type DrawdownId = [u8; 32];
 pub type DrawdownNumber = u32;
 pub type DrawdownStatusChanges<T> = BoundedVec<(DrawdownStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerDrawdown>;
-pub type DrawdownRecoveryRecord<T> = BoundedVec<(AccountIdOf<T>, UpdatedDate), <T as Config>::MaxRecoveryChangesPerDrawdown>;
+pub type RecoveryRecord<T> = BoundedVec<(AccountIdOf<T>, UpdatedDate), <T as Config>::MaxRecoveryChanges>;
 
 // Budget expenditures
 pub type ExpenditureId = [u8; 32];
@@ -201,7 +201,7 @@ pub struct DrawdownData<T: Config> {
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
     pub status_changes: DrawdownStatusChanges<T>,
-    pub recovery_record: DrawdownRecoveryRecord<T>,
+    pub recovery_record: RecoveryRecord<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
@@ -283,6 +283,7 @@ pub struct RevenueData<T: Config> {
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
     pub status_changes: RevenueStatusChanges<T>,
+    pub recovery_record: RecoveryRecord<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }

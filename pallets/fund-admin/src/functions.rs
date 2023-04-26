@@ -978,7 +978,7 @@ impl<T: Config> Pallet<T> {
 			description: None,
 			feedback: None,
 			status_changes: DrawdownStatusChanges::<T>::default(),
-			recovery_record: DrawdownRecoveryRecord::<T>::default(),
+			recovery_record: RecoveryRecord::<T>::default(),
 			created_date: timestamp,
 			closed_date: 0,
 		};
@@ -1914,7 +1914,7 @@ impl<T: Config> Pallet<T> {
 		revenue_transactions: RevenueTransactions<T>,
 	) -> DispatchResult {
 		// Ensure builder permission
-		Self::is_authorized(user, &project_id, ProxyPermission::RevenueTransaction)?;
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::RevenueTransaction)?;
 
 		// Ensure project exists & is not completed so helper private functions doesn't need to check it again
 		Self::is_project_completed(project_id)?;
@@ -1926,7 +1926,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(!revenue_transactions.is_empty(), Error::<T>::RevenueTransactionsEmpty);
 
 		// Ensure if the selected revenue is editable
-		Self::is_revenue_editable(revenue_id)?;
+		Self::is_revenue_editable(user.clone(), revenue_id)?;
 
 		for transaction in revenue_transactions.iter().cloned() {
 			match transaction.3 {
@@ -1940,6 +1940,9 @@ impl<T: Config> Pallet<T> {
 					)?;
 				},
 				CUDAction::Update => {
+					// Ensure transaction is editable
+					Self::is_revenue_transaction_editable(user.clone(), transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?)?;
+					// Update transaction
 					Self::do_update_revenue_transaction(
 						transaction.1,
 						transaction.2,
@@ -1947,6 +1950,9 @@ impl<T: Config> Pallet<T> {
 					)?;
 				},
 				CUDAction::Delete => {
+					// Ensure transaction is editable
+					Self::is_revenue_transaction_editable(user.clone(), transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?)?;
+					// Delete transaction
 					Self::do_delete_revenue_transaction(
 						transaction.4.ok_or(Error::<T>::RevenueTransactionIdRequired)?,
 					)?;
@@ -2096,12 +2102,6 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::RevenueTransactionNotFoundForSelectedRevenueId
 		);
 
-		// Ensure revenue is deletable
-		Self::is_revenue_editable(revenue_transaction_data.revenue_id)?;
-
-		// Ensure revenue transaction is deletable
-		Self::is_revenue_transaction_editable(revenue_transaction_id)?;
-
 		// Remove revenue transaction from TransactionsByRevenue
 		<TransactionsByRevenue<T>>::try_mutate_exists::<_, _, _, DispatchError, _>(
 			revenue_transaction_data.project_id,
@@ -2137,13 +2137,13 @@ impl<T: Config> Pallet<T> {
 		revenue_id: RevenueId,
 	) -> DispatchResult {
 		// Ensure builder permissions
-		Self::is_authorized(user, &project_id, ProxyPermission::SubmitRevenue)?;
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::SubmitRevenue)?;
 
 		// Ensure project exists & is not completed
 		Self::is_project_completed(project_id)?;
 
 		// Check if revenue exists & is editable
-		Self::is_revenue_editable(revenue_id)?;
+		Self::is_revenue_editable(user, revenue_id)?;
 
 		// Ensure revenue has transactions
 		ensure!(
@@ -2157,8 +2157,11 @@ impl<T: Config> Pallet<T> {
 
 		// Update each revenue transaction status to Submitted
 		for transaction_id in revenue_transactions.iter().cloned() {
-			// Ensure revenue transaction is editable
-			Self::is_revenue_transaction_editable(transaction_id)?;
+			// Ensure revenue transaction exists
+			ensure!(
+				RevenueTransactionsInfo::<T>::contains_key(transaction_id),
+				Error::<T>::RevenueTransactionNotFound
+			);
 
 			// Update revenue transaction status
 			<RevenueTransactionsInfo<T>>::try_mutate::<_, _, DispatchError, _>(
@@ -2874,11 +2877,11 @@ impl<T: Config> Pallet<T> {
 				// Match drawdown status
 				// Ensure drawdown is in draft or rejected status
 				match drawdown_data.status {
-					DrawdownStatus::Draft => 
+					DrawdownStatus::Draft =>
 						Ok(()),
-					DrawdownStatus::Rejected => 
+					DrawdownStatus::Rejected =>
 						Ok(()),
-					DrawdownStatus::Submitted => 
+					DrawdownStatus::Submitted =>
 						Err(Error::<T>::CannotPerformActionOnSubmittedDrawdown.into()),
 					DrawdownStatus::Approved => {
 						// Ensure admin permissions
@@ -2901,7 +2904,7 @@ impl<T: Config> Pallet<T> {
 			_ => {
 				// Match drawdown status
 				match drawdown_data.status {
-					DrawdownStatus::Draft => 
+					DrawdownStatus::Draft =>
 						Ok(()),
 					DrawdownStatus::Rejected =>
 						Ok(()),
@@ -3151,21 +3154,31 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn is_revenue_editable(revenue_id: RevenueId) -> DispatchResult {
+	fn is_revenue_editable(user: T::AccountId, revenue_id: RevenueId) -> DispatchResult {
 		// Get revenue data & ensure revenue exists
 		let revenue_data = RevenuesInfo::<T>::get(revenue_id).ok_or(Error::<T>::RevenueNotFound)?;
 
 		// Match revenue status
 		match revenue_data.status {
-			RevenueStatus::Draft => Ok(()),
-			RevenueStatus::Rejected => Ok(()),
+			RevenueStatus::Draft =>
+				Ok(()),
+			RevenueStatus::Rejected =>
+				Ok(()),
 			RevenueStatus::Submitted =>
 				Err(Error::<T>::CannotPerformActionOnSubmittedRevenue.into()),
-			RevenueStatus::Approved => Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into()),
+			RevenueStatus::Approved => {
+				// Ensure admin permission
+				if Self::is_authorized(user.clone(), &revenue_data.project_id, ProxyPermission::RecoveryRevenue).is_ok() {
+					Ok(())
+				} else {
+					Err(Error::<T>::CannotPerformActionOnApprovedRevenue.into())
+				}
+			},
 		}
 	}
 
 	fn is_revenue_transaction_editable(
+		user: T::AccountId,
 		revenue_transaction_id: RevenueTransactionId,
 	) -> DispatchResult {
 		// Get revenue transaction data & ensure revenue transaction exists
@@ -3175,12 +3188,20 @@ impl<T: Config> Pallet<T> {
 		// Ensure transaction is in draft or rejected status
 		// Match revenue transaction status
 		match revenue_transaction_data.status {
-			RevenueTransactionStatus::Draft => Ok(()),
-			RevenueTransactionStatus::Rejected => Ok(()),
+			RevenueTransactionStatus::Draft =>
+				Ok(()),
+			RevenueTransactionStatus::Rejected =>
+				Ok(()),
 			RevenueTransactionStatus::Submitted =>
 				Err(Error::<T>::CannotPerformActionOnSubmittedRevenueTransaction.into()),
-			RevenueTransactionStatus::Approved =>
-				Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into()),
+			RevenueTransactionStatus::Approved => {
+				// Ensure admin permissions
+				if Self::is_authorized(user.clone(), &revenue_transaction_data.project_id, ProxyPermission::RecoveryRevenueTransaction).is_ok() {
+					Ok(())
+				} else {
+					Err(Error::<T>::CannotPerformActionOnApprovedRevenueTransaction.into())
+				}
+			},
 		}
 	}
 
@@ -3247,6 +3268,7 @@ impl<T: Config> Pallet<T> {
 			total_amount: 0,
 			status: RevenueStatus::default(),
 			status_changes: RevenueStatusChanges::<T>::default(),
+			recovery_record: RecoveryRecord::<T>::default(),
 			created_date: timestamp,
 			closed_date: 0,
 		};
@@ -3526,12 +3548,62 @@ impl<T: Config> Pallet<T> {
 			drawdown
 				.recovery_record
 				.try_push((user, timestamp))
-				.map_err(|_| Error::<T>::MaxRecoveryChangesPerDrawdownReached)?;
+				.map_err(|_| Error::<T>::MaxRecoveryChangesReached)?;
 			Ok(())
 		})?;
 
 		Ok(())
 	}
 
+	pub fn do_recovery_revenue(
+		user: T::AccountId,
+		project_id: ProjectId,
+		revenue_id: RevenueId,
+		transactions: Transactions<T>,
+	) -> DispatchResult {
+		// Ensure user permissions
+		Self::is_authorized(user.clone(), &project_id, ProxyPermission::RecoveryRevenue)?;
+
+		// Ensure project exists & is not completed
+		Self::is_project_completed(project_id)?;
+
+		// Check if revenue exists & is editable
+		Self::is_revenue_editable(user.clone(), revenue_id)?;
+
+		// Ensure revenue belongs to project
+		ensure!(
+			<RevenuesByProject<T>>::get(project_id).contains(&revenue_id),
+			Error::<T>::RevenueDoesNotBelongToProject
+		);
+
+		// Ensure revenue has transactions
+		ensure!(
+			!<TransactionsByRevenue<T>>::get(project_id, revenue_id).is_empty(),
+			Error::<T>::RevenueHasNoTransactions
+		);
+
+		// Do execute revenue transactions
+		Self::do_execute_revenue_transactions(
+			user.clone(),
+			project_id,
+			revenue_id,
+			transactions,
+		)?;
+
+		// Get timestamp
+		let timestamp = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
+
+		// Create a record in RevenuesInfo
+		<RevenuesInfo<T>>::try_mutate::<_, _, DispatchError, _>(revenue_id, |revenue_data| {
+			let revenue = revenue_data.as_mut().ok_or(Error::<T>::RevenueNotFound)?;
+			revenue
+				.recovery_record
+				.try_push((user, timestamp))
+				.map_err(|_| Error::<T>::MaxRecoveryChangesReached)?;
+			Ok(())
+		})?;
+		
+		Ok(())
+	}
 	// Do not code beyond this line
 }
