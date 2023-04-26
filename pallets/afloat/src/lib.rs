@@ -108,7 +108,7 @@ pub mod pallet {
 	>;
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
+	impl<T: Config> Pallet<T>
 	where
 	T: pallet_uniques::Config<CollectionId = CollectionId>
 	{
@@ -131,13 +131,9 @@ pub mod pallet {
 				asset_id,
 				T::Lookup::unlookup(creator.clone()),
 				min_balance,
-			)?; 
+			)?;
 
-			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
-			
 			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())?;
-
-			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
 			Self::do_initial_setup(creator.clone(), admin.clone())?;
 
