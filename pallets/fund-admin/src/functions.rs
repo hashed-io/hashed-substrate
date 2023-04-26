@@ -3578,7 +3578,7 @@ impl<T: Config> Pallet<T> {
 		})?;
 
 		// Event
-		Self::deposit_event(Event::DrawdownErrorRecoveryExecuted(user, project_id, drawdown_id));
+		Self::deposit_event(Event::DrawdownErrorRecoveryExecuted(project_id, drawdown_id));
 
 		Ok(())
 	}
@@ -3657,7 +3657,7 @@ impl<T: Config> Pallet<T> {
 		})?;
 
 		// Event
-		Self::deposit_event(Event::RevenueErrorRecoveryExecuted(project_id, revenue_id, user));
+		Self::deposit_event(Event::RevenueErrorRecoveryExecuted(project_id, revenue_id));
 
 		Ok(())
 	}
