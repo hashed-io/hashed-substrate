@@ -13,6 +13,8 @@ repository = "https://github.com/hashed-io/hashed-substrate"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
+frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.38" }
+
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
 	"derive"
 ] }
@@ -77,6 +79,8 @@ substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", bran
 [features]
 default = ["std"]
 std = [
+	"frame-try-runtime?/std",
+	"frame-try-runtime/std",
 	"codec/std",
 	"scale-info/std",
 	"frame-executive/std",
@@ -133,4 +137,36 @@ runtime-benchmarks = [
 	"pallet-template/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
+]
+try-runtime = [
+	"frame-try-runtime/try-runtime",
+	"frame-executive/try-runtime",
+	"frame-system/try-runtime",
+	"frame-support/try-runtime",
+	"pallet-indices/try-runtime",
+	"pallet-aura/try-runtime",
+	"pallet-balances/try-runtime",
+	"pallet-randomness-collective-flip/try-runtime",
+	"pallet-sudo/try-runtime",
+	"pallet-timestamp/try-runtime",
+	"pallet-transaction-payment/try-runtime",
+	"pallet-treasury/try-runtime",
+	"pallet-identity/try-runtime",
+	"pallet-recovery/try-runtime",
+	"pallet-grandpa/try-runtime",
+	"pallet-collective/try-runtime",
+	"pallet-society/try-runtime",
+	"pallet-membership/try-runtime",
+	"pallet-node-authorization/try-runtime",
+	"pallet-bounties/try-runtime",
+	"pallet-uniques/try-runtime",
+	"pallet-assets/try-runtime",
+#	"pallet-transaction-payment-rpc-runtime-api/try-runtime",
+	"pallet-bitcoin-vaults/try-runtime",
+	"pallet-confidential-docs/try-runtime",
+	"pallet-fruniques/try-runtime",
+	"pallet-fund-admin/try-runtime",
+	"pallet-gated-marketplace/try-runtime",
+	"pallet-rbac/try-runtime",
+	"pallet-template/try-runtime",
 ]

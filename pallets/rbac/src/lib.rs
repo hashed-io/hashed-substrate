@@ -14,14 +14,13 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-
 mod functions;
 pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::{*, ValueQuery};
 	use crate::types::*;
+	use frame_support::pallet_prelude::{ValueQuery, *};
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -49,15 +48,15 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/*--- Onchain storage section ---*/
+	/* --- Onchain storage section --- */
 
 	#[pallet::storage]
 	#[pallet::getter(fn scopes)]
 	pub(super) type Scopes<T: Config> = StorageMap<
 		_,
 		Identity,
-		PalletId, // pallet_id
-		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
+		PalletId,                                   // pallet_id
+		BoundedVec<ScopeId, T::MaxScopesPerPallet>, // scopes_id
 		ValueQuery,
 	>;
 
@@ -66,8 +65,8 @@ pub mod pallet {
 	pub(super) type Roles<T: Config> = StorageMap<
 		_,
 		Identity,
-		RoleId, // role_id
-		BoundedVec<u8, T::RoleMaxLen >,  // role
+		RoleId,                        // role_id
+		BoundedVec<u8, T::RoleMaxLen>, // role
 		OptionQuery,
 	>;
 
@@ -76,8 +75,8 @@ pub mod pallet {
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
 		Identity,
-		PalletId, // pallet_id
-		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
+		PalletId,                                 // pallet_id
+		BoundedVec<RoleId, T::MaxRolesPerPallet>, // role_id
 		ValueQuery,
 	>;
 
@@ -86,10 +85,10 @@ pub mod pallet {
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
 		Identity,
-		PalletId, 			// pallet_id
+		PalletId, // pallet_id
 		Identity,
-		PermissionId,		// permission_id
-		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
+		PermissionId,                        // permission_id
+		BoundedVec<u8, T::PermissionMaxLen>, // permission str
 		ValueQuery,
 	>;
 
@@ -98,10 +97,10 @@ pub mod pallet {
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
 		Identity,
-		PalletId, 			// pallet_id
+		PalletId, // pallet_id
 		Identity,
-		RoleId,		// role_id
-		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
+		RoleId,                                             // role_id
+		BoundedVec<PermissionId, T::MaxPermissionsPerRole>, // permission_ids
 		ValueQuery,
 	>;
 
@@ -110,11 +109,11 @@ pub mod pallet {
 	pub(super) type RolesByUser<T: Config> = StorageNMap<
 		_,
 		(
-			NMapKey<Blake2_128Concat, T::AccountId>,// user
-			NMapKey<Identity, PalletId>,			// pallet_id
-			NMapKey<Identity, ScopeId>,		// scope_id
+			NMapKey<Blake2_128Concat, T::AccountId>, // user
+			NMapKey<Identity, PalletId>,             // pallet_id
+			NMapKey<Identity, ScopeId>,              // scope_id
 		),
-		BoundedVec<RoleId, T::MaxRolesPerUser>,	// roles (ids)
+		BoundedVec<RoleId, T::MaxRolesPerUser>, // roles (ids)
 		ValueQuery,
 	>;
 
@@ -125,16 +124,13 @@ pub mod pallet {
 		(
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
-			NMapKey<Identity, PalletId>,		// pallet_id
-			NMapKey<Identity, ScopeId>,		// scope_id
-			NMapKey<Identity, RoleId>,	// role_id
+			NMapKey<Identity, PalletId>, // pallet_id
+			NMapKey<Identity, ScopeId>,  // scope_id
+			NMapKey<Identity, RoleId>,   // role_id
 		),
-		BoundedVec<T::AccountId, T::MaxUsersPerRole>,	// users
+		BoundedVec<T::AccountId, T::MaxUsersPerRole>, // users
 		ValueQuery,
 	>;
-
-
-
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -197,6 +193,5 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
-	}
+	impl<T: Config> Pallet<T> {}
 }

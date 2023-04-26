@@ -10,7 +10,7 @@ mod tests;
 
 mod functions;
 mod types;
-
+pub mod migration;
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -20,6 +20,8 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Scale;
+	use sp_runtime::sp_std::vec::Vec;
+	use scale_info::prelude::vec;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 	use crate::types::*;
@@ -100,6 +102,9 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxStatusChangesPerRevenue: Get<u32>;
+
+		#[pallet::constant]
+		type MaxRecoveryChanges: Get<u32>;
 
 		#[pallet::constant]
 		type MinAdminBalance: Get<BalanceOf<Self>>;
@@ -381,6 +386,10 @@ pub mod pallet {
 		BankDocumentsUpdated(ProjectId, DrawdownId),
 		/// Bank's confirming documents were deleted successfully
 		BankDocumentsDeleted(ProjectId, DrawdownId),
+		/// Error recovery for revenues was executed successfully
+		RevenueErrorRecoveryExecuted(ProjectId, RevenueId),
+		/// Error recovery for drawdowns was executed successfully
+		DrawdownErrorRecoveryExecuted(ProjectId, DrawdownId),
 	}
 
 	// E R R O R S
@@ -493,6 +502,8 @@ pub mod pallet {
 		MaxDrawdownsPerProjectReached,
 		/// Max number of status changes per drawdown reached
 		MaxStatusChangesPerDrawdownReached,
+		/// Max number of recovery chnages per drawdown reached
+		MaxRecoveryChangesReached,
 		/// Can not modify a completed drawdown
 		CannotEditDrawdown,
 		/// Can not perform any action on a submitted transaction
@@ -657,6 +668,8 @@ pub mod pallet {
 		RevenueTransactionsFeedbackEmpty,
 		/// The revenue is not in submitted status
 		RevenueNotSubmitted,
+		/// The revenue id does not belong to the project
+		RevenueDoesNotBelongToProject,
 		/// Can not upload bank confirming documents if the drawdown is not in Approved status
 		DrawdowMustBeInApprovedStatus,
 		/// Drawdown is not in Confirmed status
@@ -667,6 +680,8 @@ pub mod pallet {
 		DrawdownHasAlreadyBankConfirmingDocuments,
 		/// Drawdown has no bank confirming documents (CUDAction: Update or Delete)
 		DrawdownHasNoBankConfirmingDocuments,
+		/// Drawdown id does not belong to the selected project
+		DrawdownDoesNotBelongToProject,
 		/// Bank confirming documents are required
 		BankConfirmingDocumentsNotProvided,
 		/// Banck confirming documents array is empty
@@ -1657,6 +1672,69 @@ pub mod pallet {
 			Self::do_reset_drawdown(who, project_id, drawdown_id)
 		}
 
+        /// Execute a recovery drawdown on a project. This function can only be called by an admin. 
+		/// 
+        /// Parameters:
+        /// - `origin`: The administrator account who is executing the recovery drawdown
+        /// - `project_id`: The ID of the project from which the recovery drawdown will be executed
+        /// - `drawdown_id`: The ID of the drawdown from which the recovery drawdown will be executed
+        /// - `transactions`: The list of transactions that will be executed in the recovery drawdown
+        ///
+        /// # Errors
+        ///
+        /// This function returns an error if:
+        ///
+        /// - The transaction origin is not a signed message from an admin account.
+        /// - The project with the given ID does not exist.
+        /// - The drawdown with the given ID does not exist.
+        ///
+		/// # Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The drawdown status won't be changed
+		#[pallet::call_index(21)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn recovery_drawdown(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			drawdown_id: DrawdownId,
+			transactions: Transactions<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_recovery_drawdown(who, project_id, drawdown_id, transactions)
+		}
+        /// Execute a recovery revenue on a project. This function can only be called by an admin.
+		/// 
+		/// Parameters:
+		/// - `origin`: The administrator account who is executing the recovery revenue
+		/// - `project_id`: The ID of the project from which the recovery revenue will be executed
+		/// - `revenue_id`: The ID of the revenue from which the recovery revenue will be executed
+		/// - `transactions`: The list of transactions that will be executed in the recovery revenue
+		///
+		/// # Errors
+		///
+		/// This function returns an error if:
+		///
+		/// - The transaction origin is not a signed message from an admin account.
+		/// - The project with the given ID does not exist.
+		/// - The revenue with the given ID does not exist.
+		///
+		/// ### Considerations:
+		/// - This function is only callable by an administrator role account
+		/// - The revenue status won't be changed
+		#[pallet::call_index(22)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn recovery_revenue(
+			origin: OriginFor<T>,
+			project_id: ProjectId,
+			revenue_id: RevenueId,
+			transactions: Transactions<T>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?; // origin need to be an admin
+
+			Self::do_recovery_revenue(who, project_id, revenue_id, transactions)
+		}
+
 		/// Kill all the stored data.
 		///
 		/// This function is used to kill ALL the stored data.
@@ -1667,7 +1745,7 @@ pub mod pallet {
 		///
 		/// ### Considerations:
 		/// - This function is only available to the `admin` with sudo access.
-		#[pallet::call_index(22)]
+		#[pallet::call_index(23)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
@@ -1690,6 +1768,31 @@ pub mod pallet {
 			let _ = <TransactionsByRevenue<T>>::clear(1000, None);
 
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
+			Ok(())
+		}
+
+		#[pallet::call_index(24)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
+		pub fn set_new_admin_permissions(origin: OriginFor<T>) -> DispatchResult {
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
+			// New permissions for fund admin administrator role
+			let admin_id: [u8;32] = ProxyRole::Administrator.id();
+			let pallet_id = Self::pallet_id();
+
+			let new_admin_permissions: Vec<Vec<u8>> = vec![
+				ProxyPermission::RecoveryDrawdown.to_vec(),
+				ProxyPermission::RecoveryRevenue.to_vec(),
+				ProxyPermission::RecoveryTransaction.to_vec(),
+				ProxyPermission::RecoveryRevenueTransaction.to_vec(),
+				ProxyPermission::BulkUploadTransaction.to_vec(),
+			];
+
+			T::Rbac::create_and_set_permissions(
+				pallet_id.clone(),
+				admin_id,
+				new_admin_permissions,
+			)?;
+			
 			Ok(())
 		}
 	}

@@ -593,7 +593,7 @@ fn sudo_administrator_can_remove_themselves_works() {
 }
 
 // B A L A N C E S
-// ============================================================================
+// =================================================================================================
 #[test]
 fn balances_main_account_has_an_initial_balance_works(){
     new_test_ext().execute_with(|| {
@@ -1846,7 +1846,7 @@ fn users_cannot_update_user_role_from_an_account_with_assigned_projects_should_f
 }
 
 // E X P E N D I T U R E S
-// ============================================================================
+// =================================================================================================
 #[test]
 fn expenditures_add_a_hard_cost_budget_expenditure_for_a_given_project_works() {
     new_test_ext().execute_with(|| {
@@ -3758,7 +3758,7 @@ fn job_eligibles_an_admin_cannot_delete_a_job_eligible_that_is_being_used_approv
 }
 
 // D R A W D O W N S
-// ============================================================================
+// =================================================================================================
 #[test]
 fn drawdowns_drawdowns_are_initialized_correctly_after_a_project_is_created_works() {
     new_test_ext().execute_with(|| {
@@ -4616,7 +4616,7 @@ fn drawdowns_an_administrator_rejects_a_eb5_drawdown_with_an_empty_feedback_shou
 }
 
 // B U L K   D R A W D O W N S
-// ============================================================================
+// =================================================================================================
 #[test]
 fn bulkupload_a_builder_submits_a_construction_loan_drawdown_works() {
     new_test_ext().execute_with(|| {
@@ -5938,7 +5938,7 @@ fn revenues_after_a_revenue_is_rejected_the_status_is_updated_in_project_data_wo
 }
 
 // I N F L A T I O N  R A T E
-// ============================================================================
+// =================================================================================================
 #[test]
 fn inflation_rate_an_administrator_can_set_the_inflation_rate_works() {
     new_test_ext().execute_with(|| {
@@ -6175,7 +6175,7 @@ fn inflation_rate_an_administrator_cannot_delete_the_inflation_rate_if_it_is_not
 }
 
 // B A N K   D O C U M E N T S
-// ============================================================================
+// =================================================================================================
 #[test]
 fn bank_documents_an_administrator_uploads_bank_documents_for_a_given_eb5_drawdown_works() {
     new_test_ext().execute_with(|| {
@@ -6803,7 +6803,7 @@ fn bank_documents_cannot_delete_documents_if_the_drawdown_is_not_confirmed_shoul
 }
 
 // R E S E T    D R A W D O W N
-// =================================================================================================3
+// =================================================================================================
 #[test]
 fn reset_drawdown_a_builder_resets_a_eb5_drawdown_should_work() {
     new_test_ext().execute_with(|| {
@@ -6986,45 +6986,23 @@ fn reset_drawdown_a_builder_cannot_reset_an_approved_drawdown() {
     });
 }
 
-// E X C E E D E D    B O U N D S
+// E R R O R    R E C O V E R Y   D R A W D O W N S
 // =================================================================================================
-// todo: Create helper functions to make boundedvecs that exceeds the bounds and use them
-// in the tests below.
-fn make_transaction_exceed_bounds(
-    expenditure_id: Option<ExpenditureId>,
-    expenditure_amount: Option<ExpenditureAmount>,
-    action: CUDAction,
-    transaction_id: Option<TransactionId>,
-) -> Transactions<Test> {
-    let mut transactions: Transactions<Test> = bounded_vec![];
-    let documents = Some(make_documents(10));
-    transactions
-        .try_push((
-            expenditure_id,
-            expenditure_amount,
-            documents,
-            action,
-            transaction_id,
-        ))
-        .unwrap_or_default();
-    transactions
-}
-
 #[test]
-fn transactions_a_user_uploads_more_documents_than_the_allowed_limit_should_fail(){
+fn an_administrators_updates_a_transaction_for_an_approved_drawdown_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(make_default_full_project());
-
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
         let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
         let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
-        
-        let transaction_data = make_transaction_exceed_bounds(
+        let transaction_data = make_transaction(
             Some(expenditure_id),
-            Some(0),
+            Some(10000),
             CUDAction::Create,
             None,
         );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
 
         assert_ok!(FundAdmin::submit_drawdown(
             RuntimeOrigin::signed(2),
@@ -7035,51 +7013,635 @@ fn transactions_a_user_uploads_more_documents_than_the_allowed_limit_should_fail
         ));
 
         let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
 
-        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().documents.unwrap().len(), 5);
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+
+        let new_total_amount = 200000u64;
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(new_total_amount),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, new_total_amount);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+    });
+}
+
+#[test]
+fn an_administrators_adds_a_new_transaction_to_an_approved_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let expenditure_id_2 = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 2"), ExpenditureType::SoftCost);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id_2),
+            Some(2000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        let transaction_id_2 = get_transaction_id(project_id, drawdown_id, expenditure_id_2);
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 2);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id_2).unwrap().status, TransactionStatus::Approved);
+    });
+}
+
+#[test]
+fn an_administrators_deletes_a_transaction_for_an_approved_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            None,
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).is_none(), true);
+    });
+}
+
+#[test]
+fn an_administrators_updates_a_transaction_for_a_confirmed_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let bank_documents = make_documents(1);
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Confirmed);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let new_total_amount = 200000u64;
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(new_total_amount),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, new_total_amount);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Confirmed);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+    });
+}
+
+#[test]
+fn an_administrators_adds_a_new_transaction_to_a_confirmed_drawdown_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
+
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let bank_documents = make_documents(1);
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Confirmed);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let expenditure_id_2 = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 2"), ExpenditureType::SoftCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id_2),
+            Some(2000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        let transaction_id_2 = get_transaction_id(project_id, drawdown_id, expenditure_id_2);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 2);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id_2).unwrap().status, TransactionStatus::Confirmed);
 
     });
 }
 
 #[test]
-fn projects_register_a_project_with_a_long_name_should_fail() {
+fn an_administrators_deletes_a_transaction_for_a_confirmed_drawdown_works() {
     new_test_ext().execute_with(|| {
-        assert_ok!(register_administrator());
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+        let drawdown_id = get_drawdown_id(project_id, DrawdownType::EB5, 1);
 
-        assert_ok!(FundAdmin::projects_create_project(
-            RuntimeOrigin::signed(1),
-            make_field_name("project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfj.jpeg"),
-            make_field_description("Project 1 description"),
-            Some(make_field_name("project_image.jpeg")),
-            make_field_name("New York"),
+        let expenditure_id = get_budget_expenditure_id(project_id, make_field_name("Expenditure Test 1"), ExpenditureType::HardCost);
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            Some(10000),
+            CUDAction::Create,
             None,
-            1000,
-            2000,
-            make_default_expenditures(),
-            None,
-            None,
-            make_field_description("P9f5wbr13BK74p1"),
+        );
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Draft));
+
+        assert_ok!(FundAdmin::submit_drawdown(
+            RuntimeOrigin::signed(2),
+            project_id,
+            drawdown_id,
+            Some(transaction_data),
+            true,
         ));
 
-        assert_eq!(ProjectsInfo::<Test>::iter().count(), 1);
+        let transaction_id = get_transaction_id(project_id, drawdown_id, expenditure_id);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Submitted);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().total_amount, 10000);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Submitted);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().eb5_drawdown_status, Some(DrawdownStatus::Submitted));
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            None,
+            None,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Approved);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Approved);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let bank_documents = make_documents(1);
+        assert_ok!(FundAdmin::bank_confirming_documents(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            Some(bank_documents.clone()),
+            CUDAction::Create,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).unwrap().status, TransactionStatus::Confirmed);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 1);
+
+        let transaction_data = make_transaction(
+            Some(expenditure_id),
+            None,
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_drawdown(
+            RuntimeOrigin::signed(1),
+            project_id,
+            drawdown_id,
+            transaction_data,
+        ));
+
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByDrawdown::<Test>::get(project_id, drawdown_id).len(), 0);
+        assert_eq!(DrawdownsInfo::<Test>::get(drawdown_id).unwrap().status, DrawdownStatus::Confirmed);
+        assert_eq!(TransactionsInfo::<Test>::get(transaction_id).is_none(), true);
+    });
+}
+
+// E R R O R    R E C O V E R Y   R E V E N U E S
+// =================================================================================================
+#[test]
+fn an_administrators_updates_a_transaction_for_an_approved_revenue_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
         let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
-        assert_eq!(ProjectsInfo::<Test>::get(project_id).unwrap().title, make_field_name("project_imagwerwerwerwerwrwerwerbhpkwbupwkucfweklñcjwelfjwelfjwlefhwelfhwelfj.jpeg"));
-        assert_eq!(ExpendituresInfo::<Test>::iter().count(), ExpendituresByProject::<Test>::get(project_id).len());
-        let get_expenditure_ids: Vec<[u8; 32]> = ExpendituresByProject::<Test>::get(project_id).iter().cloned().collect();
-        for i in get_expenditure_ids {
-            assert_eq!(ExpendituresInfo::<Test>::get(i).unwrap().project_id, project_id);
-        }
 
-        assert_eq!(DrawdownsInfo::<Test>::iter().count(), DrawdownsByProject::<Test>::get(project_id).len());
-        let get_drawdown_ids: Vec<[u8; 32]> = DrawdownsByProject::<Test>::get(project_id).iter().cloned().collect();
-        for i in get_drawdown_ids {
-            assert_eq!(DrawdownsInfo::<Test>::get(i).unwrap().project_id, project_id);
-        }
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
 
-        assert_eq!(RevenuesInfo::<Test>::iter().count(), RevenuesByProject::<Test>::get(project_id).len());
-        let get_revenue_ids: Vec<[u8; 32]> = RevenuesByProject::<Test>::get(project_id).iter().cloned().collect();
-        for i in get_revenue_ids {
-            assert_eq!(RevenuesInfo::<Test>::get(i).unwrap().project_id, project_id);
-        }
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Submitted);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().total_amount, 10000);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Submitted);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Approved);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+
+        let new_total_amount = 200000u64;
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(new_total_amount),
+            CUDAction::Update,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+            revenue_transaction_data,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Approved);
+    });
+}
+
+#[test]
+fn an_administrators_adds_a_transaction_for_an_approved_revenue_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Submitted);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().total_amount, 10000);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Submitted);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Approved);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+        
+        let job_eligible_data = make_job_eligible(
+            Some(make_field_name("Job Eligible Test: Construction")),
+            Some(1000),
+            Some(make_field_description("16344, 45862, 57143")),
+            Some(200),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::expenditures_and_job_eligibles(
+            RuntimeOrigin::signed(1),
+            project_id,
+            None,
+            Some(job_eligible_data),
+        ));
+
+        let job_eligible_id_2 = get_job_eligible_id(project_id, make_field_name("Job Eligible Test: Construction"));
+        assert_eq!(JobEligiblesInfo::<Test>::get(job_eligible_id_2).is_some(), true);
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id_2),
+            Some(20000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::recovery_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+            revenue_transaction_data,
+        ));
+
+        let transaction_id_2 = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id_2);
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 2);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id_2).unwrap().status, RevenueTransactionStatus::Approved);
+    });
+}
+
+#[test]
+fn an_administrators_deletes_a_transaction_for_an_approved_revenue_works() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(make_default_full_project());
+        let project_id = ProjectsInfo::<Test>::iter_keys().next().unwrap();
+
+        let revenue_id = get_revenue_id(project_id, 1);
+        let job_eligible_id = get_job_eligible_id(project_id, make_field_name("Job Eligible Test"));
+
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(10000),
+            CUDAction::Create,
+            None,
+        );
+
+        assert_ok!(FundAdmin::submit_revenue(
+            RuntimeOrigin::signed(2),
+            project_id,
+            revenue_id,
+            Some(revenue_transaction_data),
+            true,
+        ));
+
+        let transaction_id = get_revenue_transaction_id(project_id, revenue_id, job_eligible_id);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Submitted);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().total_amount, 10000);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Submitted);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().amount, 10000);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+
+        assert_ok!(FundAdmin::approve_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 0);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).unwrap().status, RevenueTransactionStatus::Approved);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 1);
+        
+        let revenue_transaction_data = make_revenue_transaction(
+            Some(job_eligible_id),
+            Some(20000),
+            CUDAction::Delete,
+            Some(transaction_id),
+        );
+
+        assert_ok!(FundAdmin::recovery_revenue(
+            RuntimeOrigin::signed(1),
+            project_id,
+            revenue_id,
+            revenue_transaction_data,
+        ));
+
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().recovery_record.len(), 1);
+        assert_eq!(TransactionsByRevenue::<Test>::get(project_id, revenue_id).len(), 0);
+        assert_eq!(RevenuesInfo::<Test>::get(revenue_id).unwrap().status, RevenueStatus::Approved);
+        assert_eq!(RevenueTransactionsInfo::<Test>::get(transaction_id).is_none(), true);
     });
 }
