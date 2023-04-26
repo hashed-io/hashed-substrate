@@ -697,7 +697,7 @@
 		},
 		<span class="attr">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
 		</span><span class="prelude-val">Some</span>(Subcommand::TryRuntime(cmd)) =&gt; {
-			<span class="kw">use </span>parachain_template_runtime::MILLISECS_PER_BLOCK;
+			<span class="kw">use </span>hashed_parachain_runtime::MILLISECS_PER_BLOCK;
 			<span class="kw">use </span>sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
 			<span class="kw">use </span>try_runtime_cli::block_building_info::timestamp_with_aura_info;
 

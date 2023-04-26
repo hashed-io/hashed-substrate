@@ -72,14 +72,12 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Migrations to version [`2.0.0`], as denoted by the changelog.
 
 </span><span class="kw">use </span>frame_support::{
 	traits::{Get, StorageVersion},
 	weights::Weight,
 };
-<span class="kw">use </span>frame_support::sp_runtime::traits::Zero;
 
 <span class="doccomment">/// The old prefix.
 </span><span class="kw">pub const </span>OLD_PREFIX: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;Template&quot;</span>;
