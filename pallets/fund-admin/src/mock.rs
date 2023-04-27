@@ -94,6 +94,7 @@ parameter_types! {
 	pub const MaxTransactionsPerRevenue:u32 = 500;
 	pub const MaxStatusChangesPerDrawdown:u32 = 100;
 	pub const MaxStatusChangesPerRevenue:u32 = 100;
+	pub const MaxRecoveryChanges:u32 = 100;
 	pub const MinAdminBalance:u64 = 10;
 	pub const TransferAmount:u64 = 10;
 	pub const InitialAdminBalance:u64 = 1_000_000;
@@ -125,10 +126,10 @@ impl pallet_fund_admin::Config for Test {
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
 	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
+	type MaxRecoveryChanges = MaxRecoveryChanges;
 	type MinAdminBalance = MinAdminBalance;
 	type TransferAmount = TransferAmount;
 }
-
 
 impl pallet_timestamp::Config for Test {
 	type Moment = u64;
@@ -161,9 +162,9 @@ impl pallet_rbac::Config for Test {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let balance_amount = InitialAdminBalance::get();
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
-	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, balance_amount)],
-	}.assimilate_storage(&mut t).expect("assimilate_storage failed");
+	pallet_balances::GenesisConfig::<Test> { balances: vec![(1, balance_amount)] }
+		.assimilate_storage(&mut t)
+		.expect("assimilate_storage failed");
 	let mut t: sp_io::TestExternalities = t.into();
 	t.execute_with(|| FundAdmin::do_initial_setup().expect("Error on configuring initial setup"));
 	t

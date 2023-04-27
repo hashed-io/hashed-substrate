@@ -17,6 +17,15 @@ serde = { version = "1.0.152", features = ["derive"] }
 jsonrpsee = { version = "0.16.2", features = ["server"] }
 hex-literal = "0.3.4"
 # Local
+futures = { version = "0.3.21", features = ["thread-pool"] }
+bs58 = "0.4.0"
+sc-keystore = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+sp-inherents = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+sp-keyring = { version = "7.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+frame-system = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+pallet-transaction-payment = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+sc-rpc-api = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.38", default-features = false }
+
 hashed-parachain-runtime = { path = "../parachain-runtime" }
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38" }
@@ -73,11 +82,11 @@ substrate-build-script-utils = { git = "https://github.com/paritytech/substrate"
 [features]
 default = []
 runtime-benchmarks = [
-	"try-runtime-cli/try-runtime",
+	# "try-runtime-cli/try-runtime",
 	"hashed-parachain-runtime/runtime-benchmarks",
 	"polkadot-cli/runtime-benchmarks",
 ]
 try-runtime = [
+	"hashed-parachain-runtime/try-runtime",
 	"try-runtime-cli/try-runtime",
-	"hashed-parachain-runtime/try-runtime"
 ]

@@ -62,6 +62,7 @@ pub type TransactionsFeedback<T> = BoundedVec<(
 pub type DrawdownId = [u8; 32];
 pub type DrawdownNumber = u32;
 pub type DrawdownStatusChanges<T> = BoundedVec<(DrawdownStatus, UpdatedDate),  <T as Config>::MaxStatusChangesPerDrawdown>;
+pub type RecoveryRecord<T> = BoundedVec<(AccountIdOf<T>, UpdatedDate), <T as Config>::MaxRecoveryChanges>;
 
 // Budget expenditures
 pub type ExpenditureId = [u8; 32];
@@ -200,6 +201,7 @@ pub struct DrawdownData<T: Config> {
     pub description: Option<FieldDescription>,
     pub feedback: Option<FieldDescription>,
     pub status_changes: DrawdownStatusChanges<T>,
+    pub recovery_record: RecoveryRecord<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
@@ -281,6 +283,7 @@ pub struct RevenueData<T: Config> {
     pub total_amount: RevenueAmount,
     pub status: RevenueStatus,
     pub status_changes: RevenueStatusChanges<T>,
+    pub recovery_record: RecoveryRecord<T>,
     pub created_date: CreatedDate,
     pub closed_date: CloseDate,
 }
@@ -397,6 +400,11 @@ pub enum ProxyPermission {
     RejectRevenue, // reject_revenue: admin
     BankConfirming, // bank_confirming: admin
     CancelDrawdownSubmission, // cancel_drawdown_submission: builder
+    RecoveryDrawdown, // recovery_drawdown: admin
+    RecoveryRevenue, // recovery_revenue: admin
+    RecoveryTransaction, // recovery_drawdown_transaction: admin
+    RecoveryRevenueTransaction, // recovery_revenue_transaction: admin
+    BulkUploadTransaction, // bulk_upload_transaction: admin
 }
 
 impl ProxyPermission {
@@ -422,6 +430,11 @@ impl ProxyPermission {
             Self::RejectRevenue => "RejectRevenue".as_bytes().to_vec(),
             Self::BankConfirming => "BankConfirming".as_bytes().to_vec(),
             Self::CancelDrawdownSubmission => "CancelDrawdownSubmission".as_bytes().to_vec(),
+            Self::RecoveryDrawdown => "RecoveryDrawdown".as_bytes().to_vec(),
+            Self::RecoveryRevenue => "RecoveryRevenue".as_bytes().to_vec(),
+            Self::RecoveryTransaction => "RecoveryTransaction".as_bytes().to_vec(),
+            Self::RecoveryRevenueTransaction => "RecoveryRevenueTransaction".as_bytes().to_vec(),
+            Self::BulkUploadTransaction => "BulkUploadTransaction".as_bytes().to_vec(),
         }
     }
 
@@ -452,6 +465,11 @@ impl ProxyPermission {
             RejectRevenue.to_vec(),
             BankConfirming.to_vec(),
             CancelDrawdownSubmission.to_vec(),
+            RecoveryDrawdown.to_vec(),
+            RecoveryRevenue.to_vec(),
+            RecoveryTransaction.to_vec(),
+            RecoveryRevenueTransaction.to_vec(),
+            BulkUploadTransaction.to_vec(),
         ].to_vec()
     }
 

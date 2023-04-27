@@ -70,6 +70,9 @@ use pallet_mapped_assets::DefaultCallback;
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
 
+/// Import the template pallet.
+pub use pallet_template;
+
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
@@ -122,6 +125,14 @@ pub type UncheckedExtrinsic =
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra>;
 
+/// All migrations that will run on the next runtime upgrade.
+///
+/// Should be cleared after every release.
+/// Example: "pallet_template::migration::v1::MigrateToV1<Runtime>"
+pub type Migrations = (
+	// migrations
+);
+
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,
@@ -129,6 +140,7 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	Migrations,
 >;
 
 pub type RootOrThreeFifthsOfCouncil = EitherOfDiverse<
@@ -758,11 +770,11 @@ impl pallet_whitelist::Config for Runtime {
 
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
-	pub const PSBTMaxLen: u32  = 2048;
-	pub const MaxVaultsPerUser: u32 = 10;
+	pub const PSBTMaxLen: u32  = 4096;
+	pub const MaxVaultsPerUser: u32 = 100;
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
-	pub const OutputDescriptorMaxLen: u32 = 2048;
+	pub const OutputDescriptorMaxLen: u32 = 4096;
 	pub const MaxProposalsPerVault: u32 = 100;
 }
 
@@ -1076,6 +1088,69 @@ impl pallet_rbac::Config for Runtime {
 	type MaxUsersPerRole = MaxUsersPerRole;
 }
 
+parameter_types! {
+	pub const MaxDocuments:u32 = 100;
+	pub const MaxProjectsPerUser:u32 = 10_000;
+	pub const MaxUserPerProject:u32 = 100_000; // should be the sum of the max number of builders, investors, issuers, regional centers
+	pub const MaxBuildersPerProject:u32 = 25_00;
+	pub const MaxInvestorsPerProject:u32 = 25_000;
+	pub const MaxIssuersPerProject:u32 = 25_000;
+	pub const MaxRegionalCenterPerProject:u32 = 25_000;
+	pub const MaxProjectsPerInvestor:u32 = 1;
+	pub const MaxDrawdownsPerProject:u32 = 10_000;
+	pub const MaxTransactionsPerDrawdown:u32 = 1_000;
+	pub const MaxRegistrationsAtTime:u32 = 100;
+	pub const MaxExpendituresPerProject:u32 = 100_000;
+	pub const MaxBanksPerProject:u32 = 10_000;
+	pub const MaxJobEligiblesByProject:u32 = 100_000;
+	pub const MaxRevenuesByProject:u32 = 100_000;
+	pub const MaxTransactionsPerRevenue:u32 = 1_000;
+	pub const MaxStatusChangesPerDrawdown:u32 = 1_000;
+	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
+	pub const MinAdminBalance: Balance = 10_000_000_000_000;
+	pub const TransferAmount: Balance = 10_000_000_000_000;
+	pub const MaxRecoveryChanges:u32 = 1_000;
+}
+
+impl pallet_fund_admin::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Timestamp = Timestamp;
+	type Moment = Moment;
+	type Rbac = RBAC;
+	type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type Currency = Balances;
+
+	type MaxDocuments = MaxDocuments;
+	type MaxProjectsPerUser = MaxProjectsPerUser;
+	type MaxUserPerProject = MaxUserPerProject;
+	type MaxBuildersPerProject = MaxBuildersPerProject;
+	type MaxInvestorsPerProject = MaxInvestorsPerProject;
+	type MaxIssuersPerProject = MaxIssuersPerProject;
+	type MaxRegionalCenterPerProject = MaxRegionalCenterPerProject;
+	type MaxDrawdownsPerProject = MaxDrawdownsPerProject;
+	type MaxTransactionsPerDrawdown = MaxTransactionsPerDrawdown;
+	type MaxRegistrationsAtTime = MaxRegistrationsAtTime;
+	type MaxExpendituresPerProject = MaxExpendituresPerProject;
+	type MaxProjectsPerInvestor = MaxProjectsPerInvestor;
+	type MaxBanksPerProject = MaxBanksPerProject;
+	type MaxJobEligiblesByProject = MaxJobEligiblesByProject;
+	type MaxRevenuesByProject = MaxRevenuesByProject;
+	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
+	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
+	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
+	type MaxRecoveryChanges = MaxRecoveryChanges;
+	type MinAdminBalance = MinAdminBalance;
+	type TransferAmount = TransferAmount;
+}
+
+/// Configure the pallet-template in pallets/template.
+impl pallet_template::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1140,7 +1215,9 @@ construct_runtime!(
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>}  = 154,
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>}  = 155,
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
-		MappedAssets: pallet_mapped_assets::{Pallet, Call, Storage, Event<T>} = 157,
+		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>}  = 157,
+		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>} = 158,
+		MappedAssets: pallet_mapped_assets::{Pallet, Call, Storage, Event<T>} = 159,
 	}
 );
 
@@ -1298,14 +1375,23 @@ impl_runtime_apis! {
 
 	#[cfg(feature = "try-runtime")]
 	impl frame_try_runtime::TryRuntime<Block> for Runtime {
-		fn on_runtime_upgrade() -> (Weight, Weight) {
-			log::info!("try-runtime::on_runtime_upgrade parachain-template.");
-			let weight = Executive::try_runtime_upgrade().unwrap();
+		fn on_runtime_upgrade(checks: frame_try_runtime::UpgradeCheckSelect) -> (Weight, Weight) {
+			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
+			// have a backtrace here. If any of the pre/post migration checks fail, we shall stop
+			// right here and right now.
+			let weight = Executive::try_runtime_upgrade(checks).unwrap();
 			(weight, RuntimeBlockWeights::get().max_block)
 		}
 
-		fn execute_block_no_check(block: Block) -> Weight {
-			Executive::execute_block_no_check(block)
+		fn execute_block(
+			block: Block,
+			state_root_check: bool,
+			signature_check: bool,
+			select: frame_try_runtime::TryStateSelect
+		) -> Weight {
+			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
+			// have a backtrace here.
+			Executive::try_execute_block(block, state_root_check, signature_check, select).expect("execute-block failed")
 		}
 	}
 
