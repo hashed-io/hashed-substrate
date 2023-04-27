@@ -21,7 +21,6 @@ pub mod pallet {
 	use frame_system::RawOrigin;
 	use pallet_gated_marketplace::types::*;
 	use sp_runtime::Permill;
-	use sp_runtime::traits::StaticLookup;
 	use pallet_fruniques::types::CollectionDescription;
 	use pallet_fruniques::types::FruniqueRole;
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -109,6 +108,13 @@ pub mod pallet {
 		<T as pallet_uniques::Config>::CollectionId, // Afloat's frunique collection id
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn asset_id)]
+	pub(super) type AfloatAssetId<T: Config> = StorageValue<
+		_,
+		<T as pallet_mapped_assets::Config>::AssetId, // Afloat's frunique collection id
+	>;
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> 
 	where
@@ -125,15 +131,9 @@ pub mod pallet {
 	{
 			ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
-			let min_balance: T::Balance = T::Balance::from(1u32);
-			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
+			AfloatAssetId::<T>::put(asset_id.clone());
 
-			pallet_mapped_assets::Pallet::<T>::create(
-				origin.clone(),
-				asset_id,
-				T::Lookup::unlookup(creator.clone()),
-				min_balance,
-			)?; 
+			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
 
 			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
 			
@@ -141,21 +141,20 @@ pub mod pallet {
 
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
-			
-
 			let label: BoundedVec<u8, T::LabelMaxLen> =
 				BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
 			let marketplace: Marketplace<T> = Marketplace {
 				label,
 				buy_fee: Permill::from_percent(2),
 				sell_fee: Permill::from_percent(4),
+				asset_id,
 				creator: creator.clone(),
 			};
 			let marketplace_id = marketplace.clone().using_encoded(blake2_256);
 
 			AfloatMarketPlaceId::<T>::put(marketplace_id);
 			Self::add_to_afloat_collection(admin.clone(),FruniqueRole::Admin)?;
-			pallet_gated_marketplace::Pallet::do_create_marketplace(creator.clone(), admin.clone(), marketplace)?;
+			pallet_gated_marketplace::Pallet::do_create_marketplace(RawOrigin::Signed(creator.clone()).into(), admin.clone(), marketplace)?;
 
 			Self::do_initial_setup(creator, admin)?;
 

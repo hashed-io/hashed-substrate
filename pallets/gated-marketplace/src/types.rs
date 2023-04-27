@@ -25,6 +25,7 @@ pub struct Marketplace<T: Config> {
 	pub label: BoundedVec<u8, T::LabelMaxLen>,
 	pub buy_fee: Permill,
 	pub sell_fee: Permill,
+	pub asset_id: T::AssetId,
 	pub creator: T::AccountId,
 }
 
@@ -265,8 +266,8 @@ pub struct OfferData<T: Config> {
 	pub item_id: T::ItemId,
 	pub percentage: Permill,
 	pub creator: T::AccountId,
-	pub price: BalanceOf<T>,
-	pub fee: BalanceOf<T>,
+	pub price: T::Balance,
+	pub fee: T::Balance,
 	pub status: OfferStatus,
 	pub creation_date: u64,
 	pub offer_type: OfferType,
