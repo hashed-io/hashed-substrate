@@ -1780,11 +1780,7 @@ pub mod pallet {
 			let pallet_id = Self::pallet_id();
 
 			let new_admin_permissions: Vec<Vec<u8>> = vec![
-				ProxyPermission::RecoveryDrawdown.to_vec(),
-				ProxyPermission::RecoveryRevenue.to_vec(),
-				ProxyPermission::RecoveryTransaction.to_vec(),
-				ProxyPermission::RecoveryRevenueTransaction.to_vec(),
-				ProxyPermission::BulkUploadTransaction.to_vec(),
+				ProxyPermission::RevenueTransaction.to_vec(),
 			];
 
 			T::Rbac::create_and_set_permissions(
