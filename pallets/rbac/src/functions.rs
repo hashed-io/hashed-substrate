@@ -422,6 +422,10 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T>{
         v.using_encoded(blake2_256)
     }
 
+    fn get_roles_by_user(user: T::AccountId, pallet: IdOrVec, scope_id: &ScopeId) -> Vec<RoleId> {
+        <RolesByUser<T>>::get((user, pallet.to_id(), scope_id)).into()
+    }
+
     type MaxRolesPerPallet = T::MaxRolesPerPallet;
 
     type MaxPermissionsPerRole = T::MaxPermissionsPerRole;
@@ -443,4 +447,5 @@ impl<T: Config> Pallet<T>{
         filtered_vec.dedup();
         vec.len() == filtered_vec.len()
     }
+
 }

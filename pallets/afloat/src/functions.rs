@@ -10,7 +10,11 @@ use frame_support::pallet_prelude::*;
 // use frame_support::traits::OriginTrait;
 use pallet_rbac::types::IdOrVec;
 use pallet_rbac::types::RoleBasedAccessControl;
+use pallet_rbac::types::RoleId;
 use scale_info::prelude::vec; 
+use frame_support::sp_io::hashing::blake2_256;
+use sp_runtime::sp_std::str;
+use sp_runtime::sp_std::vec::Vec;
 
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
@@ -223,13 +227,13 @@ impl<T: Config> Pallet<T> {
 		Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
 		Self::remove_from_afloat_marketplace(user_address.clone())?;
 			
-		let role = if Self::is_cpa(user_address.clone()) {
-			AfloatRole::CPA
-		} else {
-			AfloatRole::BuyerOrSeller
-		};
-
-		Self::remove_role_from_user(user_address.clone(), role)?;
+		let user_roles = Self::get_all_roles_for_user(user_address.clone());
+	
+		if !user_roles.is_empty() {
+			for role in user_roles {
+				Self::remove_role_from_user(user_address.clone(), role)?;
+			}
+		}
 		<UserInfo<T>>::remove(user_address.clone());
 		Self::deposit_event(Event::UserDeleted(user_address.clone()));
 		Ok(())
@@ -356,23 +360,50 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	fn role_id_to_afloat_role(role_id: RoleId) -> Option<AfloatRole> {
+		AfloatRole::enum_to_vec()
+			.iter()
+			.find(|role_bytes| role_bytes.using_encoded(blake2_256) == role_id)
+			.map(|role_bytes| {
+				let role_str = str::from_utf8(role_bytes).expect("Role bytes should be valid UTF-8");
+
+				match role_str {
+					"Owner" => AfloatRole::Owner,
+					"Admin" => AfloatRole::Admin,
+					"BuyerOrSeller" => AfloatRole::BuyerOrSeller,
+					"CPA" => AfloatRole::CPA,
+					_ => panic!("Unexpected role string"),
+				}
+			})
+	}
+
+	fn get_all_roles_for_user(account_id: T::AccountId) -> Vec<AfloatRole> {
+		let pallet_id = Self::pallet_id();
+		let scope_id = AfloatMarketPlaceId::<T>::get().unwrap();
+	
+		let roles_storage = <T as pallet::Config>::Rbac::get_roles_by_user(account_id.clone(), pallet_id, &scope_id);
+	
+		roles_storage.into_iter().filter_map(Self::role_id_to_afloat_role).collect()
+	}
+
 	pub fn do_delete_all_users() -> DispatchResult {
 		UserInfo::<T>::iter_keys().try_for_each(|account_id| {
 			if !Self::is_admin_or_owner(account_id.clone()) {
+				let user_roles = Self::get_all_roles_for_user(account_id.clone());
+	
+				if !user_roles.is_empty() {
+					for role in user_roles {
+						Self::remove_role_from_user(account_id.clone(), role)?;
+					}
+				}
+	
 				Self::remove_from_afloat_collection(account_id.clone(), FruniqueRole::Collaborator)?;
 				Self::remove_from_afloat_marketplace(account_id.clone())?;
-	
-				let role = if Self::is_cpa(account_id.clone()) {
-					AfloatRole::CPA
-				} else {
-					AfloatRole::BuyerOrSeller
-				};
-	
-				Self::remove_role_from_user(account_id.clone(), role)?;
 				UserInfo::<T>::remove(account_id);
 			}
 			Ok::<(), DispatchError>(())
 		})?;
 		Ok(())
 	}
+	
 }

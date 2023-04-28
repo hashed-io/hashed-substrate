@@ -67,4 +67,5 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn get_role_users_len(pallet: IdOrVec, scope_id:&ScopeId, role_id: &RoleId) -> usize;
     fn to_id(v: Vec<u8>)->[u8;32];
 	fn does_user_have_any_role_in_scope(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId)-> bool;
+    fn get_roles_by_user(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId)-> Vec<RoleId>;
 }

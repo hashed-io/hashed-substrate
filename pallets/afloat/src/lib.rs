@@ -81,6 +81,8 @@ pub mod pallet {
 		Unauthorized,
 		// Pallet has not ben initialized yet
 		NotInitialized,
+		// Failed to remove afloat role
+		FailedToRemoveAfloatRole,
 	}
 
 	#[pallet::storage]
