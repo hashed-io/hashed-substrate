@@ -357,6 +357,29 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
+	fn do_revoke_permission_from_role(
+		pallet: IdOrVec,
+		role_id: RoleId,
+		permission_id: PermissionId,
+	) -> DispatchResult {
+		Self::permission_exists(pallet.clone(), &permission_id)?;
+		Self::is_role_linked_to_pallet(pallet.clone(), &role_id)?;
+		Self::is_permission_linked_to_role(pallet.clone(), &role_id, &permission_id)?;
+		<PermissionsByRole<T>>::try_mutate::<_, _, _, DispatchError, _>(
+			pallet.to_id(),
+			role_id,
+			|role_permissions| {
+				let p_index = role_permissions
+					.iter()
+					.position(|&p| p == permission_id)
+					.ok_or(Error::<T>::PermissionNotLinkedToRole)?;
+				role_permissions.remove(p_index);
+				Ok(())
+			},
+		)?;
+		Ok(())
+	}
+
 	/*---- Helper functions ----*/
 
 	/// Authorization function

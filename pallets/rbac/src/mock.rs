@@ -1,13 +1,12 @@
 use crate as pallet_rbac;
-use frame_support::{parameter_types};
+use frame_support::parameter_types;
 use frame_system as system;
+use frame_system::EnsureRoot;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use frame_system::EnsureRoot;
-use frame_support::pallet_prelude::EnsureOrigin;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -73,8 +72,7 @@ impl pallet_rbac::Config for Test {
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
 	type MaxRolesPerUser = MaxRolesPerUser;
 	type MaxUsersPerRole = MaxUsersPerRole;
-	type RemoveOrigin  = EnsureRoot<Self::AccountId>;
-
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 }
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {

@@ -199,6 +199,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_create_and_set_roles(
 			origin: OriginFor<T>,
@@ -213,6 +214,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_remove_role_from_user(
 			origin: OriginFor<T>,
@@ -230,6 +232,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_create_and_set_permissions(
 			origin: OriginFor<T>,
@@ -245,6 +248,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		#[pallet::call_index(3)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn tx_assign_role_to_user(
 			origin: OriginFor<T>,
@@ -258,6 +262,22 @@ pub mod pallet {
 				Error::<T>::NotAuthorized
 			);
 			Self::assign_role_to_user(user, pallet, &scope_id, role_id)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(4)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn revoke_permission_from_role(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			role_id: RoleId,
+			permission_id: PermissionId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::do_revoke_permission_from_role(pallet, role_id, permission_id)?;
 			Ok(())
 		}
 	}
