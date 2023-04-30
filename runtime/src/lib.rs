@@ -25,16 +25,19 @@ use sp_version::RuntimeVersion;
 pub mod constants;
 use constants::*;
 use frame_system::{EnsureRoot, EnsureSigned};
+use pallet_mapped_assets::DefaultCallback;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		AsEnsureOriginWithArg, ConstU128, EitherOfDiverse, KeyOwnerProofSystem, OnRuntimeUpgrade,
-		Randomness, StorageInfo,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, ConstU64, ConstU8, EitherOfDiverse,
+		KeyOwnerProofSystem, Randomness, StorageInfo,
 	},
 	weights::{
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+		constants::{
+			BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
+		},
 		ConstantMultiplier, IdentityFee, Weight,
 	},
 	PalletId, StorageValue,
@@ -75,22 +78,6 @@ pub type Hash = sp_core::H256;
 pub type Moment = u64;
 
 /// The hooks we want to run in Maintenance Mode
-pub struct MaintenanceHooks;
-
-impl OnRuntimeUpgrade for MaintenanceHooks {
-	fn on_runtime_upgrade() -> Weight {
-		AllPalletsWithSystem::on_runtime_upgrade()
-	}
-	#[cfg(feature = "try-runtime")]
-	fn pre_upgrade() -> Result<Vec<u8>, &'static str> {
-		AllPalletsWithSystem::pre_upgrade()
-	}
-
-	#[cfg(feature = "try-runtime")]
-	fn post_upgrade(state: Vec<u8>) -> Result<(), &'static str> {
-		AllPalletsWithSystem::post_upgrade(state)
-	}
-}
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -128,7 +115,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 146,
+	spec_version: 153,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -166,7 +153,7 @@ parameter_types! {
 	/// We allow for 2 seconds of compute with a 6 second average block time.
 	pub BlockWeights: frame_system::limits::BlockWeights =
 		frame_system::limits::BlockWeights::with_sensible_defaults(
-			(2u64 * WEIGHT_PER_SECOND).set_proof_size(u64::MAX),
+			Weight::from_parts(2u64 * WEIGHT_REF_TIME_PER_SECOND, u64::MAX),
 			NORMAL_DISPATCH_RATIO,
 		);
 	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
@@ -232,6 +219,7 @@ impl pallet_randomness_collective_flip::Config for Runtime {}
 
 parameter_types! {
 	pub const MaxAuthorities: u32 = 32;
+	pub const MaxSetIdSessionEntries: u32 = 0;
 }
 
 impl pallet_aura::Config for Runtime {
@@ -257,6 +245,7 @@ impl pallet_grandpa::Config for Runtime {
 
 	type WeightInfo = ();
 	type MaxAuthorities = MaxAuthorities;
+	type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
 parameter_types! {
@@ -519,6 +508,7 @@ parameter_types! {
 	pub const StringLimit: u32 = 50;
 	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
 	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+	pub const RemoveItemsLimit: u32 = 1000;
 }
 
 impl pallet_assets::Config for Runtime {
@@ -537,6 +527,9 @@ impl pallet_assets::Config for Runtime {
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = ();
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = ();
 }
 
 parameter_types! {
@@ -601,6 +594,7 @@ parameter_types! {
 	pub const MaxStatusChangesPerRevenue:u32 = 1_000;
 	pub const MinAdminBalance: Balance = 10_000_000_000_000;
 	pub const TransferAmount: Balance = 10_000_000_000_000;
+	pub const MaxRecoveryChanges:u32 = 1_000;
 }
 
 impl pallet_fund_admin::Config for Runtime {
@@ -632,6 +626,7 @@ impl pallet_fund_admin::Config for Runtime {
 	type MaxTransactionsPerRevenue = MaxTransactionsPerRevenue;
 	type MaxStatusChangesPerDrawdown = MaxStatusChangesPerDrawdown;
 	type MaxStatusChangesPerRevenue = MaxStatusChangesPerRevenue;
+	type MaxRecoveryChanges = MaxRecoveryChanges;
 	type MinAdminBalance = MinAdminBalance;
 	type TransferAmount = TransferAmount;
 }
@@ -668,14 +663,15 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type Moment = Moment;
 	type Rbac = RBAC;
 }
+
 parameter_types! {
 	pub const XPubLen: u32 = XPUB_LEN;
-	pub const PSBTMaxLen: u32  = 2048;
-	pub const MaxVaultsPerUser: u32 = 10;
+	pub const PSBTMaxLen: u32  = 4096;
+	pub const MaxVaultsPerUser: u32 = 100;
 	pub const MaxCosignersPerVault: u32 = 7;
 	pub const VaultDescriptionMaxLen: u32 = 200;
-	pub const OutputDescriptorMaxLen: u32 = 2048;
-	pub const MaxProposalsPerVault: u32 = 5;
+	pub const OutputDescriptorMaxLen: u32 = 4096;
+	pub const MaxProposalsPerVault: u32 = 100;
 }
 
 impl pallet_bitcoin_vaults::Config for Runtime {
@@ -702,6 +698,9 @@ parameter_types! {
 	pub const DocNameMaxLen: u32 = 50;
 	pub const DocDescMinLen: u32 = 5;
 	pub const DocDescMaxLen: u32 = 100;
+	pub const GroupNameMinLen: u32 = 3;
+	pub const GroupNameMaxLen: u32 = 50;
+	pub const MaxMemberGroups: u32 = 100;
 }
 
 impl pallet_confidential_docs::Config for Runtime {
@@ -717,7 +716,38 @@ impl pallet_confidential_docs::Config for Runtime {
 	type DocNameMaxLen = DocNameMaxLen;
 	type DocDescMinLen = DocDescMinLen;
 	type DocDescMaxLen = DocDescMaxLen;
+	type GroupNameMinLen = GroupNameMinLen;
+	type GroupNameMaxLen = GroupNameMaxLen;
+	type MaxMemberGroups = MaxMemberGroups;
 }
+
+parameter_types! {
+	pub const MaxReserves: u32 = 200;
+}
+
+impl pallet_mapped_assets::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = u128;
+	type AssetId = u32;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = ();
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = u32;
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = DefaultCallback;
+}
+
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
@@ -728,6 +758,7 @@ parameter_types! {
 	pub const MaxRolesPerUser: u32 = 10;
 	pub const MaxUsersPerRole: u32 = 2500;
 }
+
 impl pallet_rbac::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RemoveOrigin = EitherOfDiverse<
@@ -741,6 +772,14 @@ impl pallet_rbac::Config for Runtime {
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
 	type MaxRolesPerUser = MaxRolesPerUser;
 	type MaxUsersPerRole = MaxUsersPerRole;
+}
+
+impl pallet_afloat::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type TimeProvider = Timestamp;
+	type RemoveOrigin = EnsureRoot<AccountId>;
+	type Rbac = RBAC;
 }
 
 parameter_types! {
@@ -838,6 +877,8 @@ construct_runtime!(
 		RBAC: pallet_rbac,
 		ConfidentialDocs: pallet_confidential_docs,
 		FundAdmin: pallet_fund_admin,
+		Afloat: pallet_afloat,
+		MappedAssets: pallet_mapped_assets,
 	}
 );
 
@@ -863,6 +904,14 @@ pub type UncheckedExtrinsic =
 	generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 /// The payload being signed in transactions.
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
+
+/// All migrations that will run on the next runtime upgrade.
+///
+/// Should be cleared after every release.
+pub type Migrations = (
+	pallet_fund_admin::migration::v1::MigrateToV1<Runtime>,
+);
+
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,
@@ -870,6 +919,7 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	Migrations,
 >;
 
 #[cfg(feature = "runtime-benchmarks")]
@@ -1018,6 +1068,12 @@ impl_runtime_apis! {
 		) -> pallet_transaction_payment::FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
 		}
+		fn query_weight_to_fee(weight: Weight) -> Balance {
+			TransactionPayment::weight_to_fee(weight)
+		}
+		fn query_length_to_fee(length: u32) -> Balance {
+			TransactionPayment::length_to_fee(length)
+		}
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
@@ -1078,6 +1134,34 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_template, TemplateModule);
 
 			Ok(batches)
+		}
+	}
+
+	// First implementation of try-runtime
+	#[cfg(feature = "try-runtime")]
+	impl frame_try_runtime::TryRuntime<Block> for Runtime {
+		fn on_runtime_upgrade(checks: frame_try_runtime::UpgradeCheckSelect) -> (Weight, Weight) {
+			log::info!("try-runtime::on_runtime_upgrade.");
+			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
+			// have a backtrace here. If any of the pre/post migration checks fail, we shall stop
+			// right here and right now.
+			// let weight = Executive::try_runtime_upgrade(checks).unwrap();
+			let weight = Executive::try_runtime_upgrade(checks).map_err(|err|{
+				log::info!("try-runtime::on_runtime_upgrade failed with: {:?}", err);
+				err
+			}).unwrap();
+			(weight, BlockWeights::get().max_block)
+		}
+
+		fn execute_block(
+			block: Block,
+			state_root_check: bool,
+			signature_check: bool,
+			select: frame_try_runtime::TryStateSelect
+		) -> Weight {
+			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
+			// have a backtrace here.
+			Executive::try_execute_block(block, state_root_check, signature_check, select).expect("execute-block failed")
 		}
 	}
 }

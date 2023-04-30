@@ -1001,8 +1001,7 @@ fn save_proof_psbt_should_work() {
 		assert_ok!(BitcoinVaults::save_proof_psbt(
 			RuntimeOrigin::signed(test_pub(1)),
 			vault_id,
-			dummy_psbt(),
-			false
+			dummy_psbt()
 		));
 	});
 }
@@ -1031,7 +1030,6 @@ fn save_nonexistent_proof_psbt_should_not_work() {
 				RuntimeOrigin::signed(test_pub(1)),
 				vault_id,
 				dummy_psbt(),
-				false
 			),
 			Error::<Test>::ProofNotFound
 		);
@@ -1061,7 +1059,6 @@ fn save_proof_psbt_invalid_vault_should_not_work() {
 				RuntimeOrigin::signed(test_pub(1)),
 				vault_id,
 				dummy_psbt(),
-				false
 			),
 			Error::<Test>::InvalidVault
 		);
@@ -1080,8 +1077,7 @@ fn save_proof_psbt_nonexistent_vault_should_not_work() {
 			BitcoinVaults::save_proof_psbt(
 				RuntimeOrigin::signed(test_pub(1)),
 				vault_id,
-				dummy_psbt(),
-				false
+				dummy_psbt()
 			),
 			Error::<Test>::VaultNotFound
 		);
@@ -1117,15 +1113,13 @@ fn save_twice_proof_psbt_should_not_work() {
 			RuntimeOrigin::signed(test_pub(1)),
 			vault_id,
 			dummy_psbt(),
-			false
 		));
 
 		assert_noop!(
 			BitcoinVaults::save_proof_psbt(
 				RuntimeOrigin::signed(test_pub(1)),
 				vault_id,
-				dummy_psbt(),
-				false
+				dummy_psbt()
 			),
 			Error::<Test>::AlreadySigned
 		);
@@ -1161,15 +1155,13 @@ fn ready_to_finalize_proof_psbt_should_work() {
 		assert_ok!(BitcoinVaults::save_proof_psbt(
 			RuntimeOrigin::signed(test_pub(1)),
 			vault_id,
-			dummy_psbt(),
-			false
+			dummy_psbt()
 		));
 
 		assert_ok!(BitcoinVaults::save_proof_psbt(
 			RuntimeOrigin::signed(test_pub(2)),
 			vault_id,
-			dummy_psbt(),
-			false
+			dummy_psbt()
 		));
 		assert!(ProofOfReserves::<Test>::get(vault_id).unwrap().status.is_ready_to_finalize())
 	});
@@ -1204,19 +1196,149 @@ fn finalize_proof_psbt_should_work() {
 		assert_ok!(BitcoinVaults::save_proof_psbt(
 			RuntimeOrigin::signed(test_pub(1)),
 			vault_id,
-			dummy_psbt(),
-			false
+			dummy_psbt()
 		));
 
 		assert_ok!(BitcoinVaults::save_proof_psbt(
 			RuntimeOrigin::signed(test_pub(2)),
 			vault_id,
-			dummy_psbt(),
-			true
+			dummy_psbt()
+		));
+
+		assert_ok!(BitcoinVaults::finalize_proof(
+			RuntimeOrigin::signed(test_pub(2)),
+			vault_id,
+			dummy_psbt()
 		));
 		assert_eq!(
 			ProofOfReserves::<Test>::get(vault_id).unwrap().status,
-			ProposalStatus::Finalized
+			ProposalStatus::Broadcasted
 		)
+	});
+}
+
+#[test]
+fn finalize_proof_twice_should_not_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(1)), dummy_xpub()));
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(2)), dummy_xpub_2()));
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(BitcoinVaults::create_vault(
+			RuntimeOrigin::signed(test_pub(1)),
+			2,
+			dummy_description(),
+			true,
+			cosigners
+		));
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
+
+		assert_ok!(BitcoinVaults::create_proof(
+			RuntimeOrigin::signed(test_pub(1)),
+			vault_id,
+			dummy_description(),
+			dummy_psbt()
+		));
+
+		assert_ok!(BitcoinVaults::save_proof_psbt(
+			RuntimeOrigin::signed(test_pub(1)),
+			vault_id,
+			dummy_psbt()
+		));
+
+		assert_ok!(BitcoinVaults::save_proof_psbt(
+			RuntimeOrigin::signed(test_pub(2)),
+			vault_id,
+			dummy_psbt()
+		));
+
+		assert_ok!(BitcoinVaults::finalize_proof(
+			RuntimeOrigin::signed(test_pub(2)),
+			vault_id,
+			dummy_psbt()
+		));
+		assert_noop!(
+			BitcoinVaults::finalize_proof(
+				RuntimeOrigin::signed(test_pub(2)),
+				vault_id,
+				dummy_psbt()
+			),
+			Error::<Test>::AlreadyBroadcasted
+		);
+	});
+}
+
+#[test]
+fn finalize_incomplete_proof_should_not_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(1)), dummy_xpub()));
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(2)), dummy_xpub_2()));
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(BitcoinVaults::create_vault(
+			RuntimeOrigin::signed(test_pub(1)),
+			2,
+			dummy_description(),
+			true,
+			cosigners
+		));
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
+
+		assert_ok!(BitcoinVaults::create_proof(
+			RuntimeOrigin::signed(test_pub(1)),
+			vault_id,
+			dummy_description(),
+			dummy_psbt()
+		));
+
+		assert_ok!(BitcoinVaults::save_proof_psbt(
+			RuntimeOrigin::signed(test_pub(1)),
+			vault_id,
+			dummy_psbt()
+		));
+		assert_noop!(
+			BitcoinVaults::finalize_proof(
+				RuntimeOrigin::signed(test_pub(2)),
+				vault_id,
+				dummy_psbt()
+			),
+			Error::<Test>::NotEnoughSignatures
+		);
+	});
+}
+
+#[test]
+fn finalize_nonexistent_proof_should_not_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(1)), dummy_xpub()));
+		assert_ok!(BitcoinVaults::set_xpub(RuntimeOrigin::signed(test_pub(2)), dummy_xpub_2()));
+		// Insert a normal vault
+		let cosigners = BoundedVec::<<Test as frame_system::Config>::AccountId, MaxCosignersPerVault>::
+		try_from([ test_pub(2),].to_vec()).unwrap();
+		assert_ok!(BitcoinVaults::create_vault(
+			RuntimeOrigin::signed(test_pub(1)),
+			2,
+			dummy_description(),
+			true,
+			cosigners
+		));
+		assert!(!BitcoinVaults::vaults_by_signer(test_pub(1)).is_empty());
+		let vault_id = BitcoinVaults::vaults_by_signer(test_pub(1)).pop().unwrap();
+		make_vault_valid(vault_id);
+
+		assert_noop!(
+			BitcoinVaults::finalize_proof(
+				RuntimeOrigin::signed(test_pub(2)),
+				vault_id,
+				dummy_psbt()
+			),
+			Error::<Test>::ProofNotFound
+		);
 	});
 }

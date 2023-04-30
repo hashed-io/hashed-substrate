@@ -37,3 +37,6 @@ dist/
 md5*.json
 md5-wasm
 md5-genesis-head
+
+# Fund-admin scripts
+/pallets/fund-admin/scripts

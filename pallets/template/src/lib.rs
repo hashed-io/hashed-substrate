@@ -20,8 +20,8 @@ pub mod migrations;
 #[frame_support::pallet]
 pub mod pallet {
 
-use frame_support::pallet_prelude::*;
-use frame_system::pallet_prelude::*;
+	use frame_support::pallet_prelude::*;
+	use frame_system::pallet_prelude::*;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -45,7 +45,6 @@ use frame_system::pallet_prelude::*;
 	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
 	pub type Something<T> = StorageValue<_, u32>;
 
-
 	#[pallet::storage]
 	#[pallet::getter(fn my_bytes_val)]
 	pub type MyBytesVal<T> = StorageValue<_, MyBytes, ValueQuery>;
@@ -60,7 +59,7 @@ use frame_system::pallet_prelude::*;
 		SomethingStored(u32, T::AccountId),
 	}
 
-	pub type MyBytes = BoundedVec<u8,ConstU32<16>>;
+	pub type MyBytes = BoundedVec<u8, ConstU32<16>>;
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
@@ -78,6 +77,7 @@ use frame_system::pallet_prelude::*;
 	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
@@ -95,6 +95,7 @@ use frame_system::pallet_prelude::*;
 		}
 
 		/// An example dispatchable that may throw a custom error.
+		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
@@ -113,8 +114,12 @@ use frame_system::pallet_prelude::*;
 			}
 		}
 
+		#[pallet::call_index(2)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
-		pub fn insert_my_bytes(origin: OriginFor<T>, optional_bytes: Option<MyBytes>) -> DispatchResult {
+		pub fn insert_my_bytes(
+			origin: OriginFor<T>,
+			optional_bytes: Option<MyBytes>,
+		) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
