@@ -87,6 +87,10 @@ pub trait RoleBasedAccessControl<AccountId> {
 		role: RoleId,
 		permission: PermissionId,
 	) -> DispatchResult;
+	fn do_remove_permission_from_pallet(
+		pallet: IdOrVec,
+		permission: PermissionId,
+	) -> DispatchResult;
 	// helpers
 	fn is_authorized(
 		user: AccountId,
@@ -115,4 +119,8 @@ pub trait RoleBasedAccessControl<AccountId> {
 		pallet: IdOrVec,
 		scope_id: &ScopeId,
 	) -> bool;
+	fn get_roles_that_have_permission(
+		pallet: PalletId,
+		permission_id: &PermissionId,
+	) -> Vec<RoleId>;
 }

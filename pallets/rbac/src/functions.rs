@@ -380,6 +380,26 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
+	fn do_remove_permission_from_pallet(
+		pallet: IdOrVec,
+		permission: PermissionId,
+	) -> DispatchResult {
+		Self::permission_exists(pallet.clone(), &permission)?;
+		let pallet_id = pallet.to_id();
+		// find all the roles that have the permission
+		let affected_roles: Vec<RoleId> =
+			Self::get_roles_that_have_permission(pallet_id, &permission);
+		// remove the permission from all affected roles
+		affected_roles.iter().for_each(|role| {
+			<PermissionsByRole<T>>::mutate(pallet_id, role, |permissions| {
+				permissions.retain(|&p| p != permission)
+			})
+		});
+		// remove the permission from the pallet
+		<Permissions<T>>::remove(pallet_id, permission);
+		Ok(())
+	}
+
 	/*---- Helper functions ----*/
 
 	/// Authorization function
@@ -501,6 +521,15 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		let role_permissions = <PermissionsByRole<T>>::get(pallet.to_id(), role_id);
 		ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole);
 		Ok(())
+	}
+
+	fn get_roles_that_have_permission(
+		pallet_id: PalletId,
+		permission_id: &PermissionId,
+	) -> Vec<RoleId> {
+		<PermissionsByRole<T>>::iter_prefix(pallet_id)
+			.filter_map(|(role, permissions)| permissions.contains(permission_id).then(|| role))
+			.collect()
 	}
 
 	/// Role list length

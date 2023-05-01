@@ -280,5 +280,20 @@ pub mod pallet {
 			Self::do_revoke_permission_from_role(pallet, role_id, permission_id)?;
 			Ok(())
 		}
+
+		#[pallet::call_index(5)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn remove_permission_from_pallet(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			permission_id: PermissionId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::do_remove_permission_from_pallet(pallet, permission_id)?;
+			Ok(())
+		}
 	}
 }

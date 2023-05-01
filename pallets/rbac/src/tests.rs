@@ -75,6 +75,30 @@ fn remove_role_from_user(user: AccountId, scope_id: &ScopeId, role_id: RoleId) {
 	assert!(!role_users.contains(&user));
 }
 
+fn revoke_permission_from_role(role_id: RoleId, permission_id: PermissionId) {
+	assert_ok!(RBAC::revoke_permission_from_role(
+		RuntimeOrigin::root(),
+		pallet_name(),
+		role_id,
+		permission_id
+	));
+	let permissions = RBAC::permissions_by_role(pallet_id(), role_id);
+	assert!(!permissions.contains(&permission_id))
+}
+
+fn remove_permission_from_pallet(permission_id: PermissionId) {
+	let affected_roles = RBAC::get_roles_that_have_permission(pallet_id(), &permission_id);
+	assert_ok!(RBAC::remove_permission_from_pallet(
+		RuntimeOrigin::root(),
+		pallet_name(),
+		permission_id
+	));
+	assert!(RBAC::permissions(pallet_id(), permission_id).is_empty());
+	affected_roles.iter().for_each(|ar| {
+		assert!(!RBAC::permissions_by_role(pallet_id(), ar).contains(&permission_id))
+	});
+}
+
 fn remove_pallet_storage() {
 	assert_ok!(RBAC::remove_pallet_storage(pallet_name()));
 	assert!(RBAC::scopes(pallet_id()).is_empty());
@@ -994,15 +1018,9 @@ fn user_that_have_any_role_while_not_matching_scope_should_fail() {
 fn remove_permission_from_role_should_work() {
 	new_test_ext().execute_with(|| {
 		let role_id = create_role("owner".as_bytes().to_vec());
-		let pallet_id = pallet_name();
 		set_role_to_pallet(role_id);
 		let p = create_and_set_permissions(role_id, gen_permissions(1));
-		assert_ok!(RBAC::revoke_permission_from_role(
-			RuntimeOrigin::root(),
-			pallet_id,
-			role_id,
-			p.first().unwrap().to_owned()
-		));
+		revoke_permission_from_role(role_id, p.first().unwrap().to_owned())
 	});
 }
 
@@ -1029,6 +1047,26 @@ fn remove_permission_from_unlinked_role_should_fail() {
 		assert_noop!(
 			RBAC::revoke_permission_from_role(RuntimeOrigin::root(), pallet_id, role_id, p),
 			Error::<Test>::PermissionNotLinkedToRole
+		);
+	});
+}
+
+#[test]
+fn remove_permission_from_pallet_should_work() {
+	new_test_ext().execute_with(|| {
+		let role_id = create_role("owner".as_bytes().to_vec());
+		set_role_to_pallet(role_id);
+		let p = create_and_set_permissions(role_id, gen_permissions(2));
+		remove_permission_from_pallet(p.first().unwrap().to_owned());
+	});
+}
+
+#[test]
+fn remove_nonexistent_permission_from_pallet_should_fail() {
+	new_test_ext().execute_with(|| {
+		assert_noop!(
+			RBAC::remove_permission_from_pallet(RuntimeOrigin::root(), pallet_name(), [0; 32]),
+			Error::<Test>::PermissionNotFound
 		);
 	});
 }
