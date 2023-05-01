@@ -357,6 +357,13 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
+	/// Permission revocation from role
+	///
+	/// Remove a permission linked to a role (in a pallet context).
+	/// ### Parameters:
+	/// - `pallet_id`: The unique pallet identifier.
+	/// - `role_id`: The role identifier to which the permissions will be removed from.
+	/// - `permission_id`: The permission to deassign.
 	fn do_revoke_permission_from_role(
 		pallet: IdOrVec,
 		role_id: RoleId,
@@ -380,6 +387,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
+	/// Permission removal from pallet
+	///
+	/// Use with caution. The permission will be deleted from all the roles and pallet.
+	/// ### Parameters:
+	/// - `pallet_id`: The unique pallet identifier.
+	/// - `permission_id`: The permission to remove completely.
 	fn do_remove_permission_from_pallet(
 		pallet: IdOrVec,
 		permission: PermissionId,
@@ -523,6 +536,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
+	/// Get roles that have a permission
+	///
+	/// Returns all the roles within the pallet that have a permission
+	/// ### Parameters:
+	/// - `pallet_id`: The unique pallet identifier.
+	/// - `permission_id`: The permission which the roles should have.
 	fn get_roles_that_have_permission(
 		pallet_id: PalletId,
 		permission_id: &PermissionId,
