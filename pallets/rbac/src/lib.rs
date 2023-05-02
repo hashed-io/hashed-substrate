@@ -140,8 +140,26 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// An initial roles config was stored [pallet_id]
-		RolesStored(PalletId),
+		/// An initial roles config was stored [pallet_id, Vec<role_id>]
+		RolesStored(PalletId, BoundedVec<RoleId, T::MaxRolesPerPallet>),
+		/// The permissions were created and set to the role [pallet_id, role_id, Vec<permission_id>]
+		PermissionsCreatedAndSet(
+			PalletId,
+			RoleId,
+			BoundedVec<PermissionId, T::MaxPermissionsPerRole>,
+		),
+		/// The user no longer has that role [pallet_id, scope_id, role_id, account_id]
+		RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
+		/// The user now has that role [pallet_id, scope_id, role_id, account_id]
+		RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
+		/// The role no longer has the permission in the pallet context [pallet_id, role_id, permission_id]
+		PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
+		/// The permission was removed from the pallet and all the roles that had it [pallet_id, permission_id, affected_roles]
+		PermissionRemovedFromPallet(
+			PalletId,
+			PermissionId,
+			BoundedVec<RoleId, T::MaxRolesPerPallet>,
+		),
 	}
 
 	// Errors inform users that something went wrong.
@@ -228,7 +246,6 @@ pub mod pallet {
 				Error::<T>::NotAuthorized
 			);
 			Self::remove_role_from_user(user, pallet, &scope_id, role_id)?;
-			// TODO: emit event on success
 			Ok(())
 		}
 

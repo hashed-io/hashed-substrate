@@ -112,7 +112,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		}
 		Self::set_multiple_pallet_roles(pallet.to_id_enum(), role_ids.clone())?;
 		let bounded_ids = Self::bound(role_ids, Error::<T>::ExceedMaxRolesPerPallet)?;
-		Self::deposit_event(Event::RolesStored(pallet.to_id()));
+		Self::deposit_event(Event::RolesStored(pallet.to_id(), bounded_ids.clone()));
 		Ok(bounded_ids)
 	}
 
@@ -196,8 +196,14 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 
 		<UsersByScope<T>>::try_mutate((pallet_id, scope_id, role_id), |users| {
 			ensure!(!users.contains(&user), Error::<T>::UserAlreadyHasRole);
-			users.try_push(user).map_err(|_| Error::<T>::ExceedMaxUsersPerRole)
+			users.try_push(user.clone()).map_err(|_| Error::<T>::ExceedMaxUsersPerRole)
 		})?;
+		Self::deposit_event(Event::RoleAssignedToUser(
+			pallet_id,
+			scope_id.to_owned(),
+			role_id,
+			user,
+		));
 		Ok(())
 	}
 
@@ -245,6 +251,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 				Ok(())
 			},
 		)?;
+		Self::deposit_event(Event::RoleRemovedFromUser(
+			pallet_id,
+			scope_id.to_owned(),
+			role_id,
+			user,
+		));
 		Ok(())
 	}
 
@@ -272,6 +284,11 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		}
 		Self::set_multiple_permissions_to_role(pallet_id_enum, role_id, permission_ids.clone())?;
 		let b_permissions = Self::bound(permission_ids, Error::<T>::ExceedMaxPermissionsPerRole)?;
+		Self::deposit_event(Event::PermissionsCreatedAndSet(
+			pallet.to_id(),
+			role_id,
+			b_permissions.clone(),
+		));
 		Ok(b_permissions)
 	}
 
@@ -384,6 +401,11 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 				Ok(())
 			},
 		)?;
+		Self::deposit_event(Event::PermissionRevokedFromRole(
+			pallet.to_id(),
+			role_id,
+			permission_id,
+		));
 		Ok(())
 	}
 
@@ -410,6 +432,11 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		});
 		// remove the permission from the pallet
 		<Permissions<T>>::remove(pallet_id, permission);
+		Self::deposit_event(Event::PermissionRemovedFromPallet(
+			pallet_id,
+			permission,
+			Self::bound(affected_roles, Error::<T>::ExceedMaxRolesPerPallet)?, // this bound should never fail
+		));
 		Ok(())
 	}
 
