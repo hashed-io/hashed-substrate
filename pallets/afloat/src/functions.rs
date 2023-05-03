@@ -4,8 +4,7 @@ use crate::types::*;
 use frame_support::traits::UnixTime;
 use frame_system::pallet_prelude::*;
 use pallet_gated_marketplace::types::MarketplaceRole;
-use pallet_fruniques::types::CollectionDescription;
-use pallet_fruniques::types::FruniqueRole;
+use pallet_fruniques::types::{CollectionDescription, FruniqueRole, Attributes, ParentInfo};
 use frame_support::pallet_prelude::*;
 // use frame_support::traits::OriginTrait;
 use pallet_rbac::types::IdOrVec;
@@ -15,6 +14,7 @@ use scale_info::prelude::vec;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::str;
 use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::traits::StaticLookup;
 
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
@@ -238,6 +238,137 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::UserDeleted(user_address.clone()));
 		Ok(())
 	}
+
+	pub fn do_set_afloat_balance(
+		origin: OriginFor<T>,
+		user_address: T::AccountId,
+		amount: T::Balance,
+	) -> DispatchResult {
+
+		let authority = ensure_signed(origin.clone())?;
+		let asset_id = AfloatAssetId::<T>::get().unwrap();
+
+		pallet_mapped_assets::Pallet::<T>::mint(
+			origin,
+			asset_id.into(),	
+			T::Lookup::unlookup(user_address.clone()),
+			amount,
+		)?;
+
+		Self::deposit_event(Event::AfloatBalanceSet(authority, user_address, amount));
+		Ok(())
+	}
+	
+	pub fn do_get_afloat_balance(user_address: T::AccountId) -> T::Balance {
+		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
+		pallet_mapped_assets::Pallet::<T>::balance(asset_id.into(), user_address)
+	}
+	
+
+	pub fn do_create_sell_order(
+		authority: T::AccountId,
+		item_id: <T as pallet_uniques::Config>::ItemId,
+		price: T::Balance,
+		percentage: u32,
+	) -> DispatchResult 
+	{
+
+		
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		let collection_id = AfloatCollectionId::<T>::get().unwrap();
+
+		pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
+			authority.clone(),
+			marketplace_id,
+			collection_id,
+			item_id,
+			price,
+			percentage,
+		)?;
+
+		Self::deposit_event(Event::SellOrderCreated(authority));
+		Ok(())
+	}
+
+	pub fn do_create_buy_order(
+		authority: T::AccountId,
+		item_id: <T as pallet_uniques::Config>::ItemId,
+		price: T::Balance,
+		percentage: u32,
+	) -> DispatchResult 
+	{
+
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		let collection_id = AfloatCollectionId::<T>::get().unwrap();
+
+		pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
+			authority.clone(),
+			marketplace_id,
+			collection_id,
+			item_id,
+			price,
+			percentage,
+		)?;
+
+		Self::deposit_event(Event::BuyOrderCreated(authority));
+		Ok(())
+	}
+
+	pub fn do_take_sell_order(
+		authority: OriginFor<T>,
+		order_id: [u8; 32],
+	) -> DispatchResult 
+	where
+	<T as pallet_uniques::Config>::ItemId: From<u32>
+	{
+		let who = ensure_signed(authority.clone())?;
+
+		pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(
+			authority.clone(),
+			order_id,
+		)?;
+
+		Self::deposit_event(Event::SellOrderTaken(who));
+		Ok(())
+	}
+
+	pub fn do_take_buy_order(
+		authority: T::AccountId,
+		order_id: [u8; 32],
+	) -> DispatchResult 
+	where
+	<T as pallet_uniques::Config>::ItemId: From<u32>
+	{
+
+		pallet_gated_marketplace::Pallet::<T>::do_take_buy_offer(
+			authority.clone(),
+			order_id,
+		)?;
+
+		Self::deposit_event(Event::BuyOrderTaken(authority));
+		Ok(())
+	}
+
+	pub fn do_create_tax_credit(
+        owner: T::AccountId,
+        metadata: CollectionDescription<T>,
+        attributes: Option<Attributes<T>>,
+        parent_info: Option<ParentInfo<T>>,
+    ) -> DispatchResult 
+	where
+		<T as pallet_uniques::Config>::ItemId: From<u32>,
+		<T as pallet_uniques::Config>::CollectionId: From<u32>,
+	{
+		let collection = AfloatCollectionId::<T>::get().unwrap();
+
+        pallet_fruniques::Pallet::<T>::do_spawn(
+            collection,
+            owner,
+            metadata,
+            attributes,
+            parent_info,
+        )
+    }
 
 	pub fn create_afloat_collection(origin: OriginFor<T>,
 		metadata: CollectionDescription<T>,

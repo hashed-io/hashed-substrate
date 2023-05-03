@@ -776,6 +776,7 @@ impl pallet_afloat::Config for Runtime {
 	type TimeProvider = Timestamp;
 	type RemoveOrigin = EnsureRoot<AccountId>;
 	type Rbac = RBAC;
+	type ItemId = u32;
 }
 
 parameter_types! {

@@ -21,8 +21,7 @@ pub mod pallet {
 	use frame_system::RawOrigin;
 	use pallet_gated_marketplace::types::*;
 	use sp_runtime::Permill;
-	use pallet_fruniques::types::CollectionDescription;
-	use pallet_fruniques::types::FruniqueRole;
+	use pallet_fruniques::types::{CollectionDescription, FruniqueRole, Attributes, ParentInfo};
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	use crate::types::*;
@@ -40,6 +39,7 @@ pub mod pallet {
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
 		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 		type Currency: Currency<Self::AccountId>;
+		type ItemId: Parameter + Member + Default;
 	}
 
 	#[pallet::pallet]
@@ -56,6 +56,11 @@ pub mod pallet {
 		NewUser(T::AccountId),
 		UserEdited(T::AccountId),
 		UserDeleted(T::AccountId),
+		SellOrderCreated(T::AccountId),
+		BuyOrderCreated(T::AccountId),
+		SellOrderTaken(T::AccountId),
+		BuyOrderTaken(T::AccountId),
+		AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
 	}
 
 	// Errors inform users that something went wrong.
@@ -120,7 +125,8 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> 
 	where
-	T: pallet_uniques::Config<CollectionId = CollectionId>
+	T: pallet_uniques::Config<CollectionId = CollectionId>,
+	<T as pallet_uniques::Config>::ItemId: From<u32>
 	{
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
@@ -204,5 +210,86 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::call_index(4)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn create_sell_order(
+			origin: OriginFor<T>,
+			item_id: <T as pallet_uniques::Config>::ItemId,
+			price: T::Balance,
+			percentage: u32,
+		)
+		 -> DispatchResult
+		{
+			let who = ensure_signed(origin)?;
+			Self::do_create_sell_order(who , item_id, price, percentage)
+		}
+
+		#[pallet::call_index(5)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn create_buy_order(
+			origin: OriginFor<T>,
+			item_id: <T as pallet_uniques::Config>::ItemId,
+			price: T::Balance,
+			percentage: u32,
+		)
+		 -> DispatchResult
+		{
+			let who = ensure_signed(origin)?;
+			Self::do_create_buy_order(who , item_id, price, percentage)
+		}
+
+		#[pallet::call_index(6)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn take_sell_order(
+			origin: OriginFor<T>,
+			offer_id: [u8; 32],
+		)
+		 -> DispatchResult
+		{
+			ensure_signed(origin.clone())?;
+			Self::do_take_sell_order(origin , offer_id)
+		}
+		
+		#[pallet::call_index(7)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn take_buy_order(
+			origin: OriginFor<T>,
+			offer_id: [u8; 32],
+		)
+		 -> DispatchResult
+		{
+			let who = ensure_signed(origin)?;
+			Self::do_take_buy_order(who , offer_id)
+		}
+
+		#[pallet::call_index(8)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+		pub fn create_tax_credit(
+			origin: OriginFor<T>,
+			metadata: CollectionDescription<T>,
+			attributes: Option<Attributes<T>>,
+			parent_info: Option<ParentInfo<T>>,
+		)
+		 -> DispatchResult
+		{
+			let who = ensure_signed(origin)?;
+			Self::do_create_tax_credit(who , metadata, attributes, parent_info)
+		}
+
+		#[pallet::call_index(9)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+		pub fn set_afloat_balance(
+			origin: OriginFor<T>,
+			beneficiary: T::AccountId,
+			amount: T::Balance,
+		)
+		 -> DispatchResult
+		{
+			ensure!(Self::is_admin_or_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
+			ensure_signed(origin.clone())?;
+			Self::do_set_afloat_balance(origin, beneficiary, amount)
+		}
+		
 	}
 }
