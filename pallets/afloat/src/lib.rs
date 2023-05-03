@@ -286,8 +286,11 @@ pub mod pallet {
 		)
 		 -> DispatchResult
 		{
-			ensure!(Self::is_admin_or_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
 			ensure_signed(origin.clone())?;
+
+			// Only the owner can set afloat balance
+			ensure!(Self::is_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
+			
 			Self::do_set_afloat_balance(origin, beneficiary, amount)
 		}
 		

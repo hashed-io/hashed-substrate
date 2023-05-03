@@ -244,21 +244,36 @@ impl<T: Config> Pallet<T> {
 		user_address: T::AccountId,
 		amount: T::Balance,
 	) -> DispatchResult {
-
+		
 		let authority = ensure_signed(origin.clone())?;
-		let asset_id = AfloatAssetId::<T>::get().unwrap();
+		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
 
-		pallet_mapped_assets::Pallet::<T>::mint(
-			origin,
-			asset_id.into(),	
-			T::Lookup::unlookup(user_address.clone()),
-			amount,
-		)?;
+		ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
 
+		let current_balance = Self::do_get_afloat_balance(user_address.clone());
+	
+		if current_balance > amount {
+			let diff = current_balance - amount;
+			pallet_mapped_assets::Pallet::<T>::burn(
+				origin.clone(),
+				asset_id.into(),
+				T::Lookup::unlookup(user_address.clone()),
+				diff,
+			)?;
+		} else if current_balance < amount {
+			let diff = amount - current_balance;
+			pallet_mapped_assets::Pallet::<T>::mint(
+				origin.clone(),
+				asset_id.into(),
+				T::Lookup::unlookup(user_address.clone()),
+				diff,
+			)?;
+		}
+	
 		Self::deposit_event(Event::AfloatBalanceSet(authority, user_address, amount));
 		Ok(())
 	}
-	
+
 	pub fn do_get_afloat_balance(user_address: T::AccountId) -> T::Balance {
 		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
 		pallet_mapped_assets::Pallet::<T>::balance(asset_id.into(), user_address)
@@ -273,7 +288,8 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult 
 	{
 
-		
+		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);	
+
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
 
@@ -297,6 +313,7 @@ impl<T: Config> Pallet<T> {
 		percentage: u32,
 	) -> DispatchResult 
 	{
+		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
 
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
@@ -322,6 +339,8 @@ impl<T: Config> Pallet<T> {
 	<T as pallet_uniques::Config>::ItemId: From<u32>
 	{
 		let who = ensure_signed(authority.clone())?;
+		
+		ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
 
 		pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(
 			authority.clone(),
@@ -339,6 +358,7 @@ impl<T: Config> Pallet<T> {
 	where
 	<T as pallet_uniques::Config>::ItemId: From<u32>
 	{
+		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
 
 		pallet_gated_marketplace::Pallet::<T>::do_take_buy_offer(
 			authority.clone(),
@@ -359,6 +379,8 @@ impl<T: Config> Pallet<T> {
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 		<T as pallet_uniques::Config>::CollectionId: From<u32>,
 	{
+		ensure!(!Self::get_all_roles_for_user(owner.clone()).is_empty(), Error::<T>::Unauthorized);
+
 		let collection = AfloatCollectionId::<T>::get().unwrap();
 
         pallet_fruniques::Pallet::<T>::do_spawn(
@@ -422,6 +444,17 @@ impl<T: Config> Pallet<T> {
 			Self::pallet_id(),
 			&marketplace_id,
 			[AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
+		)
+		.is_ok() 
+	}
+
+	pub fn is_owner(account: T::AccountId) -> bool {
+		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+		<T as pallet::Config>::Rbac::has_role(
+			account.clone(),
+			Self::pallet_id(),
+			&marketplace_id,
+			[AfloatRole::Owner.id()].to_vec(),
 		)
 		.is_ok() 
 	}

@@ -267,12 +267,38 @@ fn set_afloat_balance_works(){
         
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
 
-        assert_ok!(Afloat::set_afloat_balance(RawOrigin::Signed(1).into(), other_user.clone(), 10000));
-        assert_eq!(Afloat::do_get_afloat_balance(other_user.clone()), 10000);
+        assert_ok!(Afloat::set_afloat_balance(RawOrigin::Signed(1).into(), user.clone(), 10000));
+        assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 10000);
+        assert_ok!(Afloat::set_afloat_balance(RawOrigin::Signed(1).into(), user.clone(), 1000));
+        assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 1000);
+
     });
 
 }
 
+#[test]
+fn set_balance_by_other_than_owner_fails(){
+    new_test_ext().execute_with(|| {
+        let user = new_account(3);
+        let other_user = new_account(4);
+
+        Balances::make_free_balance_be(&user, 100);
+        Balances::make_free_balance_be(&other_user, 100);
+
+        let args = SignUpArgs::BuyerOrSeller {
+            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
+            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
+            state: 1,
+        };
+        
+        assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
+
+        assert_noop!(Afloat::set_afloat_balance(RawOrigin::Signed(3).into(), other_user.clone(), 10000), Error::<Test>::Unauthorized);
+        assert_noop!(Afloat::set_afloat_balance(RawOrigin::Signed(2).into(), other_user.clone(), 10000), Error::<Test>::Unauthorized);
+    });
+
+}
 
 #[test]
 fn create_tax_credit_works() {
@@ -352,7 +378,7 @@ fn take_sell_order_works() {
 
         Balances::make_free_balance_be(&user, 100);
         Balances::make_free_balance_be(&other_user, 100);
-        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
+        
 
         let args = SignUpArgs::BuyerOrSeller {
             first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
@@ -363,6 +389,8 @@ fn take_sell_order_works() {
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(other_user.clone()).into(), args.clone()));
+
+        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
 
         assert_ok!(Afloat::create_tax_credit(
             RawOrigin::Signed(user.clone()).into(),
@@ -400,7 +428,7 @@ fn create_buy_order_works() {
 
         Balances::make_free_balance_be(&user, 100);
         Balances::make_free_balance_be(&other_user, 100);
-        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
+       
 
         let args = SignUpArgs::BuyerOrSeller {
             first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
@@ -411,6 +439,8 @@ fn create_buy_order_works() {
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(other_user.clone()).into(), args.clone()));
+
+        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
 
         assert_ok!(Afloat::create_tax_credit(
             RawOrigin::Signed(user.clone()).into(),
@@ -439,7 +469,7 @@ fn take_buy_order_works(){
 
         Balances::make_free_balance_be(&user, 100);
         Balances::make_free_balance_be(&other_user, 100);
-        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
+        
 
         let args = SignUpArgs::BuyerOrSeller {
             first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
@@ -450,6 +480,8 @@ fn take_buy_order_works(){
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(other_user.clone()).into(), args.clone()));
+        
+        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
 
         assert_ok!(Afloat::create_tax_credit(
             RawOrigin::Signed(user.clone()).into(),
