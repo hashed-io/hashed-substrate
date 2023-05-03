@@ -1161,6 +1161,10 @@
 <a href="#1161" id="1161">1161</a>
 <a href="#1162" id="1162">1162</a>
 <a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1924,6 +1928,10 @@
 
 <span class="kw">impl </span>pallet_rbac::Config <span class="kw">for </span>Runtime {
 	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>RemoveOrigin = EitherOfDiverse&lt;
+		EnsureRoot&lt;AccountId&gt;,
+		pallet_collective::EnsureProportionAtLeast&lt;AccountId, CouncilCollective, <span class="number">3</span>, <span class="number">5</span>&gt;,
+	&gt;;
 	<span class="kw">type </span>MaxScopesPerPallet = MaxScopesPerPallet;
 	<span class="kw">type </span>MaxRolesPerPallet = MaxRolesPerPallet;
 	<span class="kw">type </span>RoleMaxLen = RoleMaxLen;
