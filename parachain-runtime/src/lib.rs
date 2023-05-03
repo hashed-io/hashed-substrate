@@ -1052,6 +1052,7 @@ parameter_types! {
 }
 
 impl pallet_rbac::Config for Runtime {
+	type RemoveOrigin = EnsureRoot<AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
