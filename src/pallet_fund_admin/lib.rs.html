@@ -1793,6 +1793,10 @@
 <a href="#1793" id="1793">1793</a>
 <a href="#1794" id="1794">1794</a>
 <a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -3575,7 +3579,11 @@
 			<span class="kw">let </span>pallet_id = <span class="self">Self</span>::pallet_id();
 
 			<span class="kw">let </span>new_admin_permissions: Vec&lt;Vec&lt;u8&gt;&gt; = <span class="macro">vec!</span>[
-				ProxyPermission::RevenueTransaction.to_vec(),
+				ProxyPermission::RecoveryDrawdown.to_vec(),
+				ProxyPermission::RecoveryRevenue.to_vec(),
+				ProxyPermission::RecoveryTransaction.to_vec(),
+				ProxyPermission::RecoveryRevenueTransaction.to_vec(),
+				ProxyPermission::BulkUploadTransaction.to_vec(),
 			];
 
 			T::Rbac::create_and_set_permissions(
