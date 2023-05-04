@@ -1,4 +1,4 @@
-use crate as pallet_gated_marketplace;
+use crate as pallet_afloat;
 use frame_support::{parameter_types, traits::AsEnsureOriginWithArg};
 use frame_system as system;
 use sp_core::H256;
@@ -11,6 +11,7 @@ type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 use frame_system::EnsureRoot;
 use system::EnsureSigned;
+
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -19,6 +20,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		AfloatModule: pallet_afloat::{Pallet, Call, Storage, Event<T>},
 		GatedMarketplace: pallet_gated_marketplace::{Pallet, Call, Storage, Event<T>},
 		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>},
 		Fruniques: pallet_fruniques::{Pallet, Call, Storage, Event<T>},
@@ -51,13 +53,20 @@ impl system::Config for Test {
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = pallet_balances::AccountData<u64>;
+	type AccountData = ();
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
+}
+
+impl pallet_afloat::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
+	type Moment = u64;
+	type Timestamp = Timestamp;
+	// type Rbac = RBAC;
 }
 
 parameter_types! {
@@ -174,24 +183,9 @@ impl pallet_rbac::Config for Test {
 	type MaxPermissionsPerRole = MaxPermissionsPerRole;
 	type MaxRolesPerUser = MaxRolesPerUser;
 	type MaxUsersPerRole = MaxUsersPerRole;
-	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	// TODO: get initial conf?
-	let mut t: sp_io::TestExternalities =
-		frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
-	t.execute_with(|| {
-		GatedMarketplace::do_initial_setup().expect("Error on GatedMarketplace configuring initial setup");
-		Fruniques::do_initial_setup().expect("Error on Fruniques configuring initial setup");
-	});
-	t
-}
-
-impl pallet_timestamp::Config for Test {
-	type Moment = u64;
-	type OnTimestampSet = ();
-	type MinimumPeriod = ();
-	type WeightInfo = ();
+	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }
