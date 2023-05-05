@@ -61,6 +61,83 @@ impl<T: Config> User<T> {
 	}
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+pub enum OfferStatus {
+	MATCHED,
+	TF_FILLED,
+	TF_PENDING_SIGNATURE,
+	TF_SIGNED,
+	TF_AGENCY_SUBMITTED,
+	TF_AGENCY_APPROVED,
+	AFLOAT_APPROVED,
+}
+
+impl Default for OfferStatus {
+	fn default() -> Self {
+		OfferStatus::TF_PENDING_SIGNATURE
+	}
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct Offer<T: Config> {
+	pub tax_credit_amount: u32,
+	pub tax_credit_amount_remaining: u32,
+	pub price_per_credit: u32,
+	pub creation_date: Date,
+	pub cancellation_date: Option<Date>,
+	pub fee: u32,
+	pub tax_credit_id: u32,
+	pub creator_id: T::AccountId,
+	pub status: OfferStatus,
+}
+
+impl<T: Config> Offer<T> {
+	pub fn new(
+		tax_credit_amount: u32,
+		tax_credit_amount_remaining: u32,
+		price_per_credit: u32,
+		creation_date: Date,
+		cancellation_date: Option<Date>,
+		fee: u32,
+		tax_credit_id: u32,
+		creator_id: T::AccountId,
+		status: OfferStatus,
+	) -> Self {
+		Self {
+			tax_credit_amount,
+			tax_credit_amount_remaining,
+			price_per_credit,
+			creation_date,
+			cancellation_date,
+			fee,
+			tax_credit_id,
+			creator_id,
+			status,
+		}
+	}
+}
+
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub struct Transaction<T: Config> {
+	pub tax_credit_amount: u32,
+	pub price_per_credit: u32,
+	pub total_price: u32,
+	pub fee: u32,
+	pub creation_date: Date,
+	pub cancellation_date: Option<Date>,
+	pub tax_credit_id: u32,
+	pub seller_id: T::AccountId,
+	pub buyer_id: T::AccountId,
+	pub offer_id: u32,
+	pub seller_confirmation_date: Option<Date>,
+	pub buyer_confirmation_date: Option<Date>,
+}
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
