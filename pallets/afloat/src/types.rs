@@ -152,8 +152,6 @@ pub enum CreateOfferArgs {
 	},
 }
 
-
-
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -167,7 +165,7 @@ pub struct Transaction<T: Config> {
 	pub tax_credit_id: u32,
 	pub seller_id: T::AccountId,
 	pub buyer_id: T::AccountId,
-	pub offer_id: u32,
+	pub offer_id: StorageId,
 	pub seller_confirmation_date: Option<Date>,
 	pub buyer_confirmation_date: Option<Date>,
 }
