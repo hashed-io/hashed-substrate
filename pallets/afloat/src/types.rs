@@ -7,6 +7,8 @@ pub type ShortString = BoundedVec<u8, ConstU32<35>>;
 pub type LongString = BoundedVec<u8, ConstU32<255>>;
 pub type Date = u64;
 pub type CollectionId = u32;
+pub type StorageId = [u8; 32];
+
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]

@@ -122,8 +122,28 @@ pub mod pallet {
 		<T as pallet_mapped_assets::Config>::AssetId, // Afloat's frunique collection id
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn afloat_offers)]
+	pub(super) type AfloatOffers<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		<T as pallet_uniques::Config>::ItemId,
+		Offer<T>,
+		OptionQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn afloat_transactions)]
+	pub(super) type AfloatTransactions<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		StorageId,
+		Transaction<T>,
+		OptionQuery,
+	>;
+
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
+	impl<T: Config> Pallet<T>
 	where
 	T: pallet_uniques::Config<CollectionId = CollectionId>,
 	<T as pallet_uniques::Config>::ItemId: From<u32>
@@ -144,7 +164,7 @@ pub mod pallet {
 			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
 
 			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
-			
+
 			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())?;
 
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
@@ -250,7 +270,7 @@ pub mod pallet {
 			ensure_signed(origin.clone())?;
 			Self::do_take_sell_order(origin , offer_id)
 		}
-		
+
 		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn take_buy_order(
@@ -290,9 +310,9 @@ pub mod pallet {
 
 			// Only the owner can set afloat balance
 			ensure!(Self::is_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
-			
+
 			Self::do_set_afloat_balance(origin, beneficiary, amount)
 		}
-		
+
 	}
 }
