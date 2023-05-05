@@ -80,6 +80,18 @@ impl Default for OfferStatus {
 	}
 }
 
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+pub enum OfferType {
+	Sell,
+	Buy
+}
+
+impl Default for OfferType {
+	fn default() -> Self {
+		OfferType::Sell
+	}
+}
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -93,6 +105,7 @@ pub struct Offer<T: Config> {
 	pub tax_credit_id: u32,
 	pub creator_id: T::AccountId,
 	pub status: OfferStatus,
+	pub offer_type: OfferType,
 }
 
 impl<T: Config> Offer<T> {
@@ -106,6 +119,7 @@ impl<T: Config> Offer<T> {
 		tax_credit_id: u32,
 		creator_id: T::AccountId,
 		status: OfferStatus,
+		offer_type: OfferType,
 	) -> Self {
 		Self {
 			tax_credit_amount,
@@ -117,9 +131,27 @@ impl<T: Config> Offer<T> {
 			tax_credit_id,
 			creator_id,
 			status,
+			offer_type,
 		}
 	}
 }
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum CreateOfferArgs {
+	Sell {
+		tax_credit_amount: u32,
+		price_per_credit: u32,
+		tax_credit_id: u32,
+	},
+	Buy {
+		tax_credit_amount: u32,
+		price_per_credit: u32,
+		tax_credit_id: u32,
+	},
+}
+
 
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
