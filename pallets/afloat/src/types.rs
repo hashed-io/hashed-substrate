@@ -14,51 +14,27 @@ pub type StorageId = [u8; 32];
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct User<T: Config> {
-	pub first_name: ShortString,
-	pub last_name: ShortString,
-	pub email: LongString,
-	pub lang_key: ShortString,
+	pub cid: ShortString,
 	pub created_by: Option<T::AccountId>,
 	pub created_date: Option<Date>,
 	pub last_modified_by: Option<T::AccountId>,
 	pub last_modified_date: Option<Date>,
-	pub phone: Option<ShortString>,
-	pub credits_needed: u32,
-	pub cpa_id: ShortString,
-	pub tax_authority_id: u32,
-	pub lock_expiration_date: Option<Date>,
 }
 
 impl<T: Config> User<T> {
 	pub fn new(
-		first_name: ShortString,
-		last_name: ShortString,
-		email: LongString,
-		lang_key: ShortString,
+		cid: ShortString,
 		created_by: Option<T::AccountId>,
 		created_date: Option<Date>,
 		last_modified_by: Option<T::AccountId>,
 		last_modified_date: Option<Date>,
-		phone: Option<ShortString>,
-		credits_needed: u32,
-		cpa_id: ShortString,
-		tax_authority_id: u32,
-		lock_expiration_date: Option<Date>,
 	) -> Self {
 		Self {
-			first_name,
-			last_name,
-			email,
-			lang_key,
+			cid,
 			created_by,
 			created_date,
 			last_modified_by,
 			last_modified_date,
-			phone,
-			credits_needed,
-			cpa_id,
-			tax_authority_id,
-			lock_expiration_date,
 		}
 	}
 }
@@ -101,7 +77,7 @@ pub struct Offer<T: Config> {
 	pub price_per_credit: T::Balance,
 	pub creation_date: Date,
 	pub cancellation_date: Option<Date>,
-	pub fee: T::Balance,
+	// pub fee: T::Balance,
 	pub tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 	pub creator_id: T::AccountId,
 	pub status: OfferStatus,
@@ -115,7 +91,7 @@ impl<T: Config> Offer<T> {
 		price_per_credit: T::Balance,
 		creation_date: Date,
 		cancellation_date: Option<Date>,
-		fee: T::Balance,
+		// fee: T::Balance,
 		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 		creator_id: T::AccountId,
 		status: OfferStatus,
@@ -127,7 +103,7 @@ impl<T: Config> Offer<T> {
 			price_per_credit,
 			creation_date,
 			cancellation_date,
-			fee,
+			// fee,
 			tax_credit_id,
 			creator_id,
 			status,
@@ -175,14 +151,7 @@ pub struct Transaction<T: Config> {
 #[codec(mel_bound())]
 pub enum UpdateUserArgs {
 	Edit {
-		first_name: Option<ShortString>,
-		last_name: Option<ShortString>,
-		email: Option<LongString>,
-		lang_key: Option<ShortString>,
-		phone: Option<Option<ShortString>>,
-		credits_needed: Option<u32>,
-		cpa_id: Option<ShortString>,
-		state: Option<u32>,
+		cid: Option<ShortString>,
 	},
 	Delete,
 }

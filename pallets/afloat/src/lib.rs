@@ -256,6 +256,7 @@ pub mod pallet {
 		pub fn accept_offer(
 			origin: OriginFor<T>,
 			offer_id: [u8; 32],
+			amount: Option<u64>,
 		)
 		 -> DispatchResult
 		{

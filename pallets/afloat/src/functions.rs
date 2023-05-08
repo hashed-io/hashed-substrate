@@ -302,17 +302,19 @@ impl<T: Config> Pallet<T> {
 			tax_credit_amount,
 		)?;
 
-		// let offer: Offer<T> = Offer {
-		// 	tax_credit_amount,
-		// 	tax_credit_amount_remaining: tax_credit_amount,
-		// 	price_per_credit: price,
-		// 	creation_date: <frame_system::Pallet<T>>::block_number(),
-		// 	tax_credit_id: item_id,
-		// 	creator_id: authority,
+		let offer: Offer<T> = Offer {
+			tax_credit_amount,
+			tax_credit_amount_remaining: tax_credit_amount,
+			price_per_credit: price,
+			creation_date: T::TimeProvider::now().as_secs(),
+			tax_credit_id: item_id,
+			creator_id: authority.clone(),
+			status: OfferStatus::default(),
+			offer_type: OfferType::Sell,
+			cancellation_date: None,
+		};
 
-
-		// 	};
-				// <UserInfo<T>>::insert(user_address.clone(), user);
+		<AfloatOffers<T>>::insert(offer_id, offer);
 
 
 		Self::deposit_event(Event::SellOrderCreated(authority));
@@ -340,6 +342,20 @@ impl<T: Config> Pallet<T> {
 			price,
 			tax_credit_amount,
 		)?;
+
+		let offer: Offer<T> = Offer {
+			tax_credit_amount,
+			tax_credit_amount_remaining: tax_credit_amount,
+			price_per_credit: price,
+			creation_date: T::TimeProvider::now().as_secs(),
+			tax_credit_id: item_id,
+			creator_id: authority.clone(),
+			status: OfferStatus::default(),
+			offer_type: OfferType::Buy,
+			cancellation_date: None,
+		};
+
+		<AfloatOffers<T>>::insert(offer_id, offer);
 
 		Self::deposit_event(Event::BuyOrderCreated(authority));
 
