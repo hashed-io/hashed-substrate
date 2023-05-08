@@ -299,8 +299,21 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			price,
-			percentage,
+			tax_credit_amount,
 		)?;
+
+		// let offer: Offer<T> = Offer {
+		// 	tax_credit_amount,
+		// 	tax_credit_amount_remaining: tax_credit_amount,
+		// 	price_per_credit: price,
+		// 	creation_date: <frame_system::Pallet<T>>::block_number(),
+		// 	tax_credit_id: item_id,
+		// 	creator_id: authority,
+
+
+		// 	};
+				// <UserInfo<T>>::insert(user_address.clone(), user);
+
 
 		Self::deposit_event(Event::SellOrderCreated(authority));
 
@@ -325,7 +338,7 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			price,
-			percentage,
+			tax_credit_amount,
 		)?;
 
 		Self::deposit_event(Event::BuyOrderCreated(authority));

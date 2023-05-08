@@ -127,7 +127,7 @@ pub mod pallet {
 	pub(super) type AfloatOffers<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
-		<T as pallet_uniques::Config>::ItemId,
+		StorageId,
 		Offer<T>,
 		OptionQuery,
 	>;
