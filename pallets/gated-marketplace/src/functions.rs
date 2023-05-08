@@ -342,7 +342,7 @@ impl<T: Config> Pallet<T> {
 		item_id: T::ItemId,
 		price: T::Balance,
 		percentage: u32,
-	) -> DispatchResult {
+	) -> Result<[u8; 32], DispatchError> {
 		//This function is only called by the owner of the marketplace
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -407,7 +407,7 @@ impl<T: Config> Pallet<T> {
 		pallet_fruniques::Pallet::<T>::do_freeze(&collection_id, item_id)?;
 
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		Ok(())
+		Ok(offer_id)
 	}
 
 	pub fn do_enlist_buy_offer(
@@ -417,7 +417,7 @@ impl<T: Config> Pallet<T> {
 		item_id: T::ItemId,
 		price: T::Balance,
 		percentage: u32,
-	) -> DispatchResult {
+	) -> Result<[u8; 32], DispatchError> {
 
 		
 		//ensure the marketplace exists
@@ -497,7 +497,8 @@ impl<T: Config> Pallet<T> {
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		Ok(())
+		
+		Ok(offer_id)
 	}
 
 	pub fn do_take_sell_offer(origin : OriginFor<T>, offer_id: [u8; 32]) -> DispatchResult
