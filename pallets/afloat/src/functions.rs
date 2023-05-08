@@ -293,7 +293,7 @@ impl<T: Config> Pallet<T> {
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
 
-		pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
+		let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
 			authority.clone(),
 			marketplace_id,
 			collection_id,
@@ -303,6 +303,7 @@ impl<T: Config> Pallet<T> {
 		)?;
 
 		Self::deposit_event(Event::SellOrderCreated(authority));
+
 		Ok(())
 	}
 
@@ -318,7 +319,7 @@ impl<T: Config> Pallet<T> {
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
 
-		pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
+		let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
 			authority.clone(),
 			marketplace_id,
 			collection_id,
@@ -328,6 +329,7 @@ impl<T: Config> Pallet<T> {
 		)?;
 
 		Self::deposit_event(Event::BuyOrderCreated(authority));
+
 		Ok(())
 	}
 

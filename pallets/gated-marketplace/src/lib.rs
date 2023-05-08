@@ -677,7 +677,9 @@ pub mod pallet {
 				item_id,
 				price,
 				percentage,
-			)
+			)?;
+
+			Ok(())
 		}
 
 		/// Accepts a sell order.
@@ -760,7 +762,9 @@ pub mod pallet {
 				item_id,
 				price,
 				percentage,
-			)
+			)?;
+
+			Ok(())
 		}
 
 		/// Accepts a buy order.
