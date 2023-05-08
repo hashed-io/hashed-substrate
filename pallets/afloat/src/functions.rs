@@ -10,7 +10,7 @@ use frame_support::pallet_prelude::*;
 use pallet_rbac::types::IdOrVec;
 use pallet_rbac::types::RoleBasedAccessControl;
 use pallet_rbac::types::RoleId;
-use scale_info::prelude::vec; 
+use scale_info::prelude::vec;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::str;
 use sp_runtime::sp_std::vec::Vec;
@@ -58,7 +58,7 @@ impl<T: Config> Pallet<T> {
 			<UserInfo<T>>::insert(admin.clone(), admin_user);
 			Self::give_role_to_user(admin, AfloatRole::Admin)?;
 		}
-	
+
 		Ok(())
 	}
 
@@ -226,9 +226,9 @@ impl<T: Config> Pallet<T> {
 
 		Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
 		Self::remove_from_afloat_marketplace(user_address.clone())?;
-			
+
 		let user_roles = Self::get_all_roles_for_user(user_address.clone());
-	
+
 		if !user_roles.is_empty() {
 			for role in user_roles {
 				Self::remove_role_from_user(user_address.clone(), role)?;
@@ -244,14 +244,14 @@ impl<T: Config> Pallet<T> {
 		user_address: T::AccountId,
 		amount: T::Balance,
 	) -> DispatchResult {
-		
+
 		let authority = ensure_signed(origin.clone())?;
 		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
 
 		ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
 
 		let current_balance = Self::do_get_afloat_balance(user_address.clone());
-	
+
 		if current_balance > amount {
 			let diff = current_balance - amount;
 			pallet_mapped_assets::Pallet::<T>::burn(
@@ -269,7 +269,7 @@ impl<T: Config> Pallet<T> {
 				diff,
 			)?;
 		}
-	
+
 		Self::deposit_event(Event::AfloatBalanceSet(authority, user_address, amount));
 		Ok(())
 	}
@@ -278,17 +278,17 @@ impl<T: Config> Pallet<T> {
 		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
 		pallet_mapped_assets::Pallet::<T>::balance(asset_id.into(), user_address)
 	}
-	
+
 
 	pub fn do_create_sell_order(
 		authority: T::AccountId,
 		item_id: <T as pallet_uniques::Config>::ItemId,
 		price: T::Balance,
-		percentage: u32,
-	) -> DispatchResult 
+		tax_credit_amount: u32,
+	) -> DispatchResult
 	{
 
-		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);	
+		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
 
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
@@ -310,8 +310,8 @@ impl<T: Config> Pallet<T> {
 		authority: T::AccountId,
 		item_id: <T as pallet_uniques::Config>::ItemId,
 		price: T::Balance,
-		percentage: u32,
-	) -> DispatchResult 
+		tax_credit_amount: u32,
+	) -> DispatchResult
 	{
 		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
 
@@ -334,12 +334,12 @@ impl<T: Config> Pallet<T> {
 	pub fn do_take_sell_order(
 		authority: OriginFor<T>,
 		order_id: [u8; 32],
-	) -> DispatchResult 
+	) -> DispatchResult
 	where
 	<T as pallet_uniques::Config>::ItemId: From<u32>
 	{
 		let who = ensure_signed(authority.clone())?;
-		
+
 		ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
 
 		pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(
@@ -354,7 +354,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_take_buy_order(
 		authority: T::AccountId,
 		order_id: [u8; 32],
-	) -> DispatchResult 
+	) -> DispatchResult
 	where
 	<T as pallet_uniques::Config>::ItemId: From<u32>
 	{
@@ -374,7 +374,7 @@ impl<T: Config> Pallet<T> {
         metadata: CollectionDescription<T>,
         attributes: Option<Attributes<T>>,
         parent_info: Option<ParentInfo<T>>,
-    ) -> DispatchResult 
+    ) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 		<T as pallet_uniques::Config>::CollectionId: From<u32>,
@@ -394,7 +394,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn create_afloat_collection(origin: OriginFor<T>,
 		metadata: CollectionDescription<T>,
-		admin: T::AccountId, ) -> DispatchResult 
+		admin: T::AccountId, ) -> DispatchResult
 		where
 		<T as pallet_uniques::Config>::CollectionId: From<u32>,
 		{
@@ -445,7 +445,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			[AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
 		)
-		.is_ok() 
+		.is_ok()
 	}
 
 	pub fn is_owner(account: T::AccountId) -> bool {
@@ -456,7 +456,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			[AfloatRole::Owner.id()].to_vec(),
 		)
-		.is_ok() 
+		.is_ok()
 	}
 
 	pub fn is_cpa(account: T::AccountId) -> bool {
@@ -467,7 +467,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			[AfloatRole::CPA.id()].to_vec(),
 		)
-		.is_ok() 
+		.is_ok()
 	}
 
 	pub fn give_role_to_user(
@@ -544,9 +544,9 @@ impl<T: Config> Pallet<T> {
 	fn get_all_roles_for_user(account_id: T::AccountId) -> Vec<AfloatRole> {
 		let pallet_id = Self::pallet_id();
 		let scope_id = AfloatMarketPlaceId::<T>::get().unwrap();
-	
+
 		let roles_storage = <T as pallet::Config>::Rbac::get_roles_by_user(account_id.clone(), pallet_id, &scope_id);
-	
+
 		roles_storage.into_iter().filter_map(Self::role_id_to_afloat_role).collect()
 	}
 
@@ -554,13 +554,13 @@ impl<T: Config> Pallet<T> {
 		UserInfo::<T>::iter_keys().try_for_each(|account_id| {
 			if !Self::is_admin_or_owner(account_id.clone()) {
 				let user_roles = Self::get_all_roles_for_user(account_id.clone());
-	
+
 				if !user_roles.is_empty() {
 					for role in user_roles {
 						Self::remove_role_from_user(account_id.clone(), role)?;
 					}
 				}
-	
+
 				Self::remove_from_afloat_collection(account_id.clone(), FruniqueRole::Collaborator)?;
 				Self::remove_from_afloat_marketplace(account_id.clone())?;
 				UserInfo::<T>::remove(account_id);
@@ -569,5 +569,5 @@ impl<T: Config> Pallet<T> {
 		})?;
 		Ok(())
 	}
-	
+
 }
