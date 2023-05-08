@@ -139,16 +139,16 @@ impl<T: Config> Offer<T> {
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
-pub enum CreateOfferArgs {
+pub enum CreateOfferArgs<T: Config> {
 	Sell {
 		tax_credit_amount: u32,
-		price_per_credit: u32,
-		tax_credit_id: u32,
+		price_per_credit: T::Balance,
+		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 	},
 	Buy {
 		tax_credit_amount: u32,
-		price_per_credit: u32,
-		tax_credit_id: u32,
+		price_per_credit: T::Balance,
+		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 	},
 }
 

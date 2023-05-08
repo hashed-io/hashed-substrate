@@ -233,31 +233,38 @@ pub mod pallet {
 
 		#[pallet::call_index(4)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn create_sell_order(
+		pub fn create_offer(
 			origin: OriginFor<T>,
-			item_id: <T as pallet_uniques::Config>::ItemId,
-			price: T::Balance,
-			percentage: u32,
+			args: CreateOfferArgs<T>,
 		)
 		 -> DispatchResult
 		{
 			let who = ensure_signed(origin)?;
-			Self::do_create_sell_order(who , item_id, price, percentage)
+			match args {
+				CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id, price_per_credit } => {
+					Self::do_create_sell_order(who, tax_credit_id, price_per_credit, tax_credit_amount)?;
+				}
+				CreateOfferArgs::Buy { tax_credit_amount, tax_credit_id, price_per_credit } => {
+					Self::do_create_buy_order(who, tax_credit_id, price_per_credit, tax_credit_amount)?;
+				}
+			}
+			Ok(())
 		}
 
 		#[pallet::call_index(5)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn create_buy_order(
+		pub fn accept_offer(
 			origin: OriginFor<T>,
-			item_id: <T as pallet_uniques::Config>::ItemId,
-			price: T::Balance,
-			percentage: u32,
+			offer_id: [u8; 32],
 		)
 		 -> DispatchResult
 		{
-			let who = ensure_signed(origin)?;
-			Self::do_create_buy_order(who , item_id, price, percentage)
+			ensure_signed(origin.clone())?;
+
+			// Self::do_accept_offer(origin , offer_id)
+			Ok(())
 		}
+
 
 		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
