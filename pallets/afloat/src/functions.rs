@@ -90,7 +90,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(!<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserAlreadyExists);
 		match args {
-			SignUpArgs::BuyerOrSeller { first_name, last_name, email, state } => {
+			SignUpArgs::BuyerOrSeller { cid, group } => {
 				let user: User<T> = User {
 					first_name,
 					last_name,
@@ -110,7 +110,7 @@ impl<T: Config> Pallet<T> {
 				Self::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)?;
 				Self::deposit_event(Event::NewUser(user_address.clone()));
 			},
-			SignUpArgs::CPA { first_name, last_name, email, license_number, state } => {
+			SignUpArgs::CPA { cid, group } => {
 				let user: User<T> = User {
 					first_name,
 					last_name,
@@ -124,7 +124,6 @@ impl<T: Config> Pallet<T> {
 					credits_needed: 0,
 					cpa_id: license_number,
 					tax_authority_id: state,
-					lock_expiration_date: None,
 				};
 				<UserInfo<T>>::insert(user_address.clone(), user);
 				Self::give_role_to_user(user_address.clone(), AfloatRole::CPA)?;
@@ -163,14 +162,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_edit_user(
 		actor: T::AccountId,
 		user_address: T::AccountId,
-		first_name: Option<ShortString>,
-		last_name: Option<ShortString>,
-		email: Option<LongString>,
-		lang_key: Option<ShortString>,
-		phone: Option<Option<ShortString>>,
-		credits_needed: Option<u32>,
-		cpa_id: Option<ShortString>,
-		state: Option<u32>,
+		cid: ShortString,
 	) -> DispatchResult {
 
 		<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
@@ -178,31 +170,7 @@ impl<T: Config> Pallet<T> {
 
 			user.last_modified_date = Some(T::TimeProvider::now().as_secs());
 			user.last_modified_by = Some(actor.clone());
-
-			if let Some(first_name) = first_name {
-				user.first_name = first_name;
-			}
-			if let Some(last_name) = last_name {
-				user.last_name = last_name;
-			}
-			if let Some(email) = email {
-				user.email = email;
-			}
-			if let Some(lang_key) = lang_key {
-				user.lang_key = lang_key;
-			}
-			if let Some(phone) = phone {
-				user.phone = phone;
-			}
-			if let Some(credits_needed) = credits_needed {
-				user.credits_needed = credits_needed;
-			}
-			if let Some(cpa_id) = cpa_id {
-				user.cpa_id = cpa_id;
-			}
-			if let Some(state) = state {
-				user.tax_authority_id = state;
-			}
+			user.cid = cid;
 
 			Ok(())
 		})?;

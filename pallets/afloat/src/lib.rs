@@ -220,8 +220,8 @@ pub mod pallet {
 			ensure!(who.clone() == address || Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 
 			match args {
-				UpdateUserArgs::Edit { first_name, last_name, email, lang_key, phone, credits_needed, cpa_id, state } => {
-					Self::do_edit_user(who, address, first_name, last_name, email, lang_key, phone, credits_needed, cpa_id, state)?;
+				UpdateUserArgs::Edit { cid } => {
+					Self::do_edit_user(who, address, cid)?;
 				}
 				UpdateUserArgs::Delete => {
 					Self::do_delete_user(who, address)?;
@@ -261,10 +261,10 @@ pub mod pallet {
 		 -> DispatchResult
 		{
 			ensure_signed(origin.clone())?;
-
-			// Self::do_accept_offer(origin , offer_id)
 			Ok(())
 		}
+
+
 
 
 		#[pallet::call_index(6)]

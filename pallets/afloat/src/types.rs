@@ -9,12 +9,14 @@ pub type Date = u64;
 pub type CollectionId = u32;
 pub type StorageId = [u8; 32];
 
+// ! User structures
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct User<T: Config> {
 	pub cid: ShortString,
+	pub group: ShortString, // only can be modified when the user is registered (can not be modified)
 	pub created_by: Option<T::AccountId>,
 	pub created_date: Option<Date>,
 	pub last_modified_by: Option<T::AccountId>,
@@ -24,6 +26,7 @@ pub struct User<T: Config> {
 impl<T: Config> User<T> {
 	pub fn new(
 		cid: ShortString,
+		group: ShortString,
 		created_by: Option<T::AccountId>,
 		created_date: Option<Date>,
 		last_modified_by: Option<T::AccountId>,
@@ -31,6 +34,7 @@ impl<T: Config> User<T> {
 	) -> Self {
 		Self {
 			cid,
+			group,
 			created_by,
 			created_date,
 			last_modified_by,
@@ -38,6 +42,32 @@ impl<T: Config> User<T> {
 		}
 	}
 }
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum UpdateUserArgs {
+	Edit {
+		cid: ShortString,
+	},
+	Delete,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum SignUpArgs {
+	BuyerOrSeller {
+		cid: ShortString,
+		group: ShortString,
+	},
+	CPA {
+		cid: ShortString,
+		group: ShortString,
+	},
+}
+
+//! Offer structures
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
 pub enum OfferStatus {
@@ -72,9 +102,10 @@ impl Default for OfferType {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Offer<T: Config> {
-	pub tax_credit_amount: u32,
-	pub tax_credit_amount_remaining: u32,
-	pub price_per_credit: T::Balance,
+	pub tax_credit_amount: u32, //!
+	pub tax_credit_amount_remaining: u32, // != percentage, it is the amount of tax credits,
+	pub price_per_credit: T::Balance, // 1_000_000_000_000
+	pub expiration_date: Date,
 	pub creation_date: Date,
 	pub cancellation_date: Option<Date>,
 	// pub fee: T::Balance,
@@ -128,6 +159,8 @@ pub enum CreateOfferArgs<T: Config> {
 	},
 }
 
+// ! Transaction structures
+
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
@@ -146,34 +179,7 @@ pub struct Transaction<T: Config> {
 	pub buyer_confirmation_date: Option<Date>,
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub enum UpdateUserArgs {
-	Edit {
-		cid: Option<ShortString>,
-	},
-	Delete,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
-#[scale_info(skip_type_params(T))]
-#[codec(mel_bound())]
-pub enum SignUpArgs {
-	BuyerOrSeller {
-		first_name: ShortString,
-		last_name: ShortString,
-		email: LongString,
-		state: u32,
-	},
-	CPA {
-		first_name: ShortString,
-		last_name: ShortString,
-		email: LongString,
-		license_number: ShortString,
-		state: u32,
-	},
-}
+// ! Roles structures
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
 pub enum AfloatRole {
