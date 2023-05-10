@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"hashed_parachain":[["impl FromArgMatches for <a class=\"enum\" href=\"hashed_parachain/cli/enum.Subcommand.html\" title=\"enum hashed_parachain::cli::Subcommand\">Subcommand</a>"],["impl FromArgMatches for <a class=\"struct\" href=\"hashed_parachain/cli/struct.Cli.html\" title=\"struct hashed_parachain::cli::Cli\">Cli</a>"]]
+"hashed_parachain":[["impl FromArgMatches for <a class=\"struct\" href=\"hashed_parachain/cli/struct.Cli.html\" title=\"struct hashed_parachain::cli::Cli\">Cli</a>"],["impl FromArgMatches for <a class=\"enum\" href=\"hashed_parachain/cli/enum.Subcommand.html\" title=\"enum hashed_parachain::cli::Subcommand\">Subcommand</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

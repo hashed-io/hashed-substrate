@@ -1308,6 +1308,62 @@
 <a href="#1308" id="1308">1308</a>
 <a href="#1309" id="1309">1309</a>
 <a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
@@ -1315,11 +1371,11 @@
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>scale_info::prelude::vec; <span class="comment">// vec![] macro
 </span><span class="kw">use </span>sp_runtime::sp_std::vec::Vec; <span class="comment">// vec primitive
-
-</span><span class="kw">use </span>frame_support::traits::Currency;
-<span class="kw">use </span>frame_support::traits::ExistenceRequirement::KeepAlive;
+</span><span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::traits::Time;
 <span class="kw">use </span>sp_runtime::Permill;
+<span class="kw">use </span>sp_runtime::traits::StaticLookup;
+<span class="kw">use </span>frame_system::RawOrigin;
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 	<span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
@@ -1360,17 +1416,30 @@
 	}
 
 	<span class="kw">pub fn </span>do_create_marketplace(
-		owner: T::AccountId,
+		origin: OriginFor&lt;T&gt;,
 		admin: T::AccountId,
 		marketplace: Marketplace&lt;T&gt;,
 	) -&gt; DispatchResult {
+		<span class="kw">let </span>owner = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 		<span class="comment">// Gen market id
 		</span><span class="kw">let </span>marketplace_id = marketplace.using_encoded(blake2_256);
+		<span class="comment">//Get asset id
+		</span><span class="kw">let </span>asset_id = marketplace.asset_id;
+		<span class="kw">let </span>min_balance: T::Balance = T::Balance::from(<span class="number">1u32</span>);
+
+
 		<span class="comment">// ensure the generated id is unique
 		</span><span class="macro">ensure!</span>(
 			!&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id),
 			Error::&lt;T&gt;::MarketplaceAlreadyExists
 		);
+		<span class="comment">// Create asset
+		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::create(
+			origin,
+			asset_id,
+			T::Lookup::unlookup(owner.clone()),
+			min_balance,
+		)<span class="question-mark">?</span>; 
 		<span class="comment">//Insert on marketplaces and marketplaces by auth
 		</span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
 		<span class="self">Self</span>::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)<span class="question-mark">?</span>;
@@ -1637,9 +1706,9 @@
 		marketplace_id: [u8; <span class="number">32</span>],
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
-		price: BalanceOf&lt;T&gt;,
+		price: T::Balance,
 		percentage: u32,
-	) -&gt; DispatchResult {
+	) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; <span class="number">32</span>], DispatchError&gt; {
 		<span class="comment">//This function is only called by the owner of the marketplace
 		//ensure the marketplace exists
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
@@ -1704,7 +1773,7 @@
 		pallet_fruniques::Pallet::&lt;T&gt;::do_freeze(<span class="kw-2">&amp;</span>collection_id, item_id)<span class="question-mark">?</span>;
 
 		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		<span class="prelude-val">Ok</span>(())
+		<span class="prelude-val">Ok</span>(offer_id)
 	}
 
 	<span class="kw">pub fn </span>do_enlist_buy_offer(
@@ -1712,13 +1781,15 @@
 		marketplace_id: [u8; <span class="number">32</span>],
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
-		price: BalanceOf&lt;T&gt;,
+		price: T::Balance,
 		percentage: u32,
-	) -&gt; DispatchResult {
+	) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; <span class="number">32</span>], DispatchError&gt; {
 
 		
 		<span class="comment">//ensure the marketplace exists
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
+
+
 
 		<span class="comment">//ensure the collection exists
 		//For this case user doesn&#39;t need to be the owner of the collection
@@ -1737,8 +1808,12 @@
 			<span class="kw-2">&amp;</span>item_id
 		)<span class="question-mark">?</span>;
 
+		<span class="comment">//Get asset id
+		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
+		
 		<span class="comment">//ensure user has enough balance to create the offer
-		</span><span class="kw">let </span>total_user_balance = T::Currency::total_balance(<span class="kw-2">&amp;</span>authority);
+		</span><span class="kw">let </span>total_user_balance = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id,authority.clone());  
+
 		<span class="macro">ensure!</span>(total_user_balance &gt;= price, Error::&lt;T&gt;::NotEnoughBalance);
 
 		<span class="comment">//ensure the price is valid
@@ -1788,16 +1863,19 @@
 			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
 
 		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		<span class="prelude-val">Ok</span>(())
+		
+		<span class="prelude-val">Ok</span>(offer_id)
 	}
 
-	<span class="kw">pub fn </span>do_take_sell_offer(buyer: T::AccountId, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult
+	<span class="kw">pub fn </span>do_take_sell_offer(origin : OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult
 	<span class="kw">where
 		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
 	{
 		<span class="comment">//This extrinsic is called by the user who wants to buy the item
 		//get offer data
-		</span><span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		</span><span class="kw">let </span>buyer = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+		<span class="kw">let </span>offer_data = &lt;OffersInfo&lt;T&gt;&gt;::get(offer_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
+		<span class="kw">let </span>marketplace_id = offer_data.marketplace_id;
 
 		<span class="self">Self</span>::is_authorized(buyer.clone(), <span class="kw-2">&amp;</span>offer_data.marketplace_id, Permission::TakeSellOffer)<span class="question-mark">?</span>;
 
@@ -1819,19 +1897,35 @@
 		<span class="comment">//ensure the offer is open and available
 		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
 		<span class="comment">//TODO: Use free_balance instead of total_balance
-		//Get the buyer&#39;s balance
-		</span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>buyer);
+		//Get asset id
+		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
+		
+		<span class="comment">//ensure user has enough balance to create the offer
+		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), buyer.clone()); 
 		<span class="comment">//ensure the buyer has enough balance to buy the item
 		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
 
 		<span class="kw">let </span>marketplace =
 			&lt;Marketplaces&lt;T&gt;&gt;::get(offer_data.marketplace_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-		<span class="kw">let </span>owners_cut: BalanceOf&lt;T&gt; = offer_data.price - offer_data.fee;
+		<span class="kw">let </span>owners_cut: T::Balance = offer_data.price - offer_data.fee;
 		<span class="comment">//Transfer the balance
-		</span>T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>owner_item, owners_cut, KeepAlive)<span class="question-mark">?</span>;
-		T::Currency::transfer(<span class="kw-2">&amp;</span>buyer, <span class="kw-2">&amp;</span>marketplace.creator, offer_data.fee, KeepAlive)<span class="question-mark">?</span>;
+		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::transfer(
+			origin.clone(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(owner_item.clone()),
+			owners_cut,
+		)<span class="question-mark">?</span>;
+		<span class="comment">//T::Currency::transfer(&amp;buyer, &amp;owner_item, owners_cut, KeepAlive)?;
 
-		pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
+		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::transfer(
+			origin.clone(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(marketplace.creator.clone()),
+			offer_data.fee,
+		)<span class="question-mark">?</span>;
+		<span class="comment">//T::Currency::transfer(&amp;buyer, &amp;marketplace.creator, offer_data.fee, KeepAlive)?;
+
+		</span>pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
 		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
 			<span class="comment">//Use uniques transfer function to transfer the item to the buyer
 			</span>pallet_uniques::Pallet::&lt;T&gt;::do_transfer(
@@ -1910,25 +2004,43 @@
 
 		<span class="comment">//ensure the offer is open and available
 		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
-
-		<span class="comment">//TODO: Use free_balance instead of total_balance
-		//Get the buyer&#39;s balance
-		</span><span class="kw">let </span>total_amount_buyer = T::Currency::total_balance(<span class="kw-2">&amp;</span>offer_data.creator);
+		
+		<span class="kw">let </span>marketplace_id = offer_data.marketplace_id;
+		<span class="comment">//Get asset id
+		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
+		
+		<span class="comment">//ensure user has enough balance to create the offer
+		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), offer_data.creator.clone()); 
 		<span class="comment">//ensure the buy_offer_creator has enough balance to buy the item
 		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
 
 		<span class="kw">let </span>marketplace =
 			&lt;Marketplaces&lt;T&gt;&gt;::get(offer_data.marketplace_id).ok_or(Error::&lt;T&gt;::OfferNotFound)<span class="question-mark">?</span>;
-		<span class="kw">let </span>owners_cut: BalanceOf&lt;T&gt; = offer_data.price - offer_data.fee;
+		<span class="kw">let </span>owners_cut: T::Balance = offer_data.price - offer_data.fee;
 		<span class="comment">//Transfer the balance to the owner of the item
-		</span>T::Currency::transfer(<span class="kw-2">&amp;</span>offer_data.creator, <span class="kw-2">&amp;</span>owner_item, owners_cut, KeepAlive)<span class="question-mark">?</span>;
-		T::Currency::transfer(
-			<span class="kw-2">&amp;</span>offer_data.creator,
-			<span class="kw-2">&amp;</span>marketplace.creator,
+		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::transfer(
+			RawOrigin::Signed(offer_data.creator.clone()).into(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(owner_item.clone()),
+			owners_cut,
+		)<span class="question-mark">?</span>;
+		<span class="comment">//T::Currency::transfer(&amp;offer_data.creator, &amp;owner_item, owners_cut, KeepAlive)?;
+
+		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::transfer(
+			RawOrigin::Signed(offer_data.creator.clone()).into(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(marketplace.creator.clone()),
+			offer_data.fee,
+		)<span class="question-mark">?</span>;
+
+		<span class="comment">/* T::Currency::transfer(
+			&amp;offer_data.creator,
+			&amp;marketplace.creator,
 			offer_data.fee,
 			KeepAlive,
-		)<span class="question-mark">?</span>;
-		pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
+		)?; */
+		
+		</span>pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
 
 		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
 			<span class="comment">//Use uniques transfer function to transfer the item to the buyer
@@ -2447,8 +2559,8 @@
 		<span class="prelude-val">Ok</span>(())
 	}
 
-	<span class="kw">fn </span>is_the_offer_valid(price: BalanceOf&lt;T&gt;, percentage: Permill) -&gt; DispatchResult {
-		<span class="kw">let </span>minimun_amount: BalanceOf&lt;T&gt; = <span class="number">1000u32</span>.into();
+	<span class="kw">fn </span>is_the_offer_valid(price: T::Balance, percentage: Permill) -&gt; DispatchResult {
+		<span class="kw">let </span>minimun_amount: T::Balance = <span class="number">1000u32</span>.into();
 		<span class="macro">ensure!</span>(price &gt; minimun_amount, Error::&lt;T&gt;::PriceMustBeGreaterThanZero);
 		<span class="macro">ensure!</span>(percentage &lt;= Permill::from_percent(<span class="number">99</span>), Error::&lt;T&gt;::ExceedMaxPercentage);
 		<span class="macro">ensure!</span>(percentage &gt;= Permill::from_percent(<span class="number">1</span>), Error::&lt;T&gt;::ExceedMinPercentage);

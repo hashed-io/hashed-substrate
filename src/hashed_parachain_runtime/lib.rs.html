@@ -1449,6 +1449,33 @@
 <a href="#1449" id="1449">1449</a>
 <a href="#1450" id="1450">1450</a>
 <a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 </span><span class="comment">// `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 </span><span class="attr">#![recursion_limit = <span class="string">&quot;256&quot;</span>]
@@ -1511,9 +1538,12 @@
 
 <span class="kw">use </span>weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight};
 
+<span class="kw">use </span>pallet_mapped_assets;
+
 <span class="comment">// XCM Imports
 </span><span class="kw">use </span>xcm::latest::prelude::BodyId;
 <span class="kw">use </span>xcm_executor::XcmExecutor;
+<span class="kw">use </span>pallet_mapped_assets::DefaultCallback;
 
 <span class="doccomment">/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 </span><span class="kw">pub type </span>Signature = MultiSignature;
@@ -2492,6 +2522,29 @@
 	<span class="kw">type </span>Rbac = RBAC;
 }
 
+<span class="kw">impl </span>pallet_mapped_assets::Config <span class="kw">for </span>Runtime {
+	<span class="kw">type </span>RuntimeEvent = RuntimeEvent;
+	<span class="kw">type </span>Balance = u128;
+	<span class="kw">type </span>AssetId = u32;
+	<span class="kw">type </span>Currency = Balances;
+	<span class="kw">type </span>CreateOrigin = AsEnsureOriginWithArg&lt;EnsureSigned&lt;AccountId&gt;&gt;;
+	<span class="kw">type </span>ForceOrigin = EnsureRoot&lt;AccountId&gt;;
+	<span class="kw">type </span>AssetDeposit = AssetDeposit;
+	<span class="kw">type </span>AssetAccountDeposit = ConstU128&lt;DOLLARS&gt;;
+	<span class="kw">type </span>MetadataDepositBase = MetadataDepositBase;
+	<span class="kw">type </span>MetadataDepositPerByte = MetadataDepositPerByte;
+	<span class="kw">type </span>ApprovalDeposit = ApprovalDeposit;
+	<span class="kw">type </span>StringLimit = StringLimit;
+	<span class="kw">type </span>Freezer = ();
+	<span class="kw">type </span>Extra = ();
+	<span class="kw">type </span>WeightInfo = ();
+	<span class="kw">type </span>MaxReserves = MaxReserves;
+	<span class="kw">type </span>ReserveIdentifier = u32;
+	<span class="kw">type </span>RemoveItemsLimit = RemoveItemsLimit;
+	<span class="kw">type </span>AssetIdParameter = u32;
+	<span class="kw">type </span>CallbackHandle = DefaultCallback;
+}
+
 <span class="macro">parameter_types! </span>{
 	<span class="kw">pub const </span>MaxScopesPerPallet: u32 = <span class="number">1000</span>;
 	<span class="kw">pub const </span>MaxRolesPerPallet: u32 = <span class="number">20</span>;
@@ -2643,6 +2696,7 @@
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event&lt;T&gt;}  = <span class="number">156</span>,
 		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event&lt;T&gt;}  = <span class="number">157</span>,
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event&lt;T&gt;} = <span class="number">158</span>,
+		MappedAssets: pallet_mapped_assets::{Pallet, Call, Storage, Event&lt;T&gt;} = <span class="number">159</span>,
 	}
 );
 

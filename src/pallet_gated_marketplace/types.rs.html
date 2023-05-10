@@ -272,6 +272,7 @@
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
 <a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -299,6 +300,7 @@
 	<span class="kw">pub </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
 	<span class="kw">pub </span>buy_fee: Permill,
 	<span class="kw">pub </span>sell_fee: Permill,
+	<span class="kw">pub </span>asset_id: T::AssetId,
 	<span class="kw">pub </span>creator: T::AccountId,
 }
 
@@ -539,8 +541,8 @@
 	<span class="kw">pub </span>item_id: T::ItemId,
 	<span class="kw">pub </span>percentage: Permill,
 	<span class="kw">pub </span>creator: T::AccountId,
-	<span class="kw">pub </span>price: BalanceOf&lt;T&gt;,
-	<span class="kw">pub </span>fee: BalanceOf&lt;T&gt;,
+	<span class="kw">pub </span>price: T::Balance,
+	<span class="kw">pub </span>fee: T::Balance,
 	<span class="kw">pub </span>status: OfferStatus,
 	<span class="kw">pub </span>creation_date: u64,
 	<span class="kw">pub </span>offer_type: OfferType,
