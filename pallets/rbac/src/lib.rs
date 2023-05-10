@@ -14,20 +14,24 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-
 mod functions;
 pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::{*, ValueQuery};
 	use crate::types::*;
+	use frame_support::pallet_prelude::{ValueQuery, *};
+	use frame_system::pallet_prelude::*;
+	use sp_runtime::sp_std::vec::Vec;
 
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		// ideally sudo or council
+		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
 		#[pallet::constant]
 		type MaxScopesPerPallet: Get<u32>;
 		#[pallet::constant]
@@ -49,15 +53,15 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/*--- Onchain storage section ---*/
+	/* --- Onchain storage section --- */
 
 	#[pallet::storage]
 	#[pallet::getter(fn scopes)]
 	pub(super) type Scopes<T: Config> = StorageMap<
 		_,
 		Identity,
-		PalletId, // pallet_id
-		BoundedVec<ScopeId, T::MaxScopesPerPallet>,  // scopes_id
+		PalletId,                                   // pallet_id
+		BoundedVec<ScopeId, T::MaxScopesPerPallet>, // scopes_id
 		ValueQuery,
 	>;
 
@@ -66,8 +70,8 @@ pub mod pallet {
 	pub(super) type Roles<T: Config> = StorageMap<
 		_,
 		Identity,
-		RoleId, // role_id
-		BoundedVec<u8, T::RoleMaxLen >,  // role
+		RoleId,                        // role_id
+		BoundedVec<u8, T::RoleMaxLen>, // role
 		OptionQuery,
 	>;
 
@@ -76,8 +80,8 @@ pub mod pallet {
 	pub(super) type PalletRoles<T: Config> = StorageMap<
 		_,
 		Identity,
-		PalletId, // pallet_id
-		BoundedVec<RoleId, T::MaxRolesPerPallet >, // role_id
+		PalletId,                                 // pallet_id
+		BoundedVec<RoleId, T::MaxRolesPerPallet>, // role_id
 		ValueQuery,
 	>;
 
@@ -86,10 +90,10 @@ pub mod pallet {
 	pub(super) type Permissions<T: Config> = StorageDoubleMap<
 		_,
 		Identity,
-		PalletId, 			// pallet_id
+		PalletId, // pallet_id
 		Identity,
-		PermissionId,		// permission_id
-		BoundedVec<u8, T::PermissionMaxLen >,	// permission str
+		PermissionId,                        // permission_id
+		BoundedVec<u8, T::PermissionMaxLen>, // permission str
 		ValueQuery,
 	>;
 
@@ -98,10 +102,10 @@ pub mod pallet {
 	pub(super) type PermissionsByRole<T: Config> = StorageDoubleMap<
 		_,
 		Identity,
-		PalletId, 			// pallet_id
+		PalletId, // pallet_id
 		Identity,
-		RoleId,		// role_id
-		BoundedVec<PermissionId, T::MaxPermissionsPerRole >,	// permission_ids
+		RoleId,                                             // role_id
+		BoundedVec<PermissionId, T::MaxPermissionsPerRole>, // permission_ids
 		ValueQuery,
 	>;
 
@@ -110,11 +114,11 @@ pub mod pallet {
 	pub(super) type RolesByUser<T: Config> = StorageNMap<
 		_,
 		(
-			NMapKey<Blake2_128Concat, T::AccountId>,// user
-			NMapKey<Identity, PalletId>,			// pallet_id
-			NMapKey<Identity, ScopeId>,		// scope_id
+			NMapKey<Blake2_128Concat, T::AccountId>, // user
+			NMapKey<Identity, PalletId>,             // pallet_id
+			NMapKey<Identity, ScopeId>,              // scope_id
 		),
-		BoundedVec<RoleId, T::MaxRolesPerUser>,	// roles (ids)
+		BoundedVec<RoleId, T::MaxRolesPerUser>, // roles (ids)
 		ValueQuery,
 	>;
 
@@ -125,22 +129,37 @@ pub mod pallet {
 		(
 			// getting "the trait bound `usize: scale_info::TypeInfo` is not satisfied" errors
 			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
-			NMapKey<Identity, PalletId>,		// pallet_id
-			NMapKey<Identity, ScopeId>,		// scope_id
-			NMapKey<Identity, RoleId>,	// role_id
+			NMapKey<Identity, PalletId>, // pallet_id
+			NMapKey<Identity, ScopeId>,  // scope_id
+			NMapKey<Identity, RoleId>,   // role_id
 		),
-		BoundedVec<T::AccountId, T::MaxUsersPerRole>,	// users
+		BoundedVec<T::AccountId, T::MaxUsersPerRole>, // users
 		ValueQuery,
 	>;
-
-
-
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// An initial roles config was stored [pallet_id]
-		RolesStored(PalletId),
+		/// An initial roles config was stored [pallet_id, Vec<role_id>]
+		RolesStored(PalletId, BoundedVec<RoleId, T::MaxRolesPerPallet>),
+		/// The permissions were created and set to the role [pallet_id, role_id, Vec<permission_id>]
+		PermissionsCreatedAndSet(
+			PalletId,
+			RoleId,
+			BoundedVec<PermissionId, T::MaxPermissionsPerRole>,
+		),
+		/// The user no longer has that role [pallet_id, scope_id, role_id, account_id]
+		RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
+		/// The user now has that role [pallet_id, scope_id, role_id, account_id]
+		RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
+		/// The role no longer has the permission in the pallet context [pallet_id, role_id, permission_id]
+		PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
+		/// The permission was removed from the pallet and all the roles that had it [pallet_id, permission_id, affected_roles]
+		PermissionRemovedFromPallet(
+			PalletId,
+			PermissionId,
+			BoundedVec<RoleId, T::MaxRolesPerPallet>,
+		),
 	}
 
 	// Errors inform users that something went wrong.
@@ -198,5 +217,100 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		#[pallet::call_index(0)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn tx_create_and_set_roles(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			roles: Vec<Vec<u8>>,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::create_and_set_roles(pallet, roles)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(1)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn tx_remove_role_from_user(
+			origin: OriginFor<T>,
+			user: T::AccountId,
+			pallet: IdOrVec,
+			scope_id: ScopeId,
+			role_id: RoleId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::remove_role_from_user(user, pallet, &scope_id, role_id)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(2)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn tx_create_and_set_permissions(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			role_id: RoleId,
+			permissions: Vec<Vec<u8>>,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::create_and_set_permissions(pallet, role_id, permissions)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(3)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn tx_assign_role_to_user(
+			origin: OriginFor<T>,
+			user: T::AccountId,
+			pallet: IdOrVec,
+			scope_id: ScopeId,
+			role_id: RoleId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::assign_role_to_user(user, pallet, &scope_id, role_id)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(4)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn revoke_permission_from_role(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			role_id: RoleId,
+			permission_id: PermissionId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::do_revoke_permission_from_role(pallet, role_id, permission_id)?;
+			Ok(())
+		}
+
+		#[pallet::call_index(5)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn remove_permission_from_pallet(
+			origin: OriginFor<T>,
+			pallet: IdOrVec,
+			permission_id: PermissionId,
+		) -> DispatchResult {
+			ensure!(
+				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
+				Error::<T>::NotAuthorized
+			);
+			Self::do_remove_permission_from_pallet(pallet, permission_id)?;
+			Ok(())
+		}
 	}
 }
