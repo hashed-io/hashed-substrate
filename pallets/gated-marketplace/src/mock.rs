@@ -1,16 +1,30 @@
 use crate as pallet_gated_marketplace;
-use frame_support::{parameter_types, traits::AsEnsureOriginWithArg};
+use frame_support::{
+	construct_runtime, parameter_types,
+	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, GenesisBuild},
+};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-
+/// Balance of an account.
+pub type Balance = u128;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 use frame_system::EnsureRoot;
 use system::EnsureSigned;
+use pallet_mapped_assets::DefaultCallback;
+use sp_runtime::{
+	create_runtime_str, generic, impl_opaque_keys,
+	traits::{AccountIdLookup, Block as BlockT, IdentifyAccount, NumberFor, Verify},
+	transaction_validity::{TransactionSource, TransactionValidity},
+	ApplyExtrinsicResult, MultiSignature, Percent,
+};
+use sp_runtime::AccountId32;
+type AccountId = u64;
+type AssetId = u32;
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -25,8 +39,11 @@ frame_support::construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		RBAC: pallet_rbac::{Pallet, Call, Storage, Event<T>},
+		Assets: pallet_mapped_assets::{Pallet, Call, Storage, Event<T>},
 	}
 );
+
+
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -194,4 +211,51 @@ impl pallet_timestamp::Config for Test {
 	type OnTimestampSet = ();
 	type MinimumPeriod = ();
 	type WeightInfo = ();
+}
+parameter_types! {
+
+	pub const AssetDeposit: Balance = 100;
+	pub const ApprovalDeposit: Balance = 1;
+	pub const RemoveItemsLimit: u32 = 1000;
+}
+
+pub trait AssetsCallback<AssetId, AccountId> {
+	/// Indicates that asset with `id` was successfully created by the `owner`
+	fn created(_id: &AssetId, _owner: &AccountId) {}
+
+	/// Indicates that asset with `id` has just been destroyed
+	fn destroyed(_id: &AssetId) {}
+}
+
+pub struct AssetsCallbackHandle;
+impl pallet_mapped_assets::AssetsCallback<u32, u64> for AssetsCallbackHandle {
+    fn created(_id: &AssetId, _owner: &u64) {
+    }
+
+    fn destroyed(_id: &AssetId) {
+    }
+}
+
+
+impl pallet_mapped_assets::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = u64;
+	type AssetId = u32;
+	type AssetIdParameter = u32;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<frame_system::EnsureSigned<u64>>;
+	type ForceOrigin = frame_system::EnsureRoot<u64>;
+	type AssetDeposit = ConstU64<1>;
+	type AssetAccountDeposit = ConstU64<10>;
+	type MetadataDepositBase = ConstU64<1>;
+	type MetadataDepositPerByte = ConstU64<1>;
+	type ApprovalDeposit = ConstU64<1>;
+	type StringLimit = ConstU32<50>;
+	type Freezer = ();
+	type WeightInfo = ();
+	type CallbackHandle = AssetsCallbackHandle;
+	type Extra = ();
+	type RemoveItemsLimit = ConstU32<5>;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = u32;
 }

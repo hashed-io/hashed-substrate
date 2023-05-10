@@ -497,73 +497,61 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 	/// - `user`: The account to validate.
 	/// - `pallet_id`: The unique pallet identifier.
 	/// - `scope_id`: The scope context in which the role will be validated.
-	fn does_user_have_any_role_in_scope(
-		account: T::AccountId,
-		pallet: IdOrVec,
-		scope_id: &ScopeId,
-	) -> bool {
-		let pallet_id = pallet.to_id();
-		UsersByScope::<T>::iter_prefix((pallet_id, scope_id))
-			.any(|(_, users)| users.contains(&account))
-	}
-	/// Scope validation
-	///
-	/// Checks if the scope exists in that pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope to validate.
-	fn scope_exists(pallet: IdOrVec, scope_id: &ScopeId) -> DispatchResult {
-		ensure!(<Scopes<T>>::get(pallet.to_id()).contains(scope_id), Error::<T>::ScopeNotFound);
-		Ok(())
-	}
+		fn does_user_have_any_role_in_scope(account: T::AccountId, pallet: IdOrVec, scope_id: &ScopeId) -> bool {
+				let pallet_id = pallet.to_id();
+				UsersByScope::<T>::iter_prefix((pallet_id, scope_id)).any(|(_, users)| {
+				users.contains(&account)
+			})
+		}
+    /// Scope validation
+    ///
+    /// Checks if the scope exists in that pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope to validate.
+    fn scope_exists(pallet: IdOrVec, scope_id:&ScopeId) -> DispatchResult{
+        ensure!(<Scopes<T>>::get(pallet.to_id()).contains(scope_id), Error::<T>::ScopeNotFound);
+        Ok(())
+    }
 
-	/// Permission validation.
-	///
-	/// Checks if the permission exists in a pallet context.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `permission_id`: The permission to validate.
-	fn permission_exists(pallet: IdOrVec, permission_id: &PermissionId) -> DispatchResult {
-		ensure!(
-			<Permissions<T>>::contains_key(pallet.to_id(), permission_id),
-			Error::<T>::PermissionNotFound
-		);
-		Ok(())
-	}
+    /// Permission validation.
+    ///
+    /// Checks if the permission exists in a pallet context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `permission_id`: The permission to validate.
+    fn permission_exists(pallet: IdOrVec, permission_id: &PermissionId)->DispatchResult{
+        ensure!(<Permissions<T>>::contains_key(pallet.to_id(), permission_id), Error::<T>::PermissionNotFound);
+        Ok(())
+    }
 
-	/// Role validation
-	///
-	/// Checks if the role is linked to the pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role to validate
-	fn is_role_linked_to_pallet(pallet: IdOrVec, role_id: &RoleId) -> DispatchResult {
-		// The role exists, now  check if the role is assigned to that pallet
-		<PalletRoles<T>>::get(pallet.to_id())
-			.iter()
-			.find(|pallet_role| *pallet_role == role_id)
-			.ok_or(Error::<T>::RoleNotLinkedToPallet)?;
-		Ok(())
-	}
+    /// Role validation
+    ///
+    /// Checks if the role is linked to the pallet.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role to validate
+    fn is_role_linked_to_pallet(pallet: IdOrVec, role_id: &RoleId)-> DispatchResult{
+        // The role exists, now  check if the role is assigned to that pallet
+        <PalletRoles<T>>::get(pallet.to_id()).iter().find(|pallet_role| *pallet_role==role_id )
+            .ok_or(Error::<T>::RoleNotLinkedToPallet)?;
+        Ok(())
+    }
 
-	/// Permission linking validation
-	///
-	/// Checks if the permission is linked to the role in the pallet context.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role which should have the permission.
-	/// - `permission_id`: The permission which the role should have.
-	fn is_permission_linked_to_role(
-		pallet: IdOrVec,
-		role_id: &RoleId,
-		permission_id: &PermissionId,
-	) -> DispatchResult {
-		let role_permissions = <PermissionsByRole<T>>::get(pallet.to_id(), role_id);
-		ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole);
-		Ok(())
-	}
+    /// Permission linking validation
+    ///
+    /// Checks if the permission is linked to the role in the pallet context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `role_id`: The role which should have the permission.
+    /// - `permission_id`: The permission which the role should have.
+    fn is_permission_linked_to_role(pallet: IdOrVec, role_id: &RoleId, permission_id: &PermissionId)-> DispatchResult{
+        let role_permissions = <PermissionsByRole<T>>::get(pallet.to_id(), role_id);
+        ensure!(role_permissions.contains(permission_id), Error::<T>::PermissionNotLinkedToRole );
+        Ok(())
+    }
 
-	/// Get roles that have a permission
+    /// Get roles that have a permission
 	///
 	/// Returns all the roles within the pallet that have a permission
 	/// ### Parameters:
@@ -578,39 +566,45 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 			.collect()
 	}
 
-	/// Role list length
-	///
-	/// Returns the number of user that have the specified role in a scope context.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope in which the users will be retrieved.
-	/// - `role_id`: The role in which the number of users will be counted.
-	fn get_role_users_len(pallet: IdOrVec, scope_id: &ScopeId, role_id: &RoleId) -> usize {
-		<UsersByScope<T>>::get((pallet.to_id(), scope_id, role_id)).len()
-	}
+    /// Role list length
+    ///
+    /// Returns the number of user that have the specified role in a scope context.
+    /// ### Parameters:
+    /// - `pallet_id`: The unique pallet identifier.
+    /// - `scope_id`: The scope in which the users will be retrieved.
+    /// - `role_id`: The role in which the number of users will be counted.
+    fn get_role_users_len(pallet: IdOrVec, scope_id:&ScopeId, role_id: &RoleId) ->usize{
+        <UsersByScope<T>>::get((pallet.to_id(), scope_id, role_id)).len()
+    }
 
-	fn to_id(v: Vec<u8>) -> [u8; 32] {
-		v.using_encoded(blake2_256)
-	}
+    fn to_id(v: Vec<u8>)->[u8;32]{
+        v.using_encoded(blake2_256)
+    }
 
-	type MaxRolesPerPallet = T::MaxRolesPerPallet;
+    fn get_roles_by_user(user: T::AccountId, pallet: IdOrVec, scope_id: &ScopeId) -> Vec<RoleId> {
+        <RolesByUser<T>>::get((user, pallet.to_id(), scope_id)).into()
+    }
 
-	type MaxPermissionsPerRole = T::MaxPermissionsPerRole;
+    type MaxRolesPerPallet = T::MaxRolesPerPallet;
 
-	type PermissionMaxLen = T::PermissionMaxLen;
+    type MaxPermissionsPerRole = T::MaxPermissionsPerRole;
 
-	type RoleMaxLen = T::RoleMaxLen;
+    type PermissionMaxLen = T::PermissionMaxLen;
+
+    type RoleMaxLen =  T::RoleMaxLen;
+
 }
 
-impl<T: Config> Pallet<T> {
-	fn bound<E, Len: Get<u32>>(vec: Vec<E>, err: Error<T>) -> Result<BoundedVec<E, Len>, Error<T>> {
-		BoundedVec::<E, Len>::try_from(vec).map_err(|_| err)
-	}
+impl<T: Config> Pallet<T>{
+    fn bound<E,Len: Get<u32>>(vec: Vec<E>, err : Error<T> )->Result<BoundedVec<E, Len>, Error<T>>{
+        BoundedVec::<E,Len>::try_from(vec).map_err(|_| err)
+    }
 
-	fn has_unique_elements<E: Ord + Clone>(vec: Vec<E>) -> bool {
-		let mut filtered_vec = vec.clone();
-		filtered_vec.sort();
-		filtered_vec.dedup();
-		vec.len() == filtered_vec.len()
-	}
+    fn has_unique_elements<E: Ord + Clone>(vec: Vec<E>) -> bool{
+        let mut filtered_vec = vec.clone();
+        filtered_vec.sort();
+        filtered_vec.dedup();
+        vec.len() == filtered_vec.len()
+    }
+
 }
