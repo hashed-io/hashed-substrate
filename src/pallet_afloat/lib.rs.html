@@ -328,6 +328,15 @@
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -449,7 +458,7 @@
 	#[pallet::getter(<span class="kw">fn </span>asset_id)]
 	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatAssetId&lt;T: Config&gt; = StorageValue&lt;
 		<span class="kw">_</span>,
-		&lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s frunique collection id
+		&lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s mapped collection asset_id
 	</span>&gt;;
 
 	<span class="attr">#[pallet::storage]
@@ -523,8 +532,17 @@
 		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
 		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
 			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who), Error::&lt;T&gt;::Unauthorized);
-			<span class="self">Self</span>::do_delete_all_users()<span class="question-mark">?</span>;
+			<span class="comment">// Self::do_delete_all_users()?;
+
+			</span><span class="kw">let _ </span>= &lt;UserInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;AfloatMarketPlaceId&lt;T&gt;&gt;::kill();
+			<span class="kw">let _ </span>= &lt;AfloatCollectionId&lt;T&gt;&gt;::kill();
+			<span class="kw">let _ </span>= &lt;AfloatOffers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+			<span class="kw">let _ </span>= &lt;AfloatTransactions&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+
+			&lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
+
+
 			<span class="prelude-val">Ok</span>(())
 		}
 
