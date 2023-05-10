@@ -223,11 +223,11 @@ pub mod pallet {
 					Self::do_edit_user(who, address, cid)?;
 				}
 				UpdateUserArgs::AdminEdit { cid, group } => {
-					ensure!(!Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 					Self::do_admin_edit_user(who, address, cid, group)?;
 				}
 				UpdateUserArgs::Delete => {
-					ensure!(!Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 					Self::do_delete_user(who, address)?;
 				}
 			}
