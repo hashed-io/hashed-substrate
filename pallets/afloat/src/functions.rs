@@ -24,9 +24,9 @@ impl<T: Config> Pallet<T> {
 		let creator_user: User<T> = User {
 					cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
 					group: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-					created_by: Some(admin.clone()),
+					created_by: Some(creator.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
-					last_modified_by: Some(admin.clone()),
+					last_modified_by: Some(creator.clone()),
 					last_modified_date: Some(T::TimeProvider::now().as_secs()),
 				};
 		<UserInfo<T>>::insert(creator.clone(), creator_user);
