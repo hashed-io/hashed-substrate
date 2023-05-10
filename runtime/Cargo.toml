@@ -169,4 +169,6 @@ try-runtime = [
 	"pallet-gated-marketplace/try-runtime",
 	"pallet-rbac/try-runtime",
 	"pallet-template/try-runtime",
+	"pallet-mapped-assets/try-runtime",
+	"pallet-afloat/try-runtime",
 ]
