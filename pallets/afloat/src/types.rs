@@ -17,6 +17,7 @@ pub type StorageId = [u8; 32];
 pub struct User<T: Config> {
 	pub cid: ShortString,
 	pub group: ShortString, // only can be modified when the user is registered (can not be modified)
+	pub group_creator: ShortString,
 	pub created_by: Option<T::AccountId>,
 	pub created_date: Option<Date>,
 	pub last_modified_by: Option<T::AccountId>,
@@ -27,6 +28,7 @@ impl<T: Config> User<T> {
 	pub fn new(
 		cid: ShortString,
 		group: ShortString,
+		group_creator: ShortString,
 		created_by: Option<T::AccountId>,
 		created_date: Option<Date>,
 		last_modified_by: Option<T::AccountId>,
@@ -35,6 +37,7 @@ impl<T: Config> User<T> {
 		Self {
 			cid,
 			group,
+			group_creator,
 			created_by,
 			created_date,
 			last_modified_by,
@@ -53,6 +56,7 @@ pub enum UpdateUserArgs {
 	AdminEdit {
 		cid: ShortString,
 		group: ShortString,
+		group_creator: ShortString,
 	},
 	Delete,
 }
@@ -64,10 +68,12 @@ pub enum SignUpArgs {
 	BuyerOrSeller {
 		cid: ShortString,
 		group: ShortString,
+		group_creator: ShortString,
 	},
 	CPA {
 		cid: ShortString,
 		group: ShortString,
+		group_creator: ShortString,
 	},
 }
 

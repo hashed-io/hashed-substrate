@@ -231,9 +231,9 @@ pub mod pallet {
 				UpdateUserArgs::Edit { cid } => {
 					Self::do_edit_user(who, address, cid)?;
 				}
-				UpdateUserArgs::AdminEdit { cid, group } => {
+				UpdateUserArgs::AdminEdit { cid, group, group_creator } => {
 					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
-					Self::do_admin_edit_user(who, address, cid, group)?;
+					Self::do_admin_edit_user(who, address, cid, group, group_creator)?;
 				}
 				UpdateUserArgs::Delete => {
 					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
