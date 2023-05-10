@@ -570,9 +570,9 @@
 				UpdateUserArgs::Edit { cid } =&gt; {
 					<span class="self">Self</span>::do_edit_user(who, address, cid)<span class="question-mark">?</span>;
 				}
-				UpdateUserArgs::AdminEdit { cid, group } =&gt; {
+				UpdateUserArgs::AdminEdit { cid, group, group_creator } =&gt; {
 					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
-					<span class="self">Self</span>::do_admin_edit_user(who, address, cid, group)<span class="question-mark">?</span>;
+					<span class="self">Self</span>::do_admin_edit_user(who, address, cid, group, group_creator)<span class="question-mark">?</span>;
 				}
 				UpdateUserArgs::Delete =&gt; {
 					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);

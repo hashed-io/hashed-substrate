@@ -569,6 +569,12 @@
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -593,8 +599,9 @@
 		<span class="self">Self</span>::initialize_rbac()<span class="question-mark">?</span>;
 
 		<span class="kw">let </span>creator_user: User&lt;T&gt; = User {
-					cid: ShortString::try_from(<span class="string">b&quot;5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5&quot;</span>.to_vec()).unwrap(),
-					group: ShortString::try_from(<span class="string">b&quot;HCD:QmZcSrTcqBdHck73xYw2WHgEQ9tchPrwNq6hM3a3rvXAAV&quot;</span>.to_vec()).unwrap(),
+					cid: ShortString::try_from(<span class="string">b&quot;HCD:QmZcSrTcqBdHck73xYw2WHgEQ9tchPrwNq6hM3a3rvXAAV&quot;</span>.to_vec()).unwrap(),
+					group: ShortString::try_from(<span class="string">b&quot;5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5&quot;</span>.to_vec()).unwrap(),
+					group_creator: ShortString::try_from(<span class="string">b&quot;5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5&quot;</span>.to_vec()).unwrap(),
 					created_by: <span class="prelude-val">Some</span>(creator.clone()),
 					created_date: <span class="prelude-val">Some</span>(T::TimeProvider::now().as_secs()),
 					last_modified_by: <span class="prelude-val">Some</span>(creator.clone()),
@@ -605,8 +612,9 @@
 
 		<span class="kw">if </span>admin != creator {
 			<span class="kw">let </span>admin_user: User&lt;T&gt; = User {
-				cid: ShortString::try_from(<span class="string">b&quot;5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w&quot;</span>.to_vec()).unwrap(),
-				group: ShortString::try_from(<span class="string">b&quot;HCD:QmbhAm22mGMVrTmAfkjUzbtZrSXVSLV28Xah5ca5NtwQ3U&quot;</span>.to_vec()).unwrap(),
+				cid: ShortString::try_from(<span class="string">b&quot;HCD:QmbhAm22mGMVrTmAfkjUzbtZrSXVSLV28Xah5ca5NtwQ3U&quot;</span>.to_vec()).unwrap(),
+				group: ShortString::try_from(<span class="string">b&quot;5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w&quot;</span>.to_vec()).unwrap(),
+				group_creator: ShortString::try_from(<span class="string">b&quot;5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w&quot;</span>.to_vec()).unwrap(),
 				created_by: <span class="prelude-val">Some</span>(admin.clone()),
 				created_date: <span class="prelude-val">Some</span>(T::TimeProvider::now().as_secs()),
 				last_modified_by: <span class="prelude-val">Some</span>(admin.clone()),
@@ -647,10 +655,11 @@
 	) -&gt; DispatchResult {
 		<span class="macro">ensure!</span>(!&lt;UserInfo&lt;T&gt;&gt;::contains_key(user_address.clone()), Error::&lt;T&gt;::UserAlreadyExists);
 		<span class="kw">match </span>args {
-			SignUpArgs::BuyerOrSeller { cid, group } =&gt; {
+			SignUpArgs::BuyerOrSeller { cid, group, group_creator } =&gt; {
 				<span class="kw">let </span>user: User&lt;T&gt; = User {
 					cid: cid,
 					group: group,
+					group_creator: group_creator,
 					created_by: <span class="prelude-val">Some</span>(actor.clone()),
 					created_date: <span class="prelude-val">Some</span>(T::TimeProvider::now().as_secs()),
 					last_modified_by: <span class="prelude-val">Some</span>(actor.clone()),
@@ -660,10 +669,11 @@
 				<span class="self">Self</span>::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)<span class="question-mark">?</span>;
 				<span class="self">Self</span>::deposit_event(Event::NewUser(user_address.clone()));
 			},
-			SignUpArgs::CPA { cid, group } =&gt; {
+			SignUpArgs::CPA { cid, group, group_creator } =&gt; {
 				<span class="kw">let </span>user: User&lt;T&gt; = User {
 					cid: cid,
 					group: group,
+					group_creator: group_creator,
 					created_by: <span class="prelude-val">Some</span>(actor.clone()),
 					created_date: <span class="prelude-val">Some</span>(T::TimeProvider::now().as_secs()),
 					last_modified_by: <span class="prelude-val">Some</span>(actor.clone()),
@@ -726,7 +736,8 @@
 		actor: T::AccountId,
 		user_address: T::AccountId,
 		cid: ShortString,
-		group: ShortString
+		group: ShortString,
+		group_creator: ShortString,
 	) -&gt; DispatchResult {
 
 		&lt;UserInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(user_address.clone(), |user| {
@@ -736,6 +747,7 @@
 			user.last_modified_by = <span class="prelude-val">Some</span>(actor.clone());
 			user.cid = cid;
 			user.group = group;
+			user.group_creator = group_creator;
 
 			<span class="prelude-val">Ok</span>(())
 		})<span class="question-mark">?</span>;
