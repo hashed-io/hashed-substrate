@@ -216,7 +216,6 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
-			ensure!(!Self::is_admin_or_owner(address.clone()), Error::<T>::Unauthorized);
 			ensure!(who.clone() == address || Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 
 			match args {
@@ -224,9 +223,11 @@ pub mod pallet {
 					Self::do_edit_user(who, address, cid)?;
 				}
 				UpdateUserArgs::AdminEdit { cid, group } => {
+					ensure!(!Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 					Self::do_admin_edit_user(who, address, cid, group)?;
 				}
 				UpdateUserArgs::Delete => {
+					ensure!(!Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 					Self::do_delete_user(who, address)?;
 				}
 			}
