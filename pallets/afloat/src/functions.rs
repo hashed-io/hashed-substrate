@@ -150,6 +150,28 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
+	pub fn do_admin_edit_user(
+		actor: T::AccountId,
+		user_address: T::AccountId,
+		cid: ShortString,
+		group: ShortString
+	) -> DispatchResult {
+
+		<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
+			let user = user.as_mut().ok_or(Error::<T>::FailedToEditUserAccount)?;
+
+			user.last_modified_date = Some(T::TimeProvider::now().as_secs());
+			user.last_modified_by = Some(actor.clone());
+			user.cid = cid;
+			user.group = group;
+
+			Ok(())
+		})?;
+
+		Ok(())
+
+	}
 	/// Function for deleting a user account.
 	///
 	/// - _actor: The AccountId of the actor performing the deletion. This parameter is currently unused.

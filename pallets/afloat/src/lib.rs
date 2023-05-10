@@ -223,6 +223,9 @@ pub mod pallet {
 				UpdateUserArgs::Edit { cid } => {
 					Self::do_edit_user(who, address, cid)?;
 				}
+				UpdateUserArgs::AdminEdit { cid, group } => {
+					Self::do_admin_edit_user(who, address, cid, group)?;
+				}
 				UpdateUserArgs::Delete => {
 					Self::do_delete_user(who, address)?;
 				}

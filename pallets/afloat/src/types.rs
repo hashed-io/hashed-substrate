@@ -50,6 +50,10 @@ pub enum UpdateUserArgs {
 	Edit {
 		cid: ShortString,
 	},
+	AdminEdit {
+		cid: ShortString,
+		group: ShortString,
+	},
 	Delete,
 }
 
