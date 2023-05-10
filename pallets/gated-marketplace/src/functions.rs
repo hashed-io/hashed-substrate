@@ -68,12 +68,12 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::MarketplaceAlreadyExists
 		);
 		// Create asset
-		pallet_mapped_assets::Pallet::<T>::create(
-			origin,
-			asset_id,
-			T::Lookup::unlookup(owner.clone()),
-			min_balance,
-		)?; 
+		// pallet_mapped_assets::Pallet::<T>::create(
+		// 	origin,
+		// 	asset_id,
+		// 	T::Lookup::unlookup(owner.clone()),
+		// 	min_balance,
+		// )?;
 		//Insert on marketplaces and marketplaces by auth
 		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
 		Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
@@ -245,9 +245,9 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
 
-		//since users can self-enroll, the caller of this function must validate 
+		//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
+
 
 		//ensure the account is not already in the marketplace
 		ensure!(
@@ -261,10 +261,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-		
+
 		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		Ok(())
 	}
 
@@ -419,7 +419,7 @@ impl<T: Config> Pallet<T> {
 		percentage: u32,
 	) -> Result<[u8; 32], DispatchError> {
 
-		
+
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -444,9 +444,9 @@ impl<T: Config> Pallet<T> {
 
 		//Get asset id
 		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
-		
+
 		//ensure user has enough balance to create the offer
-		let total_user_balance = pallet_mapped_assets::Pallet::<T>::balance(asset_id,authority.clone());  
+		let total_user_balance = pallet_mapped_assets::Pallet::<T>::balance(asset_id,authority.clone());
 
 		ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
@@ -497,7 +497,7 @@ impl<T: Config> Pallet<T> {
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		
+
 		Ok(offer_id)
 	}
 
@@ -533,9 +533,9 @@ impl<T: Config> Pallet<T> {
 		//TODO: Use free_balance instead of total_balance
 		//Get asset id
 		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
-		
+
 		//ensure user has enough balance to create the offer
-		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), buyer.clone()); 
+		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), buyer.clone());
 		//ensure the buyer has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
@@ -638,13 +638,13 @@ impl<T: Config> Pallet<T> {
 
 		//ensure the offer is open and available
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
-		
+
 		let marketplace_id = offer_data.marketplace_id;
 		//Get asset id
 		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
-		
+
 		//ensure user has enough balance to create the offer
-		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), offer_data.creator.clone()); 
+		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), offer_data.creator.clone());
 		//ensure the buy_offer_creator has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
@@ -673,7 +673,7 @@ impl<T: Config> Pallet<T> {
 			offer_data.fee,
 			KeepAlive,
 		)?; */
-		
+
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
