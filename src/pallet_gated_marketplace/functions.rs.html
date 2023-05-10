@@ -1434,13 +1434,13 @@
 			Error::&lt;T&gt;::MarketplaceAlreadyExists
 		);
 		<span class="comment">// Create asset
-		</span>pallet_mapped_assets::Pallet::&lt;T&gt;::create(
-			origin,
-			asset_id,
-			T::Lookup::unlookup(owner.clone()),
-			min_balance,
-		)<span class="question-mark">?</span>; 
-		<span class="comment">//Insert on marketplaces and marketplaces by auth
+		// pallet_mapped_assets::Pallet::&lt;T&gt;::create(
+		// 	origin,
+		// 	asset_id,
+		// 	T::Lookup::unlookup(owner.clone()),
+		// 	min_balance,
+		// )?;
+		//Insert on marketplaces and marketplaces by auth
 		</span>&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), marketplace_id)<span class="question-mark">?</span>;
 		<span class="self">Self</span>::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)<span class="question-mark">?</span>;
 		<span class="self">Self</span>::insert_in_auth_market_lists(admin.clone(), MarketplaceRole::Admin, marketplace_id)<span class="question-mark">?</span>;
@@ -1611,9 +1611,9 @@
 		marketplace_id: [u8; <span class="number">32</span>],
 	) -&gt; DispatchResult {
 
-		<span class="comment">//since users can self-enroll, the caller of this function must validate 
+		<span class="comment">//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
+
 
 		//ensure the account is not already in the marketplace
 		</span><span class="macro">ensure!</span>(
@@ -1627,10 +1627,10 @@
 		<span class="comment">// ensure the marketplace exist
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
 
-		
+
 		<span class="self">Self</span>::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)<span class="question-mark">?</span>;
 		<span class="self">Self</span>::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		<span class="prelude-val">Ok</span>(())
 	}
 
@@ -1785,7 +1785,7 @@
 		percentage: u32,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; <span class="number">32</span>], DispatchError&gt; {
 
-		
+
 		<span class="comment">//ensure the marketplace exists
 		</span><span class="macro">ensure!</span>(&lt;Marketplaces&lt;T&gt;&gt;::contains_key(marketplace_id), Error::&lt;T&gt;::MarketplaceNotFound);
 
@@ -1810,9 +1810,9 @@
 
 		<span class="comment">//Get asset id
 		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
-		
+
 		<span class="comment">//ensure user has enough balance to create the offer
-		</span><span class="kw">let </span>total_user_balance = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id,authority.clone());  
+		</span><span class="kw">let </span>total_user_balance = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id,authority.clone());
 
 		<span class="macro">ensure!</span>(total_user_balance &gt;= price, Error::&lt;T&gt;::NotEnoughBalance);
 
@@ -1863,7 +1863,7 @@
 			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::OfferStorageError)<span class="question-mark">?</span>;
 
 		<span class="self">Self</span>::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		
+
 		<span class="prelude-val">Ok</span>(offer_id)
 	}
 
@@ -1899,9 +1899,9 @@
 		<span class="comment">//TODO: Use free_balance instead of total_balance
 		//Get asset id
 		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
-		
+
 		<span class="comment">//ensure user has enough balance to create the offer
-		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), buyer.clone()); 
+		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), buyer.clone());
 		<span class="comment">//ensure the buyer has enough balance to buy the item
 		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
 
@@ -2004,13 +2004,13 @@
 
 		<span class="comment">//ensure the offer is open and available
 		</span><span class="macro">ensure!</span>(offer_data.status == OfferStatus::Open, Error::&lt;T&gt;::OfferIsNotAvailable);
-		
+
 		<span class="kw">let </span>marketplace_id = offer_data.marketplace_id;
 		<span class="comment">//Get asset id
 		</span><span class="kw">let </span>asset_id = &lt;Marketplaces&lt;T&gt;&gt;::get(marketplace_id).ok_or(Error::&lt;T&gt;::MarketplaceNotFound)<span class="question-mark">?</span>.asset_id;
-		
+
 		<span class="comment">//ensure user has enough balance to create the offer
-		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), offer_data.creator.clone()); 
+		</span><span class="kw">let </span>total_amount_buyer = pallet_mapped_assets::Pallet::&lt;T&gt;::balance(asset_id.clone(), offer_data.creator.clone());
 		<span class="comment">//ensure the buy_offer_creator has enough balance to buy the item
 		</span><span class="macro">ensure!</span>(total_amount_buyer &gt; offer_data.price, Error::&lt;T&gt;::NotEnoughBalance);
 
@@ -2039,7 +2039,7 @@
 			offer_data.fee,
 			KeepAlive,
 		)?; */
-		
+
 		</span>pallet_fruniques::Pallet::&lt;T&gt;::do_thaw(<span class="kw-2">&amp;</span>offer_data.collection_id, offer_data.item_id)<span class="question-mark">?</span>;
 
 		<span class="kw">if </span>offer_data.percentage == Permill::from_percent(<span class="number">100</span>) {
