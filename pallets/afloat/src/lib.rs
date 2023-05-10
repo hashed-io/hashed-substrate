@@ -119,7 +119,7 @@ pub mod pallet {
 	#[pallet::getter(fn asset_id)]
 	pub(super) type AfloatAssetId<T: Config> = StorageValue<
 		_,
-		<T as pallet_mapped_assets::Config>::AssetId, // Afloat's frunique collection id
+		<T as pallet_mapped_assets::Config>::AssetId, // Afloat's mapped collection asset_id
 	>;
 
 	#[pallet::storage]
@@ -193,8 +193,17 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::is_admin_or_owner(who), Error::<T>::Unauthorized);
-			Self::do_delete_all_users()?;
+			// Self::do_delete_all_users()?;
+
+			let _ = <UserInfo<T>>::clear(1000, None);
+			let _ = <AfloatMarketPlaceId<T>>::kill();
+			let _ = <AfloatCollectionId<T>>::kill();
+			let _ = <AfloatOffers<T>>::clear(1000, None);
+			let _ = <AfloatTransactions<T>>::clear(1000, None);
+
+			<T as Config>::Rbac::remove_pallet_storage(Self::pallet_id())?;
+
+
 			Ok(())
 		}
 
