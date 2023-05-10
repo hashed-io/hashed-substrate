@@ -67,7 +67,7 @@ pub enum SignUpArgs {
 	},
 }
 
-//! Offer structures
+// ! Offer structures
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
 pub enum OfferStatus {
@@ -102,9 +102,9 @@ impl Default for OfferType {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Offer<T: Config> {
-	pub tax_credit_amount: u32, //!
-	pub tax_credit_amount_remaining: u32, // != percentage, it is the amount of tax credits,
-	pub price_per_credit: T::Balance, // 1_000_000_000_000
+	pub tax_credit_amount: u32,
+	pub tax_credit_amount_remaining: u32,
+	pub price_per_credit: T::Balance,
 	pub expiration_date: Date,
 	pub creation_date: Date,
 	pub cancellation_date: Option<Date>,
@@ -125,6 +125,7 @@ impl<T: Config> Offer<T> {
 		// fee: T::Balance,
 		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 		creator_id: T::AccountId,
+		expiration_date: Date,
 		status: OfferStatus,
 		offer_type: OfferType,
 	) -> Self {
@@ -133,6 +134,7 @@ impl<T: Config> Offer<T> {
 			tax_credit_amount_remaining,
 			price_per_credit,
 			creation_date,
+			expiration_date: expiration_date,
 			cancellation_date,
 			// fee,
 			tax_credit_id,
@@ -151,11 +153,13 @@ pub enum CreateOfferArgs<T: Config> {
 		tax_credit_amount: u32,
 		price_per_credit: T::Balance,
 		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
+		expiration_date: Date,
 	},
 	Buy {
 		tax_credit_amount: u32,
 		price_per_credit: T::Balance,
 		tax_credit_id: <T as pallet_uniques::Config>::ItemId,
+		expiration_date: Date,
 	},
 }
 

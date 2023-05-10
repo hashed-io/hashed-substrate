@@ -241,11 +241,11 @@ pub mod pallet {
 		{
 			let who = ensure_signed(origin)?;
 			match args {
-				CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id, price_per_credit } => {
-					Self::do_create_sell_order(who, tax_credit_id, price_per_credit, tax_credit_amount)?;
+				CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id, price_per_credit, expiration_date } => {
+					Self::do_create_sell_order(who, tax_credit_id, price_per_credit, tax_credit_amount, expiration_date)?;
 				}
-				CreateOfferArgs::Buy { tax_credit_amount, tax_credit_id, price_per_credit } => {
-					Self::do_create_buy_order(who, tax_credit_id, price_per_credit, tax_credit_amount)?;
+				CreateOfferArgs::Buy { tax_credit_amount, tax_credit_id, price_per_credit, expiration_date } => {
+					Self::do_create_buy_order(who, tax_credit_id, price_per_credit, tax_credit_amount, expiration_date)?;
 				}
 			}
 			Ok(())

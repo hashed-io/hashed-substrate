@@ -22,38 +22,24 @@ impl<T: Config> Pallet<T> {
 		Self::initialize_rbac()?;
 
 		let creator_user: User<T> = User {
-					first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-					last_name: ShortString::try_from(b"Creator".to_vec()).unwrap(),
-					email: LongString::try_from(b"".to_vec()).unwrap(),
-					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
-					created_by: Some(creator.clone()),
+					cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+					group: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+					created_by: Some(admin.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
-					last_modified_by: Some(creator.clone()),
+					last_modified_by: Some(admin.clone()),
 					last_modified_date: Some(T::TimeProvider::now().as_secs()),
-					phone: None,
-					credits_needed: 0,
-					cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
-					tax_authority_id: 1,
-					lock_expiration_date: None,
 				};
 		<UserInfo<T>>::insert(creator.clone(), creator_user);
 		Self::give_role_to_user(creator.clone(), AfloatRole::Owner)?;
 
 		if admin != creator {
 			let admin_user: User<T> = User {
-				first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-				last_name: ShortString::try_from(b"Admin".to_vec()).unwrap(),
-				email: LongString::try_from(b"".to_vec()).unwrap(),
-				lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
+				cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+				group: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
 				created_by: Some(admin.clone()),
 				created_date: Some(T::TimeProvider::now().as_secs()),
 				last_modified_by: Some(admin.clone()),
 				last_modified_date: Some(T::TimeProvider::now().as_secs()),
-				phone: None,
-				credits_needed: 0,
-				cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
-				tax_authority_id: 1,
-				lock_expiration_date: None,
 			};
 			<UserInfo<T>>::insert(admin.clone(), admin_user);
 			Self::give_role_to_user(admin, AfloatRole::Admin)?;
@@ -92,19 +78,12 @@ impl<T: Config> Pallet<T> {
 		match args {
 			SignUpArgs::BuyerOrSeller { cid, group } => {
 				let user: User<T> = User {
-					first_name,
-					last_name,
-					email,
-					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
+					cid: cid,
+					group: group,
 					created_by: Some(actor.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
 					last_modified_by: Some(actor.clone()),
 					last_modified_date: Some(T::TimeProvider::now().as_secs()),
-					phone: None,
-					credits_needed: 0,
-					cpa_id: ShortString::try_from(b"0".to_vec()).unwrap(),
-					tax_authority_id: state,
-					lock_expiration_date: None,
 				};
 				<UserInfo<T>>::insert(user_address.clone(), user);
 				Self::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)?;
@@ -112,18 +91,12 @@ impl<T: Config> Pallet<T> {
 			},
 			SignUpArgs::CPA { cid, group } => {
 				let user: User<T> = User {
-					first_name,
-					last_name,
-					email,
-					lang_key: ShortString::try_from(b"en".to_vec()).unwrap(),
-					created_by: Some(user_address.clone()),
+					cid: cid,
+					group: group,
+					created_by: Some(actor.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
-					last_modified_by: Some(user_address.clone()),
+					last_modified_by: Some(actor.clone()),
 					last_modified_date: Some(T::TimeProvider::now().as_secs()),
-					phone: None,
-					credits_needed: 0,
-					cpa_id: license_number,
-					tax_authority_id: state,
 				};
 				<UserInfo<T>>::insert(user_address.clone(), user);
 				Self::give_role_to_user(user_address.clone(), AfloatRole::CPA)?;
@@ -253,6 +226,7 @@ impl<T: Config> Pallet<T> {
 		item_id: <T as pallet_uniques::Config>::ItemId,
 		price: T::Balance,
 		tax_credit_amount: u32,
+		expiration_date: Date,
 	) -> DispatchResult
 	{
 
@@ -275,6 +249,7 @@ impl<T: Config> Pallet<T> {
 			tax_credit_amount_remaining: tax_credit_amount,
 			price_per_credit: price,
 			creation_date: T::TimeProvider::now().as_secs(),
+			expiration_date: expiration_date,
 			tax_credit_id: item_id,
 			creator_id: authority.clone(),
 			status: OfferStatus::default(),
@@ -295,6 +270,7 @@ impl<T: Config> Pallet<T> {
 		item_id: <T as pallet_uniques::Config>::ItemId,
 		price: T::Balance,
 		tax_credit_amount: u32,
+		expiration_date: Date,
 	) -> DispatchResult
 	{
 		ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
@@ -316,6 +292,7 @@ impl<T: Config> Pallet<T> {
 			tax_credit_amount_remaining: tax_credit_amount,
 			price_per_credit: price,
 			creation_date: T::TimeProvider::now().as_secs(),
+			expiration_date: expiration_date,
 			tax_credit_id: item_id,
 			creator_id: authority.clone(),
 			status: OfferStatus::default(),
