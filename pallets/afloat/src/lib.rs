@@ -228,12 +228,12 @@ pub mod pallet {
 			ensure!(who.clone() == address || Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
 
 			match args {
-				UpdateUserArgs::Edit { cid } => {
-					Self::do_edit_user(who, address, cid)?;
+				UpdateUserArgs::Edit { cid, cid_creator } => {
+					Self::do_edit_user(who, address, cid, cid_creator)?;
 				}
-				UpdateUserArgs::AdminEdit { cid, group, group_creator } => {
+				UpdateUserArgs::AdminEdit { cid, cid_creator, group } => {
 					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
-					Self::do_admin_edit_user(who, address, cid, group, group_creator)?;
+					Self::do_admin_edit_user(who, address, cid, cid_creator, group)?;
 				}
 				UpdateUserArgs::Delete => {
 					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
@@ -276,9 +276,6 @@ pub mod pallet {
 			ensure_signed(origin.clone())?;
 			Ok(())
 		}
-
-
-
 
 		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]

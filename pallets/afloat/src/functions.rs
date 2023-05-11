@@ -23,8 +23,8 @@ impl<T: Config> Pallet<T> {
 
 		let creator_user: User<T> = User {
 					cid: ShortString::try_from(b"HCD:QmZcSrTcqBdHck73xYw2WHgEQ9tchPrwNq6hM3a3rvXAAV".to_vec()).unwrap(),
+					cid_creator: ShortString::try_from(b"HCD:QmZcSrTcqBdHck73xYw2WHgEQ9tchPrwNq6hM3a3rvXAAV".to_vec()).unwrap(),
 					group: ShortString::try_from(b"5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5".to_vec()).unwrap(),
-					group_creator: ShortString::try_from(b"5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5".to_vec()).unwrap(),
 					created_by: Some(creator.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
 					last_modified_by: Some(creator.clone()),
@@ -36,8 +36,8 @@ impl<T: Config> Pallet<T> {
 		if admin != creator {
 			let admin_user: User<T> = User {
 				cid: ShortString::try_from(b"HCD:QmbhAm22mGMVrTmAfkjUzbtZrSXVSLV28Xah5ca5NtwQ3U".to_vec()).unwrap(),
+				cid_creator: ShortString::try_from(b"HCD:QmbhAm22mGMVrTmAfkjUzbtZrSXVSLV28Xah5ca5NtwQ3U".to_vec()).unwrap(),
 				group: ShortString::try_from(b"5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w".to_vec()).unwrap(),
-				group_creator: ShortString::try_from(b"5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w".to_vec()).unwrap(),
 				created_by: Some(admin.clone()),
 				created_date: Some(T::TimeProvider::now().as_secs()),
 				last_modified_by: Some(admin.clone()),
@@ -78,11 +78,11 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(!<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserAlreadyExists);
 		match args {
-			SignUpArgs::BuyerOrSeller { cid, group, group_creator } => {
+			SignUpArgs::BuyerOrSeller { cid, cid_creator, group } => {
 				let user: User<T> = User {
 					cid: cid,
+					cid_creator: cid_creator,
 					group: group,
-					group_creator: group_creator,
 					created_by: Some(actor.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
 					last_modified_by: Some(actor.clone()),
@@ -92,11 +92,11 @@ impl<T: Config> Pallet<T> {
 				Self::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)?;
 				Self::deposit_event(Event::NewUser(user_address.clone()));
 			},
-			SignUpArgs::CPA { cid, group, group_creator } => {
+			SignUpArgs::CPA { cid, cid_creator, group } => {
 				let user: User<T> = User {
 					cid: cid,
+					cid_creator: cid_creator,
 					group: group,
-					group_creator: group_creator,
 					created_by: Some(actor.clone()),
 					created_date: Some(T::TimeProvider::now().as_secs()),
 					last_modified_by: Some(actor.clone()),
@@ -140,6 +140,7 @@ impl<T: Config> Pallet<T> {
 		actor: T::AccountId,
 		user_address: T::AccountId,
 		cid: ShortString,
+		cid_creator: ShortString,
 	) -> DispatchResult {
 
 		<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
@@ -148,6 +149,7 @@ impl<T: Config> Pallet<T> {
 			user.last_modified_date = Some(T::TimeProvider::now().as_secs());
 			user.last_modified_by = Some(actor.clone());
 			user.cid = cid;
+			user.cid_creator = cid_creator;
 
 			Ok(())
 		})?;
@@ -159,8 +161,8 @@ impl<T: Config> Pallet<T> {
 		actor: T::AccountId,
 		user_address: T::AccountId,
 		cid: ShortString,
+		cid_creator: ShortString,
 		group: ShortString,
-		group_creator: ShortString,
 	) -> DispatchResult {
 
 		<UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
@@ -169,8 +171,8 @@ impl<T: Config> Pallet<T> {
 			user.last_modified_date = Some(T::TimeProvider::now().as_secs());
 			user.last_modified_by = Some(actor.clone());
 			user.cid = cid;
+			user.cid_creator = cid_creator;
 			user.group = group;
-			user.group_creator = group_creator;
 
 			Ok(())
 		})?;
