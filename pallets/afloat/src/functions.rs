@@ -15,6 +15,7 @@ use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::str;
 use sp_runtime::sp_std::vec::Vec;
 use sp_runtime::traits::StaticLookup;
+use frame_support::traits::Time;
 
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
@@ -329,7 +330,115 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn do_take_sell_order(
+	pub fn do_start_take_sell_order(
+		authority: OriginFor<T>,
+		order_id: [u8; 32],
+		tax_credit_amount: T::Balance,
+		
+	) -> DispatchResult
+	where
+	<T as pallet_uniques::Config>::ItemId: From<u32>
+	{
+		let who = ensure_signed(authority.clone())?;
+
+		ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
+		// ensure offer exists 
+		ensure!(<AfloatOffers<T>>::contains_key(order_id), Error::<T>::Unauthorized);
+		//get offer details
+		let offer = <AfloatOffers<T>>::get(order_id).unwrap();
+		//ensure offer is a sell offer
+		ensure!(offer.offer_type == OfferType::Sell, Error::<T>::Unauthorized);
+		//ensure offer is not expired
+		ensure!(offer.expiration_date > T::TimeProvider::now().as_secs(), Error::<T>::Unauthorized);
+		//ensure offer is not cancelled
+		ensure!(offer.cancellation_date.is_none(), Error::<T>::Unauthorized);
+		//ensure offer is not taken
+		ensure!(offer.status == OfferStatus::default(), Error::<T>::Unauthorized);
+		//ensure offer has enough tax credits
+		//ensure!(offer.tax_credit_amount_remaining >= tax_credit_amount, Error::<T>::Unauthorized);
+		//ensure user has enough afloat balance
+		ensure!(Self::do_get_afloat_balance(who.clone()) >= offer.price_per_credit * tax_credit_amount.into(), Error::<T>::Unauthorized);
+
+
+
+		let creation_date: u64 = T::Timestamp::now().into();
+		let price_per_credit: T::Balance = offer.price_per_credit.into();
+		let total_price: T::Balance = price_per_credit * tax_credit_amount;
+		let fee: Option<T::Balance> = None;
+		let tax_credit_id: <T as pallet_uniques::Config>::ItemId = offer.tax_credit_id;
+		let seller_id: T::AccountId = offer.creator_id;
+		let buyer_id: T::AccountId = who.clone();
+		let offer_id: StorageId = order_id;
+		let seller_confirmation_date: Option<Date> = None;
+		let buyer_confirmation_date: Option<Date> = Some(creation_date);
+		let confirmed: bool = false;
+
+		let transaction = Transaction {
+		 tax_credit_amount,
+		 price_per_credit,
+		 total_price,
+		 fee,
+		 creation_date,
+		 cancellation_date: None,
+		 tax_credit_id,
+		 seller_id,
+		 buyer_id,
+		 offer_id,
+		 seller_confirmation_date,
+		 buyer_confirmation_date,
+		 confirmed,
+		};
+
+		<AfloatTransactions<T>>::insert(order_id, transaction);
+
+
+
+		Ok(())
+	}
+
+	pub fn do_confirm_take_sell_order(
+		authority: OriginFor<T>,
+		order_id: [u8; 32],
+	) -> DispatchResult
+	where
+	<T as pallet_uniques::Config>::ItemId: From<u32>
+	{
+		let who = ensure_signed(authority.clone())?;
+
+		ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
+		// ensure offer exists 
+		ensure!(<AfloatTransactions<T>>::contains_key(order_id), Error::<T>::Unauthorized);
+
+		// get transaction details
+		let transaction = <AfloatTransactions<T>>::get(order_id).unwrap();
+
+		//ensure transaction is not cancelled
+		ensure!(transaction.cancellation_date.is_none(), Error::<T>::Unauthorized);
+
+		//ensure transaction is not confirmed already
+		ensure!(transaction.seller_confirmation_date.is_none(), Error::<T>::Unauthorized);
+
+		//ensure transaction has buyer confirmation
+		ensure!(transaction.buyer_confirmation_date.is_some(), Error::<T>::Unauthorized);
+
+		//ensure user is the seller
+		ensure!(transaction.seller_id == who.clone(), Error::<T>::Unauthorized);
+
+		let confirmation_date: u64 = T::Timestamp::now().into();
+		let confirmed: bool = true;
+
+		<AfloatTransactions<T>>::try_mutate(order_id, |transaction| -> DispatchResult {
+			let mut transaction = transaction.as_mut().ok_or(Error::<T>::Unauthorized)?;
+			transaction.seller_confirmation_date = Some(confirmation_date);
+			transaction.confirmed = confirmed;
+			Ok(())
+		})?;
+
+		Ok(())
+		
+	}
+
+	pub fn do_finish_take_sell_order(
 		authority: OriginFor<T>,
 		order_id: [u8; 32],
 	) -> DispatchResult
@@ -340,6 +449,19 @@ impl<T: Config> Pallet<T> {
 
 		ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
 
+		// ensure offer exists 
+		ensure!(<AfloatTransactions<T>>::contains_key(order_id), Error::<T>::Unauthorized);
+
+		// get transaction details
+		let transaction = <AfloatTransactions<T>>::get(order_id).unwrap();
+
+		//ensure transaction is not cancelled
+		ensure!(transaction.cancellation_date.is_none(), Error::<T>::Unauthorized);
+
+		//ensure transaction is confirmed
+		ensure!(transaction.confirmed, Error::<T>::Unauthorized);
+	
+
 		pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(
 			authority.clone(),
 			order_id,
@@ -347,6 +469,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::SellOrderTaken(who));
 		Ok(())
+		
 	}
 
 	pub fn do_take_buy_order(

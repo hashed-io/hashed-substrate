@@ -57,8 +57,6 @@ impl<T: Config> Pallet<T> {
 		let owner = ensure_signed(origin.clone())?;
 		// Gen market id
 		let marketplace_id = marketplace.using_encoded(blake2_256);
-		//Get asset id
-		let asset_id = marketplace.asset_id;
 		let min_balance: T::Balance = T::Balance::from(1u32);
 
 
@@ -67,13 +65,8 @@ impl<T: Config> Pallet<T> {
 			!<Marketplaces<T>>::contains_key(marketplace_id),
 			Error::<T>::MarketplaceAlreadyExists
 		);
-		// Create asset
-		pallet_mapped_assets::Pallet::<T>::create(
-			origin,
-			asset_id,
-			T::Lookup::unlookup(owner.clone()),
-			min_balance,
-		)?; 
+
+
 		//Insert on marketplaces and marketplaces by auth
 		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
 		Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
@@ -1194,9 +1187,9 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn is_the_offer_valid(price: T::Balance, percentage: Permill) -> DispatchResult {
-		let minimun_amount: T::Balance = 1000u32.into();
+		let minimun_amount: T::Balance = 0u32.into();
 		ensure!(price > minimun_amount, Error::<T>::PriceMustBeGreaterThanZero);
-		ensure!(percentage <= Permill::from_percent(99), Error::<T>::ExceedMaxPercentage);
+		ensure!(percentage <= Permill::from_percent(100), Error::<T>::ExceedMaxPercentage);
 		ensure!(percentage >= Permill::from_percent(1), Error::<T>::ExceedMinPercentage);
 		Ok(())
 	}

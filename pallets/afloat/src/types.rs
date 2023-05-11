@@ -173,18 +173,19 @@ pub enum CreateOfferArgs<T: Config> {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Transaction<T: Config> {
-	pub tax_credit_amount: u32,
-	pub price_per_credit: u32,
-	pub total_price: u32,
-	pub fee: u32,
+	pub tax_credit_amount: T::Balance,
+	pub price_per_credit: T::Balance,
+	pub total_price: T::Balance,
+	pub fee: Option<T::Balance>,
 	pub creation_date: Date,
 	pub cancellation_date: Option<Date>,
-	pub tax_credit_id: u32,
+	pub tax_credit_id: <T as pallet_uniques::Config>::ItemId,
 	pub seller_id: T::AccountId,
 	pub buyer_id: T::AccountId,
 	pub offer_id: StorageId,
 	pub seller_confirmation_date: Option<Date>,
 	pub buyer_confirmation_date: Option<Date>,
+	pub confirmed: bool,
 }
 
 // ! Roles structures

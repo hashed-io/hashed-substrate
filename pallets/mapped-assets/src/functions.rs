@@ -1190,4 +1190,9 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub (super) fn do_burn_named_reserve(id: &T::ReserveIdentifier, asset_id: T::AssetId, who: &T::AccountId, admin: T::AccountId) ->DispatchResult{
 		Self::burn_named_reserve(id, asset_id, who, Some(admin))
 	}
+
+	pub fn does_asset_exists(asset_id: T::AssetId) -> bool {
+		Asset::<T,I>::contains_key(asset_id)
+	}
+
   }

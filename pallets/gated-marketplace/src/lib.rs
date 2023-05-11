@@ -375,6 +375,11 @@ pub mod pallet {
 				asset_id,
 				creator: who.clone(),
 			};
+
+			ensure!(pallet_mapped_assets::Pallet::<T>::does_asset_exists(asset_id),
+				    Error::<T>::AssetNotFound
+				);
+
 			Self::do_create_marketplace(origin, admin, m)
 		}
 

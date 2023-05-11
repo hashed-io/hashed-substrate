@@ -21,6 +21,7 @@ pub mod pallet {
 	use frame_system::RawOrigin;
 	use pallet_gated_marketplace::types::*;
 	use sp_runtime::Permill;
+	use sp_runtime::traits::StaticLookup;
 	use pallet_fruniques::types::{CollectionDescription, FruniqueRole, Attributes, ParentInfo};
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -157,8 +158,16 @@ pub mod pallet {
 		) -> DispatchResult
 
 	{
-			ensure_signed(origin.clone())?;
+			let who = ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
+			let min_balance: T::Balance = 1u32.into();
+			// Create asset
+			pallet_mapped_assets::Pallet::<T>::create(
+				origin,
+				asset_id,
+				T::Lookup::unlookup(who.clone()),
+				min_balance,
+			)?; 
 			AfloatAssetId::<T>::put(asset_id.clone());
 
 			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
@@ -273,14 +282,39 @@ pub mod pallet {
 
 		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn take_sell_order(
+		pub fn start_take_sell_order(
+			origin: OriginFor<T>,
+			offer_id: [u8; 32],
+			tax_credit_amount: T::Balance,
+		)
+		 -> DispatchResult
+		{
+			ensure_signed(origin.clone())?;
+			Self::do_start_take_sell_order(origin , offer_id, tax_credit_amount )
+		}
+
+		#[pallet::call_index(10)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn confirm_take_sell_order(
 			origin: OriginFor<T>,
 			offer_id: [u8; 32],
 		)
 		 -> DispatchResult
 		{
 			ensure_signed(origin.clone())?;
-			Self::do_take_sell_order(origin , offer_id)
+			Self::do_confirm_take_sell_order(origin, offer_id )
+		}
+
+		#[pallet::call_index(11)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn finish_take_sell_order(
+			origin: OriginFor<T>,
+			offer_id: [u8; 32],
+		)
+		 -> DispatchResult
+		{
+			ensure_signed(origin.clone())?;
+			Self::do_finish_take_sell_order(origin, offer_id )
 		}
 
 		#[pallet::call_index(7)]
