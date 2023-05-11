@@ -268,6 +268,7 @@
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
@@ -286,9 +287,9 @@
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>User&lt;T: Config&gt; {
 	<span class="kw">pub </span>cid: ShortString,
+	<span class="kw">pub </span>cid_creator: ShortString,
 	<span class="kw">pub </span>group: ShortString, <span class="comment">// only can be modified when the user is registered (can not be modified)
-	</span><span class="kw">pub </span>group_creator: ShortString,
-	<span class="kw">pub </span>created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+	</span><span class="kw">pub </span>created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
 	<span class="kw">pub </span>created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
 	<span class="kw">pub </span>last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
 	<span class="kw">pub </span>last_modified_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
@@ -297,8 +298,8 @@
 <span class="kw">impl</span>&lt;T: Config&gt; User&lt;T&gt; {
 	<span class="kw">pub fn </span>new(
 		cid: ShortString,
+		cid_creator: ShortString,
 		group: ShortString,
-		group_creator: ShortString,
 		created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
 		created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
 		last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
@@ -306,8 +307,8 @@
 	) -&gt; <span class="self">Self </span>{
 		<span class="self">Self </span>{
 			cid,
+			cid_creator,
 			group,
-			group_creator,
 			created_by,
 			created_date,
 			last_modified_by,
@@ -322,11 +323,12 @@
 </span><span class="kw">pub enum </span>UpdateUserArgs {
 	Edit {
 		cid: ShortString,
+		cid_creator: ShortString,
 	},
 	AdminEdit {
 		cid: ShortString,
+		cid_creator: ShortString,
 		group: ShortString,
-		group_creator: ShortString,
 	},
 	Delete,
 }
@@ -337,13 +339,13 @@
 </span><span class="kw">pub enum </span>SignUpArgs {
 	BuyerOrSeller {
 		cid: ShortString,
+		cid_creator: ShortString,
 		group: ShortString,
-		group_creator: ShortString,
 	},
 	CPA {
 		cid: ShortString,
+		cid_creator: ShortString,
 		group: ShortString,
-		group_creator: ShortString,
 	},
 }
 

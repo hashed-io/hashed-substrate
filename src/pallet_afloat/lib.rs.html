@@ -334,9 +334,6 @@
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a>
-<a href="#339" id="339">339</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -567,12 +564,12 @@
 			<span class="macro">ensure!</span>(who.clone() == address || <span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
 
 			<span class="kw">match </span>args {
-				UpdateUserArgs::Edit { cid } =&gt; {
-					<span class="self">Self</span>::do_edit_user(who, address, cid)<span class="question-mark">?</span>;
+				UpdateUserArgs::Edit { cid, cid_creator } =&gt; {
+					<span class="self">Self</span>::do_edit_user(who, address, cid, cid_creator)<span class="question-mark">?</span>;
 				}
-				UpdateUserArgs::AdminEdit { cid, group, group_creator } =&gt; {
+				UpdateUserArgs::AdminEdit { cid, cid_creator, group } =&gt; {
 					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
-					<span class="self">Self</span>::do_admin_edit_user(who, address, cid, group, group_creator)<span class="question-mark">?</span>;
+					<span class="self">Self</span>::do_admin_edit_user(who, address, cid, cid_creator, group)<span class="question-mark">?</span>;
 				}
 				UpdateUserArgs::Delete =&gt; {
 					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
@@ -615,9 +612,6 @@
 			ensure_signed(origin.clone())<span class="question-mark">?</span>;
 			<span class="prelude-val">Ok</span>(())
 		}
-
-
-
 
 		<span class="attr">#[pallet::call_index(<span class="number">6</span>)]
 		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
