@@ -11,11 +11,13 @@ pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::Value
 pub type Attributes<T> = Vec<(AttributeKey<T>, AttributeValue<T>)>;
 pub type Children<T> = BoundedVec<ChildInfo<T>, <T as Config>::ChildMaxLen>;
 
+// SBP-M2 review: Why this additional type as it is being used in one place only?
 pub type StringLimit<T> = BoundedVec<u8, <T as pallet_uniques::Config>::StringLimit>;
 
 pub type CollectionId = u32;
 pub type ItemId = u32;
 
+// SBP-M2 review: Use BoundedVec directly instead of creating another type
 pub type CollectionDescription<T> = StringLimit<T>;
 
 pub type ParentId = ItemId;

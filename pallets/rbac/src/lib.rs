@@ -215,6 +215,7 @@ pub mod pallet {
 		NotAuthorized,
 	}
 
+	// SBP-M2 review: Missing document
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::call_index(0)]

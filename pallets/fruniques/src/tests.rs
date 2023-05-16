@@ -67,6 +67,7 @@ fn create_collection_works() {
 	})
 }
 
+// SBP-M2 review: This test is failing please update it
 #[test]
 fn spawn_extrinsic_works() {
 	new_test_ext().execute_with(|| {

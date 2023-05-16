@@ -21,7 +21,9 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// SBP-M2 review: No need to use clone on vault_id, as [u8; 32] implements copy trait.
 	pub fn do_insert_vault(vault: Vault<T>) -> DispatchResult {
+		// SBP-M2 review: Please resolve TODOs
 		//TODO vault_id exist?
 		// generate vault id
 		ensure!(vault.signers_are_unique(), Error::<T>::DuplicateVaultMembers);
@@ -34,6 +36,7 @@ impl<T: Config> Pallet<T> {
 			if !<XpubsByOwner<T>>::contains_key(acc.clone()) {
 				return Err(Error::<T>::XPubNotFound);
 			}
+
 			<VaultsBySigner<T>>::try_mutate(acc, |vault_vec| vault_vec.try_push(vault_id.clone()))
 				.map_err(|_| Error::<T>::SignerVaultLimit)
 		})?;
@@ -98,6 +101,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_propose(proposal: Proposal<T>) -> DispatchResult {
 		Self::vault_comprobations(proposal.vault_id, &proposal.proposer)?;
 		let proposal_id = proposal.using_encoded(blake2_256);
+		// SBP-M2 review: No need to use reference as [u8; 32] implements copy trait
 		ensure!(!<Proposals<T>>::contains_key(&proposal_id), Error::<T>::AlreadyProposed);
 		<Proposals<T>>::insert(proposal_id, proposal.clone());
 		<ProposalsByVault<T>>::try_mutate(proposal.vault_id, |proposals| {
@@ -123,6 +127,8 @@ impl<T: Config> Pallet<T> {
 		<Proposals<T>>::try_mutate::<_, (), DispatchError, _>(proposal_id, |proposal| {
 			proposal.as_ref().ok_or(Error::<T>::ProposalNotFound)?;
 			if let Some(p) = proposal {
+				// SBP-M2 review: Try to incorporate any() instead
+				// SBP-M2 reivew: Suggestion: p.signed_psbts.iter().any(|&signature| signature.signer == signer);
 				let signed_already =
 					p.signed_psbts.iter().find(|&signature| signature.signer == signer).is_some();
 				ensure!(!signed_already, Error::<T>::AlreadySigned);
@@ -150,6 +156,8 @@ impl<T: Config> Pallet<T> {
 		ensure!(proposal.offchain_status.eq(&BDKStatus::Valid), Error::<T>::InvalidProposal);
 		// can be called by any vault signer
 		ensure!(vault.is_vault_member(&signer), Error::<T>::SignerPermissionsNeeded);
+
+		//SBP-M2 review: As per this comment why we are not returning error if it's Finalized?
 		// if its finalized then fire error "already finalized" or "already broadcasted"
 		ensure!(
 			proposal.status.eq(&ProposalStatus::Pending)
@@ -205,6 +213,8 @@ impl<T: Config> Pallet<T> {
 		<ProofOfReserves<T>>::try_mutate::<_, (), DispatchError, _>(vault_id, |maybe_proof| {
 			maybe_proof.as_ref().ok_or(Error::<T>::ProofNotFound)?;
 			if let Some(proof) = maybe_proof {
+				// SBP-M2 review: Try to incorporate any() instead
+				// SBP-M2 review: Suggestion: proof.signed_psbts.iter().any(|&signature| signature.signer == signer)
 				let signed_already = proof
 					.signed_psbts
 					.iter()
@@ -216,6 +226,7 @@ impl<T: Config> Pallet<T> {
 					.try_push(signature)
 					.map_err(|_| Error::<T>::ExceedMaxCosignersPerVault)?;
 				// this should never fail, earlier vault comprobations ensure it:
+				// SBP-M2 review: Still we can incorporate ? (operator) over unwrap as this function returns DispatchResult
 				if proof.signed_psbts.len() as u32 >= <Vaults<T>>::get(vault_id).unwrap().threshold
 				{
 					// set ReadyToFinalize when the threshold is reached
@@ -257,6 +268,7 @@ impl<T: Config> Pallet<T> {
 	// check if the xpub is free to take/update or if its owned by the account
 	pub fn get_xpub_status(who: T::AccountId, xpub_hash: [u8; 32]) -> XpubStatus {
 		if <Xpubs<T>>::contains_key(xpub_hash) {
+			// SBP-M2 review: No need to use clone()
 			if let Some(owned_hash) = <XpubsByOwner<T>>::get(who.clone()) {
 				match xpub_hash == owned_hash {
 					true => return XpubStatus::Owned,
@@ -334,6 +346,7 @@ impl<T: Config> Pallet<T> {
 	}
 	/*---- Offchain utilities ----*/
 
+	// SBP-M2 review: Reusing the type which should be created for key
 	pub fn get_pending_vaults() -> Vec<[u8; 32]> {
 		<Vaults<T>>::iter()
 			.filter_map(|(entry, vault)| {
@@ -398,6 +411,8 @@ impl<T: Config> Pallet<T> {
 			})
 			.collect()
 	}
+
+	// SBP-M2 review: Remove commented lines
 
 	// pub fn get_proposals_to_broadcast()->  Vec<[u8;32]>{
 	//     // offchain status == valid and proposal status ready to ReadyToBroadcast
@@ -478,6 +493,7 @@ impl<T: Config> Pallet<T> {
 		let xpubs = Self::get_accounts_xpubs(vault_signers).map_err(|_| {
 			Self::build_offchain_err(false, "One of the cosigner xpubs wasn't found")
 		})?;
+		// SBP-M2 review: Code should not contain unwrap(), error handling is must
 		let mapped_xpubs: Vec<JsonValue> = xpubs
 			.iter()
 			.map(|xpub| {
@@ -537,6 +553,7 @@ impl<T: Config> Pallet<T> {
 		Self::parse_vault_descriptors(body_str)
 	}
 
+	// SBP-M2 review: Redundant cloning on vault_to_complete
 	pub fn gen_vaults_payload_by_bulk(pending_vaults: Vec<[u8; 32]>) -> Vec<SingleVaultPayload> {
 		let mut generated_vaults = Vec::<SingleVaultPayload>::new();
 		pending_vaults.iter().for_each(|vault_to_complete| {
@@ -561,6 +578,7 @@ impl<T: Config> Pallet<T> {
 		generated_vaults
 	}
 
+	// SBP-M2 review: Redundant cloning on multiple types
 	pub fn gen_proposal_json_body(proposal_id: [u8; 32]) -> Result<Vec<u8>, OffchainStatus> {
 		let mut body = Vec::new();
 		let proposal = <Proposals<T>>::get(proposal_id)
@@ -636,6 +654,7 @@ impl<T: Config> Pallet<T> {
 		Ok(response_body)
 	}
 
+	// SBP-M2 review: Redundant cloning on multiple types
 	pub fn gen_proposals_payload_by_bulk(
 		pending_proposals: Vec<[u8; 32]>,
 		api_endpoint: Vec<u8>,
@@ -711,6 +730,8 @@ impl<T: Config> Pallet<T> {
 		// // Parse the JSON and print the resulting lite-json structure.
 		Ok(jsonSerialize::format(&json_object, 4))
 	}
+
+	// SBP-M2 review: Please remove commented code
 
 	// pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus >{
 	//     let raw_json = Self::gen_finalize_json_body(proposal_id)?;

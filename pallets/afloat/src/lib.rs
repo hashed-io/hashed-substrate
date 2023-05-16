@@ -103,8 +103,9 @@ pub mod pallet {
 		<T as pallet_uniques::Config>::CollectionId, // Afloat's frunique collection id
 	>;
 
+	// SBP-M2 review: Missing extrinsic documentation and code is not well formatted
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
+	impl<T: Config> Pallet<T>
 	where
 	T: pallet_uniques::Config<CollectionId = CollectionId>
 	{
@@ -120,6 +121,8 @@ pub mod pallet {
 			ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
 			let min_balance: T::Balance = T::Balance::from(1u32);
+			// SBP-M2 review: Returning error is a good approach instead of panic.
+			// Suggestion: A generic error enum for conversions can be used throughout the code
 			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
 
 			pallet_mapped_assets::Pallet::<T>::create(
@@ -127,10 +130,10 @@ pub mod pallet {
 				asset_id,
 				T::Lookup::unlookup(creator.clone()),
 				min_balance,
-			)?; 
+			)?;
 
 			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
-			
+
 			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())?;
 
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
@@ -158,6 +161,7 @@ pub mod pallet {
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			ensure_signed(origin.clone())?;
 			<AfloatMarketPlaceId<T>>::kill();
+			// SBP-M2 review: Remove let _, use ? operator instead
 			let _ = <UserInfo<T>>::clear(1000, None);
 			Ok(())
 		}
@@ -176,6 +180,7 @@ pub mod pallet {
 			address: T::AccountId,
 			args: UpdateUserArgs,
 		) -> DispatchResult {
+			// SBP-M2 review: Pleaser resolve this
 			// TODO: Check if the user is editing himself or is an admin
 			let who = ensure_signed(origin)?;
 

@@ -14,8 +14,10 @@ use frame_support::PalletId;
 // use frame_support::traits::OriginTrait;
 use sp_runtime::traits::AccountIdConversion;
 use sp_runtime::{sp_std::vec::Vec, Permill};
+// SBP-M2 review: Please remove commented line
 // use sp_runtime::traits::StaticLookup;
 
+// SBP-M2 review: This file contains multiple code quality issues, please run cargo clippy to find those
 impl<T: Config> Pallet<T> {
 	pub fn u32_to_instance_id(input: u32) -> T::ItemId
 	where
@@ -40,12 +42,14 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn permill_to_percent(input: Permill) -> u32 {
+		// SBP-M2 review: deconstruct() return u32, no need to type cast
 		input.deconstruct() as u32
 	}
 
 	pub fn bytes_to_string(input: Vec<u8>) -> String {
 		let mut s = String::default();
 		for x in input {
+			// SBP-M2 review: commented line
 			//let c: char = x.into();
 			s.push(x as char);
 		}
@@ -58,6 +62,7 @@ impl<T: Config> Pallet<T> {
 		<T::Lookup as sp_runtime::traits::StaticLookup>::unlookup(account_id.clone())
 	}
 
+	// SBP-M2 review: No usage found, and will panic in case of error. Error should be handled.
 	/// Helper function for printing purposes
 	pub fn get_nft_attribute(
 		class_id: &T::CollectionId,
@@ -76,6 +81,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn is_frozen(collection_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+		// SBP-M2 review: Please remove unwrap(), error should be handled properly
 		let frunique: FruniqueData<T> =
 			<FruniqueInfo<T>>::try_get(&collection_id, &instance_id).unwrap();
 
@@ -83,6 +89,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn collection_exists(class_id: &T::CollectionId) -> bool {
+		// SBP-M2 review: can be simplified like this: pallet_uniques::Pallet::<T>::collection_owner(*class_id).is_some()
 		if let Some(_owner) = pallet_uniques::Pallet::<T>::collection_owner(*class_id) {
 			return true;
 		}
@@ -90,6 +97,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn instance_exists(class_id: &T::CollectionId, instance_id: &T::ItemId) -> bool {
+		// SBP-M2 review: can be simplified like above
 		if let Some(_owner) = pallet_uniques::Pallet::<T>::owner(*class_id, *instance_id) {
 			return true;
 		}
@@ -187,6 +195,7 @@ impl<T: Config> Pallet<T> {
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		let nex_item: ItemId = <NextFrunique<T>>::try_get(collection).unwrap_or(0);
+		// SBP-M2 review: Should perform safe math operation. Eg: use of saturating_add/saturating_inc()
 		<NextFrunique<T>>::insert(collection, nex_item + 1);
 
 		let item = Self::u32_to_instance_id(nex_item);
@@ -294,6 +303,7 @@ impl<T: Config> Pallet<T> {
 			false,
 		)?;
 
+		// SBP-M2 review: Unsafe operation, please use safe math operation. Eg: use of saturating_add/saturating_inc()
 		<NextCollection<T>>::put(Self::next_collection() + 1);
 
 		Ok(class_id)
@@ -359,12 +369,14 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::FruniqueNotFound
 		);
 
+		// SBP-M2 review: Please remove unwrap(), error should be handled properly
 		let frunique_parent: FruniqueData<T> =
 			<FruniqueInfo<T>>::try_get(&parent_info.collection_id, &parent_info.parent_id).unwrap();
 
 		ensure!(!frunique_parent.frozen, Error::<T>::ParentFrozen);
 		ensure!(!frunique_parent.redeemed, Error::<T>::ParentAlreadyRedeemed);
 
+		// SBP-M2 review: Unsafe operation, please use safe math operation. Eg: saturating_mul
 		let child_percentage: Permill = parent_info.parent_weight * frunique_parent.weight;
 
 		let parent_data: ParentInfo<T> = ParentInfo {
@@ -426,6 +438,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(Self::collection_exists(&collection), Error::<T>::CollectionNotFound);
 		ensure!(Self::instance_exists(&collection, &item), Error::<T>::FruniqueNotFound);
 
+		// SBP-M2 review: Please remove unwrap(), error should be handled properly
 		let frunique_data: FruniqueData<T> = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
 
 
@@ -453,6 +466,7 @@ impl<T: Config> Pallet<T> {
 		collection: T::CollectionId,
 		item: T::ItemId,
 	) -> CollectionDescription<T> {
+		// SBP-M2 review: Please remove unwrap(), error should be handled properly
 		let frunique_data = <FruniqueInfo<T>>::try_get(collection, item).unwrap();
 		frunique_data.metadata
 	}
@@ -462,6 +476,7 @@ impl<T: Config> Pallet<T> {
 		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
 	}
 
+	// SBP-M2 review: Please handle error properly
 	// Helper function to get the pallet account as a AccountId
 	pub fn pallet_account() -> T::AccountId {
 		let pallet_name = Self::module_name().as_bytes().to_vec();

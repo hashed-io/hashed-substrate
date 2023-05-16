@@ -1,3 +1,4 @@
+//SBP-M2 review: Implement benchmarking for all the extrinsics, it is must before going to production
 //! Benchmarking setup for pallet-template
 
 use super::*;
