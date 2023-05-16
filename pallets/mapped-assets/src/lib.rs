@@ -189,7 +189,7 @@ impl AssetsCallback<u32, AccountId32> for DefaultCallback {
     }
 }
 
-
+// SBP-M2 review: Add benchmarks for remaining extrinsics
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -1600,7 +1600,7 @@ pub mod pallet {
 			let id: T::AssetId = id.into();
 			Self::do_refund(id, ensure_signed(origin)?, allow_burn)
 		}
-	
+
 
 		/// Reserve some assets on an account for a specific asset.
 		///

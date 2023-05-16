@@ -11,6 +11,7 @@ mod tests;
 pub mod functions;
 pub mod types;
 
+// SBP-M2 review: Pallet should implement benchmarks
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
@@ -161,6 +162,7 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	// SBP-M2 review: Please remove commented line
 	#[pallet::storage]
 	#[pallet::getter(fn offers_info)]
 	pub(super) type OffersInfo<T: Config> = StorageMap<
@@ -339,6 +341,7 @@ pub mod pallet {
 	where
 		T: pallet_uniques::Config<CollectionId = u32, ItemId = u32>,
 	{
+		// SBP-M2 review: Missing doc
 		#[pallet::call_index(0)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>) -> DispatchResult {
@@ -347,6 +350,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// SBP-M2 review: Incomplete doc, missing params
 		/// Create a new marketplace.
 		///
 		/// Creates a new marketplace with the given label
@@ -365,6 +369,7 @@ pub mod pallet {
 			sell_fee: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?; // origin will be market owner
+			// SBP-M2 review: Naming convention can be improved
 			let m = Marketplace {
 				label,
 				buy_fee: Permill::from_percent(buy_fee),
@@ -374,6 +379,8 @@ pub mod pallet {
 			Self::do_create_marketplace(who, admin, m)
 		}
 
+
+		// SBP-M2 review: Duplicate line and incorrect param name. Please correct this
 		/// Block or Unblock a user from apllying to a marketplace.
 		///
 		/// Blocks or Unblocks a user from applying to a marketplace.
@@ -420,6 +427,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn apply(
 			origin: OriginFor<T>,
+			// SBP-M2 review: type MarketplaceId can be used here and other relevant places
 			marketplace_id: [u8; 32],
 			// Getting encoding errors from polkadotjs if an object vector have optional fields
 			fields: Fields<T>,
@@ -476,6 +484,7 @@ pub mod pallet {
 			Self::do_apply(who, custodian, marketplace_id, application)
 		}
 
+		// SBP-M2 review: Incomplete doc, missing params
 		/// Accept or reject an application.
 		///
 		/// If the application is accepted,
@@ -509,6 +518,7 @@ pub mod pallet {
 			Self::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
 		}
 
+		// SBP-M2 review: Incomplete doc, missing params
 		/// Invite a user to a marketplace.
 		///
 		/// The admin of the marketplace can invite a user to the marketplace.
@@ -589,6 +599,7 @@ pub mod pallet {
 			Self::do_remove_authority(who, account, authority_type, marketplace_id)
 		}
 
+		// SBP-M2 review: Incomplete doc, incorrect param
 		/// Update marketplace's label.
 		///
 		/// This extrinsic updates the label of the selected marketplace.
@@ -638,6 +649,7 @@ pub mod pallet {
 			Self::do_remove_marketplace(who, marketplace_id)
 		}
 
+		// SBP-M2 review: Incomplete doc, missing param
 		/// Enlist a sell order.
 		///
 		/// This extrinsic creates a sell order in the selected marketplace.
@@ -676,6 +688,7 @@ pub mod pallet {
 			)
 		}
 
+		// SBP-M2 review: Missing param in doc
 		/// Accepts a sell order.
 		///
 		/// This extrinsic is called by the user who wants to buy the item.
@@ -722,6 +735,7 @@ pub mod pallet {
 			Self::do_remove_offer(who, offer_id)
 		}
 
+		// SBP-M2 review: Missing doc param
 		/// Enlist a buy order.
 		///
 		/// This extrinsic creates a buy order in the selected marketplace.
@@ -759,6 +773,7 @@ pub mod pallet {
 			)
 		}
 
+		// SBP-M2 review: Extra param
 		/// Accepts a buy order.
 		///
 		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
@@ -801,6 +816,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			match redeem {
 				RedeemArgs::AskForRedemption { collection_id, item_id } => {
+					// SBP-M2 review: Return can be removed
 					return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id);
 				},
 				RedeemArgs::AcceptRedemption(redemption_id) => {
@@ -809,8 +825,10 @@ pub mod pallet {
 			}
 		}
 
+		// SBP-M2 review: Pleaser resolve this
 		//TODO: Add CRUD operations for the offers
 
+		// SBP-M2 review: Pleasre remove let _ and handle error properly
 		/// Kill all the stored data.
 		///
 		/// This function is used to kill ALL the stored data.

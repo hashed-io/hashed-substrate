@@ -62,6 +62,7 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+// SBP-M2 review: Not up to date with config
 impl pallet_afloat::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Moment = u64;

@@ -106,6 +106,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		pallet: IdOrVec,
 		roles: Vec<Vec<u8>>,
 	) -> Result<BoundedVec<RoleId, T::MaxRolesPerPallet>, DispatchError> {
+		// SBP-M2 review: type RoleId can be reused here and please incorporate other relevant places as well
 		let mut role_ids = Vec::<[u8; 32]>::new();
 		for role in roles {
 			role_ids.push(Self::create_role(role.to_owned())?);
@@ -159,7 +160,7 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
 		let pallet_id = pallet.to_id();
 		// checks for duplicates:
 		ensure!(Self::has_unique_elements(roles.clone()), Error::<T>::DuplicateRole);
-		let pallet_roles = <PalletRoles<T>>::get(&pallet_id);
+		let pallet_roles = <PalletRoles<T>>:: get(&pallet_id);
 		for id in roles.clone() {
 			ensure!(!pallet_roles.contains(&id), Error::<T>::RoleAlreadyLinkedToPallet);
 		}

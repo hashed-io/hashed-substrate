@@ -7,8 +7,11 @@ use pallet_gated_marketplace::types::MarketplaceRole;
 use pallet_fruniques::types::CollectionDescription;
 use pallet_fruniques::types::FruniqueRole;
 use frame_support::pallet_prelude::*;
+
+// SBP-M2 review: Please remove this commented line
 // use frame_support::traits::OriginTrait;
 
+// SBP-M2 review: Please remove unwraps and manage error in all places
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
 		let creator_user: User<T> = User {
@@ -210,7 +213,7 @@ impl<T: Config> Pallet<T> {
 	///
 	pub fn do_delete_user(_actor: T::AccountId, user_address: T::AccountId) -> DispatchResult {
 		ensure!(<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
-		
+
 		Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
 		Self::remove_from_afloat_marketplace(user_address.clone())?;
 
@@ -221,7 +224,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn create_afloat_collection(origin: OriginFor<T>,
 		metadata: CollectionDescription<T>,
-		admin: T::AccountId, ) -> DispatchResult 
+		admin: T::AccountId, ) -> DispatchResult
 		where
 		<T as pallet_uniques::Config>::CollectionId: From<u32>,
 		{
@@ -240,6 +243,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn add_to_afloat_collection(invitee: T::AccountId, role: FruniqueRole) -> DispatchResult {
+		// SBP-M2 review: Please remove unwrap() and manage error properly
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
 		pallet_fruniques::Pallet::<T>::insert_auth_in_frunique_collection(invitee,
 		collection_id,
@@ -248,6 +252,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn remove_from_afloat_collection(invitee: T::AccountId, role: FruniqueRole) -> DispatchResult {
+		// SBP-M2 review: Please remove unwrap() and manage error properly
 		let collection_id = AfloatCollectionId::<T>::get().unwrap();
 		pallet_fruniques::Pallet::<T>::remove_auth_from_frunique_collection(invitee,
 		collection_id,
@@ -256,6 +261,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn remove_from_afloat_marketplace(invitee: T::AccountId) -> DispatchResult {
+		// SBP-M2 review: Please remove unwrap() and manage error properly
 		let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
 		pallet_gated_marketplace::Pallet::<T>::remove_from_market_lists(invitee, MarketplaceRole::Participant, marketplace_id)
 	}

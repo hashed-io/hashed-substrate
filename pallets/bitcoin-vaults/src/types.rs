@@ -7,6 +7,8 @@ use sp_runtime::sp_std::vec::Vec;
 
 pub type Description<T> = BoundedVec<u8, <T as Config>::VaultDescriptionMaxLen>;
 pub type PSBT<T> = BoundedVec<u8, <T as Config>::PSBTMaxLen>;
+
+// SBP-M2 review: Please remove commented lines
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 /*--- Constants section ---*/
 //pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems";
@@ -139,6 +141,7 @@ impl<T: Config> Proposal<T> {
 		self.status.is_ready_to_finalize() && self.offchain_status.eq(&BDKStatus::Valid)
 	}
 
+	// SBP-M2 review: Please remove commented lines
 	// pub fn can_be_broadcasted(&self) -> bool {
 	// 	self.status.eq(&ProposalStatus::ReadyToBroadcast) && self.offchain_status.eq(&BDKStatus::Valid)
 	// }
@@ -288,6 +291,8 @@ pub enum ProposalStatus {
 	Broadcasted,
 }
 
+// SBP-M2 review: Try incorporate matches! to improve code quality
+// Eg: matches!(*self, ProposalStatus::ReadyToFinalize(_))
 impl ProposalStatus {
 	pub fn is_ready_to_finalize(&self) -> bool {
 		match *self {

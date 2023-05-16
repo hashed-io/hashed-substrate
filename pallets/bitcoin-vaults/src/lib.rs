@@ -17,6 +17,7 @@ pub mod types;
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
+	// SBP-M2 review: Please remove commented lines
 	//#[cfg(feature = "std")]
 	//use frame_support::serde::{Deserialize, Serialize};
 	use crate::types::*;
@@ -193,6 +194,8 @@ pub mod pallet {
 	pub(super) type Xpubs<T: Config> = StorageMap<
 		_,
 		Identity,
+		// SBP-M2 review: Key shouldn't be used directly as [u8; 32], create a type of it and use in all places.
+		// Best place to have that type in premitives.rs and move other constants also in that file
 		[u8; 32], //that's the blake 2 hash result
 		BoundedVec<u8, T::XPubLen>,
 		OptionQuery,
@@ -296,6 +299,7 @@ pub mod pallet {
 				let pending_vaults = Self::get_pending_vaults();
 				let pending_proposals = Self::get_pending_proposals();
 				let proposals_to_finalize = Self::get_proposals_to_finalize();
+				// SBP-M2 review: Remove commented line
 				//let proposals_to_broadcast = Self::get_proposals_to_finalize();
 				log::info!("Pending vaults {:?}", pending_vaults.len());
 				// This validation needs to be done after the lock:
@@ -353,10 +357,14 @@ pub mod pallet {
 			ensure!(!<XpubsByOwner<T>>::contains_key(who.clone()), Error::<T>::UserAlreadyHasXpub);
 			let manual_hash = xpub.clone().using_encoded(blake2_256);
 			// Assert if the input xpub is free to take (or if the user owns it)
+
+			// SBP-M2 review: Please remove clone from manual_hash as it's type implements copy trait
 			match Self::get_xpub_status(who.clone(), manual_hash.clone()) {
 				XpubStatus::Owned => log::info!("Xpub owned, nothing to insert"),
 				XpubStatus::Taken => Err(Error::<T>::XPubAlreadyTaken)?, //xpub taken: abort tx
 				XpubStatus::Free => {
+
+					// SBP-M2 review: Please remove commented lines
 					// xpub free: erase unused xpub and insert on maps
 					// if <XpubsByOwner<T>>::contains_key(who.clone()) {
 					// 	Self::remove_xpub_from_pallet_storage(who.clone())?;
@@ -406,6 +414,7 @@ pub mod pallet {
 				.collect::<Vec<_>>();
 			ensure!(vaults.is_empty(), Error::<T>::XpubLinkedToVault);
 
+			// SBP-M2 review: Unnecessary clone as value is not being used further
 			Self::do_remove_xpub(who.clone())
 		}
 
@@ -445,6 +454,7 @@ pub mod pallet {
 				Error::<T>::InvalidVaultThreshold
 			);
 			let vault = Vault::<T> {
+				// SBP-M2 review: Unnecessary clone as value is not being used further
 				owner: who.clone(),
 				threshold,
 				description,
@@ -504,6 +514,7 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 			// ensure user is in the vault
 			let proposal = Proposal::<T> {
+				// SBP-M2 review: Unnecessary clone as value is not being used further
 				proposer: who.clone(),
 				vault_id,
 				status: ProposalStatus::Pending,
@@ -520,6 +531,7 @@ pub mod pallet {
 			Self::do_propose(proposal)
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Proposal removal
 		///
 		/// Tries to remove a specified proposal. Only the user who created the proposal can remove it.
@@ -534,12 +546,15 @@ pub mod pallet {
 			let proposal = <Proposals<T>>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
 			// Only vault proposer can remove
 			// validation before do_remove_proposal because the user is not needed anymore
+
+			// SBP-M2 review: Please resolve this
 			//TODO: proposal cannot be erased if readyToBroadcast() finalized or broadcasted
 			// -> erase only pending
 			ensure!(proposal.proposer.eq(&who), Error::<T>::ProposerPermissionsNeeded);
 			Self::do_remove_proposal(proposal_id)
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// BDK URL insertion
 		///
 		/// Changes the BDK-services endpoint, useful for pointing to the btc mainnet or testnet
@@ -607,6 +622,7 @@ pub mod pallet {
 			Self::do_finalize_psbt(who, proposal_id, broadcast)
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Broadcast PSBT
 		///
 		/// Queries a proposal to be broadcasted in case it wasn't on the finalization step.
@@ -622,6 +638,11 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn broadcast_psbt(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
+			// SBP-M2 review: Why same function? What if someone set broadcast as true on
+			// finalize_psbt extrinsic? Having same functionality on two extrinsics is not correct.
+			// What you can do either wrap both in one and specify the bool flag in depth or set
+			// broadcast as false in one and true in other we you like to use the same do_finalize_psbt()
+			// in both cases.
 			Self::do_finalize_psbt(who, proposal_id, true)
 		}
 
@@ -693,6 +714,7 @@ pub mod pallet {
 			Self::do_finalize_proof(who, vault_id, psbt)
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Kill almost all storage
 		///
 		/// Use with caution!
@@ -702,6 +724,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			T::ChangeBDKOrigin::ensure_origin(origin.clone())?;
+			// SBP-M2 review: Remove let _, instead use ? operator
 			let _ = <Xpubs<T>>::clear(1000, None);
 			let _ = <XpubsByOwner<T>>::clear(1000, None);
 			let _ = <Proposals<T>>::clear(1000, None);
@@ -712,6 +735,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Extrinsic to insert a valid vault descriptor
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
@@ -729,6 +753,7 @@ pub mod pallet {
 				.vaults_payload
 				.iter()
 				.find_map(|vault_payload| {
+					// SBP-M2 review: Use ? operator instead of expect (on other cases also)
 					let output_descriptor = BoundedVec::<u8, T::OutputDescriptorMaxLen>::try_from(
 						vault_payload.output_descriptor.clone(),
 					)
@@ -743,6 +768,8 @@ pub mod pallet {
 					};
 					let status: BDKStatus<T::VaultDescriptionMaxLen> =
 						vault_payload.clone().status.into();
+
+					// SBP-M2 review: Remove this commented line.
 					//assert!(Self::do_insert_descriptors(vault_payload.vault_id,descriptors).is_ok());
 					let tx_res =
 						Self::do_insert_descriptors(vault_payload.vault_id, descriptors, status);
@@ -754,6 +781,7 @@ pub mod pallet {
 				.unwrap_or(Ok(()))
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Extrinsic to insert a valid proposal PSBT
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker
@@ -786,6 +814,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// SBP-M2 review: Test case missing for this extrinsic
 		/// Extrinsic to insert a valid proposal TX_ID
 		///
 		/// Meant to be unsigned with signed payload and used by an offchain worker

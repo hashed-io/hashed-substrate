@@ -8,6 +8,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+// SBP-M2 reviewL: Pallet should contain benchmarks
 // #[cfg(feature = "runtime-benchmarks")]
 // mod benchmarking;
 
@@ -202,9 +203,11 @@ pub mod pallet {
 	where
 		T: pallet_uniques::Config<CollectionId = CollectionId, ItemId = ItemId>,
 	{
+		// SBP-M2 review: Missing doc
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(10))]
 		pub fn initial_setup(origin: OriginFor<T>, freezer: T::AccountId) -> DispatchResult {
+			// SBP-M2 review: Is it correct?
 			//Transfer the balance
 			T::RemoveOrigin::ensure_origin(origin.clone())?;
 
@@ -228,6 +231,7 @@ pub mod pallet {
 			metadata: CollectionDescription<T>,
 		) -> DispatchResult {
 			let admin: T::AccountId = ensure_signed(origin.clone())?;
+			// SBP-M2 review: Please remove this
 			// let admin: T::AccountId = frame_system::RawOrigin::Root.into();
 
 			Self::do_create_collection(origin, metadata, admin.clone())?;
@@ -376,6 +380,8 @@ pub mod pallet {
 				instance_id,
 				|frunique_data| -> DispatchResult {
 					let frunique = frunique_data.as_mut().ok_or(Error::<T>::FruniqueNotFound)?;
+					// SBP-M2 review: Try using
+					// if frunique.verified || frunique.verified_by.is_some()
 					if frunique.verified == true || frunique.verified_by.is_some() {
 						return Err(Error::<T>::FruniqueAlreadyVerified.into());
 					}

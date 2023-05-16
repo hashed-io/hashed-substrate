@@ -136,6 +136,8 @@ impl pallet_rbac::Config for Test {
 	type MaxUsersPerRole = MaxUsersPerRole;
 	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 }
+
+//SBP-M2 review: Please remove commented lines
 // Build genesis storage according to the mock runtime.
 // pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 // 	frame_system::GenesisConfig::default().build_storage::<Test>().unwrap().into()

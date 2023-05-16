@@ -11,6 +11,8 @@ use frame_support::traits::ExistenceRequirement::KeepAlive;
 use frame_support::traits::Time;
 use sp_runtime::Permill;
 
+// SBP-M2 review: This file contains multiple code quality issues, please run cargo clippy to find those,
+// remove commented lines and resolve TODOs
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup() -> DispatchResult {
 		let pallet_id = Self::pallet_id();
@@ -232,9 +234,9 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
 
-		//since users can self-enroll, the caller of this function must validate 
+		//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
+
 
 		//ensure the account is not already in the marketplace
 		ensure!(
@@ -248,10 +250,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-		
+
 		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		Ok(())
 	}
 
@@ -406,7 +408,7 @@ impl<T: Config> Pallet<T> {
 		percentage: u32,
 	) -> DispatchResult {
 
-		
+
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
@@ -877,6 +879,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_block_user(
 		authority: T::AccountId,
+		// SBP-M2 review: type MarketplaceId can be used here and other relevant places
 		marketplace_id: [u8; 32],
 		user: T::AccountId,
 	) -> DispatchResult {
@@ -932,6 +935,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
+	// SBP-M2 review: type MarketplaceId can be used here
 	fn is_user_blocked(user: T::AccountId, marketplace_id: [u8; 32]) -> bool {
 		<BlockedUsersByMarketplace<T>>::get(marketplace_id).contains(&user)
 	}
@@ -1035,6 +1039,7 @@ impl<T: Config> Pallet<T> {
 			<ApplicationsByAccount<T>>::remove(_k1, marketplace_id);
 		});
 
+		// SBP-M2 review: Error should ne handled, please remove let _
 		// remove from ApplicantsByMarketplace list
 		let _ = <ApplicantsByMarketplace<T>>::clear_prefix(marketplace_id, 1000, None);
 
@@ -1282,10 +1287,14 @@ impl<T: Config> Pallet<T> {
 			|redemption_data| -> DispatchResult {
 				let redemption_data =
 					redemption_data.as_mut().ok_or(Error::<T>::RedemptionRequestNotFound)?;
+
+				// SBP-M2 review: Can be simplified
+				// ensure!(!redemption_data.is_redeemed, Error::<T>::RedemptionRequestAlreadyRedeemed);
 				ensure!(
 					redemption_data.is_redeemed == false,
 					Error::<T>::RedemptionRequestAlreadyRedeemed
 				);
+				// SBP-M2 review: Can be simplified like above
 				ensure!(
 					redemption_data.is_redeemed == false,
 					Error::<T>::RedemptionRequestAlreadyRedeemed

@@ -1,3 +1,4 @@
+// SBP-M2 review: Implement benchmarks
 //! Benchmarking setup for pallet-template
 
 use super::*;
