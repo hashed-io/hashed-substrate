@@ -254,14 +254,18 @@ impl<T: Config> Pallet<T> {
     let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
     let collection_id = AfloatCollectionId::<T>::get().unwrap();
 
-    let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
-      authority.clone(),
-      marketplace_id,
-      collection_id,
-      item_id,
-      price,
-      tax_credit_amount,
-    )?;
+    /*
+      TODO: at the moment we are not going to list anything in marketplace yet
+      the offers on marketplace will be created once both users create a transaction
+    */
+    // let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
+    //   authority.clone(),
+    //   marketplace_id,
+    //   collection_id,
+    //   item_id,
+    //   price,
+    //   tax_credit_amount,
+    // )?;
 
     let offer: Offer<T> = Offer {
       tax_credit_amount,
@@ -275,6 +279,8 @@ impl<T: Config> Pallet<T> {
       offer_type: OfferType::Sell,
       cancellation_date: None,
     };
+
+    let offer_id = offer.using_encoded(blake2_256);
 
     <AfloatOffers<T>>::insert(offer_id, offer);
 
@@ -295,14 +301,18 @@ impl<T: Config> Pallet<T> {
     let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
     let collection_id = AfloatCollectionId::<T>::get().unwrap();
 
-    let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
-      authority.clone(),
-      marketplace_id,
-      collection_id,
-      item_id,
-      price,
-      tax_credit_amount,
-    )?;
+    /*
+      TODO: at the moment we are not going to list anything in marketplace yet
+      the offers on marketplace will be created once both users create a transaction
+    */
+    // let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
+    //   authority.clone(),
+    //   marketplace_id,
+    //   collection_id,
+    //   item_id,
+    //   price,
+    //   tax_credit_amount,
+    // )?;
 
     let offer: Offer<T> = Offer {
       tax_credit_amount,
@@ -316,6 +326,8 @@ impl<T: Config> Pallet<T> {
       offer_type: OfferType::Buy,
       cancellation_date: None,
     };
+
+    let offer_id = offer.using_encoded(blake2_256);
 
     <AfloatOffers<T>>::insert(offer_id, offer);
 

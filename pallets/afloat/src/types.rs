@@ -170,6 +170,7 @@ pub struct Transaction<T: Config> {
   pub seller_id: T::AccountId,
   pub buyer_id: T::AccountId,
   pub offer_id: StorageId,
+  pub marketplace_offer_id: StorageId,
   pub seller_confirmation_date: Option<Date>,
   pub buyer_confirmation_date: Option<Date>,
 }
