@@ -354,9 +354,7 @@ impl<T: Config> Pallet<T> {
 		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
-			.using_encoded(blake2_256);
+
 
 		//create offer structure
 
@@ -377,9 +375,9 @@ impl<T: Config> Pallet<T> {
 			buyer: None,
 		};
 
-		//ensure there is no a previous sell offer for this item
-		Self::can_this_item_receive_sell_orders(collection_id, item_id, marketplace_id)?;
-
+		//create an offer_id
+		let offer_id = offer_data.using_encoded(blake2_256);
+		
 		//insert in OffersByItem
 		<OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| offers.try_push(offer_id))
 			.map_err(|_| Error::<T>::OfferStorageError)?;
@@ -450,9 +448,7 @@ impl<T: Config> Pallet<T> {
 		let creation_date =
 			Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-		//create an offer_id
-		let offer_id = (marketplace_id, authority.clone(), collection_id, creation_date)
-			.using_encoded(blake2_256);
+
 
 		//create offer structure
 		let marketplace =
@@ -470,6 +466,9 @@ impl<T: Config> Pallet<T> {
 			offer_type: OfferType::BuyOrder,
 			buyer: None,
 		};
+
+		//create an offer_id
+		let offer_id = offer_data.using_encoded(blake2_256);
 
 		//insert in OffersByItem
 		//An item can receive multiple buy offers
@@ -535,6 +534,7 @@ impl<T: Config> Pallet<T> {
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
 		let owners_cut: T::Balance = offer_data.price - offer_data.fee;
+
 		//Transfer the balance
 		pallet_mapped_assets::Pallet::<T>::transfer(
 			origin.clone(),
@@ -542,7 +542,6 @@ impl<T: Config> Pallet<T> {
 			T::Lookup::unlookup(owner_item.clone()),
 			owners_cut,
 		)?;
-		//T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
 
 		pallet_mapped_assets::Pallet::<T>::transfer(
 			origin.clone(),
@@ -550,7 +549,6 @@ impl<T: Config> Pallet<T> {
 			T::Lookup::unlookup(marketplace.creator.clone()),
 			offer_data.fee,
 		)?;
-		//T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 		if offer_data.percentage == Permill::from_percent(100) {
@@ -651,7 +649,6 @@ impl<T: Config> Pallet<T> {
 			T::Lookup::unlookup(owner_item.clone()),
 			owners_cut,
 		)?;
-		//T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
 
 		pallet_mapped_assets::Pallet::<T>::transfer(
 			RawOrigin::Signed(offer_data.creator.clone()).into(),
@@ -659,13 +656,6 @@ impl<T: Config> Pallet<T> {
 			T::Lookup::unlookup(marketplace.creator.clone()),
 			offer_data.fee,
 		)?;
-
-		/* T::Currency::transfer(
-			&offer_data.creator,
-			&marketplace.creator,
-			offer_data.fee,
-			KeepAlive,
-		)?; */
 		
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 

@@ -187,6 +187,7 @@ parameter_types! {
 }
 impl pallet_rbac::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
+	type RemoveOrigin = EnsureRoot<Self::AccountId>;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type RoleMaxLen = RoleMaxLen;

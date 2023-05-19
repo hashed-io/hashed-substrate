@@ -2213,9 +2213,9 @@ fn enlist_sell_offer_two_marketplaces() {
 			create_label("my marketplace2"),
             500,
             600,
-			2,
+			1,
 		));
-		let m_id2 = get_marketplace_id2("my marketplace2",500,600,1,2);
+		let m_id2 = get_marketplace_id2("my marketplace2",500,600,1,1);
 
 		Assets::mint(RuntimeOrigin::signed(1), 1, 1, 10000);
 		Assets::mint(RuntimeOrigin::signed(1), 2, 1, 10000);
@@ -2425,8 +2425,6 @@ fn enlist_buy_offer_price_must_greater_than_zero_shouldnt_work() {
 #[test]
 fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1101);
 		Balances::make_free_balance_be(&3, 1201);
 
@@ -2504,10 +2502,15 @@ fn enlist_buy_offer_an_item_can_receive_multiple_buy_offers() {
 #[test]
 fn take_sell_offer_works() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&2, 1300);
+		Balances::make_free_balance_be(&1, 1000000);
+		Balances::make_free_balance_be(&1, 10000000);
+		Balances::make_free_balance_be(&2, 13000000000000);
 
+		Assets::create(RuntimeOrigin::signed(1),
+		1,
+		0,
+		1,
+	);
 		assert_ok!(GatedMarketplace::create_marketplace(
 			RuntimeOrigin::signed(1),
 			2,
@@ -2518,8 +2521,8 @@ fn take_sell_offer_works() {
 
 		));
 
-		Assets::mint(RuntimeOrigin::signed(1), 1, 1, 10000);
-		Assets::mint(RuntimeOrigin::signed(1), 1, 2, 10000);
+		Assets::mint(RuntimeOrigin::signed(1), 1, 1, 100000000000000);
+		Assets::mint(RuntimeOrigin::signed(1), 1, 2, 1000000000000000000);
 
 		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
@@ -2679,8 +2682,8 @@ fn take_buy_offer_works() {
 
 		));
 
-		Assets::mint(RuntimeOrigin::signed(1), 1, 1, 10000);
-		Assets::mint(RuntimeOrigin::signed(1), 1, 2, 10000);
+		Assets::mint(RuntimeOrigin::signed(1), 1, 1, 1000000);
+		Assets::mint(RuntimeOrigin::signed(1), 1, 2, 1000000);
 
 		let m_id = get_marketplace_id("my marketplace",500,600,1);
 
@@ -2839,7 +2842,6 @@ fn take_buy_offer_id_does_not_exist_shouldnt_work() {
 fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
@@ -2896,7 +2898,6 @@ fn take_buy_offer_user_does_not_have_enough_balance_shouldnt_work() {
 fn remove_sell_offer_works() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
@@ -2935,7 +2936,6 @@ fn remove_sell_offer_works() {
 fn remove_buy_offer_works() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
@@ -2973,7 +2973,7 @@ fn remove_buy_offer_works() {
 			m_id,
 			0,
 			0,
-			1001,
+			1000,
 			10
 		));
 		let offer_id2 = GatedMarketplace::offers_by_account(2).iter().next().unwrap().clone();
@@ -2988,7 +2988,6 @@ fn remove_buy_offer_works() {
 #[test]
 fn remove_offer_id_does_not_exist_sholdnt_work() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 
@@ -3030,7 +3029,6 @@ fn remove_offer_id_does_not_exist_sholdnt_work() {
 fn remove_offer_creator_doesnt_match_sholdnt_work() {
 	new_test_ext().execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 
 		assert_ok!(GatedMarketplace::create_marketplace(
@@ -3069,7 +3067,6 @@ fn remove_offer_creator_doesnt_match_sholdnt_work() {
 #[test]
 fn remove_offer_status_is_closed_shouldnt_work() {
 	new_test_ext().execute_with(|| {
-		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 1300);
 

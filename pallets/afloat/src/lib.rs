@@ -73,6 +73,10 @@ pub mod pallet {
 		StorageOverflow,
 		/// Marketplace not initialized
 		MarketplaceNotInitialized,
+		// Marketplace id not found
+		MarketPlaceIdNotFound,
+		// Collection id not found
+		CollectionIdNotFound,
 		/// User not found
 		UserNotFound,
 		/// User already exists
@@ -89,6 +93,42 @@ pub mod pallet {
 		NotInitialized,
 		// Failed to remove afloat role
 		FailedToRemoveAfloatRole,
+		// Maxiumum number of transactions per offer reached
+		MaxTransactionsReached,
+		// Offer not found
+		OfferNotFound,
+		// Offer's type is not correct
+		WrongOfferType,
+		// Offer has expired
+		OfferExpired,
+		// Offer has been cancelled
+		OfferCancelled,
+		// Offer has been taken already
+		OfferTaken,
+		// Transaction not found
+		TransactionNotFound,
+		// Transaction has expired
+		TransactionExpired,
+		// Transaction has been cancelled
+		TransactionCancelled,
+		// Transaction has not been confirmed yet
+		TransactionNotConfirmed,
+		// Transaction already confirmed by buyer
+		TransactionAlreadyConfirmedByBuyer,
+		// Transaction already confirmed by seller
+		TransactionAlreadyConfirmedBySeller,
+		// Transaction not confirmed by buyer
+		TransactionNotConfirmedByBuyer,
+		// Not enough tax credits available for sale
+		NotEnoughTaxCreditsAvailable,
+		// Not enough afloat balance available
+		NotEnoughAfloatBalanceAvailable,
+		// Tax credit amount overflow
+		TaxCreditAmountOverflow,
+		// Child offer id not found
+		ChildOfferIdNotFound,
+		// Tax credit amount underflow
+		Underflow,
 	}
 
 	#[pallet::storage]
@@ -158,16 +198,18 @@ pub mod pallet {
 		) -> DispatchResult
 
 	{
-			let who = ensure_signed(origin.clone())?;
+			ensure_signed(origin.clone())?;
 			let asset_id: T::AssetId = Default::default();
 			let min_balance: T::Balance = 1u32.into();
+
 			// Create asset
 			pallet_mapped_assets::Pallet::<T>::create(
-				origin,
+				origin.clone(),
 				asset_id,
-				T::Lookup::unlookup(who.clone()),
+				T::Lookup::unlookup(creator.clone()),
 				min_balance,
 			)?; 
+
 			AfloatAssetId::<T>::put(asset_id.clone());
 
 			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
@@ -202,7 +244,8 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(Self::is_admin_or_owner(who), Error::<T>::Unauthorized);
+			let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
+			ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
 			Self::do_delete_all_users()?;
 			Ok(())
 		}
@@ -223,20 +266,20 @@ pub mod pallet {
 		) -> DispatchResult {
 
 			let who = ensure_signed(origin)?;
-
+			let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
 			ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
-			ensure!(who.clone() == address || Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
-
+			ensure!(who.clone() == address || is_admin_or_owner, Error::<T>::Unauthorized);
+			
 			match args {
 				UpdateUserArgs::Edit { cid } => {
 					Self::do_edit_user(who, address, cid)?;
 				}
 				UpdateUserArgs::AdminEdit { cid, group } => {
-					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+					ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
 					Self::do_admin_edit_user(who, address, cid, group)?;
 				}
 				UpdateUserArgs::Delete => {
-					ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+					ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
 					Self::do_delete_user(who, address)?;
 				}
 			}
@@ -264,23 +307,8 @@ pub mod pallet {
 			Ok(())
 		}
 
+
 		#[pallet::call_index(5)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn accept_offer(
-			origin: OriginFor<T>,
-			offer_id: [u8; 32],
-			amount: Option<u64>,
-		)
-		 -> DispatchResult
-		{
-			ensure_signed(origin.clone())?;
-			Ok(())
-		}
-
-
-
-
-		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn start_take_sell_order(
 			origin: OriginFor<T>,
@@ -293,41 +321,30 @@ pub mod pallet {
 			Self::do_start_take_sell_order(origin , offer_id, tax_credit_amount )
 		}
 
-		#[pallet::call_index(10)]
+		#[pallet::call_index(6)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn confirm_take_sell_order(
+		pub fn confirm_sell_transaction(
 			origin: OriginFor<T>,
-			offer_id: [u8; 32],
+			transaction_id: [u8; 32],
 		)
 		 -> DispatchResult
 		{
 			ensure_signed(origin.clone())?;
-			Self::do_confirm_take_sell_order(origin, offer_id )
-		}
-
-		#[pallet::call_index(11)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn finish_take_sell_order(
-			origin: OriginFor<T>,
-			offer_id: [u8; 32],
-		)
-		 -> DispatchResult
-		{
-			ensure_signed(origin.clone())?;
-			Self::do_finish_take_sell_order(origin, offer_id )
+			Self::do_confirm_sell_transaction(origin, transaction_id )
 		}
 
 		#[pallet::call_index(7)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn take_buy_order(
+		pub fn finish_take_sell_transaction(
 			origin: OriginFor<T>,
-			offer_id: [u8; 32],
+			transaction_id: [u8; 32],
 		)
 		 -> DispatchResult
 		{
-			let who = ensure_signed(origin)?;
-			Self::do_take_buy_order(who , offer_id)
+			ensure_signed(origin.clone())?;
+			Self::do_finish_take_sell_transaction(origin, transaction_id )
 		}
+
 
 		#[pallet::call_index(8)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
@@ -354,8 +371,10 @@ pub mod pallet {
 		{
 			ensure_signed(origin.clone())?;
 
+			let is_owner = Self::is_owner(ensure_signed(origin.clone())?)?;
+
 			// Only the owner can set afloat balance
-			ensure!(Self::is_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
+			ensure!(is_owner, Error::<T>::Unauthorized);
 
 			Self::do_set_afloat_balance(origin, beneficiary, amount)
 		}

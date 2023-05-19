@@ -1,7 +1,7 @@
 use crate as pallet_gated_marketplace;
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, GenesisBuild},
+	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, GenesisBuild, Currency},
 };
 use frame_system as system;
 use sp_core::H256;
@@ -23,6 +23,8 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature, Percent,
 };
 use sp_runtime::AccountId32;
+use sp_runtime::traits::StaticLookup;
+use sp_runtime::traits::Lookup;
 type AccountId = u64;
 type AssetId = u32;
 // Configure a mock runtime to test the pallet.
@@ -202,6 +204,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	t.execute_with(|| {
 		GatedMarketplace::do_initial_setup().expect("Error on GatedMarketplace configuring initial setup");
 		Fruniques::do_initial_setup().expect("Error on Fruniques configuring initial setup");
+		Balances::make_free_balance_be(&1, 10000);
+		Assets::force_create(RuntimeOrigin::root(), 1, 1, true, 1)
 	});
 	t
 }

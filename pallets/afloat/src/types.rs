@@ -8,7 +8,7 @@ pub type LongString = BoundedVec<u8, ConstU32<255>>;
 pub type Date = u64;
 pub type CollectionId = u32;
 pub type StorageId = [u8; 32];
-
+pub type TransactionBoundedVec = BoundedVec<[u8; 32], ConstU32<100>>;
 // ! User structures
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
@@ -107,7 +107,7 @@ impl Default for OfferType {
 #[codec(mel_bound())]
 pub struct Offer<T: Config> {
 	pub tax_credit_amount: u32,
-	pub tax_credit_amount_remaining: u32,
+	pub tax_credit_amount_remaining: T::Balance,
 	pub price_per_credit: T::Balance,
 	pub expiration_date: Date,
 	pub creation_date: Date,
@@ -117,12 +117,13 @@ pub struct Offer<T: Config> {
 	pub creator_id: T::AccountId,
 	pub status: OfferStatus,
 	pub offer_type: OfferType,
+	pub transactions: TransactionBoundedVec,
 }
 
 impl<T: Config> Offer<T> {
 	pub fn new(
 		tax_credit_amount: u32,
-		tax_credit_amount_remaining: u32,
+		tax_credit_amount_remaining: T::Balance,
 		price_per_credit: T::Balance,
 		creation_date: Date,
 		cancellation_date: Option<Date>,
@@ -132,6 +133,7 @@ impl<T: Config> Offer<T> {
 		expiration_date: Date,
 		status: OfferStatus,
 		offer_type: OfferType,
+		transactions : BoundedVec<[u8; 32], ConstU32<100>>,
 	) -> Self {
 		Self {
 			tax_credit_amount,
@@ -145,6 +147,7 @@ impl<T: Config> Offer<T> {
 			creator_id,
 			status,
 			offer_type,
+			transactions,
 		}
 	}
 }
@@ -183,9 +186,11 @@ pub struct Transaction<T: Config> {
 	pub seller_id: T::AccountId,
 	pub buyer_id: T::AccountId,
 	pub offer_id: StorageId,
+	pub child_offer_id: Option<StorageId>,
 	pub seller_confirmation_date: Option<Date>,
 	pub buyer_confirmation_date: Option<Date>,
 	pub confirmed: bool,
+	pub completed: bool,
 }
 
 // ! Roles structures

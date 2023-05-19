@@ -26,10 +26,8 @@ fn sign_up_works() {
         let user = new_account(3);
         Balances::make_free_balance_be(&user, 100);
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args));
@@ -45,23 +43,14 @@ fn update_user_info_edit_works() {
         Balances::make_free_balance_be(&user, 100); 
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args));
 
         let update_args = UpdateUserArgs::Edit {
-            first_name: Some(ShortString::try_from(b"New".to_vec()).unwrap()),
-            last_name: Some(ShortString::try_from(b"User".to_vec()).unwrap()),
-            email: Some(LongString::try_from(b"Info".to_vec()).unwrap()),
-            lang_key: None,
-            phone: None,
-            credits_needed: None,
-            cpa_id: None,
-            state: None,
+            cid: ShortString::try_from(b"New".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::update_user_info(
@@ -71,9 +60,7 @@ fn update_user_info_edit_works() {
         ));
 
         let updated_user = UserInfo::<Test>::get(user).unwrap();
-        assert_eq!(updated_user.first_name, ShortString::try_from(b"New".to_vec()).unwrap());
-        assert_eq!(updated_user.last_name, ShortString::try_from(b"User".to_vec()).unwrap());
-        assert_eq!(updated_user.email, LongString::try_from(b"Info".to_vec()).unwrap());
+        assert_eq!(updated_user.cid, ShortString::try_from(b"New".to_vec()).unwrap());
         
     });
 }
@@ -88,23 +75,14 @@ fn update_other_user_info_by_not_admin_fails() {
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args));
 
         let update_args = UpdateUserArgs::Edit {
-            first_name: Some(ShortString::try_from(b"New".to_vec()).unwrap()),
-            last_name: Some(ShortString::try_from(b"User".to_vec()).unwrap()),
-            email: Some(LongString::try_from(b"Info".to_vec()).unwrap()),
-            lang_key: None,
-            phone: None,
-            credits_needed: None,
-            cpa_id: None,
-            state: None,
+            cid: ShortString::try_from(b"New".to_vec()).unwrap(),
         };
 
         assert_noop!(
@@ -132,23 +110,14 @@ fn update_other_user_info_by_admin_works() {
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args));
 
         let update_args = UpdateUserArgs::Edit {
-            first_name: Some(ShortString::try_from(b"New".to_vec()).unwrap()),
-            last_name: Some(ShortString::try_from(b"User".to_vec()).unwrap()),
-            email: Some(LongString::try_from(b"Info".to_vec()).unwrap()),
-            lang_key: None,
-            phone: None,
-            credits_needed: None,
-            cpa_id: None,
-            state: None,
+            cid: ShortString::try_from(b"New".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::update_user_info(
@@ -158,9 +127,7 @@ fn update_other_user_info_by_admin_works() {
         ));
 
         let updated_user = UserInfo::<Test>::get(user).unwrap();
-        assert_eq!(updated_user.first_name, ShortString::try_from(b"New".to_vec()).unwrap());
-        assert_eq!(updated_user.last_name, ShortString::try_from(b"User".to_vec()).unwrap());
-        assert_eq!(updated_user.email, LongString::try_from(b"Info".to_vec()).unwrap());
+        assert_eq!(updated_user.cid, ShortString::try_from(b"New".to_vec()).unwrap());
     });
 }
 
@@ -171,16 +138,14 @@ fn update_user_info_delete_works() {
         Balances::make_free_balance_be(&user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args));
 
         assert_ok!(Afloat::update_user_info(
-            RawOrigin::Signed(user.clone()).into(),
+            RawOrigin::Signed(1).into(),
             user.clone(),
             UpdateUserArgs::Delete
         ));
@@ -202,10 +167,8 @@ fn kill_storage_works() {
         Balances::make_free_balance_be(&user2, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
 
@@ -259,10 +222,8 @@ fn set_afloat_balance_works(){
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
         
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -286,10 +247,8 @@ fn set_balance_by_other_than_owner_fails(){
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
         
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -310,10 +269,8 @@ fn create_tax_credit_works() {
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 1,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -342,10 +299,8 @@ fn create_sell_order_works() {
         Balances::make_free_balance_be(&other_user, 100);
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 0,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -358,11 +313,13 @@ fn create_sell_order_works() {
             None,
         ));
 
-        assert_ok!(Afloat::create_sell_order(
+        let tax_credit_amount = 100; 
+        let price_per_credit = 10;
+        let expiration_date = 1000000000000000000;
+
+        assert_ok!(Afloat::create_offer(
             RawOrigin::Signed(user.clone()).into(),
-            item_id,
-            10000,
-            10,
+            CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id : item_id, price_per_credit, expiration_date },
         ));
 
     });
@@ -381,10 +338,8 @@ fn take_sell_order_works() {
         
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 0,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -399,22 +354,31 @@ fn take_sell_order_works() {
             None,
         ));
 
-        assert_ok!(Afloat::create_sell_order(
+        let tax_credit_amount = 100; 
+        let price_per_credit = 100;
+        let expiration_date = 1000000000000000000;
+
+        assert_ok!(Afloat::create_offer(
             RawOrigin::Signed(user.clone()).into(),
-            item_id,
-            10000,
-            10,
+            CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id : item_id, price_per_credit, expiration_date },
         ));
 
         let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
 
-        assert_ok!(Afloat::take_sell_order(
+        assert_ok!(Afloat::start_take_sell_order(
             RawOrigin::Signed(other_user.clone()).into(),
             offer_id,
+            85,
         ));
 
-        assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 9600); // 10000 - 400 (sell fee)
-        assert_eq!(Afloat::do_get_afloat_balance(1), 400); // 400 (sell fee)
+        let transaction_id = Afloat::afloat_offers(offer_id).unwrap().transactions[0];
+        assert_ok!(Afloat::confirm_sell_transaction(RawOrigin::Signed(user.clone()).into(), transaction_id));
+        let owner_balance = Afloat::do_get_afloat_balance(1);
+        assert_eq!(owner_balance, 0);
+        assert_ok!(Afloat::finish_take_sell_transaction(RawOrigin::Signed(other_user.clone()).into(), transaction_id));
+        assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 8160); // total_price*(1-sell_fee)
+        let new_owner_balance = Afloat::do_get_afloat_balance(1); 
+        assert_eq!(owner_balance + 340, new_owner_balance); // (340 = sell fee)
     });
     
 }
@@ -431,10 +395,8 @@ fn create_buy_order_works() {
        
 
         let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 0,
+            cid: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
+            group: ShortString::try_from(b"1".to_vec()).unwrap(),
         };
 
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
@@ -449,63 +411,14 @@ fn create_buy_order_works() {
             None,
         ));
 
-        assert_ok!(Afloat::create_buy_order(
+        let tax_credit_amount = 100; 
+        let price_per_credit = 10;
+        let expiration_date = 1000000000000000000;
+
+        assert_ok!(Afloat::create_offer(
             RawOrigin::Signed(other_user.clone()).into(),
-            item_id,
-            10000,
-            10,
+            CreateOfferArgs::Buy { tax_credit_amount, tax_credit_id : item_id, price_per_credit, expiration_date },
         ));
-
-    });
-    
-}
-
-#[test]
-fn take_buy_order_works(){
-    new_test_ext().execute_with(|| {
-        let user = new_account(3);
-        let other_user = new_account(4);
-        let item_id = 0;
-
-        Balances::make_free_balance_be(&user, 100);
-        Balances::make_free_balance_be(&other_user, 100);
-        
-
-        let args = SignUpArgs::BuyerOrSeller {
-            first_name: ShortString::try_from(b"Afloat".to_vec()).unwrap(),
-            last_name: ShortString::try_from(b"User".to_vec()).unwrap(),
-            email: LongString::try_from(b"Afloatuser@gmail.com".to_vec()).unwrap(),
-            state: 0,
-        };
-
-        assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
-        assert_ok!(Afloat::sign_up(RawOrigin::Signed(other_user.clone()).into(), args.clone()));
-        
-        assert_ok!(Afloat::set_afloat_balance(RuntimeOrigin::signed(1), 4, 100000));
-
-        assert_ok!(Afloat::create_tax_credit(
-            RawOrigin::Signed(user.clone()).into(),
-            dummy_description(),
-            None,
-            None,
-        ));
-
-        assert_ok!(Afloat::create_buy_order(
-            RawOrigin::Signed(other_user.clone()).into(),
-            item_id,
-            10000,
-            10,
-        ));
-
-        let offer_id = GatedMarketplace::offers_by_item(0, 0).iter().next().unwrap().clone();
-
-        assert_ok!(Afloat::take_buy_order(
-            RawOrigin::Signed(user.clone()).into(),
-            offer_id,
-        ));
-
-        assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 9800); // 10000 - 200 (buy fee)
-        assert_eq!(Afloat::do_get_afloat_balance(1), 200); // 200 (buy fee)
 
     });
     
