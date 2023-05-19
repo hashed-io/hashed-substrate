@@ -1,4 +1,3 @@
-
 //! All migrations of this pallet.
 
 /// Version 2.
