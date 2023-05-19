@@ -520,6 +520,7 @@
 <a href="#520" id="520">520</a>
 <a href="#521" id="521">521</a>
 <a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -1036,9 +1037,10 @@
 		) -&gt; DispatchResult {
 			<span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
 			<span class="comment">// for instance in instances {
-			// 	Self::mint(instance, class_id)?;
+			// 	let _ = Self::mint(instance, class_id, None, None, None, None, None, None, None)?;
 			// }
 			</span><span class="prelude-val">Ok</span>(())
+
 		}
 	}
 }
