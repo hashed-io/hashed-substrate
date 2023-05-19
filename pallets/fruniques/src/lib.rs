@@ -514,9 +514,10 @@ pub mod pallet {
 		) -> DispatchResult {
 			let _ = ensure_signed(origin)?;
 			// for instance in instances {
-			// 	Self::mint(instance, class_id)?;
+			// 	let _ = Self::mint(instance, class_id, None, None, None, None, None, None, None)?;
 			// }
 			Ok(())
+
 		}
 	}
 }
