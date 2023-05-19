@@ -510,12 +510,12 @@ pub mod pallet {
 		pub fn spam_spawning(
 			origin: OriginFor<T>,
 			class_id: T::CollectionId,
-			instances: Vec<T::ItemId>,
+			instances: u32,
 		) -> DispatchResult {
 			let _ = ensure_signed(origin)?;
-			for instance in instances {
-				Self::mint(instance, class_id)?;
-			}
+			// for instance in instances {
+			// 	Self::mint(instance, class_id)?;
+			// }
 			Ok(())
 		}
 	}
