@@ -503,15 +503,40 @@
 <a href="#503" id="503">503</a>
 <a href="#504" id="504">504</a>
 <a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
 <span class="kw">pub type </span>FieldName = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 <span class="kw">pub type </span>FieldDescription = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>CID = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
-<span class="kw">pub type </span>Documents&lt;T&gt; = BoundedVec&lt;(FieldName,CID), &lt;T <span class="kw">as </span>Config&gt;::MaxDocuments&gt;;
+<span class="kw">pub type </span>Documents&lt;T&gt; = BoundedVec&lt;(FieldName, CID), &lt;T <span class="kw">as </span>Config&gt;::MaxDocuments&gt;;
 <span class="kw">type </span>AccountIdOf&lt;T&gt; = &lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId;
 
 <span class="comment">// Projects
@@ -522,67 +547,62 @@
 <span class="kw">pub type </span>RegistrationDate = u64;
 <span class="kw">pub type </span>BankName = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
 <span class="kw">pub type </span>BankAddress = BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;;
-<span class="kw">pub type </span>UsersAssignation&lt;T&gt; = BoundedVec&lt;(
-    AccountIdOf&lt;T&gt;,
-    ProxyRole,
-    AssignAction,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
-<span class="kw">pub type </span>Banks&lt;T&gt; = BoundedVec&lt;(
-    BankName,
-    BankAddress,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxBanksPerProject&gt;;
+<span class="kw">pub type </span>UsersAssignation&lt;T&gt; =
+  BoundedVec&lt;(AccountIdOf&lt;T&gt;, ProxyRole, AssignAction), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+<span class="kw">pub type </span>Banks&lt;T&gt; = BoundedVec&lt;(BankName, BankAddress), &lt;T <span class="kw">as </span>Config&gt;::MaxBanksPerProject&gt;;
 <span class="kw">pub type </span>PrivateGroupId = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>InflationRate = u32;
-<span class="kw">pub type </span>ProjectsInflation&lt;T&gt; = BoundedVec&lt;(
-    ProjectId,
-    <span class="prelude-ty">Option</span>&lt;InflationRate&gt;,
-    CUDAction,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+<span class="kw">pub type </span>ProjectsInflation&lt;T&gt; =
+  BoundedVec&lt;(ProjectId, <span class="prelude-ty">Option</span>&lt;InflationRate&gt;, CUDAction), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Users
 </span><span class="kw">pub type </span>DateRegistered = u64;
-<span class="kw">pub type </span>Users&lt;T&gt; = BoundedVec&lt;(
-    AccountIdOf&lt;T&gt;,
-    <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
-    <span class="prelude-ty">Option</span>&lt;ProxyRole&gt;,
-    CUDAction,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+<span class="kw">pub type </span>Users&lt;T&gt; = BoundedVec&lt;
+  (AccountIdOf&lt;T&gt;, <span class="prelude-ty">Option</span>&lt;FieldName&gt;, <span class="prelude-ty">Option</span>&lt;ProxyRole&gt;, CUDAction),
+  &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime,
+&gt;;
 
 <span class="comment">// Transactions
 </span><span class="kw">pub type </span>TransactionId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>Amount = u64;
-<span class="kw">pub type </span>Transactions&lt;T&gt; = BoundedVec&lt;(
+<span class="kw">pub type </span>Transactions&lt;T&gt; = BoundedVec&lt;
+  (
     <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
     <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
     <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
     CUDAction,
     <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
-<span class="kw">pub type </span>TransactionsFeedback&lt;T&gt; = BoundedVec&lt;(
-    TransactionId,
-    FieldDescription
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+  ),
+  &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime,
+&gt;;
+<span class="kw">pub type </span>TransactionsFeedback&lt;T&gt; =
+  BoundedVec&lt;(TransactionId, FieldDescription), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
 
 <span class="comment">// Drawdowns
 </span><span class="kw">pub type </span>DrawdownId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>DrawdownNumber = u32;
-<span class="kw">pub type </span>DrawdownStatusChanges&lt;T&gt; = BoundedVec&lt;(DrawdownStatus, UpdatedDate),  &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerDrawdown&gt;;
-<span class="kw">pub type </span>RecoveryRecord&lt;T&gt; = BoundedVec&lt;(AccountIdOf&lt;T&gt;, UpdatedDate), &lt;T <span class="kw">as </span>Config&gt;::MaxRecoveryChanges&gt;;
+<span class="kw">pub type </span>DrawdownStatusChanges&lt;T&gt; =
+  BoundedVec&lt;(DrawdownStatus, UpdatedDate), &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerDrawdown&gt;;
+<span class="kw">pub type </span>RecoveryRecord&lt;T&gt; =
+  BoundedVec&lt;(AccountIdOf&lt;T&gt;, UpdatedDate), &lt;T <span class="kw">as </span>Config&gt;::MaxRecoveryChanges&gt;;
 
 <span class="comment">// Budget expenditures
 </span><span class="kw">pub type </span>ExpenditureId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>ExpenditureAmount = Amount;
 <span class="kw">pub type </span>NAICSCode = BoundedVec&lt;u8, ConstU32&lt;<span class="number">400</span>&gt;&gt;;
 <span class="kw">pub type </span>JobsMultiplier = u32;
-<span class="kw">pub type </span>Expenditures&lt;T&gt; = BoundedVec&lt;(
+<span class="kw">pub type </span>Expenditures&lt;T&gt; = BoundedVec&lt;
+  (
     <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
     <span class="prelude-ty">Option</span>&lt;ExpenditureType&gt;,
     <span class="prelude-ty">Option</span>&lt;ExpenditureAmount&gt;,
     <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
     <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
     CUDAction,
-    <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+    <span class="prelude-ty">Option</span>&lt;ExpenditureId&gt;,
+  ),
+  &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime,
+&gt;;
 
 <span class="comment">// Miscellaneous
 </span><span class="kw">pub type </span>CreatedDate = u64;
@@ -592,421 +612,453 @@
 <span class="comment">// Job Elgibles
 </span><span class="kw">pub type </span>JobEligibleId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>JobEligibleAmount = Amount;
-<span class="kw">pub type </span>JobEligibles&lt;T&gt; = BoundedVec&lt;(
+<span class="kw">pub type </span>JobEligibles&lt;T&gt; = BoundedVec&lt;
+  (
     <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
     <span class="prelude-ty">Option</span>&lt;JobEligibleAmount&gt;,
     <span class="prelude-ty">Option</span>&lt;NAICSCode&gt;,
     <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
     CUDAction,
     <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+  ),
+  &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime,
+&gt;;
 
 <span class="comment">// Revenues
 </span><span class="kw">pub type </span>RevenueAmount = Amount;
 <span class="kw">pub type </span>RevenueId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueNumber = u32;
-<span class="kw">pub type </span>RevenueStatusChanges&lt;T&gt; = BoundedVec&lt;(RevenueStatus, UpdatedDate),  &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerRevenue&gt;;
+<span class="kw">pub type </span>RevenueStatusChanges&lt;T&gt; =
+  BoundedVec&lt;(RevenueStatus, UpdatedDate), &lt;T <span class="kw">as </span>Config&gt;::MaxStatusChangesPerRevenue&gt;;
 
 <span class="comment">// Revenue Transactions
 </span><span class="kw">pub type </span>RevenueTransactionId = [u8; <span class="number">32</span>];
 <span class="kw">pub type </span>RevenueTransactionAmount = Amount;
-<span class="kw">pub type </span>RevenueTransactions&lt;T&gt; = BoundedVec&lt;(
+<span class="kw">pub type </span>RevenueTransactions&lt;T&gt; = BoundedVec&lt;
+  (
     <span class="prelude-ty">Option</span>&lt;JobEligibleId&gt;,
     <span class="prelude-ty">Option</span>&lt;RevenueAmount&gt;,
     <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
     CUDAction,
     <span class="prelude-ty">Option</span>&lt;RevenueTransactionId&gt;,
-), &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime&gt;;
+  ),
+  &lt;T <span class="kw">as </span>Config&gt;::MaxRegistrationsAtTime,
+&gt;;
 
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>ProjectData&lt;T: Config&gt; {
-    <span class="kw">pub </span>builder: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxBuildersPerProject&gt;&gt;,
-    <span class="kw">pub </span>investor: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxInvestorsPerProject&gt;&gt;,
-    <span class="kw">pub </span>issuer: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxIssuersPerProject&gt;&gt;,
-    <span class="kw">pub </span>regional_center: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxRegionalCenterPerProject&gt;&gt;,
-    <span class="kw">pub </span>title: FieldName,
-    <span class="kw">pub </span>description: FieldDescription,
-    <span class="kw">pub </span>image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
-    <span class="kw">pub </span>address: FieldName,
-    <span class="kw">pub </span>status: ProjectStatus,
-    <span class="kw">pub </span>inflation_rate: <span class="prelude-ty">Option</span>&lt;InflationRate&gt;,
-    <span class="kw">pub </span>banks: <span class="prelude-ty">Option</span>&lt;Banks&lt;T&gt;&gt;,
-    <span class="kw">pub </span>creation_date: CreationDate,
-    <span class="kw">pub </span>completion_date: CompletionDate,
-    <span class="kw">pub </span>registration_date: RegistrationDate,
-    <span class="kw">pub </span>updated_date: UpdatedDate,
-	<span class="kw">pub </span>eb5_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
-	<span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
-	<span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
-    <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
-    <span class="kw">pub </span>private_group_id: PrivateGroupId,
+  <span class="kw">pub </span>builder: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxBuildersPerProject&gt;&gt;,
+  <span class="kw">pub </span>investor: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxInvestorsPerProject&gt;&gt;,
+  <span class="kw">pub </span>issuer: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxIssuersPerProject&gt;&gt;,
+  <span class="kw">pub </span>regional_center: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;T::AccountId, T::MaxRegionalCenterPerProject&gt;&gt;,
+  <span class="kw">pub </span>title: FieldName,
+  <span class="kw">pub </span>description: FieldDescription,
+  <span class="kw">pub </span>image: <span class="prelude-ty">Option</span>&lt;CID&gt;,
+  <span class="kw">pub </span>address: FieldName,
+  <span class="kw">pub </span>status: ProjectStatus,
+  <span class="kw">pub </span>inflation_rate: <span class="prelude-ty">Option</span>&lt;InflationRate&gt;,
+  <span class="kw">pub </span>banks: <span class="prelude-ty">Option</span>&lt;Banks&lt;T&gt;&gt;,
+  <span class="kw">pub </span>creation_date: CreationDate,
+  <span class="kw">pub </span>completion_date: CompletionDate,
+  <span class="kw">pub </span>registration_date: RegistrationDate,
+  <span class="kw">pub </span>updated_date: UpdatedDate,
+  <span class="kw">pub </span>eb5_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+  <span class="kw">pub </span>construction_loan_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+  <span class="kw">pub </span>developer_equity_drawdown_status: <span class="prelude-ty">Option</span>&lt;DrawdownStatus&gt;,
+  <span class="kw">pub </span>revenue_status: <span class="prelude-ty">Option</span>&lt;RevenueStatus&gt;,
+  <span class="kw">pub </span>private_group_id: PrivateGroupId,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>ProjectStatus {
-    Started,
-    Completed,
+  Started,
+  Completed,
 }
 <span class="kw">impl </span>Default <span class="kw">for </span>ProjectStatus {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        ProjectStatus::Started
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    ProjectStatus::Started
+  }
 }
 
-
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>UserData&lt;T: Config&gt; {
-    <span class="kw">pub </span>name: FieldName,
-    <span class="kw">pub </span>role: ProxyRole,
-    <span class="kw">pub </span>image: CID,
-    <span class="kw">pub </span>date_registered: DateRegistered,
-    <span class="kw">pub </span>email: FieldName,
-    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+  <span class="kw">pub </span>name: FieldName,
+  <span class="kw">pub </span>role: ProxyRole,
+  <span class="kw">pub </span>image: CID,
+  <span class="kw">pub </span>date_registered: DateRegistered,
+  <span class="kw">pub </span>email: FieldName,
+  <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
 <span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 </span><span class="kw">pub struct </span>ExpenditureData {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>name: FieldName,
-    <span class="kw">pub </span>expenditure_type: ExpenditureType,
-    <span class="kw">pub </span>expenditure_amount: ExpenditureAmount,
-    <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>name: FieldName,
+  <span class="kw">pub </span>expenditure_type: ExpenditureType,
+  <span class="kw">pub </span>expenditure_amount: ExpenditureAmount,
+  <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>ExpenditureType {
-    HardCost,
-    SoftCost,
-    Operational,
-    Others,
+  HardCost,
+  SoftCost,
+  Operational,
+  Others,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>ExpenditureType {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        ExpenditureType::HardCost
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    ExpenditureType::HardCost
+  }
 }
 
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>DrawdownData&lt;T: Config&gt; {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>drawdown_number: DrawdownNumber,
-    <span class="kw">pub </span>drawdown_type: DrawdownType,
-    <span class="kw">pub </span>total_amount: TotalAmount,
-    <span class="kw">pub </span>status: DrawdownStatus,
-    <span class="kw">pub </span>bulkupload_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-    <span class="kw">pub </span>bank_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
-    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>status_changes: DrawdownStatusChanges&lt;T&gt;,
-    <span class="kw">pub </span>recovery_record: RecoveryRecord&lt;T&gt;,
-    <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>closed_date: CloseDate,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>drawdown_number: DrawdownNumber,
+  <span class="kw">pub </span>drawdown_type: DrawdownType,
+  <span class="kw">pub </span>total_amount: TotalAmount,
+  <span class="kw">pub </span>status: DrawdownStatus,
+  <span class="kw">pub </span>bulkupload_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+  <span class="kw">pub </span>bank_documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+  <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>status_changes: DrawdownStatusChanges&lt;T&gt;,
+  <span class="kw">pub </span>recovery_record: RecoveryRecord&lt;T&gt;,
+  <span class="kw">pub </span>created_date: CreatedDate,
+  <span class="kw">pub </span>closed_date: CloseDate,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>DrawdownType {
-    EB5,
-    ConstructionLoan,
-    DeveloperEquity,
+  EB5,
+  ConstructionLoan,
+  DeveloperEquity,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>DrawdownType {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        DrawdownType::EB5
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    DrawdownType::EB5
+  }
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>DrawdownStatus {
-    Draft,
-    Submitted,
-    Approved,
-    Rejected,
-    Confirmed,
+  Draft,
+  Submitted,
+  Approved,
+  Rejected,
+  Confirmed,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>DrawdownStatus {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        DrawdownStatus::Draft
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    DrawdownStatus::Draft
+  }
 }
 
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>TransactionData&lt;T: Config&gt; {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>drawdown_id: DrawdownId,
-    <span class="kw">pub </span>expenditure_id: ExpenditureId,
-    <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>updated_date: UpdatedDate,
-    <span class="kw">pub </span>closed_date: CloseDate,
-    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>amount: ExpenditureAmount,
-    <span class="kw">pub </span>status: TransactionStatus,
-    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>drawdown_id: DrawdownId,
+  <span class="kw">pub </span>expenditure_id: ExpenditureId,
+  <span class="kw">pub </span>created_date: CreatedDate,
+  <span class="kw">pub </span>updated_date: UpdatedDate,
+  <span class="kw">pub </span>closed_date: CloseDate,
+  <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>amount: ExpenditureAmount,
+  <span class="kw">pub </span>status: TransactionStatus,
+  <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>TransactionStatus {
-    Draft,
-    Submitted,
-    Approved,
-    Rejected,
-    Confirmed
+  Draft,
+  Submitted,
+  Approved,
+  Rejected,
+  Confirmed,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>TransactionStatus {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        TransactionStatus::Draft
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    TransactionStatus::Draft
+  }
 }
 
 <span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 </span><span class="kw">pub struct </span>JobEligibleData {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>name: FieldName,
-    <span class="kw">pub </span>job_eligible_amount: JobEligibleAmount,
-    <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>name: FieldName,
+  <span class="kw">pub </span>job_eligible_amount: JobEligibleAmount,
+  <span class="kw">pub </span>naics_code: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>jobs_multiplier: <span class="prelude-ty">Option</span>&lt;JobsMultiplier&gt;,
 }
 
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>RevenueData&lt;T: Config&gt; {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>revenue_number: RevenueNumber,
-    <span class="kw">pub </span>total_amount: RevenueAmount,
-    <span class="kw">pub </span>status: RevenueStatus,
-    <span class="kw">pub </span>status_changes: RevenueStatusChanges&lt;T&gt;,
-    <span class="kw">pub </span>recovery_record: RecoveryRecord&lt;T&gt;,
-    <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>closed_date: CloseDate,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>revenue_number: RevenueNumber,
+  <span class="kw">pub </span>total_amount: RevenueAmount,
+  <span class="kw">pub </span>status: RevenueStatus,
+  <span class="kw">pub </span>status_changes: RevenueStatusChanges&lt;T&gt;,
+  <span class="kw">pub </span>recovery_record: RecoveryRecord&lt;T&gt;,
+  <span class="kw">pub </span>created_date: CreatedDate,
+  <span class="kw">pub </span>closed_date: CloseDate,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>RevenueStatus {
-    Draft,
-    Submitted,
-    Approved,
-    Rejected,
+  Draft,
+  Submitted,
+  Approved,
+  Rejected,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>RevenueStatus {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        RevenueStatus::Draft
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    RevenueStatus::Draft
+  }
 }
 
-<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,)]
+<span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>RevenueTransactionData&lt;T: Config&gt; {
-    <span class="kw">pub </span>project_id: ProjectId,
-    <span class="kw">pub </span>revenue_id: RevenueId,
-    <span class="kw">pub </span>job_eligible_id: JobEligibleId,
-    <span class="kw">pub </span>created_date: CreatedDate,
-    <span class="kw">pub </span>updated_date: UpdatedDate,
-    <span class="kw">pub </span>closed_date: CloseDate,
-    <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
-    <span class="kw">pub </span>amount: RevenueTransactionAmount,
-    <span class="kw">pub </span>status: RevenueTransactionStatus,
-    <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
+  <span class="kw">pub </span>project_id: ProjectId,
+  <span class="kw">pub </span>revenue_id: RevenueId,
+  <span class="kw">pub </span>job_eligible_id: JobEligibleId,
+  <span class="kw">pub </span>created_date: CreatedDate,
+  <span class="kw">pub </span>updated_date: UpdatedDate,
+  <span class="kw">pub </span>closed_date: CloseDate,
+  <span class="kw">pub </span>feedback: <span class="prelude-ty">Option</span>&lt;FieldDescription&gt;,
+  <span class="kw">pub </span>amount: RevenueTransactionAmount,
+  <span class="kw">pub </span>status: RevenueTransactionStatus,
+  <span class="kw">pub </span>documents: <span class="prelude-ty">Option</span>&lt;Documents&lt;T&gt;&gt;,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>RevenueTransactionStatus {
-    Draft,
-    Submitted,
-    Approved,
-    Rejected,
+  Draft,
+  Submitted,
+  Approved,
+  Rejected,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>RevenueTransactionStatus {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        RevenueTransactionStatus::Draft
-    }
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    RevenueTransactionStatus::Draft
+  }
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>CUDAction {
-    Create,
-    Update,
-    Delete,
+  Create,
+  Update,
+  Delete,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>AssignAction {
-    Assign,
-    Unassign,
+  Assign,
+  Unassign,
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>ProxyRole {
-    Administrator,
-    Builder,
-    Investor,
-    Issuer,
-    RegionalCenter,
+  Administrator,
+  Builder,
+  Investor,
+  Issuer,
+  RegionalCenter,
 }
 
 <span class="kw">impl </span>ProxyRole {
-    <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
-        <span class="kw">match </span><span class="self">self</span>{
-            <span class="self">Self</span>::Administrator =&gt; <span class="string">&quot;Administrator&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::Builder =&gt; <span class="string">&quot;Builder&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::Investor =&gt; <span class="string">&quot;Investor&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::Issuer =&gt; <span class="string">&quot;Issuer&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RegionalCenter =&gt; <span class="string">&quot;RegionalCenter&quot;</span>.as_bytes().to_vec(),
-        }
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::Administrator =&gt; <span class="string">&quot;Administrator&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Builder =&gt; <span class="string">&quot;Builder&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Investor =&gt; <span class="string">&quot;Investor&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Issuer =&gt; <span class="string">&quot;Issuer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RegionalCenter =&gt; <span class="string">&quot;RegionalCenter&quot;</span>.as_bytes().to_vec(),
     }
+  }
 
-    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8;<span class="number">32</span>]{
-        <span class="self">self</span>.to_vec().using_encoded(blake2_256)
-    }
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-    <span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyRole::<span class="kw-2">*</span>;
-        [Administrator.to_vec(), Builder.to_vec(), Investor.to_vec(), Issuer.to_vec(), RegionalCenter.to_vec()].to_vec()
-    }
-
+  <span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyRole::<span class="kw-2">*</span>;
+    [
+      Administrator.to_vec(),
+      Builder.to_vec(),
+      Investor.to_vec(),
+      Issuer.to_vec(),
+      RegionalCenter.to_vec(),
+    ]
+    .to_vec()
+  }
 }
 
-
-
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>ProxyPermission {
-    CreateProject, <span class="comment">// projects_create_project: admin
-    </span>EditProject, <span class="comment">// projects_edit_project: admin
-    </span>DeleteProject, <span class="comment">// projects_delete_project: admin
-    </span>AssignUsers, <span class="comment">// projects_assign_user: admin
-    </span>ExecuteUsers, <span class="comment">// users: admin
-    </span>EditUser, <span class="comment">// users_edit_user: all
-    </span>Expenditures, <span class="comment">// expenditures: admin
-    </span>SubmitDrawdown, <span class="comment">// submit_drawdown: admin, builder
-    </span>ApproveDrawdown, <span class="comment">// approve_drawdown: admin
-    </span>RejectDrawdown, <span class="comment">// reject_drawdown: admin
-    </span>ExecuteTransactions, <span class="comment">// transactions: admin, builder
-    </span>UpBulkupload, <span class="comment">// up_bulkupload: builder
-    </span>InflationRate, <span class="comment">// inflation: admin
-    </span>JobEligible, <span class="comment">// job_eligible: admin
-    </span>RevenueTransaction, <span class="comment">// revenue_transaction: builder
-    </span>SubmitRevenue, <span class="comment">// submit_revenue: builder
-    </span>ApproveRevenue, <span class="comment">// approve_revenue: admin
-    </span>RejectRevenue, <span class="comment">// reject_revenue: admin
-    </span>BankConfirming, <span class="comment">// bank_confirming: admin
-    </span>CancelDrawdownSubmission, <span class="comment">// cancel_drawdown_submission: builder
-    </span>RecoveryDrawdown, <span class="comment">// recovery_drawdown: admin
-    </span>RecoveryRevenue, <span class="comment">// recovery_revenue: admin
-    </span>RecoveryTransaction, <span class="comment">// recovery_drawdown_transaction: admin
-    </span>RecoveryRevenueTransaction, <span class="comment">// recovery_revenue_transaction: admin
-    </span>BulkUploadTransaction, <span class="comment">// bulk_upload_transaction: admin
+  CreateProject,              <span class="comment">// projects_create_project: admin
+  </span>EditProject,                <span class="comment">// projects_edit_project: admin
+  </span>DeleteProject,              <span class="comment">// projects_delete_project: admin
+  </span>AssignUsers,                <span class="comment">// projects_assign_user: admin
+  </span>ExecuteUsers,               <span class="comment">// users: admin
+  </span>EditUser,                   <span class="comment">// users_edit_user: all
+  </span>Expenditures,               <span class="comment">// expenditures: admin
+  </span>SubmitDrawdown,             <span class="comment">// submit_drawdown: admin, builder
+  </span>ApproveDrawdown,            <span class="comment">// approve_drawdown: admin
+  </span>RejectDrawdown,             <span class="comment">// reject_drawdown: admin
+  </span>ExecuteTransactions,        <span class="comment">// transactions: admin, builder
+  </span>UpBulkupload,               <span class="comment">// up_bulkupload: builder
+  </span>InflationRate,              <span class="comment">// inflation: admin
+  </span>JobEligible,                <span class="comment">// job_eligible: admin
+  </span>RevenueTransaction,         <span class="comment">// revenue_transaction: builder
+  </span>SubmitRevenue,              <span class="comment">// submit_revenue: builder
+  </span>ApproveRevenue,             <span class="comment">// approve_revenue: admin
+  </span>RejectRevenue,              <span class="comment">// reject_revenue: admin
+  </span>BankConfirming,             <span class="comment">// bank_confirming: admin
+  </span>CancelDrawdownSubmission,   <span class="comment">// cancel_drawdown_submission: builder
+  </span>RecoveryDrawdown,           <span class="comment">// recovery_drawdown: admin
+  </span>RecoveryRevenue,            <span class="comment">// recovery_revenue: admin
+  </span>RecoveryTransaction,        <span class="comment">// recovery_drawdown_transaction: admin
+  </span>RecoveryRevenueTransaction, <span class="comment">// recovery_revenue_transaction: admin
+  </span>BulkUploadTransaction,      <span class="comment">// bulk_upload_transaction: admin
 </span>}
 
 <span class="kw">impl </span>ProxyPermission {
-    <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt;{
-        <span class="kw">match </span><span class="self">self</span>{
-            <span class="self">Self</span>::CreateProject =&gt; <span class="string">&quot;CreateProject&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::EditProject =&gt; <span class="string">&quot;EditProject&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::DeleteProject =&gt; <span class="string">&quot;DeleteProject&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::AssignUsers =&gt; <span class="string">&quot;AssignUsers&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::ExecuteUsers =&gt; <span class="string">&quot;ExecuteUsers&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;Edituser&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::Expenditures =&gt; <span class="string">&quot;Expenditures&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::SubmitDrawdown =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::ApproveDrawdown =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RejectDrawdown =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::ExecuteTransactions =&gt; <span class="string">&quot;ExecuteTransactions&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::UpBulkupload =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::InflationRate =&gt; <span class="string">&quot;InflationRate&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::JobEligible =&gt; <span class="string">&quot;JobEligible&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RevenueTransaction =&gt; <span class="string">&quot;RevenueTransaction&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::SubmitRevenue =&gt; <span class="string">&quot;SubmitRevenue&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::ApproveRevenue =&gt; <span class="string">&quot;ApproveRevenue&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RejectRevenue =&gt; <span class="string">&quot;RejectRevenue&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::BankConfirming =&gt; <span class="string">&quot;BankConfirming&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::CancelDrawdownSubmission =&gt; <span class="string">&quot;CancelDrawdownSubmission&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RecoveryDrawdown =&gt; <span class="string">&quot;RecoveryDrawdown&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RecoveryRevenue =&gt; <span class="string">&quot;RecoveryRevenue&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RecoveryTransaction =&gt; <span class="string">&quot;RecoveryTransaction&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::RecoveryRevenueTransaction =&gt; <span class="string">&quot;RecoveryRevenueTransaction&quot;</span>.as_bytes().to_vec(),
-            <span class="self">Self</span>::BulkUploadTransaction =&gt; <span class="string">&quot;BulkUploadTransaction&quot;</span>.as_bytes().to_vec(),
-        }
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::CreateProject =&gt; <span class="string">&quot;CreateProject&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::EditProject =&gt; <span class="string">&quot;EditProject&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::DeleteProject =&gt; <span class="string">&quot;DeleteProject&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::AssignUsers =&gt; <span class="string">&quot;AssignUsers&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::ExecuteUsers =&gt; <span class="string">&quot;ExecuteUsers&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;Edituser&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Expenditures =&gt; <span class="string">&quot;Expenditures&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::SubmitDrawdown =&gt; <span class="string">&quot;SubmitDrawdown&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::ApproveDrawdown =&gt; <span class="string">&quot;ApproveDrawdown&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RejectDrawdown =&gt; <span class="string">&quot;RejectDrawdown&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::ExecuteTransactions =&gt; <span class="string">&quot;ExecuteTransactions&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::UpBulkupload =&gt; <span class="string">&quot;UpBulkupload&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::InflationRate =&gt; <span class="string">&quot;InflationRate&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::JobEligible =&gt; <span class="string">&quot;JobEligible&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RevenueTransaction =&gt; <span class="string">&quot;RevenueTransaction&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::SubmitRevenue =&gt; <span class="string">&quot;SubmitRevenue&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::ApproveRevenue =&gt; <span class="string">&quot;ApproveRevenue&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RejectRevenue =&gt; <span class="string">&quot;RejectRevenue&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::BankConfirming =&gt; <span class="string">&quot;BankConfirming&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::CancelDrawdownSubmission =&gt; <span class="string">&quot;CancelDrawdownSubmission&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RecoveryDrawdown =&gt; <span class="string">&quot;RecoveryDrawdown&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RecoveryRevenue =&gt; <span class="string">&quot;RecoveryRevenue&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RecoveryTransaction =&gt; <span class="string">&quot;RecoveryTransaction&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RecoveryRevenueTransaction =&gt; <span class="string">&quot;RecoveryRevenueTransaction&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::BulkUploadTransaction =&gt; <span class="string">&quot;BulkUploadTransaction&quot;</span>.as_bytes().to_vec(),
     }
+  }
 
-    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8;<span class="number">32</span>]{
-        <span class="self">self</span>.to_vec().using_encoded(blake2_256)
-    }
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-    <span class="kw">pub fn </span>administrator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        [
-            CreateProject.to_vec(),
-            EditProject.to_vec(),
-            DeleteProject.to_vec(),
-            AssignUsers.to_vec(),
-            ExecuteUsers.to_vec(),
-            EditUser.to_vec(),
-            Expenditures.to_vec(),
-            SubmitDrawdown.to_vec(),
-            ApproveDrawdown.to_vec(),
-            RejectDrawdown.to_vec(),
-            ExecuteTransactions.to_vec(),
-            UpBulkupload.to_vec(),        
-            InflationRate.to_vec(),
-            JobEligible.to_vec(),
-            RevenueTransaction.to_vec(),
-            SubmitRevenue.to_vec(),
-            ApproveRevenue.to_vec(),
-            RejectRevenue.to_vec(),
-            BankConfirming.to_vec(),
-            CancelDrawdownSubmission.to_vec(),
-            RecoveryDrawdown.to_vec(),
-            RecoveryRevenue.to_vec(),
-            RecoveryTransaction.to_vec(),
-            RecoveryRevenueTransaction.to_vec(),
-            BulkUploadTransaction.to_vec(),
-        ].to_vec()
-    }
+  <span class="kw">pub fn </span>administrator_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+    [
+      CreateProject.to_vec(),
+      EditProject.to_vec(),
+      DeleteProject.to_vec(),
+      AssignUsers.to_vec(),
+      ExecuteUsers.to_vec(),
+      EditUser.to_vec(),
+      Expenditures.to_vec(),
+      SubmitDrawdown.to_vec(),
+      ApproveDrawdown.to_vec(),
+      RejectDrawdown.to_vec(),
+      ExecuteTransactions.to_vec(),
+      UpBulkupload.to_vec(),
+      InflationRate.to_vec(),
+      JobEligible.to_vec(),
+      RevenueTransaction.to_vec(),
+      SubmitRevenue.to_vec(),
+      ApproveRevenue.to_vec(),
+      RejectRevenue.to_vec(),
+      BankConfirming.to_vec(),
+      CancelDrawdownSubmission.to_vec(),
+      RecoveryDrawdown.to_vec(),
+      RecoveryRevenue.to_vec(),
+      RecoveryTransaction.to_vec(),
+      RecoveryRevenueTransaction.to_vec(),
+      BulkUploadTransaction.to_vec(),
+    ]
+    .to_vec()
+  }
 
-    <span class="kw">pub fn </span>builder_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        [
-            EditUser.to_vec(),
-            SubmitDrawdown.to_vec(),
-            ExecuteTransactions.to_vec(),
-            UpBulkupload.to_vec(),
-            RevenueTransaction.to_vec(),
-            SubmitRevenue.to_vec(),
-            CancelDrawdownSubmission.to_vec(),
-        ].to_vec()
-    }
+  <span class="kw">pub fn </span>builder_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+    [
+      EditUser.to_vec(),
+      SubmitDrawdown.to_vec(),
+      ExecuteTransactions.to_vec(),
+      UpBulkupload.to_vec(),
+      RevenueTransaction.to_vec(),
+      SubmitRevenue.to_vec(),
+      CancelDrawdownSubmission.to_vec(),
+    ]
+    .to_vec()
+  }
 
-    <span class="kw">pub fn </span>investor_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        [EditUser.to_vec(),].to_vec()
-    }
+  <span class="kw">pub fn </span>investor_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+    [EditUser.to_vec()].to_vec()
+  }
 
-    <span class="kw">pub fn </span>issuer_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        [EditUser.to_vec(),].to_vec()
-    }
+  <span class="kw">pub fn </span>issuer_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+    [EditUser.to_vec()].to_vec()
+  }
 
-    <span class="kw">pub fn </span>regional_center_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt;{
-        <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
-        [EditUser.to_vec(),].to_vec()
-    }
-
-
+  <span class="kw">pub fn </span>regional_center_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::ProxyPermission::<span class="kw-2">*</span>;
+    [EditUser.to_vec()].to_vec()
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fund_admin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

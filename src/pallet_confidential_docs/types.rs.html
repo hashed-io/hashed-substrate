@@ -142,109 +142,109 @@
 <span class="doccomment">/// User vault, the vault stores the cipher private key used to cipher the user documents.
 /// The way the user vault is ciphered depends on the login method used by the user
 </span><span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Vault&lt;T: Config&gt; {
-	<span class="doccomment">/// IPFS CID where the vault data is stored
-	</span><span class="kw">pub </span>cid: CID,
-	<span class="doccomment">/// Owner of the vault
-	</span><span class="kw">pub </span>owner: T::AccountId,
+  <span class="doccomment">/// IPFS CID where the vault data is stored
+  </span><span class="kw">pub </span>cid: CID,
+  <span class="doccomment">/// Owner of the vault
+  </span><span class="kw">pub </span>owner: T::AccountId,
 }
 
 <span class="doccomment">/// Owned confidential document
 </span><span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>OwnedDoc&lt;T: Config&gt; {
-	<span class="doccomment">/// IPFS CID where the document data is stored
-	</span><span class="kw">pub </span>cid: CID,
-	<span class="doccomment">/// User provided name for the document
-	</span><span class="kw">pub </span>name: DocName&lt;T&gt;,
-	<span class="doccomment">/// User provided description for the document
-	</span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
-	<span class="doccomment">/// Owner of the document
-	</span><span class="kw">pub </span>owner: T::AccountId,
+  <span class="doccomment">/// IPFS CID where the document data is stored
+  </span><span class="kw">pub </span>cid: CID,
+  <span class="doccomment">/// User provided name for the document
+  </span><span class="kw">pub </span>name: DocName&lt;T&gt;,
+  <span class="doccomment">/// User provided description for the document
+  </span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
+  <span class="doccomment">/// Owner of the document
+  </span><span class="kw">pub </span>owner: T::AccountId,
 }
 
 <span class="doccomment">/// Shared confidential document
 </span><span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>SharedDoc&lt;T: Config&gt; {
-	<span class="doccomment">/// IPFS CID where the document data is stored
-	</span><span class="kw">pub </span>cid: CID,
-	<span class="doccomment">/// User provided name for the document
-	</span><span class="kw">pub </span>name: DocName&lt;T&gt;,
-	<span class="doccomment">/// User provided description for the document
-	</span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
-	<span class="doccomment">/// User that shared the document
-	</span><span class="kw">pub </span>from: T::AccountId,
-	<span class="doccomment">/// User to which the document was shared
-	</span><span class="kw">pub </span>to: T::AccountId,
+  <span class="doccomment">/// IPFS CID where the document data is stored
+  </span><span class="kw">pub </span>cid: CID,
+  <span class="doccomment">/// User provided name for the document
+  </span><span class="kw">pub </span>name: DocName&lt;T&gt;,
+  <span class="doccomment">/// User provided description for the document
+  </span><span class="kw">pub </span>description: DocDesc&lt;T&gt;,
+  <span class="doccomment">/// User that shared the document
+  </span><span class="kw">pub </span>from: T::AccountId,
+  <span class="doccomment">/// User to which the document was shared
+  </span><span class="kw">pub </span>to: T::AccountId,
 }
 
 <span class="doccomment">/// Group member role
 </span><span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>GroupRole {
-	Admin,
-	<span class="attr">#[default]
-	</span>Member,
-	Owner,
+  Admin,
+  <span class="attr">#[default]
+  </span>Member,
+  Owner,
 }
 
 <span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Group&lt;T: Config&gt; {
-	<span class="doccomment">/// Account id of the group
-	</span><span class="kw">pub </span>group: T::AccountId,
-	<span class="doccomment">/// User that created the group
-	</span><span class="kw">pub </span>creator: T::AccountId,
-	<span class="doccomment">/// Group Name
-	</span><span class="kw">pub </span>name: GroupName&lt;T&gt;,
+  <span class="doccomment">/// Account id of the group
+  </span><span class="kw">pub </span>group: T::AccountId,
+  <span class="doccomment">/// User that created the group
+  </span><span class="kw">pub </span>creator: T::AccountId,
+  <span class="doccomment">/// Group Name
+  </span><span class="kw">pub </span>name: GroupName&lt;T&gt;,
 }
 
 <span class="doccomment">/// Group member
 </span><span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
+  CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen, PartialEq,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>GroupMember&lt;T: Config&gt; {
-	<span class="doccomment">/// IPFS CID where the group key is stored
-	</span><span class="kw">pub </span>cid: CID,
-	<span class="doccomment">/// User that is part of the group
-	</span><span class="kw">pub </span>group: T::AccountId,
-	<span class="doccomment">/// User that is part of the group
-	</span><span class="kw">pub </span>member: T::AccountId,
-	<span class="doccomment">/// User that authorized the member to the group
-	</span><span class="kw">pub </span>authorizer: T::AccountId,
-	<span class="doccomment">/// Role of the member within the group
-	</span><span class="kw">pub </span>role: GroupRole,
+  <span class="doccomment">/// IPFS CID where the group key is stored
+  </span><span class="kw">pub </span>cid: CID,
+  <span class="doccomment">/// User that is part of the group
+  </span><span class="kw">pub </span>group: T::AccountId,
+  <span class="doccomment">/// User that is part of the group
+  </span><span class="kw">pub </span>member: T::AccountId,
+  <span class="doccomment">/// User that authorized the member to the group
+  </span><span class="kw">pub </span>authorizer: T::AccountId,
+  <span class="doccomment">/// Role of the member within the group
+  </span><span class="kw">pub </span>role: GroupRole,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; GroupMember&lt;T&gt; {
-	<span class="kw">pub fn </span>can_add_group_member(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="self">self</span>.role == GroupRole::Admin || <span class="self">self</span>.role == GroupRole::Owner
-	}
+  <span class="kw">pub fn </span>can_add_group_member(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="self">self</span>.role == GroupRole::Admin || <span class="self">self</span>.role == GroupRole::Owner
+  }
 
-	<span class="kw">pub fn </span>can_remove_group_member(<span class="kw-2">&amp;</span><span class="self">self</span>, group_member: <span class="kw-2">&amp;</span>GroupMember&lt;T&gt;) -&gt; bool {
-		group_member.role != GroupRole::Owner &amp;&amp;
-		(<span class="self">self</span>.role == GroupRole::Owner
-			|| (<span class="self">self</span>.role == GroupRole::Admin &amp;&amp; group_member.authorizer == <span class="self">self</span>.member))
-	}
+  <span class="kw">pub fn </span>can_remove_group_member(<span class="kw-2">&amp;</span><span class="self">self</span>, group_member: <span class="kw-2">&amp;</span>GroupMember&lt;T&gt;) -&gt; bool {
+    group_member.role != GroupRole::Owner
+      &amp;&amp; (<span class="self">self</span>.role == GroupRole::Owner
+        || (<span class="self">self</span>.role == GroupRole::Admin &amp;&amp; group_member.authorizer == <span class="self">self</span>.member))
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_confidential_docs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

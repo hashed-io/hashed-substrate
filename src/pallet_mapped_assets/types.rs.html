@@ -306,6 +306,8 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
 </pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) 2017-2022 Parity Technologies (UK) Ltd.
@@ -327,237 +329,238 @@
 
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{
-	pallet_prelude::<span class="kw-2">*</span>,
-	traits::{fungible, tokens::BalanceConversion},
+  pallet_prelude::<span class="kw-2">*</span>,
+  traits::{fungible, tokens::BalanceConversion},
 };
 <span class="kw">use </span>sp_runtime::{traits::Convert, FixedPointNumber, FixedPointOperand, FixedU128};
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>DepositBalanceOf&lt;T, I = ()&gt; =
-	&lt;&lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Currency <span class="kw">as </span>Currency&lt;&lt;T <span class="kw">as </span>SystemConfig&gt;::AccountId&gt;&gt;::Balance;
+  &lt;&lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Currency <span class="kw">as </span>Currency&lt;&lt;T <span class="kw">as </span>SystemConfig&gt;::AccountId&gt;&gt;::Balance;
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AssetAccountOf&lt;T, I&gt; =
-	AssetAccount&lt;&lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Balance, DepositBalanceOf&lt;T, I&gt;, &lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Extra&gt;;
+  AssetAccount&lt;&lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Balance, DepositBalanceOf&lt;T, I&gt;, &lt;T <span class="kw">as </span>Config&lt;I&gt;&gt;::Extra&gt;;
 
 <span class="doccomment">/// AssetStatus holds the current state of the asset. It could either be Live and available for use,
 /// or in a Destroying state.
 </span><span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>AssetStatus {
-	<span class="doccomment">/// The asset is active and able to be used.
-	</span>Live,
-	<span class="doccomment">/// Whether the asset is frozen for non-admin transfers.
-	</span>Frozen,
-	<span class="doccomment">/// The asset is currently being destroyed, and all actions are no longer permitted on the
-	/// asset. Once set to `Destroying`, the asset can never transition back to a `Live` state.
-	</span>Destroying,
+  <span class="doccomment">/// The asset is active and able to be used.
+  </span>Live,
+  <span class="doccomment">/// Whether the asset is frozen for non-admin transfers.
+  </span>Frozen,
+  <span class="doccomment">/// The asset is currently being destroyed, and all actions are no longer permitted on the
+  /// asset. Once set to `Destroying`, the asset can never transition back to a `Live` state.
+  </span>Destroying,
 }
 
 <span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-</span><span class="kw">pub struct </span>AssetDetails&lt;Balance : AtLeast32BitUnsigned + Copy, AccountId, DepositBalance&gt; {
-	<span class="doccomment">/// Can change `owner`, `issuer`, `freezer` and `admin` accounts.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) owner: AccountId,
-	<span class="doccomment">/// Can mint tokens.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) issuer: AccountId,
-	<span class="doccomment">/// Can thaw tokens, force transfers and burn tokens from any account.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) admin: AccountId,
-	<span class="doccomment">/// Can freeze tokens.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) freezer: AccountId,
-	<span class="doccomment">/// The total supply across all accounts.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) supply: Balance,
-	<span class="doccomment">/// The total reserved balance across all accounts
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) reserved: Balance,
-	<span class="doccomment">/// The balance deposited for this asset. This pays for the data stored here.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
-	<span class="doccomment">/// The ED for virtual accounts.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) min_balance: Balance,
-	<span class="doccomment">/// If `true`, then any account with this asset is given a provider reference. Otherwise, it
-	/// requires a consumer reference.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) is_sufficient: bool,
-	<span class="doccomment">/// The total number of accounts.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) accounts: u32,
-	<span class="doccomment">/// The total number of accounts for which we have placed a self-sufficient reference.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) sufficients: u32,
-	<span class="doccomment">/// The total number of approvals.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) approvals: u32,
-	<span class="doccomment">/// Whether the asset is frozen for non-admin transfers.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
-	<span class="doccomment">/// The status of the asset
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) status: AssetStatus,
-
+</span><span class="kw">pub struct </span>AssetDetails&lt;Balance: AtLeast32BitUnsigned + Copy, AccountId, DepositBalance&gt; {
+  <span class="doccomment">/// Can change `owner`, `issuer`, `freezer` and `admin` accounts.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) owner: AccountId,
+  <span class="doccomment">/// Can mint tokens.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) issuer: AccountId,
+  <span class="doccomment">/// Can thaw tokens, force transfers and burn tokens from any account.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) admin: AccountId,
+  <span class="doccomment">/// Can freeze tokens.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) freezer: AccountId,
+  <span class="doccomment">/// The total supply across all accounts.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) supply: Balance,
+  <span class="doccomment">/// The total reserved balance across all accounts
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) reserved: Balance,
+  <span class="doccomment">/// The balance deposited for this asset. This pays for the data stored here.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
+  <span class="doccomment">/// The ED for virtual accounts.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) min_balance: Balance,
+  <span class="doccomment">/// If `true`, then any account with this asset is given a provider reference. Otherwise, it
+  /// requires a consumer reference.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) is_sufficient: bool,
+  <span class="doccomment">/// The total number of accounts.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) accounts: u32,
+  <span class="doccomment">/// The total number of accounts for which we have placed a self-sufficient reference.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) sufficients: u32,
+  <span class="doccomment">/// The total number of approvals.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) approvals: u32,
+  <span class="doccomment">/// Whether the asset is frozen for non-admin transfers.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
+  <span class="doccomment">/// The status of the asset
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) status: AssetStatus,
 }
 
-<span class="kw">impl</span>&lt;Balance: AtLeast32BitUnsigned + Copy, AccountId, DepositBalance&gt; AssetDetails&lt;Balance, AccountId, DepositBalance&gt; {
-<span class="comment">/* 	pub fn destroy_witness(&amp;self) -&gt; DestroyWitness {
-		DestroyWitness {
-			accounts: self.accounts,
-			sufficients: self.sufficients,
-			approvals: self.approvals,
-		}
-	} */
+<span class="kw">impl</span>&lt;Balance: AtLeast32BitUnsigned + Copy, AccountId, DepositBalance&gt;
+  AssetDetails&lt;Balance, AccountId, DepositBalance&gt;
+{
+  <span class="comment">/* 	pub fn destroy_witness(&amp;self) -&gt; DestroyWitness {
+    DestroyWitness {
+      accounts: self.accounts,
+      sufficients: self.sufficients,
+      approvals: self.approvals,
+    }
+  } */
 
-	</span><span class="kw">pub fn </span>free_supply(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Balance {
-		<span class="self">self</span>.supply.saturating_sub(<span class="self">self</span>.reserved)
-	}
+  </span><span class="kw">pub fn </span>free_supply(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Balance {
+    <span class="self">self</span>.supply.saturating_sub(<span class="self">self</span>.reserved)
+  }
 }
 
 <span class="doccomment">/// Data concerning an approval.
 </span><span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, Default, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub struct </span>Approval&lt;Balance, DepositBalance&gt; {
-	<span class="doccomment">/// The amount of funds approved for the balance transfer from the owner to some delegated
-	/// target.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) amount: Balance,
-	<span class="doccomment">/// The amount reserved on the owner&#39;s account to hold this item in storage.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
+  <span class="doccomment">/// The amount of funds approved for the balance transfer from the owner to some delegated
+  /// target.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) amount: Balance,
+  <span class="doccomment">/// The amount reserved on the owner&#39;s account to hold this item in storage.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
 }
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>ensure_bool_decodes_to_consumer_or_sufficient() {
-	<span class="macro">assert_eq!</span>(<span class="bool-val">false</span>.encode(), ExistenceReason::&lt;()&gt;::Consumer.encode());
-	<span class="macro">assert_eq!</span>(<span class="bool-val">true</span>.encode(), ExistenceReason::&lt;()&gt;::Sufficient.encode());
+  <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>.encode(), ExistenceReason::&lt;()&gt;::Consumer.encode());
+  <span class="macro">assert_eq!</span>(<span class="bool-val">true</span>.encode(), ExistenceReason::&lt;()&gt;::Sufficient.encode());
 }
 
 <span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub enum </span>ExistenceReason&lt;Balance&gt; {
-	<span class="attr">#[codec(index = <span class="number">0</span>)]
-	</span>Consumer,
-	<span class="attr">#[codec(index = <span class="number">1</span>)]
-	</span>Sufficient,
-	<span class="attr">#[codec(index = <span class="number">2</span>)]
-	</span>DepositHeld(Balance),
-	<span class="attr">#[codec(index = <span class="number">3</span>)]
-	</span>DepositRefunded,
+  <span class="attr">#[codec(index = <span class="number">0</span>)]
+  </span>Consumer,
+  <span class="attr">#[codec(index = <span class="number">1</span>)]
+  </span>Sufficient,
+  <span class="attr">#[codec(index = <span class="number">2</span>)]
+  </span>DepositHeld(Balance),
+  <span class="attr">#[codec(index = <span class="number">3</span>)]
+  </span>DepositRefunded,
 }
 
 <span class="kw">impl</span>&lt;Balance&gt; ExistenceReason&lt;Balance&gt; {
-	<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take_deposit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt; {
-		<span class="kw">if </span>!<span class="macro">matches!</span>(<span class="self">self</span>, ExistenceReason::DepositHeld(<span class="kw">_</span>)) {
-			<span class="kw">return </span><span class="prelude-val">None
-		</span>}
-		<span class="kw">if let </span>ExistenceReason::DepositHeld(deposit) =
-			sp_std::mem::replace(<span class="self">self</span>, ExistenceReason::DepositRefunded)
-		{
-			<span class="prelude-val">Some</span>(deposit)
-		} <span class="kw">else </span>{
-			<span class="prelude-val">None
-		</span>}
-	}
+  <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take_deposit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt; {
+    <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="self">self</span>, ExistenceReason::DepositHeld(<span class="kw">_</span>)) {
+      <span class="kw">return </span><span class="prelude-val">None</span>;
+    }
+    <span class="kw">if let </span>ExistenceReason::DepositHeld(deposit) =
+      sp_std::mem::replace(<span class="self">self</span>, ExistenceReason::DepositRefunded)
+    {
+      <span class="prelude-val">Some</span>(deposit)
+    } <span class="kw">else </span>{
+      <span class="prelude-val">None
+    </span>}
+  }
 }
 
 <span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub struct </span>AssetAccount&lt;Balance, DepositBalance, Extra&gt; {
-	<span class="doccomment">/// The free balance.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) balance: Balance,
-	<span class="doccomment">/// The reserved balance.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) reserved: Balance,
-	<span class="doccomment">/// Whether the account is frozen.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
-	<span class="doccomment">/// The reason for the existence of the account.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) reason: ExistenceReason&lt;DepositBalance&gt;,
-	<span class="doccomment">/// Additional &quot;sidecar&quot; data, in case some other pallet wants to use this storage item.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) extra: Extra,
+  <span class="doccomment">/// The free balance.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) balance: Balance,
+  <span class="doccomment">/// The reserved balance.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) reserved: Balance,
+  <span class="doccomment">/// Whether the account is frozen.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
+  <span class="doccomment">/// The reason for the existence of the account.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) reason: ExistenceReason&lt;DepositBalance&gt;,
+  <span class="doccomment">/// Additional &quot;sidecar&quot; data, in case some other pallet wants to use this storage item.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) extra: Extra,
 }
 
 <span class="attr">#[derive(Clone, Encode, Decode, Eq, PartialEq, Default, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub struct </span>AssetMetadata&lt;DepositBalance, BoundedString&gt; {
-	<span class="doccomment">/// The balance deposited for this metadata.
-	///
-	/// This pays for the data stored in this struct.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
-	<span class="doccomment">/// The user friendly name of this asset. Limited in length by `StringLimit`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) name: BoundedString,
-	<span class="doccomment">/// The ticker symbol for this asset. Limited in length by `StringLimit`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) symbol: BoundedString,
-	<span class="doccomment">/// The number of decimals this asset uses to represent one unit.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) decimals: u8,
-	<span class="doccomment">/// Whether the asset metadata may be changed by a non Force origin.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
+  <span class="doccomment">/// The balance deposited for this metadata.
+  ///
+  /// This pays for the data stored in this struct.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) deposit: DepositBalance,
+  <span class="doccomment">/// The user friendly name of this asset. Limited in length by `StringLimit`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) name: BoundedString,
+  <span class="doccomment">/// The ticker symbol for this asset. Limited in length by `StringLimit`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) symbol: BoundedString,
+  <span class="doccomment">/// The number of decimals this asset uses to represent one unit.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) decimals: u8,
+  <span class="doccomment">/// Whether the asset metadata may be changed by a non Force origin.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) is_frozen: bool,
 }
 
 <span class="comment">/* /// Witness data for the destroy transactions.
 #[derive(Copy, Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct DestroyWitness {
-	/// The number of accounts holding the asset.
-	#[codec(compact)]
-	pub(super) accounts: u32,
-	/// The number of accounts holding the asset with a self-sufficient reference.
-	#[codec(compact)]
-	pub(super) sufficients: u32,
-	/// The number of transfer-approvals of the asset.
-	#[codec(compact)]
-	pub(super) approvals: u32,
+  /// The number of accounts holding the asset.
+  #[codec(compact)]
+  pub(super) accounts: u32,
+  /// The number of accounts holding the asset with a self-sufficient reference.
+  #[codec(compact)]
+  pub(super) sufficients: u32,
+  /// The number of transfer-approvals of the asset.
+  #[codec(compact)]
+  pub(super) approvals: u32,
 } */
 
 </span><span class="doccomment">/// Trait for allowing a minimum balance on the account to be specified, beyond the
 /// `minimum_balance` of the asset. This is additive - the `minimum_balance` of the asset must be
 /// met *and then* anything here in addition.
 </span><span class="kw">pub trait </span>FrozenBalance&lt;AssetId, AccountId, Balance&gt; {
-	<span class="doccomment">/// Return the frozen balance.
-	///
-	/// Generally, the balance of every account must be at least the sum of this (if `Some`) and
-	/// the asset&#39;s `minimum_balance` (the latter since there may be complications to destroying an
-	/// asset&#39;s account completely).
-	///
-	/// Under normal behaviour, the account balance should not go below the sum of this (if `Some`)
-	/// and the asset&#39;s minimum balance. However, the account balance may reasonably begin below
-	/// this sum (e.g. if less than the sum had ever been transferred into the account).
-	///
-	/// In special cases (privileged intervention) the account balance may also go below the sum.
-	///
-	/// If `None` is returned, then nothing special is enforced.
-	</span><span class="kw">fn </span>frozen_balance(asset: AssetId, who: <span class="kw-2">&amp;</span>AccountId) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt;;
+  <span class="doccomment">/// Return the frozen balance.
+  ///
+  /// Generally, the balance of every account must be at least the sum of this (if `Some`) and
+  /// the asset&#39;s `minimum_balance` (the latter since there may be complications to destroying an
+  /// asset&#39;s account completely).
+  ///
+  /// Under normal behaviour, the account balance should not go below the sum of this (if `Some`)
+  /// and the asset&#39;s minimum balance. However, the account balance may reasonably begin below
+  /// this sum (e.g. if less than the sum had ever been transferred into the account).
+  ///
+  /// In special cases (privileged intervention) the account balance may also go below the sum.
+  ///
+  /// If `None` is returned, then nothing special is enforced.
+  </span><span class="kw">fn </span>frozen_balance(asset: AssetId, who: <span class="kw-2">&amp;</span>AccountId) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt;;
 
-	<span class="doccomment">/// Called after an account has been removed.
-	///
-	/// NOTE: It is possible that the asset does no longer exist when this hook is called.
-	</span><span class="kw">fn </span>died(asset: AssetId, who: <span class="kw-2">&amp;</span>AccountId);
+  <span class="doccomment">/// Called after an account has been removed.
+  ///
+  /// NOTE: It is possible that the asset does no longer exist when this hook is called.
+  </span><span class="kw">fn </span>died(asset: AssetId, who: <span class="kw-2">&amp;</span>AccountId);
 }
 
 <span class="kw">impl</span>&lt;AssetId, AccountId, Balance&gt; FrozenBalance&lt;AssetId, AccountId, Balance&gt; <span class="kw">for </span>() {
-	<span class="kw">fn </span>frozen_balance(<span class="kw">_</span>: AssetId, <span class="kw">_</span>: <span class="kw-2">&amp;</span>AccountId) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt; {
-		<span class="prelude-val">None
-	</span>}
-	<span class="kw">fn </span>died(<span class="kw">_</span>: AssetId, <span class="kw">_</span>: <span class="kw-2">&amp;</span>AccountId) {}
+  <span class="kw">fn </span>frozen_balance(<span class="kw">_</span>: AssetId, <span class="kw">_</span>: <span class="kw-2">&amp;</span>AccountId) -&gt; <span class="prelude-ty">Option</span>&lt;Balance&gt; {
+    <span class="prelude-val">None
+  </span>}
+  <span class="kw">fn </span>died(<span class="kw">_</span>: AssetId, <span class="kw">_</span>: <span class="kw-2">&amp;</span>AccountId) {}
 }
 
 <span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>TransferFlags {
-	<span class="doccomment">/// The debited account must stay alive at the end of the operation; an error is returned if
-	/// this cannot be achieved legally.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) keep_alive: bool,
-	<span class="doccomment">/// Less than the amount specified needs be debited by the operation for it to be considered
-	/// successful. If `false`, then the amount debited will always be at least the amount
-	/// specified.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) best_effort: bool,
-	<span class="doccomment">/// Any additional funds debited (due to minimum balance requirements) should be burned rather
-	/// than credited to the destination account.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) burn_dust: bool,
+  <span class="doccomment">/// The debited account must stay alive at the end of the operation; an error is returned if
+  /// this cannot be achieved legally.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) keep_alive: bool,
+  <span class="doccomment">/// Less than the amount specified needs be debited by the operation for it to be considered
+  /// successful. If `false`, then the amount debited will always be at least the amount
+  /// specified.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) best_effort: bool,
+  <span class="doccomment">/// Any additional funds debited (due to minimum balance requirements) should be burned rather
+  /// than credited to the destination account.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) burn_dust: bool,
 }
 
 <span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>DebitFlags {
-	<span class="doccomment">/// The debited account must stay alive at the end of the operation; an error is returned if
-	/// this cannot be achieved legally.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) keep_alive: bool,
-	<span class="doccomment">/// Less than the amount specified needs be debited by the operation for it to be considered
-	/// successful. If `false`, then the amount debited will always be at least the amount
-	/// specified.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) best_effort: bool,
+  <span class="doccomment">/// The debited account must stay alive at the end of the operation; an error is returned if
+  /// this cannot be achieved legally.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) keep_alive: bool,
+  <span class="doccomment">/// Less than the amount specified needs be debited by the operation for it to be considered
+  /// successful. If `false`, then the amount debited will always be at least the amount
+  /// specified.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) best_effort: bool,
 }
 
 <span class="kw">impl </span>From&lt;TransferFlags&gt; <span class="kw">for </span>DebitFlags {
-	<span class="kw">fn </span>from(f: TransferFlags) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{ keep_alive: f.keep_alive, best_effort: f.best_effort }
-	}
+  <span class="kw">fn </span>from(f: TransferFlags) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{ keep_alive: f.keep_alive, best_effort: f.best_effort }
+  }
 }
 
 <span class="doccomment">/// Possible errors when converting between external and asset balances.
 </span><span class="attr">#[derive(Eq, PartialEq, Copy, Clone, RuntimeDebug, Encode, Decode)]
 </span><span class="kw">pub enum </span>ConversionError {
-	<span class="doccomment">/// The external minimum balance must not be zero.
-	</span>MinBalanceZero,
-	<span class="doccomment">/// The asset is not present in storage.
-	</span>AssetMissing,
-	<span class="doccomment">/// The asset is not sufficient and thus does not have a reliable `min_balance` so it cannot be
-	/// converted.
-	</span>AssetNotSufficient,
+  <span class="doccomment">/// The external minimum balance must not be zero.
+  </span>MinBalanceZero,
+  <span class="doccomment">/// The asset is not present in storage.
+  </span>AssetMissing,
+  <span class="doccomment">/// The asset is not sufficient and thus does not have a reliable `min_balance` so it cannot be
+  /// converted.
+  </span>AssetNotSufficient,
 }
 
 <span class="comment">// Type alias for `frame_system`&#39;s account id.
@@ -572,47 +575,48 @@ pub struct DestroyWitness {
 /// minimum balance and the minimum asset balance.
 </span><span class="kw">pub struct </span>BalanceToAssetBalance&lt;F, T, CON, I = ()&gt;(PhantomData&lt;(F, T, CON, I)&gt;);
 <span class="kw">impl</span>&lt;F, T, CON, I&gt; BalanceConversion&lt;BalanceOf&lt;F, T&gt;, AssetIdOf&lt;T, I&gt;, AssetBalanceOf&lt;T, I&gt;&gt;
-	<span class="kw">for </span>BalanceToAssetBalance&lt;F, T, CON, I&gt;
+  <span class="kw">for </span>BalanceToAssetBalance&lt;F, T, CON, I&gt;
 <span class="kw">where
-	</span>F: fungible::Inspect&lt;AccountIdOf&lt;T&gt;&gt;,
-	T: Config&lt;I&gt;,
-	I: <span class="lifetime">&#39;static</span>,
-	CON: Convert&lt;BalanceOf&lt;F, T&gt;, AssetBalanceOf&lt;T, I&gt;&gt;,
-	BalanceOf&lt;F, T&gt;: FixedPointOperand + Zero,
-	AssetBalanceOf&lt;T, I&gt;: FixedPointOperand + Zero,
+  </span>F: fungible::Inspect&lt;AccountIdOf&lt;T&gt;&gt;,
+  T: Config&lt;I&gt;,
+  I: <span class="lifetime">&#39;static</span>,
+  CON: Convert&lt;BalanceOf&lt;F, T&gt;, AssetBalanceOf&lt;T, I&gt;&gt;,
+  BalanceOf&lt;F, T&gt;: FixedPointOperand + Zero,
+  AssetBalanceOf&lt;T, I&gt;: FixedPointOperand + Zero,
 {
-	<span class="kw">type </span>Error = ConversionError;
+  <span class="kw">type </span>Error = ConversionError;
 
-	<span class="doccomment">/// Convert the given balance value into an asset balance based on the ratio between the
-	/// fungible&#39;s minimum balance and the minimum asset balance.
-	///
-	/// Will return `Err` if the asset is not found, not sufficient or the fungible&#39;s minimum
-	/// balance is zero.
-	</span><span class="kw">fn </span>to_asset_balance(
-		balance: BalanceOf&lt;F, T&gt;,
-		asset_id: AssetIdOf&lt;T, I&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;AssetBalanceOf&lt;T, I&gt;, ConversionError&gt; {
-		<span class="kw">let </span>asset = Asset::&lt;T, I&gt;::get(asset_id).ok_or(ConversionError::AssetMissing)<span class="question-mark">?</span>;
-		<span class="comment">// only sufficient assets have a min balance with reliable value
-		</span><span class="macro">ensure!</span>(asset.is_sufficient, ConversionError::AssetNotSufficient);
-		<span class="kw">let </span>min_balance = CON::convert(F::minimum_balance());
-		<span class="comment">// make sure we don&#39;t divide by zero
-		</span><span class="macro">ensure!</span>(!min_balance.is_zero(), ConversionError::MinBalanceZero);
-		<span class="kw">let </span>balance = CON::convert(balance);
-		<span class="comment">// balance * asset.min_balance / min_balance
-		</span><span class="prelude-val">Ok</span>(FixedU128::saturating_from_rational(asset.min_balance, min_balance)
-			.saturating_mul_int(balance))
-	}
+  <span class="doccomment">/// Convert the given balance value into an asset balance based on the ratio between the
+  /// fungible&#39;s minimum balance and the minimum asset balance.
+  ///
+  /// Will return `Err` if the asset is not found, not sufficient or the fungible&#39;s minimum
+  /// balance is zero.
+  </span><span class="kw">fn </span>to_asset_balance(
+    balance: BalanceOf&lt;F, T&gt;,
+    asset_id: AssetIdOf&lt;T, I&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;AssetBalanceOf&lt;T, I&gt;, ConversionError&gt; {
+    <span class="kw">let </span>asset = Asset::&lt;T, I&gt;::get(asset_id).ok_or(ConversionError::AssetMissing)<span class="question-mark">?</span>;
+    <span class="comment">// only sufficient assets have a min balance with reliable value
+    </span><span class="macro">ensure!</span>(asset.is_sufficient, ConversionError::AssetNotSufficient);
+    <span class="kw">let </span>min_balance = CON::convert(F::minimum_balance());
+    <span class="comment">// make sure we don&#39;t divide by zero
+    </span><span class="macro">ensure!</span>(!min_balance.is_zero(), ConversionError::MinBalanceZero);
+    <span class="kw">let </span>balance = CON::convert(balance);
+    <span class="comment">// balance * asset.min_balance / min_balance
+    </span><span class="prelude-val">Ok</span>(
+      FixedU128::saturating_from_rational(asset.min_balance, min_balance)
+        .saturating_mul_int(balance),
+    )
+  }
 }
-
 
 <span class="doccomment">/// Store named reserved balance.
 </span><span class="attr">#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 </span><span class="kw">pub struct </span>ReserveData&lt;ReserveIdentifier, Balance&gt; {
-	<span class="doccomment">/// The identifier for the named reserve.
-	</span><span class="kw">pub </span>id: ReserveIdentifier,
-	<span class="doccomment">/// The amount of the named reserve.
-	</span><span class="kw">pub </span>amount: Balance,
+  <span class="doccomment">/// The identifier for the named reserve.
+  </span><span class="kw">pub </span>id: ReserveIdentifier,
+  <span class="doccomment">/// The amount of the named reserve.
+  </span><span class="kw">pub </span>amount: Balance,
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_mapped_assets" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

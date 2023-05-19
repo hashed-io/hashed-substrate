@@ -79,40 +79,40 @@
 
 <span class="doccomment">/// Full client dependencies
 </span><span class="kw">pub struct </span>FullDeps&lt;C, P&gt; {
-	<span class="doccomment">/// The client instance to use.
-	</span><span class="kw">pub </span>client: Arc&lt;C&gt;,
-	<span class="doccomment">/// Transaction pool instance.
-	</span><span class="kw">pub </span>pool: Arc&lt;P&gt;,
-	<span class="doccomment">/// Whether to deny unsafe calls
-	</span><span class="kw">pub </span>deny_unsafe: DenyUnsafe,
+  <span class="doccomment">/// The client instance to use.
+  </span><span class="kw">pub </span>client: Arc&lt;C&gt;,
+  <span class="doccomment">/// Transaction pool instance.
+  </span><span class="kw">pub </span>pool: Arc&lt;P&gt;,
+  <span class="doccomment">/// Whether to deny unsafe calls
+  </span><span class="kw">pub </span>deny_unsafe: DenyUnsafe,
 }
 
 <span class="doccomment">/// Instantiate all RPC extensions.
 </span><span class="kw">pub fn </span>create_full&lt;C, P&gt;(
-	deps: FullDeps&lt;C, P&gt;,
+  deps: FullDeps&lt;C, P&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;RpcExtension, Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync&gt;&gt;
 <span class="kw">where
-	</span>C: ProvideRuntimeApi&lt;Block&gt;
-		+ HeaderBackend&lt;Block&gt;
-		+ AuxStore
-		+ HeaderMetadata&lt;Block, Error = BlockChainError&gt;
-		+ Send
-		+ Sync
-		+ <span class="lifetime">&#39;static</span>,
-	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi&lt;Block, Balance&gt;,
-	C::Api: substrate_frame_rpc_system::AccountNonceApi&lt;Block, AccountId, Nonce&gt;,
-	C::Api: BlockBuilder&lt;Block&gt;,
-	P: TransactionPool + Sync + Send + <span class="lifetime">&#39;static</span>,
+  </span>C: ProvideRuntimeApi&lt;Block&gt;
+    + HeaderBackend&lt;Block&gt;
+    + AuxStore
+    + HeaderMetadata&lt;Block, Error = BlockChainError&gt;
+    + Send
+    + Sync
+    + <span class="lifetime">&#39;static</span>,
+  C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi&lt;Block, Balance&gt;,
+  C::Api: substrate_frame_rpc_system::AccountNonceApi&lt;Block, AccountId, Nonce&gt;,
+  C::Api: BlockBuilder&lt;Block&gt;,
+  P: TransactionPool + Sync + Send + <span class="lifetime">&#39;static</span>,
 {
-	<span class="kw">use </span>pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
-	<span class="kw">use </span>substrate_frame_rpc_system::{System, SystemApiServer};
+  <span class="kw">use </span>pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
+  <span class="kw">use </span>substrate_frame_rpc_system::{System, SystemApiServer};
 
-	<span class="kw">let </span><span class="kw-2">mut </span>module = RpcExtension::new(());
-	<span class="kw">let </span>FullDeps { client, pool, deny_unsafe } = deps;
+  <span class="kw">let </span><span class="kw-2">mut </span>module = RpcExtension::new(());
+  <span class="kw">let </span>FullDeps { client, pool, deny_unsafe } = deps;
 
-	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())<span class="question-mark">?</span>;
-	module.merge(TransactionPayment::new(client).into_rpc())<span class="question-mark">?</span>;
-	<span class="prelude-val">Ok</span>(module)
+  module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())<span class="question-mark">?</span>;
+  module.merge(TransactionPayment::new(client).into_rpc())<span class="question-mark">?</span>;
+  <span class="prelude-val">Ok</span>(module)
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

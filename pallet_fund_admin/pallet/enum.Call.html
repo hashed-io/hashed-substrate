@@ -165,8 +165,7 @@ It is an array of user accounts where each entry it should be a tuple of the fol
 <li>0: The user account</li>
 <li>1: The user name</li>
 <li>2: The user role</li>
-<li>3: The CUD operation to be performed on the user account. CUD action is ALWAYS
-required.</li>
+<li>3: The CUD operation to be performed on the user account. CUD action is ALWAYS required.</li>
 </ul>
 <h4 id="considerations-3"><a href="#considerations-3">Considerations:</a></h4>
 <ul>
@@ -183,14 +182,13 @@ optionals.</li>
 <li>Multiple users can be registered, updated, or deleted at the same time, but
 the user account must be unique. Multiple actions over the same user account
 in the same call, it could result in an unexpected behavior.</li>
-<li>If the user is already registered, the function will return an error:
-UserAlreadyRegistered</li>
+<li>If the user is already registered, the function will return an error: UserAlreadyRegistered</li>
 <li>If the user is not registered, the function will return an error: UserNotFound</li>
 </ul>
 <h4 id="note-1"><a href="#note-1">Note:</a></h4>
 <ul>
-<li>WARNING: It is possible to register, update, or delete administrators accounts using
-this extrinsic,
+<li>WARNING: It is possible to register, update, or delete administrators accounts using this
+extrinsic,
 but administrators can not delete themselves.</li>
 <li>WARNING: This function only registers, updates, or deletes users from the site.</li>
 <li>WARNING: The only way to grant or remove permissions of a user account is assigning or
@@ -225,8 +223,7 @@ ONLY available for the investor role.</li>
 <li>address: The address of the project</li>
 <li>creation_date: The creation date of the project</li>
 <li>completion_date: The completion date of the project</li>
-<li>expenditures: The expenditures of the project. It is an array of tuples where each
-entry
+<li>expenditures: The expenditures of the project. It is an array of tuples where each entry
 is a tuple of the following:</li>
 </ul>
 <ul>
@@ -236,12 +233,10 @@ is a tuple of the following:</li>
 <li>3: The expenditure NAICS code</li>
 <li>4: The expenditure jobs multiplier</li>
 <li>5: The CUD action to be performed on the expenditure. CUD action is ALWAYS required.</li>
-<li>6: The expenditure id. It is optional because it is only required when updating or
-deleting</li>
+<li>6: The expenditure id. It is optional because it is only required when updating or deleting</li>
 </ul>
 <ul>
-<li>job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of
-tuples
+<li>job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
 where each entry is composed by:</li>
 </ul>
 <ul>
@@ -253,8 +248,8 @@ where each entry is composed by:</li>
 <li>5: The job eligible id. This is only used when updating or deleting a job eligible.</li>
 </ul>
 <ul>
-<li>users: The users who will be assigned to the project. It is an array of tuples where
-each entry
+<li>users: The users who will be assigned to the project. It is an array of tuples where each
+entry
 is a tuple of the following:</li>
 </ul>
 <ul>
@@ -265,8 +260,7 @@ is a tuple of the following:</li>
 <h4 id="considerations-5"><a href="#considerations-5">Considerations:</a></h4>
 <ul>
 <li>This function can only be called by an administrator account</li>
-<li>For users assignation, the user account must be registered. If the user is not
-registered,
+<li>For users assignation, the user account must be registered. If the user is not registered,
 the function will return an error. ALL parameters are required.</li>
 <li>For expenditures, apart from the expenditure id, naics code &amp; jopbs multiplier, ALL
 parameters are required because for this
@@ -322,8 +316,8 @@ the function will return an error: ProjectNotFound</li>
 </ul>
 <h4 id="note-3"><a href="#note-3">Note:</a></h4>
 <ul>
-<li>WARNING: Deleting a project will also delete ALL stored information associated with
-the project.
+<li>WARNING: Deleting a project will also delete ALL stored information associated with the
+project.
 BE CAREFUL.</li>
 </ul>
 </div><section id="variant.projects_assign_user" class="variant"><a href="#variant.projects_assign_user" class="anchor">§</a><h3 class="code-header">projects_assign_user</h3></section><div class="sub-variant" id="variant.projects_assign_user.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.projects_assign_user.field.project_id" class="small-section-header"><a href="#variant.projects_assign_user.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.projects_assign_user.field.users" class="small-section-header"><a href="#variant.projects_assign_user.field.users" class="anchor field">§</a><code>users: BoundedVec&lt;(&lt;T as Config&gt;::AccountId, ProxyRole, AssignAction), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxRegistrationsAtTime" title="type pallet_fund_admin::pallet::Config::MaxRegistrationsAtTime">MaxRegistrationsAtTime</a>&gt;</code></span></div></div><div class="docblock"><p>Assigns a user to a project.</p>
@@ -348,8 +342,7 @@ where each entry is composed by:</li>
 depending on the AssignAction.</li>
 <li>After a user is assigned to a project, the user will be able to perform actions
 in the project depending on the role assigned to the user.</li>
-<li>After a user is unassigned from a project, the user will not be able to perform
-actions
+<li>After a user is unassigned from a project, the user will not be able to perform actions
 in the project anymore.</li>
 <li>If the user is already assigned to the project, the function will return an error.</li>
 </ul>
@@ -357,8 +350,7 @@ in the project anymore.</li>
 <ul>
 <li>WARNING: ALL provided users needs to be registered in the site. If any of the users
 is not registered, the function will return an error.</li>
-<li>Assigning or unassigning a user to a project will add or remove permissions to the
-user
+<li>Assigning or unassigning a user to a project will add or remove permissions to the user
 from the RBAC pallet.</li>
 <li>Warning: Cannot assign a user to a project with a different role than the one they
 have in UsersInfo. If the user has a different role, the function will return an error.</li>
@@ -371,10 +363,8 @@ result in an unexpected behavior.</li>
 <h4 id="parameters-8"><a href="#parameters-8">Parameters:</a></h4>
 <ul>
 <li>origin: The administrator account</li>
-<li>project_id: The selected project id where the expenditures will be
-created/updated/deleted</li>
-<li>expenditures: The expenditures to be created/updated/deleted. This is a vector of
-tuples
+<li>project_id: The selected project id where the expenditures will be created/updated/deleted</li>
+<li>expenditures: The expenditures to be created/updated/deleted. This is a vector of tuples
 where each entry is composed by:</li>
 </ul>
 <ul>
@@ -387,8 +377,7 @@ where each entry is composed by:</li>
 <li>6: The expenditure id. This is only used when updating or deleting an expenditure.</li>
 </ul>
 <ul>
-<li>job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of
-tuples
+<li>job_eligibles: The job eligibles to be created/updated/deleted. This is a vector of tuples
 where each entry is composed by:</li>
 </ul>
 <ul>
@@ -403,14 +392,12 @@ where each entry is composed by:</li>
 <ul>
 <li>Naics code and jobs multiplier are always optional.</li>
 <li>This function can only be called by an administrator account</li>
-<li>This extrinsic allows multiple expenditures to be created/updated/deleted at the same
-time.</li>
+<li>This extrinsic allows multiple expenditures to be created/updated/deleted at the same time.</li>
 <li>The project id is required because it is the only way to identify the project</li>
 <li>Expenditure parameters are optional because depends on the action to be performed:</li>
 </ul>
 <ul>
-<li><strong>Create</strong>: Name, Type &amp; Amount are required. Nacis code &amp; Jobs multiplier are
-optional.</li>
+<li><strong>Create</strong>: Name, Type &amp; Amount are required. Nacis code &amp; Jobs multiplier are optional.</li>
 <li><strong>Update</strong>: Except for the expenditure id &amp; action, all parameters are optional.</li>
 <li><strong>Delete</strong>: Only the expenditure id &amp; action is required.</li>
 </ul>
@@ -428,8 +415,8 @@ It also allows that an array of transactions to be saved as a draft or as submit
 <li>origin: The user account who is creating the transactions</li>
 <li>project_id: The selected project id where the transactions will be created</li>
 <li>drawdown_id: The selected drawdown id where the transactions will be created</li>
-<li>transactions: The transactions to be created/updated/deleted. This entry is a vector
-of tuples
+<li>transactions: The transactions to be created/updated/deleted. This entry is a vector of
+tuples
 where each entry is composed by:</li>
 </ul>
 <ul>
@@ -447,8 +434,7 @@ If false, the array of transactions will be saved as a draft.</li>
 <h4 id="considerations-10"><a href="#considerations-10">Considerations:</a></h4>
 <ul>
 <li>This function is only callable by a builder role account</li>
-<li>This extrinsic allows multiple transactions to be created/updated/deleted at the same
-time.</li>
+<li>This extrinsic allows multiple transactions to be created/updated/deleted at the same time.</li>
 <li>The project id and drawdown id are required for the reports.</li>
 <li>Transaction parameters are optional because depends on the action to be performed:</li>
 </ul>
@@ -463,8 +449,8 @@ a different transaction. For example, you can create a new
 transaction and update another one at the same time.</li>
 <li>Do not perform multiple actions over the same transaction in the same call, it could
 result in an unexpected behavior.</li>
-<li>If a drawdown is submitted, all transactions must be submitted too. If the drawdown do
-not contain
+<li>If a drawdown is submitted, all transactions must be submitted too. If the drawdown do not
+contain
 any transaction, it will return an error.</li>
 <li>After a drawdown is submitted, it can not be updated or deleted.</li>
 <li>After a drawdown is rejected, builders will use again this extrinsic to update the
@@ -482,11 +468,9 @@ transactions associated to a given drawdown.</li>
 <li>origin: The administrator account who is approving the drawdown</li>
 <li>project_id: The selected project id where the drawdown will be approved</li>
 <li>drawdown_id: The selected drawdown id to be approved.</li>
-<li>bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a
-pseudo
+<li>bulkupload: Optional bulkupload parameter. If true, the drawdown will be saved in a pseudo
 draft status. If false, the drawdown will be approved directly.</li>
-<li>transactions: The transactions to be created/updated/deleted. This is a vector of
-tuples
+<li>transactions: The transactions to be created/updated/deleted. This is a vector of tuples
 where each entry is composed by:</li>
 </ul>
 <ul>
@@ -497,8 +481,7 @@ where each entry is composed by:</li>
 <li>4: The transaction id. This is only used when updating or deleting a transaction.</li>
 </ul>
 <ul>
-<li>This extrinsic allows multiple transactions to be created/updated/deleted at the same
-time
+<li>This extrinsic allows multiple transactions to be created/updated/deleted at the same time
 (only for Construction Loan &amp; Developer Equity drawdowns).</li>
 <li>Transaction parameters are optional because depends on the action to be performed:</li>
 </ul>
@@ -523,8 +506,7 @@ not possible to approve a drawdown without approving all of its transactions.</l
 <li>After a drawdown is approved, it can not be updated or deleted.</li>
 <li>After a drawdown is approved, the next drawdown will be automatically created.</li>
 <li>The drawdown status will be updated to “Approved” after the extrinsic is executed.</li>
-<li>After a drawdown is rejected, administrators will use again this extrinsic to approve
-the
+<li>After a drawdown is rejected, administrators will use again this extrinsic to approve the
 new drawdown version uploaded by the builder.</li>
 </ul>
 </div><section id="variant.reject_drawdown" class="variant"><a href="#variant.reject_drawdown" class="anchor">§</a><h3 class="code-header">reject_drawdown</h3></section><div class="sub-variant" id="variant.reject_drawdown.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.reject_drawdown.field.project_id" class="small-section-header"><a href="#variant.reject_drawdown.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.reject_drawdown.field.drawdown_id" class="small-section-header"><a href="#variant.reject_drawdown.field.drawdown_id" class="anchor field">§</a><code>drawdown_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.reject_drawdown.field.transactions_feedback" class="small-section-header"><a href="#variant.reject_drawdown.field.transactions_feedback" class="anchor field">§</a><code>transactions_feedback: <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;BoundedVec&lt;([<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>], BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;400&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxRegistrationsAtTime" title="type pallet_fund_admin::pallet::Config::MaxRegistrationsAtTime">MaxRegistrationsAtTime</a>&gt;&gt;</code></span></div><div class="sub-variant-field"><span id="variant.reject_drawdown.field.drawdown_feedback" class="small-section-header"><a href="#variant.reject_drawdown.field.drawdown_feedback" class="anchor field">§</a><code>drawdown_feedback: <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;400&gt;&gt;&gt;</code></span></div></div><div class="docblock"><p>Reject a drawdown</p>
@@ -560,10 +542,8 @@ each rejected transaction.</li>
 feedback for the WHOLE drawdown.</li>
 <li>After a builder re-submits a drawdown, the administrator will have to review
 the drawdown again.</li>
-<li>After a builder re-submits a drawdown, the feedback field will be cleared
-automatically.</li>
-<li>If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE
-drawdown.
+<li>After a builder re-submits a drawdown, the feedback field will be cleared automatically.</li>
+<li>If a single EB5 transaction is wrong, the administrator WILL reject the WHOLE drawdown.
 There is no way to reject a single transaction.</li>
 </ul>
 </div><section id="variant.up_bulkupload" class="variant"><a href="#variant.up_bulkupload" class="anchor">§</a><h3 class="code-header">up_bulkupload</h3></section><div class="sub-variant" id="variant.up_bulkupload.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.up_bulkupload.field.project_id" class="small-section-header"><a href="#variant.up_bulkupload.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.up_bulkupload.field.drawdown_id" class="small-section-header"><a href="#variant.up_bulkupload.field.drawdown_id" class="anchor field">§</a><code>drawdown_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.up_bulkupload.field.description" class="small-section-header"><a href="#variant.up_bulkupload.field.description" class="anchor field">§</a><code>description: BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;400&gt;&gt;</code></span></div><div class="sub-variant-field"><span id="variant.up_bulkupload.field.total_amount" class="small-section-header"><a href="#variant.up_bulkupload.field.total_amount" class="anchor field">§</a><code>total_amount: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u64.html">u64</a></code></span></div><div class="sub-variant-field"><span id="variant.up_bulkupload.field.documents" class="small-section-header"><a href="#variant.up_bulkupload.field.documents" class="anchor field">§</a><code>documents: BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxDocuments" title="type pallet_fund_admin::pallet::Config::MaxDocuments">MaxDocuments</a>&gt;</code></span></div></div><div class="docblock"><p>Bulk upload drawdowns.</p>
@@ -583,8 +563,7 @@ There is no way to reject a single transaction.</li>
 <li>The drawdown will be automatically submitted.</li>
 <li>Only available for Construction Loan &amp; Developer Equity drawdowns.</li>
 <li>After a builder uploads a drawdown, the administrator will have to review it.</li>
-<li>After a builder re-submits a drawdown, the feedback field will be cleared
-automatically.</li>
+<li>After a builder re-submits a drawdown, the feedback field will be cleared automatically.</li>
 <li>Bulkuploads does not allow individual transactions.</li>
 <li>After a builder uploads a drawdown, the administrator will have to
 insert each transaction manually.</li>
@@ -609,10 +588,10 @@ This is a vector of tuples where each entry is composed by:</li>
 <li>The inflation rate is optional because depends on the CUDAction parameter:</li>
 </ul>
 <ul>
-<li><strong>Create</strong>: The inflation rate will be created. Project id, inflation rate and action
-are required.</li>
-<li><strong>Update</strong>: The inflation rate will be updated. Project id, inflation rate and action
-are required.</li>
+<li><strong>Create</strong>: The inflation rate will be created. Project id, inflation rate and action are
+required.</li>
+<li><strong>Update</strong>: The inflation rate will be updated. Project id, inflation rate and action are
+required.</li>
 <li><strong>Delete</strong>: The inflation rate will be deleted. Project id and action are required.</li>
 </ul>
 <ul>
@@ -638,18 +617,16 @@ This entry is a vector of tuples where each entry is composed by:</li>
 deleted.</li>
 </ul>
 <ul>
-<li>submit: If true, the array of revenue transactions will be submitted to the
-administrator.
+<li>submit: If true, the array of revenue transactions will be submitted to the administrator.
 If false, the array of revenue transactions will be saved as a draft.</li>
 </ul>
 <h4 id="considerations-15"><a href="#considerations-15">Considerations:</a></h4>
 <ul>
 <li>This function is only callable by a builder role account</li>
-<li>This extrinsic allows multiple revenue transactions to be created/updated/deleted at
-the same time.</li>
+<li>This extrinsic allows multiple revenue transactions to be created/updated/deleted at the
+same time.</li>
 <li>The project id and revenue id are required for the reports.</li>
-<li>revenue_transactions parameters are optional because depends on the action to be
-performed:</li>
+<li>revenue_transactions parameters are optional because depends on the action to be performed:</li>
 </ul>
 <ul>
 <li><strong>Create</strong>: Job eligible id, Amount, Documents &amp; action are required.</li>
@@ -663,8 +640,8 @@ a different transaction. For example, you can create a new
 transaction and update another one at the same time.</li>
 <li>Do not perform multiple actions over the same transaction in the same call, it could
 result in an unexpected behavior.</li>
-<li>If a revenue is submitted, all transactions must be submitted too. If the revenue do
-not contain
+<li>If a revenue is submitted, all transactions must be submitted too. If the revenue do not
+contain
 any transaction, it will return an error.</li>
 <li>After a revenue is submitted, it can not be updated or deleted.</li>
 <li>After a revenue is rejected, builders will use again this extrinsic to update the
@@ -684,8 +661,8 @@ transactions associated to a given revenue.</li>
 not possible to approve a revenue without approving all of its transactions.</li>
 <li>After a revenue is approved, it can not be updated or deleted.</li>
 <li>After a revenue is approved, the next revenue will be created automatically.</li>
-<li>After a revenue is rejected, administrators will use again this extrinsic to approve
-the rejected revenue
+<li>After a revenue is rejected, administrators will use again this extrinsic to approve the
+rejected revenue
 new revenue version uploaded by the builder.</li>
 <li>The revenue status will be updated to Approved.</li>
 </ul>
@@ -708,10 +685,8 @@ transacion. This is a vector of tuples where each entry is composed by:</li>
 <li>All transactions associated to the revenue will be rejected too. It’s
 not possible to reject a revenue without rejecting all of its transactions.</li>
 <li>Administrator needs to provide a feedback for each rejected transaction.</li>
-<li>After a builder re-submits a revenue, the feedback field will be cleared
-automatically.</li>
-<li>If a single revenue transaction is wrong, the administrator WILL reject the WHOLE
-revenue.
+<li>After a builder re-submits a revenue, the feedback field will be cleared automatically.</li>
+<li>If a single revenue transaction is wrong, the administrator WILL reject the WHOLE revenue.
 There is no way to reject a single revenue transaction.</li>
 </ul>
 </div><section id="variant.bank_confirming_documents" class="variant"><a href="#variant.bank_confirming_documents" class="anchor">§</a><h3 class="code-header">bank_confirming_documents</h3></section><div class="sub-variant" id="variant.bank_confirming_documents.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.bank_confirming_documents.field.project_id" class="small-section-header"><a href="#variant.bank_confirming_documents.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.bank_confirming_documents.field.drawdown_id" class="small-section-header"><a href="#variant.bank_confirming_documents.field.drawdown_id" class="anchor field">§</a><code>drawdown_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.bank_confirming_documents.field.confirming_documents" class="small-section-header"><a href="#variant.bank_confirming_documents.field.confirming_documents" class="anchor field">§</a><code>confirming_documents: <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxDocuments" title="type pallet_fund_admin::pallet::Config::MaxDocuments">MaxDocuments</a>&gt;&gt;</code></span></div><div class="sub-variant-field"><span id="variant.bank_confirming_documents.field.action" class="small-section-header"><a href="#variant.bank_confirming_documents.field.action" class="anchor field">§</a><code>action: CUDAction</code></span></div></div><div class="docblock"><p>The following extrinsic is used to upload the bank confirming documents
@@ -757,7 +732,7 @@ It does a rollback of the drawdown.</li>
 <li>All of its transactions will be deleted.</li>
 <li>The whole drawdown will be reset to its initial state, so be careful when using this</li>
 </ul>
-</div><section id="variant.recovery_drawdown" class="variant"><a href="#variant.recovery_drawdown" class="anchor">§</a><h3 class="code-header">recovery_drawdown</h3></section><div class="sub-variant" id="variant.recovery_drawdown.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.project_id" class="small-section-header"><a href="#variant.recovery_drawdown.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.drawdown_id" class="small-section-header"><a href="#variant.recovery_drawdown.field.drawdown_id" class="anchor field">§</a><code>drawdown_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.transactions" class="small-section-header"><a href="#variant.recovery_drawdown.field.transactions" class="anchor field">§</a><code>transactions: BoundedVec&lt;(<a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]&gt;, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u64.html">u64</a>&gt;, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxDocuments" title="type pallet_fund_admin::pallet::Config::MaxDocuments">MaxDocuments</a>&gt;&gt;, CUDAction, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxRegistrationsAtTime" title="type pallet_fund_admin::pallet::Config::MaxRegistrationsAtTime">MaxRegistrationsAtTime</a>&gt;</code></span></div></div><div class="docblock"><p>Execute a recovery drawdown on a project. This function can only be called by an admin. </p>
+</div><section id="variant.recovery_drawdown" class="variant"><a href="#variant.recovery_drawdown" class="anchor">§</a><h3 class="code-header">recovery_drawdown</h3></section><div class="sub-variant" id="variant.recovery_drawdown.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.project_id" class="small-section-header"><a href="#variant.recovery_drawdown.field.project_id" class="anchor field">§</a><code>project_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.drawdown_id" class="small-section-header"><a href="#variant.recovery_drawdown.field.drawdown_id" class="anchor field">§</a><code>drawdown_id: [<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]</code></span></div><div class="sub-variant-field"><span id="variant.recovery_drawdown.field.transactions" class="small-section-header"><a href="#variant.recovery_drawdown.field.transactions" class="anchor field">§</a><code>transactions: BoundedVec&lt;(<a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]&gt;, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u64.html">u64</a>&gt;, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;BoundedVec&lt;(BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;, BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>, ConstU32&lt;100&gt;&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxDocuments" title="type pallet_fund_admin::pallet::Config::MaxDocuments">MaxDocuments</a>&gt;&gt;, CUDAction, <a class="enum" href="https://doc.rust-lang.org/1.69.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.array.html">32</a>]&gt;), &lt;T as <a class="trait" href="trait.Config.html" title="trait pallet_fund_admin::pallet::Config">Config</a>&gt;::<a class="associatedtype" href="trait.Config.html#associatedtype.MaxRegistrationsAtTime" title="type pallet_fund_admin::pallet::Config::MaxRegistrationsAtTime">MaxRegistrationsAtTime</a>&gt;</code></span></div></div><div class="docblock"><p>Execute a recovery drawdown on a project. This function can only be called by an admin.</p>
 <p>Parameters:</p>
 <ul>
 <li><code>origin</code>: The administrator account who is executing the recovery drawdown</li>

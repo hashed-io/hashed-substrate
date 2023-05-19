@@ -101,98 +101,98 @@
 <span class="doccomment">/// Sub-commands supported by the collator.
 </span><span class="attr">#[derive(Debug, clap::Subcommand)]
 </span><span class="kw">pub enum </span>Subcommand {
-	<span class="doccomment">/// Build a chain specification.
-	</span>BuildSpec(sc_cli::BuildSpecCmd),
+  <span class="doccomment">/// Build a chain specification.
+  </span>BuildSpec(sc_cli::BuildSpecCmd),
 
-	<span class="doccomment">/// Validate blocks.
-	</span>CheckBlock(sc_cli::CheckBlockCmd),
+  <span class="doccomment">/// Validate blocks.
+  </span>CheckBlock(sc_cli::CheckBlockCmd),
 
-	<span class="doccomment">/// Export blocks.
-	</span>ExportBlocks(sc_cli::ExportBlocksCmd),
+  <span class="doccomment">/// Export blocks.
+  </span>ExportBlocks(sc_cli::ExportBlocksCmd),
 
-	<span class="doccomment">/// Export the state of a given block into a chain spec.
-	</span>ExportState(sc_cli::ExportStateCmd),
+  <span class="doccomment">/// Export the state of a given block into a chain spec.
+  </span>ExportState(sc_cli::ExportStateCmd),
 
-	<span class="doccomment">/// Import blocks.
-	</span>ImportBlocks(sc_cli::ImportBlocksCmd),
+  <span class="doccomment">/// Import blocks.
+  </span>ImportBlocks(sc_cli::ImportBlocksCmd),
 
-	<span class="doccomment">/// Revert the chain to a previous state.
-	</span>Revert(sc_cli::RevertCmd),
+  <span class="doccomment">/// Revert the chain to a previous state.
+  </span>Revert(sc_cli::RevertCmd),
 
-	<span class="doccomment">/// Remove the whole chain.
-	</span>PurgeChain(cumulus_client_cli::PurgeChainCmd),
+  <span class="doccomment">/// Remove the whole chain.
+  </span>PurgeChain(cumulus_client_cli::PurgeChainCmd),
 
-	<span class="doccomment">/// Export the genesis state of the parachain.
-	</span>ExportGenesisState(cumulus_client_cli::ExportGenesisStateCommand),
+  <span class="doccomment">/// Export the genesis state of the parachain.
+  </span>ExportGenesisState(cumulus_client_cli::ExportGenesisStateCommand),
 
-	<span class="doccomment">/// Export the genesis wasm of the parachain.
-	</span>ExportGenesisWasm(cumulus_client_cli::ExportGenesisWasmCommand),
+  <span class="doccomment">/// Export the genesis wasm of the parachain.
+  </span>ExportGenesisWasm(cumulus_client_cli::ExportGenesisWasmCommand),
 
-	<span class="doccomment">/// Sub-commands concerned with benchmarking.
-	/// The pallet benchmarking moved to the `pallet` sub-command.
-	</span><span class="attr">#[command(subcommand)]
-	</span>Benchmark(frame_benchmarking_cli::BenchmarkCmd),
+  <span class="doccomment">/// Sub-commands concerned with benchmarking.
+  /// The pallet benchmarking moved to the `pallet` sub-command.
+  </span><span class="attr">#[command(subcommand)]
+  </span>Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 
-	<span class="doccomment">/// Try some testing command against a specified runtime state.
-	</span><span class="attr">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
-	</span>TryRuntime(try_runtime_cli::TryRuntimeCmd),
+  <span class="doccomment">/// Try some testing command against a specified runtime state.
+  </span><span class="attr">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
+  </span>TryRuntime(try_runtime_cli::TryRuntimeCmd),
 
-	<span class="doccomment">/// Errors since the binary was not build with `--features try-runtime`.
-	</span><span class="attr">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
-	</span>TryRuntime,
+  <span class="doccomment">/// Errors since the binary was not build with `--features try-runtime`.
+  </span><span class="attr">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
+  </span>TryRuntime,
 }
 
 <span class="attr">#[derive(Debug, clap::Parser)]
 #[command(
-	propagate_version = <span class="bool-val">true</span>,
-	args_conflicts_with_subcommands = <span class="bool-val">true</span>,
-	subcommand_negates_reqs = <span class="bool-val">true
+  propagate_version = <span class="bool-val">true</span>,
+  args_conflicts_with_subcommands = <span class="bool-val">true</span>,
+  subcommand_negates_reqs = <span class="bool-val">true
 </span>)]
 </span><span class="kw">pub struct </span>Cli {
-	<span class="attr">#[command(subcommand)]
-	</span><span class="kw">pub </span>subcommand: <span class="prelude-ty">Option</span>&lt;Subcommand&gt;,
+  <span class="attr">#[command(subcommand)]
+  </span><span class="kw">pub </span>subcommand: <span class="prelude-ty">Option</span>&lt;Subcommand&gt;,
 
-	<span class="attr">#[command(flatten)]
-	</span><span class="kw">pub </span>run: cumulus_client_cli::RunCmd,
+  <span class="attr">#[command(flatten)]
+  </span><span class="kw">pub </span>run: cumulus_client_cli::RunCmd,
 
-	<span class="doccomment">/// Disable automatic hardware benchmarks.
-	///
-	/// By default these benchmarks are automatically ran at startup and measure
-	/// the CPU speed, the memory bandwidth and the disk speed.
-	///
-	/// The results are then printed out in the logs, and also sent as part of
-	/// telemetry, if telemetry is enabled.
-	</span><span class="attr">#[arg(long)]
-	</span><span class="kw">pub </span>no_hardware_benchmarks: bool,
+  <span class="doccomment">/// Disable automatic hardware benchmarks.
+  ///
+  /// By default these benchmarks are automatically ran at startup and measure
+  /// the CPU speed, the memory bandwidth and the disk speed.
+  ///
+  /// The results are then printed out in the logs, and also sent as part of
+  /// telemetry, if telemetry is enabled.
+  </span><span class="attr">#[arg(long)]
+  </span><span class="kw">pub </span>no_hardware_benchmarks: bool,
 
-	<span class="doccomment">/// Relay chain arguments
-	</span><span class="attr">#[arg(raw = <span class="bool-val">true</span>)]
-	</span><span class="kw">pub </span>relay_chain_args: Vec&lt;String&gt;,
+  <span class="doccomment">/// Relay chain arguments
+  </span><span class="attr">#[arg(raw = <span class="bool-val">true</span>)]
+  </span><span class="kw">pub </span>relay_chain_args: Vec&lt;String&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>RelayChainCli {
-	<span class="doccomment">/// The actual relay chain cli object.
-	</span><span class="kw">pub </span>base: polkadot_cli::RunCmd,
+  <span class="doccomment">/// The actual relay chain cli object.
+  </span><span class="kw">pub </span>base: polkadot_cli::RunCmd,
 
-	<span class="doccomment">/// Optional chain id that should be passed to the relay chain.
-	</span><span class="kw">pub </span>chain_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+  <span class="doccomment">/// Optional chain id that should be passed to the relay chain.
+  </span><span class="kw">pub </span>chain_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
-	<span class="doccomment">/// The base path that should be used by the relay chain.
-	</span><span class="kw">pub </span>base_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+  <span class="doccomment">/// The base path that should be used by the relay chain.
+  </span><span class="kw">pub </span>base_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 }
 
 <span class="kw">impl </span>RelayChainCli {
-	<span class="doccomment">/// Parse the relay chain CLI parameters using the para chain `Configuration`.
-	</span><span class="kw">pub fn </span>new&lt;<span class="lifetime">&#39;a</span>&gt;(
-		para_config: <span class="kw-2">&amp;</span>sc_service::Configuration,
-		relay_chain_args: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String&gt;,
-	) -&gt; <span class="self">Self </span>{
-		<span class="kw">let </span>extension = <span class="kw">crate</span>::chain_spec::Extensions::try_get(<span class="kw-2">&amp;*</span>para_config.chain_spec);
-		<span class="kw">let </span>chain_id = extension.map(|e| e.relay_chain.clone());
-		<span class="kw">let </span>base_path = para_config.base_path.as_ref().map(|x| x.path().join(<span class="string">&quot;polkadot&quot;</span>));
-		<span class="self">Self </span>{ base_path, chain_id, base: clap::Parser::parse_from(relay_chain_args) }
-	}
+  <span class="doccomment">/// Parse the relay chain CLI parameters using the para chain `Configuration`.
+  </span><span class="kw">pub fn </span>new&lt;<span class="lifetime">&#39;a</span>&gt;(
+    para_config: <span class="kw-2">&amp;</span>sc_service::Configuration,
+    relay_chain_args: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String&gt;,
+  ) -&gt; <span class="self">Self </span>{
+    <span class="kw">let </span>extension = <span class="kw">crate</span>::chain_spec::Extensions::try_get(<span class="kw-2">&amp;*</span>para_config.chain_spec);
+    <span class="kw">let </span>chain_id = extension.map(|e| e.relay_chain.clone());
+    <span class="kw">let </span>base_path = para_config.base_path.as_ref().map(|x| x.path().join(<span class="string">&quot;polkadot&quot;</span>));
+    <span class="self">Self </span>{ base_path, chain_id, base: clap::Parser::parse_from(relay_chain_args) }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

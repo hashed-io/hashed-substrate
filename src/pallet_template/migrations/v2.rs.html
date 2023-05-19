@@ -68,15 +68,11 @@
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Migrations to version [`2.0.0`], as denoted by the changelog.
 
 </span><span class="kw">use </span>frame_support::{
-	traits::{Get, StorageVersion},
-	weights::Weight,
+  traits::{Get, StorageVersion},
+  weights::Weight,
 };
 
 <span class="doccomment">/// The old prefix.
@@ -87,11 +83,11 @@
 ///
 /// Panics if anything goes wrong.
 </span><span class="kw">pub fn </span>pre_migration&lt;T: <span class="kw">crate</span>::Config, N: AsRef&lt;str&gt;&gt;(new: N) {
-	<span class="kw">let </span>new = new.as_ref();
-	<span class="macro">log::info!</span>(<span class="string">&quot;pre-migration for the template pallet v2 = {}&quot;</span>, new);
+  <span class="kw">let </span>new = new.as_ref();
+  <span class="macro">log::info!</span>(<span class="string">&quot;pre-migration for the template pallet v2 = {}&quot;</span>, new);
 
-	<span class="comment">// ensure storage version is 3.
-	</span><span class="macro">assert_eq!</span>(StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;(), <span class="number">1</span>);
+  <span class="comment">// ensure storage version is 3.
+  </span><span class="macro">assert_eq!</span>(StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;(), <span class="number">1</span>);
 }
 
 <span class="doccomment">/// Migrate the entire storage of this pallet to a new prefix.
@@ -102,49 +98,45 @@
 ///
 /// The old storage prefix, `Template` is hardcoded in the migration code.
 </span><span class="kw">pub fn </span>migrate&lt;T: <span class="kw">crate</span>::Config, N: AsRef&lt;str&gt;&gt;(new_pallet_name: N) -&gt; Weight {
-	<span class="kw">if </span>new_pallet_name.as_ref().as_bytes() == OLD_PREFIX {
-		<span class="macro">log::info!</span>(
-			target: <span class="string">&quot;runtime::template&quot;</span>,
-			<span class="string">&quot;New pallet name is equal to the old prefix. No migration needs to be done.&quot;</span>,
-		);
-		<span class="kw">return </span>Weight::zero()
-	}
-	<span class="kw">let </span>storage_version = StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;();
-	<span class="macro">log::info!</span>(
-		target: <span class="string">&quot;runtime::template&quot;</span>,
-		<span class="string">&quot;Running migration to v2 for template with storage version {:?}&quot;</span>,
-		storage_version,
-	);
+  <span class="kw">if </span>new_pallet_name.as_ref().as_bytes() == OLD_PREFIX {
+    <span class="macro">log::info!</span>(
+      target: <span class="string">&quot;runtime::template&quot;</span>,
+      <span class="string">&quot;New pallet name is equal to the old prefix. No migration needs to be done.&quot;</span>,
+    );
+    <span class="kw">return </span>Weight::zero();
+  }
+  <span class="kw">let </span>storage_version = StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;();
+  <span class="macro">log::info!</span>(
+    target: <span class="string">&quot;runtime::template&quot;</span>,
+    <span class="string">&quot;Running migration to v2 for template with storage version {:?}&quot;</span>,
+    storage_version,
+  );
 
-	<span class="kw">if </span>storage_version &lt;= <span class="number">1 </span>{
-		<span class="macro">log::info!</span>(<span class="string">&quot;new prefix: {}&quot;</span>, new_pallet_name.as_ref());
-		frame_support::storage::migration::move_pallet(
-			OLD_PREFIX,
-			new_pallet_name.as_ref().as_bytes(),
-		);
+  <span class="kw">if </span>storage_version &lt;= <span class="number">1 </span>{
+    <span class="macro">log::info!</span>(<span class="string">&quot;new prefix: {}&quot;</span>, new_pallet_name.as_ref());
+    frame_support::storage::migration::move_pallet(OLD_PREFIX, new_pallet_name.as_ref().as_bytes());
 
-		StorageVersion::new(<span class="number">2</span>).put::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;();
+    StorageVersion::new(<span class="number">2</span>).put::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;();
 
-		&lt;T <span class="kw">as </span>frame_system::Config&gt;::BlockWeights::get().max_block
-	} <span class="kw">else </span>{
-		<span class="macro">log::warn!</span>(
-			target: <span class="string">&quot;runtime::template&quot;</span>,
-			<span class="string">&quot;Attempted to apply migration to v2 but failed because storage version is {:?}&quot;</span>,
-			storage_version,
-		);
-		Weight::zero()
-	}
+    &lt;T <span class="kw">as </span>frame_system::Config&gt;::BlockWeights::get().max_block
+  } <span class="kw">else </span>{
+    <span class="macro">log::warn!</span>(
+      target: <span class="string">&quot;runtime::template&quot;</span>,
+      <span class="string">&quot;Attempted to apply migration to v2 but failed because storage version is {:?}&quot;</span>,
+      storage_version,
+    );
+    Weight::zero()
+  }
 }
-
 
 <span class="doccomment">/// Some checks for after migration. This can be linked to
 /// [`frame_support::traits::OnRuntimeUpgrade::post_upgrade`] for further testing.
 ///
 /// Panics if anything goes wrong.
 </span><span class="kw">pub fn </span>post_migration&lt;T: <span class="kw">crate</span>::Config&gt;() {
-	<span class="macro">log::info!</span>(<span class="string">&quot;post-migration for the template pallet v2&quot;</span>);
-	<span class="comment">// ensure we&#39;ve been updated to v4 by the automatic write of crate version -&gt; storage version.
-	</span><span class="macro">assert_eq!</span>(StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;(), <span class="number">2</span>);
+  <span class="macro">log::info!</span>(<span class="string">&quot;post-migration for the template pallet v2&quot;</span>);
+  <span class="comment">// ensure we&#39;ve been updated to v4 by the automatic write of crate version -&gt; storage version.
+  </span><span class="macro">assert_eq!</span>(StorageVersion::get::&lt;<span class="kw">crate</span>::Pallet&lt;T&gt;&gt;(), <span class="number">2</span>);
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="pallet_template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

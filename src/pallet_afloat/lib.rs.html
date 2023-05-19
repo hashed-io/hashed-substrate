@@ -334,6 +334,9 @@
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -349,326 +352,329 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
-	<span class="kw">use </span>frame_support::traits::Currency;
-	<span class="kw">use </span>frame_support::traits::UnixTime;
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_system::RawOrigin;
-	<span class="kw">use </span>pallet_gated_marketplace::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>sp_runtime::Permill;
-	<span class="kw">use </span>pallet_fruniques::types::{CollectionDescription, FruniqueRole, Attributes, ParentInfo};
-	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+  <span class="kw">use </span>frame_support::{
+    pallet_prelude::<span class="kw-2">*</span>,
+    sp_io::hashing::blake2_256,
+    traits::{Currency, UnixTime},
+  };
+  <span class="kw">use </span>frame_system::{pallet_prelude::<span class="kw-2">*</span>, RawOrigin};
+  <span class="kw">use </span>pallet_fruniques::types::{Attributes, CollectionDescription, FruniqueRole, ParentInfo};
+  <span class="kw">use </span>pallet_gated_marketplace::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>sp_runtime::Permill;
+  <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
-	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
+  <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 
-	<span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;
-		&lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId,
-	&gt;&gt;::Balance;
+  <span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;
+    &lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId,
+  &gt;&gt;::Balance;
 
-	<span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
-	</span><span class="attr">#[pallet::config]
-	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_gated_marketplace::Config + pallet_mapped_assets::Config + pallet_uniques::Config {
-		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
-		<span class="kw">type </span>TimeProvider: UnixTime;
-		<span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
-		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
-		<span class="kw">type </span>Currency: Currency&lt;<span class="self">Self</span>::AccountId&gt;;
-		<span class="kw">type </span>ItemId: Parameter + Member + Default;
-	}
+  <span class="doccomment">/// Configure the pallet by specifying the parameters and types on which it depends.
+  </span><span class="attr">#[pallet::config]
+  </span><span class="kw">pub trait </span>Config:
+    frame_system::Config
+    + pallet_gated_marketplace::Config
+    + pallet_mapped_assets::Config
+    + pallet_uniques::Config
+  {
+    <span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+    <span class="kw">type </span>TimeProvider: UnixTime;
+    <span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
+    <span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
+    <span class="kw">type </span>Currency: Currency&lt;<span class="self">Self</span>::AccountId&gt;;
+    <span class="kw">type </span>ItemId: Parameter + Member + Default;
+  }
 
-	<span class="attr">#[pallet::pallet]
-	#[pallet::storage_version(STORAGE_VERSION)]
-	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
-	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
+  <span class="attr">#[pallet::pallet]
+  #[pallet::storage_version(STORAGE_VERSION)]
+  #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+  </span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="comment">// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/v3/runtime/events-and-errors
-	</span><span class="attr">#[pallet::event]
-	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
-	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		SomethingStored(u32, T::AccountId),
-		NewUser(T::AccountId),
-		UserEdited(T::AccountId),
-		UserDeleted(T::AccountId),
-		SellOrderCreated(T::AccountId),
-		BuyOrderCreated(T::AccountId),
-		SellOrderTaken(T::AccountId),
-		BuyOrderTaken(T::AccountId),
-		AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
-	}
+  <span class="comment">// Pallets use events to inform users when important changes are made.
+  // https://docs.substrate.io/v3/runtime/events-and-errors
+  </span><span class="attr">#[pallet::event]
+  #[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+  </span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+    SomethingStored(u32, T::AccountId),
+    NewUser(T::AccountId),
+    UserEdited(T::AccountId),
+    UserDeleted(T::AccountId),
+    SellOrderCreated(T::AccountId),
+    BuyOrderCreated(T::AccountId),
+    SellOrderTaken(T::AccountId),
+    BuyOrderTaken(T::AccountId),
+    AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
+  }
 
-	<span class="comment">// Errors inform users that something went wrong.
-	</span><span class="attr">#[pallet::error]
-	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="doccomment">/// Error names should be descriptive.
-		</span>NoneValue,
-		<span class="doccomment">/// Errors should have helpful documentation associated with them.
-		</span>StorageOverflow,
-		<span class="doccomment">/// Marketplace not initialized
-		</span>MarketplaceNotInitialized,
-		<span class="doccomment">/// User not found
-		</span>UserNotFound,
-		<span class="doccomment">/// User already exists
-		</span>UserAlreadyExists,
-		<span class="doccomment">/// Failed to edit user account
-		</span>FailedToEditUserAccount,
-		<span class="comment">// Failed to create fruniques collection
-		</span>FailedToCreateFruniquesCollection,
-		<span class="comment">// Failed to remove Fruniques role
-		</span>FailedToRemoveFruniquesRole,
-		<span class="comment">// User is not authorized to perform this action
-		</span>Unauthorized,
-		<span class="comment">// Pallet has not ben initialized yet
-		</span>NotInitialized,
-		<span class="comment">// Failed to remove afloat role
-		</span>FailedToRemoveAfloatRole,
-	}
+  <span class="comment">// Errors inform users that something went wrong.
+  </span><span class="attr">#[pallet::error]
+  </span><span class="kw">pub enum </span>Error&lt;T&gt; {
+    <span class="doccomment">/// Error names should be descriptive.
+    </span>NoneValue,
+    <span class="doccomment">/// Errors should have helpful documentation associated with them.
+    </span>StorageOverflow,
+    <span class="doccomment">/// Marketplace not initialized
+    </span>MarketplaceNotInitialized,
+    <span class="doccomment">/// User not found
+    </span>UserNotFound,
+    <span class="doccomment">/// User already exists
+    </span>UserAlreadyExists,
+    <span class="doccomment">/// Failed to edit user account
+    </span>FailedToEditUserAccount,
+    <span class="comment">// Failed to create fruniques collection
+    </span>FailedToCreateFruniquesCollection,
+    <span class="comment">// Failed to remove Fruniques role
+    </span>FailedToRemoveFruniquesRole,
+    <span class="comment">// User is not authorized to perform this action
+    </span>Unauthorized,
+    <span class="comment">// Pallet has not ben initialized yet
+    </span>NotInitialized,
+    <span class="comment">// Failed to remove afloat role
+    </span>FailedToRemoveAfloatRole,
+  }
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>user_info)]
-	</span><span class="doccomment">/// Keeps track of the number of fruniques in existence for a collection.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserInfo&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AccountId,
-		User&lt;T&gt;, <span class="comment">// User&lt;T&gt; is a struct that contains all the user info
-		</span>OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>user_info)]
+  </span><span class="doccomment">/// Keeps track of the number of fruniques in existence for a collection.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserInfo&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AccountId,
+    User&lt;T&gt;, <span class="comment">// User&lt;T&gt; is a struct that contains all the user info
+    </span>OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>marketplace_id)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatMarketPlaceId&lt;T: Config&gt; = StorageValue&lt;
-		<span class="kw">_</span>,
-		MarketplaceId, <span class="comment">// Afloat&#39;s marketplace id
-	</span>&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>marketplace_id)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatMarketPlaceId&lt;T: Config&gt; = StorageValue&lt;
+    <span class="kw">_</span>,
+    MarketplaceId, <span class="comment">// Afloat&#39;s marketplace id
+  </span>&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>collection_id)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatCollectionId&lt;T: Config&gt; = StorageValue&lt;
-		<span class="kw">_</span>,
-		&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId, <span class="comment">// Afloat&#39;s frunique collection id
-	</span>&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>collection_id)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatCollectionId&lt;T: Config&gt; = StorageValue&lt;
+    <span class="kw">_</span>,
+    &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId, <span class="comment">// Afloat&#39;s frunique collection id
+  </span>&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>asset_id)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatAssetId&lt;T: Config&gt; = StorageValue&lt;
-		<span class="kw">_</span>,
-		&lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s mapped collection asset_id
-	</span>&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>asset_id)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatAssetId&lt;T: Config&gt; = StorageValue&lt;
+    <span class="kw">_</span>,
+    &lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s mapped collection asset_id
+  </span>&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>afloat_offers)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatOffers&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		StorageId,
-		Offer&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>afloat_offers)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatOffers&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_128Concat, StorageId, Offer&lt;T&gt;, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>afloat_transactions)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatTransactions&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		StorageId,
-		Transaction&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>afloat_transactions)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatTransactions&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_128Concat, StorageId, Transaction&lt;T&gt;, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::call]
-	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt;
-	<span class="kw">where
-	</span>T: pallet_uniques::Config&lt;CollectionId = CollectionId&gt;,
-	&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;
-	{
-		<span class="attr">#[pallet::call_index(<span class="number">0</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>initial_setup(
-			origin: OriginFor&lt;T&gt;,
-			creator: T::AccountId,
-			admin: T::AccountId,
-		) -&gt; DispatchResult
+  <span class="attr">#[pallet::call]
+  </span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt;
+  <span class="kw">where
+    </span>T: pallet_uniques::Config&lt;CollectionId = CollectionId&gt;,
+    &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    <span class="attr">#[pallet::call_index(<span class="number">0</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>initial_setup(
+      origin: OriginFor&lt;T&gt;,
+      creator: T::AccountId,
+      admin: T::AccountId,
+    ) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let </span>asset_id: T::AssetId = Default::default();
+      AfloatAssetId::&lt;T&gt;::put(asset_id.clone());
 
-	{
-			ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="kw">let </span>asset_id: T::AssetId = Default::default();
-			AfloatAssetId::&lt;T&gt;::put(asset_id.clone());
+      <span class="kw">let </span>metadata: CollectionDescription&lt;T&gt; =
+        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
 
-			<span class="kw">let </span>metadata: CollectionDescription&lt;T&gt; = BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
+      pallet_fruniques::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
 
-			pallet_fruniques::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
+      <span class="self">Self</span>::create_afloat_collection(
+        RawOrigin::Signed(creator.clone()).into(),
+        metadata,
+        admin.clone(),
+      )<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())<span class="question-mark">?</span>;
+      pallet_gated_marketplace::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
 
-			pallet_gated_marketplace::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
+      <span class="kw">let </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt; =
+        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
+      <span class="kw">let </span>marketplace: Marketplace&lt;T&gt; = Marketplace {
+        label,
+        buy_fee: Permill::from_percent(<span class="number">2</span>),
+        sell_fee: Permill::from_percent(<span class="number">4</span>),
+        asset_id,
+        creator: creator.clone(),
+      };
+      <span class="kw">let </span>marketplace_id = marketplace.clone().using_encoded(blake2_256);
 
-			<span class="kw">let </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt; =
-				BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
-			<span class="kw">let </span>marketplace: Marketplace&lt;T&gt; = Marketplace {
-				label,
-				buy_fee: Permill::from_percent(<span class="number">2</span>),
-				sell_fee: Permill::from_percent(<span class="number">4</span>),
-				asset_id,
-				creator: creator.clone(),
-			};
-			<span class="kw">let </span>marketplace_id = marketplace.clone().using_encoded(blake2_256);
+      AfloatMarketPlaceId::&lt;T&gt;::put(marketplace_id);
+      <span class="self">Self</span>::add_to_afloat_collection(admin.clone(), FruniqueRole::Admin)<span class="question-mark">?</span>;
+      pallet_gated_marketplace::Pallet::do_create_marketplace(
+        RawOrigin::Signed(creator.clone()).into(),
+        admin.clone(),
+        marketplace,
+      )<span class="question-mark">?</span>;
 
-			AfloatMarketPlaceId::&lt;T&gt;::put(marketplace_id);
-			<span class="self">Self</span>::add_to_afloat_collection(admin.clone(),FruniqueRole::Admin)<span class="question-mark">?</span>;
-			pallet_gated_marketplace::Pallet::do_create_marketplace(RawOrigin::Signed(creator.clone()).into(), admin.clone(), marketplace)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_initial_setup(creator, admin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_initial_setup(creator, admin)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="comment">// Self::do_delete_all_users()?;
 
-		<span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="comment">// Self::do_delete_all_users()?;
+      </span><span class="kw">let _ </span>= &lt;UserInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;AfloatMarketPlaceId&lt;T&gt;&gt;::kill();
+      <span class="kw">let _ </span>= &lt;AfloatCollectionId&lt;T&gt;&gt;::kill();
+      <span class="kw">let _ </span>= &lt;AfloatOffers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;AfloatTransactions&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
 
-			</span><span class="kw">let _ </span>= &lt;UserInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;AfloatMarketPlaceId&lt;T&gt;&gt;::kill();
-			<span class="kw">let _ </span>= &lt;AfloatCollectionId&lt;T&gt;&gt;::kill();
-			<span class="kw">let _ </span>= &lt;AfloatOffers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;AfloatTransactions&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      &lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
 
-			&lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
+    <span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>sign_up(origin: OriginFor&lt;T&gt;, args: SignUpArgs) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_create_user(who.clone(), who, args)
+    }
 
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>update_user_info(
+      origin: OriginFor&lt;T&gt;,
+      address: T::AccountId,
+      args: UpdateUserArgs,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-		<span class="attr">#[pallet::call_index(<span class="number">2</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>sign_up(origin: OriginFor&lt;T&gt;, args: SignUpArgs) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_create_user(who.clone(), who, args)
-		}
+      <span class="macro">ensure!</span>(&lt;UserInfo&lt;T&gt;&gt;::contains_key(address.clone()), Error::&lt;T&gt;::UserNotFound);
+      <span class="macro">ensure!</span>(
+        who.clone() == address || <span class="self">Self</span>::is_admin_or_owner(who.clone()),
+        Error::&lt;T&gt;::Unauthorized
+      );
 
-		<span class="attr">#[pallet::call_index(<span class="number">3</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>update_user_info(
-			origin: OriginFor&lt;T&gt;,
-			address: T::AccountId,
-			args: UpdateUserArgs,
-		) -&gt; DispatchResult {
+      <span class="kw">match </span>args {
+        UpdateUserArgs::Edit { cid, cid_creator } =&gt; {
+          <span class="self">Self</span>::do_edit_user(who, address, cid, cid_creator)<span class="question-mark">?</span>;
+        },
+        UpdateUserArgs::AdminEdit { cid, cid_creator, group } =&gt; {
+          <span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
+          <span class="self">Self</span>::do_admin_edit_user(who, address, cid, cid_creator, group)<span class="question-mark">?</span>;
+        },
+        UpdateUserArgs::Delete =&gt; {
+          <span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
+          <span class="self">Self</span>::do_delete_user(who, address)<span class="question-mark">?</span>;
+        },
+      }
 
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-			<span class="macro">ensure!</span>(&lt;UserInfo&lt;T&gt;&gt;::contains_key(address.clone()), Error::&lt;T&gt;::UserNotFound);
-			<span class="macro">ensure!</span>(who.clone() == address || <span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
+    <span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>create_offer(origin: OriginFor&lt;T&gt;, args: CreateOfferArgs&lt;T&gt;) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">match </span>args {
+        CreateOfferArgs::Sell {
+          tax_credit_amount,
+          tax_credit_id,
+          price_per_credit,
+          expiration_date,
+        } =&gt; {
+          <span class="self">Self</span>::do_create_sell_order(
+            who,
+            tax_credit_id,
+            price_per_credit,
+            tax_credit_amount,
+            expiration_date,
+          )<span class="question-mark">?</span>;
+        },
+        CreateOfferArgs::Buy {
+          tax_credit_amount,
+          tax_credit_id,
+          price_per_credit,
+          expiration_date,
+        } =&gt; {
+          <span class="self">Self</span>::do_create_buy_order(
+            who,
+            tax_credit_id,
+            price_per_credit,
+            tax_credit_amount,
+            expiration_date,
+          )<span class="question-mark">?</span>;
+        },
+      }
+      <span class="prelude-val">Ok</span>(())
+    }
 
-			<span class="kw">match </span>args {
-				UpdateUserArgs::Edit { cid, cid_creator } =&gt; {
-					<span class="self">Self</span>::do_edit_user(who, address, cid, cid_creator)<span class="question-mark">?</span>;
-				}
-				UpdateUserArgs::AdminEdit { cid, cid_creator, group } =&gt; {
-					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
-					<span class="self">Self</span>::do_admin_edit_user(who, address, cid, cid_creator, group)<span class="question-mark">?</span>;
-				}
-				UpdateUserArgs::Delete =&gt; {
-					<span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
-					<span class="self">Self</span>::do_delete_user(who, address)<span class="question-mark">?</span>;
-				}
-			}
+    <span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>accept_offer(
+      origin: OriginFor&lt;T&gt;,
+      offer_id: [u8; <span class="number">32</span>],
+      amount: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    ) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>take_sell_order(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_take_sell_order(origin, offer_id)
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">4</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>create_offer(
-			origin: OriginFor&lt;T&gt;,
-			args: CreateOfferArgs&lt;T&gt;,
-		)
-		 -&gt; DispatchResult
-		{
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">match </span>args {
-				CreateOfferArgs::Sell { tax_credit_amount, tax_credit_id, price_per_credit, expiration_date } =&gt; {
-					<span class="self">Self</span>::do_create_sell_order(who, tax_credit_id, price_per_credit, tax_credit_amount, expiration_date)<span class="question-mark">?</span>;
-				}
-				CreateOfferArgs::Buy { tax_credit_amount, tax_credit_id, price_per_credit, expiration_date } =&gt; {
-					<span class="self">Self</span>::do_create_buy_order(who, tax_credit_id, price_per_credit, tax_credit_amount, expiration_date)<span class="question-mark">?</span>;
-				}
-			}
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>take_buy_order(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_take_buy_order(who, offer_id)
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">5</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>accept_offer(
-			origin: OriginFor&lt;T&gt;,
-			offer_id: [u8; <span class="number">32</span>],
-			amount: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-		)
-		 -&gt; DispatchResult
-		{
-			ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>create_tax_credit(
+      origin: OriginFor&lt;T&gt;,
+      metadata: CollectionDescription&lt;T&gt;,
+      attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
+      parent_info: <span class="prelude-ty">Option</span>&lt;ParentInfo&lt;T&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_create_tax_credit(who, metadata, attributes, parent_info)
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">6</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_sell_order(
-			origin: OriginFor&lt;T&gt;,
-			offer_id: [u8; <span class="number">32</span>],
-		)
-		 -&gt; DispatchResult
-		{
-			ensure_signed(origin.clone())<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_take_sell_order(origin , offer_id)
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>set_afloat_balance(
+      origin: OriginFor&lt;T&gt;,
+      beneficiary: T::AccountId,
+      amount: T::Balance,
+    ) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-		<span class="attr">#[pallet::call_index(<span class="number">7</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_buy_order(
-			origin: OriginFor&lt;T&gt;,
-			offer_id: [u8; <span class="number">32</span>],
-		)
-		 -&gt; DispatchResult
-		{
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_take_buy_order(who , offer_id)
-		}
+      <span class="comment">// Only the owner can set afloat balance
+      </span><span class="macro">ensure!</span>(<span class="self">Self</span>::is_owner(ensure_signed(origin.clone())<span class="question-mark">?</span>), Error::&lt;T&gt;::Unauthorized);
 
-		<span class="attr">#[pallet::call_index(<span class="number">8</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>create_tax_credit(
-			origin: OriginFor&lt;T&gt;,
-			metadata: CollectionDescription&lt;T&gt;,
-			attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
-			parent_info: <span class="prelude-ty">Option</span>&lt;ParentInfo&lt;T&gt;&gt;,
-		)
-		 -&gt; DispatchResult
-		{
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_create_tax_credit(who , metadata, attributes, parent_info)
-		}
-
-		<span class="attr">#[pallet::call_index(<span class="number">9</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>set_afloat_balance(
-			origin: OriginFor&lt;T&gt;,
-			beneficiary: T::AccountId,
-			amount: T::Balance,
-		)
-		 -&gt; DispatchResult
-		{
-			ensure_signed(origin.clone())<span class="question-mark">?</span>;
-
-			<span class="comment">// Only the owner can set afloat balance
-			</span><span class="macro">ensure!</span>(<span class="self">Self</span>::is_owner(ensure_signed(origin.clone())<span class="question-mark">?</span>), Error::&lt;T&gt;::Unauthorized);
-
-			<span class="self">Self</span>::do_set_afloat_balance(origin, beneficiary, amount)
-		}
-
-	}
+      <span class="self">Self</span>::do_set_afloat_balance(origin, beneficiary, amount)
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_afloat" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

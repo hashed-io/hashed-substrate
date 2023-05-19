@@ -79,50 +79,50 @@
 // limitations under the License.
 
 </span><span class="kw">pub mod </span>constants {
-	<span class="kw">use </span>frame_support::{
-		parameter_types,
-		weights::{constants, RuntimeDbWeight},
-	};
+  <span class="kw">use </span>frame_support::{
+    parameter_types,
+    weights::{constants, RuntimeDbWeight},
+  };
 
-	<span class="macro">parameter_types! </span>{
-		<span class="doccomment">/// By default, Substrate uses `RocksDB`, so this will be the weight used throughout
-		/// the runtime.
-		</span><span class="kw">pub const </span>RocksDbWeight: RuntimeDbWeight = RuntimeDbWeight {
-			read: <span class="number">25_000 </span>* constants::WEIGHT_REF_TIME_PER_NANOS,
-			write: <span class="number">100_000 </span>* constants::WEIGHT_REF_TIME_PER_NANOS,
-		};
-	}
+  <span class="macro">parameter_types! </span>{
+    <span class="doccomment">/// By default, Substrate uses `RocksDB`, so this will be the weight used throughout
+    /// the runtime.
+    </span><span class="kw">pub const </span>RocksDbWeight: RuntimeDbWeight = RuntimeDbWeight {
+      read: <span class="number">25_000 </span>* constants::WEIGHT_REF_TIME_PER_NANOS,
+      write: <span class="number">100_000 </span>* constants::WEIGHT_REF_TIME_PER_NANOS,
+    };
+  }
 
-	<span class="attr">#[cfg(test)]
-	</span><span class="kw">mod </span>test_db_weights {
-		<span class="kw">use </span><span class="kw">super</span>::constants::RocksDbWeight <span class="kw">as </span>W;
-		<span class="kw">use </span>frame_support::weights::constants;
+  <span class="attr">#[cfg(test)]
+  </span><span class="kw">mod </span>test_db_weights {
+    <span class="kw">use </span><span class="kw">super</span>::constants::RocksDbWeight <span class="kw">as </span>W;
+    <span class="kw">use </span>frame_support::weights::constants;
 
-		<span class="doccomment">/// Checks that all weights exist and have sane values.
-		</span><span class="comment">// NOTE: If this test fails but you are sure that the generated values are fine,
-		// you can delete it.
-		</span><span class="attr">#[test]
-		</span><span class="kw">fn </span>sane() {
-			<span class="comment">// At least 1 µs.
-			</span><span class="macro">assert!</span>(
-				W::get().reads(<span class="number">1</span>).ref_time() &gt;= constants::WEIGHT_REF_TIME_PER_MICROS,
-				<span class="string">&quot;Read weight should be at least 1 µs.&quot;
-			</span>);
-			<span class="macro">assert!</span>(
-				W::get().writes(<span class="number">1</span>).ref_time() &gt;= constants::WEIGHT_REF_TIME_PER_MICROS,
-				<span class="string">&quot;Write weight should be at least 1 µs.&quot;
-			</span>);
-			<span class="comment">// At most 1 ms.
-			</span><span class="macro">assert!</span>(
-				W::get().reads(<span class="number">1</span>).ref_time() &lt;= constants::WEIGHT_REF_TIME_PER_MILLIS,
-				<span class="string">&quot;Read weight should be at most 1 ms.&quot;
-			</span>);
-			<span class="macro">assert!</span>(
-				W::get().writes(<span class="number">1</span>).ref_time() &lt;= constants::WEIGHT_REF_TIME_PER_MILLIS,
-				<span class="string">&quot;Write weight should be at most 1 ms.&quot;
-			</span>);
-		}
-	}
+    <span class="doccomment">/// Checks that all weights exist and have sane values.
+    </span><span class="comment">// NOTE: If this test fails but you are sure that the generated values are fine,
+    // you can delete it.
+    </span><span class="attr">#[test]
+    </span><span class="kw">fn </span>sane() {
+      <span class="comment">// At least 1 µs.
+      </span><span class="macro">assert!</span>(
+        W::get().reads(<span class="number">1</span>).ref_time() &gt;= constants::WEIGHT_REF_TIME_PER_MICROS,
+        <span class="string">&quot;Read weight should be at least 1 µs.&quot;
+      </span>);
+      <span class="macro">assert!</span>(
+        W::get().writes(<span class="number">1</span>).ref_time() &gt;= constants::WEIGHT_REF_TIME_PER_MICROS,
+        <span class="string">&quot;Write weight should be at least 1 µs.&quot;
+      </span>);
+      <span class="comment">// At most 1 ms.
+      </span><span class="macro">assert!</span>(
+        W::get().reads(<span class="number">1</span>).ref_time() &lt;= constants::WEIGHT_REF_TIME_PER_MILLIS,
+        <span class="string">&quot;Read weight should be at most 1 ms.&quot;
+      </span>);
+      <span class="macro">assert!</span>(
+        W::get().writes(<span class="number">1</span>).ref_time() &lt;= constants::WEIGHT_REF_TIME_PER_MILLIS,
+        <span class="string">&quot;Write weight should be at most 1 ms.&quot;
+      </span>);
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashed_parachain_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

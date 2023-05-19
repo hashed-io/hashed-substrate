@@ -1191,6 +1191,48 @@
 <a href="#1191" id="1191">1191</a>
 <a href="#1192" id="1192">1192</a>
 <a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
 </pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) 2017-2022 Parity Technologies (UK) Ltd.
@@ -1211,1177 +1253,1220 @@
 </span><span class="doccomment">//! Functions for the Assets pallet.
 
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::{traits::{Get}, BoundedVec};
+<span class="kw">use </span>frame_support::{traits::Get, BoundedVec};
 
 <span class="attr">#[must_use]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>DeadConsequence {
-	Remove,
-	Keep,
+  Remove,
+  Keep,
 }
 
 <span class="kw">use </span>DeadConsequence::<span class="kw-2">*</span>;
 
 <span class="comment">// The main implementation block for the module.
 </span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; Pallet&lt;T, I&gt; {
-	<span class="comment">// Public immutables
-
-	</span><span class="doccomment">/// Return the extra &quot;sid-car&quot; data for `id`/`who`, or `None` if the account doesn&#39;t exist.
-	</span><span class="kw">pub fn </span>adjust_extra(
-		id: T::AssetId,
-		who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
-	) -&gt; <span class="prelude-ty">Option</span>&lt;ExtraMutator&lt;T, I&gt;&gt; {
-		ExtraMutator::maybe_new(id, who)
-	}
-
-	<span class="doccomment">/// Get the asset `id` balance of `who`, or zero if the asset-account doesn&#39;t exist.
-	</span><span class="kw">pub fn </span>balance(id: T::AssetId, who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;) -&gt; T::Balance {
-		<span class="self">Self</span>::maybe_balance(id, who).unwrap_or_default()
-	}
-
-	<span class="doccomment">/// Get the asset `id` balance of `who` if the asset-account exists.
-	</span><span class="kw">pub fn </span>maybe_balance(
-		id: T::AssetId,
-		who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
-	) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
-		Account::&lt;T, I&gt;::get(id, who.borrow()).map(|a| a.balance)
-	}
-
-	<span class="doccomment">/// Get the asset `id` reserved balance of `who`, or zero if the asset-account doesn&#39;t exist.
-	</span><span class="kw">pub fn </span>reserved_balance(id: T::AssetId, who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;) -&gt; T::Balance {
-		<span class="self">Self</span>::maybe_reserved_balance(id, who).unwrap_or_default()
-	}
-
-	<span class="doccomment">/// Get the asset `id` reserved balance of `who` if the asset-account exists.
-	</span><span class="kw">pub fn </span>maybe_reserved_balance(
-		id: T::AssetId,
-		who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
-	) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
-		Account::&lt;T, I&gt;::get(id, who.borrow()).map(|a| a.reserved)
-	}
-
-
-	<span class="doccomment">/// Get the total supply of an asset `id`.
-	</span><span class="kw">pub fn </span>total_supply(id: T::AssetId) -&gt; T::Balance {
-		<span class="self">Self</span>::maybe_total_supply(id).unwrap_or_default()
-	}
-
-	<span class="doccomment">/// Get the total supply of an asset `id` if the asset exists.
-	</span><span class="kw">pub fn </span>maybe_total_supply(id: T::AssetId) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
-		Asset::&lt;T, I&gt;::get(id).map(|x| x.supply)
-	}
-
-	<span class="doccomment">/// Get the total reserved supply of an asset `id`.
-	</span><span class="kw">pub fn </span>total_reserved_supply(id: T::AssetId) -&gt; T::Balance {
-		<span class="self">Self</span>::maybe_total_reserved_supply(id).unwrap_or_default()
-	}
-
-	<span class="doccomment">/// Get the total reversed supply of an asset `id` if the asset exists.
-	</span><span class="kw">pub fn </span>maybe_total_reserved_supply(id: T::AssetId) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
-		Asset::&lt;T, I&gt;::get(id).map(|x| x.reserved)
-	}
-
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new_account(
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		d: <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
-		maybe_deposit: <span class="prelude-ty">Option</span>&lt;DepositBalanceOf&lt;T, I&gt;&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;ExistenceReason&lt;DepositBalanceOf&lt;T, I&gt;&gt;, DispatchError&gt; {
-		<span class="kw">let </span>accounts = d.accounts.checked_add(<span class="number">1</span>).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-		<span class="kw">let </span>reason = <span class="kw">if let </span><span class="prelude-val">Some</span>(deposit) = maybe_deposit {
-			ExistenceReason::DepositHeld(deposit)
-		} <span class="kw">else if </span>d.is_sufficient {
-			frame_system::Pallet::&lt;T&gt;::inc_sufficients(who);
-			d.sufficients += <span class="number">1</span>;
-			ExistenceReason::Sufficient
-		} <span class="kw">else </span>{
-			frame_system::Pallet::&lt;T&gt;::inc_consumers(who).map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::NoProvider)<span class="question-mark">?</span>;
-			ExistenceReason::Consumer
-		};
-		d.accounts = accounts;
-		<span class="prelude-val">Ok</span>(reason)
-	}
-
-	<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>dead_account(
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		d: <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
-		reason: <span class="kw-2">&amp;</span>ExistenceReason&lt;DepositBalanceOf&lt;T, I&gt;&gt;,
-		force: bool,
-	) -&gt; DeadConsequence {
-		<span class="kw">match </span><span class="kw-2">*</span>reason {
-			ExistenceReason::Consumer =&gt; frame_system::Pallet::&lt;T&gt;::dec_consumers(who),
-			ExistenceReason::Sufficient =&gt; {
-				d.sufficients = d.sufficients.saturating_sub(<span class="number">1</span>);
-				frame_system::Pallet::&lt;T&gt;::dec_sufficients(who);
-			},
-			ExistenceReason::DepositRefunded =&gt; {},
-			ExistenceReason::DepositHeld(<span class="kw">_</span>) <span class="kw">if </span>!force =&gt; <span class="kw">return </span>Keep,
-			ExistenceReason::DepositHeld(<span class="kw">_</span>) =&gt; {},
-		}
-		d.accounts = d.accounts.saturating_sub(<span class="number">1</span>);
-		Remove
-	}
-
-	<span class="doccomment">/// Returns `true` when the balance of `account` can be increased by `amount`.
-	///
-	/// - `id`: The id of the asset that should be increased.
-	/// - `who`: The account of which the balance should be increased.
-	/// - `amount`: The amount by which the balance should be increased.
-	/// - `increase_supply`: Will the supply of the asset be increased by `amount` at the same time
-	///   as crediting the `account`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>can_increase(
-		id: T::AssetId,
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		increase_supply: bool,
-	) -&gt; DepositConsequence {
-		<span class="kw">let </span>details = <span class="kw">match </span>Asset::&lt;T, I&gt;::get(id) {
-			<span class="prelude-val">Some</span>(details) =&gt; details,
-			<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>DepositConsequence::UnknownAsset,
-		};
-		<span class="kw">if </span>increase_supply &amp;&amp; details.supply.checked_add(<span class="kw-2">&amp;</span>amount).is_none() {
-			<span class="kw">return </span>DepositConsequence::Overflow
-		}
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(balance) = <span class="self">Self</span>::maybe_balance(id, who) {
-			<span class="kw">if </span>balance.checked_add(<span class="kw-2">&amp;</span>amount).is_none() {
-				<span class="kw">return </span>DepositConsequence::Overflow
-			}
-		} <span class="kw">else </span>{
-			<span class="kw">if </span>amount &lt; details.min_balance {
-				<span class="kw">return </span>DepositConsequence::BelowMinimum
-			}
-			<span class="kw">if </span>!details.is_sufficient &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_inc_consumer(who) {
-				<span class="kw">return </span>DepositConsequence::CannotCreate
-			}
-			<span class="kw">if </span>details.is_sufficient &amp;&amp; details.sufficients.checked_add(<span class="number">1</span>).is_none() {
-				<span class="kw">return </span>DepositConsequence::Overflow
-			}
-		}
-
-		DepositConsequence::Success
-	}
-
-	<span class="doccomment">/// Return the consequence of a withdraw.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>can_decrease(
-		id: T::AssetId,
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		keep_alive: bool,
-	) -&gt; WithdrawConsequence&lt;T::Balance&gt; {
-		<span class="kw">use </span>WithdrawConsequence::<span class="kw-2">*</span>;
-		<span class="kw">let </span>details = <span class="kw">match </span>Asset::&lt;T, I&gt;::get(id) {
-			<span class="prelude-val">Some</span>(details) =&gt; details,
-			<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>UnknownAsset,
-		};
-		<span class="kw">if </span>details.supply.checked_sub(<span class="kw-2">&amp;</span>amount).is_none() {
-			<span class="kw">return </span>Underflow
-		}
-		<span class="kw">if </span>details.is_frozen {
-			<span class="kw">return </span>Frozen
-		}
-		<span class="kw">if </span>amount.is_zero() {
-			<span class="kw">return </span>Success
-		}
-		<span class="kw">let </span>account = <span class="kw">match </span>Account::&lt;T, I&gt;::get(id, who) {
-			<span class="prelude-val">Some</span>(a) =&gt; a,
-			<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>NoFunds,
-		};
-		<span class="kw">if </span>account.is_frozen {
-			<span class="kw">return </span>Frozen
-		}
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(rest) = account.balance.checked_sub(<span class="kw-2">&amp;</span>amount) {
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(frozen) = T::Freezer::frozen_balance(id, who) {
-				<span class="kw">match </span>frozen.checked_add(<span class="kw-2">&amp;</span>details.min_balance) {
-					<span class="prelude-val">Some</span>(required) <span class="kw">if </span>rest &lt; required =&gt; <span class="kw">return </span>Frozen,
-					<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Overflow,
-					<span class="kw">_ </span>=&gt; {},
-				}
-			}
-
-			<span class="kw">let </span>is_provider = <span class="bool-val">false</span>;
-			<span class="kw">let </span>is_required = is_provider &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_dec_provider(who);
-			<span class="kw">let </span>has_reserved_balance = !account.reserved.is_zero();
-			<span class="kw">let </span>must_keep_alive = keep_alive || is_required || has_reserved_balance;
-
-			<span class="kw">if </span>rest &lt; details.min_balance {
-				<span class="kw">if </span>must_keep_alive {
-					WouldDie
-				} <span class="kw">else </span>{
-					ReducedToZero(rest)
-				}
-			} <span class="kw">else </span>{
-				Success
-			}
-		} <span class="kw">else </span>{
-			NoFunds
-		}
-	}
-
-	<span class="comment">// Maximum `amount` that can be passed into `can_withdraw` to result in a `WithdrawConsequence`
-	// of `Success`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>reducible_balance(
-		id: T::AssetId,
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		keep_alive: bool,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
-		<span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(!details.is_frozen, Error::&lt;T, I&gt;::Frozen);
-
-		<span class="kw">let </span>account = Account::&lt;T, I&gt;::get(id, who).ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
-
-		<span class="kw">let </span>amount = <span class="kw">if let </span><span class="prelude-val">Some</span>(frozen) = T::Freezer::frozen_balance(id, who) {
-			<span class="comment">// Frozen balance: account CANNOT be deleted
-			</span><span class="kw">let </span>required =
-				frozen.checked_add(<span class="kw-2">&amp;</span>details.min_balance).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-			account.balance.saturating_sub(required)
-		} <span class="kw">else </span>{
-			<span class="kw">let </span>is_provider = <span class="bool-val">false</span>;
-			<span class="kw">let </span>is_required = is_provider &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_dec_provider(who);
-			<span class="kw">if </span>keep_alive || is_required {
-				<span class="comment">// We want to keep the account around.
-				</span>account.balance.saturating_sub(details.min_balance)
-			} <span class="kw">else </span>{
-				<span class="comment">// Don&#39;t care if the account dies
-				</span>account.balance
-			}
-		};
-		<span class="prelude-val">Ok</span>(amount.min(details.supply))
-	}
-
-	<span class="doccomment">/// Make preparatory checks for debiting some funds from an account. Flags indicate requirements
-	/// of the debit.
-	///
-	/// - `amount`: The amount desired to be debited. The actual amount returned for debit may be
-	///   less (in the case of `best_effort` being `true`) or greater by up to the minimum balance
-	///   less one.
-	/// - `keep_alive`: Require that `target` must stay alive.
-	/// - `respect_freezer`: Respect any freezes on the account or token (or not).
-	/// - `best_effort`: The debit amount may be less than `amount`.
-	///
-	/// On success, the amount which should be debited (this will always be at least `amount` unless
-	/// `best_effort` is `true`) together with an optional value indicating the argument which must
-	/// be passed into the `melted` function of the `T::Freezer` if `Some`.
-	///
-	/// If no valid debit can be made then return an `Err`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>prep_debit(
-		id: T::AssetId,
-		target: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		f: DebitFlags,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
-		<span class="kw">let </span>actual = <span class="self">Self</span>::reducible_balance(id, target, f.keep_alive)<span class="question-mark">?</span>.min(amount);
-		<span class="macro">ensure!</span>(f.best_effort || actual &gt;= amount, Error::&lt;T, I&gt;::BalanceLow);
-
-		<span class="kw">let </span>conseq = <span class="self">Self</span>::can_decrease(id, target, actual, f.keep_alive);
-		<span class="kw">let </span>actual = <span class="kw">match </span>conseq.into_result() {
-			<span class="prelude-val">Ok</span>(dust) =&gt; actual.saturating_add(dust), <span class="comment">//&lt; guaranteed by reducible_balance
-			</span><span class="prelude-val">Err</span>(e) =&gt; {
-				<span class="macro">debug_assert!</span>(<span class="bool-val">false</span>, <span class="string">&quot;passed from reducible_balance; qed&quot;</span>);
-				<span class="kw">return </span><span class="prelude-val">Err</span>(e)
-			},
-		};
-
-		<span class="prelude-val">Ok</span>(actual)
-	}
-
-	<span class="doccomment">/// Make preparatory checks for crediting some funds from an account. Flags indicate
-	/// requirements of the credit.
-	///
-	/// - `amount`: The amount desired to be credited.
-	/// - `debit`: The amount by which some other account has been debited. If this is greater than
-	///   `amount`, then the `burn_dust` parameter takes effect.
-	/// - `burn_dust`: Indicates that in the case of debit being greater than amount, the additional
-	///   (dust) value should be burned, rather than credited.
-	///
-	/// On success, the amount which should be credited (this will always be at least `amount`)
-	/// together with an optional value indicating the value which should be burned. The latter
-	/// will always be `None` as long as `burn_dust` is `false` or `debit` is no greater than
-	/// `amount`.
-	///
-	/// If no valid credit can be made then return an `Err`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>prep_credit(
-		id: T::AssetId,
-		dest: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		debit: T::Balance,
-		burn_dust: bool,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;(T::Balance, <span class="prelude-ty">Option</span>&lt;T::Balance&gt;), DispatchError&gt; {
-		<span class="kw">let </span>(credit, maybe_burn) = <span class="kw">match </span>(burn_dust, debit.checked_sub(<span class="kw-2">&amp;</span>amount)) {
-			(<span class="bool-val">true</span>, <span class="prelude-val">Some</span>(dust)) =&gt; (amount, <span class="prelude-val">Some</span>(dust)),
-			<span class="kw">_ </span>=&gt; (debit, <span class="prelude-val">None</span>),
-		};
-		<span class="self">Self</span>::can_increase(id, dest, credit, <span class="bool-val">false</span>).into_result()<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>((credit, maybe_burn))
-	}
-
-	<span class="doccomment">/// Creates a account for `who` to hold asset `id` with a zero balance and takes a deposit.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_touch(id: T::AssetId, who: T::AccountId) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(!Account::&lt;T, I&gt;::contains_key(id, <span class="kw-2">&amp;</span>who), Error::&lt;T, I&gt;::AlreadyExists);
-		<span class="kw">let </span>deposit = T::AssetAccountDeposit::get();
-		<span class="kw">let </span><span class="kw-2">mut </span>details = Asset::&lt;T, I&gt;::get(<span class="kw-2">&amp;</span>id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-		<span class="kw">let </span>reason = <span class="self">Self</span>::new_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="prelude-val">Some</span>(deposit))<span class="question-mark">?</span>;
-		T::Currency::reserve(<span class="kw-2">&amp;</span>who, deposit)<span class="question-mark">?</span>;
-		Asset::&lt;T, I&gt;::insert(<span class="kw-2">&amp;</span>id, details);
-		Account::&lt;T, I&gt;::insert(
-			id,
-			<span class="kw-2">&amp;</span>who,
-			AssetAccountOf::&lt;T, I&gt; {
-				balance: Zero::zero(),
-				reserved: Zero::zero(),
-				is_frozen: <span class="bool-val">false</span>,
-				reason,
-				extra: T::Extra::default(),
-			},
-		);
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Returns a deposit, destroying an asset-account.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_refund(id: T::AssetId, who: T::AccountId, allow_burn: bool) -&gt; DispatchResult {
-		<span class="kw">let </span><span class="kw-2">mut </span>account = Account::&lt;T, I&gt;::get(id, <span class="kw-2">&amp;</span>who).ok_or(Error::&lt;T, I&gt;::NoDeposit)<span class="question-mark">?</span>;
-		<span class="kw">let </span>deposit = account.reason.take_deposit().ok_or(Error::&lt;T, I&gt;::NoDeposit)<span class="question-mark">?</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>details = Asset::&lt;T, I&gt;::get(<span class="kw-2">&amp;</span>id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-
-		<span class="macro">ensure!</span>(account.balance.is_zero() || allow_burn, Error::&lt;T, I&gt;::WouldBurn);
-		<span class="macro">ensure!</span>(!details.is_frozen, Error::&lt;T, I&gt;::Frozen);
-		<span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
-
-		T::Currency::unreserve(<span class="kw-2">&amp;</span>who, deposit);
-
-		<span class="kw">if let </span>Remove = <span class="self">Self</span>::dead_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="kw-2">&amp;</span>account.reason, <span class="bool-val">false</span>) {
-			Account::&lt;T, I&gt;::remove(id, <span class="kw-2">&amp;</span>who);
-		} <span class="kw">else </span>{
-			<span class="macro">debug_assert!</span>(<span class="bool-val">false</span>, <span class="string">&quot;refund did not result in dead account?!&quot;</span>);
-		}
-		Asset::&lt;T, I&gt;::insert(<span class="kw-2">&amp;</span>id, details);
-		<span class="comment">// Executing a hook here is safe, since it is not in a `mutate`.
-		</span>T::Freezer::died(id, <span class="kw-2">&amp;</span>who);
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Increases the asset `id` balance of `beneficiary` by `amount`.
-	///
-	/// This alters the registered supply of the asset and emits an event.
-	///
-	/// Will return an error or will increase the amount by exactly `amount`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_mint(
-		id: T::AssetId,
-		beneficiary: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		maybe_check_issuer: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-	) -&gt; DispatchResult {
-		<span class="self">Self</span>::increase_balance(id, beneficiary, amount, |details| -&gt; DispatchResult {
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(check_issuer) = maybe_check_issuer {
-				<span class="macro">ensure!</span>(check_issuer == details.issuer, Error::&lt;T, I&gt;::NoPermission);
-			}
-			<span class="macro">debug_assert!</span>(
-				T::Balance::max_value() - details.supply &gt;= amount,
-				<span class="string">&quot;checked in prep; qed&quot;
-			</span>);
-			details.supply = details.supply.saturating_add(amount);
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::Issued {
-			asset_id: id,
-			owner: beneficiary.clone(),
-			total_supply: amount,
-		});
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Increases the asset `id` balance of `beneficiary` by `amount`.
-	///
-	/// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_mint` if you need
-	/// that. This is not intended to be used alone.
-	///
-	/// Will return an error or will increase the amount by exactly `amount`.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>increase_balance(
-		id: T::AssetId,
-		beneficiary: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		check: <span class="kw">impl </span>FnOnce(
-			<span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
-		) -&gt; DispatchResult,
-	) -&gt; DispatchResult {
-		<span class="kw">if </span>amount.is_zero() {
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="self">Self</span>::can_increase(id, beneficiary, amount, <span class="bool-val">true</span>).into_result()<span class="question-mark">?</span>;
-		Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
-			<span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-
-			check(details)<span class="question-mark">?</span>;
-
-			Account::&lt;T, I&gt;::try_mutate(id, beneficiary, |maybe_account| -&gt; DispatchResult {
-				<span class="kw">match </span>maybe_account {
-					<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>account) =&gt; {
-						account.balance.saturating_accrue(amount);
-					},
-					maybe_account @ <span class="prelude-val">None </span>=&gt; {
-						<span class="comment">// Note this should never fail as it&#39;s already checked by `can_increase`.
-						</span><span class="macro">ensure!</span>(amount &gt;= details.min_balance, TokenError::BelowMinimum);
-						<span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
-							balance: amount,
-							reserved: Zero::zero(),
-							reason: <span class="self">Self</span>::new_account(beneficiary, details, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-							is_frozen: <span class="bool-val">false</span>,
-							extra: T::Extra::default(),
-						});
-					},
-				}
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Reduces asset `id` balance of `target` by `amount`. Flags `f` can be given to alter whether
-	/// it attempts a `best_effort` or makes sure to `keep_alive` the account.
-	///
-	/// This alters the registered supply of the asset and emits an event.
-	///
-	/// Will return an error and do nothing or will decrease the amount and return the amount
-	/// reduced by.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_burn(
-		id: T::AssetId,
-		target: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-		f: DebitFlags,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
-		<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(
-			d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
-			Error::&lt;T, I&gt;::AssetNotLive
-		);
-
-		<span class="kw">let </span>actual = <span class="self">Self</span>::decrease_balance(id, target, amount, f, |actual, details| {
-			<span class="comment">// Check admin rights.
-			</span><span class="kw">if let </span><span class="prelude-val">Some</span>(check_admin) = maybe_check_admin {
-				<span class="macro">ensure!</span>(check_admin == details.admin, Error::&lt;T, I&gt;::NoPermission);
-			}
-
-			<span class="macro">debug_assert!</span>(details.supply &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
-			details.supply = details.supply.saturating_sub(actual);
-
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::Burned { asset_id: id, owner: target.clone(), balance: actual });
-		<span class="prelude-val">Ok</span>(actual)
-	}
-
-	<span class="doccomment">/// Reduces asset `id` balance of `target` by `amount`. Flags `f` can be given to alter whether
-	/// it attempts a `best_effort` or makes sure to `keep_alive` the account.
-	///
-	/// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_burn` if you need
-	/// that. This is not intended to be used alone.
-	///
-	/// Will return an error and do nothing or will decrease the amount and return the amount
-	/// reduced by.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>decrease_balance(
-		id: T::AssetId,
-		target: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		f: DebitFlags,
-		check: <span class="kw">impl </span>FnOnce(
-			T::Balance,
-			<span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
-		) -&gt; DispatchResult,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
-		<span class="kw">if </span>amount.is_zero() {
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(amount)
-		}
-
-		<span class="kw">let </span>actual = <span class="self">Self</span>::prep_debit(id, target, amount, f)<span class="question-mark">?</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>target_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
-
-		Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
-			<span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-
-			check(actual, details)<span class="question-mark">?</span>;
-
-			Account::&lt;T, I&gt;::try_mutate(id, target, |maybe_account| -&gt; DispatchResult {
-				<span class="kw">let </span><span class="kw-2">mut </span>account = maybe_account.take().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
-				<span class="macro">debug_assert!</span>(account.balance &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
-
-				<span class="comment">// Make the debit.
-				</span>account.balance = account.balance.saturating_sub(actual);
-				<span class="kw">if </span>account.balance &lt; details.min_balance {
-					<span class="macro">debug_assert!</span>(account.balance.is_zero(), <span class="string">&quot;checked in prep; qed&quot;</span>);
-					target_died = <span class="prelude-val">Some</span>(<span class="self">Self</span>::dead_account(target, details, <span class="kw-2">&amp;</span>account.reason, <span class="bool-val">false</span>));
-					<span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = target_died {
-						<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-					}
-				};
-				<span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(account);
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-
-		<span class="comment">// Execute hook outside of `mutate`.
-		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = target_died {
-			T::Freezer::died(id, target);
-		}
-		<span class="prelude-val">Ok</span>(actual)
-	}
-
-	<span class="doccomment">/// Reduces the asset `id` balance of `source` by some `amount` and increases the balance of
-	/// `dest` by (similar) amount.
-	///
-	/// Returns the actual amount placed into `dest`. Exact semantics are determined by the flags
-	/// `f`.
-	///
-	/// Will fail if the amount transferred is so small that it cannot create the destination due
-	/// to minimum balance requirements.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_transfer(
-		id: T::AssetId,
-		source: <span class="kw-2">&amp;</span>T::AccountId,
-		dest: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		maybe_need_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-		f: TransferFlags,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
-		<span class="kw">let </span>(balance, died) =
-			<span class="self">Self</span>::transfer_and_die(id, source, dest, amount, maybe_need_admin, f)<span class="question-mark">?</span>;
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = died {
-			T::Freezer::died(id, source);
-		}
-		<span class="prelude-val">Ok</span>(balance)
-	}
-
-	<span class="doccomment">/// Same as `do_transfer` but it does not execute the `FrozenBalance::died` hook and
-	/// instead returns whether and how the `source` account died in this operation.
-	</span><span class="kw">fn </span>transfer_and_die(
-		id: T::AssetId,
-		source: <span class="kw-2">&amp;</span>T::AccountId,
-		dest: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		maybe_need_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-		f: TransferFlags,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;(T::Balance, <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt;), DispatchError&gt; {
-		<span class="comment">// Early exit if no-op.
-		</span><span class="kw">if </span>amount.is_zero() {
-			<span class="kw">return </span><span class="prelude-val">Ok</span>((amount, <span class="prelude-val">None</span>))
-		}
-
-		<span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-
-		<span class="comment">// Figure out the debit and credit, together with side-effects.
-		</span><span class="kw">let </span>debit = <span class="self">Self</span>::prep_debit(id, source, amount, f.into())<span class="question-mark">?</span>;
-		<span class="kw">let </span>(credit, maybe_burn) = <span class="self">Self</span>::prep_credit(id, dest, amount, debit, f.burn_dust)<span class="question-mark">?</span>;
-
-		<span class="kw">let </span><span class="kw-2">mut </span>source_account =
-			Account::&lt;T, I&gt;::get(id, <span class="kw-2">&amp;</span>source).ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>source_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
-
-		Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
-			<span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-
-			<span class="comment">// Check admin rights.
-			</span><span class="kw">if let </span><span class="prelude-val">Some</span>(need_admin) = maybe_need_admin {
-				<span class="macro">ensure!</span>(need_admin == details.admin, Error::&lt;T, I&gt;::NoPermission);
-			}
-
-			<span class="comment">// Skip if source == dest
-			</span><span class="kw">if </span>source == dest {
-				<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-			}
-
-			<span class="comment">// Burn any dust if needed.
-			</span><span class="kw">if let </span><span class="prelude-val">Some</span>(burn) = maybe_burn {
-				<span class="comment">// Debit dust from supply; this will not saturate since it&#39;s already checked in
-				// prep.
-				</span><span class="macro">debug_assert!</span>(details.supply &gt;= burn, <span class="string">&quot;checked in prep; qed&quot;</span>);
-				details.supply = details.supply.saturating_sub(burn);
-			}
-
-			<span class="comment">// Debit balance from source; this will not saturate since it&#39;s already checked in prep.
-			</span><span class="macro">debug_assert!</span>(source_account.balance &gt;= debit, <span class="string">&quot;checked in prep; qed&quot;</span>);
-			source_account.balance = source_account.balance.saturating_sub(debit);
-
-			Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>dest, |maybe_account| -&gt; DispatchResult {
-				<span class="kw">match </span>maybe_account {
-					<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>account) =&gt; {
-						<span class="comment">// Calculate new balance; this will not saturate since it&#39;s already checked
-						// in prep.
-						</span><span class="macro">debug_assert!</span>(
-							account.balance.checked_add(<span class="kw-2">&amp;</span>credit).is_some(),
-							<span class="string">&quot;checked in prep; qed&quot;
-						</span>);
-						account.balance.saturating_accrue(credit);
-					},
-					maybe_account @ <span class="prelude-val">None </span>=&gt; {
-						<span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
-							balance: credit,
-							reserved: Zero::zero(),
-							is_frozen: <span class="bool-val">false</span>,
-							reason: <span class="self">Self</span>::new_account(dest, details, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-							extra: T::Extra::default(),
-						});
-					},
-				}
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-
-			<span class="comment">// Remove source account if it&#39;s now dead.
-			</span><span class="kw">if </span>source_account.balance &lt; details.min_balance {
-				<span class="macro">debug_assert!</span>(source_account.balance.is_zero(), <span class="string">&quot;checked in prep; qed&quot;</span>);
-				source_died =
-					<span class="prelude-val">Some</span>(<span class="self">Self</span>::dead_account(source, details, <span class="kw-2">&amp;</span>source_account.reason, <span class="bool-val">false</span>));
-				<span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = source_died {
-					Account::&lt;T, I&gt;::remove(id, <span class="kw-2">&amp;</span>source);
-					<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-				}
-			}
-			Account::&lt;T, I&gt;::insert(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>source_account);
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-
-		<span class="self">Self</span>::deposit_event(Event::Transferred {
-			asset_id: id,
-			from: source.clone(),
-			to: dest.clone(),
-			amount: credit,
-		});
-		<span class="prelude-val">Ok</span>((credit, source_died))
-	}
-
-	<span class="doccomment">/// Create a new asset without taking a deposit.
-	///
-	/// * `id`: The `AssetId` you want the new asset to have. Must not already be in use.
-	/// * `owner`: The owner, issuer, admin, and freezer of this asset upon creation.
-	/// * `is_sufficient`: Whether this asset needs users to have an existential deposit to hold
-	///   this asset.
-	/// * `min_balance`: The minimum balance a user is allowed to have of this asset before they are
-	///   considered dust and cleaned up.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_force_create(
-		id: T::AssetId,
-		owner: T::AccountId,
-		is_sufficient: bool,
-		min_balance: T::Balance,
-	) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(!Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::InUse);
-		<span class="macro">ensure!</span>(!min_balance.is_zero(), Error::&lt;T, I&gt;::MinBalanceZero);
-
-		Asset::&lt;T, I&gt;::insert(
-			id,
-			AssetDetails {
-				owner: owner.clone(),
-				issuer: owner.clone(),
-				admin: owner.clone(),
-				freezer: owner.clone(),
-				supply: Zero::zero(),
-				reserved: Zero::zero(),
-				deposit: Zero::zero(),
-				min_balance,
-				is_sufficient,
-				accounts: <span class="number">0</span>,
-				sufficients: <span class="number">0</span>,
-				approvals: <span class="number">0</span>,
-				is_frozen: <span class="bool-val">false</span>,
-				status: AssetStatus::Live,
-			},
-		);
-		<span class="self">Self</span>::deposit_event(Event::ForceCreated { asset_id: id, owner: owner.clone() });
-		T::CallbackHandle::created(<span class="kw-2">&amp;</span>id, <span class="kw-2">&amp;</span>owner);
-		<span class="prelude-val">Ok</span>(())
-	}
-
-
-	<span class="doccomment">/// Start the process of destroying an asset, by setting the asset status to `Destroying`, and
-	/// emitting the `DestructionStarted` event.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_start_destroy(
-		id: T::AssetId,
-		maybe_check_owner: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-	) -&gt; DispatchResult {
-		Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
-			<span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(check_owner) = maybe_check_owner {
-				<span class="macro">ensure!</span>(details.owner == check_owner, Error::&lt;T, I&gt;::NoPermission);
-			}
-			details.status = AssetStatus::Destroying;
-
-			<span class="self">Self</span>::deposit_event(Event::DestructionStarted { asset_id: id });
-			<span class="prelude-val">Ok</span>(())
-		})
-	}
-
-
-	<span class="doccomment">/// Destroy accounts associated with a given asset up to the max (T::RemoveItemsLimit).
-	///
-	/// Each call emits the `Event::DestroyedAccounts` event.
-	/// Returns the number of destroyed accounts.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_destroy_accounts(
-		id: T::AssetId,
-		max_items: u32,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;u32, DispatchError&gt; {
-		<span class="kw">let </span><span class="kw-2">mut </span>dead_accounts: Vec&lt;T::AccountId&gt; = <span class="macro">vec!</span>[];
-		<span class="kw">let </span><span class="kw-2">mut </span>remaining_accounts = <span class="number">0</span>;
-		<span class="kw">let _ </span>=
-			Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
-				<span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="comment">// Should only destroy accounts while the asset is in a destroying state
-				</span><span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
-
-				<span class="kw">for </span>(who, v) <span class="kw">in </span>Account::&lt;T, I&gt;::drain_prefix(id) {
-					<span class="kw">let _ </span>= <span class="self">Self</span>::dead_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="kw-2">&amp;</span>v.reason, <span class="bool-val">true</span>);
-					dead_accounts.push(who);
-					<span class="kw">if </span>dead_accounts.len() &gt;= (max_items <span class="kw">as </span>usize) {
-						<span class="kw">break
-					</span>}
-				}
-				remaining_accounts = details.accounts;
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>who <span class="kw">in </span><span class="kw-2">&amp;</span>dead_accounts {
-			T::Freezer::died(id, <span class="kw-2">&amp;</span>who);
-		}
-
-		<span class="self">Self</span>::deposit_event(Event::AccountsDestroyed {
-			asset_id: id,
-			accounts_destroyed: dead_accounts.len() <span class="kw">as </span>u32,
-			accounts_remaining: remaining_accounts <span class="kw">as </span>u32,
-		});
-		<span class="prelude-val">Ok</span>(dead_accounts.len() <span class="kw">as </span>u32)
-	}
-
-
-	<span class="doccomment">/// Destroy approvals associated with a given asset up to the max (T::RemoveItemsLimit).
-	///
-	/// Each call emits the `Event::DestroyedApprovals` event
-	/// Returns the number of destroyed approvals.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_destroy_approvals(
-		id: T::AssetId,
-		max_items: u32,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;u32, DispatchError&gt; {
-		<span class="kw">let </span><span class="kw-2">mut </span>removed_approvals = <span class="number">0</span>;
-		<span class="kw">let _ </span>=
-			Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
-				<span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-
-				<span class="comment">// Should only destroy accounts while the asset is in a destroying state.
-				</span><span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
-
-				<span class="kw">for </span>((owner, <span class="kw">_</span>), approval) <span class="kw">in </span>Approvals::&lt;T, I&gt;::drain_prefix((id,)) {
-					T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
-					removed_approvals = removed_approvals.saturating_add(<span class="number">1</span>);
-					details.approvals = details.approvals.saturating_sub(<span class="number">1</span>);
-					<span class="kw">if </span>removed_approvals &gt;= max_items {
-						<span class="kw">break
-					</span>}
-				}
-				<span class="self">Self</span>::deposit_event(Event::ApprovalsDestroyed {
-					asset_id: id,
-					approvals_destroyed: removed_approvals <span class="kw">as </span>u32,
-					approvals_remaining: details.approvals <span class="kw">as </span>u32,
-				});
-				T::CallbackHandle::destroyed(<span class="kw-2">&amp;</span>id);
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(removed_approvals)
-	}
-
-
-	<span class="doccomment">/// Complete destroying an asset and unreserve the deposit.
-	///
-	/// On success, the `Event::Destroyed` event is emitted.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_finish_destroy(id: T::AssetId) -&gt; DispatchResult {
-		Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
-			<span class="kw">let </span>details = maybe_details.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
-			<span class="macro">ensure!</span>(details.accounts == <span class="number">0</span>, Error::&lt;T, I&gt;::InUse);
-			<span class="macro">ensure!</span>(details.approvals == <span class="number">0</span>, Error::&lt;T, I&gt;::InUse);
-
-			<span class="kw">let </span>metadata = Metadata::&lt;T, I&gt;::take(<span class="kw-2">&amp;</span>id);
-			T::Currency::unreserve(
-				<span class="kw-2">&amp;</span>details.owner,
-				details.deposit.saturating_add(metadata.deposit),
-			);
-			<span class="self">Self</span>::deposit_event(Event::Destroyed { asset_id: id });
-
-			<span class="prelude-val">Ok</span>(())
-		})
-	}
-
-	<span class="doccomment">/// Destroy an existing asset.
-	///
-	/// * `id`: The asset you want to destroy.
-	/// * `witness`: Witness data needed about the current state of the asset, used to confirm
-	///   complexity of the operation.
-	/// * `maybe_check_owner`: An optional check before destroying the asset, if the provided
-	///   account is the owner of that asset. Can be used for authorization checks.
-</span><span class="comment">/* 	pub(super) fn do_destroy(
-		id: T::AssetId,
-		witness: DestroyWitness,
-		maybe_check_owner: Option&lt;T::AccountId&gt;,
-	) -&gt; Result&lt;DestroyWitness, DispatchError&gt; {
-		let mut dead_accounts: Vec&lt;T::AccountId&gt; = vec![];
-
-		let result_witness: DestroyWitness = Asset::&lt;T, I&gt;::try_mutate_exists(
-			id,
-			|maybe_details| -&gt; Result&lt;DestroyWitness, DispatchError&gt; {
-				let mut details = maybe_details.take().ok_or(Error::&lt;T, I&gt;::UnknownAsset)?;
-				if let Some(check_owner) = maybe_check_owner {
-					ensure!(details.owner == check_owner, Error::&lt;T, I&gt;::NoPermission);
-				}
-				ensure!(details.accounts &lt;= witness.accounts, Error::&lt;T, I&gt;::BadWitness);
-				ensure!(details.sufficients &lt;= witness.sufficients, Error::&lt;T, I&gt;::BadWitness);
-				ensure!(details.approvals &lt;= witness.approvals, Error::&lt;T, I&gt;::BadWitness);
-
-				for (who, v) in Account::&lt;T, I&gt;::drain_prefix(id) {
-					// We have to force this as it&#39;s destroying the entire asset class.
-					// This could mean that some accounts now have irreversibly reserved
-					// funds.
-					let _ = Self::dead_account(&amp;who, &amp;mut details, &amp;v.reason, true);
-					dead_accounts.push(who);
-				}
-				debug_assert_eq!(details.accounts, 0);
-				debug_assert_eq!(details.sufficients, 0);
-
-				let metadata = Metadata::&lt;T, I&gt;::take(&amp;id);
-				T::Currency::unreserve(
-					&amp;details.owner,
-					details.deposit.saturating_add(metadata.deposit),
-				);
-
-				for ((owner, _), approval) in Approvals::&lt;T, I&gt;::drain_prefix((&amp;id,)) {
-					T::Currency::unreserve(&amp;owner, approval.deposit);
-				}
-				Self::deposit_event(Event::Destroyed { asset_id: id });
-
-				Ok(DestroyWitness {
-					accounts: details.accounts,
-					sufficients: details.sufficients,
-					approvals: details.approvals,
-				})
-			},
-		)?;
-
-		// Execute hooks outside of `mutate`.
-		for who in dead_accounts {
-			T::Freezer::died(id, &amp;who);
-		}
-		Ok(result_witness)
-	} */
-
-	</span><span class="doccomment">/// Creates an approval from `owner` to spend `amount` of asset `id` tokens by &#39;delegate&#39;
-	/// while reserving `T::ApprovalDeposit` from owner
-	///
-	/// If an approval already exists, the new amount is added to such existing approval
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_approve_transfer(
-		id: T::AssetId,
-		owner: <span class="kw-2">&amp;</span>T::AccountId,
-		delegate: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-		Approvals::&lt;T, I&gt;::try_mutate(
-			(id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate),
-			|maybe_approved| -&gt; DispatchResult {
-				<span class="kw">let </span><span class="kw-2">mut </span>approved = <span class="kw">match </span>maybe_approved.take() {
-					<span class="comment">// an approval already exists and is being updated
-					</span><span class="prelude-val">Some</span>(a) =&gt; a,
-					<span class="comment">// a new approval is created
-					</span><span class="prelude-val">None </span>=&gt; {
-						d.approvals.saturating_inc();
-						Default::default()
-					},
-				};
-				<span class="kw">let </span>deposit_required = T::ApprovalDeposit::get();
-				<span class="kw">if </span>approved.deposit &lt; deposit_required {
-					T::Currency::reserve(owner, deposit_required - approved.deposit)<span class="question-mark">?</span>;
-					approved.deposit = deposit_required;
-				}
-				approved.amount = approved.amount.saturating_add(amount);
-				<span class="kw-2">*</span>maybe_approved = <span class="prelude-val">Some</span>(approved);
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		Asset::&lt;T, I&gt;::insert(id, d);
-		<span class="self">Self</span>::deposit_event(Event::ApprovedTransfer {
-			asset_id: id,
-			source: owner.clone(),
-			delegate: delegate.clone(),
-			amount,
-		});
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Reduces the asset `id` balance of `owner` by some `amount` and increases the balance of
-	/// `dest` by (similar) amount, checking that &#39;delegate&#39; has an existing approval from `owner`
-	/// to spend`amount`.
-	///
-	/// Will fail if `amount` is greater than the approval from `owner` to &#39;delegate&#39;
-	/// Will unreserve the deposit from `owner` if the entire approved `amount` is spent by
-	/// &#39;delegate&#39;
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_transfer_approved(
-		id: T::AssetId,
-		owner: <span class="kw-2">&amp;</span>T::AccountId,
-		delegate: <span class="kw-2">&amp;</span>T::AccountId,
-		destination: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span><span class="kw-2">mut </span>owner_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
-
-		<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-
-		Approvals::&lt;T, I&gt;::try_mutate_exists(
-			(id, <span class="kw-2">&amp;</span>owner, delegate),
-			|maybe_approved| -&gt; DispatchResult {
-				<span class="kw">let </span><span class="kw-2">mut </span>approved = maybe_approved.take().ok_or(Error::&lt;T, I&gt;::Unapproved)<span class="question-mark">?</span>;
-				<span class="kw">let </span>remaining =
-					approved.amount.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(Error::&lt;T, I&gt;::Unapproved)<span class="question-mark">?</span>;
-
-				<span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
-				owner_died = <span class="self">Self</span>::transfer_and_die(id, owner, destination, amount, <span class="prelude-val">None</span>, f)<span class="question-mark">?</span>.<span class="number">1</span>;
-
-				<span class="kw">if </span>remaining.is_zero() {
-					T::Currency::unreserve(owner, approved.deposit);
-					Asset::&lt;T, I&gt;::mutate(id, |maybe_details| {
-						<span class="kw">if let </span><span class="prelude-val">Some</span>(details) = maybe_details {
-							details.approvals.saturating_dec();
-						}
-					});
-				} <span class="kw">else </span>{
-					approved.amount = remaining;
-					<span class="kw-2">*</span>maybe_approved = <span class="prelude-val">Some</span>(approved);
-				}
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-
-		<span class="comment">// Execute hook outside of `mutate`.
-		</span><span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = owner_died {
-			T::Freezer::died(id, owner);
-		}
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Do set metadata
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_set_metadata(
-		id: T::AssetId,
-		from: <span class="kw-2">&amp;</span>T::AccountId,
-		name: Vec&lt;u8&gt;,
-		symbol: Vec&lt;u8&gt;,
-		decimals: u8,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
-			name.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
-		<span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
-			symbol.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
-
-		<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-		<span class="macro">ensure!</span>(from == <span class="kw-2">&amp;</span>d.owner, Error::&lt;T, I&gt;::NoPermission);
-
-		Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
-			<span class="macro">ensure!</span>(metadata.as_ref().map_or(<span class="bool-val">true</span>, |m| !m.is_frozen), Error::&lt;T, I&gt;::NoPermission);
-
-			<span class="kw">let </span>old_deposit = metadata.take().map_or(Zero::zero(), |m| m.deposit);
-			<span class="kw">let </span>new_deposit = T::MetadataDepositPerByte::get()
-				.saturating_mul(((name.len() + symbol.len()) <span class="kw">as </span>u32).into())
-				.saturating_add(T::MetadataDepositBase::get());
-
-			<span class="kw">if </span>new_deposit &gt; old_deposit {
-				T::Currency::reserve(from, new_deposit - old_deposit)<span class="question-mark">?</span>;
-			} <span class="kw">else </span>{
-				T::Currency::unreserve(from, old_deposit - new_deposit);
-			}
-
-			<span class="kw-2">*</span>metadata = <span class="prelude-val">Some</span>(AssetMetadata {
-				deposit: new_deposit,
-				name: bounded_name,
-				symbol: bounded_symbol,
-				decimals,
-				is_frozen: <span class="bool-val">false</span>,
-			});
-
-			<span class="self">Self</span>::deposit_event(Event::MetadataSet {
-				asset_id: id,
-				name,
-				symbol,
-				decimals,
-				is_frozen: <span class="bool-val">false</span>,
-			});
-			<span class="prelude-val">Ok</span>(())
-		})
-	}
-
-	<span class="kw">pub fn </span>reserved_balance_named(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: <span class="kw-2">&amp;</span>T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId) -&gt; T::Balance {
-		<span class="kw">let </span>reserves = <span class="self">Self</span>::reserves(asset_id, who);
-		reserves
-			.binary_search_by_key(id, |data| data.id)
-			.map(|index| reserves[index].amount)
-			.unwrap_or_default()
-	}
-
-	<span class="kw">pub fn </span>has_named_reserve(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: <span class="kw-2">&amp;</span>T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId) -&gt; bool {
-		<span class="kw">let </span>reserves = <span class="self">Self</span>::reserves(asset_id, who);
-		reserves
-			.binary_search_by_key(id, |data| data.id).is_ok()
-	}
-
-	<span class="doccomment">/// Move `value` from the free balance from `who` to a named reserve balance.
-	///
-	/// Is a no-op if value to be reserved is zero.
-	</span><span class="kw">pub fn </span>reserve_named(
-		id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
-		asset_id: T::AssetId,
-		who: <span class="kw-2">&amp;</span>T::AccountId,
-		amount: T::Balance,
-		maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;
-	) -&gt; DispatchResult {
-		<span class="kw">if </span>amount.is_zero() {
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-		}
-		<span class="self">Self</span>::prep_debit(asset_id, who, amount, DebitFlags{ best_effort: <span class="bool-val">false</span>, keep_alive: <span class="bool-val">true</span>})<span class="question-mark">?</span>;
-		Asset::&lt;T, I&gt;::try_mutate(asset_id, |maybe_details|-&gt;DispatchResult {
-			<span class="kw">let </span>asset = maybe_details.as_mut().ok_or(Error::&lt;T,I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-			<span class="kw">if </span>amount &lt; asset.min_balance {
-				<span class="kw">return </span><span class="prelude-val">Err</span>(TokenError::BelowMinimum.into());
-			}
-			<span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
-				<span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T,I&gt;::NoPermission);
-			}
-			asset.reserved = asset.reserved.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-			Account::&lt;T,I&gt;::try_mutate(asset_id, who, |maybe_account|-&gt;DispatchResult {
-				<span class="kw">let </span>account = maybe_account.as_mut().ok_or(Error::&lt;T,I&gt;::NoAccount)<span class="question-mark">?</span>;
-				account.balance = account.balance.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(Error::&lt;T,I&gt;::BalanceLow)<span class="question-mark">?</span>;
-				account.reserved = account.reserved.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-				Reserves::&lt;T, I&gt;::try_mutate(asset_id, who, |reserves| -&gt; DispatchResult {
-					<span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id) {
-						<span class="prelude-val">Ok</span>(<span class="kw">_</span>)=&gt; {
-							<span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T,I&gt;::ReserveAlreadyExists.into());
-						},
-						<span class="prelude-val">Err</span>(index) =&gt; {
-							reserves
-								.try_insert(index, ReserveData { id: <span class="kw-2">*</span>id, amount: amount })
-								.map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::TooManyReserves)<span class="question-mark">?</span>;
-						},
-					};
-					<span class="prelude-val">Ok</span>(())
-				})
-			})
-		})<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::&lt;T,I&gt;::Reserved { reserve_id: id.clone(), asset_id, who: who.clone(), amount: amount });
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>unreserve_named(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;)-&gt;DispatchResult{
-		<span class="kw">let </span>amount = <span class="self">Self</span>::remove_named_reserve(id, asset_id, who, <span class="bool-val">false</span>, maybe_check_admin)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::&lt;T,I&gt;::Unreserved{reserve_id: id.clone(), asset_id, who: who.clone(), amount });
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>burn_named_reserve(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;)-&gt;DispatchResult{
-		<span class="kw">let </span>amount = <span class="self">Self</span>::remove_named_reserve(id, asset_id, who, <span class="bool-val">true</span>, maybe_check_admin)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::&lt;T,I&gt;::BurnedReserve{reserve_id: id.clone(), asset_id, who: who.clone(), amount });
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">fn </span>remove_named_reserve(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, burn: bool, maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;)-&gt;<span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt;{
-		<span class="kw">let </span><span class="kw-2">mut </span>amount = Zero::zero();
-		Reserves::&lt;T,I&gt;::try_mutate_exists(asset_id, who, |maybe_reserves| -&gt; DispatchResult {
-			<span class="kw">let </span>reserves = maybe_reserves.as_mut().ok_or(Error::&lt;T,I&gt;::UnknownReserve)<span class="question-mark">?</span>;
-			<span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id){
-				<span class="prelude-val">Ok</span>(index) =&gt;{
-					amount = reserves[index].amount;
-					Asset::&lt;T,I&gt;::try_mutate(asset_id, |maybe_asset|-&gt;DispatchResult {
-						<span class="kw">let </span>asset = maybe_asset.as_mut().ok_or(Error::&lt;T,I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-						<span class="macro">ensure!</span>(!asset.is_frozen, Error::&lt;T, I&gt;::Frozen);
-						<span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
-							<span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T,I&gt;::NoPermission);
-						}
-						asset.reserved = asset.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
-						<span class="kw">if </span>burn {
-							asset.supply = asset.supply.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
-						}
-						Account::&lt;T,I&gt;::try_mutate(asset_id, who, |maybe_account|-&gt;DispatchResult{
-							<span class="kw">let </span>account = maybe_account.as_mut().ok_or(Error::&lt;T,I&gt;::NoAccount)<span class="question-mark">?</span>;
-							<span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
-							<span class="kw">if </span>!burn {
-								account.balance = account.balance.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-							}
-							account.reserved = account.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
-							<span class="prelude-val">Ok</span>(())
-						})
-					})<span class="question-mark">?</span>;
-					reserves.remove(index);
-				},
-				<span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T,I&gt;::UnknownReserve.into()),
-			};
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(amount)
-	}
-
-	<span class="kw">pub fn </span>transfer_named_reserve(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, from: <span class="kw-2">&amp;</span>T::AccountId, to: <span class="kw-2">&amp;</span>T::AccountId, maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;)-&gt;DispatchResult{
-		<span class="kw">let </span><span class="kw-2">mut </span>amount = Zero::zero();
-		Reserves::&lt;T,I&gt;::try_mutate_exists(asset_id, from, |maybe_reserves| -&gt; DispatchResult {
-			<span class="kw">let </span>reserves = maybe_reserves.as_mut().ok_or(Error::&lt;T,I&gt;::UnknownReserve)<span class="question-mark">?</span>;
-			<span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id){
-				<span class="prelude-val">Ok</span>(index) =&gt;{
-					amount = reserves[index].amount;
-					<span class="self">Self</span>::prep_credit(asset_id, to, amount, amount, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-					Asset::&lt;T,I&gt;::try_mutate(asset_id, |maybe_asset|-&gt;DispatchResult {
-						<span class="kw">let </span>asset = maybe_asset.as_mut().ok_or(Error::&lt;T,I&gt;::UnknownAsset)<span class="question-mark">?</span>;
-						<span class="macro">ensure!</span>(!asset.is_frozen, Error::&lt;T, I&gt;::Frozen);
-						<span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
-							<span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T,I&gt;::NoPermission);
-						}
-						asset.reserved = asset.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
-						Account::&lt;T,I&gt;::try_mutate(asset_id, from, |maybe_from_account|-&gt;DispatchResult{
-							<span class="kw">let </span>from_account = maybe_from_account.as_mut().ok_or(Error::&lt;T,I&gt;::NoAccount)<span class="question-mark">?</span>;
-							<span class="macro">ensure!</span>(!from_account.is_frozen, Error::&lt;T, I&gt;::Frozen);
-							from_account.reserved = from_account.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
-							Account::&lt;T,I&gt;::try_mutate(asset_id, to, |maybe_to_account|-&gt;DispatchResult {
-								<span class="kw">match </span>maybe_to_account {
-									<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>to_account) =&gt; {
-										to_account.balance = to_account.balance.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
-									},
-									maybe_account @<span class="prelude-val">None </span>=&gt; {
-										<span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
-											balance: amount,
-											reserved: Zero::zero(),
-											is_frozen: <span class="bool-val">false</span>,
-											reason: <span class="self">Self</span>::new_account(to, asset, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-											extra: T::Extra::default(),
-										});
-									},
-								};
-								<span class="prelude-val">Ok</span>(())
-							})
-						})
-					})<span class="question-mark">?</span>;
-					reserves.remove(index);
-				},
-				<span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T,I&gt;::UnknownReserve.into()),
-			};
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::&lt;T,I&gt;::TransferredReserve { reserve_id: id.clone(), asset_id, from: from.clone(), to: to.clone(), amount });
-		<span class="prelude-val">Ok</span>(())
-	}
-
-
-	<span class="kw">pub </span>(<span class="kw">super</span>) <span class="kw">fn </span>do_reserve_named(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, amount: T::Balance, admin: T::AccountId) -&gt;DispatchResult{
-		<span class="self">Self</span>::reserve_named(id, asset_id, who, amount, <span class="prelude-val">Some</span>(admin))
-	}
-
-	<span class="kw">pub </span>(<span class="kw">super</span>) <span class="kw">fn </span>do_unreserve_named(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, admin: T::AccountId) -&gt;DispatchResult{
-		<span class="self">Self</span>::unreserve_named(id, asset_id, who, <span class="prelude-val">Some</span>(admin))
-	}
-
-	<span class="kw">pub </span>(<span class="kw">super</span>) <span class="kw">fn </span>do_burn_named_reserve(id: <span class="kw-2">&amp;</span>T::ReserveIdentifier, asset_id: T::AssetId, who: <span class="kw-2">&amp;</span>T::AccountId, admin: T::AccountId) -&gt;DispatchResult{
-		<span class="self">Self</span>::burn_named_reserve(id, asset_id, who, <span class="prelude-val">Some</span>(admin))
-	}
-  }</code></pre></div>
+  <span class="comment">// Public immutables
+
+  </span><span class="doccomment">/// Return the extra &quot;sid-car&quot; data for `id`/`who`, or `None` if the account doesn&#39;t exist.
+  </span><span class="kw">pub fn </span>adjust_extra(
+    id: T::AssetId,
+    who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
+  ) -&gt; <span class="prelude-ty">Option</span>&lt;ExtraMutator&lt;T, I&gt;&gt; {
+    ExtraMutator::maybe_new(id, who)
+  }
+
+  <span class="doccomment">/// Get the asset `id` balance of `who`, or zero if the asset-account doesn&#39;t exist.
+  </span><span class="kw">pub fn </span>balance(id: T::AssetId, who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;) -&gt; T::Balance {
+    <span class="self">Self</span>::maybe_balance(id, who).unwrap_or_default()
+  }
+
+  <span class="doccomment">/// Get the asset `id` balance of `who` if the asset-account exists.
+  </span><span class="kw">pub fn </span>maybe_balance(
+    id: T::AssetId,
+    who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
+  ) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
+    Account::&lt;T, I&gt;::get(id, who.borrow()).map(|a| a.balance)
+  }
+
+  <span class="doccomment">/// Get the asset `id` reserved balance of `who`, or zero if the asset-account doesn&#39;t exist.
+  </span><span class="kw">pub fn </span>reserved_balance(
+    id: T::AssetId,
+    who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
+  ) -&gt; T::Balance {
+    <span class="self">Self</span>::maybe_reserved_balance(id, who).unwrap_or_default()
+  }
+
+  <span class="doccomment">/// Get the asset `id` reserved balance of `who` if the asset-account exists.
+  </span><span class="kw">pub fn </span>maybe_reserved_balance(
+    id: T::AssetId,
+    who: <span class="kw">impl </span>sp_std::borrow::Borrow&lt;T::AccountId&gt;,
+  ) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
+    Account::&lt;T, I&gt;::get(id, who.borrow()).map(|a| a.reserved)
+  }
+
+  <span class="doccomment">/// Get the total supply of an asset `id`.
+  </span><span class="kw">pub fn </span>total_supply(id: T::AssetId) -&gt; T::Balance {
+    <span class="self">Self</span>::maybe_total_supply(id).unwrap_or_default()
+  }
+
+  <span class="doccomment">/// Get the total supply of an asset `id` if the asset exists.
+  </span><span class="kw">pub fn </span>maybe_total_supply(id: T::AssetId) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
+    Asset::&lt;T, I&gt;::get(id).map(|x| x.supply)
+  }
+
+  <span class="doccomment">/// Get the total reserved supply of an asset `id`.
+  </span><span class="kw">pub fn </span>total_reserved_supply(id: T::AssetId) -&gt; T::Balance {
+    <span class="self">Self</span>::maybe_total_reserved_supply(id).unwrap_or_default()
+  }
+
+  <span class="doccomment">/// Get the total reversed supply of an asset `id` if the asset exists.
+  </span><span class="kw">pub fn </span>maybe_total_reserved_supply(id: T::AssetId) -&gt; <span class="prelude-ty">Option</span>&lt;T::Balance&gt; {
+    Asset::&lt;T, I&gt;::get(id).map(|x| x.reserved)
+  }
+
+  <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new_account(
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    d: <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
+    maybe_deposit: <span class="prelude-ty">Option</span>&lt;DepositBalanceOf&lt;T, I&gt;&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;ExistenceReason&lt;DepositBalanceOf&lt;T, I&gt;&gt;, DispatchError&gt; {
+    <span class="kw">let </span>accounts = d.accounts.checked_add(<span class="number">1</span>).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+    <span class="kw">let </span>reason = <span class="kw">if let </span><span class="prelude-val">Some</span>(deposit) = maybe_deposit {
+      ExistenceReason::DepositHeld(deposit)
+    } <span class="kw">else if </span>d.is_sufficient {
+      frame_system::Pallet::&lt;T&gt;::inc_sufficients(who);
+      d.sufficients += <span class="number">1</span>;
+      ExistenceReason::Sufficient
+    } <span class="kw">else </span>{
+      frame_system::Pallet::&lt;T&gt;::inc_consumers(who).map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::NoProvider)<span class="question-mark">?</span>;
+      ExistenceReason::Consumer
+    };
+    d.accounts = accounts;
+    <span class="prelude-val">Ok</span>(reason)
+  }
+
+  <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>dead_account(
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    d: <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
+    reason: <span class="kw-2">&amp;</span>ExistenceReason&lt;DepositBalanceOf&lt;T, I&gt;&gt;,
+    force: bool,
+  ) -&gt; DeadConsequence {
+    <span class="kw">match </span><span class="kw-2">*</span>reason {
+      ExistenceReason::Consumer =&gt; frame_system::Pallet::&lt;T&gt;::dec_consumers(who),
+      ExistenceReason::Sufficient =&gt; {
+        d.sufficients = d.sufficients.saturating_sub(<span class="number">1</span>);
+        frame_system::Pallet::&lt;T&gt;::dec_sufficients(who);
+      },
+      ExistenceReason::DepositRefunded =&gt; {},
+      ExistenceReason::DepositHeld(<span class="kw">_</span>) <span class="kw">if </span>!force =&gt; <span class="kw">return </span>Keep,
+      ExistenceReason::DepositHeld(<span class="kw">_</span>) =&gt; {},
+    }
+    d.accounts = d.accounts.saturating_sub(<span class="number">1</span>);
+    Remove
+  }
+
+  <span class="doccomment">/// Returns `true` when the balance of `account` can be increased by `amount`.
+  ///
+  /// - `id`: The id of the asset that should be increased.
+  /// - `who`: The account of which the balance should be increased.
+  /// - `amount`: The amount by which the balance should be increased.
+  /// - `increase_supply`: Will the supply of the asset be increased by `amount` at the same time as
+  ///   crediting the `account`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>can_increase(
+    id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    increase_supply: bool,
+  ) -&gt; DepositConsequence {
+    <span class="kw">let </span>details = <span class="kw">match </span>Asset::&lt;T, I&gt;::get(id) {
+      <span class="prelude-val">Some</span>(details) =&gt; details,
+      <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>DepositConsequence::UnknownAsset,
+    };
+    <span class="kw">if </span>increase_supply &amp;&amp; details.supply.checked_add(<span class="kw-2">&amp;</span>amount).is_none() {
+      <span class="kw">return </span>DepositConsequence::Overflow;
+    }
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(balance) = <span class="self">Self</span>::maybe_balance(id, who) {
+      <span class="kw">if </span>balance.checked_add(<span class="kw-2">&amp;</span>amount).is_none() {
+        <span class="kw">return </span>DepositConsequence::Overflow;
+      }
+    } <span class="kw">else </span>{
+      <span class="kw">if </span>amount &lt; details.min_balance {
+        <span class="kw">return </span>DepositConsequence::BelowMinimum;
+      }
+      <span class="kw">if </span>!details.is_sufficient &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_inc_consumer(who) {
+        <span class="kw">return </span>DepositConsequence::CannotCreate;
+      }
+      <span class="kw">if </span>details.is_sufficient &amp;&amp; details.sufficients.checked_add(<span class="number">1</span>).is_none() {
+        <span class="kw">return </span>DepositConsequence::Overflow;
+      }
+    }
+
+    DepositConsequence::Success
+  }
+
+  <span class="doccomment">/// Return the consequence of a withdraw.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>can_decrease(
+    id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    keep_alive: bool,
+  ) -&gt; WithdrawConsequence&lt;T::Balance&gt; {
+    <span class="kw">use </span>WithdrawConsequence::<span class="kw-2">*</span>;
+    <span class="kw">let </span>details = <span class="kw">match </span>Asset::&lt;T, I&gt;::get(id) {
+      <span class="prelude-val">Some</span>(details) =&gt; details,
+      <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>UnknownAsset,
+    };
+    <span class="kw">if </span>details.supply.checked_sub(<span class="kw-2">&amp;</span>amount).is_none() {
+      <span class="kw">return </span>Underflow;
+    }
+    <span class="kw">if </span>details.is_frozen {
+      <span class="kw">return </span>Frozen;
+    }
+    <span class="kw">if </span>amount.is_zero() {
+      <span class="kw">return </span>Success;
+    }
+    <span class="kw">let </span>account = <span class="kw">match </span>Account::&lt;T, I&gt;::get(id, who) {
+      <span class="prelude-val">Some</span>(a) =&gt; a,
+      <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>NoFunds,
+    };
+    <span class="kw">if </span>account.is_frozen {
+      <span class="kw">return </span>Frozen;
+    }
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(rest) = account.balance.checked_sub(<span class="kw-2">&amp;</span>amount) {
+      <span class="kw">if let </span><span class="prelude-val">Some</span>(frozen) = T::Freezer::frozen_balance(id, who) {
+        <span class="kw">match </span>frozen.checked_add(<span class="kw-2">&amp;</span>details.min_balance) {
+          <span class="prelude-val">Some</span>(required) <span class="kw">if </span>rest &lt; required =&gt; <span class="kw">return </span>Frozen,
+          <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Overflow,
+          <span class="kw">_ </span>=&gt; {},
+        }
+      }
+
+      <span class="kw">let </span>is_provider = <span class="bool-val">false</span>;
+      <span class="kw">let </span>is_required = is_provider &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_dec_provider(who);
+      <span class="kw">let </span>has_reserved_balance = !account.reserved.is_zero();
+      <span class="kw">let </span>must_keep_alive = keep_alive || is_required || has_reserved_balance;
+
+      <span class="kw">if </span>rest &lt; details.min_balance {
+        <span class="kw">if </span>must_keep_alive {
+          WouldDie
+        } <span class="kw">else </span>{
+          ReducedToZero(rest)
+        }
+      } <span class="kw">else </span>{
+        Success
+      }
+    } <span class="kw">else </span>{
+      NoFunds
+    }
+  }
+
+  <span class="comment">// Maximum `amount` that can be passed into `can_withdraw` to result in a `WithdrawConsequence`
+  // of `Success`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>reducible_balance(
+    id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    keep_alive: bool,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(!details.is_frozen, Error::&lt;T, I&gt;::Frozen);
+
+    <span class="kw">let </span>account = Account::&lt;T, I&gt;::get(id, who).ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
+
+    <span class="kw">let </span>amount = <span class="kw">if let </span><span class="prelude-val">Some</span>(frozen) = T::Freezer::frozen_balance(id, who) {
+      <span class="comment">// Frozen balance: account CANNOT be deleted
+      </span><span class="kw">let </span>required = frozen.checked_add(<span class="kw-2">&amp;</span>details.min_balance).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+      account.balance.saturating_sub(required)
+    } <span class="kw">else </span>{
+      <span class="kw">let </span>is_provider = <span class="bool-val">false</span>;
+      <span class="kw">let </span>is_required = is_provider &amp;&amp; !frame_system::Pallet::&lt;T&gt;::can_dec_provider(who);
+      <span class="kw">if </span>keep_alive || is_required {
+        <span class="comment">// We want to keep the account around.
+        </span>account.balance.saturating_sub(details.min_balance)
+      } <span class="kw">else </span>{
+        <span class="comment">// Don&#39;t care if the account dies
+        </span>account.balance
+      }
+    };
+    <span class="prelude-val">Ok</span>(amount.min(details.supply))
+  }
+
+  <span class="doccomment">/// Make preparatory checks for debiting some funds from an account. Flags indicate requirements
+  /// of the debit.
+  ///
+  /// - `amount`: The amount desired to be debited. The actual amount returned for debit may be less
+  ///   (in the case of `best_effort` being `true`) or greater by up to the minimum balance less one.
+  /// - `keep_alive`: Require that `target` must stay alive.
+  /// - `respect_freezer`: Respect any freezes on the account or token (or not).
+  /// - `best_effort`: The debit amount may be less than `amount`.
+  ///
+  /// On success, the amount which should be debited (this will always be at least `amount` unless
+  /// `best_effort` is `true`) together with an optional value indicating the argument which must
+  /// be passed into the `melted` function of the `T::Freezer` if `Some`.
+  ///
+  /// If no valid debit can be made then return an `Err`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>prep_debit(
+    id: T::AssetId,
+    target: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    f: DebitFlags,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span>actual = <span class="self">Self</span>::reducible_balance(id, target, f.keep_alive)<span class="question-mark">?</span>.min(amount);
+    <span class="macro">ensure!</span>(f.best_effort || actual &gt;= amount, Error::&lt;T, I&gt;::BalanceLow);
+
+    <span class="kw">let </span>conseq = <span class="self">Self</span>::can_decrease(id, target, actual, f.keep_alive);
+    <span class="kw">let </span>actual = <span class="kw">match </span>conseq.into_result() {
+      <span class="prelude-val">Ok</span>(dust) =&gt; actual.saturating_add(dust), <span class="comment">//&lt; guaranteed by reducible_balance
+      </span><span class="prelude-val">Err</span>(e) =&gt; {
+        <span class="macro">debug_assert!</span>(<span class="bool-val">false</span>, <span class="string">&quot;passed from reducible_balance; qed&quot;</span>);
+        <span class="kw">return </span><span class="prelude-val">Err</span>(e);
+      },
+    };
+
+    <span class="prelude-val">Ok</span>(actual)
+  }
+
+  <span class="doccomment">/// Make preparatory checks for crediting some funds from an account. Flags indicate
+  /// requirements of the credit.
+  ///
+  /// - `amount`: The amount desired to be credited.
+  /// - `debit`: The amount by which some other account has been debited. If this is greater than
+  ///   `amount`, then the `burn_dust` parameter takes effect.
+  /// - `burn_dust`: Indicates that in the case of debit being greater than amount, the additional
+  ///   (dust) value should be burned, rather than credited.
+  ///
+  /// On success, the amount which should be credited (this will always be at least `amount`)
+  /// together with an optional value indicating the value which should be burned. The latter
+  /// will always be `None` as long as `burn_dust` is `false` or `debit` is no greater than
+  /// `amount`.
+  ///
+  /// If no valid credit can be made then return an `Err`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>prep_credit(
+    id: T::AssetId,
+    dest: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    debit: T::Balance,
+    burn_dust: bool,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;(T::Balance, <span class="prelude-ty">Option</span>&lt;T::Balance&gt;), DispatchError&gt; {
+    <span class="kw">let </span>(credit, maybe_burn) = <span class="kw">match </span>(burn_dust, debit.checked_sub(<span class="kw-2">&amp;</span>amount)) {
+      (<span class="bool-val">true</span>, <span class="prelude-val">Some</span>(dust)) =&gt; (amount, <span class="prelude-val">Some</span>(dust)),
+      <span class="kw">_ </span>=&gt; (debit, <span class="prelude-val">None</span>),
+    };
+    <span class="self">Self</span>::can_increase(id, dest, credit, <span class="bool-val">false</span>).into_result()<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>((credit, maybe_burn))
+  }
+
+  <span class="doccomment">/// Creates a account for `who` to hold asset `id` with a zero balance and takes a deposit.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_touch(id: T::AssetId, who: T::AccountId) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(!Account::&lt;T, I&gt;::contains_key(id, <span class="kw-2">&amp;</span>who), Error::&lt;T, I&gt;::AlreadyExists);
+    <span class="kw">let </span>deposit = T::AssetAccountDeposit::get();
+    <span class="kw">let </span><span class="kw-2">mut </span>details = Asset::&lt;T, I&gt;::get(<span class="kw-2">&amp;</span>id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+    <span class="kw">let </span>reason = <span class="self">Self</span>::new_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="prelude-val">Some</span>(deposit))<span class="question-mark">?</span>;
+    T::Currency::reserve(<span class="kw-2">&amp;</span>who, deposit)<span class="question-mark">?</span>;
+    Asset::&lt;T, I&gt;::insert(<span class="kw-2">&amp;</span>id, details);
+    Account::&lt;T, I&gt;::insert(
+      id,
+      <span class="kw-2">&amp;</span>who,
+      AssetAccountOf::&lt;T, I&gt; {
+        balance: Zero::zero(),
+        reserved: Zero::zero(),
+        is_frozen: <span class="bool-val">false</span>,
+        reason,
+        extra: T::Extra::default(),
+      },
+    );
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Returns a deposit, destroying an asset-account.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_refund(id: T::AssetId, who: T::AccountId, allow_burn: bool) -&gt; DispatchResult {
+    <span class="kw">let </span><span class="kw-2">mut </span>account = Account::&lt;T, I&gt;::get(id, <span class="kw-2">&amp;</span>who).ok_or(Error::&lt;T, I&gt;::NoDeposit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>deposit = account.reason.take_deposit().ok_or(Error::&lt;T, I&gt;::NoDeposit)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>details = Asset::&lt;T, I&gt;::get(<span class="kw-2">&amp;</span>id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+
+    <span class="macro">ensure!</span>(account.balance.is_zero() || allow_burn, Error::&lt;T, I&gt;::WouldBurn);
+    <span class="macro">ensure!</span>(!details.is_frozen, Error::&lt;T, I&gt;::Frozen);
+    <span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
+
+    T::Currency::unreserve(<span class="kw-2">&amp;</span>who, deposit);
+
+    <span class="kw">if let </span>Remove = <span class="self">Self</span>::dead_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="kw-2">&amp;</span>account.reason, <span class="bool-val">false</span>) {
+      Account::&lt;T, I&gt;::remove(id, <span class="kw-2">&amp;</span>who);
+    } <span class="kw">else </span>{
+      <span class="macro">debug_assert!</span>(<span class="bool-val">false</span>, <span class="string">&quot;refund did not result in dead account?!&quot;</span>);
+    }
+    Asset::&lt;T, I&gt;::insert(<span class="kw-2">&amp;</span>id, details);
+    <span class="comment">// Executing a hook here is safe, since it is not in a `mutate`.
+    </span>T::Freezer::died(id, <span class="kw-2">&amp;</span>who);
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Increases the asset `id` balance of `beneficiary` by `amount`.
+  ///
+  /// This alters the registered supply of the asset and emits an event.
+  ///
+  /// Will return an error or will increase the amount by exactly `amount`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_mint(
+    id: T::AssetId,
+    beneficiary: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_check_issuer: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::increase_balance(id, beneficiary, amount, |details| -&gt; DispatchResult {
+      <span class="kw">if let </span><span class="prelude-val">Some</span>(check_issuer) = maybe_check_issuer {
+        <span class="macro">ensure!</span>(check_issuer == details.issuer, Error::&lt;T, I&gt;::NoPermission);
+      }
+      <span class="macro">debug_assert!</span>(T::Balance::max_value() - details.supply &gt;= amount, <span class="string">&quot;checked in prep; qed&quot;</span>);
+      details.supply = details.supply.saturating_add(amount);
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::Issued {
+      asset_id: id,
+      owner: beneficiary.clone(),
+      total_supply: amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Increases the asset `id` balance of `beneficiary` by `amount`.
+  ///
+  /// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_mint` if you need
+  /// that. This is not intended to be used alone.
+  ///
+  /// Will return an error or will increase the amount by exactly `amount`.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>increase_balance(
+    id: T::AssetId,
+    beneficiary: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    check: <span class="kw">impl </span>FnOnce(
+      <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
+    ) -&gt; DispatchResult,
+  ) -&gt; DispatchResult {
+    <span class="kw">if </span>amount.is_zero() {
+      <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+    }
+
+    <span class="self">Self</span>::can_increase(id, beneficiary, amount, <span class="bool-val">true</span>).into_result()<span class="question-mark">?</span>;
+    Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
+      <span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+
+      check(details)<span class="question-mark">?</span>;
+
+      Account::&lt;T, I&gt;::try_mutate(id, beneficiary, |maybe_account| -&gt; DispatchResult {
+        <span class="kw">match </span>maybe_account {
+          <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>account) =&gt; {
+            account.balance.saturating_accrue(amount);
+          },
+          maybe_account @ <span class="prelude-val">None </span>=&gt; {
+            <span class="comment">// Note this should never fail as it&#39;s already checked by `can_increase`.
+            </span><span class="macro">ensure!</span>(amount &gt;= details.min_balance, TokenError::BelowMinimum);
+            <span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
+              balance: amount,
+              reserved: Zero::zero(),
+              reason: <span class="self">Self</span>::new_account(beneficiary, details, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+              is_frozen: <span class="bool-val">false</span>,
+              extra: T::Extra::default(),
+            });
+          },
+        }
+        <span class="prelude-val">Ok</span>(())
+      })<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Reduces asset `id` balance of `target` by `amount`. Flags `f` can be given to alter whether
+  /// it attempts a `best_effort` or makes sure to `keep_alive` the account.
+  ///
+  /// This alters the registered supply of the asset and emits an event.
+  ///
+  /// Will return an error and do nothing or will decrease the amount and return the amount
+  /// reduced by.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_burn(
+    id: T::AssetId,
+    target: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    f: DebitFlags,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(
+      d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
+      Error::&lt;T, I&gt;::AssetNotLive
+    );
+
+    <span class="kw">let </span>actual = <span class="self">Self</span>::decrease_balance(id, target, amount, f, |actual, details| {
+      <span class="comment">// Check admin rights.
+      </span><span class="kw">if let </span><span class="prelude-val">Some</span>(check_admin) = maybe_check_admin {
+        <span class="macro">ensure!</span>(check_admin == details.admin, Error::&lt;T, I&gt;::NoPermission);
+      }
+
+      <span class="macro">debug_assert!</span>(details.supply &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
+      details.supply = details.supply.saturating_sub(actual);
+
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::Burned { asset_id: id, owner: target.clone(), balance: actual });
+    <span class="prelude-val">Ok</span>(actual)
+  }
+
+  <span class="doccomment">/// Reduces asset `id` balance of `target` by `amount`. Flags `f` can be given to alter whether
+  /// it attempts a `best_effort` or makes sure to `keep_alive` the account.
+  ///
+  /// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_burn` if you need
+  /// that. This is not intended to be used alone.
+  ///
+  /// Will return an error and do nothing or will decrease the amount and return the amount
+  /// reduced by.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>decrease_balance(
+    id: T::AssetId,
+    target: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    f: DebitFlags,
+    check: <span class="kw">impl </span>FnOnce(
+      T::Balance,
+      <span class="kw-2">&amp;mut </span>AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
+    ) -&gt; DispatchResult,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">if </span>amount.is_zero() {
+      <span class="kw">return </span><span class="prelude-val">Ok</span>(amount);
+    }
+
+    <span class="kw">let </span>actual = <span class="self">Self</span>::prep_debit(id, target, amount, f)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>target_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
+
+    Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
+      <span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+
+      check(actual, details)<span class="question-mark">?</span>;
+
+      Account::&lt;T, I&gt;::try_mutate(id, target, |maybe_account| -&gt; DispatchResult {
+        <span class="kw">let </span><span class="kw-2">mut </span>account = maybe_account.take().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+        <span class="macro">debug_assert!</span>(account.balance &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
+
+        <span class="comment">// Make the debit.
+        </span>account.balance = account.balance.saturating_sub(actual);
+        <span class="kw">if </span>account.balance &lt; details.min_balance {
+          <span class="macro">debug_assert!</span>(account.balance.is_zero(), <span class="string">&quot;checked in prep; qed&quot;</span>);
+          target_died = <span class="prelude-val">Some</span>(<span class="self">Self</span>::dead_account(target, details, <span class="kw-2">&amp;</span>account.reason, <span class="bool-val">false</span>));
+          <span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = target_died {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+          }
+        };
+        <span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(account);
+        <span class="prelude-val">Ok</span>(())
+      })<span class="question-mark">?</span>;
+
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+
+    <span class="comment">// Execute hook outside of `mutate`.
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = target_died {
+      T::Freezer::died(id, target);
+    }
+    <span class="prelude-val">Ok</span>(actual)
+  }
+
+  <span class="doccomment">/// Reduces the asset `id` balance of `source` by some `amount` and increases the balance of
+  /// `dest` by (similar) amount.
+  ///
+  /// Returns the actual amount placed into `dest`. Exact semantics are determined by the flags
+  /// `f`.
+  ///
+  /// Will fail if the amount transferred is so small that it cannot create the destination due
+  /// to minimum balance requirements.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_transfer(
+    id: T::AssetId,
+    source: <span class="kw-2">&amp;</span>T::AccountId,
+    dest: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_need_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    f: TransferFlags,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span>(balance, died) = <span class="self">Self</span>::transfer_and_die(id, source, dest, amount, maybe_need_admin, f)<span class="question-mark">?</span>;
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = died {
+      T::Freezer::died(id, source);
+    }
+    <span class="prelude-val">Ok</span>(balance)
+  }
+
+  <span class="doccomment">/// Same as `do_transfer` but it does not execute the `FrozenBalance::died` hook and
+  /// instead returns whether and how the `source` account died in this operation.
+  </span><span class="kw">fn </span>transfer_and_die(
+    id: T::AssetId,
+    source: <span class="kw-2">&amp;</span>T::AccountId,
+    dest: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_need_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    f: TransferFlags,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;(T::Balance, <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt;), DispatchError&gt; {
+    <span class="comment">// Early exit if no-op.
+    </span><span class="kw">if </span>amount.is_zero() {
+      <span class="kw">return </span><span class="prelude-val">Ok</span>((amount, <span class="prelude-val">None</span>));
+    }
+
+    <span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+
+    <span class="comment">// Figure out the debit and credit, together with side-effects.
+    </span><span class="kw">let </span>debit = <span class="self">Self</span>::prep_debit(id, source, amount, f.into())<span class="question-mark">?</span>;
+    <span class="kw">let </span>(credit, maybe_burn) = <span class="self">Self</span>::prep_credit(id, dest, amount, debit, f.burn_dust)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>source_account = Account::&lt;T, I&gt;::get(id, <span class="kw-2">&amp;</span>source).ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>source_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
+
+    Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| -&gt; DispatchResult {
+      <span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+
+      <span class="comment">// Check admin rights.
+      </span><span class="kw">if let </span><span class="prelude-val">Some</span>(need_admin) = maybe_need_admin {
+        <span class="macro">ensure!</span>(need_admin == details.admin, Error::&lt;T, I&gt;::NoPermission);
+      }
+
+      <span class="comment">// Skip if source == dest
+      </span><span class="kw">if </span>source == dest {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+      }
+
+      <span class="comment">// Burn any dust if needed.
+      </span><span class="kw">if let </span><span class="prelude-val">Some</span>(burn) = maybe_burn {
+        <span class="comment">// Debit dust from supply; this will not saturate since it&#39;s already checked in
+        // prep.
+        </span><span class="macro">debug_assert!</span>(details.supply &gt;= burn, <span class="string">&quot;checked in prep; qed&quot;</span>);
+        details.supply = details.supply.saturating_sub(burn);
+      }
+
+      <span class="comment">// Debit balance from source; this will not saturate since it&#39;s already checked in prep.
+      </span><span class="macro">debug_assert!</span>(source_account.balance &gt;= debit, <span class="string">&quot;checked in prep; qed&quot;</span>);
+      source_account.balance = source_account.balance.saturating_sub(debit);
+
+      Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>dest, |maybe_account| -&gt; DispatchResult {
+        <span class="kw">match </span>maybe_account {
+          <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>account) =&gt; {
+            <span class="comment">// Calculate new balance; this will not saturate since it&#39;s already checked
+            // in prep.
+            </span><span class="macro">debug_assert!</span>(account.balance.checked_add(<span class="kw-2">&amp;</span>credit).is_some(), <span class="string">&quot;checked in prep; qed&quot;</span>);
+            account.balance.saturating_accrue(credit);
+          },
+          maybe_account @ <span class="prelude-val">None </span>=&gt; {
+            <span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
+              balance: credit,
+              reserved: Zero::zero(),
+              is_frozen: <span class="bool-val">false</span>,
+              reason: <span class="self">Self</span>::new_account(dest, details, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+              extra: T::Extra::default(),
+            });
+          },
+        }
+        <span class="prelude-val">Ok</span>(())
+      })<span class="question-mark">?</span>;
+
+      <span class="comment">// Remove source account if it&#39;s now dead.
+      </span><span class="kw">if </span>source_account.balance &lt; details.min_balance {
+        <span class="macro">debug_assert!</span>(source_account.balance.is_zero(), <span class="string">&quot;checked in prep; qed&quot;</span>);
+        source_died = <span class="prelude-val">Some</span>(<span class="self">Self</span>::dead_account(source, details, <span class="kw-2">&amp;</span>source_account.reason, <span class="bool-val">false</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = source_died {
+          Account::&lt;T, I&gt;::remove(id, <span class="kw-2">&amp;</span>source);
+          <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+      }
+      Account::&lt;T, I&gt;::insert(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>source_account);
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+
+    <span class="self">Self</span>::deposit_event(Event::Transferred {
+      asset_id: id,
+      from: source.clone(),
+      to: dest.clone(),
+      amount: credit,
+    });
+    <span class="prelude-val">Ok</span>((credit, source_died))
+  }
+
+  <span class="doccomment">/// Create a new asset without taking a deposit.
+  ///
+  /// * `id`: The `AssetId` you want the new asset to have. Must not already be in use.
+  /// * `owner`: The owner, issuer, admin, and freezer of this asset upon creation.
+  /// * `is_sufficient`: Whether this asset needs users to have an existential deposit to hold this
+  ///   asset.
+  /// * `min_balance`: The minimum balance a user is allowed to have of this asset before they are
+  ///   considered dust and cleaned up.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_force_create(
+    id: T::AssetId,
+    owner: T::AccountId,
+    is_sufficient: bool,
+    min_balance: T::Balance,
+  ) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(!Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::InUse);
+    <span class="macro">ensure!</span>(!min_balance.is_zero(), Error::&lt;T, I&gt;::MinBalanceZero);
+
+    Asset::&lt;T, I&gt;::insert(
+      id,
+      AssetDetails {
+        owner: owner.clone(),
+        issuer: owner.clone(),
+        admin: owner.clone(),
+        freezer: owner.clone(),
+        supply: Zero::zero(),
+        reserved: Zero::zero(),
+        deposit: Zero::zero(),
+        min_balance,
+        is_sufficient,
+        accounts: <span class="number">0</span>,
+        sufficients: <span class="number">0</span>,
+        approvals: <span class="number">0</span>,
+        is_frozen: <span class="bool-val">false</span>,
+        status: AssetStatus::Live,
+      },
+    );
+    <span class="self">Self</span>::deposit_event(Event::ForceCreated { asset_id: id, owner: owner.clone() });
+    T::CallbackHandle::created(<span class="kw-2">&amp;</span>id, <span class="kw-2">&amp;</span>owner);
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Start the process of destroying an asset, by setting the asset status to `Destroying`, and
+  /// emitting the `DestructionStarted` event.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_start_destroy(
+    id: T::AssetId,
+    maybe_check_owner: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
+      <span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="kw">if let </span><span class="prelude-val">Some</span>(check_owner) = maybe_check_owner {
+        <span class="macro">ensure!</span>(details.owner == check_owner, Error::&lt;T, I&gt;::NoPermission);
+      }
+      details.status = AssetStatus::Destroying;
+
+      <span class="self">Self</span>::deposit_event(Event::DestructionStarted { asset_id: id });
+      <span class="prelude-val">Ok</span>(())
+    })
+  }
+
+  <span class="doccomment">/// Destroy accounts associated with a given asset up to the max (T::RemoveItemsLimit).
+  ///
+  /// Each call emits the `Event::DestroyedAccounts` event.
+  /// Returns the number of destroyed accounts.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_destroy_accounts(id: T::AssetId, max_items: u32) -&gt; <span class="prelude-ty">Result</span>&lt;u32, DispatchError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>dead_accounts: Vec&lt;T::AccountId&gt; = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>remaining_accounts = <span class="number">0</span>;
+    <span class="kw">let _ </span>= Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
+      <span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="comment">// Should only destroy accounts while the asset is in a destroying state
+      </span><span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
+
+      <span class="kw">for </span>(who, v) <span class="kw">in </span>Account::&lt;T, I&gt;::drain_prefix(id) {
+        <span class="kw">let _ </span>= <span class="self">Self</span>::dead_account(<span class="kw-2">&amp;</span>who, <span class="kw-2">&amp;mut </span>details, <span class="kw-2">&amp;</span>v.reason, <span class="bool-val">true</span>);
+        dead_accounts.push(who);
+        <span class="kw">if </span>dead_accounts.len() &gt;= (max_items <span class="kw">as </span>usize) {
+          <span class="kw">break</span>;
+        }
+      }
+      remaining_accounts = details.accounts;
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>who <span class="kw">in </span><span class="kw-2">&amp;</span>dead_accounts {
+      T::Freezer::died(id, <span class="kw-2">&amp;</span>who);
+    }
+
+    <span class="self">Self</span>::deposit_event(Event::AccountsDestroyed {
+      asset_id: id,
+      accounts_destroyed: dead_accounts.len() <span class="kw">as </span>u32,
+      accounts_remaining: remaining_accounts <span class="kw">as </span>u32,
+    });
+    <span class="prelude-val">Ok</span>(dead_accounts.len() <span class="kw">as </span>u32)
+  }
+
+  <span class="doccomment">/// Destroy approvals associated with a given asset up to the max (T::RemoveItemsLimit).
+  ///
+  /// Each call emits the `Event::DestroyedApprovals` event
+  /// Returns the number of destroyed approvals.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_destroy_approvals(id: T::AssetId, max_items: u32) -&gt; <span class="prelude-ty">Result</span>&lt;u32, DispatchError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>removed_approvals = <span class="number">0</span>;
+    <span class="kw">let _ </span>= Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
+      <span class="kw">let </span><span class="kw-2">mut </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+
+      <span class="comment">// Should only destroy accounts while the asset is in a destroying state.
+      </span><span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
+
+      <span class="kw">for </span>((owner, <span class="kw">_</span>), approval) <span class="kw">in </span>Approvals::&lt;T, I&gt;::drain_prefix((id,)) {
+        T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
+        removed_approvals = removed_approvals.saturating_add(<span class="number">1</span>);
+        details.approvals = details.approvals.saturating_sub(<span class="number">1</span>);
+        <span class="kw">if </span>removed_approvals &gt;= max_items {
+          <span class="kw">break</span>;
+        }
+      }
+      <span class="self">Self</span>::deposit_event(Event::ApprovalsDestroyed {
+        asset_id: id,
+        approvals_destroyed: removed_approvals <span class="kw">as </span>u32,
+        approvals_remaining: details.approvals <span class="kw">as </span>u32,
+      });
+      T::CallbackHandle::destroyed(<span class="kw-2">&amp;</span>id);
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(removed_approvals)
+  }
+
+  <span class="doccomment">/// Complete destroying an asset and unreserve the deposit.
+  ///
+  /// On success, the `Event::Destroyed` event is emitted.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_finish_destroy(id: T::AssetId) -&gt; DispatchResult {
+    Asset::&lt;T, I&gt;::try_mutate_exists(id, |maybe_details| -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
+      <span class="kw">let </span>details = maybe_details.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(details.status == AssetStatus::Destroying, Error::&lt;T, I&gt;::IncorrectStatus);
+      <span class="macro">ensure!</span>(details.accounts == <span class="number">0</span>, Error::&lt;T, I&gt;::InUse);
+      <span class="macro">ensure!</span>(details.approvals == <span class="number">0</span>, Error::&lt;T, I&gt;::InUse);
+
+      <span class="kw">let </span>metadata = Metadata::&lt;T, I&gt;::take(<span class="kw-2">&amp;</span>id);
+      T::Currency::unreserve(<span class="kw-2">&amp;</span>details.owner, details.deposit.saturating_add(metadata.deposit));
+      <span class="self">Self</span>::deposit_event(Event::Destroyed { asset_id: id });
+
+      <span class="prelude-val">Ok</span>(())
+    })
+  }
+
+  <span class="doccomment">/// Destroy an existing asset.
+  ///
+  /// * `id`: The asset you want to destroy.
+  /// * `witness`: Witness data needed about the current state of the asset, used to confirm
+  ///   complexity of the operation.
+  /// * `maybe_check_owner`: An optional check before destroying the asset, if the provided account
+  ///   is the owner of that asset. Can be used for authorization checks.
+  </span><span class="comment">/* 	pub(super) fn do_destroy(
+    id: T::AssetId,
+    witness: DestroyWitness,
+    maybe_check_owner: Option&lt;T::AccountId&gt;,
+  ) -&gt; Result&lt;DestroyWitness, DispatchError&gt; {
+    let mut dead_accounts: Vec&lt;T::AccountId&gt; = vec![];
+
+    let result_witness: DestroyWitness = Asset::&lt;T, I&gt;::try_mutate_exists(
+      id,
+      |maybe_details| -&gt; Result&lt;DestroyWitness, DispatchError&gt; {
+        let mut details = maybe_details.take().ok_or(Error::&lt;T, I&gt;::UnknownAsset)?;
+        if let Some(check_owner) = maybe_check_owner {
+          ensure!(details.owner == check_owner, Error::&lt;T, I&gt;::NoPermission);
+        }
+        ensure!(details.accounts &lt;= witness.accounts, Error::&lt;T, I&gt;::BadWitness);
+        ensure!(details.sufficients &lt;= witness.sufficients, Error::&lt;T, I&gt;::BadWitness);
+        ensure!(details.approvals &lt;= witness.approvals, Error::&lt;T, I&gt;::BadWitness);
+
+        for (who, v) in Account::&lt;T, I&gt;::drain_prefix(id) {
+          // We have to force this as it&#39;s destroying the entire asset class.
+          // This could mean that some accounts now have irreversibly reserved
+          // funds.
+          let _ = Self::dead_account(&amp;who, &amp;mut details, &amp;v.reason, true);
+          dead_accounts.push(who);
+        }
+        debug_assert_eq!(details.accounts, 0);
+        debug_assert_eq!(details.sufficients, 0);
+
+        let metadata = Metadata::&lt;T, I&gt;::take(&amp;id);
+        T::Currency::unreserve(
+          &amp;details.owner,
+          details.deposit.saturating_add(metadata.deposit),
+        );
+
+        for ((owner, _), approval) in Approvals::&lt;T, I&gt;::drain_prefix((&amp;id,)) {
+          T::Currency::unreserve(&amp;owner, approval.deposit);
+        }
+        Self::deposit_event(Event::Destroyed { asset_id: id });
+
+        Ok(DestroyWitness {
+          accounts: details.accounts,
+          sufficients: details.sufficients,
+          approvals: details.approvals,
+        })
+      },
+    )?;
+
+    // Execute hooks outside of `mutate`.
+    for who in dead_accounts {
+      T::Freezer::died(id, &amp;who);
+    }
+    Ok(result_witness)
+  } */
+
+  </span><span class="doccomment">/// Creates an approval from `owner` to spend `amount` of asset `id` tokens by &#39;delegate&#39;
+  /// while reserving `T::ApprovalDeposit` from owner
+  ///
+  /// If an approval already exists, the new amount is added to such existing approval
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_approve_transfer(
+    id: T::AssetId,
+    owner: <span class="kw-2">&amp;</span>T::AccountId,
+    delegate: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+    Approvals::&lt;T, I&gt;::try_mutate((id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate), |maybe_approved| -&gt; DispatchResult {
+      <span class="kw">let </span><span class="kw-2">mut </span>approved = <span class="kw">match </span>maybe_approved.take() {
+        <span class="comment">// an approval already exists and is being updated
+        </span><span class="prelude-val">Some</span>(a) =&gt; a,
+        <span class="comment">// a new approval is created
+        </span><span class="prelude-val">None </span>=&gt; {
+          d.approvals.saturating_inc();
+          Default::default()
+        },
+      };
+      <span class="kw">let </span>deposit_required = T::ApprovalDeposit::get();
+      <span class="kw">if </span>approved.deposit &lt; deposit_required {
+        T::Currency::reserve(owner, deposit_required - approved.deposit)<span class="question-mark">?</span>;
+        approved.deposit = deposit_required;
+      }
+      approved.amount = approved.amount.saturating_add(amount);
+      <span class="kw-2">*</span>maybe_approved = <span class="prelude-val">Some</span>(approved);
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    Asset::&lt;T, I&gt;::insert(id, d);
+    <span class="self">Self</span>::deposit_event(Event::ApprovedTransfer {
+      asset_id: id,
+      source: owner.clone(),
+      delegate: delegate.clone(),
+      amount,
+    });
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Reduces the asset `id` balance of `owner` by some `amount` and increases the balance of
+  /// `dest` by (similar) amount, checking that &#39;delegate&#39; has an existing approval from `owner`
+  /// to spend`amount`.
+  ///
+  /// Will fail if `amount` is greater than the approval from `owner` to &#39;delegate&#39;
+  /// Will unreserve the deposit from `owner` if the entire approved `amount` is spent by
+  /// &#39;delegate&#39;
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_transfer_approved(
+    id: T::AssetId,
+    owner: <span class="kw-2">&amp;</span>T::AccountId,
+    delegate: <span class="kw-2">&amp;</span>T::AccountId,
+    destination: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span><span class="kw-2">mut </span>owner_died: <span class="prelude-ty">Option</span>&lt;DeadConsequence&gt; = <span class="prelude-val">None</span>;
+
+    <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+
+    Approvals::&lt;T, I&gt;::try_mutate_exists(
+      (id, <span class="kw-2">&amp;</span>owner, delegate),
+      |maybe_approved| -&gt; DispatchResult {
+        <span class="kw">let </span><span class="kw-2">mut </span>approved = maybe_approved.take().ok_or(Error::&lt;T, I&gt;::Unapproved)<span class="question-mark">?</span>;
+        <span class="kw">let </span>remaining = approved.amount.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(Error::&lt;T, I&gt;::Unapproved)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
+        owner_died = <span class="self">Self</span>::transfer_and_die(id, owner, destination, amount, <span class="prelude-val">None</span>, f)<span class="question-mark">?</span>.<span class="number">1</span>;
+
+        <span class="kw">if </span>remaining.is_zero() {
+          T::Currency::unreserve(owner, approved.deposit);
+          Asset::&lt;T, I&gt;::mutate(id, |maybe_details| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(details) = maybe_details {
+              details.approvals.saturating_dec();
+            }
+          });
+        } <span class="kw">else </span>{
+          approved.amount = remaining;
+          <span class="kw-2">*</span>maybe_approved = <span class="prelude-val">Some</span>(approved);
+        }
+        <span class="prelude-val">Ok</span>(())
+      },
+    )<span class="question-mark">?</span>;
+
+    <span class="comment">// Execute hook outside of `mutate`.
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(Remove) = owner_died {
+      T::Freezer::died(id, owner);
+    }
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Do set metadata
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_set_metadata(
+    id: T::AssetId,
+    from: <span class="kw-2">&amp;</span>T::AccountId,
+    name: Vec&lt;u8&gt;,
+    symbol: Vec&lt;u8&gt;,
+    decimals: u8,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
+      name.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
+    <span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
+      symbol.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+    <span class="macro">ensure!</span>(from == <span class="kw-2">&amp;</span>d.owner, Error::&lt;T, I&gt;::NoPermission);
+
+    Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
+      <span class="macro">ensure!</span>(metadata.as_ref().map_or(<span class="bool-val">true</span>, |m| !m.is_frozen), Error::&lt;T, I&gt;::NoPermission);
+
+      <span class="kw">let </span>old_deposit = metadata.take().map_or(Zero::zero(), |m| m.deposit);
+      <span class="kw">let </span>new_deposit = T::MetadataDepositPerByte::get()
+        .saturating_mul(((name.len() + symbol.len()) <span class="kw">as </span>u32).into())
+        .saturating_add(T::MetadataDepositBase::get());
+
+      <span class="kw">if </span>new_deposit &gt; old_deposit {
+        T::Currency::reserve(from, new_deposit - old_deposit)<span class="question-mark">?</span>;
+      } <span class="kw">else </span>{
+        T::Currency::unreserve(from, old_deposit - new_deposit);
+      }
+
+      <span class="kw-2">*</span>metadata = <span class="prelude-val">Some</span>(AssetMetadata {
+        deposit: new_deposit,
+        name: bounded_name,
+        symbol: bounded_symbol,
+        decimals,
+        is_frozen: <span class="bool-val">false</span>,
+      });
+
+      <span class="self">Self</span>::deposit_event(Event::MetadataSet {
+        asset_id: id,
+        name,
+        symbol,
+        decimals,
+        is_frozen: <span class="bool-val">false</span>,
+      });
+      <span class="prelude-val">Ok</span>(())
+    })
+  }
+
+  <span class="kw">pub fn </span>reserved_balance_named(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: <span class="kw-2">&amp;</span>T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+  ) -&gt; T::Balance {
+    <span class="kw">let </span>reserves = <span class="self">Self</span>::reserves(asset_id, who);
+    reserves
+      .binary_search_by_key(id, |data| data.id)
+      .map(|index| reserves[index].amount)
+      .unwrap_or_default()
+  }
+
+  <span class="kw">pub fn </span>has_named_reserve(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: <span class="kw-2">&amp;</span>T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+  ) -&gt; bool {
+    <span class="kw">let </span>reserves = <span class="self">Self</span>::reserves(asset_id, who);
+    reserves.binary_search_by_key(id, |data| data.id).is_ok()
+  }
+
+  <span class="doccomment">/// Move `value` from the free balance from `who` to a named reserve balance.
+  ///
+  /// Is a no-op if value to be reserved is zero.
+  </span><span class="kw">pub fn </span>reserve_named(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">if </span>amount.is_zero() {
+      <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+    }
+    <span class="self">Self</span>::prep_debit(asset_id, who, amount, DebitFlags { best_effort: <span class="bool-val">false</span>, keep_alive: <span class="bool-val">true </span>})<span class="question-mark">?</span>;
+    Asset::&lt;T, I&gt;::try_mutate(asset_id, |maybe_details| -&gt; DispatchResult {
+      <span class="kw">let </span>asset = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+      <span class="kw">if </span>amount &lt; asset.min_balance {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(TokenError::BelowMinimum.into());
+      }
+      <span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
+        <span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T, I&gt;::NoPermission);
+      }
+      asset.reserved = asset.reserved.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+      Account::&lt;T, I&gt;::try_mutate(asset_id, who, |maybe_account| -&gt; DispatchResult {
+        <span class="kw">let </span>account = maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+        account.balance = account.balance.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(Error::&lt;T, I&gt;::BalanceLow)<span class="question-mark">?</span>;
+        account.reserved =
+          account.reserved.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+        Reserves::&lt;T, I&gt;::try_mutate(asset_id, who, |reserves| -&gt; DispatchResult {
+          <span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T, I&gt;::ReserveAlreadyExists.into()),
+            <span class="prelude-val">Err</span>(index) =&gt; {
+              reserves
+                .try_insert(index, ReserveData { id: <span class="kw-2">*</span>id, amount })
+                .map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::TooManyReserves)<span class="question-mark">?</span>;
+            },
+          };
+          <span class="prelude-val">Ok</span>(())
+        })
+      })
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Reserved {
+      reserve_id: id.clone(),
+      asset_id,
+      who: who.clone(),
+      amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>unreserve_named(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>amount = <span class="self">Self</span>::remove_named_reserve(id, asset_id, who, <span class="bool-val">false</span>, maybe_check_admin)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Unreserved {
+      reserve_id: id.clone(),
+      asset_id,
+      who: who.clone(),
+      amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>burn_named_reserve(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>amount = <span class="self">Self</span>::remove_named_reserve(id, asset_id, who, <span class="bool-val">true</span>, maybe_check_admin)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::BurnedReserve {
+      reserve_id: id.clone(),
+      asset_id,
+      who: who.clone(),
+      amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">fn </span>remove_named_reserve(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    burn: bool,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>amount = Zero::zero();
+    Reserves::&lt;T, I&gt;::try_mutate_exists(asset_id, who, |maybe_reserves| -&gt; DispatchResult {
+      <span class="kw">let </span>reserves = maybe_reserves.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownReserve)<span class="question-mark">?</span>;
+      <span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id) {
+        <span class="prelude-val">Ok</span>(index) =&gt; {
+          amount = reserves[index].amount;
+          Asset::&lt;T, I&gt;::try_mutate(asset_id, |maybe_asset| -&gt; DispatchResult {
+            <span class="kw">let </span>asset = maybe_asset.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+            <span class="macro">ensure!</span>(!asset.is_frozen, Error::&lt;T, I&gt;::Frozen);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
+              <span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T, I&gt;::NoPermission);
+            }
+            asset.reserved =
+              asset.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
+            <span class="kw">if </span>burn {
+              asset.supply = asset.supply.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
+            }
+            Account::&lt;T, I&gt;::try_mutate(asset_id, who, |maybe_account| -&gt; DispatchResult {
+              <span class="kw">let </span>account = maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+              <span class="macro">ensure!</span>(!account.is_frozen, Error::&lt;T, I&gt;::Frozen);
+              <span class="kw">if </span>!burn {
+                account.balance =
+                  account.balance.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+              }
+              account.reserved =
+                account.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
+              <span class="prelude-val">Ok</span>(())
+            })
+          })<span class="question-mark">?</span>;
+          reserves.remove(index);
+        },
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T, I&gt;::UnknownReserve.into()),
+      };
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(amount)
+  }
+
+  <span class="kw">pub fn </span>transfer_named_reserve(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    from: <span class="kw-2">&amp;</span>T::AccountId,
+    to: <span class="kw-2">&amp;</span>T::AccountId,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span><span class="kw-2">mut </span>amount = Zero::zero();
+    Reserves::&lt;T, I&gt;::try_mutate_exists(asset_id, from, |maybe_reserves| -&gt; DispatchResult {
+      <span class="kw">let </span>reserves = maybe_reserves.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownReserve)<span class="question-mark">?</span>;
+      <span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id) {
+        <span class="prelude-val">Ok</span>(index) =&gt; {
+          amount = reserves[index].amount;
+          <span class="self">Self</span>::prep_credit(asset_id, to, amount, amount, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+          Asset::&lt;T, I&gt;::try_mutate(asset_id, |maybe_asset| -&gt; DispatchResult {
+            <span class="kw">let </span>asset = maybe_asset.as_mut().ok_or(Error::&lt;T, I&gt;::UnknownAsset)<span class="question-mark">?</span>;
+            <span class="macro">ensure!</span>(!asset.is_frozen, Error::&lt;T, I&gt;::Frozen);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(admin) = maybe_check_admin {
+              <span class="macro">ensure!</span>(admin == asset.admin, Error::&lt;T, I&gt;::NoPermission);
+            }
+            asset.reserved =
+              asset.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
+            Account::&lt;T, I&gt;::try_mutate(asset_id, from, |maybe_from_account| -&gt; DispatchResult {
+              <span class="kw">let </span>from_account = maybe_from_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>;
+              <span class="macro">ensure!</span>(!from_account.is_frozen, Error::&lt;T, I&gt;::Frozen);
+              from_account.reserved =
+                from_account.reserved.checked_sub(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Underflow)<span class="question-mark">?</span>;
+              Account::&lt;T, I&gt;::try_mutate(asset_id, to, |maybe_to_account| -&gt; DispatchResult {
+                <span class="kw">match </span>maybe_to_account {
+                  <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>to_account) =&gt; {
+                    to_account.balance =
+                      to_account.balance.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
+                  },
+                  maybe_account @ <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw-2">*</span>maybe_account = <span class="prelude-val">Some</span>(AssetAccountOf::&lt;T, I&gt; {
+                      balance: amount,
+                      reserved: Zero::zero(),
+                      is_frozen: <span class="bool-val">false</span>,
+                      reason: <span class="self">Self</span>::new_account(to, asset, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+                      extra: T::Extra::default(),
+                    });
+                  },
+                };
+                <span class="prelude-val">Ok</span>(())
+              })
+            })
+          })<span class="question-mark">?</span>;
+          reserves.remove(index);
+        },
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T, I&gt;::UnknownReserve.into()),
+      };
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::TransferredReserve {
+      reserve_id: id.clone(),
+      asset_id,
+      from: from.clone(),
+      to: to.clone(),
+      amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_reserve_named(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    admin: T::AccountId,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::reserve_named(id, asset_id, who, amount, <span class="prelude-val">Some</span>(admin))
+  }
+
+  <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_unreserve_named(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    admin: T::AccountId,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::unreserve_named(id, asset_id, who, <span class="prelude-val">Some</span>(admin))
+  }
+
+  <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_burn_named_reserve(
+    id: <span class="kw-2">&amp;</span>T::ReserveIdentifier,
+    asset_id: T::AssetId,
+    who: <span class="kw-2">&amp;</span>T::AccountId,
+    admin: T::AccountId,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::burn_named_reserve(id, asset_id, who, <span class="prelude-val">Some</span>(admin))
+  }
+}
+</code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_mapped_assets" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

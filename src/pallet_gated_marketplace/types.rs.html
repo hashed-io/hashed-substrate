@@ -265,14 +265,6 @@
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -297,22 +289,22 @@
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Marketplace&lt;T: Config&gt; {
-	<span class="kw">pub </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
-	<span class="kw">pub </span>buy_fee: Permill,
-	<span class="kw">pub </span>sell_fee: Permill,
-	<span class="kw">pub </span>asset_id: T::AssetId,
-	<span class="kw">pub </span>creator: T::AccountId,
+  <span class="kw">pub </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+  <span class="kw">pub </span>buy_fee: Permill,
+  <span class="kw">pub </span>sell_fee: Permill,
+  <span class="kw">pub </span>asset_id: T::AssetId,
+  <span class="kw">pub </span>creator: T::AccountId,
 }
 
 <span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>RedemptionData&lt;T: Config&gt; {
-	<span class="kw">pub </span>creator: T::AccountId,
-	<span class="kw">pub </span>redeemed_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-	<span class="kw">pub </span>collection_id: T::CollectionId,
-	<span class="kw">pub </span>item_id: T::ItemId,
-	<span class="kw">pub </span>is_redeemed: bool,
+  <span class="kw">pub </span>creator: T::AccountId,
+  <span class="kw">pub </span>redeemed_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  <span class="kw">pub </span>collection_id: T::CollectionId,
+  <span class="kw">pub </span>item_id: T::ItemId,
+  <span class="kw">pub </span>is_redeemed: bool,
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
@@ -320,233 +312,225 @@
 #[codec(mel_bound())]
 
 </span><span class="kw">pub enum </span>RedeemArgs&lt;T: Config&gt; {
-	AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId },
-	AcceptRedemption(RedemptionId),
+  AskForRedemption { collection_id: T::CollectionId, item_id: T::ItemId },
+  AcceptRedemption(RedemptionId),
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>BlockUserArgs&lt;T: Config&gt; {
-	BlockUser(T::AccountId),
-	UnblockUser(T::AccountId),
+  BlockUser(T::AccountId),
+  UnblockUser(T::AccountId),
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>AccountOrApplication&lt;T: Config&gt; {
-	Account(T::AccountId),
-	Application([u8; <span class="number">32</span>]),
+  Account(T::AccountId),
+  Application([u8; <span class="number">32</span>]),
 }
 
 <span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>MarketplaceRole {
-	Owner,
-	Admin,
-	Appraiser,
-	RedemptionSpecialist,
-	Participant,
+  Owner,
+  Admin,
+  Appraiser,
+  RedemptionSpecialist,
+  Participant,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>MarketplaceRole {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		MarketplaceRole::Participant
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    MarketplaceRole::Participant
+  }
 }
 
 <span class="kw">impl </span>MarketplaceRole {
-	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
-		<span class="kw">match </span><span class="self">self </span>{
-			<span class="self">Self</span>::Owner =&gt; <span class="string">&quot;Owner&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::Admin =&gt; <span class="string">&quot;Admin&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::Appraiser =&gt; <span class="string">&quot;Appraiser&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::RedemptionSpecialist =&gt; <span class="string">&quot;Redemption_specialist&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::Participant =&gt; <span class="string">&quot;Participant&quot;</span>.as_bytes().to_vec(),
-		}
-	}
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::Owner =&gt; <span class="string">&quot;Owner&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Admin =&gt; <span class="string">&quot;Admin&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Appraiser =&gt; <span class="string">&quot;Appraiser&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RedemptionSpecialist =&gt; <span class="string">&quot;Redemption_specialist&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Participant =&gt; <span class="string">&quot;Participant&quot;</span>.as_bytes().to_vec(),
+    }
+  }
 
-	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
-		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
-	}
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-	<span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
-		<span class="kw">use </span><span class="kw">crate</span>::types::MarketplaceRole::<span class="kw-2">*</span>;
-		[
-			Owner.to_vec(),
-			Admin.to_vec(),
-			Appraiser.to_vec(),
-			RedemptionSpecialist.to_vec(),
-			Participant.to_vec(),
-		]
-		.to_vec()
-	}
+  <span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::MarketplaceRole::<span class="kw-2">*</span>;
+    [
+      Owner.to_vec(),
+      Admin.to_vec(),
+      Appraiser.to_vec(),
+      RedemptionSpecialist.to_vec(),
+      Participant.to_vec(),
+    ]
+    .to_vec()
+  }
 }
 
 <span class="doccomment">/// Extrinsics which require previous authorization to call them
 </span><span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>Permission {
-	Enroll,
-	AddAuth,
-	RemoveAuth,
-	UpdateLabel,
-	RemoveMarketplace,
-	EnlistSellOffer,
-	TakeSellOffer,
-	DuplicateOffer,
-	RemoveOffer,
-	EnlistBuyOffer,
-	TakeBuyOffer,
-	AskForRedemption,
-	AcceptRedemption,
-	BlockUser,
+  Enroll,
+  AddAuth,
+  RemoveAuth,
+  UpdateLabel,
+  RemoveMarketplace,
+  EnlistSellOffer,
+  TakeSellOffer,
+  DuplicateOffer,
+  RemoveOffer,
+  EnlistBuyOffer,
+  TakeBuyOffer,
+  AskForRedemption,
+  AcceptRedemption,
+  BlockUser,
 }
 
 <span class="kw">impl </span>Permission {
-	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
-		<span class="kw">match </span><span class="self">self </span>{
-			<span class="self">Self</span>::Enroll =&gt; <span class="string">&quot;Enroll&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::AddAuth =&gt; <span class="string">&quot;AddAuth&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::RemoveAuth =&gt; <span class="string">&quot;RemoveAuth&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::UpdateLabel =&gt; <span class="string">&quot;UpdateLabel&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::RemoveMarketplace =&gt; <span class="string">&quot;RemoveMarketplace&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::EnlistSellOffer =&gt; <span class="string">&quot;EnlistSellOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::TakeSellOffer =&gt; <span class="string">&quot;TakeSellOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::DuplicateOffer =&gt; <span class="string">&quot;DuplicateOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::RemoveOffer =&gt; <span class="string">&quot;RemoveOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::EnlistBuyOffer =&gt; <span class="string">&quot;EnlistBuyOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::TakeBuyOffer =&gt; <span class="string">&quot;TakeBuyOffer&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::AskForRedemption =&gt; <span class="string">&quot;AskForRedemption&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::AcceptRedemption =&gt; <span class="string">&quot;AcceptRedemption&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::BlockUser =&gt; <span class="string">&quot;BlockUser&quot;</span>.as_bytes().to_vec(),
-		}
-	}
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::Enroll =&gt; <span class="string">&quot;Enroll&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::AddAuth =&gt; <span class="string">&quot;AddAuth&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RemoveAuth =&gt; <span class="string">&quot;RemoveAuth&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::UpdateLabel =&gt; <span class="string">&quot;UpdateLabel&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RemoveMarketplace =&gt; <span class="string">&quot;RemoveMarketplace&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::EnlistSellOffer =&gt; <span class="string">&quot;EnlistSellOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::TakeSellOffer =&gt; <span class="string">&quot;TakeSellOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::DuplicateOffer =&gt; <span class="string">&quot;DuplicateOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::RemoveOffer =&gt; <span class="string">&quot;RemoveOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::EnlistBuyOffer =&gt; <span class="string">&quot;EnlistBuyOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::TakeBuyOffer =&gt; <span class="string">&quot;TakeBuyOffer&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::AskForRedemption =&gt; <span class="string">&quot;AskForRedemption&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::AcceptRedemption =&gt; <span class="string">&quot;AcceptRedemption&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::BlockUser =&gt; <span class="string">&quot;BlockUser&quot;</span>.as_bytes().to_vec(),
+    }
+  }
 
-	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
-		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
-	}
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-	<span class="kw">pub fn </span>admin_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
-		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>admin_permissions = [
-			Enroll.to_vec(),
-			AddAuth.to_vec(),
-			RemoveAuth.to_vec(),
-			UpdateLabel.to_vec(),
-			RemoveMarketplace.to_vec(),
-			AcceptRedemption.to_vec(),
-			BlockUser.to_vec(),
-		]
-		.to_vec();
-		admin_permissions.append(<span class="kw-2">&amp;mut </span>Permission::participant_permissions());
-		admin_permissions
-	}
+  <span class="kw">pub fn </span>admin_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>admin_permissions = [
+      Enroll.to_vec(),
+      AddAuth.to_vec(),
+      RemoveAuth.to_vec(),
+      UpdateLabel.to_vec(),
+      RemoveMarketplace.to_vec(),
+      AcceptRedemption.to_vec(),
+      BlockUser.to_vec(),
+    ]
+    .to_vec();
+    admin_permissions.append(<span class="kw-2">&amp;mut </span>Permission::participant_permissions());
+    admin_permissions
+  }
 
-	<span class="kw">pub fn </span>participant_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
-		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
-		[
-			EnlistSellOffer.to_vec(),
-			TakeSellOffer.to_vec(),
-			DuplicateOffer.to_vec(),
-			RemoveOffer.to_vec(),
-			EnlistBuyOffer.to_vec(),
-			TakeBuyOffer.to_vec(),
-			AskForRedemption.to_vec(),
-		]
-		.to_vec()
-	}
+  <span class="kw">pub fn </span>participant_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+    [
+      EnlistSellOffer.to_vec(),
+      TakeSellOffer.to_vec(),
+      DuplicateOffer.to_vec(),
+      RemoveOffer.to_vec(),
+      EnlistBuyOffer.to_vec(),
+      TakeBuyOffer.to_vec(),
+      AskForRedemption.to_vec(),
+    ]
+    .to_vec()
+  }
 }
 
 <span class="attr">#[derive(
-	CloneNoBound,
-	Encode,
-	Decode,
-	Eq,
-	PartialEq,
-	RuntimeDebugNoBound,
-	Default,
-	TypeInfo,
-	MaxEncodedLen,
+  CloneNoBound, Encode, Decode, Eq, PartialEq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
 )]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Application&lt;T: Config&gt; {
-	<span class="kw">pub </span>status: ApplicationStatus,
-	<span class="kw">pub </span>fields: BoundedVec&lt;ApplicationField, T::MaxFiles&gt;,
-	<span class="kw">pub </span>feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
+  <span class="kw">pub </span>status: ApplicationStatus,
+  <span class="kw">pub </span>fields: BoundedVec&lt;ApplicationField, T::MaxFiles&gt;,
+  <span class="kw">pub </span>feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
 }
 
 <span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>ApplicationStatus {
-	Pending,
-	Approved,
-	Rejected,
+  Pending,
+  Approved,
+  Rejected,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>ApplicationStatus {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		ApplicationStatus::Pending
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    ApplicationStatus::Pending
+  }
 }
 
 <span class="attr">#[derive(
-	CloneNoBound, Encode, Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
+  CloneNoBound, Encode, Decode, Eq, RuntimeDebugNoBound, Default, TypeInfo, MaxEncodedLen,
 )]
 </span><span class="kw">pub struct </span>ApplicationField {
-	<span class="kw">pub </span>display_name: BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;,
-	<span class="kw">pub </span>cid: Cid,
-	<span class="kw">pub </span>custodian_cid: <span class="prelude-ty">Option</span>&lt;Cid&gt;,
+  <span class="kw">pub </span>display_name: BoundedVec&lt;u8, ConstU32&lt;<span class="number">100</span>&gt;&gt;,
+  <span class="kw">pub </span>cid: Cid,
+  <span class="kw">pub </span>custodian_cid: <span class="prelude-ty">Option</span>&lt;Cid&gt;,
 }
 <span class="comment">// Eq macro didnt work (binary operation `==` cannot be applied to type...)
 </span><span class="kw">impl </span>PartialEq <span class="kw">for </span>ApplicationField {
-	<span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-		<span class="self">self</span>.cid == other.cid &amp;&amp; <span class="self">self</span>.display_name == other.display_name
-	}
+  <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+    <span class="self">self</span>.cid == other.cid &amp;&amp; <span class="self">self</span>.display_name == other.display_name
+  }
 }
 
 <span class="comment">//offers
 </span><span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>OfferStatus {
-	Open,
-	Closed,
+  Open,
+  Closed,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>OfferStatus {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		OfferStatus::Open
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    OfferStatus::Open
+  }
 }
 
 <span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>OfferType {
-	SellOrder,
-	BuyOrder,
+  SellOrder,
+  BuyOrder,
 }
 <span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>OfferData&lt;T: Config&gt; {
-	<span class="kw">pub </span>marketplace_id: [u8; <span class="number">32</span>],
-	<span class="kw">pub </span>collection_id: T::CollectionId,
-	<span class="kw">pub </span>item_id: T::ItemId,
-	<span class="kw">pub </span>percentage: Permill,
-	<span class="kw">pub </span>creator: T::AccountId,
-	<span class="kw">pub </span>price: T::Balance,
-	<span class="kw">pub </span>fee: T::Balance,
-	<span class="kw">pub </span>status: OfferStatus,
-	<span class="kw">pub </span>creation_date: u64,
-	<span class="kw">pub </span>offer_type: OfferType,
-	<span class="kw">pub </span>buyer: <span class="prelude-ty">Option</span>&lt;(T::AccountId, [u8; <span class="number">32</span>])&gt;,
+  <span class="kw">pub </span>marketplace_id: [u8; <span class="number">32</span>],
+  <span class="kw">pub </span>collection_id: T::CollectionId,
+  <span class="kw">pub </span>item_id: T::ItemId,
+  <span class="kw">pub </span>percentage: Permill,
+  <span class="kw">pub </span>creator: T::AccountId,
+  <span class="kw">pub </span>price: T::Balance,
+  <span class="kw">pub </span>fee: T::Balance,
+  <span class="kw">pub </span>status: OfferStatus,
+  <span class="kw">pub </span>creation_date: u64,
+  <span class="kw">pub </span>offer_type: OfferType,
+  <span class="kw">pub </span>buyer: <span class="prelude-ty">Option</span>&lt;(T::AccountId, [u8; <span class="number">32</span>])&gt;,
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_gated_marketplace" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

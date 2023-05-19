@@ -498,545 +498,505 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
-<a href="#506" id="506">506</a>
-<a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a>
-<a href="#514" id="514">514</a>
-<a href="#515" id="515">515</a>
-<a href="#516" id="516">516</a>
-<a href="#517" id="517">517</a>
-<a href="#518" id="518">518</a>
-<a href="#519" id="519">519</a>
-<a href="#520" id="520">520</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
-<span class="kw">use </span>frame_support::traits::tokens::nonfungibles::Inspect;
+<span class="kw">use </span>frame_support::{sp_io::hashing::blake2_256, traits::tokens::nonfungibles::Inspect};
 <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>scale_info::prelude::string::String;
 
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
 
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::traits::EnsureOriginWithArg;
-<span class="kw">use </span>frame_support::PalletId;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, traits::EnsureOriginWithArg, PalletId};
 <span class="comment">// use frame_support::traits::OriginTrait;
-</span><span class="kw">use </span>sp_runtime::traits::AccountIdConversion;
-<span class="kw">use </span>sp_runtime::{sp_std::vec::Vec, Permill};
+</span><span class="kw">use </span>sp_runtime::{sp_std::vec::Vec, traits::AccountIdConversion, Permill};
 <span class="comment">// use sp_runtime::traits::StaticLookup;
 
 </span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-	<span class="kw">pub fn </span>u32_to_instance_id(input: u32) -&gt; T::ItemId
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
-	{
-		T::ItemId::from(input)
-	}
-
-	<span class="kw">pub fn </span>u32_to_class_id(input: u32) -&gt; T::CollectionId
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId: From&lt;u32&gt;,
-	{
-		T::CollectionId::from(input)
-	}
-
-	<span class="kw">pub fn </span>bytes_to_u32(input: Vec&lt;u8&gt;) -&gt; u32 {
-		u32::from_ne_bytes(input.try_into().unwrap())
-	}
-
-	<span class="kw">pub fn </span>percent_to_permill(input: u32) -&gt; Permill {
-		Permill::from_percent(input)
-	}
-
-	<span class="kw">pub fn </span>permill_to_percent(input: Permill) -&gt; u32 {
-		input.deconstruct() <span class="kw">as </span>u32
-	}
-
-	<span class="kw">pub fn </span>bytes_to_string(input: Vec&lt;u8&gt;) -&gt; String {
-		<span class="kw">let </span><span class="kw-2">mut </span>s = String::default();
-		<span class="kw">for </span>x <span class="kw">in </span>input {
-			<span class="comment">//let c: char = x.into();
-			</span>s.push(x <span class="kw">as </span>char);
-		}
-		s
-	}
-
-	<span class="kw">pub fn </span>account_id_to_lookup_source(
-		account_id: <span class="kw-2">&amp;</span>T::AccountId,
-	) -&gt; &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::Source {
-		&lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::unlookup(account_id.clone())
-	}
-
-	<span class="doccomment">/// Helper function for printing purposes
-	</span><span class="kw">pub fn </span>get_nft_attribute(
-		class_id: <span class="kw-2">&amp;</span>T::CollectionId,
-		instance_id: <span class="kw-2">&amp;</span>T::ItemId,
-		key: <span class="kw-2">&amp;</span>[u8],
-	) -&gt; AttributeValue&lt;T&gt; {
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::attribute(class_id, instance_id, key) {
-			<span class="kw">return </span>BoundedVec::&lt;u8, T::ValueLimit&gt;::try_from(a)
-				.expect(<span class="string">&quot;Error on converting the attribute to BoundedVec&quot;</span>);
-		}
-		BoundedVec::&lt;u8, T::ValueLimit&gt;::default()
-	}
-
-	<span class="kw">pub fn </span>admin_of(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; <span class="prelude-ty">Option</span>&lt;T::AccountId&gt; {
-		pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id)
-	}
-
-	<span class="kw">pub fn </span>is_frozen(collection_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; bool {
-		<span class="kw">let </span>frunique: FruniqueData&lt;T&gt; =
-			&lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>collection_id, <span class="kw-2">&amp;</span>instance_id).unwrap();
-
-		frunique.frozen
-	}
-
-	<span class="kw">pub fn </span>collection_exists(class_id: <span class="kw-2">&amp;</span>T::CollectionId) -&gt; bool {
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(_owner) = pallet_uniques::Pallet::&lt;T&gt;::collection_owner(<span class="kw-2">*</span>class_id) {
-			<span class="kw">return </span><span class="bool-val">true</span>;
-		}
-		<span class="bool-val">false
-	</span>}
-
-	<span class="kw">pub fn </span>instance_exists(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; bool {
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(_owner) = pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id) {
-			<span class="kw">return </span><span class="bool-val">true</span>;
-		}
-		<span class="bool-val">false
-	</span>}
-
-	<span class="comment">// helper to initialize the roles for the RBAC module
-	</span><span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
-		<span class="kw">let </span>pallet: IdOrVec = <span class="self">Self</span>::pallet_id();
-
-		<span class="kw">let </span>owner_role_ids =
-			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_owner_roles())<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>owner_role <span class="kw">in </span>owner_role_ids {
-			T::Rbac::create_and_set_permissions(
-				pallet.clone(),
-				owner_role,
-				Permission::owner_permissions(),
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="kw">let </span>admin_role_ids =
-			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_admin_roles())<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>admin_role <span class="kw">in </span>admin_role_ids {
-			T::Rbac::create_and_set_permissions(
-				pallet.clone(),
-				admin_role,
-				Permission::admin_permissions(),
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="kw">let </span>collaborator_role_ids =
-			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collaborator_roles())<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>collaborator_role <span class="kw">in </span>collaborator_role_ids {
-			T::Rbac::create_and_set_permissions(
-				pallet.clone(),
-				collaborator_role,
-				Permission::collaborator_permissions(),
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="kw">let </span>collector_role_ids =
-			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collector_roles())<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>collector_role <span class="kw">in </span>collector_role_ids {
-			T::Rbac::create_and_set_permissions(
-				pallet.clone(),
-				collector_role,
-				Permission::collector_permissions(),
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="kw">let </span>holder_role_ids =
-			T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_holder_roles())<span class="question-mark">?</span>;
-
-		<span class="kw">for </span>holder_role <span class="kw">in </span>holder_role_ids {
-			T::Rbac::create_and_set_permissions(
-				pallet.clone(),
-				holder_role,
-				Permission::holder_permissions(),
-			)<span class="question-mark">?</span>;
-		}
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">// Helper function to set an attribute to a given NFT
-	</span><span class="kw">pub fn </span>set_attribute(
-		origin: OriginFor&lt;T&gt;,
-		class_id: <span class="kw-2">&amp;</span>T::CollectionId,
-		instance_id: T::ItemId,
-		key: AttributeKey&lt;T&gt;,
-		value: AttributeValue&lt;T&gt;,
-	) -&gt; DispatchResult {
-		pallet_uniques::Pallet::&lt;T&gt;::set_attribute(
-			origin,
-			<span class="kw-2">*</span>class_id,
-			<span class="prelude-val">Some</span>(instance_id),
-			key,
-			value,
-		)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">// Helper function to mint a new NFT
-	</span><span class="kw">pub fn </span>do_mint(
-		collection: T::CollectionId,
-		owner: T::AccountId,
-		metadata: CollectionDescription&lt;T&gt;,
-		attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
-	) -&gt; DispatchResult
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
-	{
-		<span class="kw">let </span>nex_item: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(collection).unwrap_or(<span class="number">0</span>);
-		&lt;NextFrunique&lt;T&gt;&gt;::insert(collection, nex_item + <span class="number">1</span>);
-
-		<span class="kw">let </span>item = <span class="self">Self</span>::u32_to_instance_id(nex_item);
-		pallet_uniques::Pallet::&lt;T&gt;::do_mint(collection, item, owner, |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
-
-		pallet_uniques::Pallet::&lt;T&gt;::set_metadata(
-			frame_system::RawOrigin::Root.into(),
-			collection,
-			item.clone(),
-			metadata,
-			<span class="bool-val">false</span>,
-		)<span class="question-mark">?</span>;
-
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(attributes) = attributes {
-			<span class="kw">for </span>(key, value) <span class="kw">in </span>attributes {
-				pallet_uniques::Pallet::&lt;T&gt;::set_attribute(
-					frame_system::RawOrigin::Root.into(),
-					collection,
-					<span class="prelude-val">Some</span>(item),
-					key,
-					value,
-				)<span class="question-mark">?</span>;
-			}
-		}
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>do_freeze(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
-		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			class_id,
-			instance_id,
-			|frunique_data| -&gt; DispatchResult {
-				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
-				frunique.frozen = <span class="bool-val">true</span>;
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>do_thaw(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
-		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			class_id,
-			instance_id,
-			|frunique_data| -&gt; DispatchResult {
-				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
-				frunique.frozen = <span class="bool-val">false</span>;
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>burn(
-		origin: OriginFor&lt;T&gt;,
-		class_id: <span class="kw-2">&amp;</span>T::CollectionId,
-		instance_id: T::ItemId,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>admin = <span class="self">Self</span>::admin_of(class_id, <span class="kw-2">&amp;</span>instance_id);
-		<span class="macro">ensure!</span>(admin.is_some(), <span class="string">&quot;Instance is not owned by anyone&quot;</span>);
-
-		pallet_uniques::Pallet::&lt;T&gt;::burn(
-			origin,
-			<span class="kw-2">*</span>class_id,
-			instance_id,
-			<span class="prelude-val">Some</span>(<span class="self">Self</span>::account_id_to_lookup_source(<span class="kw-2">&amp;</span>admin.unwrap())),
-		)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Helper function to create a new collection
-	/// Creates a collection and updates its metadata if needed.
-	</span><span class="kw">pub fn </span>do_create_collection(
-		origin: OriginFor&lt;T&gt;,
-		metadata: CollectionDescription&lt;T&gt;,
-		admin: T::AccountId,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;T::CollectionId, DispatchError&gt;
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId: From&lt;u32&gt;,
-	{
-		<span class="kw">let </span>next_collection: u32 = <span class="self">Self</span>::next_collection();
-		<span class="kw">let </span>class_id = <span class="self">Self</span>::u32_to_class_id(next_collection);
-
-		<span class="kw">let </span>owner = T::CreateOrigin::ensure_origin(origin.clone(), <span class="kw-2">&amp;</span>class_id)<span class="question-mark">?</span>;
-
-		<span class="kw">let </span>scope_id = class_id.using_encoded(blake2_256);
-		T::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), scope_id)<span class="question-mark">?</span>;
-
-		<span class="self">Self</span>::insert_auth_in_frunique_collection(owner.clone(), class_id, FruniqueRole::Owner)<span class="question-mark">?</span>;
-
-		pallet_uniques::Pallet::&lt;T&gt;::do_create_collection(
-			class_id,
-			owner.clone(),
-			admin.clone(),
-			T::CollectionDeposit::get(),
-			<span class="bool-val">false</span>,
-			pallet_uniques::Event::Created { collection: class_id, creator: admin.clone(), owner },
-		)<span class="question-mark">?</span>;
-
-		pallet_uniques::Pallet::&lt;T&gt;::set_collection_metadata(
-			origin,
-			class_id.clone(),
-			metadata,
-			<span class="bool-val">false</span>,
-		)<span class="question-mark">?</span>;
-
-		&lt;NextCollection&lt;T&gt;&gt;::put(<span class="self">Self</span>::next_collection() + <span class="number">1</span>);
-
-		<span class="prelude-val">Ok</span>(class_id)
-	}
-
-	<span class="comment">// Create a new NFT for a given collection
-	</span><span class="kw">pub fn </span>do_spawn(
-		collection: T::CollectionId,
-		owner: T::AccountId,
-		metadata: CollectionDescription&lt;T&gt;,
-		attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
-		parent_info: <span class="prelude-ty">Option</span>&lt;ParentInfo&lt;T&gt;&gt;,
-	) -&gt; DispatchResult
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
-	{
-		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
-
-		<span class="kw">let </span>nex_item: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(collection).unwrap_or(<span class="number">0</span>);
-		<span class="kw">let </span>item = <span class="self">Self</span>::u32_to_instance_id(nex_item);
-
-		<span class="self">Self</span>::do_mint(collection, owner.clone(), metadata.clone(), attributes)<span class="question-mark">?</span>;
-
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>parent_info) = parent_info {
-			<span class="kw">return </span><span class="self">Self</span>::do_nft_division(collection, item, metadata, parent_info, owner);
-		}
-
-		<span class="kw">let </span>frunique_data = FruniqueData {
-			metadata,
-			weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
-			parent: <span class="prelude-val">None</span>,
-			children: <span class="prelude-val">None</span>,
-			verified: <span class="bool-val">false</span>,
-			frozen: <span class="bool-val">false</span>,
-			redeemed: <span class="bool-val">false</span>,
-			spawned_by: <span class="prelude-val">Some</span>(owner.clone()),
-			verified_by: <span class="prelude-val">None</span>,
-		};
-
-		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
-		&lt;FruniqueRoots&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">// Takes cares of the division of the NFT
-	</span><span class="kw">pub fn </span>do_nft_division(
-		collection: T::CollectionId,
-		item: T::ItemId,
-		metadata: CollectionDescription&lt;T&gt;,
-		parent_info: <span class="kw-2">&amp;</span>ParentInfo&lt;T&gt;,
-		user: T::AccountId,
-	) -&gt; DispatchResult
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
-	{
-		<span class="macro">ensure!</span>(
-			<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>parent_info.collection_id),
-			Error::&lt;T&gt;::CollectionNotFound
-		);
-		<span class="macro">ensure!</span>(
-			<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>parent_info.collection_id, <span class="kw-2">&amp;</span>parent_info.parent_id),
-			Error::&lt;T&gt;::FruniqueNotFound
-		);
-
-		<span class="kw">let </span>frunique_parent: FruniqueData&lt;T&gt; =
-			&lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>parent_info.collection_id, <span class="kw-2">&amp;</span>parent_info.parent_id).unwrap();
-
-		<span class="macro">ensure!</span>(!frunique_parent.frozen, Error::&lt;T&gt;::ParentFrozen);
-		<span class="macro">ensure!</span>(!frunique_parent.redeemed, Error::&lt;T&gt;::ParentAlreadyRedeemed);
-
-		<span class="kw">let </span>child_percentage: Permill = parent_info.parent_weight * frunique_parent.weight;
-
-		<span class="kw">let </span>parent_data: ParentInfo&lt;T&gt; = ParentInfo {
-			collection_id: parent_info.collection_id,
-			parent_id: parent_info.parent_id,
-			parent_weight: child_percentage,
-			is_hierarchical: parent_info.is_hierarchical,
-		};
-
-		<span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = FruniqueData {
-			metadata,
-			weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
-			parent: <span class="prelude-val">Some</span>(parent_data),
-			children: <span class="prelude-val">None</span>,
-			verified: <span class="bool-val">false</span>,
-			frozen: <span class="bool-val">false</span>,
-			redeemed: <span class="bool-val">false</span>,
-			spawned_by: <span class="prelude-val">Some</span>(user.clone()),
-			verified_by: <span class="prelude-val">None</span>,
-		};
-
-		&lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
-
-		<span class="kw">let </span>frunique_child: ChildInfo&lt;T&gt; = ChildInfo {
-			collection_id: collection,
-			child_id: item,
-			weight_inherited: child_percentage,
-			is_hierarchical: parent_info.is_hierarchical,
-		};
-
-		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			parent_info.collection_id,
-			parent_info.parent_id,
-			|frunique_data| -&gt; DispatchResult {
-				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
-				<span class="kw">match </span>frunique.children.as_mut() {
-					<span class="prelude-val">Some</span>(children) =&gt; children
-						.try_push(frunique_child)
-						.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxNumberOfChildrenReached)<span class="question-mark">?</span>,
-					<span class="prelude-val">None </span>=&gt; {
-						<span class="kw">let </span>child = frunique.children.get_or_insert(Children::default());
-						child
-							.try_push(frunique_child)
-							.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxNumberOfChildrenReached)<span class="question-mark">?</span>;
-					},
-				}
-				frunique.weight = frunique.weight - child_percentage;
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>do_redeem(collection: T::CollectionId, item: T::ItemId) -&gt; DispatchResult
-	<span class="kw">where
-		</span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
-	{
-		<span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
-		<span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>collection, <span class="kw-2">&amp;</span>item), Error::&lt;T&gt;::FruniqueNotFound);
-
-		<span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
-
-
-		<span class="macro">ensure!</span>(!frunique_data.frozen, Error::&lt;T&gt;::FruniqueFrozen);
-		<span class="macro">ensure!</span>(!frunique_data.redeemed, Error::&lt;T&gt;::FruniqueAlreadyRedeemed);
-
-		&lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			collection,
-			item,
-			|frunique_data| -&gt; DispatchResult {
-				<span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
-				frunique.redeemed = <span class="bool-val">true</span>;
-				frunique.frozen = <span class="bool-val">true</span>;
-
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-
-		&lt;FruniqueRedeemed&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="kw">pub fn </span>get_nft_metadata(
-		collection: T::CollectionId,
-		item: T::ItemId,
-	) -&gt; CollectionDescription&lt;T&gt; {
-		<span class="kw">let </span>frunique_data = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
-		frunique_data.metadata
-	}
-
-	<span class="doccomment">/// Helper functions to interact with the RBAC module
-	</span><span class="kw">pub fn </span>pallet_id() -&gt; IdOrVec {
-		IdOrVec::Vec(<span class="self">Self</span>::module_name().as_bytes().to_vec())
-	}
-
-	<span class="comment">// Helper function to get the pallet account as a AccountId
-	</span><span class="kw">pub fn </span>pallet_account() -&gt; T::AccountId {
-		<span class="kw">let </span>pallet_name = <span class="self">Self</span>::module_name().as_bytes().to_vec();
-		<span class="kw">let </span>pallet_account_name: [u8; <span class="number">8</span>] =
-			pallet_name.as_slice().try_into().unwrap_or(<span class="kw-2">*</span><span class="string">b&quot;frunique&quot;</span>);
-		<span class="kw">let </span>pallet_id = PalletId(pallet_account_name);
-		pallet_id.try_into_account().unwrap()
-	}
-
-	<span class="comment">// Helper add RBAC roles for collections
-	</span><span class="kw">pub fn </span>insert_auth_in_frunique_collection(
-		user: T::AccountId,
-		class_id: T::CollectionId,
-		role: FruniqueRole,
-	) -&gt; DispatchResult {
-		T::Rbac::assign_role_to_user(
-			user,
-			<span class="self">Self</span>::pallet_id(),
-			<span class="kw-2">&amp;</span>class_id.using_encoded(blake2_256),
-			role.id(),
-		)<span class="question-mark">?</span>;
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">// Helper function to remove RBAC roles for collections
-	</span><span class="kw">pub fn </span>remove_auth_from_frunique_collection(
-		user: T::AccountId,
-		class_id: T::CollectionId,
-		role: FruniqueRole,
-	) -&gt; DispatchResult {
-		T::Rbac::remove_role_from_user(
-			user,
-			<span class="self">Self</span>::pallet_id(),
-			<span class="kw-2">&amp;</span>class_id.using_encoded(blake2_256),
-			role.id(),
-		)<span class="question-mark">?</span>;
-
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">// Helper function to check if a user has a specific role in a collection
-	</span><span class="kw">pub fn </span>is_authorized(
-		user: T::AccountId,
-		collection_id: T::CollectionId,
-		permission: Permission,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>scope_id = collection_id.using_encoded(blake2_256);
-		&lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::is_authorized(
-			user,
-			<span class="self">Self</span>::pallet_id(),
-			<span class="kw-2">&amp;</span>scope_id,
-			<span class="kw-2">&amp;</span>permission.id(),
-		)
-	}
+  <span class="kw">pub fn </span>u32_to_instance_id(input: u32) -&gt; T::ItemId
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    T::ItemId::from(input)
+  }
+
+  <span class="kw">pub fn </span>u32_to_class_id(input: u32) -&gt; T::CollectionId
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId: From&lt;u32&gt;,
+  {
+    T::CollectionId::from(input)
+  }
+
+  <span class="kw">pub fn </span>bytes_to_u32(input: Vec&lt;u8&gt;) -&gt; u32 {
+    u32::from_ne_bytes(input.try_into().unwrap())
+  }
+
+  <span class="kw">pub fn </span>percent_to_permill(input: u32) -&gt; Permill {
+    Permill::from_percent(input)
+  }
+
+  <span class="kw">pub fn </span>permill_to_percent(input: Permill) -&gt; u32 {
+    input.deconstruct() <span class="kw">as </span>u32
+  }
+
+  <span class="kw">pub fn </span>bytes_to_string(input: Vec&lt;u8&gt;) -&gt; String {
+    <span class="kw">let </span><span class="kw-2">mut </span>s = String::default();
+    <span class="kw">for </span>x <span class="kw">in </span>input {
+      <span class="comment">//let c: char = x.into();
+      </span>s.push(x <span class="kw">as </span>char);
+    }
+    s
+  }
+
+  <span class="kw">pub fn </span>account_id_to_lookup_source(
+    account_id: <span class="kw-2">&amp;</span>T::AccountId,
+  ) -&gt; &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::Source {
+    &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::unlookup(account_id.clone())
+  }
+
+  <span class="doccomment">/// Helper function for printing purposes
+  </span><span class="kw">pub fn </span>get_nft_attribute(
+    class_id: <span class="kw-2">&amp;</span>T::CollectionId,
+    instance_id: <span class="kw-2">&amp;</span>T::ItemId,
+    key: <span class="kw-2">&amp;</span>[u8],
+  ) -&gt; AttributeValue&lt;T&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(a) = pallet_uniques::Pallet::&lt;T&gt;::attribute(class_id, instance_id, key) {
+      <span class="kw">return </span>BoundedVec::&lt;u8, T::ValueLimit&gt;::try_from(a)
+        .expect(<span class="string">&quot;Error on converting the attribute to BoundedVec&quot;</span>);
+    }
+    BoundedVec::&lt;u8, T::ValueLimit&gt;::default()
+  }
+
+  <span class="kw">pub fn </span>admin_of(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; <span class="prelude-ty">Option</span>&lt;T::AccountId&gt; {
+    pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id)
+  }
+
+  <span class="kw">pub fn </span>is_frozen(collection_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; bool {
+    <span class="kw">let </span>frunique: FruniqueData&lt;T&gt; =
+      &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>collection_id, <span class="kw-2">&amp;</span>instance_id).unwrap();
+
+    frunique.frozen
+  }
+
+  <span class="kw">pub fn </span>collection_exists(class_id: <span class="kw-2">&amp;</span>T::CollectionId) -&gt; bool {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(_owner) = pallet_uniques::Pallet::&lt;T&gt;::collection_owner(<span class="kw-2">*</span>class_id) {
+      <span class="kw">return </span><span class="bool-val">true</span>;
+    }
+    <span class="bool-val">false
+  </span>}
+
+  <span class="kw">pub fn </span>instance_exists(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: <span class="kw-2">&amp;</span>T::ItemId) -&gt; bool {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(_owner) = pallet_uniques::Pallet::&lt;T&gt;::owner(<span class="kw-2">*</span>class_id, <span class="kw-2">*</span>instance_id) {
+      <span class="kw">return </span><span class="bool-val">true</span>;
+    }
+    <span class="bool-val">false
+  </span>}
+
+  <span class="comment">// helper to initialize the roles for the RBAC module
+  </span><span class="kw">pub fn </span>do_initial_setup() -&gt; DispatchResult {
+    <span class="kw">let </span>pallet: IdOrVec = <span class="self">Self</span>::pallet_id();
+
+    <span class="kw">let </span>owner_role_ids =
+      T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_owner_roles())<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>owner_role <span class="kw">in </span>owner_role_ids {
+      T::Rbac::create_and_set_permissions(
+        pallet.clone(),
+        owner_role,
+        Permission::owner_permissions(),
+      )<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>admin_role_ids =
+      T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_admin_roles())<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>admin_role <span class="kw">in </span>admin_role_ids {
+      T::Rbac::create_and_set_permissions(
+        pallet.clone(),
+        admin_role,
+        Permission::admin_permissions(),
+      )<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>collaborator_role_ids =
+      T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collaborator_roles())<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>collaborator_role <span class="kw">in </span>collaborator_role_ids {
+      T::Rbac::create_and_set_permissions(
+        pallet.clone(),
+        collaborator_role,
+        Permission::collaborator_permissions(),
+      )<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>collector_role_ids =
+      T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_collector_roles())<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>collector_role <span class="kw">in </span>collector_role_ids {
+      T::Rbac::create_and_set_permissions(
+        pallet.clone(),
+        collector_role,
+        Permission::collector_permissions(),
+      )<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>holder_role_ids =
+      T::Rbac::create_and_set_roles(pallet.clone(), FruniqueRole::get_holder_roles())<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>holder_role <span class="kw">in </span>holder_role_ids {
+      T::Rbac::create_and_set_permissions(
+        pallet.clone(),
+        holder_role,
+        Permission::holder_permissions(),
+      )<span class="question-mark">?</span>;
+    }
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="comment">// Helper function to set an attribute to a given NFT
+  </span><span class="kw">pub fn </span>set_attribute(
+    origin: OriginFor&lt;T&gt;,
+    class_id: <span class="kw-2">&amp;</span>T::CollectionId,
+    instance_id: T::ItemId,
+    key: AttributeKey&lt;T&gt;,
+    value: AttributeValue&lt;T&gt;,
+  ) -&gt; DispatchResult {
+    pallet_uniques::Pallet::&lt;T&gt;::set_attribute(origin, <span class="kw-2">*</span>class_id, <span class="prelude-val">Some</span>(instance_id), key, value)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="comment">// Helper function to mint a new NFT
+  </span><span class="kw">pub fn </span>do_mint(
+    collection: T::CollectionId,
+    owner: T::AccountId,
+    metadata: CollectionDescription&lt;T&gt;,
+    attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
+  ) -&gt; DispatchResult
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    <span class="kw">let </span>nex_item: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(collection).unwrap_or(<span class="number">0</span>);
+    &lt;NextFrunique&lt;T&gt;&gt;::insert(collection, nex_item + <span class="number">1</span>);
+
+    <span class="kw">let </span>item = <span class="self">Self</span>::u32_to_instance_id(nex_item);
+    pallet_uniques::Pallet::&lt;T&gt;::do_mint(collection, item, owner, |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
+
+    pallet_uniques::Pallet::&lt;T&gt;::set_metadata(
+      frame_system::RawOrigin::Root.into(),
+      collection,
+      item.clone(),
+      metadata,
+      <span class="bool-val">false</span>,
+    )<span class="question-mark">?</span>;
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(attributes) = attributes {
+      <span class="kw">for </span>(key, value) <span class="kw">in </span>attributes {
+        pallet_uniques::Pallet::&lt;T&gt;::set_attribute(
+          frame_system::RawOrigin::Root.into(),
+          collection,
+          <span class="prelude-val">Some</span>(item),
+          key,
+          value,
+        )<span class="question-mark">?</span>;
+      }
+    }
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>do_freeze(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
+    &lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+      class_id,
+      instance_id,
+      |frunique_data| -&gt; DispatchResult {
+        <span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+        frunique.frozen = <span class="bool-val">true</span>;
+        <span class="prelude-val">Ok</span>(())
+      },
+    )<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>do_thaw(class_id: <span class="kw-2">&amp;</span>T::CollectionId, instance_id: T::ItemId) -&gt; DispatchResult {
+    &lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+      class_id,
+      instance_id,
+      |frunique_data| -&gt; DispatchResult {
+        <span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+        frunique.frozen = <span class="bool-val">false</span>;
+        <span class="prelude-val">Ok</span>(())
+      },
+    )<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>burn(
+    origin: OriginFor&lt;T&gt;,
+    class_id: <span class="kw-2">&amp;</span>T::CollectionId,
+    instance_id: T::ItemId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>admin = <span class="self">Self</span>::admin_of(class_id, <span class="kw-2">&amp;</span>instance_id);
+    <span class="macro">ensure!</span>(admin.is_some(), <span class="string">&quot;Instance is not owned by anyone&quot;</span>);
+
+    pallet_uniques::Pallet::&lt;T&gt;::burn(
+      origin,
+      <span class="kw-2">*</span>class_id,
+      instance_id,
+      <span class="prelude-val">Some</span>(<span class="self">Self</span>::account_id_to_lookup_source(<span class="kw-2">&amp;</span>admin.unwrap())),
+    )<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Helper function to create a new collection
+  /// Creates a collection and updates its metadata if needed.
+  </span><span class="kw">pub fn </span>do_create_collection(
+    origin: OriginFor&lt;T&gt;,
+    metadata: CollectionDescription&lt;T&gt;,
+    admin: T::AccountId,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::CollectionId, DispatchError&gt;
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::CollectionId: From&lt;u32&gt;,
+  {
+    <span class="kw">let </span>next_collection: u32 = <span class="self">Self</span>::next_collection();
+    <span class="kw">let </span>class_id = <span class="self">Self</span>::u32_to_class_id(next_collection);
+
+    <span class="kw">let </span>owner = T::CreateOrigin::ensure_origin(origin.clone(), <span class="kw-2">&amp;</span>class_id)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>scope_id = class_id.using_encoded(blake2_256);
+    T::Rbac::create_scope(<span class="self">Self</span>::pallet_id(), scope_id)<span class="question-mark">?</span>;
+
+    <span class="self">Self</span>::insert_auth_in_frunique_collection(owner.clone(), class_id, FruniqueRole::Owner)<span class="question-mark">?</span>;
+
+    pallet_uniques::Pallet::&lt;T&gt;::do_create_collection(
+      class_id,
+      owner.clone(),
+      admin.clone(),
+      T::CollectionDeposit::get(),
+      <span class="bool-val">false</span>,
+      pallet_uniques::Event::Created { collection: class_id, creator: admin.clone(), owner },
+    )<span class="question-mark">?</span>;
+
+    pallet_uniques::Pallet::&lt;T&gt;::set_collection_metadata(
+      origin,
+      class_id.clone(),
+      metadata,
+      <span class="bool-val">false</span>,
+    )<span class="question-mark">?</span>;
+
+    &lt;NextCollection&lt;T&gt;&gt;::put(<span class="self">Self</span>::next_collection() + <span class="number">1</span>);
+
+    <span class="prelude-val">Ok</span>(class_id)
+  }
+
+  <span class="comment">// Create a new NFT for a given collection
+  </span><span class="kw">pub fn </span>do_spawn(
+    collection: T::CollectionId,
+    owner: T::AccountId,
+    metadata: CollectionDescription&lt;T&gt;,
+    attributes: <span class="prelude-ty">Option</span>&lt;Attributes&lt;T&gt;&gt;,
+    parent_info: <span class="prelude-ty">Option</span>&lt;ParentInfo&lt;T&gt;&gt;,
+  ) -&gt; DispatchResult
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    <span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
+
+    <span class="kw">let </span>nex_item: ItemId = &lt;NextFrunique&lt;T&gt;&gt;::try_get(collection).unwrap_or(<span class="number">0</span>);
+    <span class="kw">let </span>item = <span class="self">Self</span>::u32_to_instance_id(nex_item);
+
+    <span class="self">Self</span>::do_mint(collection, owner.clone(), metadata.clone(), attributes)<span class="question-mark">?</span>;
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>parent_info) = parent_info {
+      <span class="kw">return </span><span class="self">Self</span>::do_nft_division(collection, item, metadata, parent_info, owner);
+    }
+
+    <span class="kw">let </span>frunique_data = FruniqueData {
+      metadata,
+      weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
+      parent: <span class="prelude-val">None</span>,
+      children: <span class="prelude-val">None</span>,
+      verified: <span class="bool-val">false</span>,
+      frozen: <span class="bool-val">false</span>,
+      redeemed: <span class="bool-val">false</span>,
+      spawned_by: <span class="prelude-val">Some</span>(owner.clone()),
+      verified_by: <span class="prelude-val">None</span>,
+    };
+
+    &lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
+    &lt;FruniqueRoots&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="comment">// Takes cares of the division of the NFT
+  </span><span class="kw">pub fn </span>do_nft_division(
+    collection: T::CollectionId,
+    item: T::ItemId,
+    metadata: CollectionDescription&lt;T&gt;,
+    parent_info: <span class="kw-2">&amp;</span>ParentInfo&lt;T&gt;,
+    user: T::AccountId,
+  ) -&gt; DispatchResult
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    <span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>parent_info.collection_id), Error::&lt;T&gt;::CollectionNotFound);
+    <span class="macro">ensure!</span>(
+      <span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>parent_info.collection_id, <span class="kw-2">&amp;</span>parent_info.parent_id),
+      Error::&lt;T&gt;::FruniqueNotFound
+    );
+
+    <span class="kw">let </span>frunique_parent: FruniqueData&lt;T&gt; =
+      &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>parent_info.collection_id, <span class="kw-2">&amp;</span>parent_info.parent_id).unwrap();
+
+    <span class="macro">ensure!</span>(!frunique_parent.frozen, Error::&lt;T&gt;::ParentFrozen);
+    <span class="macro">ensure!</span>(!frunique_parent.redeemed, Error::&lt;T&gt;::ParentAlreadyRedeemed);
+
+    <span class="kw">let </span>child_percentage: Permill = parent_info.parent_weight * frunique_parent.weight;
+
+    <span class="kw">let </span>parent_data: ParentInfo&lt;T&gt; = ParentInfo {
+      collection_id: parent_info.collection_id,
+      parent_id: parent_info.parent_id,
+      parent_weight: child_percentage,
+      is_hierarchical: parent_info.is_hierarchical,
+    };
+
+    <span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = FruniqueData {
+      metadata,
+      weight: <span class="self">Self</span>::percent_to_permill(<span class="number">100</span>),
+      parent: <span class="prelude-val">Some</span>(parent_data),
+      children: <span class="prelude-val">None</span>,
+      verified: <span class="bool-val">false</span>,
+      frozen: <span class="bool-val">false</span>,
+      redeemed: <span class="bool-val">false</span>,
+      spawned_by: <span class="prelude-val">Some</span>(user.clone()),
+      verified_by: <span class="prelude-val">None</span>,
+    };
+
+    &lt;FruniqueInfo&lt;T&gt;&gt;::insert(collection, item, frunique_data);
+
+    <span class="kw">let </span>frunique_child: ChildInfo&lt;T&gt; = ChildInfo {
+      collection_id: collection,
+      child_id: item,
+      weight_inherited: child_percentage,
+      is_hierarchical: parent_info.is_hierarchical,
+    };
+
+    &lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+      parent_info.collection_id,
+      parent_info.parent_id,
+      |frunique_data| -&gt; DispatchResult {
+        <span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+        <span class="kw">match </span>frunique.children.as_mut() {
+          <span class="prelude-val">Some</span>(children) =&gt; children
+            .try_push(frunique_child)
+            .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxNumberOfChildrenReached)<span class="question-mark">?</span>,
+          <span class="prelude-val">None </span>=&gt; {
+            <span class="kw">let </span>child = frunique.children.get_or_insert(Children::default());
+            child
+              .try_push(frunique_child)
+              .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::MaxNumberOfChildrenReached)<span class="question-mark">?</span>;
+          },
+        }
+        frunique.weight = frunique.weight - child_percentage;
+        <span class="prelude-val">Ok</span>(())
+      },
+    )<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>do_redeem(collection: T::CollectionId, item: T::ItemId) -&gt; DispatchResult
+  <span class="kw">where
+    </span>&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId: From&lt;u32&gt;,
+  {
+    <span class="macro">ensure!</span>(<span class="self">Self</span>::collection_exists(<span class="kw-2">&amp;</span>collection), Error::&lt;T&gt;::CollectionNotFound);
+    <span class="macro">ensure!</span>(<span class="self">Self</span>::instance_exists(<span class="kw-2">&amp;</span>collection, <span class="kw-2">&amp;</span>item), Error::&lt;T&gt;::FruniqueNotFound);
+
+    <span class="kw">let </span>frunique_data: FruniqueData&lt;T&gt; = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
+
+    <span class="macro">ensure!</span>(!frunique_data.frozen, Error::&lt;T&gt;::FruniqueFrozen);
+    <span class="macro">ensure!</span>(!frunique_data.redeemed, Error::&lt;T&gt;::FruniqueAlreadyRedeemed);
+
+    &lt;FruniqueInfo&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+      collection,
+      item,
+      |frunique_data| -&gt; DispatchResult {
+        <span class="kw">let </span>frunique = frunique_data.as_mut().ok_or(Error::&lt;T&gt;::FruniqueNotFound)<span class="question-mark">?</span>;
+        frunique.redeemed = <span class="bool-val">true</span>;
+        frunique.frozen = <span class="bool-val">true</span>;
+
+        <span class="prelude-val">Ok</span>(())
+      },
+    )<span class="question-mark">?</span>;
+
+    &lt;FruniqueRedeemed&lt;T&gt;&gt;::insert(collection, item, <span class="bool-val">true</span>);
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">pub fn </span>get_nft_metadata(
+    collection: T::CollectionId,
+    item: T::ItemId,
+  ) -&gt; CollectionDescription&lt;T&gt; {
+    <span class="kw">let </span>frunique_data = &lt;FruniqueInfo&lt;T&gt;&gt;::try_get(collection, item).unwrap();
+    frunique_data.metadata
+  }
+
+  <span class="doccomment">/// Helper functions to interact with the RBAC module
+  </span><span class="kw">pub fn </span>pallet_id() -&gt; IdOrVec {
+    IdOrVec::Vec(<span class="self">Self</span>::module_name().as_bytes().to_vec())
+  }
+
+  <span class="comment">// Helper function to get the pallet account as a AccountId
+  </span><span class="kw">pub fn </span>pallet_account() -&gt; T::AccountId {
+    <span class="kw">let </span>pallet_name = <span class="self">Self</span>::module_name().as_bytes().to_vec();
+    <span class="kw">let </span>pallet_account_name: [u8; <span class="number">8</span>] = pallet_name.as_slice().try_into().unwrap_or(<span class="kw-2">*</span><span class="string">b&quot;frunique&quot;</span>);
+    <span class="kw">let </span>pallet_id = PalletId(pallet_account_name);
+    pallet_id.try_into_account().unwrap()
+  }
+
+  <span class="comment">// Helper add RBAC roles for collections
+  </span><span class="kw">pub fn </span>insert_auth_in_frunique_collection(
+    user: T::AccountId,
+    class_id: T::CollectionId,
+    role: FruniqueRole,
+  ) -&gt; DispatchResult {
+    T::Rbac::assign_role_to_user(
+      user,
+      <span class="self">Self</span>::pallet_id(),
+      <span class="kw-2">&amp;</span>class_id.using_encoded(blake2_256),
+      role.id(),
+    )<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="comment">// Helper function to remove RBAC roles for collections
+  </span><span class="kw">pub fn </span>remove_auth_from_frunique_collection(
+    user: T::AccountId,
+    class_id: T::CollectionId,
+    role: FruniqueRole,
+  ) -&gt; DispatchResult {
+    T::Rbac::remove_role_from_user(
+      user,
+      <span class="self">Self</span>::pallet_id(),
+      <span class="kw-2">&amp;</span>class_id.using_encoded(blake2_256),
+      role.id(),
+    )<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="comment">// Helper function to check if a user has a specific role in a collection
+  </span><span class="kw">pub fn </span>is_authorized(
+    user: T::AccountId,
+    collection_id: T::CollectionId,
+    permission: Permission,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>scope_id = collection_id.using_encoded(blake2_256);
+    &lt;T <span class="kw">as </span>pallet::Config&gt;::Rbac::is_authorized(user, <span class="self">Self</span>::pallet_id(), <span class="kw-2">&amp;</span>scope_id, <span class="kw-2">&amp;</span>permission.id())
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_fruniques" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

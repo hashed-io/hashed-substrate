@@ -380,18 +380,8 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="kw">use </span>frame_system::offchain::{SignedPayload, SigningTypes};
 <span class="kw">use </span>sp_core::crypto::KeyTypeId;
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
@@ -399,7 +389,7 @@
 <span class="kw">pub type </span>Description&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>Config&gt;::VaultDescriptionMaxLen&gt;;
 <span class="kw">pub type </span>PSBT&lt;T&gt; = BoundedVec&lt;u8, &lt;T <span class="kw">as </span>Config&gt;::PSBTMaxLen&gt;;
 <span class="comment">//pub type AccountId = &lt;&lt;Signature as Verify&gt;::Signer as IdentifyAccount&gt;::AccountId;
-/*--- Constants section ---*/
+/* --- Constants section --- */
 //pub const BDK_SERVICES_URL: &amp;[u8] = b&quot;https://bdk.hashed.systems&quot;;
 </span><span class="kw">pub const </span>UNSIGNED_TXS_PRIORITY: u64 = <span class="number">100</span>;
 <span class="kw">pub const </span>KEY_TYPE: KeyTypeId = KeyTypeId(<span class="kw-2">*</span><span class="string">b&quot;bdks&quot;</span>);
@@ -407,34 +397,34 @@
 <span class="kw">pub const </span>LOCK_BLOCK_EXPIRATION: u32 = <span class="number">5</span>; <span class="comment">// in block number
 </span><span class="kw">pub const </span>LOCK_TIMEOUT_EXPIRATION: u64 = <span class="number">10000</span>; <span class="comment">// in milli-seconds
 
-/*--- Crypto module section---*/
+/* --- Crypto module section--- */
 </span><span class="kw">pub mod </span>crypto {
-	<span class="kw">use </span><span class="kw">super</span>::KEY_TYPE;
-	<span class="kw">use </span>sp_core::sr25519::Signature <span class="kw">as </span>Sr25519Signature;
-	<span class="kw">use </span>sp_runtime::{
-		app_crypto::{app_crypto, sr25519},
-		traits::Verify,
-		MultiSignature, MultiSigner,
-	};
-	<span class="macro">app_crypto!</span>(sr25519, KEY_TYPE);
+  <span class="kw">use </span><span class="kw">super</span>::KEY_TYPE;
+  <span class="kw">use </span>sp_core::sr25519::Signature <span class="kw">as </span>Sr25519Signature;
+  <span class="kw">use </span>sp_runtime::{
+    app_crypto::{app_crypto, sr25519},
+    traits::Verify,
+    MultiSignature, MultiSigner,
+  };
+  <span class="macro">app_crypto!</span>(sr25519, KEY_TYPE);
 
-	<span class="kw">pub struct </span>TestAuthId;
+  <span class="kw">pub struct </span>TestAuthId;
 
-	<span class="comment">// implemented for runtime
-	</span><span class="kw">impl </span>frame_system::offchain::AppCrypto&lt;MultiSigner, MultiSignature&gt; <span class="kw">for </span>TestAuthId {
-		<span class="kw">type </span>RuntimeAppPublic = Public;
-		<span class="kw">type </span>GenericSignature = sp_core::sr25519::Signature;
-		<span class="kw">type </span>GenericPublic = sp_core::sr25519::Public;
-	}
+  <span class="comment">// implemented for runtime
+  </span><span class="kw">impl </span>frame_system::offchain::AppCrypto&lt;MultiSigner, MultiSignature&gt; <span class="kw">for </span>TestAuthId {
+    <span class="kw">type </span>RuntimeAppPublic = Public;
+    <span class="kw">type </span>GenericSignature = sp_core::sr25519::Signature;
+    <span class="kw">type </span>GenericPublic = sp_core::sr25519::Public;
+  }
 
-	<span class="comment">// implemented for mock runtime in test
-	</span><span class="kw">impl </span>frame_system::offchain::AppCrypto&lt;&lt;Sr25519Signature <span class="kw">as </span>Verify&gt;::Signer, Sr25519Signature&gt;
-		<span class="kw">for </span>TestAuthId
-	{
-		<span class="kw">type </span>RuntimeAppPublic = Public;
-		<span class="kw">type </span>GenericSignature = sp_core::sr25519::Signature;
-		<span class="kw">type </span>GenericPublic = sp_core::sr25519::Public;
-	}
+  <span class="comment">// implemented for mock runtime in test
+  </span><span class="kw">impl </span>frame_system::offchain::AppCrypto&lt;&lt;Sr25519Signature <span class="kw">as </span>Verify&gt;::Signer, Sr25519Signature&gt;
+    <span class="kw">for </span>TestAuthId
+  {
+    <span class="kw">type </span>RuntimeAppPublic = Public;
+    <span class="kw">type </span>GenericSignature = sp_core::sr25519::Signature;
+    <span class="kw">type </span>GenericPublic = sp_core::sr25519::Public;
+  }
 }
 
 <span class="comment">// Struct for holding Vaults information.
@@ -442,115 +432,115 @@
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Vault&lt;T: Config&gt; {
-	<span class="kw">pub </span>owner: T::AccountId,
-	<span class="kw">pub </span>threshold: u32,
-	<span class="kw">pub </span>description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
-	<span class="kw">pub </span>cosigners: BoundedVec&lt;T::AccountId, T::MaxCosignersPerVault&gt;,
-	<span class="kw">pub </span>descriptors: Descriptors&lt;T::OutputDescriptorMaxLen&gt;,
-	<span class="kw">pub </span>offchain_status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;,
+  <span class="kw">pub </span>owner: T::AccountId,
+  <span class="kw">pub </span>threshold: u32,
+  <span class="kw">pub </span>description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
+  <span class="kw">pub </span>cosigners: BoundedVec&lt;T::AccountId, T::MaxCosignersPerVault&gt;,
+  <span class="kw">pub </span>descriptors: Descriptors&lt;T::OutputDescriptorMaxLen&gt;,
+  <span class="kw">pub </span>offchain_status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; Vault&lt;T&gt; {
-	<span class="kw">pub fn </span>is_vault_member(<span class="kw-2">&amp;</span><span class="self">self</span>, account: <span class="kw-2">&amp;</span>T::AccountId) -&gt; bool {
-		<span class="self">Self</span>::get_vault_members(<span class="self">self</span>).contains(account)
-	}
+  <span class="kw">pub fn </span>is_vault_member(<span class="kw-2">&amp;</span><span class="self">self</span>, account: <span class="kw-2">&amp;</span>T::AccountId) -&gt; bool {
+    <span class="self">Self</span>::get_vault_members(<span class="self">self</span>).contains(account)
+  }
 
-	<span class="kw">pub fn </span>get_vault_members(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;T::AccountId&gt; {
-		<span class="kw">let </span><span class="kw-2">mut </span>members = [<span class="self">self</span>.cosigners.clone().as_slice(), <span class="kw-2">&amp;</span>[<span class="self">self</span>.owner.clone()]].concat();
-		members.sort();
-		members.dedup();
-		members
-	}
+  <span class="kw">pub fn </span>get_vault_members(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;T::AccountId&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>members = [<span class="self">self</span>.cosigners.clone().as_slice(), <span class="kw-2">&amp;</span>[<span class="self">self</span>.owner.clone()]].concat();
+    members.sort();
+    members.dedup();
+    members
+  }
 
-	<span class="kw">pub fn </span>signers_are_unique(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="kw">let </span><span class="kw-2">mut </span>filtered_signers = <span class="self">self</span>.cosigners.clone().to_vec();
-		filtered_signers.sort();
-		filtered_signers.dedup();
-		<span class="self">self</span>.cosigners.len() == filtered_signers.len()
-	}
+  <span class="kw">pub fn </span>signers_are_unique(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>filtered_signers = <span class="self">self</span>.cosigners.clone().to_vec();
+    filtered_signers.sort();
+    filtered_signers.dedup();
+    <span class="self">self</span>.cosigners.len() == filtered_signers.len()
+  }
 
-	<span class="doccomment">/// A vault must have valid descriptors in order to produce psbt&#39;s
-	</span><span class="kw">pub fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="self">self</span>.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::Valid) &amp;&amp; <span class="self">self</span>.descriptors.are_not_empty()
-	}
+  <span class="doccomment">/// A vault must have valid descriptors in order to produce psbt&#39;s
+  </span><span class="kw">pub fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="self">self</span>.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::Valid) &amp;&amp; <span class="self">self</span>.descriptors.are_not_empty()
+  }
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; PartialEq <span class="kw">for </span>Vault&lt;T&gt; {
-	<span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-		<span class="self">self</span>.using_encoded(blake2_256) == other.using_encoded(blake2_256)
-	}
+  <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+    <span class="self">self</span>.using_encoded(blake2_256) == other.using_encoded(blake2_256)
+  }
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; Clone <span class="kw">for </span>Vault&lt;T&gt; {
-	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		Vault {
-			owner: <span class="self">self</span>.owner.clone(),
-			threshold: <span class="self">self</span>.threshold.clone(),
-			cosigners: <span class="self">self</span>.cosigners.clone(),
-			description: <span class="self">self</span>.description.clone(),
-			descriptors: <span class="self">self</span>.descriptors.clone(),
-			offchain_status: <span class="self">self</span>.offchain_status.clone(),
-		}
-	}
+  <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    Vault {
+      owner: <span class="self">self</span>.owner.clone(),
+      threshold: <span class="self">self</span>.threshold.clone(),
+      cosigners: <span class="self">self</span>.cosigners.clone(),
+      description: <span class="self">self</span>.description.clone(),
+      descriptors: <span class="self">self</span>.descriptors.clone(),
+      offchain_status: <span class="self">self</span>.offchain_status.clone(),
+    }
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>ProposalSignatures&lt;T: Config&gt; {
-	<span class="kw">pub </span>signer: T::AccountId,
-	<span class="kw">pub </span>signature: BoundedVec&lt;u8, T::PSBTMaxLen&gt;,
+  <span class="kw">pub </span>signer: T::AccountId,
+  <span class="kw">pub </span>signature: BoundedVec&lt;u8, T::PSBTMaxLen&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; Clone <span class="kw">for </span>ProposalSignatures&lt;T&gt; {
-	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{ signer: <span class="self">self</span>.signer.clone(), signature: <span class="self">self</span>.signature.clone() }
-	}
+  <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{ signer: <span class="self">self</span>.signer.clone(), signature: <span class="self">self</span>.signature.clone() }
+  }
 }
 <span class="comment">// Struct for holding Proposal information.
 </span><span class="attr">#[derive(Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Proposal&lt;T: Config&gt; {
-	<span class="kw">pub </span>proposer: T::AccountId,
-	<span class="kw">pub </span>vault_id: [u8; <span class="number">32</span>],
-	<span class="kw">pub </span>status: ProposalStatus,
-	<span class="kw">pub </span>offchain_status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;,
-	<span class="kw">pub </span>to_address: BoundedVec&lt;u8, T::XPubLen&gt;,
-	<span class="kw">pub </span>amount: u64,
-	<span class="kw">pub </span>fee_sat_per_vb: u32,
-	<span class="kw">pub </span>description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
-	<span class="kw">pub </span>tx_id: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;&gt;,
-	<span class="kw">pub </span>psbt: BoundedVec&lt;u8, T::PSBTMaxLen&gt;,
-	<span class="kw">pub </span>signed_psbts: BoundedVec&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;,
+  <span class="kw">pub </span>proposer: T::AccountId,
+  <span class="kw">pub </span>vault_id: [u8; <span class="number">32</span>],
+  <span class="kw">pub </span>status: ProposalStatus,
+  <span class="kw">pub </span>offchain_status: BDKStatus&lt;T::VaultDescriptionMaxLen&gt;,
+  <span class="kw">pub </span>to_address: BoundedVec&lt;u8, T::XPubLen&gt;,
+  <span class="kw">pub </span>amount: u64,
+  <span class="kw">pub </span>fee_sat_per_vb: u32,
+  <span class="kw">pub </span>description: BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;,
+  <span class="kw">pub </span>tx_id: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;u8, T::VaultDescriptionMaxLen&gt;&gt;,
+  <span class="kw">pub </span>psbt: BoundedVec&lt;u8, T::PSBTMaxLen&gt;,
+  <span class="kw">pub </span>signed_psbts: BoundedVec&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; Proposal&lt;T&gt; {
-	<span class="kw">pub fn </span>can_be_finalized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="self">self</span>.status.is_ready_to_finalize() &amp;&amp; <span class="self">self</span>.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::Valid)
-	}
+  <span class="kw">pub fn </span>can_be_finalized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="self">self</span>.status.is_ready_to_finalize() &amp;&amp; <span class="self">self</span>.offchain_status.eq(<span class="kw-2">&amp;</span>BDKStatus::Valid)
+  }
 
-	<span class="comment">// pub fn can_be_broadcasted(&amp;self) -&gt; bool {
-	// 	self.status.eq(&amp;ProposalStatus::ReadyToBroadcast) &amp;&amp; self.offchain_status.eq(&amp;BDKStatus::Valid)
-	// }
+  <span class="comment">// pub fn can_be_broadcasted(&amp;self) -&gt; bool {
+  // 	self.status.eq(&amp;ProposalStatus::ReadyToBroadcast) &amp;&amp; self.offchain_status.eq(&amp;BDKStatus::Valid)
+  // }
 </span>}
 
 <span class="kw">impl</span>&lt;T: Config&gt; Clone <span class="kw">for </span>Proposal&lt;T&gt; {
-	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{
-			proposer: <span class="self">self</span>.proposer.clone(),
-			vault_id: <span class="self">self</span>.vault_id.clone(),
-			status: <span class="self">self</span>.status.clone(),
-			offchain_status: <span class="self">self</span>.offchain_status.clone(),
-			to_address: <span class="self">self</span>.to_address.clone(),
-			amount: <span class="self">self</span>.amount.clone(),
-			fee_sat_per_vb: <span class="self">self</span>.fee_sat_per_vb.clone(),
-			description: <span class="self">self</span>.description.clone(),
-			tx_id: <span class="self">self</span>.tx_id.clone(),
-			psbt: <span class="self">self</span>.psbt.clone(),
-			signed_psbts: <span class="self">self</span>.signed_psbts.clone(),
-		}
-	}
+  <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{
+      proposer: <span class="self">self</span>.proposer.clone(),
+      vault_id: <span class="self">self</span>.vault_id.clone(),
+      status: <span class="self">self</span>.status.clone(),
+      offchain_status: <span class="self">self</span>.offchain_status.clone(),
+      to_address: <span class="self">self</span>.to_address.clone(),
+      amount: <span class="self">self</span>.amount.clone(),
+      fee_sat_per_vb: <span class="self">self</span>.fee_sat_per_vb.clone(),
+      description: <span class="self">self</span>.description.clone(),
+      tx_id: <span class="self">self</span>.tx_id.clone(),
+      psbt: <span class="self">self</span>.psbt.clone(),
+      signed_psbts: <span class="self">self</span>.signed_psbts.clone(),
+    }
+  }
 }
 
 <span class="comment">// Struct for holding Proof of reserve information.
@@ -558,227 +548,219 @@
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>ProofOfReserve&lt;T: Config&gt; {
-	<span class="kw">pub </span>status: ProposalStatus,
-	<span class="kw">pub </span>message: Description&lt;T&gt;,
-	<span class="kw">pub </span>psbt: PSBT&lt;T&gt;,
-	<span class="kw">pub </span>signed_psbts: BoundedVec&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;,
+  <span class="kw">pub </span>status: ProposalStatus,
+  <span class="kw">pub </span>message: Description&lt;T&gt;,
+  <span class="kw">pub </span>psbt: PSBT&lt;T&gt;,
+  <span class="kw">pub </span>signed_psbts: BoundedVec&lt;ProposalSignatures&lt;T&gt;, T::MaxCosignersPerVault&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; ProofOfReserve&lt;T&gt; {
-	<span class="kw">pub fn </span>can_be_finalized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="self">self</span>.status.is_ready_to_finalize()
-	}
+  <span class="kw">pub fn </span>can_be_finalized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="self">self</span>.status.is_ready_to_finalize()
+  }
 
-	<span class="kw">pub fn </span>is_already_broadcasted(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="self">self</span>.status.is_broadcasted()
-	}
+  <span class="kw">pub fn </span>is_already_broadcasted(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="self">self</span>.status.is_broadcasted()
+  }
 }
 
 <span class="attr">#[derive(
-	Encode,
-	Decode,
-	Default,
-	Eq,
-	PartialEq,
-	CloneNoBound,
-	RuntimeDebugNoBound,
-	TypeInfo,
-	MaxEncodedLen,
+  Encode, Decode, Default, Eq, PartialEq, CloneNoBound, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
 )]
 #[scale_info(skip_type_params(MaxLen))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Descriptors&lt;MaxLen: Get&lt;u32&gt;&gt; {
-	<span class="kw">pub </span>output_descriptor: BoundedVec&lt;u8, MaxLen&gt;,
-	<span class="kw">pub </span>change_descriptor: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;u8, MaxLen&gt;&gt;,
+  <span class="kw">pub </span>output_descriptor: BoundedVec&lt;u8, MaxLen&gt;,
+  <span class="kw">pub </span>change_descriptor: <span class="prelude-ty">Option</span>&lt;BoundedVec&lt;u8, MaxLen&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;MaxLen: Get&lt;u32&gt;&gt; Descriptors&lt;MaxLen&gt; {
-	<span class="kw">pub fn </span>are_not_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		!<span class="self">self</span>.output_descriptor.is_empty() &amp;&amp; <span class="self">self</span>.change_descriptor.is_some()
-	}
+  <span class="kw">pub fn </span>are_not_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    !<span class="self">self</span>.output_descriptor.is_empty() &amp;&amp; <span class="self">self</span>.change_descriptor.is_some()
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>VaultsPayload&lt;Public&gt; {
-	<span class="kw">pub </span>vaults_payload: Vec&lt;SingleVaultPayload&gt;,
-	<span class="kw">pub </span>public: Public,
+  <span class="kw">pub </span>vaults_payload: Vec&lt;SingleVaultPayload&gt;,
+  <span class="kw">pub </span>public: Public,
 }
 
 <span class="attr">#[derive(Encode, Decode, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[scale_info(skip_type_params(MaxLen))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>SingleVaultPayload {
-	<span class="comment">// Not successful, macros/generics issue
-	// descriptors: Descriptors&lt;u8&gt;,
-	</span><span class="kw">pub </span>vault_id: [u8; <span class="number">32</span>],
-	<span class="kw">pub </span>output_descriptor: Vec&lt;u8&gt;,
-	<span class="kw">pub </span>change_descriptor: Vec&lt;u8&gt;,
-	<span class="kw">pub </span>status: OffchainStatus,
+  <span class="comment">// Not successful, macros/generics issue
+  // descriptors: Descriptors&lt;u8&gt;,
+  </span><span class="kw">pub </span>vault_id: [u8; <span class="number">32</span>],
+  <span class="kw">pub </span>output_descriptor: Vec&lt;u8&gt;,
+  <span class="kw">pub </span>change_descriptor: Vec&lt;u8&gt;,
+  <span class="kw">pub </span>status: OffchainStatus,
 }
 
 <span class="kw">impl </span>Clone <span class="kw">for </span>SingleVaultPayload {
-	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{
-			vault_id: <span class="self">self</span>.vault_id.clone(),
-			output_descriptor: <span class="self">self</span>.output_descriptor.clone(),
-			change_descriptor: <span class="self">self</span>.change_descriptor.clone(),
-			status: <span class="self">self</span>.status.clone(),
-		}
-	}
+  <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{
+      vault_id: <span class="self">self</span>.vault_id.clone(),
+      output_descriptor: <span class="self">self</span>.output_descriptor.clone(),
+      change_descriptor: <span class="self">self</span>.change_descriptor.clone(),
+      status: <span class="self">self</span>.status.clone(),
+    }
+  }
 }
 
 <span class="kw">impl</span>&lt;S: SigningTypes&gt; SignedPayload&lt;S&gt; <span class="kw">for </span>VaultsPayload&lt;S::Public&gt; {
-	<span class="kw">fn </span>public(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S::Public {
-		<span class="self">self</span>.public.clone()
-	}
+  <span class="kw">fn </span>public(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S::Public {
+    <span class="self">self</span>.public.clone()
+  }
 }
 
 <span class="doccomment">/// Struct for requesting a descriptor generation
 </span><span class="attr">#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 </span><span class="kw">pub struct </span>ProposalRequest&lt;DescriptorMaxLen: Get&lt;u32&gt;, XPubLen: Get&lt;u32&gt;&gt; {
-	<span class="kw">pub </span>descriptors: Descriptors&lt;DescriptorMaxLen&gt;,
-	<span class="kw">pub </span>to_address: BoundedVec&lt;u8, XPubLen&gt;,
-	<span class="kw">pub </span>amount: u64,
-	<span class="kw">pub </span>fee_sat_per_vb: u32,
+  <span class="kw">pub </span>descriptors: Descriptors&lt;DescriptorMaxLen&gt;,
+  <span class="kw">pub </span>to_address: BoundedVec&lt;u8, XPubLen&gt;,
+  <span class="kw">pub </span>amount: u64,
+  <span class="kw">pub </span>fee_sat_per_vb: u32,
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>ProposalsPayload&lt;Public&gt; {
-	<span class="kw">pub </span>proposals_payload: Vec&lt;SingleProposalPayload&gt;,
-	<span class="kw">pub </span>public: Public,
+  <span class="kw">pub </span>proposals_payload: Vec&lt;SingleProposalPayload&gt;,
+  <span class="kw">pub </span>public: Public,
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>SingleProposalPayload {
-	<span class="kw">pub </span>proposal_id: [u8; <span class="number">32</span>],
-	<span class="kw">pub </span>psbt: Vec&lt;u8&gt;,
-	<span class="kw">pub </span>status: OffchainStatus,
+  <span class="kw">pub </span>proposal_id: [u8; <span class="number">32</span>],
+  <span class="kw">pub </span>psbt: Vec&lt;u8&gt;,
+  <span class="kw">pub </span>status: OffchainStatus,
 }
 
 <span class="kw">impl</span>&lt;S: SigningTypes&gt; SignedPayload&lt;S&gt; <span class="kw">for </span>ProposalsPayload&lt;S::Public&gt; {
-	<span class="kw">fn </span>public(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S::Public {
-		<span class="self">self</span>.public.clone()
-	}
+  <span class="kw">fn </span>public(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; S::Public {
+    <span class="self">self</span>.public.clone()
+  }
 }
 
 <span class="kw">pub enum </span>XpubStatus {
-	Owned,
-	Free,
-	Taken,
+  Owned,
+  Free,
+  Taken,
 }
 
 <span class="attr">#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 </span><span class="kw">pub enum </span>ProposalStatus {
-	Pending,
-	ReadyToFinalize(bool), <span class="comment">//bool is the flag to broadcast automatically once finalized
-	</span>Finalized,
-	<span class="comment">//ReadyToBroadcast,
-	</span>Broadcasted,
+  Pending,
+  ReadyToFinalize(bool), <span class="comment">//bool is the flag to broadcast automatically once finalized
+  </span>Finalized,
+  <span class="comment">//ReadyToBroadcast,
+  </span>Broadcasted,
 }
 
 <span class="kw">impl </span>ProposalStatus {
-	<span class="kw">pub fn </span>is_ready_to_finalize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-			ProposalStatus::ReadyToFinalize(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
-			<span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-		}
-	}
+  <span class="kw">pub fn </span>is_ready_to_finalize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+      ProposalStatus::ReadyToFinalize(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+      <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+    }
+  }
 
-	<span class="kw">pub fn </span>is_broadcasted(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-		<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-			ProposalStatus::Broadcasted =&gt; <span class="bool-val">true</span>,
-			<span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-		}
-	}
+  <span class="kw">pub fn </span>is_broadcasted(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+      ProposalStatus::Broadcasted =&gt; <span class="bool-val">true</span>,
+      <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+    }
+  }
 
-	<span class="kw">pub fn </span>next_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		<span class="kw">use </span>ProposalStatus::<span class="kw-2">*</span>;
-		<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-			Pending =&gt; ReadyToFinalize(<span class="bool-val">false</span>),
-			ReadyToFinalize(<span class="bool-val">false</span>) =&gt; Finalized, <span class="comment">// it will be finalized but the broadcast is still pending
-			</span>ReadyToFinalize(<span class="bool-val">true</span>) =&gt; Broadcasted, <span class="comment">// the &quot;true&quot; flag value will finalize and broadcast it
-			</span>Finalized =&gt; ReadyToFinalize(<span class="bool-val">true</span>),  <span class="comment">// this will broadcast the tx
-			//ReadyToBroadcast =&gt; Broadcasted, // not used, but not discarded
-			</span>Broadcasted =&gt; Broadcasted,
-		}
-	}
+  <span class="kw">pub fn </span>next_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="kw">use </span>ProposalStatus::<span class="kw-2">*</span>;
+    <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+      Pending =&gt; ReadyToFinalize(<span class="bool-val">false</span>),
+      ReadyToFinalize(<span class="bool-val">false</span>) =&gt; Finalized, <span class="comment">// it will be finalized but the broadcast is still pending
+      </span>ReadyToFinalize(<span class="bool-val">true</span>) =&gt; Broadcasted, <span class="comment">// the &quot;true&quot; flag value will finalize and broadcast it
+      </span>Finalized =&gt; ReadyToFinalize(<span class="bool-val">true</span>),  <span class="comment">// this will broadcast the tx
+      //ReadyToBroadcast =&gt; Broadcasted, // not used, but not discarded
+      </span>Broadcasted =&gt; Broadcasted,
+    }
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 </span><span class="kw">pub enum </span>OffchainStatus {
-	Pending,
-	Valid,
-	RecoverableError(Vec&lt;u8&gt;),
-	IrrecoverableError(Vec&lt;u8&gt;),
+  Pending,
+  Valid,
+  RecoverableError(Vec&lt;u8&gt;),
+  IrrecoverableError(Vec&lt;u8&gt;),
 }
 
 <span class="comment">//Default macro didnt work
 </span><span class="kw">impl </span>Default <span class="kw">for </span>OffchainStatus {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		OffchainStatus::Pending
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    OffchainStatus::Pending
+  }
 }
 
 <span class="kw">impl</span>&lt;MaxLen: Get&lt;u32&gt;&gt; From&lt;OffchainStatus&gt; <span class="kw">for </span>BDKStatus&lt;MaxLen&gt; {
-	<span class="kw">fn </span>from(status: OffchainStatus) -&gt; <span class="self">Self </span>{
-		<span class="kw">match </span>status {
-			OffchainStatus::Pending =&gt; BDKStatus::Pending,
-			OffchainStatus::Valid =&gt; BDKStatus::Valid,
-			OffchainStatus::RecoverableError(msj) =&gt; BDKStatus::RecoverableError(
-				BoundedVec::&lt;u8, MaxLen&gt;::try_from(msj).unwrap_or_default(),
-			),
-			OffchainStatus::IrrecoverableError(msj) =&gt; BDKStatus::IrrecoverableError(
-				BoundedVec::&lt;u8, MaxLen&gt;::try_from(msj).unwrap_or_default(),
-			),
-		}
-	}
+  <span class="kw">fn </span>from(status: OffchainStatus) -&gt; <span class="self">Self </span>{
+    <span class="kw">match </span>status {
+      OffchainStatus::Pending =&gt; BDKStatus::Pending,
+      OffchainStatus::Valid =&gt; BDKStatus::Valid,
+      OffchainStatus::RecoverableError(msj) =&gt; {
+        BDKStatus::RecoverableError(BoundedVec::&lt;u8, MaxLen&gt;::try_from(msj).unwrap_or_default())
+      },
+      OffchainStatus::IrrecoverableError(msj) =&gt; {
+        BDKStatus::IrrecoverableError(BoundedVec::&lt;u8, MaxLen&gt;::try_from(msj).unwrap_or_default())
+      },
+    }
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxLen))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>BDKStatus&lt;MaxLen: Get&lt;u32&gt;&gt; {
-	Pending,
-	Valid,
-	RecoverableError(BoundedVec&lt;u8, MaxLen&gt;),
-	IrrecoverableError(BoundedVec&lt;u8, MaxLen&gt;),
+  Pending,
+  Valid,
+  RecoverableError(BoundedVec&lt;u8, MaxLen&gt;),
+  IrrecoverableError(BoundedVec&lt;u8, MaxLen&gt;),
 }
 <span class="kw">impl</span>&lt;MaxLen: Get&lt;u32&gt;&gt; Default <span class="kw">for </span>BDKStatus&lt;MaxLen&gt; {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		BDKStatus::Pending
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    BDKStatus::Pending
+  }
 }
 <span class="comment">// Clone macro didnt work
 </span><span class="kw">impl</span>&lt;MaxLen: Get&lt;u32&gt;&gt; Clone <span class="kw">for </span>BDKStatus&lt;MaxLen&gt; {
-	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-		<span class="kw">match </span><span class="self">self </span>{
-			<span class="self">Self</span>::Pending =&gt; <span class="self">Self</span>::Pending,
-			<span class="self">Self</span>::Valid =&gt; <span class="self">Self</span>::Valid,
-			<span class="self">Self</span>::RecoverableError(arg0) =&gt; <span class="self">Self</span>::RecoverableError(arg0.clone()),
-			<span class="self">Self</span>::IrrecoverableError(arg0) =&gt; <span class="self">Self</span>::IrrecoverableError(arg0.clone()),
-		}
-	}
+  <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::Pending =&gt; <span class="self">Self</span>::Pending,
+      <span class="self">Self</span>::Valid =&gt; <span class="self">Self</span>::Valid,
+      <span class="self">Self</span>::RecoverableError(arg0) =&gt; <span class="self">Self</span>::RecoverableError(arg0.clone()),
+      <span class="self">Self</span>::IrrecoverableError(arg0) =&gt; <span class="self">Self</span>::IrrecoverableError(arg0.clone()),
+    }
+  }
 }
 
 <span class="kw">impl</span>&lt;MaxLen: Get&lt;u32&gt;&gt; PartialEq <span class="kw">for </span>BDKStatus&lt;MaxLen&gt; {
-	<span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-		<span class="kw">match </span>(<span class="self">self</span>, other) {
-			(<span class="self">Self</span>::RecoverableError(<span class="kw">_</span>), <span class="self">Self</span>::RecoverableError(<span class="kw">_</span>)) =&gt; <span class="bool-val">true</span>,
-			(<span class="self">Self</span>::IrrecoverableError(l0), <span class="self">Self</span>::IrrecoverableError(r0)) =&gt; l0 == r0,
-			<span class="kw">_ </span>=&gt; core::mem::discriminant(<span class="self">self</span>) == core::mem::discriminant(other),
-		}
-	}
+  <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+    <span class="kw">match </span>(<span class="self">self</span>, other) {
+      (<span class="self">Self</span>::RecoverableError(<span class="kw">_</span>), <span class="self">Self</span>::RecoverableError(<span class="kw">_</span>)) =&gt; <span class="bool-val">true</span>,
+      (<span class="self">Self</span>::IrrecoverableError(l0), <span class="self">Self</span>::IrrecoverableError(r0)) =&gt; l0 == r0,
+      <span class="kw">_ </span>=&gt; core::mem::discriminant(<span class="self">self</span>) == core::mem::discriminant(other),
+    }
+  }
 
-	<span class="kw">fn </span>ne(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-		<span class="kw">match </span>(<span class="self">self</span>, other) {
-			(<span class="self">Self</span>::RecoverableError(l0), <span class="self">Self</span>::RecoverableError(r0)) =&gt; l0 == r0,
-			(<span class="self">Self</span>::IrrecoverableError(l0), <span class="self">Self</span>::IrrecoverableError(r0)) =&gt; l0 == r0,
-			<span class="kw">_ </span>=&gt; core::mem::discriminant(<span class="self">self</span>) == core::mem::discriminant(other),
-		}
-	}
+  <span class="kw">fn </span>ne(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+    <span class="kw">match </span>(<span class="self">self</span>, other) {
+      (<span class="self">Self</span>::RecoverableError(l0), <span class="self">Self</span>::RecoverableError(r0)) =&gt; l0 == r0,
+      (<span class="self">Self</span>::IrrecoverableError(l0), <span class="self">Self</span>::IrrecoverableError(r0)) =&gt; l0 == r0,
+      <span class="kw">_ </span>=&gt; core::mem::discriminant(<span class="self">self</span>) == core::mem::discriminant(other),
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_bitcoin_vaults" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

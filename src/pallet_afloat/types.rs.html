@@ -240,38 +240,8 @@
 <a href="#240" id="240">240</a>
 <a href="#241" id="241">241</a>
 <a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
 <span class="kw">pub type </span>ShortString = BoundedVec&lt;u8, ConstU32&lt;<span class="number">55</span>&gt;&gt;;
@@ -286,163 +256,144 @@
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>User&lt;T: Config&gt; {
-	<span class="kw">pub </span>cid: ShortString,
-	<span class="kw">pub </span>cid_creator: ShortString,
-	<span class="kw">pub </span>group: ShortString, <span class="comment">// only can be modified when the user is registered (can not be modified)
-	</span><span class="kw">pub </span>created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-	<span class="kw">pub </span>created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-	<span class="kw">pub </span>last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-	<span class="kw">pub </span>last_modified_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="kw">pub </span>cid: ShortString,
+  <span class="kw">pub </span>cid_creator: ShortString,
+  <span class="kw">pub </span>group: ShortString, <span class="comment">// only can be modified when the user is registered (can not be modified)
+  </span><span class="kw">pub </span>created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  <span class="kw">pub </span>created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="kw">pub </span>last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  <span class="kw">pub </span>last_modified_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; User&lt;T&gt; {
-	<span class="kw">pub fn </span>new(
-		cid: ShortString,
-		cid_creator: ShortString,
-		group: ShortString,
-		created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-		created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-		last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
-		last_modified_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-	) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{
-			cid,
-			cid_creator,
-			group,
-			created_by,
-			created_date,
-			last_modified_by,
-			last_modified_date,
-		}
-	}
+  <span class="kw">pub fn </span>new(
+    cid: ShortString,
+    cid_creator: ShortString,
+    group: ShortString,
+    created_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    created_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+    last_modified_by: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    last_modified_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  ) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{ cid, cid_creator, group, created_by, created_date, last_modified_by, last_modified_date }
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>UpdateUserArgs {
-	Edit {
-		cid: ShortString,
-		cid_creator: ShortString,
-	},
-	AdminEdit {
-		cid: ShortString,
-		cid_creator: ShortString,
-		group: ShortString,
-	},
-	Delete,
+  Edit { cid: ShortString, cid_creator: ShortString },
+  AdminEdit { cid: ShortString, cid_creator: ShortString, group: ShortString },
+  Delete,
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>SignUpArgs {
-	BuyerOrSeller {
-		cid: ShortString,
-		cid_creator: ShortString,
-		group: ShortString,
-	},
-	CPA {
-		cid: ShortString,
-		cid_creator: ShortString,
-		group: ShortString,
-	},
+  BuyerOrSeller { cid: ShortString, cid_creator: ShortString, group: ShortString },
+  CPA { cid: ShortString, cid_creator: ShortString, group: ShortString },
 }
 
 <span class="comment">// ! Offer structures
 
-</span><span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+</span><span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>OfferStatus {
-	MATCHED,
-	TF_FILLED,
-	TF_PENDING_SIGNATURE,
-	TF_SIGNED,
-	TF_AGENCY_SUBMITTED,
-	TF_AGENCY_APPROVED,
-	AFLOAT_APPROVED,
+  MATCHED,
+  TF_FILLED,
+  TF_PENDING_SIGNATURE,
+  TF_SIGNED,
+  TF_AGENCY_SUBMITTED,
+  TF_AGENCY_APPROVED,
+  AFLOAT_APPROVED,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>OfferStatus {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		OfferStatus::TF_PENDING_SIGNATURE
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    OfferStatus::TF_PENDING_SIGNATURE
+  }
 }
 
-<span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+<span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>OfferType {
-	Sell,
-	Buy
+  Sell,
+  Buy,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>OfferType {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		OfferType::Sell
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    OfferType::Sell
+  }
 }
 
 <span class="attr">#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Offer&lt;T: Config&gt; {
-	<span class="kw">pub </span>tax_credit_amount: u32,
-	<span class="kw">pub </span>tax_credit_amount_remaining: u32,
-	<span class="kw">pub </span>price_per_credit: T::Balance,
-	<span class="kw">pub </span>expiration_date: Date,
-	<span class="kw">pub </span>creation_date: Date,
-	<span class="kw">pub </span>cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-	<span class="comment">// pub fee: T::Balance,
-	</span><span class="kw">pub </span>tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
-	<span class="kw">pub </span>creator_id: T::AccountId,
-	<span class="kw">pub </span>status: OfferStatus,
-	<span class="kw">pub </span>offer_type: OfferType,
+  <span class="kw">pub </span>tax_credit_amount: u32,
+  <span class="kw">pub </span>tax_credit_amount_remaining: u32,
+  <span class="kw">pub </span>price_per_credit: T::Balance,
+  <span class="kw">pub </span>expiration_date: Date,
+  <span class="kw">pub </span>creation_date: Date,
+  <span class="kw">pub </span>cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="comment">// pub fee: T::Balance,
+  </span><span class="kw">pub </span>tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
+  <span class="kw">pub </span>creator_id: T::AccountId,
+  <span class="kw">pub </span>status: OfferStatus,
+  <span class="kw">pub </span>offer_type: OfferType,
 }
 
 <span class="kw">impl</span>&lt;T: Config&gt; Offer&lt;T&gt; {
-	<span class="kw">pub fn </span>new(
-		tax_credit_amount: u32,
-		tax_credit_amount_remaining: u32,
-		price_per_credit: T::Balance,
-		creation_date: Date,
-		cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-		<span class="comment">// fee: T::Balance,
-		</span>tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
-		creator_id: T::AccountId,
-		expiration_date: Date,
-		status: OfferStatus,
-		offer_type: OfferType,
-	) -&gt; <span class="self">Self </span>{
-		<span class="self">Self </span>{
-			tax_credit_amount,
-			tax_credit_amount_remaining,
-			price_per_credit,
-			creation_date,
-			expiration_date: expiration_date,
-			cancellation_date,
-			<span class="comment">// fee,
-			</span>tax_credit_id,
-			creator_id,
-			status,
-			offer_type,
-		}
-	}
+  <span class="kw">pub fn </span>new(
+    tax_credit_amount: u32,
+    tax_credit_amount_remaining: u32,
+    price_per_credit: T::Balance,
+    creation_date: Date,
+    cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+    <span class="comment">// fee: T::Balance,
+    </span>tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
+    creator_id: T::AccountId,
+    expiration_date: Date,
+    status: OfferStatus,
+    offer_type: OfferType,
+  ) -&gt; <span class="self">Self </span>{
+    <span class="self">Self </span>{
+      tax_credit_amount,
+      tax_credit_amount_remaining,
+      price_per_credit,
+      creation_date,
+      expiration_date,
+      cancellation_date,
+      <span class="comment">// fee,
+      </span>tax_credit_id,
+      creator_id,
+      status,
+      offer_type,
+    }
+  }
 }
 
 <span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub enum </span>CreateOfferArgs&lt;T: Config&gt; {
-	Sell {
-		tax_credit_amount: u32,
-		price_per_credit: T::Balance,
-		tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
-		expiration_date: Date,
-	},
-	Buy {
-		tax_credit_amount: u32,
-		price_per_credit: T::Balance,
-		tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
-		expiration_date: Date,
-	},
+  Sell {
+    tax_credit_amount: u32,
+    price_per_credit: T::Balance,
+    tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
+    expiration_date: Date,
+  },
+  Buy {
+    tax_credit_amount: u32,
+    price_per_credit: T::Balance,
+    tax_credit_id: &lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::ItemId,
+    expiration_date: Date,
+  },
 }
 
 <span class="comment">// ! Transaction structures
@@ -451,94 +402,85 @@
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 </span><span class="kw">pub struct </span>Transaction&lt;T: Config&gt; {
-	<span class="kw">pub </span>tax_credit_amount: u32,
-	<span class="kw">pub </span>price_per_credit: u32,
-	<span class="kw">pub </span>total_price: u32,
-	<span class="kw">pub </span>fee: u32,
-	<span class="kw">pub </span>creation_date: Date,
-	<span class="kw">pub </span>cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-	<span class="kw">pub </span>tax_credit_id: u32,
-	<span class="kw">pub </span>seller_id: T::AccountId,
-	<span class="kw">pub </span>buyer_id: T::AccountId,
-	<span class="kw">pub </span>offer_id: StorageId,
-	<span class="kw">pub </span>seller_confirmation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
-	<span class="kw">pub </span>buyer_confirmation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="kw">pub </span>tax_credit_amount: u32,
+  <span class="kw">pub </span>price_per_credit: u32,
+  <span class="kw">pub </span>total_price: u32,
+  <span class="kw">pub </span>fee: u32,
+  <span class="kw">pub </span>creation_date: Date,
+  <span class="kw">pub </span>cancellation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="kw">pub </span>tax_credit_id: u32,
+  <span class="kw">pub </span>seller_id: T::AccountId,
+  <span class="kw">pub </span>buyer_id: T::AccountId,
+  <span class="kw">pub </span>offer_id: StorageId,
+  <span class="kw">pub </span>seller_confirmation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
+  <span class="kw">pub </span>buyer_confirmation_date: <span class="prelude-ty">Option</span>&lt;Date&gt;,
 }
 
 <span class="comment">// ! Roles structures
 
-</span><span class="attr">#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+</span><span class="attr">#[derive(
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+)]
 </span><span class="kw">pub enum </span>AfloatRole {
-	Owner,
-	Admin,
-	BuyerOrSeller,
-	CPA,
+  Owner,
+  Admin,
+  BuyerOrSeller,
+  CPA,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>AfloatRole {
-	<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-		AfloatRole::BuyerOrSeller
-	}
+  <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    AfloatRole::BuyerOrSeller
+  }
 }
 
 <span class="kw">impl </span>AfloatRole {
-	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
-		<span class="kw">match </span><span class="self">self </span>{
-			<span class="self">Self</span>::Owner =&gt; <span class="string">&quot;Owner&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::Admin =&gt; <span class="string">&quot;Admin&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::BuyerOrSeller =&gt; <span class="string">&quot;BuyerOrSeller&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::CPA =&gt; <span class="string">&quot;CPA&quot;</span>.as_bytes().to_vec(),
-		}
-	}
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::Owner =&gt; <span class="string">&quot;Owner&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::Admin =&gt; <span class="string">&quot;Admin&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::BuyerOrSeller =&gt; <span class="string">&quot;BuyerOrSeller&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::CPA =&gt; <span class="string">&quot;CPA&quot;</span>.as_bytes().to_vec(),
+    }
+  }
 
-	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
-		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
-	}
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-	<span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
-		<span class="kw">use </span><span class="kw">crate</span>::types::AfloatRole::<span class="kw-2">*</span>;
-		[
-			Owner.to_vec(),
-			Admin.to_vec(),
-			BuyerOrSeller.to_vec(),
-			CPA.to_vec(),
-		]
-		.to_vec()
-	}
+  <span class="kw">pub fn </span>enum_to_vec() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::AfloatRole::<span class="kw-2">*</span>;
+    [Owner.to_vec(), Admin.to_vec(), BuyerOrSeller.to_vec(), CPA.to_vec()].to_vec()
+  }
 }
 
 <span class="attr">#[derive(
-	Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
+  Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 </span><span class="kw">pub enum </span>Permission {
-	CreateUser,
-	EditUser,
-	DeleteUser,
+  CreateUser,
+  EditUser,
+  DeleteUser,
 }
 
 <span class="kw">impl </span>Permission {
-	<span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
-		<span class="kw">match </span><span class="self">self </span>{
-			<span class="self">Self</span>::CreateUser =&gt; <span class="string">&quot;CreateUser&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;EditUser&quot;</span>.as_bytes().to_vec(),
-			<span class="self">Self</span>::DeleteUser =&gt; <span class="string">&quot;DeleteUser&quot;</span>.as_bytes().to_vec(),
-		}
-	}
+  <span class="kw">pub fn </span>to_vec(<span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">match </span><span class="self">self </span>{
+      <span class="self">Self</span>::CreateUser =&gt; <span class="string">&quot;CreateUser&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::EditUser =&gt; <span class="string">&quot;EditUser&quot;</span>.as_bytes().to_vec(),
+      <span class="self">Self</span>::DeleteUser =&gt; <span class="string">&quot;DeleteUser&quot;</span>.as_bytes().to_vec(),
+    }
+  }
 
-	<span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
-		<span class="self">self</span>.to_vec().using_encoded(blake2_256)
-	}
+  <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [u8; <span class="number">32</span>] {
+    <span class="self">self</span>.to_vec().using_encoded(blake2_256)
+  }
 
-	<span class="kw">pub fn </span>admin_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
-		<span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
-		<span class="kw">let </span>admin_permissions = [
-			CreateUser.to_vec(),
-			EditUser.to_vec(),
-			DeleteUser.to_vec(),
-		]
-		.to_vec();
-		admin_permissions
-	}
+  <span class="kw">pub fn </span>admin_permissions() -&gt; Vec&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">use </span><span class="kw">crate</span>::types::Permission::<span class="kw-2">*</span>;
+    <span class="kw">let </span>admin_permissions = [CreateUser.to_vec(), EditUser.to_vec(), DeleteUser.to_vec()].to_vec();
+    admin_permissions
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_afloat" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

@@ -114,7 +114,7 @@
 <span class="kw">pub const </span>DOLLARS: Balance = <span class="number">100 </span>* CENTS; <span class="comment">// 0x0000_0000_0000_0000_0000_5af3_107a_4000u128
 
 </span><span class="kw">pub const fn </span>deposit(items: u32, bytes: u32) -&gt; Balance {
-	items <span class="kw">as </span>Balance * <span class="number">2_000 </span>* CENTS + (bytes <span class="kw">as </span>Balance) * <span class="number">100 </span>* MILLICENTS
+  items <span class="kw">as </span>Balance * <span class="number">2_000 </span>* CENTS + (bytes <span class="kw">as </span>Balance) * <span class="number">100 </span>* MILLICENTS
 }
 
 <span class="kw">pub const </span>MILLISECS_PER_BLOCK: Moment = <span class="number">6000</span>;

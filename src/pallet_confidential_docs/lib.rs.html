@@ -415,10 +415,6 @@
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
 <a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
 </pre><pre class="rust"><code><span class="doccomment">//! The confidential docs pallet provides the backend services and metadata
 //! storage for the confidential docs solution
 
@@ -440,405 +436,401 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-	<span class="doccomment">//! Provides the backend services and metadata storage for the confidential docs solution
-	</span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="doccomment">//! Provides the backend services and metadata storage for the confidential docs solution
+  </span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
 
-	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+  <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
-	<span class="attr">#[pallet::config]
-	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+  <span class="attr">#[pallet::config]
+  </span><span class="kw">pub trait </span>Config: frame_system::Config {
+    <span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
-		<span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
+    <span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 
-		<span class="doccomment">/// Maximum number of confidential documents that a user can own
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxOwnedDocs: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum number of confidential documents that a user can share
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxSharedFromDocs: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum number of confidential documents that can be shared to a user
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxSharedToDocs: Get&lt;u32&gt;;
-		<span class="doccomment">/// Minimum length for a document name
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>DocNameMinLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum length for a document name
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>DocNameMaxLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Minimum length for a document description
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>DocDescMinLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum length for a document description
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>DocDescMaxLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Minimum length for a groupName
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>GroupNameMinLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum length for a groupName
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>GroupNameMaxLen: Get&lt;u32&gt;;
-		<span class="doccomment">/// Maximum groups a user can belong to
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxMemberGroups: Get&lt;u32&gt;;
-	}
+    <span class="doccomment">/// Maximum number of confidential documents that a user can own
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxOwnedDocs: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum number of confidential documents that a user can share
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxSharedFromDocs: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum number of confidential documents that can be shared to a user
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxSharedToDocs: Get&lt;u32&gt;;
+    <span class="doccomment">/// Minimum length for a document name
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>DocNameMinLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum length for a document name
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>DocNameMaxLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Minimum length for a document description
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>DocDescMinLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum length for a document description
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>DocDescMaxLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Minimum length for a groupName
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>GroupNameMinLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum length for a groupName
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>GroupNameMaxLen: Get&lt;u32&gt;;
+    <span class="doccomment">/// Maximum groups a user can belong to
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxMemberGroups: Get&lt;u32&gt;;
+  }
 
-	<span class="attr">#[pallet::pallet]
-	#[pallet::storage_version(STORAGE_VERSION)]
-	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
-	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
+  <span class="attr">#[pallet::pallet]
+  #[pallet::storage_version(STORAGE_VERSION)]
+  #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+  </span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>vaults)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_256,
-		UserId, <span class="comment">//user identifier
-		</span>Vault&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>vaults)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Vaults&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_256,
+    UserId, <span class="comment">//user identifier
+    </span>Vault&lt;T&gt;,
+    OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>public_keys)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PublicKeys&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, PublicKey, OptionQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>public_keys)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PublicKeys&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, PublicKey, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>users_ids)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserIds&lt;T: Config&gt; = StorageMap&lt;<span class="kw">_</span>, Identity, [u8; <span class="number">32</span>], UserId, OptionQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>users_ids)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UserIds&lt;T: Config&gt; = StorageMap&lt;<span class="kw">_</span>, Identity, [u8; <span class="number">32</span>], UserId, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>owned_docs)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocs&lt;T: Config&gt; = StorageMap&lt;<span class="kw">_</span>, Blake2_256, CID, OwnedDoc&lt;T&gt;, OptionQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>owned_docs)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocs&lt;T: Config&gt; = StorageMap&lt;<span class="kw">_</span>, Blake2_256, CID, OwnedDoc&lt;T&gt;, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>owned_docs_by_owner)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocsByOwner&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxOwnedDocs&gt;, ValueQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>owned_docs_by_owner)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OwnedDocsByOwner&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxOwnedDocs&gt;, ValueQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>shared_docs)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocs&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Blake2_256, CID, SharedDoc&lt;T&gt;, OptionQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>shared_docs)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocs&lt;T: Config&gt; = StorageMap&lt;<span class="kw">_</span>, Blake2_256, CID, SharedDoc&lt;T&gt;, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>shared_docs_by_to)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByTo&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxSharedToDocs&gt;, ValueQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>shared_docs_by_to)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByTo&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxSharedToDocs&gt;, ValueQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>shared_docs_by_from)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByFrom&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxSharedFromDocs&gt;, ValueQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>shared_docs_by_from)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>SharedDocsByFrom&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Blake2_256, T::AccountId, BoundedVec&lt;CID, T::MaxSharedFromDocs&gt;, ValueQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>groups)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Groups&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_256,
-		<span class="comment">// Group Account Id
-		</span>T::AccountId,
-		Group&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>groups)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Groups&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_256,
+    <span class="comment">// Group Account Id
+    </span>T::AccountId,
+    Group&lt;T&gt;,
+    OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>group_members)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>GroupMembers&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_256,
-		<span class="comment">// Group Account Id
-		</span>T::AccountId,
-		Blake2_256,
-		<span class="comment">// Member Account Id
-		</span>T::AccountId,
-		GroupMember&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>group_members)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>GroupMembers&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_256,
+    <span class="comment">// Group Account Id
+    </span>T::AccountId,
+    Blake2_256,
+    <span class="comment">// Member Account Id
+    </span>T::AccountId,
+    GroupMember&lt;T&gt;,
+    OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>member_groups)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>MemberGroups&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_256,
-		<span class="comment">// Member Account Id
-		</span>T::AccountId,
-		<span class="comment">// Group Account Ids
-		</span>BoundedVec&lt;T::AccountId, T::MaxMemberGroups&gt;,
-		ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>member_groups)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>MemberGroups&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_256,
+    <span class="comment">// Member Account Id
+    </span>T::AccountId,
+    <span class="comment">// Group Account Ids
+    </span>BoundedVec&lt;T::AccountId, T::MaxMemberGroups&gt;,
+    ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::event]
-	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
-	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="doccomment">/// Vault stored
-		</span>VaultStored(UserId, PublicKey, Vault&lt;T&gt;),
-		<span class="doccomment">/// Owned confidential document stored
-		</span>OwnedDocStored(OwnedDoc&lt;T&gt;),
-		<span class="doccomment">/// Owned confidential document removed
-		</span>OwnedDocRemoved(OwnedDoc&lt;T&gt;),
-		<span class="doccomment">/// Shared confidential document stored
-		</span>SharedDocStored(SharedDoc&lt;T&gt;),
-		<span class="doccomment">/// Shared confidential document metadata updated
-		</span>SharedDocUpdated(SharedDoc&lt;T&gt;),
-		<span class="doccomment">/// Shared confidential document removed
-		</span>SharedDocRemoved(SharedDoc&lt;T&gt;),
-		<span class="doccomment">/// Group created
-		</span>GroupCreated(Group&lt;T&gt;),
-		<span class="doccomment">/// Group Member added
-		</span>GroupMemberAdded(GroupMember&lt;T&gt;),
-		<span class="doccomment">/// Group Member Removed
-		</span>GroupMemberRemoved(GroupMember&lt;T&gt;),
-	}
+  <span class="attr">#[pallet::event]
+  #[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+  </span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+    <span class="doccomment">/// Vault stored
+    </span>VaultStored(UserId, PublicKey, Vault&lt;T&gt;),
+    <span class="doccomment">/// Owned confidential document stored
+    </span>OwnedDocStored(OwnedDoc&lt;T&gt;),
+    <span class="doccomment">/// Owned confidential document removed
+    </span>OwnedDocRemoved(OwnedDoc&lt;T&gt;),
+    <span class="doccomment">/// Shared confidential document stored
+    </span>SharedDocStored(SharedDoc&lt;T&gt;),
+    <span class="doccomment">/// Shared confidential document metadata updated
+    </span>SharedDocUpdated(SharedDoc&lt;T&gt;),
+    <span class="doccomment">/// Shared confidential document removed
+    </span>SharedDocRemoved(SharedDoc&lt;T&gt;),
+    <span class="doccomment">/// Group created
+    </span>GroupCreated(Group&lt;T&gt;),
+    <span class="doccomment">/// Group Member added
+    </span>GroupMemberAdded(GroupMember&lt;T&gt;),
+    <span class="doccomment">/// Group Member Removed
+    </span>GroupMemberRemoved(GroupMember&lt;T&gt;),
+  }
 
-	<span class="attr">#[pallet::error]
-	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="doccomment">/// Empty CID
-		</span>CIDNoneValue,
-		<span class="doccomment">/// Document Name is too short
-		</span>DocNameTooShort,
-		<span class="doccomment">/// Document Desc is too short
-		</span>DocDescTooShort,
-		<span class="doccomment">/// Group Name is too short
-		</span>GroupNameTooShort,
-		<span class="doccomment">/// Errors should have helpful documentation associated with them.
-		</span>StorageOverflow,
-		<span class="doccomment">/// Origin is not the owner of the user id
-		</span>NotOwnerOfUserId,
-		<span class="doccomment">/// Origin is not the owner of the vault
-		</span>NotOwnerOfVault,
-		<span class="doccomment">/// The user already has a vault
-		</span>UserAlreadyHasVault,
-		<span class="doccomment">/// The user already has a public key
-		</span>AccountAlreadyHasPublicKey,
-		<span class="doccomment">/// User is not document owner
-		</span>NotDocOwner,
-		<span class="doccomment">/// User is not document whom with the document was shared
-		</span>NotDocSharee,
-		<span class="doccomment">/// CID not found
-		</span>CIDNotFound,
-		<span class="doccomment">/// Document not found
-		</span>DocNotFound,
-		<span class="doccomment">/// The document has already been shared
-		</span>DocAlreadyShared,
-		<span class="doccomment">/// The group already exits
-		</span>GroupAlreadyExists,
-		<span class="doccomment">/// Shared with self
-		</span>DocSharedWithSelf,
-		<span class="doccomment">/// Account has no public key
-		</span>AccountHasNoPublicKey,
-		<span class="doccomment">/// Max owned documents has been exceeded
-		</span>ExceedMaxOwnedDocs,
-		<span class="doccomment">/// Max documents shared with the &quot;to&quot; account has been exceeded
-		</span>ExceedMaxSharedToDocs,
-		<span class="doccomment">/// Max documents shared with the &quot;from&quot; account has been exceeded
-		</span>ExceedMaxSharedFromDocs,
-		<span class="doccomment">/// Max groups an account can have has been exceeded
-		</span>ExceedMaxMemberGroups,
-		<span class="doccomment">/// Group does not exist
-		</span>GroupDoesNotExist,
-		<span class="doccomment">/// User does not have permission to perform the operation
-		</span>NoPermission,
-		<span class="doccomment">/// User already a group member
-		</span>UserAlreadyGroupMember,
-		<span class="doccomment">/// Group member does not exist
-		</span>GroupMemberDoesNotExist,
-		<span class="doccomment">/// Member group does not exist
-		</span>MemberGroupDoesNotExist,
-		<span class="doccomment">/// Member group already exits
-		</span>MemberGroupAlreadyExists,
-		<span class="doccomment">/// Can not add member as group owner
-		</span>CanNotAddMemberAsGroupOwner,
-	}
+  <span class="attr">#[pallet::error]
+  </span><span class="kw">pub enum </span>Error&lt;T&gt; {
+    <span class="doccomment">/// Empty CID
+    </span>CIDNoneValue,
+    <span class="doccomment">/// Document Name is too short
+    </span>DocNameTooShort,
+    <span class="doccomment">/// Document Desc is too short
+    </span>DocDescTooShort,
+    <span class="doccomment">/// Group Name is too short
+    </span>GroupNameTooShort,
+    <span class="doccomment">/// Errors should have helpful documentation associated with them.
+    </span>StorageOverflow,
+    <span class="doccomment">/// Origin is not the owner of the user id
+    </span>NotOwnerOfUserId,
+    <span class="doccomment">/// Origin is not the owner of the vault
+    </span>NotOwnerOfVault,
+    <span class="doccomment">/// The user already has a vault
+    </span>UserAlreadyHasVault,
+    <span class="doccomment">/// The user already has a public key
+    </span>AccountAlreadyHasPublicKey,
+    <span class="doccomment">/// User is not document owner
+    </span>NotDocOwner,
+    <span class="doccomment">/// User is not document whom with the document was shared
+    </span>NotDocSharee,
+    <span class="doccomment">/// CID not found
+    </span>CIDNotFound,
+    <span class="doccomment">/// Document not found
+    </span>DocNotFound,
+    <span class="doccomment">/// The document has already been shared
+    </span>DocAlreadyShared,
+    <span class="doccomment">/// The group already exits
+    </span>GroupAlreadyExists,
+    <span class="doccomment">/// Shared with self
+    </span>DocSharedWithSelf,
+    <span class="doccomment">/// Account has no public key
+    </span>AccountHasNoPublicKey,
+    <span class="doccomment">/// Max owned documents has been exceeded
+    </span>ExceedMaxOwnedDocs,
+    <span class="doccomment">/// Max documents shared with the &quot;to&quot; account has been exceeded
+    </span>ExceedMaxSharedToDocs,
+    <span class="doccomment">/// Max documents shared with the &quot;from&quot; account has been exceeded
+    </span>ExceedMaxSharedFromDocs,
+    <span class="doccomment">/// Max groups an account can have has been exceeded
+    </span>ExceedMaxMemberGroups,
+    <span class="doccomment">/// Group does not exist
+    </span>GroupDoesNotExist,
+    <span class="doccomment">/// User does not have permission to perform the operation
+    </span>NoPermission,
+    <span class="doccomment">/// User already a group member
+    </span>UserAlreadyGroupMember,
+    <span class="doccomment">/// Group member does not exist
+    </span>GroupMemberDoesNotExist,
+    <span class="doccomment">/// Member group does not exist
+    </span>MemberGroupDoesNotExist,
+    <span class="doccomment">/// Member group already exits
+    </span>MemberGroupAlreadyExists,
+    <span class="doccomment">/// Can not add member as group owner
+    </span>CanNotAddMemberAsGroupOwner,
+  }
 
-	<span class="attr">#[pallet::call]
-	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-		<span class="doccomment">/// Create/Update a vault
-		///
-		/// Creates/Updates the calling user&#39;s vault and sets their public cipher key
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is configuring their vault
-		/// - `user_id`: User identifier generated from their login method, their address if using
-		/// native login or user id if using SSO
-		/// - `public key`: The users cipher public key
-		/// - `cid`: The IPFS CID that contains the vaults data
-		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>set_vault(
-			origin: OriginFor&lt;T&gt;,
-			user_id: UserId,
-			public_key: PublicKey,
-			cid: CID,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_set_vault(who, user_id, public_key, cid)
-		}
+  <span class="attr">#[pallet::call]
+  </span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+    <span class="doccomment">/// Create/Update a vault
+    ///
+    /// Creates/Updates the calling user&#39;s vault and sets their public cipher key
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is configuring their vault
+    /// - `user_id`: User identifier generated from their login method, their address if using
+    /// native login or user id if using SSO
+    /// - `public key`: The users cipher public key
+    /// - `cid`: The IPFS CID that contains the vaults data
+    </span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>set_vault(
+      origin: OriginFor&lt;T&gt;,
+      user_id: UserId,
+      public_key: PublicKey,
+      cid: CID,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_set_vault(who, user_id, public_key, cid)
+    }
 
-		<span class="doccomment">/// Create/Update an owned document
-		///
-		/// Creates a new owned document or updates an existing owned document&#39;s metadata
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is creating/updating an owned document
-		/// - `owned_doc`: Metadata related to the owned document
-		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>set_owned_document(origin: OriginFor&lt;T&gt;, owned_doc: OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_set_owned_document(who, owned_doc)
-		}
+    <span class="doccomment">/// Create/Update an owned document
+    ///
+    /// Creates a new owned document or updates an existing owned document&#39;s metadata
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is creating/updating an owned document
+    /// - `owned_doc`: Metadata related to the owned document
+    </span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>set_owned_document(origin: OriginFor&lt;T&gt;, owned_doc: OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_set_owned_document(who, owned_doc)
+    }
 
-		<span class="doccomment">/// Remove an owned document
-		///
-		/// Removes an owned document
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The owner of the document
-		/// - `cid`: of the document to be removed
-		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_owned_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_remove_owned_document(who, cid)
-		}
+    <span class="doccomment">/// Remove an owned document
+    ///
+    /// Removes an owned document
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The owner of the document
+    /// - `cid`: of the document to be removed
+    </span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_owned_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_remove_owned_document(who, cid)
+    }
 
-		<span class="doccomment">/// Share a document
-		///
-		/// Creates a shared document
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is creating the shared document
-		/// - `shared_doc`: Metadata related to the shared document
-		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>share_document(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_share_document(who, shared_doc)
-		}
+    <span class="doccomment">/// Share a document
+    ///
+    /// Creates a shared document
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is creating the shared document
+    /// - `shared_doc`: Metadata related to the shared document
+    </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>share_document(origin: OriginFor&lt;T&gt;, shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_share_document(who, shared_doc)
+    }
 
-		<span class="doccomment">/// Update share document metadata
-		///
-		/// Updates share document metadata, only the user with which the document
-		/// was shared can update it
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The &quot;to&quot; user of the shared document
-		/// - `shared_doc`: Metadata related to the shared document
-		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>update_shared_document_metadata(
-			origin: OriginFor&lt;T&gt;,
-			shared_doc: SharedDoc&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_update_shared_document_metadata(who, shared_doc)
-		}
+    <span class="doccomment">/// Update share document metadata
+    ///
+    /// Updates share document metadata, only the user with which the document
+    /// was shared can update it
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The &quot;to&quot; user of the shared document
+    /// - `shared_doc`: Metadata related to the shared document
+    </span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>update_shared_document_metadata(
+      origin: OriginFor&lt;T&gt;,
+      shared_doc: SharedDoc&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_update_shared_document_metadata(who, shared_doc)
+    }
 
-		<span class="doccomment">/// Remove a shared document
-		///
-		/// Removes a shared document, only the user with whom the document was
-		/// is able to remove it
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The &quot;to&quot; user of the shared document
-		/// - `cid`: of the document to be removed
-		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_shared_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_remove_shared_document(who, cid)
-		}
+    <span class="doccomment">/// Remove a shared document
+    ///
+    /// Removes a shared document, only the user with whom the document was
+    /// is able to remove it
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The &quot;to&quot; user of the shared document
+    /// - `cid`: of the document to be removed
+    </span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_shared_document(origin: OriginFor&lt;T&gt;, cid: CID) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_remove_shared_document(who, cid)
+    }
 
-		<span class="doccomment">/// Create a group
-		///
-		/// Creates a group that enables the sharing of documents with multiple users
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is creating the group
-		/// - `group`: AccountId of the group
-		/// - `name`: Name of the group
-		/// - `public_key`: Public key of the group
-		/// - `cid`: cid of the document containing the private key of the group
-		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>create_group(
-			origin: OriginFor&lt;T&gt;,
-			group: T::AccountId,
-			name: GroupName&lt;T&gt;,
-			public_key: PublicKey,
-			cid: CID,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_create_group(who, group, name, public_key, cid)
-		}
+    <span class="doccomment">/// Create a group
+    ///
+    /// Creates a group that enables the sharing of documents with multiple users
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is creating the group
+    /// - `group`: AccountId of the group
+    /// - `name`: Name of the group
+    /// - `public_key`: Public key of the group
+    /// - `cid`: cid of the document containing the private key of the group
+    </span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>create_group(
+      origin: OriginFor&lt;T&gt;,
+      group: T::AccountId,
+      name: GroupName&lt;T&gt;,
+      public_key: PublicKey,
+      cid: CID,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_create_group(who, group, name, public_key, cid)
+    }
 
-		<span class="doccomment">/// Add group member
-		///
-		/// Adds a member to a group only the owner and admins can add members
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is adding the member to the group
-		/// - `group_member`: GroupMember object containg the details of the member
-		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>add_group_member(
-			origin: OriginFor&lt;T&gt;,
-			group_member: GroupMember&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_add_group_member(who, group_member)
-		}
+    <span class="doccomment">/// Add group member
+    ///
+    /// Adds a member to a group only the owner and admins can add members
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is adding the member to the group
+    /// - `group_member`: GroupMember object containg the details of the member
+    </span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>add_group_member(origin: OriginFor&lt;T&gt;, group_member: GroupMember&lt;T&gt;) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_add_group_member(who, group_member)
+    }
 
-		<span class="doccomment">/// Remove group member
-		///
-		/// Removes a member from a group the owner can remove any member, an admin only users
-		/// added by them selfs
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The user that is removing the member from the group
-		/// - `group`: AccountId of the group
-		/// - `member`: AccountId of the user to remove from the group
-		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_group_member(
-			origin: OriginFor&lt;T&gt;,
-			group: T::AccountId,
-			member: T::AccountId,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_remove_group_member(who, group, member)
-		}
+    <span class="doccomment">/// Remove group member
+    ///
+    /// Removes a member from a group the owner can remove any member, an admin only users
+    /// added by them selfs
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The user that is removing the member from the group
+    /// - `group`: AccountId of the group
+    /// - `member`: AccountId of the user to remove from the group
+    </span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_group_member(
+      origin: OriginFor&lt;T&gt;,
+      group: T::AccountId,
+      member: T::AccountId,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_remove_group_member(who, group, member)
+    }
 
-		<span class="doccomment">/// Kill all the stored data.
-		///
-		/// This function is used to kill ALL the stored data.
-		/// Use with caution!
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		///
-		/// ### Considerations:
-		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="kw">let _ </span>= &lt;Vaults&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;PublicKeys&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OwnedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OwnedDocsByOwner&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;SharedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;SharedDocsByTo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;SharedDocsByFrom&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;Groups&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;GroupMembers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;MemberGroups&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="prelude-val">Ok</span>(())
-		}
-	}
+    <span class="doccomment">/// Kill all the stored data.
+    ///
+    /// This function is used to kill ALL the stored data.
+    /// Use with caution!
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    ///
+    /// ### Considerations:
+    /// - This function is only available to the `admin` with sudo access.
+    </span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
+      T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let _ </span>= &lt;Vaults&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;PublicKeys&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OwnedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OwnedDocsByOwner&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;SharedDocs&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;SharedDocsByTo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;SharedDocsByFrom&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;Groups&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;GroupMembers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;MemberGroups&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="prelude-val">Ok</span>(())
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_confidential_docs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

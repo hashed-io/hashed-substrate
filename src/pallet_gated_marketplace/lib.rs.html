@@ -836,18 +836,6 @@
 <a href="#836" id="836">836</a>
 <a href="#837" id="837">837</a>
 <a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -863,840 +851,828 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::traits::{Currency, Time};
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>sp_runtime::traits::Scale;
-	<span class="kw">use </span>sp_runtime::Permill;
+  <span class="kw">use </span>frame_support::{
+    pallet_prelude::<span class="kw-2">*</span>,
+    traits::{Currency, Time},
+  };
+  <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>sp_runtime::{traits::Scale, Permill};
 
-	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+  <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
-	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
+  <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 
-	<span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;
-		&lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId,
-	&gt;&gt;::Balance;
+  <span class="kw">pub type </span>BalanceOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>pallet_uniques::Config&gt;::Currency <span class="kw">as </span>Currency&lt;
+    &lt;T <span class="kw">as </span>frame_system::Config&gt;::AccountId,
+  &gt;&gt;::Balance;
 
-	<span class="attr">#[pallet::config]
-	</span><span class="kw">pub trait </span>Config: frame_system::Config + pallet_fruniques::Config + pallet_mapped_assets::Config  {
-		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+  <span class="attr">#[pallet::config]
+  </span><span class="kw">pub trait </span>Config:
+    frame_system::Config + pallet_fruniques::Config + pallet_mapped_assets::Config
+  {
+    <span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
-		<span class="kw">type </span>Moment: Parameter
-			+ Default
-			+ Scale&lt;<span class="self">Self</span>::BlockNumber, Output = <span class="self">Self</span>::Moment&gt;
-			+ Copy
-			+ MaxEncodedLen
-			+ scale_info::StaticTypeInfo
-			+ Into&lt;u64&gt;;
+    <span class="kw">type </span>Moment: Parameter
+      + Default
+      + Scale&lt;<span class="self">Self</span>::BlockNumber, Output = <span class="self">Self</span>::Moment&gt;
+      + Copy
+      + MaxEncodedLen
+      + scale_info::StaticTypeInfo
+      + Into&lt;u64&gt;;
 
-		<span class="kw">type </span>Timestamp: Time&lt;Moment = <span class="self">Self</span>::Moment&gt;;
+    <span class="kw">type </span>Timestamp: Time&lt;Moment = <span class="self">Self</span>::Moment&gt;;
 
-		<span class="comment">// type RemoveOrigin: EnsureOrigin&lt;Self::RuntimeOrigin&gt;;
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxAuthsPerMarket: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxRolesPerAuth: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxApplicants: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>LabelMaxLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxFeedbackLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>NotesMaxLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>NameMaxLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxFiles: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxApplicationsPerCustodian: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxMarketsPerItem: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxOffersPerMarket: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxBlockedUsersPerMarket: Get&lt;u32&gt;;
+    <span class="comment">// type RemoveOrigin: EnsureOrigin&lt;Self::RuntimeOrigin&gt;;
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxAuthsPerMarket: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxRolesPerAuth: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxApplicants: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>LabelMaxLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxFeedbackLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>NotesMaxLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>NameMaxLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxFiles: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxApplicationsPerCustodian: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxMarketsPerItem: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxOffersPerMarket: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxBlockedUsersPerMarket: Get&lt;u32&gt;;
 
-		<span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
-	}
+    <span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
+  }
 
-	<span class="attr">#[pallet::pallet]
-	#[pallet::storage_version(STORAGE_VERSION)]
-	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
-	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
+  <span class="attr">#[pallet::pallet]
+  #[pallet::storage_version(STORAGE_VERSION)]
+  #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+  </span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="comment">/*--- Onchain storage section ---*/
+  <span class="comment">/* --- Onchain storage section --- */
 
-	</span><span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>marketplaces)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Marketplaces&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		MarketplaceId,
-		Marketplace&lt;T&gt;, <span class="comment">// Value
-		</span>OptionQuery,
-	&gt;;
+  </span><span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>marketplaces)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Marketplaces&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    MarketplaceId,
+    Marketplace&lt;T&gt;, <span class="comment">// Value
+    </span>OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>applications)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; =
-		StorageMap&lt;<span class="kw">_</span>, Identity, ApplicationId, Application&lt;T&gt;, OptionQuery&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>applications)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Applications&lt;T: Config&gt; =
+    StorageMap&lt;<span class="kw">_</span>, Identity, ApplicationId, Application&lt;T&gt;, OptionQuery&gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>applications_by_account)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicationsByAccount&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AccountId, <span class="comment">// K1: account_id
-		</span>Identity,
-		MarketplaceId,
-		ApplicationId,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>applications_by_account)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicationsByAccount&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AccountId, <span class="comment">// K1: account_id
+    </span>Identity,
+    MarketplaceId,
+    ApplicationId,
+    OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>applicants_by_marketplace)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicantsByMarketplace&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		MarketplaceId,
-		Blake2_128Concat,
-		ApplicationStatus, <span class="comment">//K2: application_status
-		</span>BoundedVec&lt;T::AccountId, T::MaxApplicants&gt;,
-		ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>applicants_by_marketplace)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ApplicantsByMarketplace&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    MarketplaceId,
+    Blake2_128Concat,
+    ApplicationStatus, <span class="comment">//K2: application_status
+    </span>BoundedVec&lt;T::AccountId, T::MaxApplicants&gt;,
+    ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>custodians)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Custodians&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AccountId, <span class="comment">//custodians
-		</span>Identity,
-		MarketplaceId,
-		BoundedVec&lt;T::AccountId, T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>custodians)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Custodians&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AccountId, <span class="comment">//custodians
+    </span>Identity,
+    MarketplaceId,
+    BoundedVec&lt;T::AccountId, T::MaxApplicationsPerCustodian&gt;, <span class="comment">//applicants
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>offers_by_item)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByItem&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::CollectionId, <span class="comment">//collection_id
-		</span>Blake2_128Concat,
-		T::ItemId,                                  <span class="comment">//item_id
-		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>offers_by_item)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByItem&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::CollectionId, <span class="comment">//collection_id
+    </span>Blake2_128Concat,
+    T::ItemId,                                  <span class="comment">//item_id
+    </span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>offers_by_account)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByAccount&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AccountId,                               <span class="comment">// account_id
-		</span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>offers_by_account)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByAccount&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AccountId,                               <span class="comment">// account_id
+    </span>BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>offers_by_marketplace)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		MarketplaceId,
-		BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>offers_by_marketplace)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    MarketplaceId,
+    BoundedVec&lt;OfferId, T::MaxOffersPerMarket&gt;, <span class="comment">// offer_id&#39;s
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>offers_info)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersInfo&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		OfferId,
-		<span class="comment">//StorageDoubleMap -&gt; marketplace_id(?)
-		</span>OfferData&lt;T&gt;, <span class="comment">// offer data
-		</span>OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>offers_info)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>OffersInfo&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    OfferId,
+    <span class="comment">//StorageDoubleMap -&gt; marketplace_id(?)
+    </span>OfferData&lt;T&gt;, <span class="comment">// offer data
+    </span>OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>asking_for_redemption)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AskingForRedemption&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		MarketplaceId,
-		Blake2_128Concat,
-		RedemptionId,
-		RedemptionData&lt;T&gt;,
-		OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>asking_for_redemption)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AskingForRedemption&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    MarketplaceId,
+    Blake2_128Concat,
+    RedemptionId,
+    RedemptionData&lt;T&gt;,
+    OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>get_blocked_accounts)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>BlockedUsersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		MarketplaceId,
-		BoundedVec&lt;T::AccountId, T::MaxBlockedUsersPerMarket&gt;, <span class="comment">// Blocked accounts
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>get_blocked_accounts)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>BlockedUsersByMarketplace&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    MarketplaceId,
+    BoundedVec&lt;T::AccountId, T::MaxBlockedUsersPerMarket&gt;, <span class="comment">// Blocked accounts
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::event]
-	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
-	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="doccomment">/// Marketplaces stored. [owner, admin, market_id]
-		</span>MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
-		<span class="doccomment">/// Application stored on the specified marketplace. [application_id, market_id]
-		</span>ApplicationStored(ApplicationId, MarketplaceId),
-		<span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
-		</span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, MarketplaceId, ApplicationStatus),
-		<span class="doccomment">/// Add a new authority to the selected marketplace [account, authority]
-		</span>AuthorityAdded(T::AccountId, MarketplaceRole),
-		<span class="doccomment">/// Remove the selected authority from the selected marketplace [account, authority]
-		</span>AuthorityRemoved(T::AccountId, MarketplaceRole),
-		<span class="doccomment">/// The label of the selected marketplace has been updated. [market_id]
-		</span>MarketplaceLabelUpdated(MarketplaceId),
-		<span class="doccomment">/// The selected marketplace has been removed. [market_id]
-		</span>MarketplaceRemoved(MarketplaceId),
-		<span class="doccomment">/// Offer stored. [collection_id, item_id, [offer_id]]
-		</span>OfferStored(T::CollectionId, T::ItemId, OfferId),
-		<span class="doccomment">/// Offer was accepted [offer_id, account]
-		</span>OfferWasAccepted(OfferId, T::AccountId),
-		<span class="doccomment">/// Offer was duplicated. [new_offer_id, new_marketplace_id]
-		</span>OfferDuplicated(OfferId, MarketplaceId),
-		<span class="doccomment">/// Offer was removed. [offer_id], [marketplace_id]
-		</span>OfferRemoved(OfferId, MarketplaceId),
-		<span class="doccomment">/// Initial pallet setup
-		</span>MarketplaceSetupCompleted,
-		<span class="doccomment">/// A new redemption was requested. [marketplace_id, redemption_id], owner
-		</span>RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
-		<span class="doccomment">/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
-		</span>RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
-		<span class="doccomment">/// User was blocked. [marketplace_id, account]
-		</span>UserBlocked(MarketplaceId, T::AccountId),
-		<span class="doccomment">/// User was unblocked. [marketplace_id, account]
-		</span>UserUnblocked(MarketplaceId, T::AccountId),
-	}
+  <span class="attr">#[pallet::event]
+  #[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+  </span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+    <span class="doccomment">/// Marketplaces stored. [owner, admin, market_id]
+    </span>MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
+    <span class="doccomment">/// Application stored on the specified marketplace. [application_id, market_id]
+    </span>ApplicationStored(ApplicationId, MarketplaceId),
+    <span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id,
+    /// status]
+    </span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, MarketplaceId, ApplicationStatus),
+    <span class="doccomment">/// Add a new authority to the selected marketplace [account, authority]
+    </span>AuthorityAdded(T::AccountId, MarketplaceRole),
+    <span class="doccomment">/// Remove the selected authority from the selected marketplace [account, authority]
+    </span>AuthorityRemoved(T::AccountId, MarketplaceRole),
+    <span class="doccomment">/// The label of the selected marketplace has been updated. [market_id]
+    </span>MarketplaceLabelUpdated(MarketplaceId),
+    <span class="doccomment">/// The selected marketplace has been removed. [market_id]
+    </span>MarketplaceRemoved(MarketplaceId),
+    <span class="doccomment">/// Offer stored. [collection_id, item_id, [offer_id]]
+    </span>OfferStored(T::CollectionId, T::ItemId, OfferId),
+    <span class="doccomment">/// Offer was accepted [offer_id, account]
+    </span>OfferWasAccepted(OfferId, T::AccountId),
+    <span class="doccomment">/// Offer was duplicated. [new_offer_id, new_marketplace_id]
+    </span>OfferDuplicated(OfferId, MarketplaceId),
+    <span class="doccomment">/// Offer was removed. [offer_id], [marketplace_id]
+    </span>OfferRemoved(OfferId, MarketplaceId),
+    <span class="doccomment">/// Initial pallet setup
+    </span>MarketplaceSetupCompleted,
+    <span class="doccomment">/// A new redemption was requested. [marketplace_id, redemption_id], owner
+    </span>RedemptionRequested(MarketplaceId, RedemptionId, T::AccountId),
+    <span class="doccomment">/// A redemption was accepted. [marketplace_id, redemption_id], redemption_specialist
+    </span>RedemptionAccepted(MarketplaceId, RedemptionId, T::AccountId),
+    <span class="doccomment">/// User was blocked. [marketplace_id, account]
+    </span>UserBlocked(MarketplaceId, T::AccountId),
+    <span class="doccomment">/// User was unblocked. [marketplace_id, account]
+    </span>UserUnblocked(MarketplaceId, T::AccountId),
+  }
 
-	<span class="comment">// Errors inform users that something went wrong.
-	</span><span class="attr">#[pallet::error]
-	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="doccomment">///Limit bounded vector exceeded
-		</span>LimitExceeded,
-		<span class="doccomment">/// The account supervises too many marketplaces
-		</span>ExceedMaxMarketsPerAuth,
-		<span class="doccomment">/// The account has too many roles in that marketplace
-		</span>ExceedMaxRolesPerAuth,
-		<span class="doccomment">/// Too many applicants for this market! try again later
-		</span>ExceedMaxApplicants,
-		<span class="doccomment">/// This custodian has too many applications for this market, try with another one
-		</span>ExceedMaxApplicationsPerCustodian,
-		<span class="doccomment">/// This offer has bigger percentage than the allowed
-		</span>ExceedMaxPercentage,
-		<span class="doccomment">/// This offer has smaller percentage than the allowed
-		</span>ExceedMinPercentage,
-		<span class="doccomment">/// Application does not exist
-		</span>ApplicationNotFound,
-		<span class="doccomment">/// The user has not applied to that market before
-		</span>ApplicantNotFound,
-		<span class="doccomment">/// The user cannot be custodian of its own application
-		</span>ApplicantCannotBeCustodian,
-		<span class="doccomment">/// A marketplace with the same data exists already
-		</span>MarketplaceAlreadyExists,
-		<span class="doccomment">/// The user has already applied to the marketplace (or an identical application exist)
-		</span>AlreadyApplied,
-		<span class="doccomment">/// The specified marketplace does not exist
-		</span>MarketplaceNotFound,
-		<span class="doccomment">/// You need to be an owner or an admin of the marketplace
-		</span>NotOwnerOrAdmin,
-		<span class="doccomment">/// There was no change regarding the application status
-		</span>AlreadyEnrolled,
-		<span class="doccomment">/// There cannot be more than one owner per marketplace
-		</span>OnlyOneOwnerIsAllowed,
-		<span class="doccomment">/// Cannot remove the owner of the marketplace
-		</span>CantRemoveOwner,
-		<span class="doccomment">/// Admin can not remove itself from the marketplace
-		</span>AdminCannotRemoveItself,
-		<span class="doccomment">/// User not found
-		</span>UserNotFound,
-		<span class="doccomment">/// Owner not found
-		</span>OwnerNotFound,
-		<span class="comment">// Rol not found for the selected user
-		</span>AuthorityNotFoundForUser,
-		<span class="doccomment">/// Admins cannot be deleted between them, only the owner can
-		</span>CannotDeleteAdmin,
-		<span class="doccomment">/// Application ID not found
-		</span>ApplicationIdNotFound,
-		<span class="doccomment">/// Application status is still pending, user cannot apply/reapply
-		</span>ApplicationStatusStillPending,
-		<span class="doccomment">/// The application has already been approved, application status is approved
-		</span>ApplicationHasAlreadyBeenApproved,
-		<span class="doccomment">/// Collection not found
-		</span>CollectionNotFound,
-		<span class="doccomment">/// User who calls the function is not the owner of the collection
-		</span>NotOwner,
-		<span class="doccomment">/// Offer already exists
-		</span>OfferAlreadyExists,
-		<span class="doccomment">/// Offer not found
-		</span>OfferNotFound,
-		<span class="doccomment">/// Offer is not available at the moment
-		</span>OfferIsNotAvailable,
-		<span class="doccomment">/// Owner can not buy its own offer
-		</span>CannotTakeOffer,
-		<span class="doccomment">/// User cannot remove the offer from the marketplace
-		</span>CannotRemoveOffer,
-		<span class="doccomment">/// Error related to the timestamp
-		</span>TimestampError,
-		<span class="doccomment">/// User does not have enough balance to buy the offer
-		</span>NotEnoughBalance,
-		<span class="doccomment">/// User cannot delete the offer because is closed
-		</span>CannotDeleteOffer,
-		<span class="doccomment">/// There was a problem storing the offer
-		</span>OfferStorageError,
-		<span class="doccomment">/// Price must be greater than zero
-		</span>PriceMustBeGreaterThanZero,
-		<span class="doccomment">/// User cannot create buy offers for their own items
-		</span>CannotCreateOffer,
-		<span class="doccomment">/// This items is not available for sale
-		</span>ItemNotForSale,
-		<span class="doccomment">/// Could not access to item metadata
-		</span>ItemMetadataNotFound,
-		<span class="doccomment">/// Redemption request not found
-		</span>RedemptionRequestNotFound,
-		<span class="doccomment">/// Redemption request already in place
-		</span>RedemptionRequestAlreadyExists,
-		<span class="doccomment">/// The redemption in question is already redeemed
-		</span>RedemptionRequestAlreadyRedeemed,
-		<span class="doccomment">/// User is blocked
-		</span>UserIsBlocked,
-		<span class="doccomment">/// The number of blocked users has reached the limit
-		</span>ExceedMaxBlockedUsers,
-		<span class="doccomment">/// User is already a participant in the marketplace
-		</span>UserAlreadyParticipant,
-		<span class="doccomment">/// User is not blocked
-		</span>UserIsNotBlocked,
-		<span class="doccomment">/// User is already blocked
-		</span>UserAlreadyBlocked,
-		<span class="doccomment">/// The owner of the NFT is not in the marketplace
-		</span>OwnerNotInMarketplace,
-		<span class="doccomment">/// MappedAssetId not found
-		</span>AssetNotFound,
-	}
+  <span class="comment">// Errors inform users that something went wrong.
+  </span><span class="attr">#[pallet::error]
+  </span><span class="kw">pub enum </span>Error&lt;T&gt; {
+    <span class="doccomment">///Limit bounded vector exceeded
+    </span>LimitExceeded,
+    <span class="doccomment">/// The account supervises too many marketplaces
+    </span>ExceedMaxMarketsPerAuth,
+    <span class="doccomment">/// The account has too many roles in that marketplace
+    </span>ExceedMaxRolesPerAuth,
+    <span class="doccomment">/// Too many applicants for this market! try again later
+    </span>ExceedMaxApplicants,
+    <span class="doccomment">/// This custodian has too many applications for this market, try with another one
+    </span>ExceedMaxApplicationsPerCustodian,
+    <span class="doccomment">/// This offer has bigger percentage than the allowed
+    </span>ExceedMaxPercentage,
+    <span class="doccomment">/// This offer has smaller percentage than the allowed
+    </span>ExceedMinPercentage,
+    <span class="doccomment">/// Application does not exist
+    </span>ApplicationNotFound,
+    <span class="doccomment">/// The user has not applied to that market before
+    </span>ApplicantNotFound,
+    <span class="doccomment">/// The user cannot be custodian of its own application
+    </span>ApplicantCannotBeCustodian,
+    <span class="doccomment">/// A marketplace with the same data exists already
+    </span>MarketplaceAlreadyExists,
+    <span class="doccomment">/// The user has already applied to the marketplace (or an identical application exist)
+    </span>AlreadyApplied,
+    <span class="doccomment">/// The specified marketplace does not exist
+    </span>MarketplaceNotFound,
+    <span class="doccomment">/// You need to be an owner or an admin of the marketplace
+    </span>NotOwnerOrAdmin,
+    <span class="doccomment">/// There was no change regarding the application status
+    </span>AlreadyEnrolled,
+    <span class="doccomment">/// There cannot be more than one owner per marketplace
+    </span>OnlyOneOwnerIsAllowed,
+    <span class="doccomment">/// Cannot remove the owner of the marketplace
+    </span>CantRemoveOwner,
+    <span class="doccomment">/// Admin can not remove itself from the marketplace
+    </span>AdminCannotRemoveItself,
+    <span class="doccomment">/// User not found
+    </span>UserNotFound,
+    <span class="doccomment">/// Owner not found
+    </span>OwnerNotFound,
+    <span class="comment">// Rol not found for the selected user
+    </span>AuthorityNotFoundForUser,
+    <span class="doccomment">/// Admins cannot be deleted between them, only the owner can
+    </span>CannotDeleteAdmin,
+    <span class="doccomment">/// Application ID not found
+    </span>ApplicationIdNotFound,
+    <span class="doccomment">/// Application status is still pending, user cannot apply/reapply
+    </span>ApplicationStatusStillPending,
+    <span class="doccomment">/// The application has already been approved, application status is approved
+    </span>ApplicationHasAlreadyBeenApproved,
+    <span class="doccomment">/// Collection not found
+    </span>CollectionNotFound,
+    <span class="doccomment">/// User who calls the function is not the owner of the collection
+    </span>NotOwner,
+    <span class="doccomment">/// Offer already exists
+    </span>OfferAlreadyExists,
+    <span class="doccomment">/// Offer not found
+    </span>OfferNotFound,
+    <span class="doccomment">/// Offer is not available at the moment
+    </span>OfferIsNotAvailable,
+    <span class="doccomment">/// Owner can not buy its own offer
+    </span>CannotTakeOffer,
+    <span class="doccomment">/// User cannot remove the offer from the marketplace
+    </span>CannotRemoveOffer,
+    <span class="doccomment">/// Error related to the timestamp
+    </span>TimestampError,
+    <span class="doccomment">/// User does not have enough balance to buy the offer
+    </span>NotEnoughBalance,
+    <span class="doccomment">/// User cannot delete the offer because is closed
+    </span>CannotDeleteOffer,
+    <span class="doccomment">/// There was a problem storing the offer
+    </span>OfferStorageError,
+    <span class="doccomment">/// Price must be greater than zero
+    </span>PriceMustBeGreaterThanZero,
+    <span class="doccomment">/// User cannot create buy offers for their own items
+    </span>CannotCreateOffer,
+    <span class="doccomment">/// This items is not available for sale
+    </span>ItemNotForSale,
+    <span class="doccomment">/// Could not access to item metadata
+    </span>ItemMetadataNotFound,
+    <span class="doccomment">/// Redemption request not found
+    </span>RedemptionRequestNotFound,
+    <span class="doccomment">/// Redemption request already in place
+    </span>RedemptionRequestAlreadyExists,
+    <span class="doccomment">/// The redemption in question is already redeemed
+    </span>RedemptionRequestAlreadyRedeemed,
+    <span class="doccomment">/// User is blocked
+    </span>UserIsBlocked,
+    <span class="doccomment">/// The number of blocked users has reached the limit
+    </span>ExceedMaxBlockedUsers,
+    <span class="doccomment">/// User is already a participant in the marketplace
+    </span>UserAlreadyParticipant,
+    <span class="doccomment">/// User is not blocked
+    </span>UserIsNotBlocked,
+    <span class="doccomment">/// User is already blocked
+    </span>UserAlreadyBlocked,
+    <span class="doccomment">/// The owner of the NFT is not in the marketplace
+    </span>OwnerNotInMarketplace,
+    <span class="doccomment">/// MappedAssetId not found
+    </span>AssetNotFound,
+  }
 
-	<span class="attr">#[pallet::call]
-	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt;
-	<span class="kw">where
-		</span>T: pallet_uniques::Config&lt;CollectionId = u32, ItemId = u32&gt;,
-	{
-		<span class="attr">#[pallet::call_index(<span class="number">0</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
-		</span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+  <span class="attr">#[pallet::call]
+  </span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt;
+  <span class="kw">where
+    </span>T: pallet_uniques::Config&lt;CollectionId = u32, ItemId = u32&gt;,
+  {
+    <span class="attr">#[pallet::call_index(<span class="number">0</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">10</span>))]
+    </span><span class="kw">pub fn </span>initial_setup(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
+      T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_initial_setup()<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="doccomment">/// Create a new marketplace.
-		///
-		/// Creates a new marketplace with the given label
-		/// .
-		/// ### Parameters:
-		/// - `origin`: The owner of the marketplace.
-		/// - `admin`: The admin of the marketplace.
-		/// - `label`: The name of the marketplace.
-		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>create_marketplace(
-			origin: OriginFor&lt;T&gt;,
-			admin: T::AccountId,
-			label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
-			buy_fee: u32,
-			sell_fee: u32,
-			asset_id: T::AssetId,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
-			</span><span class="kw">let </span>m = Marketplace {
-				label,
-				buy_fee: Permill::from_percent(buy_fee),
-				sell_fee: Permill::from_percent(sell_fee),
-				asset_id,
-				creator: who.clone(),
-			};
-			<span class="self">Self</span>::do_create_marketplace(origin, admin, m)
-		}
+    <span class="doccomment">/// Create a new marketplace.
+    ///
+    /// Creates a new marketplace with the given label
+    /// .
+    /// ### Parameters:
+    /// - `origin`: The owner of the marketplace.
+    /// - `admin`: The admin of the marketplace.
+    /// - `label`: The name of the marketplace.
+    </span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>create_marketplace(
+      origin: OriginFor&lt;T&gt;,
+      admin: T::AccountId,
+      label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+      buy_fee: u32,
+      sell_fee: u32,
+      asset_id: T::AssetId,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>; <span class="comment">// origin will be market owner
+      </span><span class="kw">let </span>m = Marketplace {
+        label,
+        buy_fee: Permill::from_percent(buy_fee),
+        sell_fee: Permill::from_percent(sell_fee),
+        asset_id,
+        creator: who.clone(),
+      };
+      <span class="self">Self</span>::do_create_marketplace(origin, admin, m)
+    }
 
-		<span class="doccomment">/// Block or Unblock a user from apllying to a marketplace.
-		///
-		/// Blocks or Unblocks a user from applying to a marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The admin of the marketplace.
-		/// - `marketplace_id`: The id of the marketplace to block/unblock the user.
-		/// - `user`: The id of the user to block/unblock.`
-		///
-		/// ### Considerations:
-		/// - Once a user is blocked, the user won&#39;t be able to join the marketplace until unblocked.
-		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>block_user(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: MarketplaceId,
-			block_args: BlockUserArgs&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">match </span>block_args {
-				BlockUserArgs::BlockUser(user) =&gt; <span class="self">Self</span>::do_block_user(who, marketplace_id, user),
-				BlockUserArgs::UnblockUser(user) =&gt; {
-					<span class="self">Self</span>::do_unblock_user(who, marketplace_id, user)
-				},
-			}
-		}
+    <span class="doccomment">/// Block or Unblock a user from apllying to a marketplace.
+    ///
+    /// Blocks or Unblocks a user from applying to a marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The admin of the marketplace.
+    /// - `marketplace_id`: The id of the marketplace to block/unblock the user.
+    /// - `user`: The id of the user to block/unblock.`
+    ///
+    /// ### Considerations:
+    /// - Once a user is blocked, the user won&#39;t be able to join the marketplace until unblocked.
+    </span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>block_user(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: MarketplaceId,
+      block_args: BlockUserArgs&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">match </span>block_args {
+        BlockUserArgs::BlockUser(user) =&gt; <span class="self">Self</span>::do_block_user(who, marketplace_id, user),
+        BlockUserArgs::UnblockUser(user) =&gt; <span class="self">Self</span>::do_unblock_user(who, marketplace_id, user),
+      }
+    }
 
-		<span class="doccomment">/// Apply to a marketplace.
-		///
-		/// Applies to the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The applicant.
-		/// - `marketplace_id`: The id of the marketplace where we want to apply.
-		/// - `fields`: Confidential user documents, any files necessary for the application
-		/// - `custodian_fields`: The custodian account and their documents.
-		///
-		/// ### Considerations:
-		/// - You can add many documents, up to the maximum allowed (10).
-		/// - The custodian account is optional. You can apply to a marketplace without a
-		/// custodian account.
-		/// - All custodian fields are optional.
-		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>apply(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
-			</span>fields: Fields&lt;T&gt;,
-			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Apply to a marketplace.
+    ///
+    /// Applies to the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The applicant.
+    /// - `marketplace_id`: The id of the marketplace where we want to apply.
+    /// - `fields`: Confidential user documents, any files necessary for the application
+    /// - `custodian_fields`: The custodian account and their documents.
+    ///
+    /// ### Considerations:
+    /// - You can add many documents, up to the maximum allowed (10).
+    /// - The custodian account is optional. You can apply to a marketplace without a
+    /// custodian account.
+    /// - All custodian fields are optional.
+    </span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>apply(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      <span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
+      </span>fields: Fields&lt;T&gt;,
+      custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
+      <span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
 
-			<span class="kw">let </span>application = Application::&lt;T&gt; {
-				status: ApplicationStatus::default(),
-				fields,
-				feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
-			};
+      <span class="kw">let </span>application = Application::&lt;T&gt; {
+        status: ApplicationStatus::default(),
+        fields,
+        feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
+      };
 
-			<span class="self">Self</span>::do_apply(who, custodian, marketplace_id, application)
-		}
+      <span class="self">Self</span>::do_apply(who, custodian, marketplace_id, application)
+    }
 
-		<span class="doccomment">/// Accept or reject a reapplyment.
-		///
-		/// Allows the applicant for a second chance to apply to the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The reapplicant.
-		/// - `marketplace_id`: The id of the marketplace where we want to reapply.
-		/// - `fields`: Confidential user documents, any files necessary for the reapplication
-		/// - `custodian_fields`: The custodian account and their documents.
-		///
-		/// ### Considerations:
-		/// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
-		/// - The custodian account is optional. You can replace the previous custodian.
-		/// - Since we know the application exists, we can check the current status of the application.
-		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>reapply(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			<span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
-			</span>fields: Fields&lt;T&gt;,
-			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Accept or reject a reapplyment.
+    ///
+    /// Allows the applicant for a second chance to apply to the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The reapplicant.
+    /// - `marketplace_id`: The id of the marketplace where we want to reapply.
+    /// - `fields`: Confidential user documents, any files necessary for the reapplication
+    /// - `custodian_fields`: The custodian account and their documents.
+    ///
+    /// ### Considerations:
+    /// - Since this is a second chance, you can replace your previous documents, up to the maximum
+    ///   allowed (10).
+    /// - The custodian account is optional. You can replace the previous custodian.
+    /// - Since we know the application exists, we can check the current status of the application.
+    </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>reapply(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      <span class="comment">// Getting encoding errors from polkadotjs if an object vector have optional fields
+      </span>fields: Fields&lt;T&gt;,
+      custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
+      <span class="kw">let </span>(custodian, fields) = <span class="self">Self</span>::set_up_application(fields, custodian_fields);
 
-			<span class="kw">let </span>application = Application::&lt;T&gt; {
-				status: ApplicationStatus::default(),
-				fields,
-				feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
-			};
+      <span class="kw">let </span>application = Application::&lt;T&gt; {
+        status: ApplicationStatus::default(),
+        fields,
+        feedback: BoundedVec::&lt;u8, T::MaxFeedbackLen&gt;::default(),
+      };
 
-			<span class="self">Self</span>::is_application_in_rejected_status(who.clone(), marketplace_id)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::is_application_in_rejected_status(who.clone(), marketplace_id)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_apply(who, custodian, marketplace_id, application)
-		}
+      <span class="self">Self</span>::do_apply(who, custodian, marketplace_id, application)
+    }
 
-		<span class="doccomment">/// Accept or reject an application.
-		///
-		/// If the application is accepted,
-		/// the user will be added to the list of applicants.
-		/// If the application is rejected,
-		/// the user will be moved to the list of rejected applicants.
-		///
-		/// ### Parameters:
-		/// - `origin`:  The owner/admin of the marketplace.
-		/// - `marketplace_id`: The id of the marketplace where we want to enroll users.
-		/// - `account_or_application`: The account or application id to accept or reject.
-		/// - `approved`:  Whether to accept or reject the account/application.
-		///
-		/// ### Considerations:
-		/// - You can only accept or reject applications where you are the owner/admin of the marketplace.
-		/// - Ensure that your extrinsic has selected the right option account/application
-		/// because some fields changes.
-		/// - If you select `Account` you need to enter the account to be accepted.
-		/// - If you select `Application` you need to enter the `application_id` to be accepted.
-		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enroll(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			account_or_application: AccountOrApplication&lt;T&gt;,
-			approved: bool,
-			feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Accept or reject an application.
+    ///
+    /// If the application is accepted,
+    /// the user will be added to the list of applicants.
+    /// If the application is rejected,
+    /// the user will be moved to the list of rejected applicants.
+    ///
+    /// ### Parameters:
+    /// - `origin`:  The owner/admin of the marketplace.
+    /// - `marketplace_id`: The id of the marketplace where we want to enroll users.
+    /// - `account_or_application`: The account or application id to accept or reject.
+    /// - `approved`:  Whether to accept or reject the account/application.
+    ///
+    /// ### Considerations:
+    /// - You can only accept or reject applications where you are the owner/admin of the marketplace.
+    /// - Ensure that your extrinsic has selected the right option account/application
+    /// because some fields changes.
+    /// - If you select `Account` you need to enter the account to be accepted.
+    /// - If you select `Application` you need to enter the `application_id` to be accepted.
+    </span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>enroll(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      account_or_application: AccountOrApplication&lt;T&gt;,
+      approved: bool,
+      feedback: BoundedVec&lt;u8, T::MaxFeedbackLen&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
-		}
+      <span class="self">Self</span>::do_enroll(who, marketplace_id, account_or_application, approved, feedback)
+    }
 
-		<span class="doccomment">/// Invite a user to a marketplace.
-		///
-		/// The admin of the marketplace can invite a user to the marketplace.
-		/// ### Parameters:
-		/// - `origin`: The admin of the marketplace.
-		/// - `marketplace_id`: The id of the marketplace where we want to invite a user.
-		/// - `account`: The account to be invited.
-		///
-		/// ### Considerations:
-		/// - You can only invite users to a marketplace where you are the admin.
-		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>invite(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			account: T::AccountId,
-			fields: Fields&lt;T&gt;,
-			custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Invite a user to a marketplace.
+    ///
+    /// The admin of the marketplace can invite a user to the marketplace.
+    /// ### Parameters:
+    /// - `origin`: The admin of the marketplace.
+    /// - `marketplace_id`: The id of the marketplace where we want to invite a user.
+    /// - `account`: The account to be invited.
+    ///
+    /// ### Considerations:
+    /// - You can only invite users to a marketplace where you are the admin.
+    </span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>invite(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      account: T::AccountId,
+      fields: Fields&lt;T&gt;,
+      custodian_fields: <span class="prelude-ty">Option</span>&lt;CustodianFields&lt;T&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_invite(who, marketplace_id, account, fields, custodian_fields)
-		}
+      <span class="self">Self</span>::do_invite(who, marketplace_id, account, fields, custodian_fields)
+    }
 
-		<span class="doccomment">/// Add an Authority type
-		///
-		/// This extrinsic adds an authority type for the selected account
-		/// from the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `account`: The account to be removed.
-		/// - `authority_type`: The type of authority to be added.
-		/// - `marketplace_id`: The id of the marketplace where we want to add the account.
-		///
-		/// ### Considerations:
-		/// If the user has already applied to the marketplace for that particular
-		/// authority type, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>add_authority(
-			origin: OriginFor&lt;T&gt;,
-			account: T::AccountId,
-			authority_type: MarketplaceRole,
-			marketplace_id: [u8; <span class="number">32</span>],
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Add an Authority type
+    ///
+    /// This extrinsic adds an authority type for the selected account
+    /// from the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `account`: The account to be removed.
+    /// - `authority_type`: The type of authority to be added.
+    /// - `marketplace_id`: The id of the marketplace where we want to add the account.
+    ///
+    /// ### Considerations:
+    /// If the user has already applied to the marketplace for that particular
+    /// authority type, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>add_authority(
+      origin: OriginFor&lt;T&gt;,
+      account: T::AccountId,
+      authority_type: MarketplaceRole,
+      marketplace_id: [u8; <span class="number">32</span>],
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_authority(who, account, authority_type, marketplace_id)
-		}
+      <span class="self">Self</span>::do_authority(who, account, authority_type, marketplace_id)
+    }
 
-		<span class="doccomment">/// Remove an Authority type
-		///
-		/// This extrinsic removes an authority type for the selected account from the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `account`: The account to be removed.
-		/// - `authority_type`: The type of authority to be removed.
-		/// - `marketplace_id`: The id of the marketplace where we want to remove the account.
-		///
-		/// ### Considerations:
-		/// - This extrinsic doesn&#39;t remove the account from the marketplace,
-		/// it only removes the selected authority type for that account.
-		/// If the user doesn&#39;t have the selected authority type, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_authority(
-			origin: OriginFor&lt;T&gt;,
-			account: T::AccountId,
-			authority_type: MarketplaceRole,
-			marketplace_id: [u8; <span class="number">32</span>],
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="comment">// TODO: review If we&#39;re allowing more than one role per user per marketplace, we should
-			// check what role we want to remove instead of removing the user completely from
-			// selected marketplace.
-			</span><span class="self">Self</span>::do_remove_authority(who, account, authority_type, marketplace_id)
-		}
+    <span class="doccomment">/// Remove an Authority type
+    ///
+    /// This extrinsic removes an authority type for the selected account from the selected
+    /// marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `account`: The account to be removed.
+    /// - `authority_type`: The type of authority to be removed.
+    /// - `marketplace_id`: The id of the marketplace where we want to remove the account.
+    ///
+    /// ### Considerations:
+    /// - This extrinsic doesn&#39;t remove the account from the marketplace,
+    /// it only removes the selected authority type for that account.
+    /// If the user doesn&#39;t have the selected authority type, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_authority(
+      origin: OriginFor&lt;T&gt;,
+      account: T::AccountId,
+      authority_type: MarketplaceRole,
+      marketplace_id: [u8; <span class="number">32</span>],
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="comment">// TODO: review If we&#39;re allowing more than one role per user per marketplace, we should
+      // check what role we want to remove instead of removing the user completely from
+      // selected marketplace.
+      </span><span class="self">Self</span>::do_remove_authority(who, account, authority_type, marketplace_id)
+    }
 
-		<span class="doccomment">/// Update marketplace&#39;s label.
-		///
-		/// This extrinsic updates the label of the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to update the label.
-		/// - `label`: The new label for the selected marketplace.
-		///
-		/// ### Considerations:
-		/// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
-		/// - The label must be less than or equal to `T::LabelMaxLen
-		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>update_label_marketplace(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			new_label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Update marketplace&#39;s label.
+    ///
+    /// This extrinsic updates the label of the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `marketplace_id`: The id of the marketplace where we want to update the label.
+    /// - `label`: The new label for the selected marketplace.
+    ///
+    /// ### Considerations:
+    /// - You can only update the label of the marketplace where you are the owner/admin of the
+    ///   marketplace.
+    /// - The label must be less than or equal to `T::LabelMaxLen
+    /// - If the selected marketplace doesn&#39;t exist, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>update_label_marketplace(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      new_label: BoundedVec&lt;u8, T::LabelMaxLen&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_update_label_marketplace(who, marketplace_id, new_label)
-		}
+      <span class="self">Self</span>::do_update_label_marketplace(who, marketplace_id, new_label)
+    }
 
-		<span class="doccomment">/// Remove a particular marketplace.
-		///
-		/// This extrinsic removes the selected marketplace.
-		/// It removes all the applications related with the marketplace.
-		/// It removes all the authorities from the lists of the marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace to be removed.
-		///
-		/// ### Considerations:
-		/// - You can only remove the marketplace where you are the owner/admin of the marketplace.
-		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_marketplace(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Remove a particular marketplace.
+    ///
+    /// This extrinsic removes the selected marketplace.
+    /// It removes all the applications related with the marketplace.
+    /// It removes all the authorities from the lists of the marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `marketplace_id`: The id of the marketplace to be removed.
+    ///
+    /// ### Considerations:
+    /// - You can only remove the marketplace where you are the owner/admin of the marketplace.
+    /// - If the selected marketplace doesn&#39;t exist, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_marketplace(origin: OriginFor&lt;T&gt;, marketplace_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_remove_marketplace(who, marketplace_id)
-		}
+      <span class="self">Self</span>::do_remove_marketplace(who, marketplace_id)
+    }
 
-		<span class="doccomment">/// Enlist a sell order.
-		///
-		/// This extrinsic creates a sell order in the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to create the sell order.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
-		/// - `price`: The price of the item.
-		///
-		/// ### Considerations:
-		/// - You can only create a sell order in the marketplace if you are the owner of the item.
-		/// - You can create only one sell order for each item per marketplace.
-		/// - If the selected marketplace doesn&#39;t exist, it will throw an error.
-		/// - If the selected collection doesn&#39;t exist, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enlist_sell_offer(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			collection_id: T::CollectionId,
-			item_id: T::ItemId,
-			price: T::Balance,
-			percentage: u32,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Enlist a sell order.
+    ///
+    /// This extrinsic creates a sell order in the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `marketplace_id`: The id of the marketplace where we want to create the sell order.
+    /// - `collection_id`: The id of the collection.
+    /// - `item_id`: The id of the item inside the collection.
+    /// - `price`: The price of the item.
+    ///
+    /// ### Considerations:
+    /// - You can only create a sell order in the marketplace if you are the owner of the item.
+    /// - You can create only one sell order for each item per marketplace.
+    /// - If the selected marketplace doesn&#39;t exist, it will throw an error.
+    /// - If the selected collection doesn&#39;t exist, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>enlist_sell_offer(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      collection_id: T::CollectionId,
+      item_id: T::ItemId,
+      price: T::Balance,
+      percentage: u32,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_enlist_sell_offer(
-				who,
-				marketplace_id,
-				collection_id,
-				item_id,
-				price,
-				percentage,
-			)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_enlist_sell_offer(who, marketplace_id, collection_id, item_id, price, percentage)<span class="question-mark">?</span>;
 
-			<span class="prelude-val">Ok</span>(())
-		}
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="doccomment">/// Accepts a sell order.
-		///
-		/// This extrinsic is called by the user who wants to buy the item.
-		/// Accepts a sell order in the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - &#39;offer_id`: The id of the sell order to be accepted.
-		/// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.
-		///
-		/// ### Considerations:
-		/// - You don&#39;t need to be the owner of the item to accept the sell order.
-		/// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
-		/// - If you don&#39;t have the enough balance to accept the sell order, it will throw an error.
-		</span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
-			ensure_signed(origin.clone())<span class="question-mark">?</span>;
+    <span class="doccomment">/// Accepts a sell order.
+    ///
+    /// This extrinsic is called by the user who wants to buy the item.
+    /// Accepts a sell order in the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - &#39;offer_id`: The id of the sell order to be accepted.
+    /// - `marketplace_id`: The id of the marketplace where we want to accept the sell order.
+    ///
+    /// ### Considerations:
+    /// - You don&#39;t need to be the owner of the item to accept the sell order.
+    /// - Once the sell order is accepted, the ownership of the item is transferred to the buyer.
+    /// - If you don&#39;t have the enough balance to accept the sell order, it will throw an error.
+    </span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>take_sell_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_take_sell_offer(origin, offer_id)
-		}
+      <span class="self">Self</span>::do_take_sell_offer(origin, offer_id)
+    }
 
-		<span class="doccomment">/// Delete an offer.
-		///
-		/// This extrinsic deletes an offer in the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `offer_id`: The id of the offer to be deleted.
-		///
-		/// ### Considerations:
-		/// - You can delete sell orders or buy orders.
-		/// - You can only delete an offer if you are the creator of the offer.
-		/// - Only open offers can be deleted.
-		/// - If you need to delete multiple offers for the same item, you need to
-		///  delete them one by one.
-		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
-			<span class="comment">//Currently, we can only remove one offer at a time.
-			//TODO: Add support for removing multiple offers at a time.
-			</span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+    <span class="doccomment">/// Delete an offer.
+    ///
+    /// This extrinsic deletes an offer in the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `offer_id`: The id of the offer to be deleted.
+    ///
+    /// ### Considerations:
+    /// - You can delete sell orders or buy orders.
+    /// - You can only delete an offer if you are the creator of the offer.
+    /// - Only open offers can be deleted.
+    /// - If you need to delete multiple offers for the same item, you need to
+    ///  delete them one by one.
+    </span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      <span class="comment">//Currently, we can only remove one offer at a time.
+      //TODO: Add support for removing multiple offers at a time.
+      </span><span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_remove_offer(who, offer_id)
-		}
+      <span class="self">Self</span>::do_remove_offer(who, offer_id)
+    }
 
-		<span class="doccomment">/// Enlist a buy order.
-		///
-		/// This extrinsic creates a buy order in the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to create the buy order.
-		/// - `collection_id`: The id of the collection.
-		/// - `item_id`: The id of the item inside the collection.
-		/// - `price`: The price of the item.
-		///
-		/// ### Considerations:
-		/// - Any user can create a buy order in the marketplace.
-		/// - An item can receive multiple buy orders at a time.
-		/// - You need to have the enough balance to create the buy order.
-		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>enlist_buy_offer(
-			origin: OriginFor&lt;T&gt;,
-			marketplace_id: [u8; <span class="number">32</span>],
-			collection_id: T::CollectionId,
-			item_id: T::ItemId,
-			price: T::Balance,
-			percentage: u32,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Enlist a buy order.
+    ///
+    /// This extrinsic creates a buy order in the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `marketplace_id`: The id of the marketplace where we want to create the buy order.
+    /// - `collection_id`: The id of the collection.
+    /// - `item_id`: The id of the item inside the collection.
+    /// - `price`: The price of the item.
+    ///
+    /// ### Considerations:
+    /// - Any user can create a buy order in the marketplace.
+    /// - An item can receive multiple buy orders at a time.
+    /// - You need to have the enough balance to create the buy order.
+    </span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>enlist_buy_offer(
+      origin: OriginFor&lt;T&gt;,
+      marketplace_id: [u8; <span class="number">32</span>],
+      collection_id: T::CollectionId,
+      item_id: T::ItemId,
+      price: T::Balance,
+      percentage: u32,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_enlist_buy_offer(
-				who,
-				marketplace_id,
-				collection_id,
-				item_id,
-				price,
-				percentage,
-			)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_enlist_buy_offer(who, marketplace_id, collection_id, item_id, price, percentage)<span class="question-mark">?</span>;
 
-			<span class="prelude-val">Ok</span>(())
-		}
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="doccomment">/// Accepts a buy order.
-		///
-		/// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
-		/// Accepts a buy order in the selected marketplace.
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `offer_id`: The id of the buy order to be accepted.
-		/// - `marketplace_id`: The id of the marketplace where we accept the buy order.
-		///
-		/// ### Considerations:
-		/// - You need to be the owner of the item to accept a buy order.
-		/// - Owner of the item can accept only one buy order at a time.
-		/// - When an offer is accepted, all the other offers for this item are closed.
-		/// - The buyer needs to have the enough balance to accept the buy order.
-		/// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
-		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+    <span class="doccomment">/// Accepts a buy order.
+    ///
+    /// This extrinsic is called by the owner of the item who accepts the buy offer created by a
+    /// market participant. Accepts a buy order in the selected marketplace.
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `offer_id`: The id of the buy order to be accepted.
+    /// - `marketplace_id`: The id of the marketplace where we accept the buy order.
+    ///
+    /// ### Considerations:
+    /// - You need to be the owner of the item to accept a buy order.
+    /// - Owner of the item can accept only one buy order at a time.
+    /// - When an offer is accepted, all the other offers for this item are closed.
+    /// - The buyer needs to have the enough balance to accept the buy order.
+    /// - Once the buy order is accepted, the ownership of the item is transferred to the buyer.
+    </span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>take_buy_offer(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
 
-			<span class="self">Self</span>::do_take_buy_offer(who, offer_id)
-		}
+      <span class="self">Self</span>::do_take_buy_offer(who, offer_id)
+    }
 
-		<span class="doccomment">/// Redeem an item.
-		/// This extrinsic is called by the owner of the item who wants to redeem the item.
-		/// The owner of the item can ask for redemption or accept redemption.
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		/// - `marketplace_id`: The id of the marketplace where we want to redeem the item.
-		/// - `redeem`: The type of redemption.
+    <span class="doccomment">/// Redeem an item.
+    /// This extrinsic is called by the owner of the item who wants to redeem the item.
+    /// The owner of the item can ask for redemption or accept redemption.
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    /// - `marketplace_id`: The id of the marketplace where we want to redeem the item.
+    /// - `redeem`: The type of redemption.
 
-		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>redeem(
-			origin: OriginFor&lt;T&gt;,
-			marketplace: MarketplaceId,
-			redeem: RedeemArgs&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">match </span>redeem {
-				RedeemArgs::AskForRedemption { collection_id, item_id } =&gt; {
-					<span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id);
-				},
-				RedeemArgs::AcceptRedemption(redemption_id) =&gt; {
-					<span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id);
-				},
-			}
-		}
+    </span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>redeem(
+      origin: OriginFor&lt;T&gt;,
+      marketplace: MarketplaceId,
+      redeem: RedeemArgs&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">match </span>redeem {
+        RedeemArgs::AskForRedemption { collection_id, item_id } =&gt; {
+          <span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id)
+        },
+        RedeemArgs::AcceptRedemption(redemption_id) =&gt; {
+          <span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id)
+        },
+      }
+    }
 
-		<span class="comment">//TODO: Add CRUD operations for the offers
+    <span class="comment">//TODO: Add CRUD operations for the offers
 
-		</span><span class="doccomment">/// Kill all the stored data.
-		///
-		/// This function is used to kill ALL the stored data.
-		/// Use with caution!
-		///
-		/// ### Parameters:
-		/// - `origin`: The user who performs the action.
-		///
-		/// ### Considerations:
-		/// - This function is only available to the `admin` with sudo access.
-		</span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-			T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-			<span class="kw">let _ </span>= &lt;Marketplaces&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;Applications&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;ApplicationsByAccount&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;Custodians&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OffersByItem&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OffersByAccount&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OffersByMarketplace&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;OffersInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			<span class="kw">let _ </span>= &lt;AskingForRedemption&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-			&lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
-	}
+    </span><span class="doccomment">/// Kill all the stored data.
+    ///
+    /// This function is used to kill ALL the stored data.
+    /// Use with caution!
+    ///
+    /// ### Parameters:
+    /// - `origin`: The user who performs the action.
+    ///
+    /// ### Considerations:
+    /// - This function is only available to the `admin` with sudo access.
+    </span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
+      T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let _ </span>= &lt;Marketplaces&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;Applications&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;ApplicationsByAccount&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;ApplicantsByMarketplace&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;Custodians&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OffersByItem&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OffersByAccount&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OffersByMarketplace&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;OffersInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;AskingForRedemption&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      &lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_gated_marketplace" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

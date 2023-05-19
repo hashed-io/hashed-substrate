@@ -414,12 +414,6 @@
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 </span><span class="comment">// std
@@ -432,12 +426,12 @@
 <span class="comment">// Cumulus Imports
 </span><span class="kw">use </span>cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
 <span class="kw">use </span>cumulus_client_consensus_common::{
-	ParachainBlockImport <span class="kw">as </span>TParachainBlockImport, ParachainConsensus,
+  ParachainBlockImport <span class="kw">as </span>TParachainBlockImport, ParachainConsensus,
 };
 <span class="kw">use </span>cumulus_client_network::BlockAnnounceValidator;
 <span class="kw">use </span>cumulus_client_service::{
-	build_relay_chain_interface, prepare_node_config, start_collator, start_full_node,
-	StartCollatorParams, StartFullNodeParams,
+  build_relay_chain_interface, prepare_node_config, start_collator, start_full_node,
+  StartCollatorParams, StartFullNodeParams,
 };
 <span class="kw">use </span>cumulus_primitives_core::ParaId;
 <span class="kw">use </span>cumulus_relay_chain_interface::RelayChainInterface;
@@ -457,15 +451,15 @@
 </span><span class="kw">pub struct </span>ParachainNativeExecutor;
 
 <span class="kw">impl </span>sc_executor::NativeExecutionDispatch <span class="kw">for </span>ParachainNativeExecutor {
-	<span class="kw">type </span>ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+  <span class="kw">type </span>ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
 
-	<span class="kw">fn </span>dispatch(method: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
-		hashed_parachain_runtime::api::dispatch(method, data)
-	}
+  <span class="kw">fn </span>dispatch(method: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+    hashed_parachain_runtime::api::dispatch(method, data)
+  }
 
-	<span class="kw">fn </span>native_version() -&gt; sc_executor::NativeVersion {
-		hashed_parachain_runtime::native_version()
-	}
+  <span class="kw">fn </span>native_version() -&gt; sc_executor::NativeVersion {
+    hashed_parachain_runtime::native_version()
+  }
 }
 
 <span class="kw">type </span>ParachainExecutor = NativeElseWasmExecutor&lt;ParachainNativeExecutor&gt;;
@@ -481,79 +475,79 @@
 /// Use this macro if you don&#39;t actually need the full service, but just the builder in order to
 /// be able to perform chain operations.
 </span><span class="kw">pub fn </span>new_partial(
-	config: <span class="kw-2">&amp;</span>Configuration,
+  config: <span class="kw-2">&amp;</span>Configuration,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;
-	PartialComponents&lt;
-		ParachainClient,
-		ParachainBackend,
-		(),
-		sc_consensus::DefaultImportQueue&lt;Block, ParachainClient&gt;,
-		sc_transaction_pool::FullPool&lt;Block, ParachainClient&gt;,
-		(ParachainBlockImport, <span class="prelude-ty">Option</span>&lt;Telemetry&gt;, <span class="prelude-ty">Option</span>&lt;TelemetryWorkerHandle&gt;),
-	&gt;,
-	sc_service::Error,
+  PartialComponents&lt;
+    ParachainClient,
+    ParachainBackend,
+    (),
+    sc_consensus::DefaultImportQueue&lt;Block, ParachainClient&gt;,
+    sc_transaction_pool::FullPool&lt;Block, ParachainClient&gt;,
+    (ParachainBlockImport, <span class="prelude-ty">Option</span>&lt;Telemetry&gt;, <span class="prelude-ty">Option</span>&lt;TelemetryWorkerHandle&gt;),
+  &gt;,
+  sc_service::Error,
 &gt; {
-	<span class="kw">let </span>telemetry = config
-		.telemetry_endpoints
-		.clone()
-		.filter(|x| !x.is_empty())
-		.map(|endpoints| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, sc_telemetry::Error&gt; {
-			<span class="kw">let </span>worker = TelemetryWorker::new(<span class="number">16</span>)<span class="question-mark">?</span>;
-			<span class="kw">let </span>telemetry = worker.handle().new_telemetry(endpoints);
-			<span class="prelude-val">Ok</span>((worker, telemetry))
-		})
-		.transpose()<span class="question-mark">?</span>;
+  <span class="kw">let </span>telemetry = config
+    .telemetry_endpoints
+    .clone()
+    .filter(|x| !x.is_empty())
+    .map(|endpoints| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, sc_telemetry::Error&gt; {
+      <span class="kw">let </span>worker = TelemetryWorker::new(<span class="number">16</span>)<span class="question-mark">?</span>;
+      <span class="kw">let </span>telemetry = worker.handle().new_telemetry(endpoints);
+      <span class="prelude-val">Ok</span>((worker, telemetry))
+    })
+    .transpose()<span class="question-mark">?</span>;
 
-	<span class="kw">let </span>executor = ParachainExecutor::new(
-		config.wasm_method,
-		config.default_heap_pages,
-		config.max_runtime_instances,
-		config.runtime_cache_size,
-	);
+  <span class="kw">let </span>executor = ParachainExecutor::new(
+    config.wasm_method,
+    config.default_heap_pages,
+    config.max_runtime_instances,
+    config.runtime_cache_size,
+  );
 
-	<span class="kw">let </span>(client, backend, keystore_container, task_manager) =
-		sc_service::new_full_parts::&lt;Block, RuntimeApi, <span class="kw">_</span>&gt;(
-			config,
-			telemetry.as_ref().map(|(<span class="kw">_</span>, telemetry)| telemetry.handle()),
-			executor,
-		)<span class="question-mark">?</span>;
-	<span class="kw">let </span>client = Arc::new(client);
+  <span class="kw">let </span>(client, backend, keystore_container, task_manager) =
+    sc_service::new_full_parts::&lt;Block, RuntimeApi, <span class="kw">_</span>&gt;(
+      config,
+      telemetry.as_ref().map(|(<span class="kw">_</span>, telemetry)| telemetry.handle()),
+      executor,
+    )<span class="question-mark">?</span>;
+  <span class="kw">let </span>client = Arc::new(client);
 
-	<span class="kw">let </span>telemetry_worker_handle = telemetry.as_ref().map(|(worker, <span class="kw">_</span>)| worker.handle());
+  <span class="kw">let </span>telemetry_worker_handle = telemetry.as_ref().map(|(worker, <span class="kw">_</span>)| worker.handle());
 
-	<span class="kw">let </span>telemetry = telemetry.map(|(worker, telemetry)| {
-		task_manager.spawn_handle().spawn(<span class="string">&quot;telemetry&quot;</span>, <span class="prelude-val">None</span>, worker.run());
-		telemetry
-	});
+  <span class="kw">let </span>telemetry = telemetry.map(|(worker, telemetry)| {
+    task_manager.spawn_handle().spawn(<span class="string">&quot;telemetry&quot;</span>, <span class="prelude-val">None</span>, worker.run());
+    telemetry
+  });
 
-	<span class="kw">let </span>transaction_pool = sc_transaction_pool::BasicPool::new_full(
-		config.transaction_pool.clone(),
-		config.role.is_authority().into(),
-		config.prometheus_registry(),
-		task_manager.spawn_essential_handle(),
-		client.clone(),
-	);
+  <span class="kw">let </span>transaction_pool = sc_transaction_pool::BasicPool::new_full(
+    config.transaction_pool.clone(),
+    config.role.is_authority().into(),
+    config.prometheus_registry(),
+    task_manager.spawn_essential_handle(),
+    client.clone(),
+  );
 
-	<span class="kw">let </span>block_import = ParachainBlockImport::new(client.clone(), backend.clone());
+  <span class="kw">let </span>block_import = ParachainBlockImport::new(client.clone(), backend.clone());
 
-	<span class="kw">let </span>import_queue = build_import_queue(
-		client.clone(),
-		block_import.clone(),
-		config,
-		telemetry.as_ref().map(|telemetry| telemetry.handle()),
-		<span class="kw-2">&amp;</span>task_manager,
-	)<span class="question-mark">?</span>;
+  <span class="kw">let </span>import_queue = build_import_queue(
+    client.clone(),
+    block_import.clone(),
+    config,
+    telemetry.as_ref().map(|telemetry| telemetry.handle()),
+    <span class="kw-2">&amp;</span>task_manager,
+  )<span class="question-mark">?</span>;
 
-	<span class="prelude-val">Ok</span>(PartialComponents {
-		backend,
-		client,
-		import_queue,
-		keystore_container,
-		task_manager,
-		transaction_pool,
-		select_chain: (),
-		other: (block_import, telemetry, telemetry_worker_handle),
-	})
+  <span class="prelude-val">Ok</span>(PartialComponents {
+    backend,
+    client,
+    import_queue,
+    keystore_container,
+    task_manager,
+    transaction_pool,
+    select_chain: (),
+    other: (block_import, telemetry, telemetry_worker_handle),
+  })
 }
 
 <span class="doccomment">/// Start a node with the given parachain `Configuration` and relay chain `Configuration`.
@@ -561,286 +555,280 @@
 /// This is the actual implementation that is abstract over the executor and the runtime api.
 </span><span class="attr">#[sc_tracing::logging::prefix_logs_with(<span class="string">&quot;Parachain&quot;</span>)]
 </span><span class="kw">async fn </span>start_node_impl(
-	parachain_config: Configuration,
-	polkadot_config: Configuration,
-	collator_options: CollatorOptions,
-	para_id: ParaId,
-	hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
+  parachain_config: Configuration,
+  polkadot_config: Configuration,
+  collator_options: CollatorOptions,
+  para_id: ParaId,
+  hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
 ) -&gt; sc_service::error::Result&lt;(TaskManager, Arc&lt;ParachainClient&gt;)&gt; {
-	<span class="kw">let </span>parachain_config = prepare_node_config(parachain_config);
+  <span class="kw">let </span>parachain_config = prepare_node_config(parachain_config);
 
-	<span class="kw">let </span>params = new_partial(<span class="kw-2">&amp;</span>parachain_config)<span class="question-mark">?</span>;
-	<span class="kw">let </span>(block_import, <span class="kw-2">mut </span>telemetry, telemetry_worker_handle) = params.other;
+  <span class="kw">let </span>params = new_partial(<span class="kw-2">&amp;</span>parachain_config)<span class="question-mark">?</span>;
+  <span class="kw">let </span>(block_import, <span class="kw-2">mut </span>telemetry, telemetry_worker_handle) = params.other;
 
-	<span class="kw">let </span>client = params.client.clone();
-	<span class="kw">let </span>backend = params.backend.clone();
-	<span class="kw">let </span><span class="kw-2">mut </span>task_manager = params.task_manager;
+  <span class="kw">let </span>client = params.client.clone();
+  <span class="kw">let </span>backend = params.backend.clone();
+  <span class="kw">let </span><span class="kw-2">mut </span>task_manager = params.task_manager;
 
-	<span class="kw">let </span>(relay_chain_interface, collator_key) = build_relay_chain_interface(
-		polkadot_config,
-		<span class="kw-2">&amp;</span>parachain_config,
-		telemetry_worker_handle,
-		<span class="kw-2">&amp;mut </span>task_manager,
-		collator_options.clone(),
-		hwbench.clone(),
-	)
-	.<span class="kw">await
-	</span>.map_err(|e| sc_service::Error::Application(Box::new(e) <span class="kw">as </span>Box&lt;<span class="kw">_</span>&gt;))<span class="question-mark">?</span>;
+  <span class="kw">let </span>(relay_chain_interface, collator_key) = build_relay_chain_interface(
+    polkadot_config,
+    <span class="kw-2">&amp;</span>parachain_config,
+    telemetry_worker_handle,
+    <span class="kw-2">&amp;mut </span>task_manager,
+    collator_options.clone(),
+    hwbench.clone(),
+  )
+  .<span class="kw">await
+  </span>.map_err(|e| sc_service::Error::Application(Box::new(e) <span class="kw">as </span>Box&lt;<span class="kw">_</span>&gt;))<span class="question-mark">?</span>;
 
-	<span class="kw">let </span>block_announce_validator =
-		BlockAnnounceValidator::new(relay_chain_interface.clone(), para_id);
+  <span class="kw">let </span>block_announce_validator =
+    BlockAnnounceValidator::new(relay_chain_interface.clone(), para_id);
 
-	<span class="kw">let </span>force_authoring = parachain_config.force_authoring;
-	<span class="kw">let </span>validator = parachain_config.role.is_authority();
-	<span class="kw">let </span>prometheus_registry = parachain_config.prometheus_registry().cloned();
-	<span class="kw">let </span>transaction_pool = params.transaction_pool.clone();
-	<span class="kw">let </span>import_queue_service = params.import_queue.service();
+  <span class="kw">let </span>force_authoring = parachain_config.force_authoring;
+  <span class="kw">let </span>validator = parachain_config.role.is_authority();
+  <span class="kw">let </span>prometheus_registry = parachain_config.prometheus_registry().cloned();
+  <span class="kw">let </span>transaction_pool = params.transaction_pool.clone();
+  <span class="kw">let </span>import_queue_service = params.import_queue.service();
 
-	<span class="kw">let </span>(network, system_rpc_tx, tx_handler_controller, start_network) =
-		sc_service::build_network(sc_service::BuildNetworkParams {
-			config: <span class="kw-2">&amp;</span>parachain_config,
-			client: client.clone(),
-			transaction_pool: transaction_pool.clone(),
-			spawn_handle: task_manager.spawn_handle(),
-			import_queue: params.import_queue,
-			block_announce_validator_builder: <span class="prelude-val">Some</span>(Box::new(|<span class="kw">_</span>| {
-				Box::new(block_announce_validator)
-			})),
-			warp_sync: <span class="prelude-val">None</span>,
-		})<span class="question-mark">?</span>;
+  <span class="kw">let </span>(network, system_rpc_tx, tx_handler_controller, start_network) =
+    sc_service::build_network(sc_service::BuildNetworkParams {
+      config: <span class="kw-2">&amp;</span>parachain_config,
+      client: client.clone(),
+      transaction_pool: transaction_pool.clone(),
+      spawn_handle: task_manager.spawn_handle(),
+      import_queue: params.import_queue,
+      block_announce_validator_builder: <span class="prelude-val">Some</span>(Box::new(|<span class="kw">_</span>| Box::new(block_announce_validator))),
+      warp_sync: <span class="prelude-val">None</span>,
+    })<span class="question-mark">?</span>;
 
-	<span class="kw">if </span>parachain_config.offchain_worker.enabled {
-		sc_service::build_offchain_workers(
-			<span class="kw-2">&amp;</span>parachain_config,
-			task_manager.spawn_handle(),
-			client.clone(),
-			network.clone(),
-		);
-	}
+  <span class="kw">if </span>parachain_config.offchain_worker.enabled {
+    sc_service::build_offchain_workers(
+      <span class="kw-2">&amp;</span>parachain_config,
+      task_manager.spawn_handle(),
+      client.clone(),
+      network.clone(),
+    );
+  }
 
-	<span class="kw">let </span>rpc_builder = {
-		<span class="kw">let </span>client = client.clone();
-		<span class="kw">let </span>transaction_pool = transaction_pool.clone();
+  <span class="kw">let </span>rpc_builder = {
+    <span class="kw">let </span>client = client.clone();
+    <span class="kw">let </span>transaction_pool = transaction_pool.clone();
 
-		Box::new(<span class="kw">move </span>|deny_unsafe, <span class="kw">_</span>| {
-			<span class="kw">let </span>deps = <span class="kw">crate</span>::rpc::FullDeps {
-				client: client.clone(),
-				pool: transaction_pool.clone(),
-				deny_unsafe,
-			};
+    Box::new(<span class="kw">move </span>|deny_unsafe, <span class="kw">_</span>| {
+      <span class="kw">let </span>deps = <span class="kw">crate</span>::rpc::FullDeps {
+        client: client.clone(),
+        pool: transaction_pool.clone(),
+        deny_unsafe,
+      };
 
-			<span class="kw">crate</span>::rpc::create_full(deps).map_err(Into::into)
-		})
-	};
+      <span class="kw">crate</span>::rpc::create_full(deps).map_err(Into::into)
+    })
+  };
 
-	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-		rpc_builder,
-		client: client.clone(),
-		transaction_pool: transaction_pool.clone(),
-		task_manager: <span class="kw-2">&amp;mut </span>task_manager,
-		config: parachain_config,
-		keystore: params.keystore_container.sync_keystore(),
-		backend,
-		network: network.clone(),
-		system_rpc_tx,
-		tx_handler_controller,
-		telemetry: telemetry.as_mut(),
-	})<span class="question-mark">?</span>;
+  sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+    rpc_builder,
+    client: client.clone(),
+    transaction_pool: transaction_pool.clone(),
+    task_manager: <span class="kw-2">&amp;mut </span>task_manager,
+    config: parachain_config,
+    keystore: params.keystore_container.sync_keystore(),
+    backend,
+    network: network.clone(),
+    system_rpc_tx,
+    tx_handler_controller,
+    telemetry: telemetry.as_mut(),
+  })<span class="question-mark">?</span>;
 
-	<span class="kw">if let </span><span class="prelude-val">Some</span>(hwbench) = hwbench {
-		sc_sysinfo::print_hwbench(<span class="kw-2">&amp;</span>hwbench);
-		<span class="comment">// Here you can check whether the hardware meets your chains&#39; requirements. Putting a link
-		// in there and swapping out the requirements for your own are probably a good idea. The
-		// requirements for a para-chain are dictated by its relay-chain.
-		</span><span class="kw">if </span>!SUBSTRATE_REFERENCE_HARDWARE.check_hardware(<span class="kw-2">&amp;</span>hwbench) &amp;&amp; validator {
-			<span class="macro">log::warn!</span>(
-				<span class="string">&quot;⚠️  The hardware does not meet the minimal requirements for role &#39;Authority&#39;.&quot;
-			</span>);
-		}
+  <span class="kw">if let </span><span class="prelude-val">Some</span>(hwbench) = hwbench {
+    sc_sysinfo::print_hwbench(<span class="kw-2">&amp;</span>hwbench);
+    <span class="comment">// Here you can check whether the hardware meets your chains&#39; requirements. Putting a link
+    // in there and swapping out the requirements for your own are probably a good idea. The
+    // requirements for a para-chain are dictated by its relay-chain.
+    </span><span class="kw">if </span>!SUBSTRATE_REFERENCE_HARDWARE.check_hardware(<span class="kw-2">&amp;</span>hwbench) &amp;&amp; validator {
+      <span class="macro">log::warn!</span>(<span class="string">&quot;⚠️  The hardware does not meet the minimal requirements for role &#39;Authority&#39;.&quot;</span>);
+    }
 
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>telemetry) = telemetry {
-			<span class="kw">let </span>telemetry_handle = telemetry.handle();
-			task_manager.spawn_handle().spawn(
-				<span class="string">&quot;telemetry_hwbench&quot;</span>,
-				<span class="prelude-val">None</span>,
-				sc_sysinfo::initialize_hwbench_telemetry(telemetry_handle, hwbench),
-			);
-		}
-	}
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>telemetry) = telemetry {
+      <span class="kw">let </span>telemetry_handle = telemetry.handle();
+      task_manager.spawn_handle().spawn(
+        <span class="string">&quot;telemetry_hwbench&quot;</span>,
+        <span class="prelude-val">None</span>,
+        sc_sysinfo::initialize_hwbench_telemetry(telemetry_handle, hwbench),
+      );
+    }
+  }
 
-	<span class="kw">let </span>announce_block = {
-		<span class="kw">let </span>network = network.clone();
-		Arc::new(<span class="kw">move </span>|hash, data| network.announce_block(hash, data))
-	};
+  <span class="kw">let </span>announce_block = {
+    <span class="kw">let </span>network = network.clone();
+    Arc::new(<span class="kw">move </span>|hash, data| network.announce_block(hash, data))
+  };
 
-	<span class="kw">let </span>relay_chain_slot_duration = Duration::from_secs(<span class="number">6</span>);
+  <span class="kw">let </span>relay_chain_slot_duration = Duration::from_secs(<span class="number">6</span>);
 
-	<span class="kw">if </span>validator {
-		<span class="kw">let </span>parachain_consensus = build_consensus(
-			client.clone(),
-			block_import,
-			prometheus_registry.as_ref(),
-			telemetry.as_ref().map(|t| t.handle()),
-			<span class="kw-2">&amp;</span>task_manager,
-			relay_chain_interface.clone(),
-			transaction_pool,
-			network,
-			params.keystore_container.sync_keystore(),
-			force_authoring,
-			para_id,
-		)<span class="question-mark">?</span>;
+  <span class="kw">if </span>validator {
+    <span class="kw">let </span>parachain_consensus = build_consensus(
+      client.clone(),
+      block_import,
+      prometheus_registry.as_ref(),
+      telemetry.as_ref().map(|t| t.handle()),
+      <span class="kw-2">&amp;</span>task_manager,
+      relay_chain_interface.clone(),
+      transaction_pool,
+      network,
+      params.keystore_container.sync_keystore(),
+      force_authoring,
+      para_id,
+    )<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>spawner = task_manager.spawn_handle();
-		<span class="kw">let </span>params = StartCollatorParams {
-			para_id,
-			block_status: client.clone(),
-			announce_block,
-			client: client.clone(),
-			task_manager: <span class="kw-2">&amp;mut </span>task_manager,
-			relay_chain_interface,
-			spawner,
-			parachain_consensus,
-			import_queue: import_queue_service,
-			collator_key: collator_key.expect(<span class="string">&quot;Command line arguments do not allow this. qed&quot;</span>),
-			relay_chain_slot_duration,
-		};
+    <span class="kw">let </span>spawner = task_manager.spawn_handle();
+    <span class="kw">let </span>params = StartCollatorParams {
+      para_id,
+      block_status: client.clone(),
+      announce_block,
+      client: client.clone(),
+      task_manager: <span class="kw-2">&amp;mut </span>task_manager,
+      relay_chain_interface,
+      spawner,
+      parachain_consensus,
+      import_queue: import_queue_service,
+      collator_key: collator_key.expect(<span class="string">&quot;Command line arguments do not allow this. qed&quot;</span>),
+      relay_chain_slot_duration,
+    };
 
-		start_collator(params).<span class="kw">await</span><span class="question-mark">?</span>;
-	} <span class="kw">else </span>{
-		<span class="kw">let </span>params = StartFullNodeParams {
-			client: client.clone(),
-			announce_block,
-			task_manager: <span class="kw-2">&amp;mut </span>task_manager,
-			para_id,
-			relay_chain_interface,
-			relay_chain_slot_duration,
-			import_queue: import_queue_service,
-		};
+    start_collator(params).<span class="kw">await</span><span class="question-mark">?</span>;
+  } <span class="kw">else </span>{
+    <span class="kw">let </span>params = StartFullNodeParams {
+      client: client.clone(),
+      announce_block,
+      task_manager: <span class="kw-2">&amp;mut </span>task_manager,
+      para_id,
+      relay_chain_interface,
+      relay_chain_slot_duration,
+      import_queue: import_queue_service,
+    };
 
-		start_full_node(params)<span class="question-mark">?</span>;
-	}
+    start_full_node(params)<span class="question-mark">?</span>;
+  }
 
-	start_network.start_network();
+  start_network.start_network();
 
-	<span class="prelude-val">Ok</span>((task_manager, client))
+  <span class="prelude-val">Ok</span>((task_manager, client))
 }
 
 <span class="doccomment">/// Build the import queue for the parachain runtime.
 </span><span class="kw">fn </span>build_import_queue(
-	client: Arc&lt;ParachainClient&gt;,
-	block_import: ParachainBlockImport,
-	config: <span class="kw-2">&amp;</span>Configuration,
-	telemetry: <span class="prelude-ty">Option</span>&lt;TelemetryHandle&gt;,
-	task_manager: <span class="kw-2">&amp;</span>TaskManager,
+  client: Arc&lt;ParachainClient&gt;,
+  block_import: ParachainBlockImport,
+  config: <span class="kw-2">&amp;</span>Configuration,
+  telemetry: <span class="prelude-ty">Option</span>&lt;TelemetryHandle&gt;,
+  task_manager: <span class="kw-2">&amp;</span>TaskManager,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;sc_consensus::DefaultImportQueue&lt;Block, ParachainClient&gt;, sc_service::Error&gt; {
-	<span class="kw">let </span>slot_duration = cumulus_client_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
+  <span class="kw">let </span>slot_duration = cumulus_client_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
 
-	cumulus_client_consensus_aura::import_queue::&lt;
-		sp_consensus_aura::sr25519::AuthorityPair,
-		<span class="kw">_</span>,
-		<span class="kw">_</span>,
-		<span class="kw">_</span>,
-		<span class="kw">_</span>,
-		<span class="kw">_</span>,
-	&gt;(cumulus_client_consensus_aura::ImportQueueParams {
-		block_import,
-		client,
-		create_inherent_data_providers: <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| <span class="kw">async move </span>{
-			<span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+  cumulus_client_consensus_aura::import_queue::&lt;
+    sp_consensus_aura::sr25519::AuthorityPair,
+    <span class="kw">_</span>,
+    <span class="kw">_</span>,
+    <span class="kw">_</span>,
+    <span class="kw">_</span>,
+    <span class="kw">_</span>,
+  &gt;(cumulus_client_consensus_aura::ImportQueueParams {
+    block_import,
+    client,
+    create_inherent_data_providers: <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| <span class="kw">async move </span>{
+      <span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-			<span class="kw">let </span>slot =
-				sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-					<span class="kw-2">*</span>timestamp,
-					slot_duration,
-				);
+      <span class="kw">let </span>slot =
+        sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+          <span class="kw-2">*</span>timestamp,
+          slot_duration,
+        );
 
-			<span class="prelude-val">Ok</span>((slot, timestamp))
-		},
-		registry: config.prometheus_registry(),
-		spawner: <span class="kw-2">&amp;</span>task_manager.spawn_essential_handle(),
-		telemetry,
-	})
-	.map_err(Into::into)
+      <span class="prelude-val">Ok</span>((slot, timestamp))
+    },
+    registry: config.prometheus_registry(),
+    spawner: <span class="kw-2">&amp;</span>task_manager.spawn_essential_handle(),
+    telemetry,
+  })
+  .map_err(Into::into)
 }
 
 <span class="kw">fn </span>build_consensus(
-	client: Arc&lt;ParachainClient&gt;,
-	block_import: ParachainBlockImport,
-	prometheus_registry: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Registry&gt;,
-	telemetry: <span class="prelude-ty">Option</span>&lt;TelemetryHandle&gt;,
-	task_manager: <span class="kw-2">&amp;</span>TaskManager,
-	relay_chain_interface: Arc&lt;<span class="kw">dyn </span>RelayChainInterface&gt;,
-	transaction_pool: Arc&lt;sc_transaction_pool::FullPool&lt;Block, ParachainClient&gt;&gt;,
-	sync_oracle: Arc&lt;NetworkService&lt;Block, Hash&gt;&gt;,
-	keystore: SyncCryptoStorePtr,
-	force_authoring: bool,
-	para_id: ParaId,
+  client: Arc&lt;ParachainClient&gt;,
+  block_import: ParachainBlockImport,
+  prometheus_registry: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Registry&gt;,
+  telemetry: <span class="prelude-ty">Option</span>&lt;TelemetryHandle&gt;,
+  task_manager: <span class="kw-2">&amp;</span>TaskManager,
+  relay_chain_interface: Arc&lt;<span class="kw">dyn </span>RelayChainInterface&gt;,
+  transaction_pool: Arc&lt;sc_transaction_pool::FullPool&lt;Block, ParachainClient&gt;&gt;,
+  sync_oracle: Arc&lt;NetworkService&lt;Block, Hash&gt;&gt;,
+  keystore: SyncCryptoStorePtr,
+  force_authoring: bool,
+  para_id: ParaId,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>ParachainConsensus&lt;Block&gt;&gt;, sc_service::Error&gt; {
-	<span class="kw">let </span>slot_duration = cumulus_client_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
+  <span class="kw">let </span>slot_duration = cumulus_client_consensus_aura::slot_duration(<span class="kw-2">&amp;*</span>client)<span class="question-mark">?</span>;
 
-	<span class="kw">let </span>proposer_factory = sc_basic_authorship::ProposerFactory::with_proof_recording(
-		task_manager.spawn_handle(),
-		client.clone(),
-		transaction_pool,
-		prometheus_registry,
-		telemetry.clone(),
-	);
+  <span class="kw">let </span>proposer_factory = sc_basic_authorship::ProposerFactory::with_proof_recording(
+    task_manager.spawn_handle(),
+    client.clone(),
+    transaction_pool,
+    prometheus_registry,
+    telemetry.clone(),
+  );
 
-	<span class="kw">let </span>params = BuildAuraConsensusParams {
-		proposer_factory,
-		create_inherent_data_providers: <span class="kw">move </span>|<span class="kw">_</span>, (relay_parent, validation_data)| {
-			<span class="kw">let </span>relay_chain_interface = relay_chain_interface.clone();
-			<span class="kw">async move </span>{
-				<span class="kw">let </span>parachain_inherent =
-					cumulus_primitives_parachain_inherent::ParachainInherentData::create_at(
-						relay_parent,
-						<span class="kw-2">&amp;</span>relay_chain_interface,
-						<span class="kw-2">&amp;</span>validation_data,
-						para_id,
-					)
-					.<span class="kw">await</span>;
-				<span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+  <span class="kw">let </span>params = BuildAuraConsensusParams {
+    proposer_factory,
+    create_inherent_data_providers: <span class="kw">move </span>|<span class="kw">_</span>, (relay_parent, validation_data)| {
+      <span class="kw">let </span>relay_chain_interface = relay_chain_interface.clone();
+      <span class="kw">async move </span>{
+        <span class="kw">let </span>parachain_inherent =
+          cumulus_primitives_parachain_inherent::ParachainInherentData::create_at(
+            relay_parent,
+            <span class="kw-2">&amp;</span>relay_chain_interface,
+            <span class="kw-2">&amp;</span>validation_data,
+            para_id,
+          )
+          .<span class="kw">await</span>;
+        <span class="kw">let </span>timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-				<span class="kw">let </span>slot =
-						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-							<span class="kw-2">*</span>timestamp,
-							slot_duration,
-						);
+        <span class="kw">let </span>slot =
+          sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+            <span class="kw-2">*</span>timestamp,
+            slot_duration,
+          );
 
-				<span class="kw">let </span>parachain_inherent = parachain_inherent.ok_or_else(|| {
-					Box::&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync&gt;::from(
-						<span class="string">&quot;Failed to create parachain inherent&quot;</span>,
-					)
-				})<span class="question-mark">?</span>;
-				<span class="prelude-val">Ok</span>((slot, timestamp, parachain_inherent))
-			}
-		},
-		block_import,
-		para_client: client,
-		backoff_authoring_blocks: <span class="prelude-ty">Option</span>::&lt;()&gt;::None,
-		sync_oracle,
-		keystore,
-		force_authoring,
-		slot_duration,
-		<span class="comment">// We got around 500ms for proposing
-		</span>block_proposal_slot_portion: SlotProportion::new(<span class="number">1f32 </span>/ <span class="number">24f32</span>),
-		<span class="comment">// And a maximum of 750ms if slots are skipped
-		</span>max_block_proposal_slot_portion: <span class="prelude-val">Some</span>(SlotProportion::new(<span class="number">1f32 </span>/ <span class="number">16f32</span>)),
-		telemetry,
-	};
+        <span class="kw">let </span>parachain_inherent = parachain_inherent.ok_or_else(|| {
+          Box::&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync&gt;::from(<span class="string">&quot;Failed to create parachain inherent&quot;</span>)
+        })<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((slot, timestamp, parachain_inherent))
+      }
+    },
+    block_import,
+    para_client: client,
+    backoff_authoring_blocks: <span class="prelude-ty">Option</span>::&lt;()&gt;::None,
+    sync_oracle,
+    keystore,
+    force_authoring,
+    slot_duration,
+    <span class="comment">// We got around 500ms for proposing
+    </span>block_proposal_slot_portion: SlotProportion::new(<span class="number">1f32 </span>/ <span class="number">24f32</span>),
+    <span class="comment">// And a maximum of 750ms if slots are skipped
+    </span>max_block_proposal_slot_portion: <span class="prelude-val">Some</span>(SlotProportion::new(<span class="number">1f32 </span>/ <span class="number">16f32</span>)),
+    telemetry,
+  };
 
-	<span class="prelude-val">Ok</span>(AuraConsensus::build::&lt;sp_consensus_aura::sr25519::AuthorityPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(params))
+  <span class="prelude-val">Ok</span>(AuraConsensus::build::&lt;sp_consensus_aura::sr25519::AuthorityPair, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(params))
 }
 
 <span class="doccomment">/// Start a parachain node.
 </span><span class="kw">pub async fn </span>start_parachain_node(
-	parachain_config: Configuration,
-	polkadot_config: Configuration,
-	collator_options: CollatorOptions,
-	para_id: ParaId,
-	hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
+  parachain_config: Configuration,
+  polkadot_config: Configuration,
+  collator_options: CollatorOptions,
+  para_id: ParaId,
+  hwbench: <span class="prelude-ty">Option</span>&lt;sc_sysinfo::HwBench&gt;,
 ) -&gt; sc_service::error::Result&lt;(TaskManager, Arc&lt;ParachainClient&gt;)&gt; {
-	start_node_impl(parachain_config, polkadot_config, collator_options, para_id, hwbench).<span class="kw">await
+  start_node_impl(parachain_config, polkadot_config, collator_options, para_id, hwbench).<span class="kw">await
 </span>}
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

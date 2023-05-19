@@ -69,40 +69,40 @@
 // limitations under the License.
 
 </span><span class="kw">pub mod </span>constants {
-	<span class="kw">use </span>frame_support::{
-		parameter_types,
-		weights::{constants, Weight},
-	};
+  <span class="kw">use </span>frame_support::{
+    parameter_types,
+    weights::{constants, Weight},
+  };
 
-	<span class="macro">parameter_types! </span>{
-		<span class="doccomment">/// Importing a block with 0 Extrinsics.
-		</span><span class="kw">pub const </span>BlockExecutionWeight: Weight =
-			Weight::from_ref_time(constants::WEIGHT_REF_TIME_PER_NANOS.saturating_mul(<span class="number">5_000_000</span>));
-	}
+  <span class="macro">parameter_types! </span>{
+    <span class="doccomment">/// Importing a block with 0 Extrinsics.
+    </span><span class="kw">pub const </span>BlockExecutionWeight: Weight =
+      Weight::from_ref_time(constants::WEIGHT_REF_TIME_PER_NANOS.saturating_mul(<span class="number">5_000_000</span>));
+  }
 
-	<span class="attr">#[cfg(test)]
-	</span><span class="kw">mod </span>test_weights {
-		<span class="kw">use </span>frame_support::weights::constants;
+  <span class="attr">#[cfg(test)]
+  </span><span class="kw">mod </span>test_weights {
+    <span class="kw">use </span>frame_support::weights::constants;
 
-		<span class="doccomment">/// Checks that the weight exists and is sane.
-		</span><span class="comment">// NOTE: If this test fails but you are sure that the generated values are fine,
-		// you can delete it.
-		</span><span class="attr">#[test]
-		</span><span class="kw">fn </span>sane() {
-			<span class="kw">let </span>w = <span class="kw">super</span>::constants::BlockExecutionWeight::get();
+    <span class="doccomment">/// Checks that the weight exists and is sane.
+    </span><span class="comment">// NOTE: If this test fails but you are sure that the generated values are fine,
+    // you can delete it.
+    </span><span class="attr">#[test]
+    </span><span class="kw">fn </span>sane() {
+      <span class="kw">let </span>w = <span class="kw">super</span>::constants::BlockExecutionWeight::get();
 
-			<span class="comment">// At least 100 µs.
-			</span><span class="macro">assert!</span>(
-				w.ref_time() &gt;= <span class="number">100u64 </span>* constants::WEIGHT_REF_TIME_PER_MICROS,
-				<span class="string">&quot;Weight should be at least 100 µs.&quot;
-			</span>);
-			<span class="comment">// At most 50 ms.
-			</span><span class="macro">assert!</span>(
-				w.ref_time() &lt;= <span class="number">50u64 </span>* constants::WEIGHT_REF_TIME_PER_MILLIS,
-				<span class="string">&quot;Weight should be at most 50 ms.&quot;
-			</span>);
-		}
-	}
+      <span class="comment">// At least 100 µs.
+      </span><span class="macro">assert!</span>(
+        w.ref_time() &gt;= <span class="number">100u64 </span>* constants::WEIGHT_REF_TIME_PER_MICROS,
+        <span class="string">&quot;Weight should be at least 100 µs.&quot;
+      </span>);
+      <span class="comment">// At most 50 ms.
+      </span><span class="macro">assert!</span>(
+        w.ref_time() &lt;= <span class="number">50u64 </span>* constants::WEIGHT_REF_TIME_PER_MILLIS,
+        <span class="string">&quot;Weight should be at most 50 ms.&quot;
+      </span>);
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hashed_parachain_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

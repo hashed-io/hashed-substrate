@@ -1653,39 +1653,6 @@
 <a href="#1653" id="1653">1653</a>
 <a href="#1654" id="1654">1654</a>
 <a href="#1655" id="1655">1655</a>
-<a href="#1656" id="1656">1656</a>
-<a href="#1657" id="1657">1657</a>
-<a href="#1658" id="1658">1658</a>
-<a href="#1659" id="1659">1659</a>
-<a href="#1660" id="1660">1660</a>
-<a href="#1661" id="1661">1661</a>
-<a href="#1662" id="1662">1662</a>
-<a href="#1663" id="1663">1663</a>
-<a href="#1664" id="1664">1664</a>
-<a href="#1665" id="1665">1665</a>
-<a href="#1666" id="1666">1666</a>
-<a href="#1667" id="1667">1667</a>
-<a href="#1668" id="1668">1668</a>
-<a href="#1669" id="1669">1669</a>
-<a href="#1670" id="1670">1670</a>
-<a href="#1671" id="1671">1671</a>
-<a href="#1672" id="1672">1672</a>
-<a href="#1673" id="1673">1673</a>
-<a href="#1674" id="1674">1674</a>
-<a href="#1675" id="1675">1675</a>
-<a href="#1676" id="1676">1676</a>
-<a href="#1677" id="1677">1677</a>
-<a href="#1678" id="1678">1678</a>
-<a href="#1679" id="1679">1679</a>
-<a href="#1680" id="1680">1680</a>
-<a href="#1681" id="1681">1681</a>
-<a href="#1682" id="1682">1682</a>
-<a href="#1683" id="1683">1683</a>
-<a href="#1684" id="1684">1684</a>
-<a href="#1685" id="1685">1685</a>
-<a href="#1686" id="1686">1686</a>
-<a href="#1687" id="1687">1687</a>
-<a href="#1688" id="1688">1688</a>
 </pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) 2017-2022 Parity Technologies (UK) Ltd.
@@ -1831,22 +1798,20 @@
 <span class="kw">use </span>codec::HasCompact;
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="kw">use </span>sp_runtime::{
-	traits::{
-		AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedSub, Saturating, StaticLookup, Zero,
-	},
-	ArithmeticError, TokenError,
+  traits::{AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedSub, Saturating, StaticLookup, Zero},
+  ArithmeticError, TokenError,
 };
 <span class="kw">use </span>sp_std::{borrow::Borrow, prelude::<span class="kw-2">*</span>};
 
 <span class="kw">use </span>frame_support::{
-	dispatch::{DispatchError, DispatchResult},
-	ensure,
-	pallet_prelude::DispatchResultWithPostInfo,
-	traits::{
-		tokens::{fungibles, DepositConsequence, WithdrawConsequence},
-		BalanceStatus::Reserved,
-		Currency, EnsureOriginWithArg, ReservableCurrency, StoredMap,
-	},
+  dispatch::{DispatchError, DispatchResult},
+  ensure,
+  pallet_prelude::DispatchResultWithPostInfo,
+  traits::{
+    tokens::{fungibles, DepositConsequence, WithdrawConsequence},
+    BalanceStatus::Reserved,
+    Currency, EnsureOriginWithArg, ReservableCurrency, StoredMap,
+  },
 };
 <span class="kw">use </span>frame_system::Config <span class="kw">as </span>SystemConfig;
 <span class="kw">use </span>sp_runtime::AccountId32;
@@ -1858,1521 +1823,1490 @@
 
 <span class="doccomment">/// Trait with callbacks that are executed after successfull asset creation or destruction.
 </span><span class="kw">pub trait </span>AssetsCallback&lt;AssetId, AccountId&gt; {
-	<span class="doccomment">/// Indicates that asset with `id` was successfully created by the `owner`
-	</span><span class="kw">fn </span>created(_id: <span class="kw-2">&amp;</span>AssetId, _owner: <span class="kw-2">&amp;</span>AccountId) {}
+  <span class="doccomment">/// Indicates that asset with `id` was successfully created by the `owner`
+  </span><span class="kw">fn </span>created(_id: <span class="kw-2">&amp;</span>AssetId, _owner: <span class="kw-2">&amp;</span>AccountId) {}
 
-	<span class="doccomment">/// Indicates that asset with `id` has just been destroyed
-	</span><span class="kw">fn </span>destroyed(_id: <span class="kw-2">&amp;</span>AssetId) {}
+  <span class="doccomment">/// Indicates that asset with `id` has just been destroyed
+  </span><span class="kw">fn </span>destroyed(_id: <span class="kw-2">&amp;</span>AssetId) {}
 }
 
 <span class="kw">pub struct </span>DefaultCallback;
 
 <span class="kw">impl </span>AssetsCallback&lt;u32, AccountId32&gt; <span class="kw">for </span>DefaultCallback {
-    <span class="kw">fn </span>created(_id: <span class="kw-2">&amp;</span>u32, _owner: <span class="kw-2">&amp;</span>AccountId32) {
-        <span class="comment">// Empty implementation
-    </span>}
+  <span class="kw">fn </span>created(_id: <span class="kw-2">&amp;</span>u32, _owner: <span class="kw-2">&amp;</span>AccountId32) {
+    <span class="comment">// Empty implementation
+  </span>}
 
-    <span class="kw">fn </span>destroyed(_id: <span class="kw-2">&amp;</span>u32) {
-        <span class="comment">// Empty implementation
-    </span>}
+  <span class="kw">fn </span>destroyed(_id: <span class="kw-2">&amp;</span>u32) {
+    <span class="comment">// Empty implementation
+  </span>}
 }
-
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-	<span class="kw">use super</span>::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
-
-	<span class="doccomment">/// The current storage version.
-	</span><span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
-
-	<span class="attr">#[pallet::pallet]
-	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
-	#[pallet::storage_version(STORAGE_VERSION)]
-	</span><span class="kw">pub struct </span>Pallet&lt;T, I = ()&gt;(<span class="kw">_</span>);
-
-	<span class="attr">#[pallet::config]
-	</span><span class="doccomment">/// The module configuration trait.
-	</span><span class="kw">pub trait </span>Config&lt;I: <span class="lifetime">&#39;static </span>= ()&gt;: frame_system::Config {
-		<span class="doccomment">/// The overarching event type.
-		</span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>, I&gt;&gt;
-			+ IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
-
-		<span class="doccomment">/// The units in which we record balances.
-		</span><span class="kw">type </span>Balance: Member
-			+ Parameter
-			+ AtLeast32BitUnsigned
-			+ Default
-			+ Copy
-			+ MaybeSerializeDeserialize
-			+ MaxEncodedLen
-			+ TypeInfo;
-
-		<span class="doccomment">/// Max number of items to destroy per `destroy_accounts` and `destroy_approvals` call.
-		///
-		/// Must be configured to result in a weight that makes each call fit in a block.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>RemoveItemsLimit: Get&lt;u32&gt;;
-
-		<span class="doccomment">/// Identifier for the class of asset.
-		</span><span class="kw">type </span>AssetId: Member
-			+ Parameter
-			+ Default
-			+ Copy
-			+ HasCompact
-			+ MaybeSerializeDeserialize
-			+ MaxEncodedLen
-			+ TypeInfo;
-
-		<span class="doccomment">/// Wrapper around `Self::AssetId` to use in dispatchable call signatures. Allows the use
-		/// of compact encoding in instances of the pallet, which will prevent breaking changes
-		/// resulting from the removal of `HasCompact` from `Self::AssetId`.
-		///
-		/// This type includes the `From&lt;Self::AssetId&gt;` bound, since tightly coupled pallets may
-		/// want to convert an `AssetId` into a parameter for calling dispatchable functions
-		/// directly.
-		</span><span class="kw">type </span>AssetIdParameter: Parameter
-			+ Copy
-			+ From&lt;<span class="self">Self</span>::AssetId&gt;
-			+ Into&lt;<span class="self">Self</span>::AssetId&gt;
-			+ MaxEncodedLen;
-
-		<span class="doccomment">/// The currency mechanism.
-		</span><span class="kw">type </span>Currency: ReservableCurrency&lt;<span class="self">Self</span>::AccountId&gt;;
-
-		<span class="doccomment">/// Standard asset class creation is only allowed if the origin attempting it and the
-		/// asset class are in this set.
-		</span><span class="kw">type </span>CreateOrigin: EnsureOriginWithArg&lt;
-			<span class="self">Self</span>::RuntimeOrigin,
-			<span class="self">Self</span>::AssetId,
-			Success = <span class="self">Self</span>::AccountId,
-		&gt;;
-
-		<span class="doccomment">/// The origin which may forcibly create or destroy an asset or otherwise alter privileged
-		/// attributes.
-		</span><span class="kw">type </span>ForceOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
-
-		<span class="doccomment">/// The basic amount of funds that must be reserved for an asset.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>AssetDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
-
-		<span class="doccomment">/// The amount of funds that must be reserved for a non-provider asset account to be
-		/// maintained.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>AssetAccountDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
-
-		<span class="doccomment">/// The basic amount of funds that must be reserved when adding metadata to your asset.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MetadataDepositBase: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
-
-		<span class="doccomment">/// The additional funds that must be reserved for the number of bytes you store in your
-		/// metadata.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MetadataDepositPerByte: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
-
-		<span class="doccomment">/// The amount of funds that must be reserved when creating a new approval.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>ApprovalDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
-
-		<span class="doccomment">/// The maximum length of a name or symbol stored on-chain.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>StringLimit: Get&lt;u32&gt;;
-
-		<span class="doccomment">/// The maximum number of named reserves that can exist on an account.
-		</span><span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxReserves: Get&lt;u32&gt;;
-
-		<span class="doccomment">/// A hook to allow a per-asset, per-account minimum balance to be enforced. This must be
-		/// respected in all permissionless operations.
-		</span><span class="kw">type </span>Freezer: FrozenBalance&lt;<span class="self">Self</span>::AssetId, <span class="self">Self</span>::AccountId, <span class="self">Self</span>::Balance&gt;;
-
-		<span class="doccomment">/// Additional data to be stored with an account&#39;s asset balance.
-		</span><span class="kw">type </span>Extra: Member + Parameter + Default + MaxEncodedLen;
-
-		<span class="doccomment">/// Callback methods for asset state change (e.g. asset created or destroyed)
-		</span><span class="kw">type </span>CallbackHandle: AssetsCallback&lt;<span class="self">Self</span>::AssetId, <span class="self">Self</span>::AccountId&gt;;
-
-		<span class="doccomment">/// Weight information for extrinsics in this pallet.
-		</span><span class="kw">type </span>WeightInfo: WeightInfo;
-
-		<span class="doccomment">/// The id type for named reserves.
-		</span><span class="kw">type </span>ReserveIdentifier: Parameter + Member + MaxEncodedLen + Ord + Copy;
-	}
-
-	<span class="attr">#[pallet::storage]
-	</span><span class="doccomment">/// Details of an asset.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Asset&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AssetId,
-		AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
-	&gt;;
-
-	<span class="attr">#[pallet::storage]
-	</span><span class="doccomment">/// The holdings of a specific account for a specific asset.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Account&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AssetId,
-		Blake2_128Concat,
-		T::AccountId,
-		AssetAccountOf&lt;T, I&gt;,
-	&gt;;
-
-	<span class="doccomment">/// Named reserves on account balances for a specific asset.
-	</span><span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>reserves)]
-	</span><span class="kw">pub type </span>Reserves&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AssetId,
-		Blake2_128Concat,
-		T::AccountId,
-		BoundedVec&lt;ReserveData&lt;T::ReserveIdentifier, T::Balance&gt;, T::MaxReserves&gt;,
-		ValueQuery,
-	&gt;;
-
-	<span class="attr">#[pallet::storage]
-	</span><span class="doccomment">/// Approved balance transfers. First balance is the amount approved for transfer. Second
-	/// is the amount of `T::Currency` reserved for storing this.
-	/// First key is the asset ID, second key is the owner and third key is the delegate.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Approvals&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageNMap&lt;
-		<span class="kw">_</span>,
-		(
-			NMapKey&lt;Blake2_128Concat, T::AssetId&gt;,
-			NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// owner
-			</span>NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// delegate
-		</span>),
-		Approval&lt;T::Balance, DepositBalanceOf&lt;T, I&gt;&gt;,
-	&gt;;
-
-	<span class="attr">#[pallet::storage]
-	</span><span class="doccomment">/// Metadata of an asset.
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Metadata&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Blake2_128Concat,
-		T::AssetId,
-		AssetMetadata&lt;DepositBalanceOf&lt;T, I&gt;, BoundedVec&lt;u8, T::StringLimit&gt;&gt;,
-		ValueQuery,
-	&gt;;
-
-	<span class="attr">#[pallet::genesis_config]
-	</span><span class="kw">pub struct </span>GenesisConfig&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; {
-		<span class="doccomment">/// Genesis assets: id, owner, is_sufficient, min_balance
-		</span><span class="kw">pub </span>assets: Vec&lt;(T::AssetId, T::AccountId, bool, T::Balance)&gt;,
-		<span class="doccomment">/// Genesis metadata: id, name, symbol, decimals
-		</span><span class="kw">pub </span>metadata: Vec&lt;(T::AssetId, Vec&lt;u8&gt;, Vec&lt;u8&gt;, u8)&gt;,
-		<span class="doccomment">/// Genesis accounts: id, account_id, balance
-		</span><span class="kw">pub </span>accounts: Vec&lt;(T::AssetId, T::AccountId, T::Balance)&gt;,
-	}
-
-	<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-	</span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; Default <span class="kw">for </span>GenesisConfig&lt;T, I&gt; {
-		<span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-			<span class="self">Self </span>{
-				assets: Default::default(),
-				metadata: Default::default(),
-				accounts: Default::default(),
-			}
-		}
-	}
-
-	<span class="attr">#[pallet::genesis_build]
-	</span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; GenesisBuild&lt;T, I&gt; <span class="kw">for </span>GenesisConfig&lt;T, I&gt; {
-		<span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-			<span class="kw">for </span>(id, owner, is_sufficient, min_balance) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.assets {
-				<span class="macro">assert!</span>(!Asset::&lt;T, I&gt;::contains_key(id), <span class="string">&quot;Asset id already in use&quot;</span>);
-				<span class="macro">assert!</span>(!min_balance.is_zero(), <span class="string">&quot;Min balance should not be zero&quot;</span>);
-				Asset::&lt;T, I&gt;::insert(
-					id,
-					AssetDetails {
-						owner: owner.clone(),
-						issuer: owner.clone(),
-						admin: owner.clone(),
-						freezer: owner.clone(),
-						supply: Zero::zero(),
-						reserved: Zero::zero(),
-						deposit: Zero::zero(),
-						min_balance: <span class="kw-2">*</span>min_balance,
-						is_sufficient: <span class="kw-2">*</span>is_sufficient,
-						accounts: <span class="number">0</span>,
-						sufficients: <span class="number">0</span>,
-						approvals: <span class="number">0</span>,
-						is_frozen: <span class="bool-val">false</span>,
-						status: AssetStatus::Live,
-					},
-				);
-			}
-
-			<span class="kw">for </span>(id, name, symbol, decimals) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.metadata {
-				<span class="macro">assert!</span>(Asset::&lt;T, I&gt;::contains_key(id), <span class="string">&quot;Asset does not exist&quot;</span>);
-
-				<span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
-					name.clone().try_into().expect(<span class="string">&quot;asset name is too long&quot;</span>);
-				<span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
-					symbol.clone().try_into().expect(<span class="string">&quot;asset symbol is too long&quot;</span>);
-
-				<span class="kw">let </span>metadata = AssetMetadata {
-					deposit: Zero::zero(),
-					name: bounded_name,
-					symbol: bounded_symbol,
-					decimals: <span class="kw-2">*</span>decimals,
-					is_frozen: <span class="bool-val">false</span>,
-				};
-				Metadata::&lt;T, I&gt;::insert(id, metadata);
-			}
-
-			<span class="kw">for </span>(id, account_id, amount) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.accounts {
-				<span class="kw">let </span>result = &lt;Pallet&lt;T, I&gt;&gt;::increase_balance(
-					<span class="kw-2">*</span>id,
-					account_id,
-					<span class="kw-2">*</span>amount,
-					|details| -&gt; DispatchResult {
-						<span class="macro">debug_assert!</span>(
-							T::Balance::max_value() - details.supply &gt;= <span class="kw-2">*</span>amount,
-							<span class="string">&quot;checked in prep; qed&quot;
-						</span>);
-						details.supply = details.supply.saturating_add(<span class="kw-2">*</span>amount);
-						<span class="prelude-val">Ok</span>(())
-					},
-				);
-				<span class="macro">assert!</span>(result.is_ok());
-			}
-		}
-	}
-
-	<span class="attr">#[pallet::event]
-	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
-	</span><span class="kw">pub enum </span>Event&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; {
-		<span class="doccomment">/// Some asset class was created.
-		</span>Created { asset_id: T::AssetId, creator: T::AccountId, owner: T::AccountId },
-		<span class="doccomment">/// Some assets were issued.
-		</span>Issued { asset_id: T::AssetId, owner: T::AccountId, total_supply: T::Balance },
-		<span class="doccomment">/// Some assets were transferred.
-		</span>Transferred {
-			asset_id: T::AssetId,
-			from: T::AccountId,
-			to: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// Some assets were reserved.
-		</span>Reserved {
-			reserve_id: T::ReserveIdentifier,
-			asset_id: T::AssetId,
-			who: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// Some reserved assets were unreserved.
-		</span>Unreserved {
-			reserve_id: T::ReserveIdentifier,
-			asset_id: T::AssetId,
-			who: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// Some reserved assets were burned.
-		</span>BurnedReserve {
-			reserve_id: T::ReserveIdentifier,
-			asset_id: T::AssetId,
-			who: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// Some reserved assets were transferred.
-		</span>TransferredReserve {
-			reserve_id: T::ReserveIdentifier,
-			asset_id: T::AssetId,
-			from: T::AccountId,
-			to: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// Some assets were destroyed.
-		</span>Burned { asset_id: T::AssetId, owner: T::AccountId, balance: T::Balance },
-		<span class="doccomment">/// The management team changed.
-		</span>TeamChanged {
-			asset_id: T::AssetId,
-			issuer: T::AccountId,
-			admin: T::AccountId,
-			freezer: T::AccountId,
-		},
-		<span class="doccomment">/// The owner changed.
-		</span>OwnerChanged { asset_id: T::AssetId, owner: T::AccountId },
-		<span class="doccomment">/// Some account `who` was frozen.
-		</span>Frozen { asset_id: T::AssetId, who: T::AccountId },
-		<span class="doccomment">/// Some account `who` was thawed.
-		</span>Thawed { asset_id: T::AssetId, who: T::AccountId },
-		<span class="doccomment">/// Some asset `asset_id` was frozen.
-		</span>AssetFrozen { asset_id: T::AssetId },
-		<span class="doccomment">/// Some asset `asset_id` was thawed.
-		</span>AssetThawed { asset_id: T::AssetId },
-		<span class="doccomment">/// Accounts were destroyed for given asset.
-		</span>AccountsDestroyed { asset_id: T::AssetId, accounts_destroyed: u32, accounts_remaining: u32 },
-		<span class="doccomment">/// Approvals were destroyed for given asset.
-		</span>ApprovalsDestroyed {
-			asset_id: T::AssetId,
-			approvals_destroyed: u32,
-			approvals_remaining: u32,
-		},
-		<span class="doccomment">/// An asset class is in the process of being destroyed.
-		</span>DestructionStarted { asset_id: T::AssetId },
-		<span class="doccomment">/// An asset class was destroyed.
-		/// An asset class was destroyed.
-		</span>Destroyed { asset_id: T::AssetId },
-		<span class="doccomment">/// Some asset class was force-created.
-		</span>ForceCreated { asset_id: T::AssetId, owner: T::AccountId },
-		<span class="doccomment">/// New metadata has been set for an asset.
-		</span>MetadataSet {
-			asset_id: T::AssetId,
-			name: Vec&lt;u8&gt;,
-			symbol: Vec&lt;u8&gt;,
-			decimals: u8,
-			is_frozen: bool,
-		},
-		<span class="doccomment">/// Metadata has been cleared for an asset.
-		</span>MetadataCleared { asset_id: T::AssetId },
-		<span class="doccomment">/// (Additional) funds have been approved for transfer to a destination account.
-		</span>ApprovedTransfer {
-			asset_id: T::AssetId,
-			source: T::AccountId,
-			delegate: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// An approval for account `delegate` was cancelled by `owner`.
-		</span>ApprovalCancelled { asset_id: T::AssetId, owner: T::AccountId, delegate: T::AccountId },
-		<span class="doccomment">/// An `amount` was transferred in its entirety from `owner` to `destination` by
-		/// the approved `delegate`.
-		</span>TransferredApproved {
-			asset_id: T::AssetId,
-			owner: T::AccountId,
-			delegate: T::AccountId,
-			destination: T::AccountId,
-			amount: T::Balance,
-		},
-		<span class="doccomment">/// An asset has had its attributes changed by the `Force` origin.
-		</span>AssetStatusChanged { asset_id: T::AssetId },
-	}
-
-	<span class="attr">#[pallet::error]
-	</span><span class="kw">pub enum </span>Error&lt;T, I = ()&gt; {
-		<span class="doccomment">/// Account balance must be greater than or equal to the transfer amount.
-		</span>BalanceLow,
-		<span class="doccomment">/// The account to alter does not exist.
-		</span>NoAccount,
-		<span class="doccomment">/// The signing account has no permission to do the operation.
-		</span>NoPermission,
-		<span class="doccomment">/// The given asset ID is unknown.
-		</span>UnknownAsset,
-		Unknown,
-		<span class="doccomment">/// The origin account is frozen.
-		</span>Frozen,
-		<span class="doccomment">/// The asset ID is already taken.
-		</span>InUse,
-		<span class="doccomment">/// Invalid witness data given.
-		</span>BadWitness,
-		<span class="doccomment">/// Minimum balance should be non-zero.
-		</span>MinBalanceZero,
-		<span class="doccomment">/// Unable to increment the consumer reference counters on the account. Either no provider
-		/// reference exists to allow a non-zero balance of a non-self-sufficient asset, or the
-		/// maximum number of consumers has been reached.
-		</span>NoProvider,
-		<span class="doccomment">/// Invalid metadata given.
-		</span>BadMetadata,
-		<span class="doccomment">/// No approval exists that would allow the transfer.
-		</span>Unapproved,
-		<span class="doccomment">/// The source account would not survive the transfer and it needs to stay alive.
-		</span>WouldDie,
-		<span class="doccomment">/// The asset-account already exists.
-		</span>AlreadyExists,
-		<span class="doccomment">/// The asset-account doesn&#39;t have an associated deposit.
-		</span>NoDeposit,
-		<span class="doccomment">/// The operation would result in funds being burned.
-		</span>WouldBurn,
-		<span class="doccomment">/// Number of named reserves exceed MaxReserves
-		</span>TooManyReserves,
-		<span class="doccomment">/// Named reserve already exists
-		</span>ReserveAlreadyExists,
-		<span class="doccomment">/// Unknown reserve
-		</span>UnknownReserve,
-		<span class="doccomment">/// The asset is a live asset and is actively being used. Usually emit for operations such
-		/// as `start_destroy` which require the asset to be in a destroying state.
-		</span>LiveAsset,
-		<span class="doccomment">/// The asset is not live, and likely being destroyed.
-		</span>AssetNotLive,
-		<span class="doccomment">/// The asset status is not the expected status.
-		</span>IncorrectStatus,
-		<span class="doccomment">/// The asset should be frozen before the given operation.
-		</span>NotFrozen,
-	}
-
-	<span class="attr">#[pallet::call]
-	</span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; Pallet&lt;T, I&gt; {
-		<span class="doccomment">/// Issue a new class of fungible assets from a public origin.
-		///
-		/// This new asset class has no assets initially and its owner is the origin.
-		///
-		/// The origin must conform to the configured `CreateOrigin` and have sufficient funds free.
-		///
-		/// Funds of sender are reserved by `AssetDeposit`.
-		///
-		/// Parameters:
-		/// - `id`: The identifier of the new asset. This must not be currently in use to identify
-		/// an existing asset.
-		/// - `admin`: The admin of this class of assets. The admin is the initial address of each
-		/// member of the asset class&#39;s admin team.
-		/// - `min_balance`: The minimum balance of this new asset that any single account must
-		/// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
-		///
-		/// Emits `Created` event when successful.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">0</span>)]
-		#[pallet::weight(T::WeightInfo::create())]
-		</span><span class="kw">pub fn </span>create(
-			origin: OriginFor&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>id: T::AssetId,
-			admin: AccountIdLookupOf&lt;T&gt;,
-			min_balance: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>owner = T::CreateOrigin::ensure_origin(origin, <span class="kw-2">&amp;</span>id)<span class="question-mark">?</span>;
-			<span class="kw">let </span>admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
-
-			<span class="macro">ensure!</span>(!Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::InUse);
-			<span class="macro">ensure!</span>(!min_balance.is_zero(), Error::&lt;T, I&gt;::MinBalanceZero);
-
-			<span class="kw">let </span>deposit = T::AssetDeposit::get();
-			T::Currency::reserve(<span class="kw-2">&amp;</span>owner, deposit)<span class="question-mark">?</span>;
-
-			Asset::&lt;T, I&gt;::insert(
-				id,
-				AssetDetails {
-					owner: owner.clone(),
-					issuer: admin.clone(),
-					admin: admin.clone(),
-					freezer: admin.clone(),
-					supply: Zero::zero(),
-					reserved: Zero::zero(),
-					deposit,
-					min_balance,
-					is_sufficient: <span class="bool-val">false</span>,
-					accounts: <span class="number">0</span>,
-					sufficients: <span class="number">0</span>,
-					approvals: <span class="number">0</span>,
-					is_frozen: <span class="bool-val">false</span>,
-					status: AssetStatus::Live,
-				},
-			);
-			<span class="self">Self</span>::deposit_event(Event::Created { asset_id: id, creator: owner.clone(), owner: admin });
-			T::CallbackHandle::created(<span class="kw-2">&amp;</span>id, <span class="kw-2">&amp;</span>owner);
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Issue a new class of fungible assets from a privileged origin.
-		///
-		/// This new asset class has no assets initially.
-		///
-		/// The origin must conform to `ForceOrigin`.
-		///
-		/// Unlike `create`, no funds are reserved.
-		///
-		/// - `id`: The identifier of the new asset. This must not be currently in use to identify
-		/// an existing asset.
-		/// - `owner`: The owner of this class of assets. The owner has full superuser permissions
-		/// over this asset, but may later change and configure the permissions using
-		/// `transfer_ownership` and `set_team`.
-		/// - `min_balance`: The minimum balance of this new asset that any single account must
-		/// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
-		///
-		/// Emits `ForceCreated` event when successful.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(T::WeightInfo::force_create())]
-		</span><span class="kw">pub fn </span>force_create(
-			origin: OriginFor&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>id: T::AssetId,
-			owner: AccountIdLookupOf&lt;T&gt;,
-			is_sufficient: bool,
-			<span class="attr">#[pallet::compact] </span>min_balance: T::Balance,
-		) -&gt; DispatchResult {
-			T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_force_create(id, owner, is_sufficient, min_balance)
-		}
-
-		<span class="doccomment">/// Destroy a class of fungible assets.
-		///
-		/// The origin must conform to `ForceOrigin` or must be Signed and the sender must be the
-		/// owner of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be destroyed. This must identify an existing
-		/// asset.
-		///
-		/// Emits `Destroyed` event when successful.
-		///
-		/// NOTE: It can be helpful to first freeze an asset before destroying it so that you
-		/// can provide accurate witness information and prevent users from manipulating state
-		/// in a way that can make it harder to destroy.
-		///
-		/// Weight: `O(c + p + a)` where:
-		/// - `c = (witness.accounts - witness.sufficients)`
-		/// - `s = witness.sufficients`
-		/// - `a = witness.approvals`
-	</span><span class="comment">/* 		#[pallet::weight(T::WeightInfo::destroy(
-			witness.accounts.saturating_sub(witness.sufficients),
- 			witness.sufficients,
- 			witness.approvals,
- 		))]
-		pub fn destroy(
-			origin: OriginFor&lt;T&gt;,
-			#[pallet::compact] id: T::AssetId,
-			witness: DestroyWitness,
-		) -&gt; DispatchResultWithPostInfo {
-			let maybe_check_owner = match T::ForceOrigin::try_origin(origin) {
-				Ok(_) =&gt; None,
-				Err(origin) =&gt; Some(ensure_signed(origin)?),
-			};
-			let details = Self::do_destroy(id, witness, maybe_check_owner)?;
-			Ok(Some(T::WeightInfo::destroy(
-				details.accounts.saturating_sub(details.sufficients),
-				details.sufficients,
-				details.approvals,
-			))
-			.into())
-		} */
-
-		</span><span class="doccomment">/// Start the process of destroying a fungible asset class.
-		///
-		/// `start_destroy` is the first in a series of extrinsics that should be called, to allow
-		/// destruction of an asset class.
-		///
-		/// The origin must conform to `ForceOrigin` or must be `Signed` by the asset&#39;s `owner`.
-		///
-		/// - `id`: The identifier of the asset to be destroyed. This must identify an existing
-		///   asset.
-		///
-		/// The asset class must be frozen before calling `start_destroy`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
-		#[pallet::weight(T::WeightInfo::start_destroy())]
-		</span><span class="kw">pub fn </span>start_destroy(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let </span>maybe_check_owner = <span class="kw">match </span>T::ForceOrigin::try_origin(origin) {
-				<span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-				<span class="prelude-val">Err</span>(origin) =&gt; <span class="prelude-val">Some</span>(ensure_signed(origin)<span class="question-mark">?</span>),
-			};
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_start_destroy(id, maybe_check_owner)
-		}
-
-		<span class="doccomment">/// Destroy all accounts associated with a given asset.
-		///
-		/// `destroy_accounts` should only be called after `start_destroy` has been called, and the
-		/// asset is in a `Destroying` state.
-		///
-		/// Due to weight restrictions, this function may need to be called multiple times to fully
-		/// destroy all accounts. It will destroy `RemoveItemsLimit` accounts at a time.
-		///
-		/// - `id`: The identifier of the asset to be destroyed. This must identify an existing
-		///   asset.
-		///
-		/// Each call emits the `Event::DestroyedAccounts` event.
-		</span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
-		#[pallet::weight(T::WeightInfo::destroy_accounts(T::RemoveItemsLimit::get()))]
-		</span><span class="kw">pub fn </span>destroy_accounts(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-		) -&gt; DispatchResultWithPostInfo {
-			<span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="kw">let </span>removed_accounts = <span class="self">Self</span>::do_destroy_accounts(id, T::RemoveItemsLimit::get())<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(T::WeightInfo::destroy_accounts(removed_accounts)).into())
-		}
-
-		<span class="doccomment">/// Destroy all approvals associated with a given asset up to the max (T::RemoveItemsLimit).
-		///
-		/// `destroy_approvals` should only be called after `start_destroy` has been called, and the
-		/// asset is in a `Destroying` state.
-		///
-		/// Due to weight restrictions, this function may need to be called multiple times to fully
-		/// destroy all approvals. It will destroy `RemoveItemsLimit` approvals at a time.
-		///
-		/// - `id`: The identifier of the asset to be destroyed. This must identify an existing
-		///   asset.
-		///
-		/// Each call emits the `Event::DestroyedApprovals` event.
-		</span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
-		#[pallet::weight(T::WeightInfo::destroy_approvals(T::RemoveItemsLimit::get()))]
-		</span><span class="kw">pub fn </span>destroy_approvals(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-		) -&gt; DispatchResultWithPostInfo {
-			<span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="kw">let </span>removed_approvals = <span class="self">Self</span>::do_destroy_approvals(id, T::RemoveItemsLimit::get())<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(T::WeightInfo::destroy_approvals(removed_approvals)).into())
-		}
-
-		<span class="doccomment">/// Complete destroying asset and unreserve currency.
-		///
-		/// `finish_destroy` should only be called after `start_destroy` has been called, and the
-		/// asset is in a `Destroying` state. All accounts or approvals should be destroyed before
-		/// hand.
-		///
-		/// - `id`: The identifier of the asset to be destroyed. This must identify an existing
-		///   asset.
-		///
-		/// Each successful call emits the `Event::Destroyed` event.
-		</span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
-		#[pallet::weight(T::WeightInfo::finish_destroy())]
-		</span><span class="kw">pub fn </span>finish_destroy(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_finish_destroy(id)
-		}
-
-
-		<span class="doccomment">/// Mint assets of a particular class.
-		///
-		/// The origin must be Signed and the sender must be the Issuer of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to have some amount minted.
-		/// - `beneficiary`: The account to be credited with the minted assets.
-		/// - `amount`: The amount of the asset to be minted.
-		///
-		/// Emits `Issued` event when successful.
-		///
-		/// Weight: `O(1)`
-		/// Modes: Pre-existing balance of `beneficiary`; Account pre-existence of `beneficiary`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
-		#[pallet::weight(T::WeightInfo::mint())]
-		</span><span class="kw">pub fn </span>mint(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			beneficiary: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>beneficiary = T::Lookup::lookup(beneficiary)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_mint(id, <span class="kw-2">&amp;</span>beneficiary, amount, <span class="prelude-val">Some</span>(origin))<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Reduce the balance of `who` by as much as possible up to `amount` assets of `id`.
-		///
-		/// Origin must be Signed and the sender should be the Manager of the asset `id`.
-		///
-		/// Bails with `NoAccount` if the `who` is already dead.
-		///
-		/// - `id`: The identifier of the asset to have some amount burned.
-		/// - `who`: The account to be debited from.
-		/// - `amount`: The maximum amount by which `who`&#39;s balance should be reduced.
-		///
-		/// Emits `Burned` with the actual amount burned. If this takes the balance to below the
-		/// minimum for the asset, then the amount burned is increased to take it to zero.
-		///
-		/// Weight: `O(1)`
-		/// Modes: Post-existence of `who`; Pre &amp; post Zombie-status of `who`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
-		#[pallet::weight(T::WeightInfo::burn())]
-		</span><span class="kw">pub fn </span>burn(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			who: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>f = DebitFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">true </span>};
-			<span class="kw">let _ </span>= <span class="self">Self</span>::do_burn(id, <span class="kw-2">&amp;</span>who, amount, <span class="prelude-val">Some</span>(origin), f)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Move some assets from the sender account to another.
-		///
-		/// Origin must be Signed.
-		///
-		/// - `id`: The identifier of the asset to have some amount transferred.
-		/// - `target`: The account to be credited.
-		/// - `amount`: The amount by which the sender&#39;s balance of assets should be reduced and
-		/// `target`&#39;s balance increased. The amount actually transferred may be slightly greater in
-		/// the case that the transfer would otherwise take the sender balance above zero but below
-		/// the minimum balance. Must be greater than zero.
-		///
-		/// Emits `Transferred` with the actual amount transferred. If this takes the source balance
-		/// to below the minimum for the asset, then the amount transferred is increased to take it
-		/// to zero.
-		///
-		/// Weight: `O(1)`
-		/// Modes: Pre-existence of `target`; Post-existence of sender; Account pre-existence of
-		/// `target`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
-		#[pallet::weight(T::WeightInfo::transfer())]
-		</span><span class="kw">pub fn </span>transfer(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			target: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>dest = T::Lookup::lookup(target)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
-			<span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>origin, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">None</span>, f).map(|<span class="kw">_</span>| ())
-		}
-
-		<span class="doccomment">/// Move some assets from the sender account to another, keeping the sender account alive.
-		///
-		/// Origin must be Signed.
-		///
-		/// - `id`: The identifier of the asset to have some amount transferred.
-		/// - `target`: The account to be credited.
-		/// - `amount`: The amount by which the sender&#39;s balance of assets should be reduced and
-		/// `target`&#39;s balance increased. The amount actually transferred may be slightly greater in
-		/// the case that the transfer would otherwise take the sender balance above zero but below
-		/// the minimum balance. Must be greater than zero.
-		///
-		/// Emits `Transferred` with the actual amount transferred. If this takes the source balance
-		/// to below the minimum for the asset, then the amount transferred is increased to take it
-		/// to zero.
-		///
-		/// Weight: `O(1)`
-		/// Modes: Pre-existence of `target`; Post-existence of sender; Account pre-existence of
-		/// `target`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
-		#[pallet::weight(T::WeightInfo::transfer_keep_alive())]
-		</span><span class="kw">pub fn </span>transfer_keep_alive(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			target: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>source = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>dest = T::Lookup::lookup(target)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">true</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
-			<span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">None</span>, f).map(|<span class="kw">_</span>| ())
-		}
-		<span class="doccomment">/// Move some assets from one account to another.
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to have some amount transferred.
-		/// - `source`: The account to be debited.
-		/// - `dest`: The account to be credited.
-		/// - `amount`: The amount by which the `source`&#39;s balance of assets should be reduced and
-		/// `dest`&#39;s balance increased. The amount actually transferred may be slightly greater in
-		/// the case that the transfer would otherwise take the `source` balance above zero but
-		/// below the minimum balance. Must be greater than zero.
-		///
-		/// Emits `Transferred` with the actual amount transferred. If this takes the source balance
-		/// to below the minimum for the asset, then the amount transferred is increased to take it
-		/// to zero.
-		///
-		/// Weight: `O(1)`
-		/// Modes: Pre-existence of `dest`; Post-existence of `source`; Account pre-existence of
-		/// `dest`.
-		</span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
-		#[pallet::weight(T::WeightInfo::force_transfer())]
-		</span><span class="kw">pub fn </span>force_transfer(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			source: AccountIdLookupOf&lt;T&gt;,
-			dest: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>source = T::Lookup::lookup(source)<span class="question-mark">?</span>;
-			<span class="kw">let </span>dest = T::Lookup::lookup(dest)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
-			<span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">Some</span>(origin), f).map(|<span class="kw">_</span>| ())
-		}
-		<span class="doccomment">/// Disallow further unprivileged transfers from an account.
-		///
-		/// Origin must be Signed and the sender should be the Freezer of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be frozen.
-		/// - `who`: The account to be frozen.
-		///
-		/// Emits `Frozen`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
-		#[pallet::weight(T::WeightInfo::freeze())]
-		</span><span class="kw">pub fn </span>freeze(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			who: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(
-				d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
-				Error::&lt;T, I&gt;::AssetNotLive
-			);
-			<span class="macro">ensure!</span>(origin == d.freezer, Error::&lt;T, I&gt;::NoPermission);
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-
-			Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>who, |maybe_account| -&gt; DispatchResult {
-				maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>.is_frozen = <span class="bool-val">true</span>;
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-
-			<span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Frozen { asset_id: id, who });
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Allow unprivileged transfers from an account again.
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be frozen.
-		/// - `who`: The account to be unfrozen.
-		///
-		/// Emits `Thawed`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
-		#[pallet::weight(T::WeightInfo::thaw())]
-		</span><span class="kw">pub fn </span>thaw(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			who: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(
-				details.status == AssetStatus::Live || details.status == AssetStatus::Frozen,
-				Error::&lt;T, I&gt;::AssetNotLive
-			);
-			<span class="macro">ensure!</span>(origin == details.admin, Error::&lt;T, I&gt;::NoPermission);
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-
-			Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>who, |maybe_account| -&gt; DispatchResult {
-				maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>.is_frozen = <span class="bool-val">false</span>;
-				<span class="prelude-val">Ok</span>(())
-			})<span class="question-mark">?</span>;
-
-			<span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Thawed { asset_id: id, who });
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Disallow further unprivileged transfers for the asset class.
-		///
-		/// Origin must be Signed and the sender should be the Freezer of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be frozen.
-		///
-		/// Emits `Frozen`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
-		#[pallet::weight(T::WeightInfo::freeze_asset())]
-		</span><span class="kw">pub fn </span>freeze_asset(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
-				<span class="kw">let </span>d = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-				<span class="macro">ensure!</span>(origin == d.freezer, Error::&lt;T, I&gt;::NoPermission);
-
-				d.status = AssetStatus::Frozen;
-
-				<span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::AssetFrozen { asset_id: id });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Allow unprivileged transfers for the asset again.
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be thawed.
-		///
-		/// Emits `Thawed`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
-		#[pallet::weight(T::WeightInfo::thaw_asset())]
-		</span><span class="kw">pub fn </span>thaw_asset(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
-				<span class="kw">let </span>d = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="macro">ensure!</span>(origin == d.admin, Error::&lt;T, I&gt;::NoPermission);
-				<span class="macro">ensure!</span>(d.status == AssetStatus::Frozen, Error::&lt;T, I&gt;::NotFrozen);
-
-				d.status = AssetStatus::Live;
-
-				<span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::AssetThawed { asset_id: id });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Change the Owner of an asset.
-		///
-		/// Origin must be Signed and the sender should be the Owner of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `owner`: The new Owner of this asset.
-		///
-		/// Emits `OwnerChanged`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
-		#[pallet::weight(T::WeightInfo::transfer_ownership())]
-		</span><span class="kw">pub fn </span>transfer_ownership(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			owner: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
-				<span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::LiveAsset);
-				<span class="macro">ensure!</span>(origin == details.owner, Error::&lt;T, I&gt;::NoPermission);
-				<span class="kw">if </span>details.owner == owner {
-					<span class="kw">return </span><span class="prelude-val">Ok</span>(())
-				}
-
-				<span class="kw">let </span>metadata_deposit = Metadata::&lt;T, I&gt;::get(id).deposit;
-				<span class="kw">let </span>deposit = details.deposit + metadata_deposit;
-
-				<span class="comment">// Move the deposit to the new owner.
-				</span>T::Currency::repatriate_reserved(<span class="kw-2">&amp;</span>details.owner, <span class="kw-2">&amp;</span>owner, deposit, Reserved)<span class="question-mark">?</span>;
-
-				details.owner = owner.clone();
-
-				<span class="self">Self</span>::deposit_event(Event::OwnerChanged { asset_id: id, owner });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Change the Issuer, Admin and Freezer of an asset.
-		///
-		/// Origin must be Signed and the sender should be the Owner of the asset `id`.
-		///
-		/// - `id`: The identifier of the asset to be frozen.
-		/// - `issuer`: The new Issuer of this asset.
-		/// - `admin`: The new Admin of this asset.
-		/// - `freezer`: The new Freezer of this asset.
-		///
-		/// Emits `TeamChanged`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
-		#[pallet::weight(T::WeightInfo::set_team())]
-		</span><span class="kw">pub fn </span>set_team(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			issuer: AccountIdLookupOf&lt;T&gt;,
-			admin: AccountIdLookupOf&lt;T&gt;,
-			freezer: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>issuer = T::Lookup::lookup(issuer)<span class="question-mark">?</span>;
-			<span class="kw">let </span>admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>freezer = T::Lookup::lookup(freezer)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
-				<span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-				<span class="macro">ensure!</span>(origin == details.owner, Error::&lt;T, I&gt;::NoPermission);
-
-				details.issuer = issuer.clone();
-				details.admin = admin.clone();
-				details.freezer = freezer.clone();
-
-				<span class="self">Self</span>::deposit_event(Event::TeamChanged { asset_id: id, issuer, admin, freezer });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Set the metadata for an asset.
-		///
-		/// Origin must be Signed and the sender should be the Owner of the asset `id`.
-		///
-		/// Funds of sender are reserved according to the formula:
-		/// `MetadataDepositBase + MetadataDepositPerByte * (name.len + symbol.len)` taking into
-		/// account any already reserved funds.
-		///
-		/// - `id`: The identifier of the asset to update.
-		/// - `name`: The user friendly name of this asset. Limited in length by `StringLimit`.
-		/// - `symbol`: The exchange symbol for this asset. Limited in length by `StringLimit`.
-		/// - `decimals`: The number of decimals this asset uses to represent one unit.
-		///
-		/// Emits `MetadataSet`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
-		#[pallet::weight(T::WeightInfo::set_metadata(name.len() <span class="kw">as </span>u32, symbol.len() <span class="kw">as </span>u32))]
-		</span><span class="kw">pub fn </span>set_metadata(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			name: Vec&lt;u8&gt;,
-			symbol: Vec&lt;u8&gt;,
-			decimals: u8,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_set_metadata(id, <span class="kw-2">&amp;</span>origin, name, symbol, decimals)
-		}
-
-		<span class="doccomment">/// Clear the metadata for an asset.
-		///
-		/// Origin must be Signed and the sender should be the Owner of the asset `id`.
-		///
-		/// Any deposit is freed for the asset owner.
-		///
-		/// - `id`: The identifier of the asset to clear.
-		///
-		/// Emits `MetadataCleared`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">18</span>)]
-		#[pallet::weight(T::WeightInfo::clear_metadata())]
-		</span><span class="kw">pub fn </span>clear_metadata(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-			<span class="macro">ensure!</span>(origin == d.owner, Error::&lt;T, I&gt;::NoPermission);
-
-			Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
-				<span class="kw">let </span>deposit = metadata.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>.deposit;
-				T::Currency::unreserve(<span class="kw-2">&amp;</span>d.owner, deposit);
-				<span class="self">Self</span>::deposit_event(Event::MetadataCleared { asset_id: id });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Force the metadata for an asset to some value.
-		///
-		/// Origin must be ForceOrigin.
-		///
-		/// Any deposit is left alone.
-		///
-		/// - `id`: The identifier of the asset to update.
-		/// - `name`: The user friendly name of this asset. Limited in length by `StringLimit`.
-		/// - `symbol`: The exchange symbol for this asset. Limited in length by `StringLimit`.
-		/// - `decimals`: The number of decimals this asset uses to represent one unit.
-		///
-		/// Emits `MetadataSet`.
-		///
-		/// Weight: `O(N + S)` where N and S are the length of the name and symbol respectively.
-		</span><span class="attr">#[pallet::call_index(<span class="number">19</span>)]
-		#[pallet::weight(T::WeightInfo::force_set_metadata(name.len() <span class="kw">as </span>u32, symbol.len() <span class="kw">as </span>u32))]
-		</span><span class="kw">pub fn </span>force_set_metadata(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			name: Vec&lt;u8&gt;,
-			symbol: Vec&lt;u8&gt;,
-			decimals: u8,
-			is_frozen: bool,
-		) -&gt; DispatchResult {
-			T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
-				name.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
-
-			<span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
-				symbol.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
-
-			<span class="macro">ensure!</span>(Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::Unknown);
-			Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
-				<span class="kw">let </span>deposit = metadata.take().map_or(Zero::zero(), |m| m.deposit);
-				<span class="kw-2">*</span>metadata = <span class="prelude-val">Some</span>(AssetMetadata {
-					deposit,
-					name: bounded_name,
-					symbol: bounded_symbol,
-					decimals,
-					is_frozen,
-				});
-
-				<span class="self">Self</span>::deposit_event(Event::MetadataSet {
-					asset_id: id,
-					name,
-					symbol,
-					decimals,
-					is_frozen,
-				});
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Clear the metadata for an asset.
-		///
-		/// Origin must be ForceOrigin.
-		///
-		/// Any deposit is returned.
-		///
-		/// - `id`: The identifier of the asset to clear.
-		///
-		/// Emits `MetadataCleared`.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">20</span>)]
-		#[pallet::weight(T::WeightInfo::force_clear_metadata())]
-		</span><span class="kw">pub fn </span>force_clear_metadata(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-		) -&gt; DispatchResult {
-			T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			<span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
-				<span class="kw">let </span>deposit = metadata.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>.deposit;
-				T::Currency::unreserve(<span class="kw-2">&amp;</span>d.owner, deposit);
-				<span class="self">Self</span>::deposit_event(Event::MetadataCleared { asset_id: id });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Alter the attributes of a given asset.
-		///
-		/// Origin must be `ForceOrigin`.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `owner`: The new Owner of this asset.
-		/// - `issuer`: The new Issuer of this asset.
-		/// - `admin`: The new Admin of this asset.
-		/// - `freezer`: The new Freezer of this asset.
-		/// - `min_balance`: The minimum balance of this new asset that any single account must
-		/// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
-		/// - `is_sufficient`: Whether a non-zero balance of this asset is deposit of sufficient
-		/// value to account for the state bloat associated with its balance storage. If set to
-		/// `true`, then non-zero balances may be stored without a `consumer` reference (and thus
-		/// an ED in the Balances pallet or whatever else is used to control user-account state
-		/// growth).
-		/// - `is_frozen`: Whether this asset class is frozen except for permissioned/admin
-		/// instructions.
-		///
-		/// Emits `AssetStatusChanged` with the identity of the asset.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">21</span>)]
-		#[pallet::weight(T::WeightInfo::force_asset_status())]
-		</span><span class="kw">pub fn </span>force_asset_status(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			owner: AccountIdLookupOf&lt;T&gt;,
-			issuer: AccountIdLookupOf&lt;T&gt;,
-			admin: AccountIdLookupOf&lt;T&gt;,
-			freezer: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>min_balance: T::Balance,
-			is_sufficient: bool,
-			is_frozen: bool,
-		) -&gt; DispatchResult {
-			T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-
-			Asset::&lt;T, I&gt;::try_mutate(id, |maybe_asset| {
-				<span class="kw">let </span><span class="kw-2">mut </span>asset = maybe_asset.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-				<span class="macro">ensure!</span>(asset.status != AssetStatus::Destroying, Error::&lt;T, I&gt;::AssetNotLive);
-				asset.owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
-				asset.issuer = T::Lookup::lookup(issuer)<span class="question-mark">?</span>;
-				asset.admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
-				asset.freezer = T::Lookup::lookup(freezer)<span class="question-mark">?</span>;
-				asset.min_balance = min_balance;
-				asset.is_sufficient = is_sufficient;
-				<span class="kw">if </span>is_frozen {
-					asset.status = AssetStatus::Frozen;
-				} <span class="kw">else </span>{
-					asset.status = AssetStatus::Live;
-				}
-				<span class="kw-2">*</span>maybe_asset = <span class="prelude-val">Some</span>(asset);
-
-				<span class="self">Self</span>::deposit_event(Event::AssetStatusChanged { asset_id: id });
-				<span class="prelude-val">Ok</span>(())
-			})
-		}
-
-		<span class="doccomment">/// Approve an amount of asset for transfer by a delegated third-party account.
-		///
-		/// Origin must be Signed.
-		///
-		/// Ensures that `ApprovalDeposit` worth of `Currency` is reserved from signing account
-		/// for the purpose of holding the approval. If some non-zero amount of assets is already
-		/// approved from signing account to `delegate`, then it is topped up or unreserved to
-		/// meet the right value.
-		///
-		/// NOTE: The signing account does not need to own `amount` of assets at the point of
-		/// making this call.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `delegate`: The account to delegate permission to transfer asset.
-		/// - `amount`: The amount of asset that may be transferred by `delegate`. If there is
-		/// already an approval in place, then this acts additively.
-		///
-		/// Emits `ApprovedTransfer` on success.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">22</span>)]
-		#[pallet::weight(T::WeightInfo::approve_transfer())]
-		</span><span class="kw">pub fn </span>approve_transfer(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			delegate: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>owner = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_approve_transfer(id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate, amount)
-		}
-
-		<span class="doccomment">/// Cancel all of some asset approved for delegated transfer by a third-party account.
-		///
-		/// Origin must be Signed and there must be an approval in place between signer and
-		/// `delegate`.
-		///
-		/// Unreserves any deposit previously reserved by `approve_transfer` for the approval.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `delegate`: The account delegated permission to transfer asset.
-		///
-		/// Emits `ApprovalCancelled` on success.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">23</span>)]
-		#[pallet::weight(T::WeightInfo::cancel_approval())]
-		</span><span class="kw">pub fn </span>cancel_approval(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			delegate: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>owner = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-
-			<span class="kw">let </span>approval =
-				Approvals::&lt;T, I&gt;::take((id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate)).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
-
-			d.approvals.saturating_dec();
-			Asset::&lt;T, I&gt;::insert(id, d);
-
-			<span class="self">Self</span>::deposit_event(Event::ApprovalCancelled { asset_id: id, owner, delegate });
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Cancel all of some asset approved for delegated transfer by a third-party account.
-		///
-		/// Origin must be either ForceOrigin or Signed origin with the signer being the Admin
-		/// account of the asset `id`.
-		///
-		/// Unreserves any deposit previously reserved by `approve_transfer` for the approval.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `delegate`: The account delegated permission to transfer asset.
-		///
-		/// Emits `ApprovalCancelled` on success.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">24</span>)]
-		#[pallet::weight(T::WeightInfo::force_cancel_approval())]
-		</span><span class="kw">pub fn </span>force_cancel_approval(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			owner: AccountIdLookupOf&lt;T&gt;,
-			delegate: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			<span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
-			T::ForceOrigin::try_origin(origin)
-				.map(|<span class="kw">_</span>| ())
-				.or_else(|origin| -&gt; DispatchResult {
-					<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-					<span class="macro">ensure!</span>(origin == d.admin, Error::&lt;T, I&gt;::NoPermission);
-					<span class="prelude-val">Ok</span>(())
-				})<span class="question-mark">?</span>;
-
-			<span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
-			<span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
-
-			<span class="kw">let </span>approval =
-				Approvals::&lt;T, I&gt;::take((id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate)).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
-			T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
-			d.approvals.saturating_dec();
-			Asset::&lt;T, I&gt;::insert(id, d);
-
-			<span class="self">Self</span>::deposit_event(Event::ApprovalCancelled { asset_id: id, owner, delegate });
-			<span class="prelude-val">Ok</span>(())
-		}
-
-		<span class="doccomment">/// Transfer some asset balance from a previously delegated account to some third-party
-		/// account.
-		///
-		/// Origin must be Signed and there must be an approval in place by the `owner` to the
-		/// signer.
-		///
-		/// If the entire amount approved for transfer is transferred, then any deposit previously
-		/// reserved by `approve_transfer` is unreserved.
-		///
-		/// - `id`: The identifier of the asset.
-		/// - `owner`: The account which previously approved for a transfer of at least `amount` and
-		/// from which the asset balance will be withdrawn.
-		/// - `destination`: The account to which the asset balance of `amount` will be transferred.
-		/// - `amount`: The amount of assets to transfer.
-		///
-		/// Emits `TransferredApproved` on success.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">25</span>)]
-		#[pallet::weight(T::WeightInfo::transfer_approved())]
-		</span><span class="kw">pub fn </span>transfer_approved(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			owner: AccountIdLookupOf&lt;T&gt;,
-			destination: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>delegate = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
-			<span class="kw">let </span>destination = T::Lookup::lookup(destination)<span class="question-mark">?</span>;
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_transfer_approved(id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate, <span class="kw-2">&amp;</span>destination, amount)
-		}
-
-
-		<span class="doccomment">/// Create an asset account for non-provider assets.
-		///
-		/// A deposit will be taken from the signer account.
-		///
-		/// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit
-		///   to be taken.
-		/// - `id`: The identifier of the asset for the account to be created.
-		///
-		/// Emits `Touched` event when successful.
-		</span><span class="attr">#[pallet::call_index(<span class="number">26</span>)]
-		#[pallet::weight(T::WeightInfo::mint())]
-		</span><span class="kw">pub fn </span>touch(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_touch(id, ensure_signed(origin)<span class="question-mark">?</span>)
-		}
-
-		<span class="doccomment">/// Return the deposit (if any) of an asset account.
-		///
-		/// The origin must be Signed.
-		///
-		/// - `id`: The identifier of the asset for the account to be created.
-		/// - `allow_burn`: If `true` then assets may be destroyed in order to complete the refund.
-		///
-		/// Emits `Refunded` event when successful.
-		</span><span class="attr">#[pallet::call_index(<span class="number">27</span>)]
-		#[pallet::weight(T::WeightInfo::mint())]
-		</span><span class="kw">pub fn </span>refund(
-			origin: OriginFor&lt;T&gt;,
-			id: T::AssetIdParameter,
-			allow_burn: bool,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>id: T::AssetId = id.into();
-			<span class="self">Self</span>::do_refund(id, ensure_signed(origin)<span class="question-mark">?</span>, allow_burn)
-		}
-	
-
-		<span class="doccomment">/// Reserve some assets on an account for a specific asset.
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier to be used for the reserve
-		/// - `asset_id`: The identifier of the asset.
-		/// - `who`: The account on which the assets are to be reserved.
-		/// - `amount`: The amount to reserve
-		/// `who`&#39;s free balance is decreased by amount and the reserve balance increased by amount.
-		/// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id is
-		/// added to reserves.
-		///
-		/// Emits `Reserved` with the reserved amount.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">28</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>reserve(
-			origin: OriginFor&lt;T&gt;,
-			id: T::ReserveIdentifier,
-			<span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
-			who: AccountIdLookupOf&lt;T&gt;,
-			<span class="attr">#[pallet::compact] </span>amount: T::Balance,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_reserve_named(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, amount, origin)
-		}
-
-		<span class="doccomment">/// Unreserve assets reserved under id from an account
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier to be used for the reserve
-		/// - `asset_id`: The identifier of the asset.
-		/// - `who`: The account on which the assets are to be unreserved.
-		/// `who`&#39;s free balance is increased by amount and the reserve balance decreased by amount.
-		/// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with id is
-		/// removed.
-		///
-		/// Emits `Uneserved` with the reserved amount.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">29</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>unreserve(
-			origin: OriginFor&lt;T&gt;,
-			id: T::ReserveIdentifier,
-			<span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
-			who: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_unreserve_named(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, origin)
-		}
-
-		<span class="doccomment">/// Burn assets reserved under id from an account
-		///
-		/// Origin must be Signed and the sender should be the Admin of the asset `id`.
-		///
-		/// - `id`: The identifier to be used for the reserve
-		/// - `asset_id`: The identifier of the asset.
-		/// - `who`: The account on which the reserved assets are to be burned.
-		/// `who`&#39;s reserve balance is decreased by amount.
-		/// The reserve balance of the asset with asset_id is decreased by amount and the supply is decreased by amount. The named reserve with id is
-		/// removed.
-		///
-		/// Emits `BurnedReserve` with the reserved amount.
-		///
-		/// Weight: `O(1)`
-		</span><span class="attr">#[pallet::call_index(<span class="number">30</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>burn_reserve(
-			origin: OriginFor&lt;T&gt;,
-			id: T::ReserveIdentifier,
-			<span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
-			who: AccountIdLookupOf&lt;T&gt;,
-		) -&gt; DispatchResult {
-			<span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
-			<span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
-			<span class="self">Self</span>::do_burn_named_reserve(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, origin)
-		}
-	}
+  <span class="kw">use super</span>::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+
+  <span class="doccomment">/// The current storage version.
+  </span><span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+
+  <span class="attr">#[pallet::pallet]
+  #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+  #[pallet::storage_version(STORAGE_VERSION)]
+  </span><span class="kw">pub struct </span>Pallet&lt;T, I = ()&gt;(<span class="kw">_</span>);
+
+  <span class="attr">#[pallet::config]
+  </span><span class="doccomment">/// The module configuration trait.
+  </span><span class="kw">pub trait </span>Config&lt;I: <span class="lifetime">&#39;static </span>= ()&gt;: frame_system::Config {
+    <span class="doccomment">/// The overarching event type.
+    </span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>, I&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+
+    <span class="doccomment">/// The units in which we record balances.
+    </span><span class="kw">type </span>Balance: Member
+      + Parameter
+      + AtLeast32BitUnsigned
+      + Default
+      + Copy
+      + MaybeSerializeDeserialize
+      + MaxEncodedLen
+      + TypeInfo;
+
+    <span class="doccomment">/// Max number of items to destroy per `destroy_accounts` and `destroy_approvals` call.
+    ///
+    /// Must be configured to result in a weight that makes each call fit in a block.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>RemoveItemsLimit: Get&lt;u32&gt;;
+
+    <span class="doccomment">/// Identifier for the class of asset.
+    </span><span class="kw">type </span>AssetId: Member
+      + Parameter
+      + Default
+      + Copy
+      + HasCompact
+      + MaybeSerializeDeserialize
+      + MaxEncodedLen
+      + TypeInfo;
+
+    <span class="doccomment">/// Wrapper around `Self::AssetId` to use in dispatchable call signatures. Allows the use
+    /// of compact encoding in instances of the pallet, which will prevent breaking changes
+    /// resulting from the removal of `HasCompact` from `Self::AssetId`.
+    ///
+    /// This type includes the `From&lt;Self::AssetId&gt;` bound, since tightly coupled pallets may
+    /// want to convert an `AssetId` into a parameter for calling dispatchable functions
+    /// directly.
+    </span><span class="kw">type </span>AssetIdParameter: Parameter
+      + Copy
+      + From&lt;<span class="self">Self</span>::AssetId&gt;
+      + Into&lt;<span class="self">Self</span>::AssetId&gt;
+      + MaxEncodedLen;
+
+    <span class="doccomment">/// The currency mechanism.
+    </span><span class="kw">type </span>Currency: ReservableCurrency&lt;<span class="self">Self</span>::AccountId&gt;;
+
+    <span class="doccomment">/// Standard asset class creation is only allowed if the origin attempting it and the
+    /// asset class are in this set.
+    </span><span class="kw">type </span>CreateOrigin: EnsureOriginWithArg&lt;
+      <span class="self">Self</span>::RuntimeOrigin,
+      <span class="self">Self</span>::AssetId,
+      Success = <span class="self">Self</span>::AccountId,
+    &gt;;
+
+    <span class="doccomment">/// The origin which may forcibly create or destroy an asset or otherwise alter privileged
+    /// attributes.
+    </span><span class="kw">type </span>ForceOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
+
+    <span class="doccomment">/// The basic amount of funds that must be reserved for an asset.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>AssetDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
+
+    <span class="doccomment">/// The amount of funds that must be reserved for a non-provider asset account to be
+    /// maintained.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>AssetAccountDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
+
+    <span class="doccomment">/// The basic amount of funds that must be reserved when adding metadata to your asset.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MetadataDepositBase: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
+
+    <span class="doccomment">/// The additional funds that must be reserved for the number of bytes you store in your
+    /// metadata.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MetadataDepositPerByte: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
+
+    <span class="doccomment">/// The amount of funds that must be reserved when creating a new approval.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>ApprovalDeposit: Get&lt;DepositBalanceOf&lt;<span class="self">Self</span>, I&gt;&gt;;
+
+    <span class="doccomment">/// The maximum length of a name or symbol stored on-chain.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>StringLimit: Get&lt;u32&gt;;
+
+    <span class="doccomment">/// The maximum number of named reserves that can exist on an account.
+    </span><span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxReserves: Get&lt;u32&gt;;
+
+    <span class="doccomment">/// A hook to allow a per-asset, per-account minimum balance to be enforced. This must be
+    /// respected in all permissionless operations.
+    </span><span class="kw">type </span>Freezer: FrozenBalance&lt;<span class="self">Self</span>::AssetId, <span class="self">Self</span>::AccountId, <span class="self">Self</span>::Balance&gt;;
+
+    <span class="doccomment">/// Additional data to be stored with an account&#39;s asset balance.
+    </span><span class="kw">type </span>Extra: Member + Parameter + Default + MaxEncodedLen;
+
+    <span class="doccomment">/// Callback methods for asset state change (e.g. asset created or destroyed)
+    </span><span class="kw">type </span>CallbackHandle: AssetsCallback&lt;<span class="self">Self</span>::AssetId, <span class="self">Self</span>::AccountId&gt;;
+
+    <span class="doccomment">/// Weight information for extrinsics in this pallet.
+    </span><span class="kw">type </span>WeightInfo: WeightInfo;
+
+    <span class="doccomment">/// The id type for named reserves.
+    </span><span class="kw">type </span>ReserveIdentifier: Parameter + Member + MaxEncodedLen + Ord + Copy;
+  }
+
+  <span class="attr">#[pallet::storage]
+  </span><span class="doccomment">/// Details of an asset.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Asset&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AssetId,
+    AssetDetails&lt;T::Balance, T::AccountId, DepositBalanceOf&lt;T, I&gt;&gt;,
+  &gt;;
+
+  <span class="attr">#[pallet::storage]
+  </span><span class="doccomment">/// The holdings of a specific account for a specific asset.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Account&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AssetId,
+    Blake2_128Concat,
+    T::AccountId,
+    AssetAccountOf&lt;T, I&gt;,
+  &gt;;
+
+  <span class="doccomment">/// Named reserves on account balances for a specific asset.
+  </span><span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>reserves)]
+  </span><span class="kw">pub type </span>Reserves&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AssetId,
+    Blake2_128Concat,
+    T::AccountId,
+    BoundedVec&lt;ReserveData&lt;T::ReserveIdentifier, T::Balance&gt;, T::MaxReserves&gt;,
+    ValueQuery,
+  &gt;;
+
+  <span class="attr">#[pallet::storage]
+  </span><span class="doccomment">/// Approved balance transfers. First balance is the amount approved for transfer. Second
+  /// is the amount of `T::Currency` reserved for storing this.
+  /// First key is the asset ID, second key is the owner and third key is the delegate.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Approvals&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageNMap&lt;
+    <span class="kw">_</span>,
+    (
+      NMapKey&lt;Blake2_128Concat, T::AssetId&gt;,
+      NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// owner
+      </span>NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// delegate
+    </span>),
+    Approval&lt;T::Balance, DepositBalanceOf&lt;T, I&gt;&gt;,
+  &gt;;
+
+  <span class="attr">#[pallet::storage]
+  </span><span class="doccomment">/// Metadata of an asset.
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Metadata&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Blake2_128Concat,
+    T::AssetId,
+    AssetMetadata&lt;DepositBalanceOf&lt;T, I&gt;, BoundedVec&lt;u8, T::StringLimit&gt;&gt;,
+    ValueQuery,
+  &gt;;
+
+  <span class="attr">#[pallet::genesis_config]
+  </span><span class="kw">pub struct </span>GenesisConfig&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; {
+    <span class="doccomment">/// Genesis assets: id, owner, is_sufficient, min_balance
+    </span><span class="kw">pub </span>assets: Vec&lt;(T::AssetId, T::AccountId, bool, T::Balance)&gt;,
+    <span class="doccomment">/// Genesis metadata: id, name, symbol, decimals
+    </span><span class="kw">pub </span>metadata: Vec&lt;(T::AssetId, Vec&lt;u8&gt;, Vec&lt;u8&gt;, u8)&gt;,
+    <span class="doccomment">/// Genesis accounts: id, account_id, balance
+    </span><span class="kw">pub </span>accounts: Vec&lt;(T::AssetId, T::AccountId, T::Balance)&gt;,
+  }
+
+  <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+  </span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; Default <span class="kw">for </span>GenesisConfig&lt;T, I&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+      <span class="self">Self </span>{
+        assets: Default::default(),
+        metadata: Default::default(),
+        accounts: Default::default(),
+      }
+    }
+  }
+
+  <span class="attr">#[pallet::genesis_build]
+  </span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; GenesisBuild&lt;T, I&gt; <span class="kw">for </span>GenesisConfig&lt;T, I&gt; {
+    <span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+      <span class="kw">for </span>(id, owner, is_sufficient, min_balance) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.assets {
+        <span class="macro">assert!</span>(!Asset::&lt;T, I&gt;::contains_key(id), <span class="string">&quot;Asset id already in use&quot;</span>);
+        <span class="macro">assert!</span>(!min_balance.is_zero(), <span class="string">&quot;Min balance should not be zero&quot;</span>);
+        Asset::&lt;T, I&gt;::insert(
+          id,
+          AssetDetails {
+            owner: owner.clone(),
+            issuer: owner.clone(),
+            admin: owner.clone(),
+            freezer: owner.clone(),
+            supply: Zero::zero(),
+            reserved: Zero::zero(),
+            deposit: Zero::zero(),
+            min_balance: <span class="kw-2">*</span>min_balance,
+            is_sufficient: <span class="kw-2">*</span>is_sufficient,
+            accounts: <span class="number">0</span>,
+            sufficients: <span class="number">0</span>,
+            approvals: <span class="number">0</span>,
+            is_frozen: <span class="bool-val">false</span>,
+            status: AssetStatus::Live,
+          },
+        );
+      }
+
+      <span class="kw">for </span>(id, name, symbol, decimals) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.metadata {
+        <span class="macro">assert!</span>(Asset::&lt;T, I&gt;::contains_key(id), <span class="string">&quot;Asset does not exist&quot;</span>);
+
+        <span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
+          name.clone().try_into().expect(<span class="string">&quot;asset name is too long&quot;</span>);
+        <span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
+          symbol.clone().try_into().expect(<span class="string">&quot;asset symbol is too long&quot;</span>);
+
+        <span class="kw">let </span>metadata = AssetMetadata {
+          deposit: Zero::zero(),
+          name: bounded_name,
+          symbol: bounded_symbol,
+          decimals: <span class="kw-2">*</span>decimals,
+          is_frozen: <span class="bool-val">false</span>,
+        };
+        Metadata::&lt;T, I&gt;::insert(id, metadata);
+      }
+
+      <span class="kw">for </span>(id, account_id, amount) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.accounts {
+        <span class="kw">let </span>result =
+          &lt;Pallet&lt;T, I&gt;&gt;::increase_balance(<span class="kw-2">*</span>id, account_id, <span class="kw-2">*</span>amount, |details| -&gt; DispatchResult {
+            <span class="macro">debug_assert!</span>(
+              T::Balance::max_value() - details.supply &gt;= <span class="kw-2">*</span>amount,
+              <span class="string">&quot;checked in prep; qed&quot;
+            </span>);
+            details.supply = details.supply.saturating_add(<span class="kw-2">*</span>amount);
+            <span class="prelude-val">Ok</span>(())
+          });
+        <span class="macro">assert!</span>(result.is_ok());
+      }
+    }
+  }
+
+  <span class="attr">#[pallet::event]
+  #[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+  </span><span class="kw">pub enum </span>Event&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static </span>= ()&gt; {
+    <span class="doccomment">/// Some asset class was created.
+    </span>Created { asset_id: T::AssetId, creator: T::AccountId, owner: T::AccountId },
+    <span class="doccomment">/// Some assets were issued.
+    </span>Issued { asset_id: T::AssetId, owner: T::AccountId, total_supply: T::Balance },
+    <span class="doccomment">/// Some assets were transferred.
+    </span>Transferred { asset_id: T::AssetId, from: T::AccountId, to: T::AccountId, amount: T::Balance },
+    <span class="doccomment">/// Some assets were reserved.
+    </span>Reserved {
+      reserve_id: T::ReserveIdentifier,
+      asset_id: T::AssetId,
+      who: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// Some reserved assets were unreserved.
+    </span>Unreserved {
+      reserve_id: T::ReserveIdentifier,
+      asset_id: T::AssetId,
+      who: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// Some reserved assets were burned.
+    </span>BurnedReserve {
+      reserve_id: T::ReserveIdentifier,
+      asset_id: T::AssetId,
+      who: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// Some reserved assets were transferred.
+    </span>TransferredReserve {
+      reserve_id: T::ReserveIdentifier,
+      asset_id: T::AssetId,
+      from: T::AccountId,
+      to: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// Some assets were destroyed.
+    </span>Burned { asset_id: T::AssetId, owner: T::AccountId, balance: T::Balance },
+    <span class="doccomment">/// The management team changed.
+    </span>TeamChanged {
+      asset_id: T::AssetId,
+      issuer: T::AccountId,
+      admin: T::AccountId,
+      freezer: T::AccountId,
+    },
+    <span class="doccomment">/// The owner changed.
+    </span>OwnerChanged { asset_id: T::AssetId, owner: T::AccountId },
+    <span class="doccomment">/// Some account `who` was frozen.
+    </span>Frozen { asset_id: T::AssetId, who: T::AccountId },
+    <span class="doccomment">/// Some account `who` was thawed.
+    </span>Thawed { asset_id: T::AssetId, who: T::AccountId },
+    <span class="doccomment">/// Some asset `asset_id` was frozen.
+    </span>AssetFrozen { asset_id: T::AssetId },
+    <span class="doccomment">/// Some asset `asset_id` was thawed.
+    </span>AssetThawed { asset_id: T::AssetId },
+    <span class="doccomment">/// Accounts were destroyed for given asset.
+    </span>AccountsDestroyed { asset_id: T::AssetId, accounts_destroyed: u32, accounts_remaining: u32 },
+    <span class="doccomment">/// Approvals were destroyed for given asset.
+    </span>ApprovalsDestroyed { asset_id: T::AssetId, approvals_destroyed: u32, approvals_remaining: u32 },
+    <span class="doccomment">/// An asset class is in the process of being destroyed.
+    </span>DestructionStarted { asset_id: T::AssetId },
+    <span class="doccomment">/// An asset class was destroyed.
+    /// An asset class was destroyed.
+    </span>Destroyed { asset_id: T::AssetId },
+    <span class="doccomment">/// Some asset class was force-created.
+    </span>ForceCreated { asset_id: T::AssetId, owner: T::AccountId },
+    <span class="doccomment">/// New metadata has been set for an asset.
+    </span>MetadataSet {
+      asset_id: T::AssetId,
+      name: Vec&lt;u8&gt;,
+      symbol: Vec&lt;u8&gt;,
+      decimals: u8,
+      is_frozen: bool,
+    },
+    <span class="doccomment">/// Metadata has been cleared for an asset.
+    </span>MetadataCleared { asset_id: T::AssetId },
+    <span class="doccomment">/// (Additional) funds have been approved for transfer to a destination account.
+    </span>ApprovedTransfer {
+      asset_id: T::AssetId,
+      source: T::AccountId,
+      delegate: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// An approval for account `delegate` was cancelled by `owner`.
+    </span>ApprovalCancelled { asset_id: T::AssetId, owner: T::AccountId, delegate: T::AccountId },
+    <span class="doccomment">/// An `amount` was transferred in its entirety from `owner` to `destination` by
+    /// the approved `delegate`.
+    </span>TransferredApproved {
+      asset_id: T::AssetId,
+      owner: T::AccountId,
+      delegate: T::AccountId,
+      destination: T::AccountId,
+      amount: T::Balance,
+    },
+    <span class="doccomment">/// An asset has had its attributes changed by the `Force` origin.
+    </span>AssetStatusChanged { asset_id: T::AssetId },
+  }
+
+  <span class="attr">#[pallet::error]
+  </span><span class="kw">pub enum </span>Error&lt;T, I = ()&gt; {
+    <span class="doccomment">/// Account balance must be greater than or equal to the transfer amount.
+    </span>BalanceLow,
+    <span class="doccomment">/// The account to alter does not exist.
+    </span>NoAccount,
+    <span class="doccomment">/// The signing account has no permission to do the operation.
+    </span>NoPermission,
+    <span class="doccomment">/// The given asset ID is unknown.
+    </span>UnknownAsset,
+    Unknown,
+    <span class="doccomment">/// The origin account is frozen.
+    </span>Frozen,
+    <span class="doccomment">/// The asset ID is already taken.
+    </span>InUse,
+    <span class="doccomment">/// Invalid witness data given.
+    </span>BadWitness,
+    <span class="doccomment">/// Minimum balance should be non-zero.
+    </span>MinBalanceZero,
+    <span class="doccomment">/// Unable to increment the consumer reference counters on the account. Either no provider
+    /// reference exists to allow a non-zero balance of a non-self-sufficient asset, or the
+    /// maximum number of consumers has been reached.
+    </span>NoProvider,
+    <span class="doccomment">/// Invalid metadata given.
+    </span>BadMetadata,
+    <span class="doccomment">/// No approval exists that would allow the transfer.
+    </span>Unapproved,
+    <span class="doccomment">/// The source account would not survive the transfer and it needs to stay alive.
+    </span>WouldDie,
+    <span class="doccomment">/// The asset-account already exists.
+    </span>AlreadyExists,
+    <span class="doccomment">/// The asset-account doesn&#39;t have an associated deposit.
+    </span>NoDeposit,
+    <span class="doccomment">/// The operation would result in funds being burned.
+    </span>WouldBurn,
+    <span class="doccomment">/// Number of named reserves exceed MaxReserves
+    </span>TooManyReserves,
+    <span class="doccomment">/// Named reserve already exists
+    </span>ReserveAlreadyExists,
+    <span class="doccomment">/// Unknown reserve
+    </span>UnknownReserve,
+    <span class="doccomment">/// The asset is a live asset and is actively being used. Usually emit for operations such
+    /// as `start_destroy` which require the asset to be in a destroying state.
+    </span>LiveAsset,
+    <span class="doccomment">/// The asset is not live, and likely being destroyed.
+    </span>AssetNotLive,
+    <span class="doccomment">/// The asset status is not the expected status.
+    </span>IncorrectStatus,
+    <span class="doccomment">/// The asset should be frozen before the given operation.
+    </span>NotFrozen,
+  }
+
+  <span class="attr">#[pallet::call]
+  </span><span class="kw">impl</span>&lt;T: Config&lt;I&gt;, I: <span class="lifetime">&#39;static</span>&gt; Pallet&lt;T, I&gt; {
+    <span class="doccomment">/// Issue a new class of fungible assets from a public origin.
+    ///
+    /// This new asset class has no assets initially and its owner is the origin.
+    ///
+    /// The origin must conform to the configured `CreateOrigin` and have sufficient funds free.
+    ///
+    /// Funds of sender are reserved by `AssetDeposit`.
+    ///
+    /// Parameters:
+    /// - `id`: The identifier of the new asset. This must not be currently in use to identify
+    /// an existing asset.
+    /// - `admin`: The admin of this class of assets. The admin is the initial address of each
+    /// member of the asset class&#39;s admin team.
+    /// - `min_balance`: The minimum balance of this new asset that any single account must
+    /// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
+    ///
+    /// Emits `Created` event when successful.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">0</span>)]
+    #[pallet::weight(T::WeightInfo::create())]
+    </span><span class="kw">pub fn </span>create(
+      origin: OriginFor&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>id: T::AssetId,
+      admin: AccountIdLookupOf&lt;T&gt;,
+      min_balance: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>owner = T::CreateOrigin::ensure_origin(origin, <span class="kw-2">&amp;</span>id)<span class="question-mark">?</span>;
+      <span class="kw">let </span>admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
+
+      <span class="macro">ensure!</span>(!Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::InUse);
+      <span class="macro">ensure!</span>(!min_balance.is_zero(), Error::&lt;T, I&gt;::MinBalanceZero);
+
+      <span class="kw">let </span>deposit = T::AssetDeposit::get();
+      T::Currency::reserve(<span class="kw-2">&amp;</span>owner, deposit)<span class="question-mark">?</span>;
+
+      Asset::&lt;T, I&gt;::insert(
+        id,
+        AssetDetails {
+          owner: owner.clone(),
+          issuer: admin.clone(),
+          admin: admin.clone(),
+          freezer: admin.clone(),
+          supply: Zero::zero(),
+          reserved: Zero::zero(),
+          deposit,
+          min_balance,
+          is_sufficient: <span class="bool-val">false</span>,
+          accounts: <span class="number">0</span>,
+          sufficients: <span class="number">0</span>,
+          approvals: <span class="number">0</span>,
+          is_frozen: <span class="bool-val">false</span>,
+          status: AssetStatus::Live,
+        },
+      );
+      <span class="self">Self</span>::deposit_event(Event::Created { asset_id: id, creator: owner.clone(), owner: admin });
+      T::CallbackHandle::created(<span class="kw-2">&amp;</span>id, <span class="kw-2">&amp;</span>owner);
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Issue a new class of fungible assets from a privileged origin.
+    ///
+    /// This new asset class has no assets initially.
+    ///
+    /// The origin must conform to `ForceOrigin`.
+    ///
+    /// Unlike `create`, no funds are reserved.
+    ///
+    /// - `id`: The identifier of the new asset. This must not be currently in use to identify
+    /// an existing asset.
+    /// - `owner`: The owner of this class of assets. The owner has full superuser permissions
+    /// over this asset, but may later change and configure the permissions using
+    /// `transfer_ownership` and `set_team`.
+    /// - `min_balance`: The minimum balance of this new asset that any single account must
+    /// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
+    ///
+    /// Emits `ForceCreated` event when successful.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+    #[pallet::weight(T::WeightInfo::force_create())]
+    </span><span class="kw">pub fn </span>force_create(
+      origin: OriginFor&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>id: T::AssetId,
+      owner: AccountIdLookupOf&lt;T&gt;,
+      is_sufficient: bool,
+      <span class="attr">#[pallet::compact] </span>min_balance: T::Balance,
+    ) -&gt; DispatchResult {
+      T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_force_create(id, owner, is_sufficient, min_balance)
+    }
+
+    <span class="doccomment">/// Destroy a class of fungible assets.
+    ///
+    /// The origin must conform to `ForceOrigin` or must be Signed and the sender must be the
+    /// owner of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    /// asset.
+    ///
+    /// Emits `Destroyed` event when successful.
+    ///
+    /// NOTE: It can be helpful to first freeze an asset before destroying it so that you
+    /// can provide accurate witness information and prevent users from manipulating state
+    /// in a way that can make it harder to destroy.
+    ///
+    /// Weight: `O(c + p + a)` where:
+    /// - `c = (witness.accounts - witness.sufficients)`
+    /// - `s = witness.sufficients`
+    /// - `a = witness.approvals`
+    </span><span class="comment">/* 		#[pallet::weight(T::WeightInfo::destroy(
+      witness.accounts.saturating_sub(witness.sufficients),
+        witness.sufficients,
+        witness.approvals,
+      ))]
+    pub fn destroy(
+      origin: OriginFor&lt;T&gt;,
+      #[pallet::compact] id: T::AssetId,
+      witness: DestroyWitness,
+    ) -&gt; DispatchResultWithPostInfo {
+      let maybe_check_owner = match T::ForceOrigin::try_origin(origin) {
+        Ok(_) =&gt; None,
+        Err(origin) =&gt; Some(ensure_signed(origin)?),
+      };
+      let details = Self::do_destroy(id, witness, maybe_check_owner)?;
+      Ok(Some(T::WeightInfo::destroy(
+        details.accounts.saturating_sub(details.sufficients),
+        details.sufficients,
+        details.approvals,
+      ))
+      .into())
+    } */
+
+    </span><span class="doccomment">/// Start the process of destroying a fungible asset class.
+    ///
+    /// `start_destroy` is the first in a series of extrinsics that should be called, to allow
+    /// destruction of an asset class.
+    ///
+    /// The origin must conform to `ForceOrigin` or must be `Signed` by the asset&#39;s `owner`.
+    ///
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    ///
+    /// The asset class must be frozen before calling `start_destroy`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+    #[pallet::weight(T::WeightInfo::start_destroy())]
+    </span><span class="kw">pub fn </span>start_destroy(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let </span>maybe_check_owner = <span class="kw">match </span>T::ForceOrigin::try_origin(origin) {
+        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+        <span class="prelude-val">Err</span>(origin) =&gt; <span class="prelude-val">Some</span>(ensure_signed(origin)<span class="question-mark">?</span>),
+      };
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_start_destroy(id, maybe_check_owner)
+    }
+
+    <span class="doccomment">/// Destroy all accounts associated with a given asset.
+    ///
+    /// `destroy_accounts` should only be called after `start_destroy` has been called, and the
+    /// asset is in a `Destroying` state.
+    ///
+    /// Due to weight restrictions, this function may need to be called multiple times to fully
+    /// destroy all accounts. It will destroy `RemoveItemsLimit` accounts at a time.
+    ///
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    ///
+    /// Each call emits the `Event::DestroyedAccounts` event.
+    </span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+    #[pallet::weight(T::WeightInfo::destroy_accounts(T::RemoveItemsLimit::get()))]
+    </span><span class="kw">pub fn </span>destroy_accounts(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+    ) -&gt; DispatchResultWithPostInfo {
+      <span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="kw">let </span>removed_accounts = <span class="self">Self</span>::do_destroy_accounts(id, T::RemoveItemsLimit::get())<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(T::WeightInfo::destroy_accounts(removed_accounts)).into())
+    }
+
+    <span class="doccomment">/// Destroy all approvals associated with a given asset up to the max (T::RemoveItemsLimit).
+    ///
+    /// `destroy_approvals` should only be called after `start_destroy` has been called, and the
+    /// asset is in a `Destroying` state.
+    ///
+    /// Due to weight restrictions, this function may need to be called multiple times to fully
+    /// destroy all approvals. It will destroy `RemoveItemsLimit` approvals at a time.
+    ///
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    ///
+    /// Each call emits the `Event::DestroyedApprovals` event.
+    </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+    #[pallet::weight(T::WeightInfo::destroy_approvals(T::RemoveItemsLimit::get()))]
+    </span><span class="kw">pub fn </span>destroy_approvals(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+    ) -&gt; DispatchResultWithPostInfo {
+      <span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="kw">let </span>removed_approvals = <span class="self">Self</span>::do_destroy_approvals(id, T::RemoveItemsLimit::get())<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(T::WeightInfo::destroy_approvals(removed_approvals)).into())
+    }
+
+    <span class="doccomment">/// Complete destroying asset and unreserve currency.
+    ///
+    /// `finish_destroy` should only be called after `start_destroy` has been called, and the
+    /// asset is in a `Destroying` state. All accounts or approvals should be destroyed before
+    /// hand.
+    ///
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    ///
+    /// Each successful call emits the `Event::Destroyed` event.
+    </span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+    #[pallet::weight(T::WeightInfo::finish_destroy())]
+    </span><span class="kw">pub fn </span>finish_destroy(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_finish_destroy(id)
+    }
+
+    <span class="doccomment">/// Mint assets of a particular class.
+    ///
+    /// The origin must be Signed and the sender must be the Issuer of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to have some amount minted.
+    /// - `beneficiary`: The account to be credited with the minted assets.
+    /// - `amount`: The amount of the asset to be minted.
+    ///
+    /// Emits `Issued` event when successful.
+    ///
+    /// Weight: `O(1)`
+    /// Modes: Pre-existing balance of `beneficiary`; Account pre-existence of `beneficiary`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
+    #[pallet::weight(T::WeightInfo::mint())]
+    </span><span class="kw">pub fn </span>mint(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      beneficiary: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>beneficiary = T::Lookup::lookup(beneficiary)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_mint(id, <span class="kw-2">&amp;</span>beneficiary, amount, <span class="prelude-val">Some</span>(origin))<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Reduce the balance of `who` by as much as possible up to `amount` assets of `id`.
+    ///
+    /// Origin must be Signed and the sender should be the Manager of the asset `id`.
+    ///
+    /// Bails with `NoAccount` if the `who` is already dead.
+    ///
+    /// - `id`: The identifier of the asset to have some amount burned.
+    /// - `who`: The account to be debited from.
+    /// - `amount`: The maximum amount by which `who`&#39;s balance should be reduced.
+    ///
+    /// Emits `Burned` with the actual amount burned. If this takes the balance to below the
+    /// minimum for the asset, then the amount burned is increased to take it to zero.
+    ///
+    /// Weight: `O(1)`
+    /// Modes: Post-existence of `who`; Pre &amp; post Zombie-status of `who`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">7</span>)]
+    #[pallet::weight(T::WeightInfo::burn())]
+    </span><span class="kw">pub fn </span>burn(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      who: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>f = DebitFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">true </span>};
+      <span class="kw">let _ </span>= <span class="self">Self</span>::do_burn(id, <span class="kw-2">&amp;</span>who, amount, <span class="prelude-val">Some</span>(origin), f)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Move some assets from the sender account to another.
+    ///
+    /// Origin must be Signed.
+    ///
+    /// - `id`: The identifier of the asset to have some amount transferred.
+    /// - `target`: The account to be credited.
+    /// - `amount`: The amount by which the sender&#39;s balance of assets should be reduced and
+    /// `target`&#39;s balance increased. The amount actually transferred may be slightly greater in
+    /// the case that the transfer would otherwise take the sender balance above zero but below
+    /// the minimum balance. Must be greater than zero.
+    ///
+    /// Emits `Transferred` with the actual amount transferred. If this takes the source balance
+    /// to below the minimum for the asset, then the amount transferred is increased to take it
+    /// to zero.
+    ///
+    /// Weight: `O(1)`
+    /// Modes: Pre-existence of `target`; Post-existence of sender; Account pre-existence of
+    /// `target`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">8</span>)]
+    #[pallet::weight(T::WeightInfo::transfer())]
+    </span><span class="kw">pub fn </span>transfer(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      target: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>dest = T::Lookup::lookup(target)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
+      <span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>origin, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">None</span>, f).map(|<span class="kw">_</span>| ())
+    }
+
+    <span class="doccomment">/// Move some assets from the sender account to another, keeping the sender account alive.
+    ///
+    /// Origin must be Signed.
+    ///
+    /// - `id`: The identifier of the asset to have some amount transferred.
+    /// - `target`: The account to be credited.
+    /// - `amount`: The amount by which the sender&#39;s balance of assets should be reduced and
+    /// `target`&#39;s balance increased. The amount actually transferred may be slightly greater in
+    /// the case that the transfer would otherwise take the sender balance above zero but below
+    /// the minimum balance. Must be greater than zero.
+    ///
+    /// Emits `Transferred` with the actual amount transferred. If this takes the source balance
+    /// to below the minimum for the asset, then the amount transferred is increased to take it
+    /// to zero.
+    ///
+    /// Weight: `O(1)`
+    /// Modes: Pre-existence of `target`; Post-existence of sender; Account pre-existence of
+    /// `target`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
+    #[pallet::weight(T::WeightInfo::transfer_keep_alive())]
+    </span><span class="kw">pub fn </span>transfer_keep_alive(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      target: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>source = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>dest = T::Lookup::lookup(target)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">true</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
+      <span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">None</span>, f).map(|<span class="kw">_</span>| ())
+    }
+    <span class="doccomment">/// Move some assets from one account to another.
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to have some amount transferred.
+    /// - `source`: The account to be debited.
+    /// - `dest`: The account to be credited.
+    /// - `amount`: The amount by which the `source`&#39;s balance of assets should be reduced and
+    /// `dest`&#39;s balance increased. The amount actually transferred may be slightly greater in
+    /// the case that the transfer would otherwise take the `source` balance above zero but
+    /// below the minimum balance. Must be greater than zero.
+    ///
+    /// Emits `Transferred` with the actual amount transferred. If this takes the source balance
+    /// to below the minimum for the asset, then the amount transferred is increased to take it
+    /// to zero.
+    ///
+    /// Weight: `O(1)`
+    /// Modes: Pre-existence of `dest`; Post-existence of `source`; Account pre-existence of
+    /// `dest`.
+    </span><span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+    #[pallet::weight(T::WeightInfo::force_transfer())]
+    </span><span class="kw">pub fn </span>force_transfer(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      source: AccountIdLookupOf&lt;T&gt;,
+      dest: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>source = T::Lookup::lookup(source)<span class="question-mark">?</span>;
+      <span class="kw">let </span>dest = T::Lookup::lookup(dest)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>f = TransferFlags { keep_alive: <span class="bool-val">false</span>, best_effort: <span class="bool-val">false</span>, burn_dust: <span class="bool-val">false </span>};
+      <span class="self">Self</span>::do_transfer(id, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>dest, amount, <span class="prelude-val">Some</span>(origin), f).map(|<span class="kw">_</span>| ())
+    }
+    <span class="doccomment">/// Disallow further unprivileged transfers from an account.
+    ///
+    /// Origin must be Signed and the sender should be the Freezer of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be frozen.
+    /// - `who`: The account to be frozen.
+    ///
+    /// Emits `Frozen`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">11</span>)]
+    #[pallet::weight(T::WeightInfo::freeze())]
+    </span><span class="kw">pub fn </span>freeze(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      who: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(
+        d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
+        Error::&lt;T, I&gt;::AssetNotLive
+      );
+      <span class="macro">ensure!</span>(origin == d.freezer, Error::&lt;T, I&gt;::NoPermission);
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+
+      Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>who, |maybe_account| -&gt; DispatchResult {
+        maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>.is_frozen = <span class="bool-val">true</span>;
+        <span class="prelude-val">Ok</span>(())
+      })<span class="question-mark">?</span>;
+
+      <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Frozen { asset_id: id, who });
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Allow unprivileged transfers from an account again.
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be frozen.
+    /// - `who`: The account to be unfrozen.
+    ///
+    /// Emits `Thawed`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">12</span>)]
+    #[pallet::weight(T::WeightInfo::thaw())]
+    </span><span class="kw">pub fn </span>thaw(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      who: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>details = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(
+        details.status == AssetStatus::Live || details.status == AssetStatus::Frozen,
+        Error::&lt;T, I&gt;::AssetNotLive
+      );
+      <span class="macro">ensure!</span>(origin == details.admin, Error::&lt;T, I&gt;::NoPermission);
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+
+      Account::&lt;T, I&gt;::try_mutate(id, <span class="kw-2">&amp;</span>who, |maybe_account| -&gt; DispatchResult {
+        maybe_account.as_mut().ok_or(Error::&lt;T, I&gt;::NoAccount)<span class="question-mark">?</span>.is_frozen = <span class="bool-val">false</span>;
+        <span class="prelude-val">Ok</span>(())
+      })<span class="question-mark">?</span>;
+
+      <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::Thawed { asset_id: id, who });
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Disallow further unprivileged transfers for the asset class.
+    ///
+    /// Origin must be Signed and the sender should be the Freezer of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be frozen.
+    ///
+    /// Emits `Frozen`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">13</span>)]
+    #[pallet::weight(T::WeightInfo::freeze_asset())]
+    </span><span class="kw">pub fn </span>freeze_asset(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
+        <span class="kw">let </span>d = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+        <span class="macro">ensure!</span>(origin == d.freezer, Error::&lt;T, I&gt;::NoPermission);
+
+        d.status = AssetStatus::Frozen;
+
+        <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::AssetFrozen { asset_id: id });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Allow unprivileged transfers for the asset again.
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be thawed.
+    ///
+    /// Emits `Thawed`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">14</span>)]
+    #[pallet::weight(T::WeightInfo::thaw_asset())]
+    </span><span class="kw">pub fn </span>thaw_asset(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
+        <span class="kw">let </span>d = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(origin == d.admin, Error::&lt;T, I&gt;::NoPermission);
+        <span class="macro">ensure!</span>(d.status == AssetStatus::Frozen, Error::&lt;T, I&gt;::NotFrozen);
+
+        d.status = AssetStatus::Live;
+
+        <span class="self">Self</span>::deposit_event(Event::&lt;T, I&gt;::AssetThawed { asset_id: id });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Change the Owner of an asset.
+    ///
+    /// Origin must be Signed and the sender should be the Owner of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `owner`: The new Owner of this asset.
+    ///
+    /// Emits `OwnerChanged`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
+    #[pallet::weight(T::WeightInfo::transfer_ownership())]
+    </span><span class="kw">pub fn </span>transfer_ownership(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      owner: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
+        <span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::LiveAsset);
+        <span class="macro">ensure!</span>(origin == details.owner, Error::&lt;T, I&gt;::NoPermission);
+        <span class="kw">if </span>details.owner == owner {
+          <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="kw">let </span>metadata_deposit = Metadata::&lt;T, I&gt;::get(id).deposit;
+        <span class="kw">let </span>deposit = details.deposit + metadata_deposit;
+
+        <span class="comment">// Move the deposit to the new owner.
+        </span>T::Currency::repatriate_reserved(<span class="kw-2">&amp;</span>details.owner, <span class="kw-2">&amp;</span>owner, deposit, Reserved)<span class="question-mark">?</span>;
+
+        details.owner = owner.clone();
+
+        <span class="self">Self</span>::deposit_event(Event::OwnerChanged { asset_id: id, owner });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Change the Issuer, Admin and Freezer of an asset.
+    ///
+    /// Origin must be Signed and the sender should be the Owner of the asset `id`.
+    ///
+    /// - `id`: The identifier of the asset to be frozen.
+    /// - `issuer`: The new Issuer of this asset.
+    /// - `admin`: The new Admin of this asset.
+    /// - `freezer`: The new Freezer of this asset.
+    ///
+    /// Emits `TeamChanged`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
+    #[pallet::weight(T::WeightInfo::set_team())]
+    </span><span class="kw">pub fn </span>set_team(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      issuer: AccountIdLookupOf&lt;T&gt;,
+      admin: AccountIdLookupOf&lt;T&gt;,
+      freezer: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>issuer = T::Lookup::lookup(issuer)<span class="question-mark">?</span>;
+      <span class="kw">let </span>admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>freezer = T::Lookup::lookup(freezer)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      Asset::&lt;T, I&gt;::try_mutate(id, |maybe_details| {
+        <span class="kw">let </span>details = maybe_details.as_mut().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(details.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+        <span class="macro">ensure!</span>(origin == details.owner, Error::&lt;T, I&gt;::NoPermission);
+
+        details.issuer = issuer.clone();
+        details.admin = admin.clone();
+        details.freezer = freezer.clone();
+
+        <span class="self">Self</span>::deposit_event(Event::TeamChanged { asset_id: id, issuer, admin, freezer });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Set the metadata for an asset.
+    ///
+    /// Origin must be Signed and the sender should be the Owner of the asset `id`.
+    ///
+    /// Funds of sender are reserved according to the formula:
+    /// `MetadataDepositBase + MetadataDepositPerByte * (name.len + symbol.len)` taking into
+    /// account any already reserved funds.
+    ///
+    /// - `id`: The identifier of the asset to update.
+    /// - `name`: The user friendly name of this asset. Limited in length by `StringLimit`.
+    /// - `symbol`: The exchange symbol for this asset. Limited in length by `StringLimit`.
+    /// - `decimals`: The number of decimals this asset uses to represent one unit.
+    ///
+    /// Emits `MetadataSet`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
+    #[pallet::weight(T::WeightInfo::set_metadata(name.len() <span class="kw">as </span>u32, symbol.len() <span class="kw">as </span>u32))]
+    </span><span class="kw">pub fn </span>set_metadata(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      name: Vec&lt;u8&gt;,
+      symbol: Vec&lt;u8&gt;,
+      decimals: u8,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_set_metadata(id, <span class="kw-2">&amp;</span>origin, name, symbol, decimals)
+    }
+
+    <span class="doccomment">/// Clear the metadata for an asset.
+    ///
+    /// Origin must be Signed and the sender should be the Owner of the asset `id`.
+    ///
+    /// Any deposit is freed for the asset owner.
+    ///
+    /// - `id`: The identifier of the asset to clear.
+    ///
+    /// Emits `MetadataCleared`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">18</span>)]
+    #[pallet::weight(T::WeightInfo::clear_metadata())]
+    </span><span class="kw">pub fn </span>clear_metadata(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+      <span class="macro">ensure!</span>(origin == d.owner, Error::&lt;T, I&gt;::NoPermission);
+
+      Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
+        <span class="kw">let </span>deposit = metadata.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>.deposit;
+        T::Currency::unreserve(<span class="kw-2">&amp;</span>d.owner, deposit);
+        <span class="self">Self</span>::deposit_event(Event::MetadataCleared { asset_id: id });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Force the metadata for an asset to some value.
+    ///
+    /// Origin must be ForceOrigin.
+    ///
+    /// Any deposit is left alone.
+    ///
+    /// - `id`: The identifier of the asset to update.
+    /// - `name`: The user friendly name of this asset. Limited in length by `StringLimit`.
+    /// - `symbol`: The exchange symbol for this asset. Limited in length by `StringLimit`.
+    /// - `decimals`: The number of decimals this asset uses to represent one unit.
+    ///
+    /// Emits `MetadataSet`.
+    ///
+    /// Weight: `O(N + S)` where N and S are the length of the name and symbol respectively.
+    </span><span class="attr">#[pallet::call_index(<span class="number">19</span>)]
+    #[pallet::weight(T::WeightInfo::force_set_metadata(name.len() <span class="kw">as </span>u32, symbol.len() <span class="kw">as </span>u32))]
+    </span><span class="kw">pub fn </span>force_set_metadata(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      name: Vec&lt;u8&gt;,
+      symbol: Vec&lt;u8&gt;,
+      decimals: u8,
+      is_frozen: bool,
+    ) -&gt; DispatchResult {
+      T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>bounded_name: BoundedVec&lt;u8, T::StringLimit&gt; =
+        name.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
+
+      <span class="kw">let </span>bounded_symbol: BoundedVec&lt;u8, T::StringLimit&gt; =
+        symbol.clone().try_into().map_err(|<span class="kw">_</span>| Error::&lt;T, I&gt;::BadMetadata)<span class="question-mark">?</span>;
+
+      <span class="macro">ensure!</span>(Asset::&lt;T, I&gt;::contains_key(id), Error::&lt;T, I&gt;::Unknown);
+      Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
+        <span class="kw">let </span>deposit = metadata.take().map_or(Zero::zero(), |m| m.deposit);
+        <span class="kw-2">*</span>metadata = <span class="prelude-val">Some</span>(AssetMetadata {
+          deposit,
+          name: bounded_name,
+          symbol: bounded_symbol,
+          decimals,
+          is_frozen,
+        });
+
+        <span class="self">Self</span>::deposit_event(Event::MetadataSet { asset_id: id, name, symbol, decimals, is_frozen });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Clear the metadata for an asset.
+    ///
+    /// Origin must be ForceOrigin.
+    ///
+    /// Any deposit is returned.
+    ///
+    /// - `id`: The identifier of the asset to clear.
+    ///
+    /// Emits `MetadataCleared`.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">20</span>)]
+    #[pallet::weight(T::WeightInfo::force_clear_metadata())]
+    </span><span class="kw">pub fn </span>force_clear_metadata(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      Metadata::&lt;T, I&gt;::try_mutate_exists(id, |metadata| {
+        <span class="kw">let </span>deposit = metadata.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>.deposit;
+        T::Currency::unreserve(<span class="kw-2">&amp;</span>d.owner, deposit);
+        <span class="self">Self</span>::deposit_event(Event::MetadataCleared { asset_id: id });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Alter the attributes of a given asset.
+    ///
+    /// Origin must be `ForceOrigin`.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `owner`: The new Owner of this asset.
+    /// - `issuer`: The new Issuer of this asset.
+    /// - `admin`: The new Admin of this asset.
+    /// - `freezer`: The new Freezer of this asset.
+    /// - `min_balance`: The minimum balance of this new asset that any single account must
+    /// have. If an account&#39;s balance is reduced below this, then it collapses to zero.
+    /// - `is_sufficient`: Whether a non-zero balance of this asset is deposit of sufficient
+    /// value to account for the state bloat associated with its balance storage. If set to
+    /// `true`, then non-zero balances may be stored without a `consumer` reference (and thus
+    /// an ED in the Balances pallet or whatever else is used to control user-account state
+    /// growth).
+    /// - `is_frozen`: Whether this asset class is frozen except for permissioned/admin
+    /// instructions.
+    ///
+    /// Emits `AssetStatusChanged` with the identity of the asset.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">21</span>)]
+    #[pallet::weight(T::WeightInfo::force_asset_status())]
+    </span><span class="kw">pub fn </span>force_asset_status(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      owner: AccountIdLookupOf&lt;T&gt;,
+      issuer: AccountIdLookupOf&lt;T&gt;,
+      admin: AccountIdLookupOf&lt;T&gt;,
+      freezer: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>min_balance: T::Balance,
+      is_sufficient: bool,
+      is_frozen: bool,
+    ) -&gt; DispatchResult {
+      T::ForceOrigin::ensure_origin(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+
+      Asset::&lt;T, I&gt;::try_mutate(id, |maybe_asset| {
+        <span class="kw">let </span><span class="kw-2">mut </span>asset = maybe_asset.take().ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(asset.status != AssetStatus::Destroying, Error::&lt;T, I&gt;::AssetNotLive);
+        asset.owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
+        asset.issuer = T::Lookup::lookup(issuer)<span class="question-mark">?</span>;
+        asset.admin = T::Lookup::lookup(admin)<span class="question-mark">?</span>;
+        asset.freezer = T::Lookup::lookup(freezer)<span class="question-mark">?</span>;
+        asset.min_balance = min_balance;
+        asset.is_sufficient = is_sufficient;
+        <span class="kw">if </span>is_frozen {
+          asset.status = AssetStatus::Frozen;
+        } <span class="kw">else </span>{
+          asset.status = AssetStatus::Live;
+        }
+        <span class="kw-2">*</span>maybe_asset = <span class="prelude-val">Some</span>(asset);
+
+        <span class="self">Self</span>::deposit_event(Event::AssetStatusChanged { asset_id: id });
+        <span class="prelude-val">Ok</span>(())
+      })
+    }
+
+    <span class="doccomment">/// Approve an amount of asset for transfer by a delegated third-party account.
+    ///
+    /// Origin must be Signed.
+    ///
+    /// Ensures that `ApprovalDeposit` worth of `Currency` is reserved from signing account
+    /// for the purpose of holding the approval. If some non-zero amount of assets is already
+    /// approved from signing account to `delegate`, then it is topped up or unreserved to
+    /// meet the right value.
+    ///
+    /// NOTE: The signing account does not need to own `amount` of assets at the point of
+    /// making this call.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `delegate`: The account to delegate permission to transfer asset.
+    /// - `amount`: The amount of asset that may be transferred by `delegate`. If there is
+    /// already an approval in place, then this acts additively.
+    ///
+    /// Emits `ApprovedTransfer` on success.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">22</span>)]
+    #[pallet::weight(T::WeightInfo::approve_transfer())]
+    </span><span class="kw">pub fn </span>approve_transfer(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      delegate: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>owner = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_approve_transfer(id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate, amount)
+    }
+
+    <span class="doccomment">/// Cancel all of some asset approved for delegated transfer by a third-party account.
+    ///
+    /// Origin must be Signed and there must be an approval in place between signer and
+    /// `delegate`.
+    ///
+    /// Unreserves any deposit previously reserved by `approve_transfer` for the approval.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `delegate`: The account delegated permission to transfer asset.
+    ///
+    /// Emits `ApprovalCancelled` on success.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">23</span>)]
+    #[pallet::weight(T::WeightInfo::cancel_approval())]
+    </span><span class="kw">pub fn </span>cancel_approval(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      delegate: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>owner = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+
+      <span class="kw">let </span>approval =
+        Approvals::&lt;T, I&gt;::take((id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate)).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
+
+      d.approvals.saturating_dec();
+      Asset::&lt;T, I&gt;::insert(id, d);
+
+      <span class="self">Self</span>::deposit_event(Event::ApprovalCancelled { asset_id: id, owner, delegate });
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Cancel all of some asset approved for delegated transfer by a third-party account.
+    ///
+    /// Origin must be either ForceOrigin or Signed origin with the signer being the Admin
+    /// account of the asset `id`.
+    ///
+    /// Unreserves any deposit previously reserved by `approve_transfer` for the approval.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `delegate`: The account delegated permission to transfer asset.
+    ///
+    /// Emits `ApprovalCancelled` on success.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">24</span>)]
+    #[pallet::weight(T::WeightInfo::force_cancel_approval())]
+    </span><span class="kw">pub fn </span>force_cancel_approval(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      owner: AccountIdLookupOf&lt;T&gt;,
+      delegate: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="kw">let </span><span class="kw-2">mut </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(d.status == AssetStatus::Live, Error::&lt;T, I&gt;::AssetNotLive);
+      T::ForceOrigin::try_origin(origin)
+        .map(|<span class="kw">_</span>| ())
+        .or_else(|origin| -&gt; DispatchResult {
+          <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+          <span class="macro">ensure!</span>(origin == d.admin, Error::&lt;T, I&gt;::NoPermission);
+          <span class="prelude-val">Ok</span>(())
+        })<span class="question-mark">?</span>;
+
+      <span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
+      <span class="kw">let </span>delegate = T::Lookup::lookup(delegate)<span class="question-mark">?</span>;
+
+      <span class="kw">let </span>approval =
+        Approvals::&lt;T, I&gt;::take((id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate)).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+      T::Currency::unreserve(<span class="kw-2">&amp;</span>owner, approval.deposit);
+      d.approvals.saturating_dec();
+      Asset::&lt;T, I&gt;::insert(id, d);
+
+      <span class="self">Self</span>::deposit_event(Event::ApprovalCancelled { asset_id: id, owner, delegate });
+      <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Transfer some asset balance from a previously delegated account to some third-party
+    /// account.
+    ///
+    /// Origin must be Signed and there must be an approval in place by the `owner` to the
+    /// signer.
+    ///
+    /// If the entire amount approved for transfer is transferred, then any deposit previously
+    /// reserved by `approve_transfer` is unreserved.
+    ///
+    /// - `id`: The identifier of the asset.
+    /// - `owner`: The account which previously approved for a transfer of at least `amount` and
+    /// from which the asset balance will be withdrawn.
+    /// - `destination`: The account to which the asset balance of `amount` will be transferred.
+    /// - `amount`: The amount of assets to transfer.
+    ///
+    /// Emits `TransferredApproved` on success.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">25</span>)]
+    #[pallet::weight(T::WeightInfo::transfer_approved())]
+    </span><span class="kw">pub fn </span>transfer_approved(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      owner: AccountIdLookupOf&lt;T&gt;,
+      destination: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>delegate = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>owner = T::Lookup::lookup(owner)<span class="question-mark">?</span>;
+      <span class="kw">let </span>destination = T::Lookup::lookup(destination)<span class="question-mark">?</span>;
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_transfer_approved(id, <span class="kw-2">&amp;</span>owner, <span class="kw-2">&amp;</span>delegate, <span class="kw-2">&amp;</span>destination, amount)
+    }
+
+    <span class="doccomment">/// Create an asset account for non-provider assets.
+    ///
+    /// A deposit will be taken from the signer account.
+    ///
+    /// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit to be
+    ///   taken.
+    /// - `id`: The identifier of the asset for the account to be created.
+    ///
+    /// Emits `Touched` event when successful.
+    </span><span class="attr">#[pallet::call_index(<span class="number">26</span>)]
+    #[pallet::weight(T::WeightInfo::mint())]
+    </span><span class="kw">pub fn </span>touch(origin: OriginFor&lt;T&gt;, id: T::AssetIdParameter) -&gt; DispatchResult {
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_touch(id, ensure_signed(origin)<span class="question-mark">?</span>)
+    }
+
+    <span class="doccomment">/// Return the deposit (if any) of an asset account.
+    ///
+    /// The origin must be Signed.
+    ///
+    /// - `id`: The identifier of the asset for the account to be created.
+    /// - `allow_burn`: If `true` then assets may be destroyed in order to complete the refund.
+    ///
+    /// Emits `Refunded` event when successful.
+    </span><span class="attr">#[pallet::call_index(<span class="number">27</span>)]
+    #[pallet::weight(T::WeightInfo::mint())]
+    </span><span class="kw">pub fn </span>refund(
+      origin: OriginFor&lt;T&gt;,
+      id: T::AssetIdParameter,
+      allow_burn: bool,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>id: T::AssetId = id.into();
+      <span class="self">Self</span>::do_refund(id, ensure_signed(origin)<span class="question-mark">?</span>, allow_burn)
+    }
+
+    <span class="doccomment">/// Reserve some assets on an account for a specific asset.
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier to be used for the reserve
+    /// - `asset_id`: The identifier of the asset.
+    /// - `who`: The account on which the assets are to be reserved.
+    /// - `amount`: The amount to reserve
+    /// `who`&#39;s free balance is decreased by amount and the reserve balance increased by amount.
+    /// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id
+    /// is added to reserves.
+    ///
+    /// Emits `Reserved` with the reserved amount.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">28</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>reserve(
+      origin: OriginFor&lt;T&gt;,
+      id: T::ReserveIdentifier,
+      <span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
+      who: AccountIdLookupOf&lt;T&gt;,
+      <span class="attr">#[pallet::compact] </span>amount: T::Balance,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_reserve_named(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, amount, origin)
+    }
+
+    <span class="doccomment">/// Unreserve assets reserved under id from an account
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier to be used for the reserve
+    /// - `asset_id`: The identifier of the asset.
+    /// - `who`: The account on which the assets are to be unreserved.
+    /// `who`&#39;s free balance is increased by amount and the reserve balance decreased by amount.
+    /// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with
+    /// id is removed.
+    ///
+    /// Emits `Uneserved` with the reserved amount.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">29</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>unreserve(
+      origin: OriginFor&lt;T&gt;,
+      id: T::ReserveIdentifier,
+      <span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
+      who: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_unreserve_named(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, origin)
+    }
+
+    <span class="doccomment">/// Burn assets reserved under id from an account
+    ///
+    /// Origin must be Signed and the sender should be the Admin of the asset `id`.
+    ///
+    /// - `id`: The identifier to be used for the reserve
+    /// - `asset_id`: The identifier of the asset.
+    /// - `who`: The account on which the reserved assets are to be burned.
+    /// `who`&#39;s reserve balance is decreased by amount.
+    /// The reserve balance of the asset with asset_id is decreased by amount and the supply is
+    /// decreased by amount. The named reserve with id is removed.
+    ///
+    /// Emits `BurnedReserve` with the reserved amount.
+    ///
+    /// Weight: `O(1)`
+    </span><span class="attr">#[pallet::call_index(<span class="number">30</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>burn_reserve(
+      origin: OriginFor&lt;T&gt;,
+      id: T::ReserveIdentifier,
+      <span class="attr">#[pallet::compact] </span>asset_id: T::AssetId,
+      who: AccountIdLookupOf&lt;T&gt;,
+    ) -&gt; DispatchResult {
+      <span class="kw">let </span>origin = ensure_signed(origin)<span class="question-mark">?</span>;
+      <span class="kw">let </span>who = T::Lookup::lookup(who)<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_burn_named_reserve(<span class="kw-2">&amp;</span>id, asset_id, <span class="kw-2">&amp;</span>who, origin)
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_mapped_assets" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

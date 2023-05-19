@@ -253,280 +253,260 @@
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+<span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="comment">//use frame_system::pallet_prelude::*;
 </span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-	<span class="kw">pub fn </span>do_set_vault(
-		owner: T::AccountId,
-		user_id: UserId,
-		public_key: PublicKey,
-		cid: CID,
-	) -&gt; DispatchResult {
-		<span class="self">Self</span>::validate_cid(<span class="kw-2">&amp;</span>cid)<span class="question-mark">?</span>;
-		<span class="kw">let </span>hashed_account = owner.using_encoded(blake2_256);
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(uid) = &lt;UserIds&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>hashed_account) {
-			<span class="macro">ensure!</span>(uid == user_id, Error::&lt;T&gt;::NotOwnerOfUserId);
-		} <span class="kw">else </span>{
-			<span class="macro">ensure!</span>(!&lt;Vaults&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>user_id), Error::&lt;T&gt;::NotOwnerOfVault);
-		}
+  <span class="kw">pub fn </span>do_set_vault(
+    owner: T::AccountId,
+    user_id: UserId,
+    public_key: PublicKey,
+    cid: CID,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::validate_cid(<span class="kw-2">&amp;</span>cid)<span class="question-mark">?</span>;
+    <span class="kw">let </span>hashed_account = owner.using_encoded(blake2_256);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(uid) = &lt;UserIds&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>hashed_account) {
+      <span class="macro">ensure!</span>(uid == user_id, Error::&lt;T&gt;::NotOwnerOfUserId);
+    } <span class="kw">else </span>{
+      <span class="macro">ensure!</span>(!&lt;Vaults&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>user_id), Error::&lt;T&gt;::NotOwnerOfVault);
+    }
 
-		<span class="kw">let </span>vault = Vault { cid: cid.clone(), owner: owner.clone() };
-		&lt;Vaults&lt;T&gt;&gt;::insert(user_id, vault.clone());
-		&lt;PublicKeys&lt;T&gt;&gt;::insert(owner.clone(), public_key);
-		&lt;UserIds&lt;T&gt;&gt;::insert(hashed_account.clone(), user_id);
+    <span class="kw">let </span>vault = Vault { cid: cid.clone(), owner: owner.clone() };
+    &lt;Vaults&lt;T&gt;&gt;::insert(user_id, vault.clone());
+    &lt;PublicKeys&lt;T&gt;&gt;::insert(owner.clone(), public_key);
+    &lt;UserIds&lt;T&gt;&gt;::insert(hashed_account.clone(), user_id);
 
-		<span class="self">Self</span>::deposit_event(Event::VaultStored(user_id, public_key, vault));
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="self">Self</span>::deposit_event(Event::VaultStored(user_id, public_key, vault));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_set_owned_document(
-		owner: T::AccountId,
-		<span class="kw-2">mut </span>owned_doc: OwnedDoc&lt;T&gt;,
-	) -&gt; DispatchResult {
-		owned_doc.owner = owner.clone();
-		<span class="self">Self</span>::validate_owned_doc(<span class="kw-2">&amp;</span>owned_doc)<span class="question-mark">?</span>;
-		<span class="kw">let </span>OwnedDoc { cid, .. } = owned_doc.clone();
-		<span class="kw">if let </span><span class="prelude-val">Some</span>(doc) = &lt;OwnedDocs&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>cid) {
-			<span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
-		} <span class="kw">else </span>{
-			&lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| owned_vec.try_push(cid.clone()))
-				.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxOwnedDocs)<span class="question-mark">?</span>;
-		}
-		&lt;OwnedDocs&lt;T&gt;&gt;::insert(cid.clone(), owned_doc.clone());
-		<span class="self">Self</span>::deposit_event(Event::OwnedDocStored(owned_doc));
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">pub fn </span>do_set_owned_document(owner: T::AccountId, <span class="kw-2">mut </span>owned_doc: OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
+    owned_doc.owner = owner.clone();
+    <span class="self">Self</span>::validate_owned_doc(<span class="kw-2">&amp;</span>owned_doc)<span class="question-mark">?</span>;
+    <span class="kw">let </span>OwnedDoc { cid, .. } = owned_doc.clone();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(doc) = &lt;OwnedDocs&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>cid) {
+      <span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
+    } <span class="kw">else </span>{
+      &lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| owned_vec.try_push(cid.clone()))
+        .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxOwnedDocs)<span class="question-mark">?</span>;
+    }
+    &lt;OwnedDocs&lt;T&gt;&gt;::insert(cid.clone(), owned_doc.clone());
+    <span class="self">Self</span>::deposit_event(Event::OwnedDocStored(owned_doc));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_remove_owned_document(owner: T::AccountId, cid: CID) -&gt; DispatchResult {
-		<span class="kw">let </span>doc = &lt;OwnedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
-		&lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| {
-			<span class="kw">let </span>cid_index =
-				owned_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-			owned_vec.remove(cid_index);
-			<span class="prelude-val">Ok</span>(())
-		})
-		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-		&lt;OwnedDocs&lt;T&gt;&gt;::remove(cid.clone());
-		<span class="self">Self</span>::deposit_event(Event::OwnedDocRemoved(doc));
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">pub fn </span>do_remove_owned_document(owner: T::AccountId, cid: CID) -&gt; DispatchResult {
+    <span class="kw">let </span>doc = &lt;OwnedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.owner == owner, Error::&lt;T&gt;::NotDocOwner);
+    &lt;OwnedDocsByOwner&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>owner, |owned_vec| {
+      <span class="kw">let </span>cid_index = owned_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      owned_vec.remove(cid_index);
+      <span class="prelude-val">Ok</span>(())
+    })
+    .map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    &lt;OwnedDocs&lt;T&gt;&gt;::remove(cid.clone());
+    <span class="self">Self</span>::deposit_event(Event::OwnedDocRemoved(doc));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_share_document(owner: T::AccountId, <span class="kw-2">mut </span>shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
-		shared_doc.from = owner;
-		<span class="self">Self</span>::validate_shared_doc(<span class="kw-2">&amp;</span>shared_doc)<span class="question-mark">?</span>;
-		<span class="kw">let </span>SharedDoc { cid, to, from, .. } = shared_doc.clone();
+  <span class="kw">pub fn </span>do_share_document(owner: T::AccountId, <span class="kw-2">mut </span>shared_doc: SharedDoc&lt;T&gt;) -&gt; DispatchResult {
+    shared_doc.from = owner;
+    <span class="self">Self</span>::validate_shared_doc(<span class="kw-2">&amp;</span>shared_doc)<span class="question-mark">?</span>;
+    <span class="kw">let </span>SharedDoc { cid, to, from, .. } = shared_doc.clone();
 
-		&lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>from, |shared_vec| shared_vec.try_push(cid.clone()))
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedFromDocs)<span class="question-mark">?</span>;
+    &lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>from, |shared_vec| shared_vec.try_push(cid.clone()))
+      .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedFromDocs)<span class="question-mark">?</span>;
 
-		&lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| shared_vec.try_push(cid.clone()))
-			.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedToDocs)<span class="question-mark">?</span>;
+    &lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| shared_vec.try_push(cid.clone()))
+      .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxSharedToDocs)<span class="question-mark">?</span>;
 
-		&lt;SharedDocs&lt;T&gt;&gt;::insert(cid.clone(), shared_doc.clone());
-		<span class="self">Self</span>::deposit_event(Event::SharedDocStored(shared_doc));
-		<span class="prelude-val">Ok</span>(())
-	}
+    &lt;SharedDocs&lt;T&gt;&gt;::insert(cid.clone(), shared_doc.clone());
+    <span class="self">Self</span>::deposit_event(Event::SharedDocStored(shared_doc));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_update_shared_document_metadata(
-		to: T::AccountId,
-		<span class="kw-2">mut </span>shared_doc: SharedDoc&lt;T&gt;,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>shared_doc.cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
-		shared_doc.from = doc.from;
-		shared_doc.to = to;
-		&lt;SharedDocs&lt;T&gt;&gt;::insert(doc.cid.clone(), shared_doc.clone());
-		<span class="self">Self</span>::deposit_event(Event::SharedDocUpdated(shared_doc));
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">pub fn </span>do_update_shared_document_metadata(
+    to: T::AccountId,
+    <span class="kw-2">mut </span>shared_doc: SharedDoc&lt;T&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>shared_doc.cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
+    shared_doc.from = doc.from;
+    shared_doc.to = to;
+    &lt;SharedDocs&lt;T&gt;&gt;::insert(doc.cid.clone(), shared_doc.clone());
+    <span class="self">Self</span>::deposit_event(Event::SharedDocUpdated(shared_doc));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_remove_shared_document(to: T::AccountId, cid: CID) -&gt; DispatchResult {
-		<span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
-		&lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| {
-			<span class="kw">let </span>cid_index =
-				shared_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-			shared_vec.remove(cid_index);
-			<span class="prelude-val">Ok</span>(())
-		})
-		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-		&lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>doc.from, |shared_vec| {
-			<span class="kw">let </span>cid_index =
-				shared_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-			shared_vec.remove(cid_index);
-			<span class="prelude-val">Ok</span>(())
-		})
-		.map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
-		&lt;SharedDocs&lt;T&gt;&gt;::remove(cid.clone());
-		<span class="self">Self</span>::deposit_event(Event::SharedDocRemoved(doc));
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">pub fn </span>do_remove_shared_document(to: T::AccountId, cid: CID) -&gt; DispatchResult {
+    <span class="kw">let </span>doc = &lt;SharedDocs&lt;T&gt;&gt;::try_get(<span class="kw-2">&amp;</span>cid).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::DocNotFound)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(doc.to == to, Error::&lt;T&gt;::NotDocSharee);
+    &lt;SharedDocsByTo&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>to, |shared_vec| {
+      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      shared_vec.remove(cid_index);
+      <span class="prelude-val">Ok</span>(())
+    })
+    .map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    &lt;SharedDocsByFrom&lt;T&gt;&gt;::try_mutate(<span class="kw-2">&amp;</span>doc.from, |shared_vec| {
+      <span class="kw">let </span>cid_index = shared_vec.iter().position(|c| <span class="kw-2">*</span>c == cid).ok_or(Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+      shared_vec.remove(cid_index);
+      <span class="prelude-val">Ok</span>(())
+    })
+    .map_err(|<span class="kw">_</span>: Error&lt;T&gt;| Error::&lt;T&gt;::CIDNotFound)<span class="question-mark">?</span>;
+    &lt;SharedDocs&lt;T&gt;&gt;::remove(cid.clone());
+    <span class="self">Self</span>::deposit_event(Event::SharedDocRemoved(doc));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_create_group(
-		creator: T::AccountId,
-		group_id: T::AccountId,
-		name: GroupName&lt;T&gt;,
-		public_key: PublicKey,
-		cid: CID,
-	) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(!&lt;Groups&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>group_id), Error::&lt;T&gt;::GroupAlreadyExists);
-		<span class="self">Self</span>::validate_cid(<span class="kw-2">&amp;</span>cid)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_group_name(<span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_has_public_key(<span class="kw-2">&amp;</span>creator)<span class="question-mark">?</span>;
+  <span class="kw">pub fn </span>do_create_group(
+    creator: T::AccountId,
+    group_id: T::AccountId,
+    name: GroupName&lt;T&gt;,
+    public_key: PublicKey,
+    cid: CID,
+  ) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(!&lt;Groups&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>group_id), Error::&lt;T&gt;::GroupAlreadyExists);
+    <span class="self">Self</span>::validate_cid(<span class="kw-2">&amp;</span>cid)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_group_name(<span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_has_public_key(<span class="kw-2">&amp;</span>creator)<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>group_member = GroupMember {
-			authorizer: creator.clone(),
-			group: group_id.clone(),
-			cid,
-			member: creator.clone(),
-			role: GroupRole::Owner,
-		};
-		<span class="self">Self</span>::store_group_member(group_member.clone())<span class="question-mark">?</span>;
-		PublicKeys::&lt;T&gt;::insert(group_id.clone(), public_key);
-		<span class="kw">let </span>group = Group { creator: creator.clone(), group: group_id.clone(), name };
-		Groups::&lt;T&gt;::insert(group_id.clone(), group.clone());
-		<span class="self">Self</span>::deposit_event(Event::GroupCreated(group));
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="kw">let </span>group_member = GroupMember {
+      authorizer: creator.clone(),
+      group: group_id.clone(),
+      cid,
+      member: creator.clone(),
+      role: GroupRole::Owner,
+    };
+    <span class="self">Self</span>::store_group_member(group_member.clone())<span class="question-mark">?</span>;
+    PublicKeys::&lt;T&gt;::insert(group_id.clone(), public_key);
+    <span class="kw">let </span>group = Group { creator: creator.clone(), group: group_id.clone(), name };
+    Groups::&lt;T&gt;::insert(group_id.clone(), group.clone());
+    <span class="self">Self</span>::deposit_event(Event::GroupCreated(group));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_add_group_member(
-		authorizer: T::AccountId,
-		<span class="kw-2">mut </span>group_member: GroupMember&lt;T&gt;,
-	) -&gt; DispatchResult {
-		group_member.authorizer = authorizer.clone();
-		<span class="kw">let </span>GroupMember { <span class="kw-2">ref </span>group, <span class="kw-2">ref </span>member, .. } = group_member;
-		<span class="self">Self</span>::validate_group_member(<span class="kw-2">&amp;</span>group_member)<span class="question-mark">?</span>;
-		<span class="kw">let </span>authorizer =
-			GroupMembers::&lt;T&gt;::get(group, <span class="kw-2">&amp;</span>authorizer).ok_or_else(|| Error::&lt;T&gt;::NoPermission)<span class="question-mark">?</span>;
+  <span class="kw">pub fn </span>do_add_group_member(
+    authorizer: T::AccountId,
+    <span class="kw-2">mut </span>group_member: GroupMember&lt;T&gt;,
+  ) -&gt; DispatchResult {
+    group_member.authorizer = authorizer.clone();
+    <span class="kw">let </span>GroupMember { <span class="kw-2">ref </span>group, <span class="kw-2">ref </span>member, .. } = group_member;
+    <span class="self">Self</span>::validate_group_member(<span class="kw-2">&amp;</span>group_member)<span class="question-mark">?</span>;
+    <span class="kw">let </span>authorizer =
+      GroupMembers::&lt;T&gt;::get(group, <span class="kw-2">&amp;</span>authorizer).ok_or_else(|| Error::&lt;T&gt;::NoPermission)<span class="question-mark">?</span>;
 
-		<span class="macro">ensure!</span>(authorizer.can_add_group_member(), Error::&lt;T&gt;::NoPermission);
-		<span class="macro">ensure!</span>(
-			!GroupMembers::&lt;T&gt;::contains_key(group, member),
-			Error::&lt;T&gt;::UserAlreadyGroupMember
-		);
-		<span class="self">Self</span>::store_group_member(group_member.clone())<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::GroupMemberAdded(group_member));
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="macro">ensure!</span>(authorizer.can_add_group_member(), Error::&lt;T&gt;::NoPermission);
+    <span class="macro">ensure!</span>(!GroupMembers::&lt;T&gt;::contains_key(group, member), Error::&lt;T&gt;::UserAlreadyGroupMember);
+    <span class="self">Self</span>::store_group_member(group_member.clone())<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::GroupMemberAdded(group_member));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">pub fn </span>do_remove_group_member(
-		authorizer: T::AccountId,
-		group: T::AccountId,
-		member: T::AccountId,
-	) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(&lt;Groups&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>group), Error::&lt;T&gt;::GroupDoesNotExist);
-		<span class="kw">let </span>authorizer =
-			GroupMembers::&lt;T&gt;::get(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>authorizer).ok_or_else(|| Error::&lt;T&gt;::NoPermission)<span class="question-mark">?</span>;
+  <span class="kw">pub fn </span>do_remove_group_member(
+    authorizer: T::AccountId,
+    group: T::AccountId,
+    member: T::AccountId,
+  ) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(&lt;Groups&lt;T&gt;&gt;::contains_key(<span class="kw-2">&amp;</span>group), Error::&lt;T&gt;::GroupDoesNotExist);
+    <span class="kw">let </span>authorizer =
+      GroupMembers::&lt;T&gt;::get(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>authorizer).ok_or_else(|| Error::&lt;T&gt;::NoPermission)<span class="question-mark">?</span>;
 
-		<span class="kw">let </span>group_member = GroupMembers::&lt;T&gt;::get(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>member)
-			.ok_or_else(|| Error::&lt;T&gt;::GroupMemberDoesNotExist)<span class="question-mark">?</span>;
+    <span class="kw">let </span>group_member =
+      GroupMembers::&lt;T&gt;::get(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>member).ok_or_else(|| Error::&lt;T&gt;::GroupMemberDoesNotExist)<span class="question-mark">?</span>;
 
-		<span class="macro">ensure!</span>(authorizer.can_remove_group_member(<span class="kw-2">&amp;</span>group_member), Error::&lt;T&gt;::NoPermission);
-		MemberGroups::&lt;T&gt;::try_mutate(<span class="kw-2">&amp;</span>member, |member_groups| {
-			<span class="kw">match </span>member_groups.binary_search(<span class="kw-2">&amp;</span>group) {
-				<span class="prelude-val">Ok</span>(idx) =&gt; member_groups.remove(idx),
-				<span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::MemberGroupDoesNotExist),
-			};
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		GroupMembers::&lt;T&gt;::remove(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>member);
-		<span class="self">Self</span>::deposit_event(Event::GroupMemberRemoved(group_member));
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="macro">ensure!</span>(authorizer.can_remove_group_member(<span class="kw-2">&amp;</span>group_member), Error::&lt;T&gt;::NoPermission);
+    MemberGroups::&lt;T&gt;::try_mutate(<span class="kw-2">&amp;</span>member, |member_groups| {
+      <span class="kw">match </span>member_groups.binary_search(<span class="kw-2">&amp;</span>group) {
+        <span class="prelude-val">Ok</span>(idx) =&gt; member_groups.remove(idx),
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::MemberGroupDoesNotExist),
+      };
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    GroupMembers::&lt;T&gt;::remove(<span class="kw-2">&amp;</span>group, <span class="kw-2">&amp;</span>member);
+    <span class="self">Self</span>::deposit_event(Event::GroupMemberRemoved(group_member));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_owned_doc(owned_doc: <span class="kw-2">&amp;</span>OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
-		<span class="kw">let </span>OwnedDoc { cid, name, description, owner } = owned_doc;
-		<span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_doc_name(name)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_doc_desc(description)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_has_public_key(owner)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_owned_doc(owned_doc: <span class="kw-2">&amp;</span>OwnedDoc&lt;T&gt;) -&gt; DispatchResult {
+    <span class="kw">let </span>OwnedDoc { cid, name, description, owner } = owned_doc;
+    <span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_doc_name(name)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_doc_desc(description)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_has_public_key(owner)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_group_member(group_member: <span class="kw-2">&amp;</span>GroupMember&lt;T&gt;) -&gt; DispatchResult {
-		<span class="kw">let </span>GroupMember { authorizer, group, cid, member, role, .. } = group_member;
-		<span class="macro">ensure!</span>(&lt;Groups&lt;T&gt;&gt;::contains_key(group), Error::&lt;T&gt;::GroupDoesNotExist);
-		<span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_has_public_key(authorizer)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_has_public_key(member)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(<span class="kw-2">*</span>role != GroupRole::Owner, Error::&lt;T&gt;::CanNotAddMemberAsGroupOwner);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_group_member(group_member: <span class="kw-2">&amp;</span>GroupMember&lt;T&gt;) -&gt; DispatchResult {
+    <span class="kw">let </span>GroupMember { authorizer, group, cid, member, role, .. } = group_member;
+    <span class="macro">ensure!</span>(&lt;Groups&lt;T&gt;&gt;::contains_key(group), Error::&lt;T&gt;::GroupDoesNotExist);
+    <span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_has_public_key(authorizer)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_has_public_key(member)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(<span class="kw-2">*</span>role != GroupRole::Owner, Error::&lt;T&gt;::CanNotAddMemberAsGroupOwner);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_shared_doc(shared_doc: <span class="kw-2">&amp;</span>SharedDoc&lt;T&gt;) -&gt; DispatchResult {
-		<span class="kw">let </span>SharedDoc { cid, name, description, from, to } = shared_doc;
-		<span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_doc_name(name)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_doc_desc(description)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(from != to, Error::&lt;T&gt;::DocSharedWithSelf);
-		<span class="macro">ensure!</span>(!&lt;SharedDocs&lt;T&gt;&gt;::contains_key(cid), Error::&lt;T&gt;::DocAlreadyShared);
-		<span class="self">Self</span>::validate_has_public_key(from)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::validate_has_public_key(to)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_shared_doc(shared_doc: <span class="kw-2">&amp;</span>SharedDoc&lt;T&gt;) -&gt; DispatchResult {
+    <span class="kw">let </span>SharedDoc { cid, name, description, from, to } = shared_doc;
+    <span class="self">Self</span>::validate_cid(cid)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_doc_name(name)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_doc_desc(description)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(from != to, Error::&lt;T&gt;::DocSharedWithSelf);
+    <span class="macro">ensure!</span>(!&lt;SharedDocs&lt;T&gt;&gt;::contains_key(cid), Error::&lt;T&gt;::DocAlreadyShared);
+    <span class="self">Self</span>::validate_has_public_key(from)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::validate_has_public_key(to)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_has_public_key(who: <span class="kw-2">&amp;</span>T::AccountId) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(&lt;PublicKeys&lt;T&gt;&gt;::contains_key(who), Error::&lt;T&gt;::AccountHasNoPublicKey);
-		<span class="prelude-val">Ok</span>(())
-	}
-	<span class="kw">fn </span>validate_cid(cid: <span class="kw-2">&amp;</span>CID) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(cid.len() &gt; <span class="number">0</span>, Error::&lt;T&gt;::CIDNoneValue);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_has_public_key(who: <span class="kw-2">&amp;</span>T::AccountId) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(&lt;PublicKeys&lt;T&gt;&gt;::contains_key(who), Error::&lt;T&gt;::AccountHasNoPublicKey);
+    <span class="prelude-val">Ok</span>(())
+  }
+  <span class="kw">fn </span>validate_cid(cid: <span class="kw-2">&amp;</span>CID) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(cid.len() &gt; <span class="number">0</span>, Error::&lt;T&gt;::CIDNoneValue);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_doc_name(doc_name: <span class="kw-2">&amp;</span>DocName&lt;T&gt;) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(
-			doc_name.len() &gt;= T::DocNameMinLen::get().try_into().unwrap(),
-			Error::&lt;T&gt;::DocNameTooShort
-		);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_doc_name(doc_name: <span class="kw-2">&amp;</span>DocName&lt;T&gt;) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(
+      doc_name.len() &gt;= T::DocNameMinLen::get().try_into().unwrap(),
+      Error::&lt;T&gt;::DocNameTooShort
+    );
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_group_name(group_name: <span class="kw-2">&amp;</span>GroupName&lt;T&gt;) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(
-			group_name.len() &gt;= T::GroupNameMinLen::get().try_into().unwrap(),
-			Error::&lt;T&gt;::GroupNameTooShort
-		);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_group_name(group_name: <span class="kw-2">&amp;</span>GroupName&lt;T&gt;) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(
+      group_name.len() &gt;= T::GroupNameMinLen::get().try_into().unwrap(),
+      Error::&lt;T&gt;::GroupNameTooShort
+    );
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>validate_doc_desc(doc_desc: <span class="kw-2">&amp;</span>DocDesc&lt;T&gt;) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(
-			doc_desc.len() &gt;= T::DocDescMinLen::get().try_into().unwrap(),
-			Error::&lt;T&gt;::DocDescTooShort
-		);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>validate_doc_desc(doc_desc: <span class="kw-2">&amp;</span>DocDesc&lt;T&gt;) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(
+      doc_desc.len() &gt;= T::DocDescMinLen::get().try_into().unwrap(),
+      Error::&lt;T&gt;::DocDescTooShort
+    );
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="kw">fn </span>store_group_member(group_member: GroupMember&lt;T&gt;) -&gt; DispatchResult {
-		<span class="kw">let </span>GroupMember { <span class="kw-2">ref </span>group, <span class="kw-2">ref </span>member, .. } = group_member;
-		MemberGroups::&lt;T&gt;::try_mutate(member, |member_groups| {
-			<span class="kw">match </span>member_groups.binary_search(<span class="kw-2">&amp;</span>group) {
-				<span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::MemberGroupAlreadyExists),
-				<span class="prelude-val">Err</span>(idx) =&gt; member_groups
-					.try_insert(idx, group.clone())
-					.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxMemberGroups)<span class="question-mark">?</span>,
-			};
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		GroupMembers::&lt;T&gt;::insert(group.clone(), member.clone(), group_member);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="kw">fn </span>store_group_member(group_member: GroupMember&lt;T&gt;) -&gt; DispatchResult {
+    <span class="kw">let </span>GroupMember { <span class="kw-2">ref </span>group, <span class="kw-2">ref </span>member, .. } = group_member;
+    MemberGroups::&lt;T&gt;::try_mutate(member, |member_groups| {
+      <span class="kw">match </span>member_groups.binary_search(<span class="kw-2">&amp;</span>group) {
+        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::MemberGroupAlreadyExists),
+        <span class="prelude-val">Err</span>(idx) =&gt; member_groups
+          .try_insert(idx, group.clone())
+          .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxMemberGroups)<span class="question-mark">?</span>,
+      };
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    GroupMembers::&lt;T&gt;::insert(group.clone(), member.clone(), group_member);
+    <span class="prelude-val">Ok</span>(())
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_confidential_docs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

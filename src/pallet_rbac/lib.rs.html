@@ -290,30 +290,6 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.
@@ -335,300 +311,276 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-	<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-	<span class="kw">use </span>frame_support::pallet_prelude::{ValueQuery, <span class="kw-2">*</span>};
-	<span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
-	<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
+  <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_support::pallet_prelude::{ValueQuery, <span class="kw-2">*</span>};
+  <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
-	<span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
+  <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
-	<span class="attr">#[pallet::config]
-	</span><span class="kw">pub trait </span>Config: frame_system::Config {
-		<span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
-		<span class="comment">// ideally sudo or council
-		</span><span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
+  <span class="attr">#[pallet::config]
+  </span><span class="kw">pub trait </span>Config: frame_system::Config {
+    <span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
+    <span class="comment">// ideally sudo or council
+    </span><span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
 
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxScopesPerPallet: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxRolesPerPallet: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>RoleMaxLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>PermissionMaxLen: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxPermissionsPerRole: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxRolesPerUser: Get&lt;u32&gt;;
-		<span class="attr">#[pallet::constant]
-		</span><span class="kw">type </span>MaxUsersPerRole: Get&lt;u32&gt;;
-	}
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxScopesPerPallet: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxRolesPerPallet: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>RoleMaxLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>PermissionMaxLen: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxPermissionsPerRole: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxRolesPerUser: Get&lt;u32&gt;;
+    <span class="attr">#[pallet::constant]
+    </span><span class="kw">type </span>MaxUsersPerRole: Get&lt;u32&gt;;
+  }
 
-	<span class="attr">#[pallet::pallet]
-	#[pallet::storage_version(STORAGE_VERSION)]
-	#[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
-	</span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
+  <span class="attr">#[pallet::pallet]
+  #[pallet::storage_version(STORAGE_VERSION)]
+  #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
+  </span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-	<span class="comment">/* --- Onchain storage section --- */
+  <span class="comment">/* --- Onchain storage section --- */
 
-	</span><span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>scopes)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Scopes&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		PalletId,                                   <span class="comment">// pallet_id
-		</span>BoundedVec&lt;ScopeId, T::MaxScopesPerPallet&gt;, <span class="comment">// scopes_id
-		</span>ValueQuery,
-	&gt;;
+  </span><span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>scopes)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Scopes&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    PalletId,                                   <span class="comment">// pallet_id
+    </span>BoundedVec&lt;ScopeId, T::MaxScopesPerPallet&gt;, <span class="comment">// scopes_id
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>roles)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Roles&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		RoleId,                        <span class="comment">// role_id
-		</span>BoundedVec&lt;u8, T::RoleMaxLen&gt;, <span class="comment">// role
-		</span>OptionQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>roles)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Roles&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    RoleId,                        <span class="comment">// role_id
+    </span>BoundedVec&lt;u8, T::RoleMaxLen&gt;, <span class="comment">// role
+    </span>OptionQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>pallet_roles)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PalletRoles&lt;T: Config&gt; = StorageMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		PalletId,                                 <span class="comment">// pallet_id
-		</span>BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;, <span class="comment">// role_id
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>pallet_roles)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PalletRoles&lt;T: Config&gt; = StorageMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    PalletId,                                 <span class="comment">// pallet_id
+    </span>BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;, <span class="comment">// role_id
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>permissions)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Permissions&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		PalletId, <span class="comment">// pallet_id
-		</span>Identity,
-		PermissionId,                        <span class="comment">// permission_id
-		</span>BoundedVec&lt;u8, T::PermissionMaxLen&gt;, <span class="comment">// permission str
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>permissions)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>Permissions&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    PalletId, <span class="comment">// pallet_id
+    </span>Identity,
+    PermissionId,                        <span class="comment">// permission_id
+    </span>BoundedVec&lt;u8, T::PermissionMaxLen&gt;, <span class="comment">// permission str
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>permissions_by_role)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PermissionsByRole&lt;T: Config&gt; = StorageDoubleMap&lt;
-		<span class="kw">_</span>,
-		Identity,
-		PalletId, <span class="comment">// pallet_id
-		</span>Identity,
-		RoleId,                                             <span class="comment">// role_id
-		</span>BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole&gt;, <span class="comment">// permission_ids
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>permissions_by_role)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>PermissionsByRole&lt;T: Config&gt; = StorageDoubleMap&lt;
+    <span class="kw">_</span>,
+    Identity,
+    PalletId, <span class="comment">// pallet_id
+    </span>Identity,
+    RoleId,                                             <span class="comment">// role_id
+    </span>BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole&gt;, <span class="comment">// permission_ids
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>roles_by_user)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>RolesByUser&lt;T: Config&gt; = StorageNMap&lt;
-		<span class="kw">_</span>,
-		(
-			NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// user
-			</span>NMapKey&lt;Identity, PalletId&gt;,             <span class="comment">// pallet_id
-			</span>NMapKey&lt;Identity, ScopeId&gt;,              <span class="comment">// scope_id
-		</span>),
-		BoundedVec&lt;RoleId, T::MaxRolesPerUser&gt;, <span class="comment">// roles (ids)
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>roles_by_user)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>RolesByUser&lt;T: Config&gt; = StorageNMap&lt;
+    <span class="kw">_</span>,
+    (
+      NMapKey&lt;Blake2_128Concat, T::AccountId&gt;, <span class="comment">// user
+      </span>NMapKey&lt;Identity, PalletId&gt;,             <span class="comment">// pallet_id
+      </span>NMapKey&lt;Identity, ScopeId&gt;,              <span class="comment">// scope_id
+    </span>),
+    BoundedVec&lt;RoleId, T::MaxRolesPerUser&gt;, <span class="comment">// roles (ids)
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::storage]
-	#[pallet::getter(<span class="kw">fn </span>users_by_scope)]
-	</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UsersByScope&lt;T: Config&gt; = StorageNMap&lt;
-		<span class="kw">_</span>,
-		(
-			<span class="comment">// getting &quot;the trait bound `usize: scale_info::TypeInfo` is not satisfied&quot; errors
-			//  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
-			</span>NMapKey&lt;Identity, PalletId&gt;, <span class="comment">// pallet_id
-			</span>NMapKey&lt;Identity, ScopeId&gt;,  <span class="comment">// scope_id
-			</span>NMapKey&lt;Identity, RoleId&gt;,   <span class="comment">// role_id
-		</span>),
-		BoundedVec&lt;T::AccountId, T::MaxUsersPerRole&gt;, <span class="comment">// users
-		</span>ValueQuery,
-	&gt;;
+  <span class="attr">#[pallet::storage]
+  #[pallet::getter(<span class="kw">fn </span>users_by_scope)]
+  </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>UsersByScope&lt;T: Config&gt; = StorageNMap&lt;
+    <span class="kw">_</span>,
+    (
+      <span class="comment">// getting &quot;the trait bound `usize: scale_info::TypeInfo` is not satisfied&quot; errors
+      //  on a 32 bit target, this is 4 bytes and on a 64 bit target, this is 8 bytes.
+      </span>NMapKey&lt;Identity, PalletId&gt;, <span class="comment">// pallet_id
+      </span>NMapKey&lt;Identity, ScopeId&gt;,  <span class="comment">// scope_id
+      </span>NMapKey&lt;Identity, RoleId&gt;,   <span class="comment">// role_id
+    </span>),
+    BoundedVec&lt;T::AccountId, T::MaxUsersPerRole&gt;, <span class="comment">// users
+    </span>ValueQuery,
+  &gt;;
 
-	<span class="attr">#[pallet::event]
-	#[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
-	</span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
-		<span class="doccomment">/// An initial roles config was stored [pallet_id, Vec&lt;role_id&gt;]
-		</span>RolesStored(PalletId, BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;),
-		<span class="doccomment">/// The permissions were created and set to the role [pallet_id, role_id, Vec&lt;permission_id&gt;]
-		</span>PermissionsCreatedAndSet(
-			PalletId,
-			RoleId,
-			BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole&gt;,
-		),
-		<span class="doccomment">/// The user no longer has that role [pallet_id, scope_id, role_id, account_id]
-		</span>RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
-		<span class="doccomment">/// The user now has that role [pallet_id, scope_id, role_id, account_id]
-		</span>RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
-		<span class="doccomment">/// The role no longer has the permission in the pallet context [pallet_id, role_id, permission_id]
-		</span>PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
-		<span class="doccomment">/// The permission was removed from the pallet and all the roles that had it [pallet_id, permission_id, affected_roles]
-		</span>PermissionRemovedFromPallet(
-			PalletId,
-			PermissionId,
-			BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;,
-		),
-	}
+  <span class="attr">#[pallet::event]
+  #[pallet::generate_deposit(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deposit_event)]
+  </span><span class="kw">pub enum </span>Event&lt;T: Config&gt; {
+    <span class="doccomment">/// An initial roles config was stored [pallet_id, Vec&lt;role_id&gt;]
+    </span>RolesStored(PalletId, BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;),
+    <span class="doccomment">/// The permissions were created and set to the role [pallet_id, role_id, Vec&lt;permission_id&gt;]
+    </span>PermissionsCreatedAndSet(PalletId, RoleId, BoundedVec&lt;PermissionId, T::MaxPermissionsPerRole&gt;),
+    <span class="doccomment">/// The user no longer has that role [pallet_id, scope_id, role_id, account_id]
+    </span>RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
+    <span class="doccomment">/// The user now has that role [pallet_id, scope_id, role_id, account_id]
+    </span>RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
+    <span class="doccomment">/// The role no longer has the permission in the pallet context [pallet_id, role_id,
+    /// permission_id]
+    </span>PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
+    <span class="doccomment">/// The permission was removed from the pallet and all the roles that had it [pallet_id,
+    /// permission_id, affected_roles]
+    </span>PermissionRemovedFromPallet(PalletId, PermissionId, BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;),
+  }
 
-	<span class="comment">// Errors inform users that something went wrong.
-	</span><span class="attr">#[pallet::error]
-	</span><span class="kw">pub enum </span>Error&lt;T&gt; {
-		<span class="doccomment">/// Error names should be descriptive.
-		</span>NoneValue,
-		<span class="doccomment">/// The specified scope doesn&#39;t exists
-		</span>ScopeNotFound,
-		<span class="doccomment">/// The scope is already linked with the pallet
-		</span>ScopeAlreadyExists,
-		<span class="doccomment">/// The specified role doesn&#39;t exist or it hasn&#39;t been set to the user
-		</span>RoleNotFound,
-		<span class="doccomment">/// The permission doesn&#39;t exist in the pallet
-		</span>PermissionNotFound,
-		<span class="doccomment">/// The specified user hasn&#39;t been asigned to this scope
-		</span>UserNotFound,
-		<span class="doccomment">/// The provided role list must have unique elements
-		</span>DuplicateRole,
-		<span class="doccomment">/// The provided permission list must have unique elements
-		</span>DuplicatePermission,
-		<span class="doccomment">/// The user has that role asigned in that scope
-		</span>UserAlreadyHasRole,
-		<span class="doccomment">/// The role is already linked in the pallet
-		</span>RoleAlreadyLinkedToPallet,
-		<span class="doccomment">/// The role exists but it hasn&#39;t been linked to the pallet
-		</span>RoleNotLinkedToPallet,
-		<span class="doccomment">/// The permission is already linked to that role in that scope
-		</span>PermissionAlreadyLinkedToRole,
-		<span class="doccomment">/// The permission wasn&#39;t found in the roles capabilities
-		</span>PermissionNotLinkedToRole,
-		<span class="doccomment">/// The user doesn&#39;t have any roles in this pallet
-		</span>UserHasNoRoles,
-		<span class="doccomment">/// The role doesn&#39;t have any users assigned to it
-		</span>RoleHasNoUsers,
-		<span class="doccomment">/// The pallet name is too long
-		</span>ExceedPalletNameMaxLen,
-		<span class="doccomment">/// The pallet has too many scopes
-		</span>ExceedMaxScopesPerPallet,
-		<span class="doccomment">/// The pallet cannot have more roles
-		</span>ExceedMaxRolesPerPallet,
-		<span class="doccomment">/// The specified role cannot have more permission in this scope
-		</span>ExceedMaxPermissionsPerRole,
-		<span class="doccomment">/// The user cannot have more roles in this scope
-		</span>ExceedMaxRolesPerUser,
-		<span class="doccomment">/// This role cannot have assigned to more users in this scope
-		</span>ExceedMaxUsersPerRole,
-		<span class="doccomment">/// The role string is too long
-		</span>ExceedRoleMaxLen,
-		<span class="doccomment">/// The permission string is too long
-		</span>ExceedPermissionMaxLen,
-		<span class="doccomment">/// The user does not have the specified role
-		</span>NotAuthorized,
-	}
+  <span class="comment">// Errors inform users that something went wrong.
+  </span><span class="attr">#[pallet::error]
+  </span><span class="kw">pub enum </span>Error&lt;T&gt; {
+    <span class="doccomment">/// Error names should be descriptive.
+    </span>NoneValue,
+    <span class="doccomment">/// The specified scope doesn&#39;t exists
+    </span>ScopeNotFound,
+    <span class="doccomment">/// The scope is already linked with the pallet
+    </span>ScopeAlreadyExists,
+    <span class="doccomment">/// The specified role doesn&#39;t exist or it hasn&#39;t been set to the user
+    </span>RoleNotFound,
+    <span class="doccomment">/// The permission doesn&#39;t exist in the pallet
+    </span>PermissionNotFound,
+    <span class="doccomment">/// The specified user hasn&#39;t been asigned to this scope
+    </span>UserNotFound,
+    <span class="doccomment">/// The provided role list must have unique elements
+    </span>DuplicateRole,
+    <span class="doccomment">/// The provided permission list must have unique elements
+    </span>DuplicatePermission,
+    <span class="doccomment">/// The user has that role asigned in that scope
+    </span>UserAlreadyHasRole,
+    <span class="doccomment">/// The role is already linked in the pallet
+    </span>RoleAlreadyLinkedToPallet,
+    <span class="doccomment">/// The role exists but it hasn&#39;t been linked to the pallet
+    </span>RoleNotLinkedToPallet,
+    <span class="doccomment">/// The permission is already linked to that role in that scope
+    </span>PermissionAlreadyLinkedToRole,
+    <span class="doccomment">/// The permission wasn&#39;t found in the roles capabilities
+    </span>PermissionNotLinkedToRole,
+    <span class="doccomment">/// The user doesn&#39;t have any roles in this pallet
+    </span>UserHasNoRoles,
+    <span class="doccomment">/// The role doesn&#39;t have any users assigned to it
+    </span>RoleHasNoUsers,
+    <span class="doccomment">/// The pallet name is too long
+    </span>ExceedPalletNameMaxLen,
+    <span class="doccomment">/// The pallet has too many scopes
+    </span>ExceedMaxScopesPerPallet,
+    <span class="doccomment">/// The pallet cannot have more roles
+    </span>ExceedMaxRolesPerPallet,
+    <span class="doccomment">/// The specified role cannot have more permission in this scope
+    </span>ExceedMaxPermissionsPerRole,
+    <span class="doccomment">/// The user cannot have more roles in this scope
+    </span>ExceedMaxRolesPerUser,
+    <span class="doccomment">/// This role cannot have assigned to more users in this scope
+    </span>ExceedMaxUsersPerRole,
+    <span class="doccomment">/// The role string is too long
+    </span>ExceedRoleMaxLen,
+    <span class="doccomment">/// The permission string is too long
+    </span>ExceedPermissionMaxLen,
+    <span class="doccomment">/// The user does not have the specified role
+    </span>NotAuthorized,
+  }
 
-	<span class="attr">#[pallet::call]
-	</span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-		<span class="attr">#[pallet::call_index(<span class="number">0</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>tx_create_and_set_roles(
-			origin: OriginFor&lt;T&gt;,
-			pallet: IdOrVec,
-			roles: Vec&lt;Vec&lt;u8&gt;&gt;,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::create_and_set_roles(pallet, roles)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+  <span class="attr">#[pallet::call]
+  </span><span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+    <span class="attr">#[pallet::call_index(<span class="number">0</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>tx_create_and_set_roles(
+      origin: OriginFor&lt;T&gt;,
+      pallet: IdOrVec,
+      roles: Vec&lt;Vec&lt;u8&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::create_and_set_roles(pallet, roles)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>tx_remove_role_from_user(
-			origin: OriginFor&lt;T&gt;,
-			user: T::AccountId,
-			pallet: IdOrVec,
-			scope_id: ScopeId,
-			role_id: RoleId,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::remove_role_from_user(user, pallet, <span class="kw-2">&amp;</span>scope_id, role_id)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">1</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>tx_remove_role_from_user(
+      origin: OriginFor&lt;T&gt;,
+      user: T::AccountId,
+      pallet: IdOrVec,
+      scope_id: ScopeId,
+      role_id: RoleId,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::remove_role_from_user(user, pallet, <span class="kw-2">&amp;</span>scope_id, role_id)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">2</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>tx_create_and_set_permissions(
-			origin: OriginFor&lt;T&gt;,
-			pallet: IdOrVec,
-			role_id: RoleId,
-			permissions: Vec&lt;Vec&lt;u8&gt;&gt;,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::create_and_set_permissions(pallet, role_id, permissions)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">2</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>tx_create_and_set_permissions(
+      origin: OriginFor&lt;T&gt;,
+      pallet: IdOrVec,
+      role_id: RoleId,
+      permissions: Vec&lt;Vec&lt;u8&gt;&gt;,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::create_and_set_permissions(pallet, role_id, permissions)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">3</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>tx_assign_role_to_user(
-			origin: OriginFor&lt;T&gt;,
-			user: T::AccountId,
-			pallet: IdOrVec,
-			scope_id: ScopeId,
-			role_id: RoleId,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::assign_role_to_user(user, pallet, <span class="kw-2">&amp;</span>scope_id, role_id)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">3</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>tx_assign_role_to_user(
+      origin: OriginFor&lt;T&gt;,
+      user: T::AccountId,
+      pallet: IdOrVec,
+      scope_id: ScopeId,
+      role_id: RoleId,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::assign_role_to_user(user, pallet, <span class="kw-2">&amp;</span>scope_id, role_id)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">4</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>revoke_permission_from_role(
-			origin: OriginFor&lt;T&gt;,
-			pallet: IdOrVec,
-			role_id: RoleId,
-			permission_id: PermissionId,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::do_revoke_permission_from_role(pallet, role_id, permission_id)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
+    <span class="attr">#[pallet::call_index(<span class="number">4</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>revoke_permission_from_role(
+      origin: OriginFor&lt;T&gt;,
+      pallet: IdOrVec,
+      role_id: RoleId,
+      permission_id: PermissionId,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::do_revoke_permission_from_role(pallet, role_id, permission_id)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
 
-		<span class="attr">#[pallet::call_index(<span class="number">5</span>)]
-		#[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
-		</span><span class="kw">pub fn </span>remove_permission_from_pallet(
-			origin: OriginFor&lt;T&gt;,
-			pallet: IdOrVec,
-			permission_id: PermissionId,
-		) -&gt; DispatchResult {
-			<span class="macro">ensure!</span>(
-				T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(),
-				Error::&lt;T&gt;::NotAuthorized
-			);
-			<span class="self">Self</span>::do_remove_permission_from_pallet(pallet, permission_id)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		}
-	}
+    <span class="attr">#[pallet::call_index(<span class="number">5</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>remove_permission_from_pallet(
+      origin: OriginFor&lt;T&gt;,
+      pallet: IdOrVec,
+      permission_id: PermissionId,
+    ) -&gt; DispatchResult {
+      <span class="macro">ensure!</span>(T::RemoveOrigin::ensure_origin(origin.clone()).is_ok(), Error::&lt;T&gt;::NotAuthorized);
+      <span class="self">Self</span>::do_remove_permission_from_pallet(pallet, permission_id)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    }
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_rbac" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

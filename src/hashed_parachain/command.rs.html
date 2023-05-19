@@ -461,6 +461,12 @@
 <a href="#461" id="461">461</a>
 <a href="#462" id="462">462</a>
 <a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::net::SocketAddr;
 
 <span class="kw">use </span>codec::Encode;
@@ -470,108 +476,108 @@
 <span class="kw">use </span>hashed_parachain_runtime::Block;
 <span class="kw">use </span>log::{info, warn};
 <span class="kw">use </span>sc_cli::{
-	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
-	NetworkParams, <span class="prelude-ty">Result</span>, RuntimeVersion, SharedParams, SubstrateCli,
+  ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
+  NetworkParams, <span class="prelude-ty">Result</span>, RuntimeVersion, SharedParams, SubstrateCli,
 };
 <span class="kw">use </span>sc_service::config::{BasePath, PrometheusConfig};
 <span class="kw">use </span>sp_core::hexdisplay::HexDisplay;
 <span class="kw">use </span>sp_runtime::traits::{AccountIdConversion, Block <span class="kw">as </span>BlockT};
 
 <span class="kw">use crate</span>::{
-	chain_spec,
-	cli::{Cli, RelayChainCli, Subcommand},
-	service::{new_partial, ParachainNativeExecutor},
+  chain_spec,
+  cli::{Cli, RelayChainCli, Subcommand},
+  service::{new_partial, ParachainNativeExecutor},
 };
 
 <span class="kw">fn </span>load_spec(id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>ChainSpec&gt;, String&gt; {
-	<span class="prelude-val">Ok</span>(<span class="kw">match </span>id {
-		<span class="string">&quot;dev&quot; </span>=&gt; Box::new(chain_spec::development_config()),
-		<span class="string">&quot;hashed&quot; </span>=&gt; Box::new(chain_spec::hashed::get_chain_spec()),
-		<span class="comment">// &quot;luhn&quot; =&gt; Box::new(chain_spec::luhn::get_chain_spec()),
-		</span><span class="string">&quot;md5&quot; </span>=&gt; Box::new(chain_spec::md5::get_chain_spec()),
-		<span class="string">&quot;&quot; </span>| <span class="string">&quot;local&quot; </span>=&gt; Box::new(chain_spec::local_testnet_config()),
-		path =&gt; Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))<span class="question-mark">?</span>),
-	})
+  <span class="prelude-val">Ok</span>(<span class="kw">match </span>id {
+    <span class="string">&quot;dev&quot; </span>=&gt; Box::new(chain_spec::development_config()),
+    <span class="string">&quot;hashed&quot; </span>=&gt; Box::new(chain_spec::hashed::get_chain_spec()),
+    <span class="comment">// &quot;luhn&quot; =&gt; Box::new(chain_spec::luhn::get_chain_spec()),
+    </span><span class="string">&quot;md5&quot; </span>=&gt; Box::new(chain_spec::md5::get_chain_spec()),
+    <span class="string">&quot;&quot; </span>| <span class="string">&quot;local&quot; </span>=&gt; Box::new(chain_spec::local_testnet_config()),
+    path =&gt; Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))<span class="question-mark">?</span>),
+  })
 }
 
 <span class="kw">impl </span>SubstrateCli <span class="kw">for </span>Cli {
-	<span class="kw">fn </span>impl_name() -&gt; String {
-		<span class="string">&quot;Hashed Systems Parachain Collator&quot;</span>.into()
-	}
+  <span class="kw">fn </span>impl_name() -&gt; String {
+    <span class="string">&quot;Hashed Systems Parachain Collator&quot;</span>.into()
+  }
 
-	<span class="kw">fn </span>impl_version() -&gt; String {
-		<span class="macro">env!</span>(<span class="string">&quot;SUBSTRATE_CLI_IMPL_VERSION&quot;</span>).into()
-	}
+  <span class="kw">fn </span>impl_version() -&gt; String {
+    <span class="macro">env!</span>(<span class="string">&quot;SUBSTRATE_CLI_IMPL_VERSION&quot;</span>).into()
+  }
 
-	<span class="kw">fn </span>description() -&gt; String {
-		<span class="macro">format!</span>(
-			<span class="string">&quot;Hashed Systems Parachain Collator\n\nThe command-line arguments provided first will be \
+  <span class="kw">fn </span>description() -&gt; String {
+    <span class="macro">format!</span>(
+      <span class="string">&quot;Hashed Systems Parachain Collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relay chain node.\n\n\
 		{} &lt;parachain-args&gt; -- &lt;relay-chain-args&gt;&quot;</span>,
-			<span class="self">Self</span>::executable_name()
-		)
-	}
+      <span class="self">Self</span>::executable_name()
+    )
+  }
 
-	<span class="kw">fn </span>author() -&gt; String {
-		<span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>).into()
-	}
+  <span class="kw">fn </span>author() -&gt; String {
+    <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>).into()
+  }
 
-	<span class="kw">fn </span>support_url() -&gt; String {
-		<span class="string">&quot;https://github.com/hashed-io/hashed-parachain/issues/new&quot;</span>.into()
-	}
+  <span class="kw">fn </span>support_url() -&gt; String {
+    <span class="string">&quot;https://github.com/hashed-io/hashed-parachain/issues/new&quot;</span>.into()
+  }
 
-	<span class="kw">fn </span>copyright_start_year() -&gt; i32 {
-		<span class="number">2022
-	</span>}
+  <span class="kw">fn </span>copyright_start_year() -&gt; i32 {
+    <span class="number">2022
+  </span>}
 
-	<span class="kw">fn </span>load_spec(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>sc_service::ChainSpec&gt;, String&gt; {
-		load_spec(id)
-	}
+  <span class="kw">fn </span>load_spec(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>sc_service::ChainSpec&gt;, String&gt; {
+    load_spec(id)
+  }
 
-	<span class="kw">fn </span>native_runtime_version(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>RuntimeVersion {
-		<span class="kw-2">&amp;</span>hashed_parachain_runtime::VERSION
-	}
+  <span class="kw">fn </span>native_runtime_version(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>RuntimeVersion {
+    <span class="kw-2">&amp;</span>hashed_parachain_runtime::VERSION
+  }
 }
 
 <span class="kw">impl </span>SubstrateCli <span class="kw">for </span>RelayChainCli {
-	<span class="kw">fn </span>impl_name() -&gt; String {
-		<span class="string">&quot;Hashed Systems Parachain Collator&quot;</span>.into()
-	}
+  <span class="kw">fn </span>impl_name() -&gt; String {
+    <span class="string">&quot;Hashed Systems Parachain Collator&quot;</span>.into()
+  }
 
-	<span class="kw">fn </span>impl_version() -&gt; String {
-		<span class="macro">env!</span>(<span class="string">&quot;SUBSTRATE_CLI_IMPL_VERSION&quot;</span>).into()
-	}
+  <span class="kw">fn </span>impl_version() -&gt; String {
+    <span class="macro">env!</span>(<span class="string">&quot;SUBSTRATE_CLI_IMPL_VERSION&quot;</span>).into()
+  }
 
-	<span class="kw">fn </span>description() -&gt; String {
-		<span class="macro">format!</span>(
-			<span class="string">&quot;Hashed Systems Parachain Collator\n\nThe command-line arguments provided first will be \
+  <span class="kw">fn </span>description() -&gt; String {
+    <span class="macro">format!</span>(
+      <span class="string">&quot;Hashed Systems Parachain Collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relay chain node.\n\n\
 		{} &lt;parachain-args&gt; -- &lt;relay-chain-args&gt;&quot;</span>,
-			<span class="self">Self</span>::executable_name()
-		)
-	}
+      <span class="self">Self</span>::executable_name()
+    )
+  }
 
-	<span class="kw">fn </span>author() -&gt; String {
-		<span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>).into()
-	}
+  <span class="kw">fn </span>author() -&gt; String {
+    <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>).into()
+  }
 
-	<span class="kw">fn </span>support_url() -&gt; String {
-		<span class="string">&quot;https://github.com/hashed-io/hashed-parachain/issues/new&quot;</span>.into()
-	}
+  <span class="kw">fn </span>support_url() -&gt; String {
+    <span class="string">&quot;https://github.com/hashed-io/hashed-parachain/issues/new&quot;</span>.into()
+  }
 
-	<span class="kw">fn </span>copyright_start_year() -&gt; i32 {
-		<span class="number">2022
-	</span>}
+  <span class="kw">fn </span>copyright_start_year() -&gt; i32 {
+    <span class="number">2022
+  </span>}
 
-	<span class="kw">fn </span>load_spec(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>sc_service::ChainSpec&gt;, String&gt; {
-		polkadot_cli::Cli::from_iter([RelayChainCli::executable_name()].iter()).load_spec(id)
-	}
+  <span class="kw">fn </span>load_spec(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;Box&lt;<span class="kw">dyn </span>sc_service::ChainSpec&gt;, String&gt; {
+    polkadot_cli::Cli::from_iter([RelayChainCli::executable_name()].iter()).load_spec(id)
+  }
 
-	<span class="kw">fn </span>native_runtime_version(chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>RuntimeVersion {
-		polkadot_cli::Cli::native_runtime_version(chain_spec)
-	}
+  <span class="kw">fn </span>native_runtime_version(chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>RuntimeVersion {
+    polkadot_cli::Cli::native_runtime_version(chain_spec)
+  }
 }
 
 <span class="macro">macro_rules! </span>construct_async_run {
@@ -587,153 +593,157 @@
 
 <span class="doccomment">/// Parse command line arguments into service configuration.
 </span><span class="kw">pub fn </span>run() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-	<span class="kw">let </span>cli = Cli::from_args();
+  <span class="kw">let </span>cli = Cli::from_args();
 
-	<span class="kw">match </span><span class="kw-2">&amp;</span>cli.subcommand {
-		<span class="prelude-val">Some</span>(Subcommand::BuildSpec(cmd)) =&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
-			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
-		},
-		<span class="prelude-val">Some</span>(Subcommand::CheckBlock(cmd)) =&gt; {
-			<span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
-				<span class="prelude-val">Ok</span>(cmd.run(components.client, components.import_queue))
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::ExportBlocks(cmd)) =&gt; {
-			<span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
-				<span class="prelude-val">Ok</span>(cmd.run(components.client, config.database))
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::ExportState(cmd)) =&gt; {
-			<span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
-				<span class="prelude-val">Ok</span>(cmd.run(components.client, config.chain_spec))
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::ImportBlocks(cmd)) =&gt; {
-			<span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
-				<span class="prelude-val">Ok</span>(cmd.run(components.client, components.import_queue))
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::Revert(cmd)) =&gt; {
-			<span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
-				<span class="prelude-val">Ok</span>(cmd.run(components.client, components.backend, <span class="prelude-val">None</span>))
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::PurgeChain(cmd)) =&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+  <span class="kw">match </span><span class="kw-2">&amp;</span>cli.subcommand {
+    <span class="prelude-val">Some</span>(Subcommand::BuildSpec(cmd)) =&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+      runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
+    },
+    <span class="prelude-val">Some</span>(Subcommand::CheckBlock(cmd)) =&gt; {
+      <span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
+        <span class="prelude-val">Ok</span>(cmd.run(components.client, components.import_queue))
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::ExportBlocks(cmd)) =&gt; {
+      <span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
+        <span class="prelude-val">Ok</span>(cmd.run(components.client, config.database))
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::ExportState(cmd)) =&gt; {
+      <span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
+        <span class="prelude-val">Ok</span>(cmd.run(components.client, config.chain_spec))
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::ImportBlocks(cmd)) =&gt; {
+      <span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
+        <span class="prelude-val">Ok</span>(cmd.run(components.client, components.import_queue))
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::Revert(cmd)) =&gt; {
+      <span class="macro">construct_async_run!</span>(|components, cli, cmd, config| {
+        <span class="prelude-val">Ok</span>(cmd.run(components.client, components.backend, <span class="prelude-val">None</span>))
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::PurgeChain(cmd)) =&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
 
-			runner.sync_run(|config| {
-				<span class="kw">let </span>polkadot_cli = RelayChainCli::new(
-					<span class="kw-2">&amp;</span>config,
-					[RelayChainCli::executable_name()].iter().chain(cli.relay_chain_args.iter()),
-				);
+      runner.sync_run(|config| {
+        <span class="kw">let </span>polkadot_cli = RelayChainCli::new(
+          <span class="kw-2">&amp;</span>config,
+          [RelayChainCli::executable_name()].iter().chain(cli.relay_chain_args.iter()),
+        );
 
-				<span class="kw">let </span>polkadot_config = SubstrateCli::create_configuration(
-					<span class="kw-2">&amp;</span>polkadot_cli,
-					<span class="kw-2">&amp;</span>polkadot_cli,
-					config.tokio_handle.clone(),
-				)
-				.map_err(|err| <span class="macro">format!</span>(<span class="string">&quot;Relay chain argument error: {}&quot;</span>, err))<span class="question-mark">?</span>;
+        <span class="kw">let </span>polkadot_config = SubstrateCli::create_configuration(
+          <span class="kw-2">&amp;</span>polkadot_cli,
+          <span class="kw-2">&amp;</span>polkadot_cli,
+          config.tokio_handle.clone(),
+        )
+        .map_err(|err| <span class="macro">format!</span>(<span class="string">&quot;Relay chain argument error: {}&quot;</span>, err))<span class="question-mark">?</span>;
 
-				cmd.run(config, polkadot_config)
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::ExportGenesisState(cmd)) =&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
-			runner.sync_run(|_config| {
-				<span class="kw">let </span>spec = cli.load_spec(<span class="kw-2">&amp;</span>cmd.shared_params.chain.clone().unwrap_or_default())<span class="question-mark">?</span>;
-				<span class="kw">let </span>state_version = Cli::native_runtime_version(<span class="kw-2">&amp;</span>spec).state_version();
-				cmd.run::&lt;Block&gt;(<span class="kw-2">&amp;*</span>spec, state_version)
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::ExportGenesisWasm(cmd)) =&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
-			runner.sync_run(|_config| {
-				<span class="kw">let </span>spec = cli.load_spec(<span class="kw-2">&amp;</span>cmd.shared_params.chain.clone().unwrap_or_default())<span class="question-mark">?</span>;
-				cmd.run(<span class="kw-2">&amp;*</span>spec)
-			})
-		},
-		<span class="prelude-val">Some</span>(Subcommand::Benchmark(cmd)) =&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
-			<span class="comment">// Switch on the concrete benchmark sub-command-
-			</span><span class="kw">match </span>cmd {
-				BenchmarkCmd::Pallet(cmd) =&gt; {
-					<span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>) {
-						runner.sync_run(|config| cmd.run::&lt;Block, ParachainNativeExecutor&gt;(config))
-					} <span class="kw">else </span>{
-						<span class="prelude-val">Err</span>(<span class="string">&quot;Benchmarking wasn&#39;t enabled when building the node. \
+        cmd.run(config, polkadot_config)
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::ExportGenesisState(cmd)) =&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+      runner.sync_run(|_config| {
+        <span class="kw">let </span>spec = cli.load_spec(<span class="kw-2">&amp;</span>cmd.shared_params.chain.clone().unwrap_or_default())<span class="question-mark">?</span>;
+        <span class="kw">let </span>state_version = Cli::native_runtime_version(<span class="kw-2">&amp;</span>spec).state_version();
+        cmd.run::&lt;Block&gt;(<span class="kw-2">&amp;*</span>spec, state_version)
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::ExportGenesisWasm(cmd)) =&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+      runner.sync_run(|_config| {
+        <span class="kw">let </span>spec = cli.load_spec(<span class="kw-2">&amp;</span>cmd.shared_params.chain.clone().unwrap_or_default())<span class="question-mark">?</span>;
+        cmd.run(<span class="kw-2">&amp;*</span>spec)
+      })
+    },
+    <span class="prelude-val">Some</span>(Subcommand::Benchmark(cmd)) =&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+      <span class="comment">// Switch on the concrete benchmark sub-command-
+      </span><span class="kw">match </span>cmd {
+        BenchmarkCmd::Pallet(cmd) =&gt; {
+          <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>) {
+            runner.sync_run(|config| cmd.run::&lt;Block, ParachainNativeExecutor&gt;(config))
+          } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(
+              <span class="string">&quot;Benchmarking wasn&#39;t enabled when building the node. \
 					You can enable it with `--features runtime-benchmarks`.&quot;
-							</span>.into())
-					}
-				},
-				BenchmarkCmd::Block(cmd) =&gt; runner.sync_run(|config| {
-					<span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
-					cmd.run(partials.client)
-				}),
-				<span class="attr">#[cfg(not(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>))]
-				</span>BenchmarkCmd::Storage(<span class="kw">_</span>) =&gt; {
-					<span class="kw">return </span><span class="prelude-val">Err</span>(sc_cli::Error::Input(
-						<span class="string">&quot;Compile with --features=runtime-benchmarks \
+                </span>.into(),
+            )
+          }
+        },
+        BenchmarkCmd::Block(cmd) =&gt; runner.sync_run(|config| {
+          <span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
+          cmd.run(partials.client)
+        }),
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>))]
+        </span>BenchmarkCmd::Storage(<span class="kw">_</span>) =&gt; {
+          <span class="kw">return </span><span class="prelude-val">Err</span>(
+            sc_cli::Error::Input(
+              <span class="string">&quot;Compile with --features=runtime-benchmarks \
 						to enable storage benchmarks.&quot;
-							</span>.into(),
-					)
-					.into())
-				},
-				<span class="attr">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
-				</span>BenchmarkCmd::Storage(cmd) =&gt; runner.sync_run(|config| {
-					<span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
-					<span class="kw">let </span>db = partials.backend.expose_db();
-					<span class="kw">let </span>storage = partials.backend.expose_storage();
-					cmd.run(config, partials.client.clone(), db, storage)
-				}),
-				BenchmarkCmd::Machine(cmd) =&gt; {
-					runner.sync_run(|config| cmd.run(<span class="kw-2">&amp;</span>config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
-				},
-				<span class="comment">// NOTE: this allows the Client to leniently implement
-				// new benchmark commands without requiring a companion MR.
-				</span><span class="attr">#[allow(unreachable_patterns)]
-				</span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;Benchmarking sub-command unsupported&quot;</span>.into()),
-			}
-		},
-		<span class="attr">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
-		</span><span class="prelude-val">Some</span>(Subcommand::TryRuntime(cmd)) =&gt; {
-			<span class="kw">use </span>hashed_parachain_runtime::MILLISECS_PER_BLOCK;
-			<span class="kw">use </span>sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
-			<span class="kw">use </span>try_runtime_cli::block_building_info::timestamp_with_aura_info;
+                </span>.into(),
+            )
+            .into(),
+          )
+        },
+        <span class="attr">#[cfg(feature = <span class="string">&quot;runtime-benchmarks&quot;</span>)]
+        </span>BenchmarkCmd::Storage(cmd) =&gt; runner.sync_run(|config| {
+          <span class="kw">let </span>partials = new_partial(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
+          <span class="kw">let </span>db = partials.backend.expose_db();
+          <span class="kw">let </span>storage = partials.backend.expose_storage();
+          cmd.run(config, partials.client.clone(), db, storage)
+        }),
+        BenchmarkCmd::Machine(cmd) =&gt; {
+          runner.sync_run(|config| cmd.run(<span class="kw-2">&amp;</span>config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
+        },
+        <span class="comment">// NOTE: this allows the Client to leniently implement
+        // new benchmark commands without requiring a companion MR.
+        </span><span class="attr">#[allow(unreachable_patterns)]
+        </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;Benchmarking sub-command unsupported&quot;</span>.into()),
+      }
+    },
+    <span class="attr">#[cfg(feature = <span class="string">&quot;try-runtime&quot;</span>)]
+    </span><span class="prelude-val">Some</span>(Subcommand::TryRuntime(cmd)) =&gt; {
+      <span class="kw">use </span>hashed_parachain_runtime::MILLISECS_PER_BLOCK;
+      <span class="kw">use </span>sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
+      <span class="kw">use </span>try_runtime_cli::block_building_info::timestamp_with_aura_info;
 
-			<span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
+      <span class="kw">let </span>runner = cli.create_runner(cmd)<span class="question-mark">?</span>;
 
-			<span class="kw">type </span>HostFunctionsOf&lt;E&gt; = ExtendedHostFunctions&lt;
-				sp_io::SubstrateHostFunctions,
-				&lt;E <span class="kw">as </span>NativeExecutionDispatch&gt;::ExtendHostFunctions,
-			&gt;;
+      <span class="kw">type </span>HostFunctionsOf&lt;E&gt; = ExtendedHostFunctions&lt;
+        sp_io::SubstrateHostFunctions,
+        &lt;E <span class="kw">as </span>NativeExecutionDispatch&gt;::ExtendHostFunctions,
+      &gt;;
 
-			<span class="comment">// grab the task manager.
-			</span><span class="kw">let </span>registry = <span class="kw-2">&amp;</span>runner.config().prometheus_config.as_ref().map(|cfg| <span class="kw-2">&amp;</span>cfg.registry);
-			<span class="kw">let </span>task_manager =
-				sc_service::TaskManager::new(runner.config().tokio_handle.clone(), <span class="kw-2">*</span>registry)
-					.map_err(|e| <span class="macro">format!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e))<span class="question-mark">?</span>;
+      <span class="comment">// grab the task manager.
+      </span><span class="kw">let </span>registry = <span class="kw-2">&amp;</span>runner.config().prometheus_config.as_ref().map(|cfg| <span class="kw-2">&amp;</span>cfg.registry);
+      <span class="kw">let </span>task_manager =
+        sc_service::TaskManager::new(runner.config().tokio_handle.clone(), <span class="kw-2">*</span>registry)
+          .map_err(|e| <span class="macro">format!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e))<span class="question-mark">?</span>;
 
-			<span class="kw">let </span>info_provider = timestamp_with_aura_info(MILLISECS_PER_BLOCK);
+      <span class="kw">let </span>info_provider = timestamp_with_aura_info(MILLISECS_PER_BLOCK);
 
-			runner.async_run(|<span class="kw">_</span>| {
-				<span class="prelude-val">Ok</span>((
-					cmd.run::&lt;Block, HostFunctionsOf&lt;ParachainNativeExecutor&gt;, <span class="kw">_</span>&gt;(<span class="prelude-val">Some</span>(
-						info_provider,
-					)),
-					task_manager,
-				))
-			})
-		},
-		<span class="attr">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
-		</span><span class="prelude-val">Some</span>(Subcommand::TryRuntime) =&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;Try-runtime was not enabled when building the node. \
+      runner.async_run(|<span class="kw">_</span>| {
+        <span class="prelude-val">Ok</span>((
+          cmd.run::&lt;Block, HostFunctionsOf&lt;ParachainNativeExecutor&gt;, <span class="kw">_</span>&gt;(<span class="prelude-val">Some</span>(info_provider)),
+          task_manager,
+        ))
+      })
+    },
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;try-runtime&quot;</span>))]
+    </span><span class="prelude-val">Some</span>(Subcommand::TryRuntime) =&gt; <span class="prelude-val">Err</span>(
+      <span class="string">&quot;Try-runtime was not enabled when building the node. \
 			You can enable it with `--features try-runtime`.&quot;
-			</span>.into()),
-		<span class="prelude-val">None </span>=&gt; {
-			<span class="kw">let </span>runner = cli.create_runner(<span class="kw-2">&amp;</span>cli.run.normalize())<span class="question-mark">?</span>;
-			<span class="kw">let </span>collator_options = cli.run.collator_options();
+        </span>.into(),
+    ),
+    <span class="prelude-val">None </span>=&gt; {
+      <span class="kw">let </span>runner = cli.create_runner(<span class="kw-2">&amp;</span>cli.run.normalize())<span class="question-mark">?</span>;
+      <span class="kw">let </span>collator_options = cli.run.collator_options();
 
-			runner.run_node_until_exit(|config| <span class="kw">async move </span>{
+      runner.run_node_until_exit(|config| <span class="kw">async move </span>{
 				<span class="kw">let </span>hwbench = (!cli.no_hardware_benchmarks).then_some(
 					config.database.path().map(|database_path| {
 						<span class="kw">let _ </span>= std::fs::create_dir_all(<span class="kw-2">&amp;</span>database_path);
@@ -784,145 +794,147 @@
 				</span>.map(|r| r.<span class="number">0</span>)
 				.map_err(Into::into)
 			})
-		},
-	}
+    },
+  }
 }
 
 <span class="kw">impl </span>DefaultConfigurationValues <span class="kw">for </span>RelayChainCli {
-	<span class="kw">fn </span>p2p_listen_port() -&gt; u16 {
-		<span class="number">30334
-	</span>}
+  <span class="kw">fn </span>p2p_listen_port() -&gt; u16 {
+    <span class="number">30334
+  </span>}
 
-	<span class="kw">fn </span>rpc_ws_listen_port() -&gt; u16 {
-		<span class="number">9945
-	</span>}
+  <span class="kw">fn </span>rpc_ws_listen_port() -&gt; u16 {
+    <span class="number">9945
+  </span>}
 
-	<span class="kw">fn </span>rpc_http_listen_port() -&gt; u16 {
-		<span class="number">9934
-	</span>}
+  <span class="kw">fn </span>rpc_http_listen_port() -&gt; u16 {
+    <span class="number">9934
+  </span>}
 
-	<span class="kw">fn </span>prometheus_listen_port() -&gt; u16 {
-		<span class="number">9616
-	</span>}
+  <span class="kw">fn </span>prometheus_listen_port() -&gt; u16 {
+    <span class="number">9616
+  </span>}
 }
 
 <span class="kw">impl </span>CliConfiguration&lt;<span class="self">Self</span>&gt; <span class="kw">for </span>RelayChainCli {
-	<span class="kw">fn </span>shared_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SharedParams {
-		<span class="self">self</span>.base.base.shared_params()
-	}
+  <span class="kw">fn </span>shared_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SharedParams {
+    <span class="self">self</span>.base.base.shared_params()
+  }
 
-	<span class="kw">fn </span>import_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ImportParams&gt; {
-		<span class="self">self</span>.base.base.import_params()
-	}
+  <span class="kw">fn </span>import_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ImportParams&gt; {
+    <span class="self">self</span>.base.base.import_params()
+  }
 
-	<span class="kw">fn </span>network_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>NetworkParams&gt; {
-		<span class="self">self</span>.base.base.network_params()
-	}
+  <span class="kw">fn </span>network_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>NetworkParams&gt; {
+    <span class="self">self</span>.base.base.network_params()
+  }
 
-	<span class="kw">fn </span>keystore_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>KeystoreParams&gt; {
-		<span class="self">self</span>.base.base.keystore_params()
-	}
+  <span class="kw">fn </span>keystore_params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>KeystoreParams&gt; {
+    <span class="self">self</span>.base.base.keystore_params()
+  }
 
-	<span class="kw">fn </span>base_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BasePath&gt;&gt; {
-		<span class="prelude-val">Ok</span>(<span class="self">self
-			</span>.shared_params()
-			.base_path()<span class="question-mark">?
-			</span>.or_else(|| <span class="self">self</span>.base_path.clone().map(Into::into)))
-	}
+  <span class="kw">fn </span>base_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BasePath&gt;&gt; {
+    <span class="prelude-val">Ok</span>(
+      <span class="self">self
+        </span>.shared_params()
+        .base_path()<span class="question-mark">?
+        </span>.or_else(|| <span class="self">self</span>.base_path.clone().map(Into::into)),
+    )
+  }
 
-	<span class="kw">fn </span>rpc_http(<span class="kw-2">&amp;</span><span class="self">self</span>, default_listen_port: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt; {
-		<span class="self">self</span>.base.base.rpc_http(default_listen_port)
-	}
+  <span class="kw">fn </span>rpc_http(<span class="kw-2">&amp;</span><span class="self">self</span>, default_listen_port: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt; {
+    <span class="self">self</span>.base.base.rpc_http(default_listen_port)
+  }
 
-	<span class="kw">fn </span>rpc_ipc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
-		<span class="self">self</span>.base.base.rpc_ipc()
-	}
+  <span class="kw">fn </span>rpc_ipc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
+    <span class="self">self</span>.base.base.rpc_ipc()
+  }
 
-	<span class="kw">fn </span>rpc_ws(<span class="kw-2">&amp;</span><span class="self">self</span>, default_listen_port: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt; {
-		<span class="self">self</span>.base.base.rpc_ws(default_listen_port)
-	}
+  <span class="kw">fn </span>rpc_ws(<span class="kw-2">&amp;</span><span class="self">self</span>, default_listen_port: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt; {
+    <span class="self">self</span>.base.base.rpc_ws(default_listen_port)
+  }
 
-	<span class="kw">fn </span>prometheus_config(
-		<span class="kw-2">&amp;</span><span class="self">self</span>,
-		default_listen_port: u16,
-		chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;PrometheusConfig&gt;&gt; {
-		<span class="self">self</span>.base.base.prometheus_config(default_listen_port, chain_spec)
-	}
+  <span class="kw">fn </span>prometheus_config(
+    <span class="kw-2">&amp;</span><span class="self">self</span>,
+    default_listen_port: u16,
+    chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;PrometheusConfig&gt;&gt; {
+    <span class="self">self</span>.base.base.prometheus_config(default_listen_port, chain_spec)
+  }
 
-	<span class="kw">fn </span>init&lt;F&gt;(
-		<span class="kw-2">&amp;</span><span class="self">self</span>,
-		_support_url: <span class="kw-2">&amp;</span>String,
-		_impl_version: <span class="kw-2">&amp;</span>String,
-		_logger_hook: F,
-		_config: <span class="kw-2">&amp;</span>sc_service::Configuration,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
-	<span class="kw">where
-		</span>F: FnOnce(<span class="kw-2">&amp;mut </span>sc_cli::LoggerBuilder, <span class="kw-2">&amp;</span>sc_service::Configuration),
-	{
-		<span class="macro">unreachable!</span>(<span class="string">&quot;PolkadotCli is never initialized; qed&quot;</span>);
-	}
+  <span class="kw">fn </span>init&lt;F&gt;(
+    <span class="kw-2">&amp;</span><span class="self">self</span>,
+    _support_url: <span class="kw-2">&amp;</span>String,
+    _impl_version: <span class="kw-2">&amp;</span>String,
+    _logger_hook: F,
+    _config: <span class="kw-2">&amp;</span>sc_service::Configuration,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+  <span class="kw">where
+    </span>F: FnOnce(<span class="kw-2">&amp;mut </span>sc_cli::LoggerBuilder, <span class="kw-2">&amp;</span>sc_service::Configuration),
+  {
+    <span class="macro">unreachable!</span>(<span class="string">&quot;PolkadotCli is never initialized; qed&quot;</span>);
+  }
 
-	<span class="kw">fn </span>chain_id(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-		<span class="kw">let </span>chain_id = <span class="self">self</span>.base.base.chain_id(is_dev)<span class="question-mark">?</span>;
+  <span class="kw">fn </span>chain_id(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+    <span class="kw">let </span>chain_id = <span class="self">self</span>.base.base.chain_id(is_dev)<span class="question-mark">?</span>;
 
-		<span class="prelude-val">Ok</span>(<span class="kw">if </span>chain_id.is_empty() { <span class="self">self</span>.chain_id.clone().unwrap_or_default() } <span class="kw">else </span>{ chain_id })
-	}
+    <span class="prelude-val">Ok</span>(<span class="kw">if </span>chain_id.is_empty() { <span class="self">self</span>.chain_id.clone().unwrap_or_default() } <span class="kw">else </span>{ chain_id })
+  }
 
-	<span class="kw">fn </span>role(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::Role&gt; {
-		<span class="self">self</span>.base.base.role(is_dev)
-	}
+  <span class="kw">fn </span>role(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::Role&gt; {
+    <span class="self">self</span>.base.base.role(is_dev)
+  }
 
-	<span class="kw">fn </span>transaction_pool(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::config::TransactionPoolOptions&gt; {
-		<span class="self">self</span>.base.base.transaction_pool(is_dev)
-	}
+  <span class="kw">fn </span>transaction_pool(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::config::TransactionPoolOptions&gt; {
+    <span class="self">self</span>.base.base.transaction_pool(is_dev)
+  }
 
-	<span class="kw">fn </span>trie_cache_maximum_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
-		<span class="self">self</span>.base.base.trie_cache_maximum_size()
-	}
+  <span class="kw">fn </span>trie_cache_maximum_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
+    <span class="self">self</span>.base.base.trie_cache_maximum_size()
+  }
 
-	<span class="kw">fn </span>rpc_methods(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::config::RpcMethods&gt; {
-		<span class="self">self</span>.base.base.rpc_methods()
-	}
+  <span class="kw">fn </span>rpc_methods(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;sc_service::config::RpcMethods&gt; {
+    <span class="self">self</span>.base.base.rpc_methods()
+  }
 
-	<span class="kw">fn </span>rpc_ws_max_connections(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
-		<span class="self">self</span>.base.base.rpc_ws_max_connections()
-	}
+  <span class="kw">fn </span>rpc_ws_max_connections(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
+    <span class="self">self</span>.base.base.rpc_ws_max_connections()
+  }
 
-	<span class="kw">fn </span>rpc_cors(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;&gt; {
-		<span class="self">self</span>.base.base.rpc_cors(is_dev)
-	}
+  <span class="kw">fn </span>rpc_cors(<span class="kw-2">&amp;</span><span class="self">self</span>, is_dev: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;&gt; {
+    <span class="self">self</span>.base.base.rpc_cors(is_dev)
+  }
 
-	<span class="kw">fn </span>default_heap_pages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-		<span class="self">self</span>.base.base.default_heap_pages()
-	}
+  <span class="kw">fn </span>default_heap_pages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
+    <span class="self">self</span>.base.base.default_heap_pages()
+  }
 
-	<span class="kw">fn </span>force_authoring(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-		<span class="self">self</span>.base.base.force_authoring()
-	}
+  <span class="kw">fn </span>force_authoring(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="self">self</span>.base.base.force_authoring()
+  }
 
-	<span class="kw">fn </span>disable_grandpa(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-		<span class="self">self</span>.base.base.disable_grandpa()
-	}
+  <span class="kw">fn </span>disable_grandpa(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="self">self</span>.base.base.disable_grandpa()
+  }
 
-	<span class="kw">fn </span>max_runtime_instances(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
-		<span class="self">self</span>.base.base.max_runtime_instances()
-	}
+  <span class="kw">fn </span>max_runtime_instances(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
+    <span class="self">self</span>.base.base.max_runtime_instances()
+  }
 
-	<span class="kw">fn </span>announce_block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-		<span class="self">self</span>.base.base.announce_block()
-	}
+  <span class="kw">fn </span>announce_block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="self">self</span>.base.base.announce_block()
+  }
 
-	<span class="kw">fn </span>telemetry_endpoints(
-		<span class="kw-2">&amp;</span><span class="self">self</span>,
-		chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;sc_telemetry::TelemetryEndpoints&gt;&gt; {
-		<span class="self">self</span>.base.base.telemetry_endpoints(chain_spec)
-	}
+  <span class="kw">fn </span>telemetry_endpoints(
+    <span class="kw-2">&amp;</span><span class="self">self</span>,
+    chain_spec: <span class="kw-2">&amp;</span>Box&lt;<span class="kw">dyn </span>ChainSpec&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;sc_telemetry::TelemetryEndpoints&gt;&gt; {
+    <span class="self">self</span>.base.base.telemetry_endpoints(chain_spec)
+  }
 
-	<span class="kw">fn </span>node_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-		<span class="self">self</span>.base.base.node_name()
-	}
+  <span class="kw">fn </span>node_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+    <span class="self">self</span>.base.base.node_name()
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hashed_parachain" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

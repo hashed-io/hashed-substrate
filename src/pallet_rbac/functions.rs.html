@@ -593,630 +593,600 @@
 <a href="#593" id="593">593</a>
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
-</span><span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
-<span class="kw">use </span>frame_support::sp_std::borrow::ToOwned;
+</span><span class="kw">use </span>frame_support::{sp_io::hashing::blake2_256, sp_std::borrow::ToOwned};
 <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
 <span class="kw">impl</span>&lt;T: Config&gt; RoleBasedAccessControl&lt;T::AccountId&gt; <span class="kw">for </span>Pallet&lt;T&gt; {
-	<span class="comment">/*---- Basic Insertion of individual storage maps ---*/
-	</span><span class="doccomment">/// Scope creation
-	///
-	/// Creates a scope within a external pallet using the pallet index.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The newly generated scope identifier.
-	</span><span class="kw">fn </span>create_scope(pallet: IdOrVec, scope_id: ScopeId) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-		&lt;Scopes&lt;T&gt;&gt;::try_mutate(pallet_id, |scopes| {
-			<span class="macro">ensure!</span>(!scopes.contains(<span class="kw-2">&amp;</span>scope_id), Error::&lt;T&gt;::ScopeAlreadyExists);
-			scopes.try_push(scope_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxScopesPerPallet)<span class="question-mark">?</span>;
-			<span class="prelude-val">Ok</span>(())
-		})
-	}
+  <span class="comment">/* ---- Basic Insertion of individual storage maps --- */
+  </span><span class="doccomment">/// Scope creation
+  ///
+  /// Creates a scope within a external pallet using the pallet index.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The newly generated scope identifier.
+  </span><span class="kw">fn </span>create_scope(pallet: IdOrVec, scope_id: ScopeId) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    &lt;Scopes&lt;T&gt;&gt;::try_mutate(pallet_id, |scopes| {
+      <span class="macro">ensure!</span>(!scopes.contains(<span class="kw-2">&amp;</span>scope_id), Error::&lt;T&gt;::ScopeAlreadyExists);
+      scopes.try_push(scope_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxScopesPerPallet)<span class="question-mark">?</span>;
+      <span class="prelude-val">Ok</span>(())
+    })
+  }
 
-	<span class="doccomment">/// Scope removal
-	///
-	/// Removes a scope within a external pallet using the pallet index.
-	/// Executing this function will delete all registered role users.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope identifier to remove.
-	</span><span class="kw">fn </span>remove_scope(pallet: IdOrVec, scope_id: ScopeId) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-		<span class="comment">// remove on scopes
-		</span>&lt;Scopes&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(pallet_id, |scopes_option| {
-			<span class="kw">let </span>scopes = scopes_option.as_mut().ok_or(Error::&lt;T&gt;::ScopeNotFound)<span class="question-mark">?</span>;
-			<span class="kw">let </span>s_pos =
-				scopes.iter().position(|<span class="kw-2">&amp;</span>s| s == scope_id).ok_or(Error::&lt;T&gt;::ScopeNotFound)<span class="question-mark">?</span>;
-			scopes.remove(s_pos);
-			<span class="kw">if </span>scopes.is_empty() {
-				scopes_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
-			}
-			<span class="prelude-val">Ok</span>(())
-		})<span class="question-mark">?</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>scope_users = &lt;UsersByScope&lt;T&gt;&gt;::iter_prefix((pallet_id, scope_id))
-			.flat_map(|(_role, users)| users)
-			.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-		<span class="comment">// exclude duplicate users
-		</span>scope_users.sort();
-		scope_users.dedup();
-		<span class="comment">// remove on RolesByUser
-		</span>scope_users.iter().for_each(|user| {
-			&lt;RolesByUser&lt;T&gt;&gt;::remove((user, pallet_id, scope_id));
-		});
-		<span class="comment">// remove on users by scope
-		</span><span class="kw">let _ </span>= &lt;UsersByScope&lt;T&gt;&gt;::clear_prefix((pallet_id, scope_id), <span class="number">1000</span>, <span class="prelude-val">None</span>);
+  <span class="doccomment">/// Scope removal
+  ///
+  /// Removes a scope within a external pallet using the pallet index.
+  /// Executing this function will delete all registered role users.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope identifier to remove.
+  </span><span class="kw">fn </span>remove_scope(pallet: IdOrVec, scope_id: ScopeId) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    <span class="comment">// remove on scopes
+    </span>&lt;Scopes&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(pallet_id, |scopes_option| {
+      <span class="kw">let </span>scopes = scopes_option.as_mut().ok_or(Error::&lt;T&gt;::ScopeNotFound)<span class="question-mark">?</span>;
+      <span class="kw">let </span>s_pos = scopes.iter().position(|<span class="kw-2">&amp;</span>s| s == scope_id).ok_or(Error::&lt;T&gt;::ScopeNotFound)<span class="question-mark">?</span>;
+      scopes.remove(s_pos);
+      <span class="kw">if </span>scopes.is_empty() {
+        scopes_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+      }
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>scope_users = &lt;UsersByScope&lt;T&gt;&gt;::iter_prefix((pallet_id, scope_id))
+      .flat_map(|(_role, users)| users)
+      .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="comment">// exclude duplicate users
+    </span>scope_users.sort();
+    scope_users.dedup();
+    <span class="comment">// remove on RolesByUser
+    </span>scope_users.iter().for_each(|user| {
+      &lt;RolesByUser&lt;T&gt;&gt;::remove((user, pallet_id, scope_id));
+    });
+    <span class="comment">// remove on users by scope
+    </span><span class="kw">let _ </span>= &lt;UsersByScope&lt;T&gt;&gt;::clear_prefix((pallet_id, scope_id), <span class="number">1000</span>, <span class="prelude-val">None</span>);
 
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="doccomment">/// External pallet storage removal
-	///
-	/// Removes all storage associated to a external pallet.
-	///
-	/// Executing this function will delete all role lists and permissions linked
-	/// to that pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	</span><span class="kw">fn </span>remove_pallet_storage(pallet: IdOrVec) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
-		<span class="comment">//remove all scopes
-		</span><span class="kw">let </span>scopes = &lt;Scopes&lt;T&gt;&gt;::get(pallet_id);
-		<span class="kw">for </span>scope <span class="kw">in </span>scopes {
-			<span class="self">Self</span>::remove_scope(pallet_id_enum.clone(), scope)<span class="question-mark">?</span>;
-		}
-		<span class="comment">// remove all roles
-		</span><span class="kw">let </span>pallet_roles = &lt;PalletRoles&lt;T&gt;&gt;::take(pallet_id);
-		<span class="comment">//check if there&#39;s other pallet that uses the roles, if not, remove them
-		</span><span class="kw">let </span>all_pallet_roles =
-			&lt;PalletRoles&lt;T&gt;&gt;::iter().map(|p| p.<span class="number">1</span>.to_vec()).collect::&lt;Vec&lt;Vec&lt;[u8; <span class="number">32</span>]&gt;&gt;&gt;();
-		<span class="kw">let </span>flatten_all_pallet_roles =
-			all_pallet_roles.iter().flatten().collect::&lt;Vec&lt;<span class="kw-2">&amp;</span>[u8; <span class="number">32</span>]&gt;&gt;();
-		<span class="kw">let </span>filtered_roles = pallet_roles
-			.iter()
-			.filter(|pallet_role| !flatten_all_pallet_roles.contains(pallet_role));
-		filtered_roles.for_each(|role| {
-			&lt;Roles&lt;T&gt;&gt;::remove(role);
-		});
-		<span class="comment">//remove all permissions
-		</span><span class="kw">let _ </span>= &lt;PermissionsByRole&lt;T&gt;&gt;::clear_prefix(pallet_id, <span class="number">1000</span>, <span class="prelude-val">None</span>);
-		<span class="kw">let _ </span>= &lt;Permissions&lt;T&gt;&gt;::clear_prefix(pallet_id, <span class="number">1000</span>, <span class="prelude-val">None</span>);
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="doccomment">/// External pallet storage removal
+  ///
+  /// Removes all storage associated to a external pallet.
+  ///
+  /// Executing this function will delete all role lists and permissions linked
+  /// to that pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  </span><span class="kw">fn </span>remove_pallet_storage(pallet: IdOrVec) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
+    <span class="comment">//remove all scopes
+    </span><span class="kw">let </span>scopes = &lt;Scopes&lt;T&gt;&gt;::get(pallet_id);
+    <span class="kw">for </span>scope <span class="kw">in </span>scopes {
+      <span class="self">Self</span>::remove_scope(pallet_id_enum.clone(), scope)<span class="question-mark">?</span>;
+    }
+    <span class="comment">// remove all roles
+    </span><span class="kw">let </span>pallet_roles = &lt;PalletRoles&lt;T&gt;&gt;::take(pallet_id);
+    <span class="comment">//check if there&#39;s other pallet that uses the roles, if not, remove them
+    </span><span class="kw">let </span>all_pallet_roles =
+      &lt;PalletRoles&lt;T&gt;&gt;::iter().map(|p| p.<span class="number">1</span>.to_vec()).collect::&lt;Vec&lt;Vec&lt;[u8; <span class="number">32</span>]&gt;&gt;&gt;();
+    <span class="kw">let </span>flatten_all_pallet_roles = all_pallet_roles.iter().flatten().collect::&lt;Vec&lt;<span class="kw-2">&amp;</span>[u8; <span class="number">32</span>]&gt;&gt;();
+    <span class="kw">let </span>filtered_roles = pallet_roles
+      .iter()
+      .filter(|pallet_role| !flatten_all_pallet_roles.contains(pallet_role));
+    filtered_roles.for_each(|role| {
+      &lt;Roles&lt;T&gt;&gt;::remove(role);
+    });
+    <span class="comment">//remove all permissions
+    </span><span class="kw">let _ </span>= &lt;PermissionsByRole&lt;T&gt;&gt;::clear_prefix(pallet_id, <span class="number">1000</span>, <span class="prelude-val">None</span>);
+    <span class="kw">let _ </span>= &lt;Permissions&lt;T&gt;&gt;::clear_prefix(pallet_id, <span class="number">1000</span>, <span class="prelude-val">None</span>);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="doccomment">/// Role creation and coupling with pallet.
-	///
-	/// Creates the specified roles if needed and adds them to the pallet.
-	/// Recommended first step to enable RBAC on a external pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `roles`: A list of roles to create, encoded in bytes.
-	</span><span class="kw">fn </span>create_and_set_roles(
-		pallet: IdOrVec,
-		roles: Vec&lt;Vec&lt;u8&gt;&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;, DispatchError&gt; {
-		<span class="kw">let </span><span class="kw-2">mut </span>role_ids = Vec::&lt;[u8; <span class="number">32</span>]&gt;::new();
-		<span class="kw">for </span>role <span class="kw">in </span>roles {
-			role_ids.push(<span class="self">Self</span>::create_role(role.to_owned())<span class="question-mark">?</span>);
-		}
-		<span class="self">Self</span>::set_multiple_pallet_roles(pallet.to_id_enum(), role_ids.clone())<span class="question-mark">?</span>;
-		<span class="kw">let </span>bounded_ids = <span class="self">Self</span>::bound(role_ids, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::RolesStored(pallet.to_id(), bounded_ids.clone()));
-		<span class="prelude-val">Ok</span>(bounded_ids)
-	}
+  <span class="doccomment">/// Role creation and coupling with pallet.
+  ///
+  /// Creates the specified roles if needed and adds them to the pallet.
+  /// Recommended first step to enable RBAC on a external pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `roles`: A list of roles to create, encoded in bytes.
+  </span><span class="kw">fn </span>create_and_set_roles(
+    pallet: IdOrVec,
+    roles: Vec&lt;Vec&lt;u8&gt;&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;, DispatchError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>role_ids = Vec::&lt;[u8; <span class="number">32</span>]&gt;::new();
+    <span class="kw">for </span>role <span class="kw">in </span>roles {
+      role_ids.push(<span class="self">Self</span>::create_role(role.to_owned())<span class="question-mark">?</span>);
+    }
+    <span class="self">Self</span>::set_multiple_pallet_roles(pallet.to_id_enum(), role_ids.clone())<span class="question-mark">?</span>;
+    <span class="kw">let </span>bounded_ids = <span class="self">Self</span>::bound(role_ids, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::RolesStored(pallet.to_id(), bounded_ids.clone()));
+    <span class="prelude-val">Ok</span>(bounded_ids)
+  }
 
-	<span class="doccomment">/// Role creation.
-	///
-	/// Creates a role and returns its identifier, if its already created,
-	/// the function will return the preexisting one.
-	/// ### Parameters:
-	/// - `role`: A role to create, encoded in bytes.
-	</span><span class="kw">fn </span>create_role(role: Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;RoleId, DispatchError&gt; {
-		<span class="kw">let </span>role_id = role.using_encoded(blake2_256);
-		<span class="comment">// no &quot;get_or_insert&quot; method found
-		</span><span class="kw">let </span>b_role = <span class="self">Self</span>::bound::&lt;<span class="kw">_</span>, T::RoleMaxLen&gt;(role, Error::&lt;T&gt;::ExceedRoleMaxLen)<span class="question-mark">?</span>;
-		<span class="macro">ensure!</span>(role_id == b_role.using_encoded(blake2_256), Error::&lt;T&gt;::NoneValue);
-		<span class="kw">if </span>!&lt;Roles&lt;T&gt;&gt;::contains_key(role_id) {
-			&lt;Roles&lt;T&gt;&gt;::insert(role_id, b_role)
-		};
-		<span class="prelude-val">Ok</span>(role_id)
-	}
+  <span class="doccomment">/// Role creation.
+  ///
+  /// Creates a role and returns its identifier, if its already created,
+  /// the function will return the preexisting one.
+  /// ### Parameters:
+  /// - `role`: A role to create, encoded in bytes.
+  </span><span class="kw">fn </span>create_role(role: Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;RoleId, DispatchError&gt; {
+    <span class="kw">let </span>role_id = role.using_encoded(blake2_256);
+    <span class="comment">// no &quot;get_or_insert&quot; method found
+    </span><span class="kw">let </span>b_role = <span class="self">Self</span>::bound::&lt;<span class="kw">_</span>, T::RoleMaxLen&gt;(role, Error::&lt;T&gt;::ExceedRoleMaxLen)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(role_id == b_role.using_encoded(blake2_256), Error::&lt;T&gt;::NoneValue);
+    <span class="kw">if </span>!&lt;Roles&lt;T&gt;&gt;::contains_key(role_id) {
+      &lt;Roles&lt;T&gt;&gt;::insert(role_id, b_role)
+    };
+    <span class="prelude-val">Ok</span>(role_id)
+  }
 
-	<span class="doccomment">/// Role coupling with pallet.
-	///
-	/// Assigns a previously created role to a pallet.
-	///
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The unique role identifier.
-	</span><span class="kw">fn </span>set_role_to_pallet(pallet: IdOrVec, role_id: RoleId) -&gt; DispatchResult {
-		<span class="macro">ensure!</span>(&lt;Roles&lt;T&gt;&gt;::contains_key(role_id), Error::&lt;T&gt;::RoleNotFound);
-		&lt;PalletRoles&lt;T&gt;&gt;::try_mutate(pallet.to_id(), |roles| {
-			<span class="macro">ensure!</span>(!roles.contains(<span class="kw-2">&amp;</span>role_id), Error::&lt;T&gt;::RoleAlreadyLinkedToPallet);
-			roles.try_push(role_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerPallet)
-		})<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
+  <span class="doccomment">/// Role coupling with pallet.
+  ///
+  /// Assigns a previously created role to a pallet.
+  ///
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The unique role identifier.
+  </span><span class="kw">fn </span>set_role_to_pallet(pallet: IdOrVec, role_id: RoleId) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(&lt;Roles&lt;T&gt;&gt;::contains_key(role_id), Error::&lt;T&gt;::RoleNotFound);
+    &lt;PalletRoles&lt;T&gt;&gt;::try_mutate(pallet.to_id(), |roles| {
+      <span class="macro">ensure!</span>(!roles.contains(<span class="kw-2">&amp;</span>role_id), Error::&lt;T&gt;::RoleAlreadyLinkedToPallet);
+      roles.try_push(role_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerPallet)
+    })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="doccomment">/// Multiple role coupling with pallet.
-	///
-	/// Assigns multiple, previously created roles to a pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `roles`: A list of unique role identifiers.
-	</span><span class="kw">fn </span>set_multiple_pallet_roles(pallet: IdOrVec, roles: Vec&lt;RoleId&gt;) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-		<span class="comment">// checks for duplicates:
-		</span><span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(roles.clone()), Error::&lt;T&gt;::DuplicateRole);
-		<span class="kw">let </span>pallet_roles = &lt;PalletRoles&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>pallet_id);
-		<span class="kw">for </span>id <span class="kw">in </span>roles.clone() {
-			<span class="macro">ensure!</span>(!pallet_roles.contains(<span class="kw-2">&amp;</span>id), Error::&lt;T&gt;::RoleAlreadyLinkedToPallet);
-		}
-		&lt;PalletRoles&lt;T&gt;&gt;::try_mutate(pallet_id, |pallet_roles| {
-			pallet_roles.try_extend(roles.into_iter())
-		})
-		.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>;
+  <span class="doccomment">/// Multiple role coupling with pallet.
+  ///
+  /// Assigns multiple, previously created roles to a pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `roles`: A list of unique role identifiers.
+  </span><span class="kw">fn </span>set_multiple_pallet_roles(pallet: IdOrVec, roles: Vec&lt;RoleId&gt;) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    <span class="comment">// checks for duplicates:
+    </span><span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(roles.clone()), Error::&lt;T&gt;::DuplicateRole);
+    <span class="kw">let </span>pallet_roles = &lt;PalletRoles&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>pallet_id);
+    <span class="kw">for </span>id <span class="kw">in </span>roles.clone() {
+      <span class="macro">ensure!</span>(!pallet_roles.contains(<span class="kw-2">&amp;</span>id), Error::&lt;T&gt;::RoleAlreadyLinkedToPallet);
+    }
+    &lt;PalletRoles&lt;T&gt;&gt;::try_mutate(pallet_id, |pallet_roles| {
+      pallet_roles.try_extend(roles.into_iter())
+    })
+    .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>;
 
-		<span class="prelude-val">Ok</span>(())
-	}
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="doccomment">/// Role assignation to a user
-	///
-	/// Assigns a role to a user in a scope context.
-	/// ### Parameters:
-	/// - `user`: The account which the role will be granted.
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope in which the role will be granted.
-	/// - `role_id`: The role identifier to grant for the user.
-	</span><span class="kw">fn </span>assign_role_to_user(
-		user: T::AccountId,
-		pallet: IdOrVec,
-		scope_id: <span class="kw-2">&amp;</span>ScopeId,
-		role_id: RoleId,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
-		<span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
-		&lt;RolesByUser&lt;T&gt;&gt;::try_mutate((<span class="kw-2">&amp;</span>user, pallet_id, scope_id), |roles| {
-			<span class="macro">ensure!</span>(!roles.contains(<span class="kw-2">&amp;</span>role_id), Error::&lt;T&gt;::UserAlreadyHasRole);
-			roles.try_push(role_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerUser)
-		})<span class="question-mark">?</span>;
+  <span class="doccomment">/// Role assignation to a user
+  ///
+  /// Assigns a role to a user in a scope context.
+  /// ### Parameters:
+  /// - `user`: The account which the role will be granted.
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope in which the role will be granted.
+  /// - `role_id`: The role identifier to grant for the user.
+  </span><span class="kw">fn </span>assign_role_to_user(
+    user: T::AccountId,
+    pallet: IdOrVec,
+    scope_id: <span class="kw-2">&amp;</span>ScopeId,
+    role_id: RoleId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
+    <span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
+    &lt;RolesByUser&lt;T&gt;&gt;::try_mutate((<span class="kw-2">&amp;</span>user, pallet_id, scope_id), |roles| {
+      <span class="macro">ensure!</span>(!roles.contains(<span class="kw-2">&amp;</span>role_id), Error::&lt;T&gt;::UserAlreadyHasRole);
+      roles.try_push(role_id).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxRolesPerUser)
+    })<span class="question-mark">?</span>;
 
-		&lt;UsersByScope&lt;T&gt;&gt;::try_mutate((pallet_id, scope_id, role_id), |users| {
-			<span class="macro">ensure!</span>(!users.contains(<span class="kw-2">&amp;</span>user), Error::&lt;T&gt;::UserAlreadyHasRole);
-			users.try_push(user.clone()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxUsersPerRole)
-		})<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::RoleAssignedToUser(
-			pallet_id,
-			scope_id.to_owned(),
-			role_id,
-			user,
-		));
-		<span class="prelude-val">Ok</span>(())
-	}
+    &lt;UsersByScope&lt;T&gt;&gt;::try_mutate((pallet_id, scope_id, role_id), |users| {
+      <span class="macro">ensure!</span>(!users.contains(<span class="kw-2">&amp;</span>user), Error::&lt;T&gt;::UserAlreadyHasRole);
+      users.try_push(user.clone()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxUsersPerRole)
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::RoleAssignedToUser(pallet_id, scope_id.to_owned(), role_id, user));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-	<span class="doccomment">/// Role removal from the user.
-	///
-	/// Removes the specified role from a user in a scope context. the user will no longer
-	/// be able to enforce the removed role and its permissions.
-	/// ### Parameters:
-	/// - `user`: The account which the role will be removed.
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope in which the role will be removed.
-	/// - `role_id`: The role identifier to remove from the user.
-	</span><span class="kw">fn </span>remove_role_from_user(
-		user: T::AccountId,
-		pallet: IdOrVec,
-		scope_id: <span class="kw-2">&amp;</span>ScopeId,
-		role_id: RoleId,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-		&lt;RolesByUser&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(
-			(user.clone(), pallet_id, scope_id),
-			|user_roles_option| {
-				<span class="kw">let </span>user_roles = user_roles_option.as_mut().ok_or(Error::&lt;T&gt;::UserHasNoRoles)<span class="question-mark">?</span>;
-				<span class="kw">let </span>r_pos = user_roles
-					.iter()
-					.position(|<span class="kw-2">&amp;</span>r| r == role_id)
-					.ok_or(Error::&lt;T&gt;::RoleNotFound)<span class="question-mark">?</span>;
-				user_roles.remove(r_pos);
-				<span class="kw">if </span>user_roles.is_empty() {
-					user_roles_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>)
-				}
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		&lt;UsersByScope&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(
-			(pallet_id, scope_id, role_id),
-			|auth_users_option| {
-				<span class="kw">let </span>auth_users = auth_users_option.as_mut().ok_or(Error::&lt;T&gt;::RoleHasNoUsers)<span class="question-mark">?</span>;
-				<span class="kw">let </span>u_pos =
-					auth_users.iter().position(|u| <span class="kw-2">*</span>u == user).ok_or(Error::&lt;T&gt;::UserNotFound)<span class="question-mark">?</span>;
-				auth_users.remove(u_pos);
-				<span class="kw">if </span>auth_users.is_empty() {
-					auth_users_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
-				}
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::RoleRemovedFromUser(
-			pallet_id,
-			scope_id.to_owned(),
-			role_id,
-			user,
-		));
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Permission creation and coupling with a role.
-	///
-	/// Creates the specified permissions if needed and assigns them to a role.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role identifier to which the permissions will
-	/// be linked to.
-	/// - `permissions`: A list of permissions to create and link,
-	/// encoded in bytes.
-	</span><span class="kw">fn </span>create_and_set_permissions(
-		pallet: IdOrVec,
-		role_id: RoleId,
-		permissions: Vec&lt;Vec&lt;u8&gt;&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;BoundedVec&lt;PermissionId, <span class="self">Self</span>::MaxPermissionsPerRole&gt;, DispatchError&gt; {
-		<span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(permissions.clone()), Error::&lt;T&gt;::DuplicatePermission);
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum.clone(), <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
-		<span class="kw">let </span><span class="kw-2">mut </span>permission_ids = Vec::&lt;[u8; <span class="number">32</span>]&gt;::new();
-		<span class="kw">for </span>permission <span class="kw">in </span>permissions {
-			permission_ids
-				.push(<span class="self">Self</span>::create_permission(pallet_id_enum.clone(), permission.to_owned())<span class="question-mark">?</span>);
-		}
-		<span class="self">Self</span>::set_multiple_permissions_to_role(pallet_id_enum, role_id, permission_ids.clone())<span class="question-mark">?</span>;
-		<span class="kw">let </span>b_permissions = <span class="self">Self</span>::bound(permission_ids, Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::PermissionsCreatedAndSet(
-			pallet.to_id(),
-			role_id,
-			b_permissions.clone(),
-		));
-		<span class="prelude-val">Ok</span>(b_permissions)
-	}
-
-	<span class="doccomment">/// Permission creation
-	///
-	/// Creates the specified permission in the specified pallet..
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `permission`: The permission to insert, encoded in bytes.
-	</span><span class="kw">fn </span>create_permission(
-		pallet: IdOrVec,
-		permission: Vec&lt;u8&gt;,
-	) -&gt; <span class="prelude-ty">Result</span>&lt;PermissionId, DispatchError&gt; {
-		<span class="kw">let </span>permission_id = <span class="self">Self</span>::to_id(permission.clone());
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-
-		<span class="kw">let </span>b_permission =
-			<span class="self">Self</span>::bound::&lt;<span class="kw">_</span>, T::PermissionMaxLen&gt;(permission, Error::&lt;T&gt;::ExceedPermissionMaxLen)<span class="question-mark">?</span>;
-
-		<span class="kw">if </span>!&lt;Permissions&lt;T&gt;&gt;::contains_key(pallet_id, permission_id) {
-			&lt;Permissions&lt;T&gt;&gt;::insert(pallet_id, permission_id, b_permission);
-		}
-		<span class="prelude-val">Ok</span>(permission_id)
-	}
-
-	<span class="doccomment">/// Permission linking to role.
-	///
-	/// Assigns a previously created permission to a role.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role identifier to which the permission will be added.
-	/// - `permission_id`: The permission to assign to the role.
-	</span><span class="kw">fn </span>set_permission_to_role(
-		pallet: IdOrVec,
-		role_id: RoleId,
-		permission_id: PermissionId,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
-		<span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
-
-		<span class="macro">ensure!</span>(
-			&lt;Permissions&lt;T&gt;&gt;::contains_key(pallet_id, permission_id),
-			Error::&lt;T&gt;::PermissionNotFound
-		);
-
-		&lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate(pallet_id, role_id, |role_permissions| {
-			<span class="macro">ensure!</span>(!role_permissions.contains(<span class="kw-2">&amp;</span>permission_id), Error::&lt;T&gt;::DuplicatePermission);
-			role_permissions
-				.try_push(permission_id)
-				.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)
-		})<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Multiple permissions assignation to a role
-	///
-	/// Assigns multiple, previously created permissions
-	/// to a role in a pallet context.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role identifier to which the permissions will be added.
-	/// - `permissions`: A list of permission identifiers to assign to the role.
-	</span><span class="kw">fn </span>set_multiple_permissions_to_role(
-		pallet: IdOrVec,
-		role_id: RoleId,
-		permissions: Vec&lt;PermissionId&gt;,
-	) -&gt; DispatchResult {
-		<span class="comment">// checks for duplicates:
-		</span><span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(permissions.clone()), Error::&lt;T&gt;::DuplicatePermission);
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
-		<span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
-
-		<span class="kw">let </span>role_permissions = &lt;PermissionsByRole&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>pallet_id, role_id);
-		<span class="kw">for </span>id <span class="kw">in </span>permissions.clone() {
-			<span class="macro">ensure!</span>(!role_permissions.contains(<span class="kw-2">&amp;</span>id), Error::&lt;T&gt;::PermissionAlreadyLinkedToRole);
-		}
-		&lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate(pallet_id, role_id, |role_permissions| {
-			role_permissions.try_extend(permissions.into_iter())
-		})
-		.map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)<span class="question-mark">?</span>;
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Permission revocation from role
-	///
-	/// Remove a permission linked to a role (in a pallet context).
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `role_id`: The role identifier to which the permissions will be removed from.
-	/// - `permission_id`: The permission to deassign.
-	</span><span class="kw">fn </span>do_revoke_permission_from_role(
-		pallet: IdOrVec,
-		role_id: RoleId,
-		permission_id: PermissionId,
-	) -&gt; DispatchResult {
-		<span class="self">Self</span>::permission_exists(pallet.clone(), <span class="kw-2">&amp;</span>permission_id)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::is_role_linked_to_pallet(pallet.clone(), <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::is_permission_linked_to_role(pallet.clone(), <span class="kw-2">&amp;</span>role_id, <span class="kw-2">&amp;</span>permission_id)<span class="question-mark">?</span>;
-		&lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
-			pallet.to_id(),
-			role_id,
-			|role_permissions| {
-				<span class="kw">let </span>p_index = role_permissions
-					.iter()
-					.position(|<span class="kw-2">&amp;</span>p| p == permission_id)
-					.ok_or(Error::&lt;T&gt;::PermissionNotLinkedToRole)<span class="question-mark">?</span>;
-				role_permissions.remove(p_index);
-				<span class="prelude-val">Ok</span>(())
-			},
-		)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::deposit_event(Event::PermissionRevokedFromRole(
-			pallet.to_id(),
-			role_id,
-			permission_id,
-		));
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// Permission removal from pallet
-	///
-	/// Use with caution. The permission will be deleted from all the roles and pallet.
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `permission_id`: The permission to remove completely.
-	</span><span class="kw">fn </span>do_remove_permission_from_pallet(
-		pallet: IdOrVec,
-		permission: PermissionId,
-	) -&gt; DispatchResult {
-		<span class="self">Self</span>::permission_exists(pallet.clone(), <span class="kw-2">&amp;</span>permission)<span class="question-mark">?</span>;
-		<span class="kw">let </span>pallet_id = pallet.to_id();
-		<span class="comment">// find all the roles that have the permission
-		</span><span class="kw">let </span>affected_roles: Vec&lt;RoleId&gt; =
-			<span class="self">Self</span>::get_roles_that_have_permission(pallet_id, <span class="kw-2">&amp;</span>permission);
-		<span class="comment">// remove the permission from all affected roles
-		</span>affected_roles.iter().for_each(|role| {
-			&lt;PermissionsByRole&lt;T&gt;&gt;::mutate(pallet_id, role, |permissions| {
-				permissions.retain(|<span class="kw-2">&amp;</span>p| p != permission)
-			})
-		});
-		<span class="comment">// remove the permission from the pallet
-		</span>&lt;Permissions&lt;T&gt;&gt;::remove(pallet_id, permission);
-		<span class="self">Self</span>::deposit_event(Event::PermissionRemovedFromPallet(
-			pallet_id,
-			permission,
-			<span class="self">Self</span>::bound(affected_roles, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>, <span class="comment">// this bound should never fail
-		</span>));
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="comment">/*---- Helper functions ----*/
-
-	</span><span class="doccomment">/// Authorization function
-	///
-	/// Checks if the user has a role that includes the specified permission.
-	/// ### Parameters:
-	/// - `user`: The account to validate.
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope context in which the permission will be validated.
-	/// - `permission_id`: The permission the user must have.
-	</span><span class="kw">fn </span>is_authorized(
-		user: T::AccountId,
-		pallet: IdOrVec,
-		scope_id: <span class="kw-2">&amp;</span>ScopeId,
-		permission_id: <span class="kw-2">&amp;</span>PermissionId,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
-		<span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
-		<span class="self">Self</span>::permission_exists(pallet_id_enum, permission_id)<span class="question-mark">?</span>;
-		<span class="comment">// get roles the user has in this scope
-		</span><span class="kw">let </span>user_roles = &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet_id, scope_id));
-		<span class="comment">// determine if one of the roles has the requested permission
-		</span><span class="kw">let </span>has_permission = user_roles
-			.iter()
-			.any(|r_id| &lt;PermissionsByRole&lt;T&gt;&gt;::get(pallet_id, r_id).contains(permission_id));
-		<span class="macro">ensure!</span>(has_permission, Error::&lt;T&gt;::NotAuthorized);
-		<span class="prelude-val">Ok</span>(())
-	}
-
-	<span class="doccomment">/// User role validation function
-	///
-	/// Checks if the user has at least one of the specified roles.
-	/// ### Parameters:
-	/// - `user`: The account to validate.
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope context in which the permission will be validated.
-	/// - `role_ids`: A list of roles to validate.
-	</span><span class="kw">fn </span>has_role(
-		user: T::AccountId,
-		pallet: IdOrVec,
-		scope_id: <span class="kw-2">&amp;</span>ScopeId,
-		role_ids: Vec&lt;RoleId&gt;,
-	) -&gt; DispatchResult {
-		<span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
-		<span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
-		<span class="kw">let </span>user_roles = &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet_id_enum.to_id(), scope_id));
-		<span class="macro">ensure!</span>(user_roles.iter().any(|r| role_ids.contains(r)), Error::&lt;T&gt;::NotAuthorized);
-		<span class="prelude-val">Ok</span>(())
-	}
-	<span class="doccomment">/// User any-role validation function
-	///
-	/// Checks if the user has at least one role in the given scope.
-	/// ### Parameters:
-	/// - `user`: The account to validate.
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `scope_id`: The scope context in which the role will be validated.
-		</span><span class="kw">fn </span>does_user_have_any_role_in_scope(account: T::AccountId, pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId) -&gt; bool {
-				<span class="kw">let </span>pallet_id = pallet.to_id();
-				UsersByScope::&lt;T&gt;::iter_prefix((pallet_id, scope_id)).any(|(<span class="kw">_</span>, users)| {
-				users.contains(<span class="kw-2">&amp;</span>account)
-			})
-		}
-    <span class="doccomment">/// Scope validation
-    ///
-    /// Checks if the scope exists in that pallet.
-    /// ### Parameters:
-    /// - `pallet_id`: The unique pallet identifier.
-    /// - `scope_id`: The scope to validate.
-    </span><span class="kw">fn </span>scope_exists(pallet: IdOrVec, scope_id:<span class="kw-2">&amp;</span>ScopeId) -&gt; DispatchResult{
-        <span class="macro">ensure!</span>(&lt;Scopes&lt;T&gt;&gt;::get(pallet.to_id()).contains(scope_id), Error::&lt;T&gt;::ScopeNotFound);
+  <span class="doccomment">/// Role removal from the user.
+  ///
+  /// Removes the specified role from a user in a scope context. the user will no longer
+  /// be able to enforce the removed role and its permissions.
+  /// ### Parameters:
+  /// - `user`: The account which the role will be removed.
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope in which the role will be removed.
+  /// - `role_id`: The role identifier to remove from the user.
+  </span><span class="kw">fn </span>remove_role_from_user(
+    user: T::AccountId,
+    pallet: IdOrVec,
+    scope_id: <span class="kw-2">&amp;</span>ScopeId,
+    role_id: RoleId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    &lt;RolesByUser&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(
+      (user.clone(), pallet_id, scope_id),
+      |user_roles_option| {
+        <span class="kw">let </span>user_roles = user_roles_option.as_mut().ok_or(Error::&lt;T&gt;::UserHasNoRoles)<span class="question-mark">?</span>;
+        <span class="kw">let </span>r_pos =
+          user_roles.iter().position(|<span class="kw-2">&amp;</span>r| r == role_id).ok_or(Error::&lt;T&gt;::RoleNotFound)<span class="question-mark">?</span>;
+        user_roles.remove(r_pos);
+        <span class="kw">if </span>user_roles.is_empty() {
+          user_roles_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>)
+        }
         <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Permission validation.
-    ///
-    /// Checks if the permission exists in a pallet context.
-    /// ### Parameters:
-    /// - `pallet_id`: The unique pallet identifier.
-    /// - `permission_id`: The permission to validate.
-    </span><span class="kw">fn </span>permission_exists(pallet: IdOrVec, permission_id: <span class="kw-2">&amp;</span>PermissionId)-&gt;DispatchResult{
-        <span class="macro">ensure!</span>(&lt;Permissions&lt;T&gt;&gt;::contains_key(pallet.to_id(), permission_id), Error::&lt;T&gt;::PermissionNotFound);
+      },
+    )<span class="question-mark">?</span>;
+    &lt;UsersByScope&lt;T&gt;&gt;::try_mutate_exists::&lt;<span class="kw">_</span>, (), DispatchError, <span class="kw">_</span>&gt;(
+      (pallet_id, scope_id, role_id),
+      |auth_users_option| {
+        <span class="kw">let </span>auth_users = auth_users_option.as_mut().ok_or(Error::&lt;T&gt;::RoleHasNoUsers)<span class="question-mark">?</span>;
+        <span class="kw">let </span>u_pos = auth_users.iter().position(|u| <span class="kw-2">*</span>u == user).ok_or(Error::&lt;T&gt;::UserNotFound)<span class="question-mark">?</span>;
+        auth_users.remove(u_pos);
+        <span class="kw">if </span>auth_users.is_empty() {
+          auth_users_option.clone_from(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+        }
         <span class="prelude-val">Ok</span>(())
-    }
+      },
+    )<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::RoleRemovedFromUser(pallet_id, scope_id.to_owned(), role_id, user));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="doccomment">/// Role validation
-    ///
-    /// Checks if the role is linked to the pallet.
-    /// ### Parameters:
-    /// - `pallet_id`: The unique pallet identifier.
-    /// - `role_id`: The role to validate
-    </span><span class="kw">fn </span>is_role_linked_to_pallet(pallet: IdOrVec, role_id: <span class="kw-2">&amp;</span>RoleId)-&gt; DispatchResult{
-        <span class="comment">// The role exists, now  check if the role is assigned to that pallet
-        </span>&lt;PalletRoles&lt;T&gt;&gt;::get(pallet.to_id()).iter().find(|pallet_role| <span class="kw-2">*</span>pallet_role==role_id )
-            .ok_or(Error::&lt;T&gt;::RoleNotLinkedToPallet)<span class="question-mark">?</span>;
+  <span class="doccomment">/// Permission creation and coupling with a role.
+  ///
+  /// Creates the specified permissions if needed and assigns them to a role.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role identifier to which the permissions will
+  /// be linked to.
+  /// - `permissions`: A list of permissions to create and link,
+  /// encoded in bytes.
+  </span><span class="kw">fn </span>create_and_set_permissions(
+    pallet: IdOrVec,
+    role_id: RoleId,
+    permissions: Vec&lt;Vec&lt;u8&gt;&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;BoundedVec&lt;PermissionId, <span class="self">Self</span>::MaxPermissionsPerRole&gt;, DispatchError&gt; {
+    <span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(permissions.clone()), Error::&lt;T&gt;::DuplicatePermission);
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum.clone(), <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>permission_ids = Vec::&lt;[u8; <span class="number">32</span>]&gt;::new();
+    <span class="kw">for </span>permission <span class="kw">in </span>permissions {
+      permission_ids.push(<span class="self">Self</span>::create_permission(pallet_id_enum.clone(), permission.to_owned())<span class="question-mark">?</span>);
+    }
+    <span class="self">Self</span>::set_multiple_permissions_to_role(pallet_id_enum, role_id, permission_ids.clone())<span class="question-mark">?</span>;
+    <span class="kw">let </span>b_permissions = <span class="self">Self</span>::bound(permission_ids, Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::PermissionsCreatedAndSet(
+      pallet.to_id(),
+      role_id,
+      b_permissions.clone(),
+    ));
+    <span class="prelude-val">Ok</span>(b_permissions)
+  }
+
+  <span class="doccomment">/// Permission creation
+  ///
+  /// Creates the specified permission in the specified pallet..
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `permission`: The permission to insert, encoded in bytes.
+  </span><span class="kw">fn </span>create_permission(
+    pallet: IdOrVec,
+    permission: Vec&lt;u8&gt;,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;PermissionId, DispatchError&gt; {
+    <span class="kw">let </span>permission_id = <span class="self">Self</span>::to_id(permission.clone());
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+
+    <span class="kw">let </span>b_permission =
+      <span class="self">Self</span>::bound::&lt;<span class="kw">_</span>, T::PermissionMaxLen&gt;(permission, Error::&lt;T&gt;::ExceedPermissionMaxLen)<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>!&lt;Permissions&lt;T&gt;&gt;::contains_key(pallet_id, permission_id) {
+      &lt;Permissions&lt;T&gt;&gt;::insert(pallet_id, permission_id, b_permission);
+    }
+    <span class="prelude-val">Ok</span>(permission_id)
+  }
+
+  <span class="doccomment">/// Permission linking to role.
+  ///
+  /// Assigns a previously created permission to a role.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role identifier to which the permission will be added.
+  /// - `permission_id`: The permission to assign to the role.
+  </span><span class="kw">fn </span>set_permission_to_role(
+    pallet: IdOrVec,
+    role_id: RoleId,
+    permission_id: PermissionId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
+    <span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
+
+    <span class="macro">ensure!</span>(
+      &lt;Permissions&lt;T&gt;&gt;::contains_key(pallet_id, permission_id),
+      Error::&lt;T&gt;::PermissionNotFound
+    );
+
+    &lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate(pallet_id, role_id, |role_permissions| {
+      <span class="macro">ensure!</span>(!role_permissions.contains(<span class="kw-2">&amp;</span>permission_id), Error::&lt;T&gt;::DuplicatePermission);
+      role_permissions
+        .try_push(permission_id)
+        .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)
+    })<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Multiple permissions assignation to a role
+  ///
+  /// Assigns multiple, previously created permissions
+  /// to a role in a pallet context.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role identifier to which the permissions will be added.
+  /// - `permissions`: A list of permission identifiers to assign to the role.
+  </span><span class="kw">fn </span>set_multiple_permissions_to_role(
+    pallet: IdOrVec,
+    role_id: RoleId,
+    permissions: Vec&lt;PermissionId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="comment">// checks for duplicates:
+    </span><span class="macro">ensure!</span>(<span class="self">Self</span>::has_unique_elements(permissions.clone()), Error::&lt;T&gt;::DuplicatePermission);
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
+    <span class="self">Self</span>::is_role_linked_to_pallet(pallet_id_enum, <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>role_permissions = &lt;PermissionsByRole&lt;T&gt;&gt;::get(<span class="kw-2">&amp;</span>pallet_id, role_id);
+    <span class="kw">for </span>id <span class="kw">in </span>permissions.clone() {
+      <span class="macro">ensure!</span>(!role_permissions.contains(<span class="kw-2">&amp;</span>id), Error::&lt;T&gt;::PermissionAlreadyLinkedToRole);
+    }
+    &lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate(pallet_id, role_id, |role_permissions| {
+      role_permissions.try_extend(permissions.into_iter())
+    })
+    .map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::ExceedMaxPermissionsPerRole)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="doccomment">/// Permission revocation from role
+  ///
+  /// Remove a permission linked to a role (in a pallet context).
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role identifier to which the permissions will be removed from.
+  /// - `permission_id`: The permission to deassign.
+  </span><span class="kw">fn </span>do_revoke_permission_from_role(
+    pallet: IdOrVec,
+    role_id: RoleId,
+    permission_id: PermissionId,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::permission_exists(pallet.clone(), <span class="kw-2">&amp;</span>permission_id)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::is_role_linked_to_pallet(pallet.clone(), <span class="kw-2">&amp;</span>role_id)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::is_permission_linked_to_role(pallet.clone(), <span class="kw-2">&amp;</span>role_id, <span class="kw-2">&amp;</span>permission_id)<span class="question-mark">?</span>;
+    &lt;PermissionsByRole&lt;T&gt;&gt;::try_mutate::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, DispatchError, <span class="kw">_</span>&gt;(
+      pallet.to_id(),
+      role_id,
+      |role_permissions| {
+        <span class="kw">let </span>p_index = role_permissions
+          .iter()
+          .position(|<span class="kw-2">&amp;</span>p| p == permission_id)
+          .ok_or(Error::&lt;T&gt;::PermissionNotLinkedToRole)<span class="question-mark">?</span>;
+        role_permissions.remove(p_index);
         <span class="prelude-val">Ok</span>(())
-    }
+      },
+    )<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::PermissionRevokedFromRole(pallet.to_id(), role_id, permission_id));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="doccomment">/// Permission linking validation
-    ///
-    /// Checks if the permission is linked to the role in the pallet context.
-    /// ### Parameters:
-    /// - `pallet_id`: The unique pallet identifier.
-    /// - `role_id`: The role which should have the permission.
-    /// - `permission_id`: The permission which the role should have.
-    </span><span class="kw">fn </span>is_permission_linked_to_role(pallet: IdOrVec, role_id: <span class="kw-2">&amp;</span>RoleId, permission_id: <span class="kw-2">&amp;</span>PermissionId)-&gt; DispatchResult{
-        <span class="kw">let </span>role_permissions = &lt;PermissionsByRole&lt;T&gt;&gt;::get(pallet.to_id(), role_id);
-        <span class="macro">ensure!</span>(role_permissions.contains(permission_id), Error::&lt;T&gt;::PermissionNotLinkedToRole );
-        <span class="prelude-val">Ok</span>(())
-    }
+  <span class="doccomment">/// Permission removal from pallet
+  ///
+  /// Use with caution. The permission will be deleted from all the roles and pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `permission_id`: The permission to remove completely.
+  </span><span class="kw">fn </span>do_remove_permission_from_pallet(pallet: IdOrVec, permission: PermissionId) -&gt; DispatchResult {
+    <span class="self">Self</span>::permission_exists(pallet.clone(), <span class="kw-2">&amp;</span>permission)<span class="question-mark">?</span>;
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    <span class="comment">// find all the roles that have the permission
+    </span><span class="kw">let </span>affected_roles: Vec&lt;RoleId&gt; = <span class="self">Self</span>::get_roles_that_have_permission(pallet_id, <span class="kw-2">&amp;</span>permission);
+    <span class="comment">// remove the permission from all affected roles
+    </span>affected_roles.iter().for_each(|role| {
+      &lt;PermissionsByRole&lt;T&gt;&gt;::mutate(pallet_id, role, |permissions| {
+        permissions.retain(|<span class="kw-2">&amp;</span>p| p != permission)
+      })
+    });
+    <span class="comment">// remove the permission from the pallet
+    </span>&lt;Permissions&lt;T&gt;&gt;::remove(pallet_id, permission);
+    <span class="self">Self</span>::deposit_event(Event::PermissionRemovedFromPallet(
+      pallet_id,
+      permission,
+      <span class="self">Self</span>::bound(affected_roles, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>, <span class="comment">/* this bound should never
+                                                                          * fail */
+    </span>));
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="doccomment">/// Get roles that have a permission
-	///
-	/// Returns all the roles within the pallet that have a permission
-	/// ### Parameters:
-	/// - `pallet_id`: The unique pallet identifier.
-	/// - `permission_id`: The permission which the roles should have.
-	</span><span class="kw">fn </span>get_roles_that_have_permission(
-		pallet_id: PalletId,
-		permission_id: <span class="kw-2">&amp;</span>PermissionId,
-	) -&gt; Vec&lt;RoleId&gt; {
-		&lt;PermissionsByRole&lt;T&gt;&gt;::iter_prefix(pallet_id)
-			.filter_map(|(role, permissions)| permissions.contains(permission_id).then(|| role))
-			.collect()
-	}
+  <span class="comment">/* ---- Helper functions ---- */
 
-    <span class="doccomment">/// Role list length
-    ///
-    /// Returns the number of user that have the specified role in a scope context.
-    /// ### Parameters:
-    /// - `pallet_id`: The unique pallet identifier.
-    /// - `scope_id`: The scope in which the users will be retrieved.
-    /// - `role_id`: The role in which the number of users will be counted.
-    </span><span class="kw">fn </span>get_role_users_len(pallet: IdOrVec, scope_id:<span class="kw-2">&amp;</span>ScopeId, role_id: <span class="kw-2">&amp;</span>RoleId) -&gt;usize{
-        &lt;UsersByScope&lt;T&gt;&gt;::get((pallet.to_id(), scope_id, role_id)).len()
-    }
+  </span><span class="doccomment">/// Authorization function
+  ///
+  /// Checks if the user has a role that includes the specified permission.
+  /// ### Parameters:
+  /// - `user`: The account to validate.
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope context in which the permission will be validated.
+  /// - `permission_id`: The permission the user must have.
+  </span><span class="kw">fn </span>is_authorized(
+    user: T::AccountId,
+    pallet: IdOrVec,
+    scope_id: <span class="kw-2">&amp;</span>ScopeId,
+    permission_id: <span class="kw-2">&amp;</span>PermissionId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="kw">let </span>pallet_id = pallet_id_enum.to_id();
+    <span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
+    <span class="self">Self</span>::permission_exists(pallet_id_enum, permission_id)<span class="question-mark">?</span>;
+    <span class="comment">// get roles the user has in this scope
+    </span><span class="kw">let </span>user_roles = &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet_id, scope_id));
+    <span class="comment">// determine if one of the roles has the requested permission
+    </span><span class="kw">let </span>has_permission = user_roles
+      .iter()
+      .any(|r_id| &lt;PermissionsByRole&lt;T&gt;&gt;::get(pallet_id, r_id).contains(permission_id));
+    <span class="macro">ensure!</span>(has_permission, Error::&lt;T&gt;::NotAuthorized);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="kw">fn </span>to_id(v: Vec&lt;u8&gt;)-&gt;[u8;<span class="number">32</span>]{
-        v.using_encoded(blake2_256)
-    }
+  <span class="doccomment">/// User role validation function
+  ///
+  /// Checks if the user has at least one of the specified roles.
+  /// ### Parameters:
+  /// - `user`: The account to validate.
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope context in which the permission will be validated.
+  /// - `role_ids`: A list of roles to validate.
+  </span><span class="kw">fn </span>has_role(
+    user: T::AccountId,
+    pallet: IdOrVec,
+    scope_id: <span class="kw-2">&amp;</span>ScopeId,
+    role_ids: Vec&lt;RoleId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>pallet_id_enum = pallet.to_id_enum();
+    <span class="self">Self</span>::scope_exists(pallet_id_enum.clone(), scope_id)<span class="question-mark">?</span>;
+    <span class="kw">let </span>user_roles = &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet_id_enum.to_id(), scope_id));
+    <span class="macro">ensure!</span>(user_roles.iter().any(|r| role_ids.contains(r)), Error::&lt;T&gt;::NotAuthorized);
+    <span class="prelude-val">Ok</span>(())
+  }
+  <span class="doccomment">/// User any-role validation function
+  ///
+  /// Checks if the user has at least one role in the given scope.
+  /// ### Parameters:
+  /// - `user`: The account to validate.
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope context in which the role will be validated.
+  </span><span class="kw">fn </span>does_user_have_any_role_in_scope(
+    account: T::AccountId,
+    pallet: IdOrVec,
+    scope_id: <span class="kw-2">&amp;</span>ScopeId,
+  ) -&gt; bool {
+    <span class="kw">let </span>pallet_id = pallet.to_id();
+    UsersByScope::&lt;T&gt;::iter_prefix((pallet_id, scope_id)).any(|(<span class="kw">_</span>, users)| users.contains(<span class="kw-2">&amp;</span>account))
+  }
+  <span class="doccomment">/// Scope validation
+  ///
+  /// Checks if the scope exists in that pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope to validate.
+  </span><span class="kw">fn </span>scope_exists(pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(&lt;Scopes&lt;T&gt;&gt;::get(pallet.to_id()).contains(scope_id), Error::&lt;T&gt;::ScopeNotFound);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="kw">fn </span>get_roles_by_user(user: T::AccountId, pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId) -&gt; Vec&lt;RoleId&gt; {
-        &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet.to_id(), scope_id)).into()
-    }
+  <span class="doccomment">/// Permission validation.
+  ///
+  /// Checks if the permission exists in a pallet context.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `permission_id`: The permission to validate.
+  </span><span class="kw">fn </span>permission_exists(pallet: IdOrVec, permission_id: <span class="kw-2">&amp;</span>PermissionId) -&gt; DispatchResult {
+    <span class="macro">ensure!</span>(
+      &lt;Permissions&lt;T&gt;&gt;::contains_key(pallet.to_id(), permission_id),
+      Error::&lt;T&gt;::PermissionNotFound
+    );
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="kw">type </span>MaxRolesPerPallet = T::MaxRolesPerPallet;
+  <span class="doccomment">/// Role validation
+  ///
+  /// Checks if the role is linked to the pallet.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role to validate
+  </span><span class="kw">fn </span>is_role_linked_to_pallet(pallet: IdOrVec, role_id: <span class="kw-2">&amp;</span>RoleId) -&gt; DispatchResult {
+    <span class="comment">// The role exists, now  check if the role is assigned to that pallet
+    </span>&lt;PalletRoles&lt;T&gt;&gt;::get(pallet.to_id())
+      .iter()
+      .find(|pallet_role| <span class="kw-2">*</span>pallet_role == role_id)
+      .ok_or(Error::&lt;T&gt;::RoleNotLinkedToPallet)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="kw">type </span>MaxPermissionsPerRole = T::MaxPermissionsPerRole;
+  <span class="doccomment">/// Permission linking validation
+  ///
+  /// Checks if the permission is linked to the role in the pallet context.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `role_id`: The role which should have the permission.
+  /// - `permission_id`: The permission which the role should have.
+  </span><span class="kw">fn </span>is_permission_linked_to_role(
+    pallet: IdOrVec,
+    role_id: <span class="kw-2">&amp;</span>RoleId,
+    permission_id: <span class="kw-2">&amp;</span>PermissionId,
+  ) -&gt; DispatchResult {
+    <span class="kw">let </span>role_permissions = &lt;PermissionsByRole&lt;T&gt;&gt;::get(pallet.to_id(), role_id);
+    <span class="macro">ensure!</span>(role_permissions.contains(permission_id), Error::&lt;T&gt;::PermissionNotLinkedToRole);
+    <span class="prelude-val">Ok</span>(())
+  }
 
-    <span class="kw">type </span>PermissionMaxLen = T::PermissionMaxLen;
+  <span class="doccomment">/// Get roles that have a permission
+  ///
+  /// Returns all the roles within the pallet that have a permission
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `permission_id`: The permission which the roles should have.
+  </span><span class="kw">fn </span>get_roles_that_have_permission(
+    pallet_id: PalletId,
+    permission_id: <span class="kw-2">&amp;</span>PermissionId,
+  ) -&gt; Vec&lt;RoleId&gt; {
+    &lt;PermissionsByRole&lt;T&gt;&gt;::iter_prefix(pallet_id)
+      .filter_map(|(role, permissions)| permissions.contains(permission_id).then(|| role))
+      .collect()
+  }
 
-    <span class="kw">type </span>RoleMaxLen =  T::RoleMaxLen;
+  <span class="doccomment">/// Role list length
+  ///
+  /// Returns the number of user that have the specified role in a scope context.
+  /// ### Parameters:
+  /// - `pallet_id`: The unique pallet identifier.
+  /// - `scope_id`: The scope in which the users will be retrieved.
+  /// - `role_id`: The role in which the number of users will be counted.
+  </span><span class="kw">fn </span>get_role_users_len(pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId, role_id: <span class="kw-2">&amp;</span>RoleId) -&gt; usize {
+    &lt;UsersByScope&lt;T&gt;&gt;::get((pallet.to_id(), scope_id, role_id)).len()
+  }
 
+  <span class="kw">fn </span>to_id(v: Vec&lt;u8&gt;) -&gt; [u8; <span class="number">32</span>] {
+    v.using_encoded(blake2_256)
+  }
+
+  <span class="kw">fn </span>get_roles_by_user(user: T::AccountId, pallet: IdOrVec, scope_id: <span class="kw-2">&amp;</span>ScopeId) -&gt; Vec&lt;RoleId&gt; {
+    &lt;RolesByUser&lt;T&gt;&gt;::get((user, pallet.to_id(), scope_id)).into()
+  }
+
+  <span class="kw">type </span>MaxRolesPerPallet = T::MaxRolesPerPallet;
+
+  <span class="kw">type </span>MaxPermissionsPerRole = T::MaxPermissionsPerRole;
+
+  <span class="kw">type </span>PermissionMaxLen = T::PermissionMaxLen;
+
+  <span class="kw">type </span>RoleMaxLen = T::RoleMaxLen;
 }
 
-<span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt;{
-    <span class="kw">fn </span>bound&lt;E,Len: Get&lt;u32&gt;&gt;(vec: Vec&lt;E&gt;, err : Error&lt;T&gt; )-&gt;<span class="prelude-ty">Result</span>&lt;BoundedVec&lt;E, Len&gt;, Error&lt;T&gt;&gt;{
-        BoundedVec::&lt;E,Len&gt;::try_from(vec).map_err(|<span class="kw">_</span>| err)
-    }
+<span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
+  <span class="kw">fn </span>bound&lt;E, Len: Get&lt;u32&gt;&gt;(vec: Vec&lt;E&gt;, err: Error&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;BoundedVec&lt;E, Len&gt;, Error&lt;T&gt;&gt; {
+    BoundedVec::&lt;E, Len&gt;::try_from(vec).map_err(|<span class="kw">_</span>| err)
+  }
 
-    <span class="kw">fn </span>has_unique_elements&lt;E: Ord + Clone&gt;(vec: Vec&lt;E&gt;) -&gt; bool{
-        <span class="kw">let </span><span class="kw-2">mut </span>filtered_vec = vec.clone();
-        filtered_vec.sort();
-        filtered_vec.dedup();
-        vec.len() == filtered_vec.len()
-    }
-
+  <span class="kw">fn </span>has_unique_elements&lt;E: Ord + Clone&gt;(vec: Vec&lt;E&gt;) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>filtered_vec = vec.clone();
+    filtered_vec.sort();
+    filtered_vec.dedup();
+    vec.len() == filtered_vec.len()
+  }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pallet_rbac" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
