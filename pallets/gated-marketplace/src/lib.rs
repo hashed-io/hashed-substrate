@@ -29,7 +29,7 @@ pub mod pallet {
 	>>::Balance;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_fruniques::Config {
+	pub trait Config: frame_system::Config + pallet_fruniques::Config + pallet_mapped_assets::Config  {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Moment: Parameter
@@ -332,6 +332,8 @@ pub mod pallet {
 		UserAlreadyBlocked,
 		/// The owner of the NFT is not in the marketplace
 		OwnerNotInMarketplace,
+		/// MappedAssetId not found
+		AssetNotFound,
 	}
 
 	#[pallet::call]
@@ -363,15 +365,17 @@ pub mod pallet {
 			label: BoundedVec<u8, T::LabelMaxLen>,
 			buy_fee: u32,
 			sell_fee: u32,
+			asset_id: T::AssetId,
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?; // origin will be market owner
+			let who = ensure_signed(origin.clone())?; // origin will be market owner
 			let m = Marketplace {
 				label,
 				buy_fee: Permill::from_percent(buy_fee),
 				sell_fee: Permill::from_percent(sell_fee),
+				asset_id,
 				creator: who.clone(),
 			};
-			Self::do_create_marketplace(who, admin, m)
+			Self::do_create_marketplace(origin, admin, m)
 		}
 
 		/// Block or Unblock a user from apllying to a marketplace.
@@ -661,7 +665,7 @@ pub mod pallet {
 			marketplace_id: [u8; 32],
 			collection_id: T::CollectionId,
 			item_id: T::ItemId,
-			price: BalanceOf<T>,
+			price: T::Balance,
 			percentage: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -673,7 +677,9 @@ pub mod pallet {
 				item_id,
 				price,
 				percentage,
-			)
+			)?;
+
+			Ok(())
 		}
 
 		/// Accepts a sell order.
@@ -693,9 +699,9 @@ pub mod pallet {
 		#[pallet::call_index(12)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
 		pub fn take_sell_offer(origin: OriginFor<T>, offer_id: [u8; 32]) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
+			ensure_signed(origin.clone())?;
 
-			Self::do_take_sell_offer(who, offer_id)
+			Self::do_take_sell_offer(origin, offer_id)
 		}
 
 		/// Delete an offer.
@@ -744,7 +750,7 @@ pub mod pallet {
 			marketplace_id: [u8; 32],
 			collection_id: T::CollectionId,
 			item_id: T::ItemId,
-			price: BalanceOf<T>,
+			price: T::Balance,
 			percentage: u32,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -756,7 +762,9 @@ pub mod pallet {
 				item_id,
 				price,
 				percentage,
-			)
+			)?;
+
+			Ok(())
 		}
 
 		/// Accepts a buy order.

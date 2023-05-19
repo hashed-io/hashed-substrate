@@ -5,11 +5,11 @@ use frame_support::sp_io::hashing::blake2_256;
 use pallet_rbac::types::*;
 use scale_info::prelude::vec; // vec![] macro
 use sp_runtime::sp_std::vec::Vec; // vec primitive
-
-use frame_support::traits::Currency;
-use frame_support::traits::ExistenceRequirement::KeepAlive;
+use frame_system::pallet_prelude::*;
 use frame_support::traits::Time;
 use sp_runtime::Permill;
+use sp_runtime::traits::StaticLookup;
+use frame_system::RawOrigin;
 
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup() -> DispatchResult {
@@ -50,17 +50,30 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_create_marketplace(
-		owner: T::AccountId,
+		origin: OriginFor<T>,
 		admin: T::AccountId,
 		marketplace: Marketplace<T>,
 	) -> DispatchResult {
+		let owner = ensure_signed(origin.clone())?;
 		// Gen market id
 		let marketplace_id = marketplace.using_encoded(blake2_256);
+		//Get asset id
+		let asset_id = marketplace.asset_id;
+		let min_balance: T::Balance = T::Balance::from(1u32);
+
+
 		// ensure the generated id is unique
 		ensure!(
 			!<Marketplaces<T>>::contains_key(marketplace_id),
 			Error::<T>::MarketplaceAlreadyExists
 		);
+		// Create asset
+		// pallet_mapped_assets::Pallet::<T>::create(
+		// 	origin,
+		// 	asset_id,
+		// 	T::Lookup::unlookup(owner.clone()),
+		// 	min_balance,
+		// )?;
 		//Insert on marketplaces and marketplaces by auth
 		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
 		Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
@@ -232,9 +245,9 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 	) -> DispatchResult {
 
-		//since users can self-enroll, the caller of this function must validate 
+		//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
+
 
 		//ensure the account is not already in the marketplace
 		ensure!(
@@ -248,10 +261,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-		
+
 		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		Ok(())
 	}
 
@@ -327,9 +340,9 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
-		price: BalanceOf<T>,
+		price: T::Balance,
 		percentage: u32,
-	) -> DispatchResult {
+	) -> Result<[u8; 32], DispatchError> {
 		//This function is only called by the owner of the marketplace
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
@@ -394,7 +407,7 @@ impl<T: Config> Pallet<T> {
 		pallet_fruniques::Pallet::<T>::do_freeze(&collection_id, item_id)?;
 
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		Ok(())
+		Ok(offer_id)
 	}
 
 	pub fn do_enlist_buy_offer(
@@ -402,13 +415,15 @@ impl<T: Config> Pallet<T> {
 		marketplace_id: [u8; 32],
 		collection_id: T::CollectionId,
 		item_id: T::ItemId,
-		price: BalanceOf<T>,
+		price: T::Balance,
 		percentage: u32,
-	) -> DispatchResult {
+	) -> Result<[u8; 32], DispatchError> {
 
-		
+
 		//ensure the marketplace exists
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
+
+
 
 		//ensure the collection exists
 		//For this case user doesn't need to be the owner of the collection
@@ -427,8 +442,12 @@ impl<T: Config> Pallet<T> {
 			&item_id
 		)?;
 
+		//Get asset id
+		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
+
 		//ensure user has enough balance to create the offer
-		let total_user_balance = T::Currency::total_balance(&authority);
+		let total_user_balance = pallet_mapped_assets::Pallet::<T>::balance(asset_id,authority.clone());
+
 		ensure!(total_user_balance >= price, Error::<T>::NotEnoughBalance);
 
 		//ensure the price is valid
@@ -478,16 +497,19 @@ impl<T: Config> Pallet<T> {
 			.map_err(|_| Error::<T>::OfferStorageError)?;
 
 		Self::deposit_event(Event::OfferStored(collection_id, item_id, offer_id));
-		Ok(())
+
+		Ok(offer_id)
 	}
 
-	pub fn do_take_sell_offer(buyer: T::AccountId, offer_id: [u8; 32]) -> DispatchResult
+	pub fn do_take_sell_offer(origin : OriginFor<T>, offer_id: [u8; 32]) -> DispatchResult
 	where
 		<T as pallet_uniques::Config>::ItemId: From<u32>,
 	{
 		//This extrinsic is called by the user who wants to buy the item
 		//get offer data
+		let buyer = ensure_signed(origin.clone())?;
 		let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
+		let marketplace_id = offer_data.marketplace_id;
 
 		Self::is_authorized(buyer.clone(), &offer_data.marketplace_id, Permission::TakeSellOffer)?;
 
@@ -509,17 +531,33 @@ impl<T: Config> Pallet<T> {
 		//ensure the offer is open and available
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
 		//TODO: Use free_balance instead of total_balance
-		//Get the buyer's balance
-		let total_amount_buyer = T::Currency::total_balance(&buyer);
+		//Get asset id
+		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
+
+		//ensure user has enough balance to create the offer
+		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), buyer.clone());
 		//ensure the buyer has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
-		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
+		let owners_cut: T::Balance = offer_data.price - offer_data.fee;
 		//Transfer the balance
-		T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
+		pallet_mapped_assets::Pallet::<T>::transfer(
+			origin.clone(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(owner_item.clone()),
+			owners_cut,
+		)?;
+		//T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
+
+		pallet_mapped_assets::Pallet::<T>::transfer(
+			origin.clone(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(marketplace.creator.clone()),
+			offer_data.fee,
+		)?;
+		//T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 		if offer_data.percentage == Permill::from_percent(100) {
@@ -601,23 +639,41 @@ impl<T: Config> Pallet<T> {
 		//ensure the offer is open and available
 		ensure!(offer_data.status == OfferStatus::Open, Error::<T>::OfferIsNotAvailable);
 
-		//TODO: Use free_balance instead of total_balance
-		//Get the buyer's balance
-		let total_amount_buyer = T::Currency::total_balance(&offer_data.creator);
+		let marketplace_id = offer_data.marketplace_id;
+		//Get asset id
+		let asset_id = <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?.asset_id;
+
+		//ensure user has enough balance to create the offer
+		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), offer_data.creator.clone());
 		//ensure the buy_offer_creator has enough balance to buy the item
 		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
-		let owners_cut: BalanceOf<T> = offer_data.price - offer_data.fee;
+		let owners_cut: T::Balance = offer_data.price - offer_data.fee;
 		//Transfer the balance to the owner of the item
-		T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
-		T::Currency::transfer(
+		pallet_mapped_assets::Pallet::<T>::transfer(
+			RawOrigin::Signed(offer_data.creator.clone()).into(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(owner_item.clone()),
+			owners_cut,
+		)?;
+		//T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
+
+		pallet_mapped_assets::Pallet::<T>::transfer(
+			RawOrigin::Signed(offer_data.creator.clone()).into(),
+			asset_id.clone().into(),
+			T::Lookup::unlookup(marketplace.creator.clone()),
+			offer_data.fee,
+		)?;
+
+		/* T::Currency::transfer(
 			&offer_data.creator,
 			&marketplace.creator,
 			offer_data.fee,
 			KeepAlive,
-		)?;
+		)?; */
+
 		pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
 		if offer_data.percentage == Permill::from_percent(100) {
@@ -1137,8 +1193,8 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn is_the_offer_valid(price: BalanceOf<T>, percentage: Permill) -> DispatchResult {
-		let minimun_amount: BalanceOf<T> = 1000u32.into();
+	fn is_the_offer_valid(price: T::Balance, percentage: Permill) -> DispatchResult {
+		let minimun_amount: T::Balance = 1000u32.into();
 		ensure!(price > minimun_amount, Error::<T>::PriceMustBeGreaterThanZero);
 		ensure!(percentage <= Permill::from_percent(99), Error::<T>::ExceedMaxPercentage);
 		ensure!(percentage >= Permill::from_percent(1), Error::<T>::ExceedMinPercentage);

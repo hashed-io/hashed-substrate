@@ -60,9 +60,12 @@ use polkadot_runtime_common::{BlockHashCount, SlowAdjustingFeeUpdate};
 
 use weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight};
 
+use pallet_mapped_assets;
+
 // XCM Imports
 use xcm::latest::prelude::BodyId;
 use xcm_executor::XcmExecutor;
+use pallet_mapped_assets::DefaultCallback;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
@@ -1041,6 +1044,29 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type Rbac = RBAC;
 }
 
+impl pallet_mapped_assets::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = u128;
+	type AssetId = u32;
+	type Currency = Balances;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ConstU128<DOLLARS>;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = ();
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = u32;
+	type RemoveItemsLimit = RemoveItemsLimit;
+	type AssetIdParameter = u32;
+	type CallbackHandle = DefaultCallback;
+}
+
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;
 	pub const MaxRolesPerPallet: u32 = 20;
@@ -1052,6 +1078,7 @@ parameter_types! {
 }
 
 impl pallet_rbac::Config for Runtime {
+	type RemoveOrigin = EnsureRoot<AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
@@ -1191,6 +1218,7 @@ construct_runtime!(
 		ConfidentialDocs: pallet_confidential_docs::{Pallet, Call, Storage, Event<T>}  = 156,
 		FundAdmin: pallet_fund_admin::{Pallet, Call, Storage, Event<T>}  = 157,
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>} = 158,
+		MappedAssets: pallet_mapped_assets::{Pallet, Call, Storage, Event<T>} = 159,
 	}
 );
 

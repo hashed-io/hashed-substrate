@@ -115,7 +115,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 153,
+	spec_version: 160,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -761,6 +761,10 @@ parameter_types! {
 
 impl pallet_rbac::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	type RemoveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
 	type MaxScopesPerPallet = MaxScopesPerPallet;
 	type MaxRolesPerPallet = MaxRolesPerPallet;
 	type RoleMaxLen = RoleMaxLen;
@@ -776,6 +780,7 @@ impl pallet_afloat::Config for Runtime {
 	type TimeProvider = Timestamp;
 	type RemoveOrigin = EnsureRoot<AccountId>;
 	type Rbac = RBAC;
+	type ItemId = u32;
 }
 
 parameter_types! {

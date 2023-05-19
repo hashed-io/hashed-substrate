@@ -4,7 +4,7 @@ use super::*;
 const LOG_TARGET: &str = "\nFund Admin pallet migration ";
 use frame_support::{pallet_prelude::*, log, traits::OnRuntimeUpgrade, storage_alias, Identity};
 use sp_runtime::Saturating;
-
+use sp_std::vec::Vec;
 use crate::types::*;
 
 mod v0 {

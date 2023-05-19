@@ -1,34 +1,33 @@
 //use super::*;
 use frame_support::pallet_prelude::*;
-use sp_runtime::sp_std::vec::Vec;
 use frame_support::sp_io::hashing::blake2_256;
+use sp_runtime::sp_std::vec::Vec;
 
+pub type PalletId = [u8; 32];
+pub type RoleId = [u8; 32];
+pub type ScopeId = [u8; 32];
+pub type PermissionId = [u8; 32];
 
-pub type PalletId = [u8;32];
-pub type RoleId = [u8;32];
-pub type ScopeId = [u8;32];
-pub type PermissionId = [u8;32];
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq,)]
-pub enum IdOrVec{
-    Id([u8;32]),
-    Vec(Vec<u8>)
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq, TypeInfo)]
+pub enum IdOrVec {
+	Id([u8; 32]),
+	Vec(Vec<u8>),
 }
 
-impl IdOrVec{
-    pub fn to_id_enum(&self)->Self{
-        match self{
-            Self::Id(_) => self.clone(),
-            Self::Vec(_) => Self::Id(Self::to_id(self))
-        }
-    }
+impl IdOrVec {
+	pub fn to_id_enum(&self) -> Self {
+		match self {
+			Self::Id(_) => self.clone(),
+			Self::Vec(_) => Self::Id(Self::to_id(self)),
+		}
+	}
 
-    pub fn to_id(&self)->[u8;32]{
-        match self{
-            Self::Id(id) => *id,
-            Self::Vec(v) => v.clone().using_encoded(blake2_256)
-        }
-    }
+	pub fn to_id(&self) -> [u8; 32] {
+		match self {
+			Self::Id(id) => *id,
+			Self::Vec(v) => v.clone().using_encoded(blake2_256),
+		}
+	}
 }
 
 pub trait RoleBasedAccessControl<AccountId>{
@@ -57,6 +56,8 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn create_permission(pallet: IdOrVec, permissions: Vec<u8>) -> Result<PermissionId, DispatchError>;
     fn set_permission_to_role( pallet: IdOrVec, role: RoleId, permission: PermissionId ) -> DispatchResult;
     fn set_multiple_permissions_to_role(  pallet: IdOrVec, role: RoleId, permission: Vec<PermissionId> )-> DispatchResult;
+    fn do_revoke_permission_from_role(pallet: IdOrVec, role: RoleId, permission: PermissionId,) -> DispatchResult;
+	fn do_remove_permission_from_pallet(pallet: IdOrVec, permission: PermissionId,) -> DispatchResult;
     // helpers
     fn is_authorized(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId, permission_id: &PermissionId ) -> DispatchResult;
     fn has_role(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId, role_ids: Vec<RoleId>)->DispatchResult;
@@ -67,4 +68,6 @@ pub trait RoleBasedAccessControl<AccountId>{
     fn get_role_users_len(pallet: IdOrVec, scope_id:&ScopeId, role_id: &RoleId) -> usize;
     fn to_id(v: Vec<u8>)->[u8;32];
 	fn does_user_have_any_role_in_scope(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId)-> bool;
+    fn get_roles_by_user(user: AccountId, pallet: IdOrVec, scope_id: &ScopeId)-> Vec<RoleId>;
+    fn get_roles_that_have_permission(pallet: PalletId, permission_id: &PermissionId) -> Vec<RoleId>;
 }
