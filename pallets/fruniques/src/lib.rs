@@ -504,5 +504,19 @@ pub mod pallet {
 			T::Rbac::remove_pallet_storage(Self::pallet_id())?;
 			Ok(())
 		}
+
+		#[pallet::call_index(10)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
+		pub fn spam_spawning(
+			origin: OriginFor<T>,
+			class_id: T::CollectionId,
+			instances: Vec<T::ItemId>,
+		) -> DispatchResult {
+			let _ = ensure_signed(origin)?;
+			for instance in instances {
+				Self::mint(instance, class_id)?;
+			}
+			Ok(())
+		}
 	}
 }
