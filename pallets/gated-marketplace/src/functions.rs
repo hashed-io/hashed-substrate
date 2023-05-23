@@ -2,10 +2,14 @@ use super::*;
 use crate::types::*;
 use frame_support::pallet_prelude::*;
 use frame_support::sp_io::hashing::blake2_256;
+use frame_support::traits::tokens::AssetId;
 use pallet_rbac::types::*;
 use scale_info::prelude::vec; // vec![] macro
 use sp_runtime::sp_std::vec::Vec; // vec primitive
-use frame_system::pallet_prelude::*;
+
+use frame_support::traits::fungibles::Transfer;
+use frame_support::traits::Currency;
+use frame_support::traits::ExistenceRequirement::KeepAlive;
 use frame_support::traits::Time;
 use sp_runtime::Permill;
 use sp_runtime::traits::StaticLookup;
@@ -232,15 +236,9 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-
-	pub fn self_enroll(
-		account: T::AccountId,
-		marketplace_id: [u8; 32],
-	) -> DispatchResult {
-
-		//since users can self-enroll, the caller of this function must validate 
+	pub fn self_enroll(account: T::AccountId, marketplace_id: [u8; 32]) -> DispatchResult {
+		//since users can self-enroll, the caller of this function must validate
 		//that the user is indeed the owner of the address by using ensure_signed
-	
 
 		//ensure the account is not already in the marketplace
 		ensure!(
@@ -254,10 +252,13 @@ impl<T: Config> Pallet<T> {
 		// ensure the marketplace exist
 		ensure!(<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceNotFound);
 
-		
-		Self::insert_in_auth_market_lists(account.clone(), MarketplaceRole::Participant, marketplace_id)?;
+		Self::insert_in_auth_market_lists(
+			account.clone(),
+			MarketplaceRole::Participant,
+			marketplace_id,
+		)?;
 		Self::deposit_event(Event::AuthorityAdded(account, MarketplaceRole::Participant));
-		
+
 		Ok(())
 	}
 
@@ -366,6 +367,7 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			creator: authority.clone(),
+			// might require a storage migration
 			price,
 			fee: price * Permill::deconstruct(marketplace.sell_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
@@ -430,7 +432,7 @@ impl<T: Config> Pallet<T> {
 			&marketplace_id,
 			authority.clone(),
 			&collection_id,
-			&item_id
+			&item_id,
 		)?;
 
 		//Get asset id
@@ -458,6 +460,7 @@ impl<T: Config> Pallet<T> {
 			collection_id,
 			item_id,
 			creator: authority.clone(),
+			// TODO: evaluate if the change will require a storage migration
 			price,
 			fee: price * Permill::deconstruct(marketplace.buy_fee).into() / 1_000_000u32.into(),
 			percentage: Permill::from_percent(percentage),
@@ -529,7 +532,7 @@ impl<T: Config> Pallet<T> {
 		//ensure user has enough balance to create the offer
 		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), buyer.clone()); 
 		//ensure the buyer has enough balance to buy the item
-		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+		//ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
@@ -637,7 +640,7 @@ impl<T: Config> Pallet<T> {
 		//ensure user has enough balance to create the offer
 		let total_amount_buyer = pallet_mapped_assets::Pallet::<T>::balance(asset_id.clone(), offer_data.creator.clone()); 
 		//ensure the buy_offer_creator has enough balance to buy the item
-		ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
+		//ensure!(total_amount_buyer > offer_data.price, Error::<T>::NotEnoughBalance);
 
 		let marketplace =
 			<Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
@@ -924,7 +927,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the origin is authorized to block users
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
 		// ensure the user is not already a participant of the marketplace
-		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		ensure!(
+			!Self::has_any_role(user.clone(), &marketplace_id),
+			Error::<T>::UserAlreadyParticipant
+		);
 		// ensure the user is not already blocked
 		ensure!(
 			!Self::is_user_blocked(user.clone(), marketplace_id),
@@ -951,7 +957,10 @@ impl<T: Config> Pallet<T> {
 		// ensure the origin is authorized to block users
 		Self::is_authorized(authority.clone(), &marketplace_id, Permission::BlockUser)?;
 		// ensure the user is not already a participant of the marketplace
-		ensure!(!Self::has_any_role(user.clone(), &marketplace_id), Error::<T>::UserAlreadyParticipant);
+		ensure!(
+			!Self::has_any_role(user.clone(), &marketplace_id),
+			Error::<T>::UserAlreadyParticipant
+		);
 		// ensure the user is blocked
 		ensure!(Self::is_user_blocked(user.clone(), marketplace_id), Error::<T>::UserIsNotBlocked);
 
@@ -991,7 +1000,11 @@ impl<T: Config> Pallet<T> {
 	/// Let us know if the selected account has at least one role in the marketplace.
 	fn has_any_role(account: T::AccountId, marketplace_id: &[u8; 32]) -> bool {
 		let pallet_id = Self::pallet_id();
-		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(account, pallet_id, marketplace_id)
+		<T as pallet::Config>::Rbac::does_user_have_any_role_in_scope(
+			account,
+			pallet_id,
+			marketplace_id,
+		)
 	}
 
 	///Lets us know if the selected user is an admin.

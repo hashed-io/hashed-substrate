@@ -662,6 +662,7 @@ impl pallet_gated_marketplace::Config for Runtime {
 	type Timestamp = Timestamp;
 	type Moment = Moment;
 	type Rbac = RBAC;
+	type MappedAssets = MappedAssets;
 }
 
 parameter_types! {
@@ -747,7 +748,6 @@ impl pallet_mapped_assets::Config for Runtime {
 	type AssetIdParameter = u32;
 	type CallbackHandle = DefaultCallback;
 }
-
 
 parameter_types! {
 	pub const MaxScopesPerPallet: u32 = 1000;

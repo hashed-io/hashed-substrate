@@ -45,13 +45,11 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", d
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38", default-features = false }
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true, branch = "polkadot-v0.9.38" }
 # Local Pallets
-pallet-template = { default-features = false, path = "../pallets/template" }
-pallet-fruniques = { version = "0.1.0-dev", default-features = false, path = "../pallets/fruniques" }
-pallet-bitcoin-vaults = { default-features = false, path = "../pallets/bitcoin-vaults" }
-pallet-gated-marketplace = { default-features = false, path = "../pallets/gated-marketplace" }
-pallet-rbac = { default-features = false, path = "../pallets/rbac" }
-pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
-pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
+pallet-bitcoin-vaults = { path = "../pallets/bitcoin-vaults", default-features = false }
+pallet-fruniques = { path = "../pallets/fruniques", default-features = false }
+pallet-gated-marketplace = { path = "../pallets/gated-marketplace", default-features = false }
+pallet-rbac = { path = "../pallets/rbac", default-features = false }
+pallet-confidential-docs = { path = "../pallets/confidential-docs", default-features = false }
 pallet-mapped-assets = { path = "../pallets/mapped-assets",default-features = false }
 # Prebuilt Pallets
 pallet-alliance = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38", default-features = false }
