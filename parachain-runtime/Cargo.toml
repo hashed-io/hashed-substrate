@@ -52,6 +52,7 @@ pallet-gated-marketplace = { default-features = false, path = "../pallets/gated-
 pallet-rbac = { default-features = false, path = "../pallets/rbac" }
 pallet-confidential-docs = { default-features = false, path = "../pallets/confidential-docs" }
 pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
+pallet-mapped-assets = { path = "../pallets/mapped-assets",default-features = false }
 # Prebuilt Pallets
 pallet-alliance = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38", default-features = false }
 pallet-assets = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38", default-features = false }
@@ -142,6 +143,7 @@ std = [
 	"pallet-rbac/std",
 	"pallet-fund-admin/std",
 	"pallet-template/std",
+	"pallet-mapped-assets/std",
 	# Prebuilt Pallets
 	"pallet-alliance/std",
 	"pallet-assets/std",

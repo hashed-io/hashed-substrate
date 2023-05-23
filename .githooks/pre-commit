@@ -1,0 +1,28 @@
+#!/bin/bash
+
+exe=$(which rustfmt)
+
+if [ -n "$exe" ]
+then
+    # field separator to the new line
+    IFS=$'\n'
+
+    for line in $(git status -s)
+    do
+        # if added or modified
+        if [[ $line == A* || $line == M* ]]
+        then
+            # check file extension
+            if [[ $line == *.rs ]]
+            then
+                # format file
+                rustfmt $(pwd)/${line:3}
+                # add changes
+                git add $(pwd)/${line:3}
+            fi
+        fi
+    done
+
+else
+    echo "rustfmt was not found"
+fi

@@ -30,7 +30,7 @@ pub const MILLICENTS: Balance = CENTS / 1_000;
 pub const DOLLARS: Balance = 100 * CENTS; // 0x0000_0000_0000_0000_0000_5af3_107a_4000u128
 
 pub const fn deposit(items: u32, bytes: u32) -> Balance {
-	items as Balance * 2_000 * CENTS + (bytes as Balance) * 100 * MILLICENTS
+  items as Balance * 2_000 * CENTS + (bytes as Balance) * 100 * MILLICENTS
 }
 
 pub const MILLISECS_PER_BLOCK: Moment = 6000;
