@@ -26,6 +26,10 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Sign a proposal](#sign-a-proposal)
       - [Finalize (and posibly broadcast) a PSBT](#finalize-and-posibly-broadcast-a-psbt)
       - [Broadcast a PSBT](#broadcast-a-psbt)
+      - [Create a Proof of Reserve](#create-a-proof-of-reserve)
+      - [Query a Proof of Reserve](#query-a-proof-of-reserve)
+      - [Save a PoR psbt](#save-a-por-psbt)
+      - [Finalize a PoR](#finalize-a-por)
     - [Polkadot-js api (javascript library)](#polkadot-js-api-javascript-library)
       - [Enabling Offchain Worker](#enabling-offchain-worker-1)
       - [Insert an xpub](#insert-an-xpub-1)
@@ -43,6 +47,11 @@ A storage module for Native Bitcoin Vaults on substrate.
       - [Sign a proposal](#sign-a-proposal-1)
       - [Finalize (and posibly broadcast) a PSBT](#finalize-and-posibly-broadcast-a-psbt-1)
       - [Broadcast a PSBT](#broadcast-a-psbt-1)
+      - [Create a Proof of reserve](#create-a-proof-of-reserve-1)
+      - [Query a Proof of Reserve](#query-a-proof-of-reserve-1)
+      - [Query all PoR's](#query-all-pors)
+      - [Save a PoR psbt](#save-a-por-psbt-1)
+      - [Finalize a PoR](#finalize-a-por-1)
   - [Events](#events)
   - [Errors](#errors)
   - [Assumptions](#assumptions)
@@ -54,6 +63,7 @@ This module provides functionality for data management regarding the Native Bitc
 - Query the stored, extended public keys by individual accounts (owners).
 - Create Bitcoin Vaults: Specify vault users to participate in your vault and threshold in order to get a transaction aproved. The output descriptors will get generated automatically by an offchain worker (requests `bdk-services`).
 - Sign Vault PSBT's: You can approve and sign a proposal in a vault you participate, if the number of signs gets equal or greater than the threshold, the Transaction will be executed.
+- Generate proof of reserves to ensure a vault's balance.
 
 
 ### Terminology
@@ -75,11 +85,14 @@ This module provides functionality for data management regarding the Native Bitc
 - `save_psbt` takes a `proposal_id` and collects a signature payload in pure bytes for it, these types of signatures are necessary to fullfill the vault's `threshold`. If successful, this process cannot be undone.
 - `finalize_psbt` generates a `tx_id` by taking a `proposal_id`, a `broadcast` boolean flag must be specified to determine if the transaction will be automatically transmited to the blockchain or not. 
 - `broadcast` publishes the transaction if it wasn't on the previous step.
+- `create_proof` is the first step to create a proof of reserve, it can be only one PoR per vault, and creating amother one will erase the previous one. It takes a `vault_id`, a `message` that serves as a description, and the initial `psbt`.
+- `save_proof_psbt` updates the PoF with a new vault member signature, takes a `vault_id` and a `psbt`. Each member is able to post its psbt once.
+- `finalize_proof` finishes the PoR flow, storing the final `psbt` linked to the `vault_id` as it marks it as finalized.
 
 ### Offchain worker dispatchable functions
-
-- `ocw_insert_descriptors` is only an extrinsic that is meant to be called by the pallet's offchain worker, as it makes the output descriptors insertion.
-- `ocw_insert_psbts` is meant to be called by the pallet's offchain worker, it performs the psbt proposal insertion.
+These type of extrinsics are meant to be called by the pallet's offchain worker, the transaction must be left unsigned while the payload has the signature.
+- `ocw_insert_descriptors` makes the output descriptors insertion.
+- `ocw_insert_psbts` performs the psbt proposal insertion.
 - `ocw_finalize_psbts` inserts the generated `tx_id` for the transaction, which can be inspected with a block explorer.
 
 ### Getters
@@ -89,6 +102,7 @@ This module provides functionality for data management regarding the Native Bitc
 - `vaults_by_signer`
 - `proposals`
 - `proposals_by_vault`
+- `proof_of_reserve`
 - `DefaultURL` (for bdk services)
 
 ## Usage
@@ -210,6 +224,31 @@ This extrinsic is needed in case the PSBT is finalized but not broadcasted.
 polkadot-js-api tx.bitcoinVaults.broadcastPsbt 0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675 --seed "//Alice"
 ```
 
+#### Create a Proof of Reserve
+
+```bash
+# vault_id, message, and psbt
+polkadot-js-api tx.bitcoinVaults.createProof "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" "<your_message_here>" "<your_psbt_here>" --seed "//Alice"
+```
+
+#### Query a Proof of Reserve
+```bash
+# vault_id
+polkadot-js-api query.bitcoinVaults.proofOfReserves "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf"
+```
+
+#### Save a PoR psbt
+```bash
+# vault_id, psbt
+polkadot-js-api tx.bitcoinVaults.saveProofPsbt "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" "<your_psbt_here>" --seed "//Alice"
+```
+
+#### Finalize a PoR
+```bash
+# vault_id, final_psbt
+polkadot-js-api tx.bitcoinVaults.finalizeProof "0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf" "<your_final_psbt_here>" --seed "//Alice"
+```
+
 ### Polkadot-js api (javascript library)
 While most of the data flow is almost identical to its CLI counter part, the javascript library is much more versatile regarding queries. The API setup will be omitted.
 
@@ -217,7 +256,7 @@ While most of the data flow is almost identical to its CLI counter part, the jav
 In order to enable vault-related features, an account needs to be linked to the offchain worker. This process needs to be done just once, preferably by one of the chain administrators:  
 
 ```js
-# key type (constant to bdks), suri, public key in hex (no method was found for parsing an address to hex)
+// key type (constant to bdks), suri, public key in hex (no method was found for parsing an address to hex)
 const setKey = api.rpc.author.insertKey("bdks", "//Alice", "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d")
 ```
 
@@ -278,7 +317,7 @@ console.log('Tx sent with hash', removeAccountXpub.toHex());
 
 #### Insert Vault
 ```js
-const insertVault = await api.tx.bitcoinVaults.createVault(1, "descripcion", ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]).signAndSend(alice);
+const insertVault = await api.tx.bitcoinVaults.createVault(1, "descripcion", true, ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]).signAndSend(alice);
 console.log('Tx sent with hash', insertVault.toHuman());
 ```
 
@@ -346,6 +385,46 @@ console.log(finalizePsbt.toHuman());
 ```js
 const broadcastPsbt = await api.tx.bitcoinVaults.broadcastPsbt("0x8426160f6705e480825a5bdccb2e465ad097d8a0a09981467348f884682d5675").signAndSend(alice);
 console.log(broadcastPsbt.toHuman());
+```
+
+#### Create a Proof of reserve
+```js
+// vault_id, message, and psbt
+const createProof = await api.tx.bitcoinVaults.createProof("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf","<your_message_here>","<your_psbt_here>").signAndSend(alice);
+console.log(createProof.toHuman());
+```
+
+#### Query a Proof of Reserve
+```js
+// vault_id
+const proofs = await api.query.bitcoinVaults.proofOfReserves("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf");
+console.log(proofs.toHuman()); 
+```
+
+#### Query all PoR's
+```js
+// vault_id
+const proofs = await api.query.bitcoinVaults.proofOfReserves.entries();
+proofs.forEach(([key, value]) => {
+  console.log(
+    "Vault id:",
+    key.args.map((k) => k.toHuman())
+  );
+  console.log("     Proof of reserve:", value.toHuman());
+});
+```
+
+#### Save a PoR psbt
+```js
+// vault_id, psbt
+const save_proof = await api.tx.bitcoinVaults.saveProofPsbt("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf","<your_psbt_here>").signAndSend(alice)
+console.log(save_proof.toHuman()); 
+```
+#### Finalize a PoR
+```js
+// vault_id, final_psbt
+const finalize_proof = await api.tx.bitcoinVaults.finalizeProof("0xdc08dcf7b4e6525bdd894433ffe45644262079dec2cdd8d5293e6b78c10edbcf","<your_final_psbt_here>").signAndSend(alice)
+console.log(finalize_proof.toHuman()); 
 ```
 
 ## Events
