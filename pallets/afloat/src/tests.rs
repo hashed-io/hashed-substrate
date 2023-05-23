@@ -372,13 +372,17 @@ fn take_sell_order_works() {
         ));
 
         let transaction_id = Afloat::afloat_offers(offer_id).unwrap().transactions[0];
+        let transaction_before = Afloat::afloat_transactions(transaction_id).unwrap();
         assert_ok!(Afloat::confirm_sell_transaction(RawOrigin::Signed(user.clone()).into(), transaction_id));
         let owner_balance = Afloat::do_get_afloat_balance(1);
         assert_eq!(owner_balance, 0);
+        assert_eq!(transaction_before.completed, false);
         assert_ok!(Afloat::finish_take_sell_transaction(RawOrigin::Signed(other_user.clone()).into(), transaction_id));
         assert_eq!(Afloat::do_get_afloat_balance(user.clone()), 8160); // total_price*(1-sell_fee)
+        let transaction_after = Afloat::afloat_transactions(transaction_id).unwrap();
         let new_owner_balance = Afloat::do_get_afloat_balance(1); 
         assert_eq!(owner_balance + 340, new_owner_balance); // (340 = sell fee)
+        assert_eq!(transaction_after.completed, true);
     });
     
 }

@@ -641,7 +641,13 @@ impl<T: Config> Pallet<T> {
 			offer.tax_credit_amount_remaining = offer.tax_credit_amount_remaining - transaction.tax_credit_amount;
 			Ok(())
 		})?;
-	
+		
+		<AfloatTransactions<T>>::try_mutate(transaction_id, |transaction| -> DispatchResult {
+			let mut transaction = transaction.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+			transaction.completed = true;
+			Ok(())
+		})?;
+
 		Self::deposit_event(Event::SellOrderTaken(who));
 		Ok(())
 		
