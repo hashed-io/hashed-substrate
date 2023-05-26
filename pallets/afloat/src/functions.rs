@@ -262,15 +262,6 @@ impl<T: Config> Pallet<T> {
 		let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
 		let transactions = TransactionBoundedVec::default();
 
-		let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
-			authority.clone(),
-			marketplace_id,
-			collection_id,
-			item_id,
-			price * tax_credit_amount.into(),
-			tax_credit_amount,
-		)?;
-
 		let offer: Offer<T> = Offer {
 			tax_credit_amount,
 			tax_credit_amount_remaining: tax_credit_amount.into(),
@@ -285,8 +276,8 @@ impl<T: Config> Pallet<T> {
 			transactions,
 		};
 
+		let offer_id = offer.using_encoded(blake2_256);
 		<AfloatOffers<T>>::insert(offer_id, offer);
-
 
 		Self::deposit_event(Event::SellOrderCreated(authority));
 
@@ -308,15 +299,6 @@ impl<T: Config> Pallet<T> {
 		let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
 		let transactions = TransactionBoundedVec::default();
 
-		let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
-			authority.clone(),
-			marketplace_id,
-			collection_id,
-			item_id,
-			price * tax_credit_amount.into(),
-			tax_credit_amount,
-		)?;
-
 		let offer: Offer<T> = Offer {
 			tax_credit_amount,
 			tax_credit_amount_remaining: tax_credit_amount.into(),
@@ -330,6 +312,8 @@ impl<T: Config> Pallet<T> {
 			cancellation_date: None,
 			transactions,
 		};
+
+		let offer_id = offer.using_encoded(blake2_256);
 
 		<AfloatOffers<T>>::insert(offer_id, offer);
 
@@ -536,7 +520,7 @@ impl<T: Config> Pallet<T> {
 	
 		let offer = <AfloatOffers<T>>::get(transaction.offer_id).ok_or(Error::<T>::OfferNotFound)?;
 	
-		let children_offer_id = if tax_credit_amount_u32 != offer.tax_credit_amount {
+		let child_offer_id = 
 			pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
 				who,
 				marketplace_id,
@@ -544,16 +528,13 @@ impl<T: Config> Pallet<T> {
 				transaction.tax_credit_id,
 				transaction.total_price,
 				tax_credit_amount_u32,
-			)?
-		} else {
-			transaction.offer_id
-		};
-	
+			)?;
+
 		<AfloatTransactions<T>>::try_mutate(transaction_id, |transaction| -> DispatchResult {
 			let mut transaction = transaction.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
 			transaction.seller_confirmation_date = Some(confirmation_date);
 			transaction.confirmed = confirmed;
-			transaction.child_offer_id = Some(children_offer_id);
+			transaction.child_offer_id = Some(child_offer_id);
 			Ok(())
 		})?;
 	

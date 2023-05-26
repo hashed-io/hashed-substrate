@@ -38,7 +38,7 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		type TimeProvider: UnixTime;
 		type Rbac: RoleBasedAccessControl<Self::AccountId>;
-		type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+		//type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 		type Currency: Currency<Self::AccountId>;
 		type ItemId: Parameter + Member + Default;
 	}
@@ -75,6 +75,8 @@ pub mod pallet {
 		MarketplaceNotInitialized,
 		// Marketplace id not found
 		MarketPlaceIdNotFound,
+		//Asset id not found
+		AssetNotFound,
 		// Collection id not found
 		CollectionIdNotFound,
 		/// User not found
@@ -129,6 +131,8 @@ pub mod pallet {
 		ChildOfferIdNotFound,
 		// Tax credit amount underflow
 		Underflow,
+		// Afloat marketplace label too long
+		LabelTooLong,
 	}
 
 	#[pallet::storage]
@@ -195,33 +199,36 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			creator: T::AccountId,
 			admin: T::AccountId,
-		) -> DispatchResult
-
-	{
-			ensure_signed(origin.clone())?;
-			let asset_id: T::AssetId = Default::default();
-			let min_balance: T::Balance = 1u32.into();
-
-			// Create asset
-			pallet_mapped_assets::Pallet::<T>::create(
-				origin.clone(),
-				asset_id,
-				T::Lookup::unlookup(creator.clone()),
-				min_balance,
-			)?; 
-
+			asset: CreateAsset<T>,
+		) -> DispatchResult {
+			// Ensure sudo origin
+			let _ = T::RemoveOrigin::ensure_origin(origin.clone())?;
+			let asset_id = match asset {
+				CreateAsset::New { owner, asset_id, min_balance } => {
+					pallet_mapped_assets::Pallet::<T>::create(
+						RawOrigin::Signed(owner.clone()).into(),
+						asset_id,
+						T::Lookup::unlookup(owner.clone()),
+						min_balance,
+					)?; 
+					asset_id
+				},
+				CreateAsset::Existing { asset_id } => {
+					ensure!(pallet_mapped_assets::Pallet::<T>::does_asset_exists(asset_id), Error::<T>::AssetNotFound);
+					asset_id
+				},
+				_ => return Err(Error::<T>::Unauthorized.into()),
+			};
+		
 			AfloatAssetId::<T>::put(asset_id.clone());
-
-			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
-
+		
+			let metadata: CollectionDescription<T> = BoundedVec::try_from(b"Afloat".to_vec()).map_err(|_| Error::<T>::LabelTooLong)?;
 			pallet_fruniques::Pallet::<T>::do_initial_setup()?;
-
-			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata, admin.clone())?;
-
+		
+			Self::create_afloat_collection(RawOrigin::Signed(creator.clone()).into(), metadata.clone(), admin.clone())?;
 			pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
-
-			let label: BoundedVec<u8, T::LabelMaxLen> =
-				BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
+		
+			let label: BoundedVec<u8, T::LabelMaxLen> = BoundedVec::try_from(b"Afloat".to_vec()).map_err(|_| Error::<T>::LabelTooLong)?;
 			let marketplace: Marketplace<T> = Marketplace {
 				label,
 				buy_fee: Permill::from_percent(2),
@@ -230,22 +237,20 @@ pub mod pallet {
 				creator: creator.clone(),
 			};
 			let marketplace_id = marketplace.clone().using_encoded(blake2_256);
-
+		
 			AfloatMarketPlaceId::<T>::put(marketplace_id);
 			Self::add_to_afloat_collection(admin.clone(),FruniqueRole::Admin)?;
 			pallet_gated_marketplace::Pallet::do_create_marketplace(RawOrigin::Signed(creator.clone()).into(), admin.clone(), marketplace)?;
-
 			Self::do_initial_setup(creator, admin)?;
-
-			Ok(())
+		
+			Ok(().into())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-			let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
-			ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
+			// ensure sudo origin
+			T::RemoveOrigin::ensure_origin(origin.clone())?;
 			Self::do_delete_all_users()?;
 			Ok(())
 		}

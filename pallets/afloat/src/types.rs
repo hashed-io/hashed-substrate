@@ -193,6 +193,20 @@ pub struct Transaction<T: Config> {
 	pub completed: bool,
 }
 
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum CreateAsset<T: Config> {
+	New {
+		owner: T::AccountId,
+		asset_id: T::AssetId,
+		min_balance: T::Balance,
+	},
+	Existing {
+		asset_id: T::AssetId,
+	},
+}
+
 // ! Roles structures
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]

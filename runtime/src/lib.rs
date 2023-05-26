@@ -778,7 +778,7 @@ impl pallet_afloat::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type TimeProvider = Timestamp;
-	type RemoveOrigin = EnsureRoot<AccountId>;
+	//type RemoveOrigin = EnsureRoot<AccountId>;
 	type Rbac = RBAC;
 	type ItemId = u32;
 }

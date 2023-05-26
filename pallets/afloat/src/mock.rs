@@ -15,7 +15,7 @@ use frame_system::EnsureRoot;
 use system::EnsureSigned;
 
 use frame_system::RawOrigin;
-
+use crate::types::CreateAsset;
 type AssetId = u32;
 
 parameter_types! {
@@ -74,7 +74,7 @@ impl system::Config for Test {
 impl pallet_afloat::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
     type TimeProvider = pallet_timestamp::Pallet<Self>;
-    type RemoveOrigin = frame_system::EnsureSigned<Self::AccountId>;
+    //type RemoveOrigin = frame_system::EnsureSigned<Self::AccountId>;
     type Currency = pallet_balances::Pallet<Self>;
 	type Rbac = RBAC;
 	type ItemId = u32;
@@ -255,7 +255,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	t.execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 100);
-		Afloat::initial_setup(RawOrigin::Signed(1).into(), 1, 2).expect("Error on GatedMarketplace configuring initial setup");
+		Afloat::initial_setup(RawOrigin::Root.into(), 1, 2,CreateAsset::New{owner:1,asset_id:0,min_balance:1}).expect("Error on GatedMarketplace configuring initial setup");
 	});
 	t
 }

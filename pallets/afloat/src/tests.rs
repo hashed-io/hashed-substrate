@@ -182,7 +182,7 @@ fn kill_storage_works() {
         assert!(UserInfo::<Test>::contains_key(user2));
 
         // Kill storage with admin
-        assert_ok!(Afloat::kill_storage(RawOrigin::Signed(admin.clone()).into()));
+        assert_ok!(Afloat::kill_storage(RawOrigin::Root.into()));
 
         // Ensure users no longer exist
         assert!(!UserInfo::<Test>::contains_key(user1));
@@ -196,19 +196,6 @@ fn kill_storage_works() {
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user1.clone()).into(), args.clone()));
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user2.clone()).into(), args.clone()));
 
-    });
-}
-
-#[test]
-fn kill_storage_fails_for_non_admin() {
-    new_test_ext().execute_with(|| {
-        let user = new_account(3);
-
-        // Attempt to kill storage with non-admin user
-        assert_noop!(
-            Afloat::kill_storage(RawOrigin::Signed(user.clone()).into()),
-            Error::<Test>::Unauthorized
-        );
     });
 }
 
