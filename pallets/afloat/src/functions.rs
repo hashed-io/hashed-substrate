@@ -14,11 +14,10 @@ use scale_info::prelude::vec;
 use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::str;
 use sp_runtime::sp_std::vec::Vec;
-use sp_runtime::traits::StaticLookup;
 use frame_support::traits::Time;
 use core::convert::TryInto;
 use sp_runtime::traits::Zero;
-
+use pallet_mapped_assets::DebitFlags;
 impl<T: Config> Pallet<T> {
 	pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
 
@@ -213,26 +212,26 @@ impl<T: Config> Pallet<T> {
 
 		let authority = ensure_signed(origin.clone())?;
 		let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
-
+		let debit_flags = DebitFlags { keep_alive: false, best_effort: true };
 		ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
 
 		let current_balance = Self::do_get_afloat_balance(user_address.clone());
-
 		if current_balance > amount {
 			let diff = current_balance - amount;
-			pallet_mapped_assets::Pallet::<T>::burn(
-				origin.clone(),
+			pallet_mapped_assets::Pallet::<T>::afloat_do_burn(
 				asset_id.into(),
-				T::Lookup::unlookup(user_address.clone()),
+				&user_address.clone(),
 				diff,
+				Some(authority.clone()),
+				debit_flags
 			)?;
 		} else if current_balance < amount {
 			let diff = amount - current_balance;
-			pallet_mapped_assets::Pallet::<T>::mint(
-				origin.clone(),
+			pallet_mapped_assets::Pallet::<T>::afloat_do_mint(
 				asset_id.into(),
-				T::Lookup::unlookup(user_address.clone()),
+				&user_address.clone(),
 				diff,
+				Some(authority.clone()),
 			)?;
 		}
 
@@ -258,8 +257,6 @@ impl<T: Config> Pallet<T> {
 		let maybe_roles = Self::get_all_roles_for_user(authority.clone())?;
 		ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-		let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
 		let transactions = TransactionBoundedVec::default();
 
 		let offer: Offer<T> = Offer {
@@ -295,8 +292,6 @@ impl<T: Config> Pallet<T> {
 		let maybe_roles = Self::get_all_roles_for_user(authority.clone())?;
 		ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-		let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
 		let transactions = TransactionBoundedVec::default();
 
 		let offer: Offer<T> = Offer {
@@ -518,8 +513,6 @@ impl<T: Config> Pallet<T> {
 			return Err(Error::<T>::TaxCreditAmountOverflow.into())
 		};
 	
-		let offer = <AfloatOffers<T>>::get(transaction.offer_id).ok_or(Error::<T>::OfferNotFound)?;
-	
 		let child_offer_id = 
 			pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
 				who,
@@ -718,17 +711,12 @@ impl<T: Config> Pallet<T> {
 		pallet_gated_marketplace::Pallet::<T>::remove_from_market_lists(invitee, MarketplaceRole::Participant, marketplace_id)
 	}
 
-	pub fn pallet_id() -> IdOrVec {
-		IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
-	}
 
 	pub fn is_admin_or_owner(account: T::AccountId) -> Result<bool, DispatchError> {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-		
 		let maybe_super_role = <T as pallet::Config>::Rbac::has_role(
 			account.clone(),
 			Self::pallet_id(),
-			&marketplace_id,
+			&Self::scope_id(),
 			[AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
 		);
 		
@@ -736,12 +724,10 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn is_owner(account: T::AccountId) -> Result<bool, DispatchError> {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-		
 		let maybe_owner = <T as pallet::Config>::Rbac::has_role(
 			account.clone(),
 			Self::pallet_id(),
-			&marketplace_id,
+			&Self::scope_id(),
 			[AfloatRole::Owner.id()].to_vec(),
 		);
 		
@@ -749,12 +735,10 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn is_cpa(account: T::AccountId) -> Result<bool, DispatchError> {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-
 		let maybe_cpa = <T as pallet::Config>::Rbac::has_role(
 			account.clone(),
 			Self::pallet_id(),
-			&marketplace_id,
+			&Self::scope_id(),
 			[AfloatRole::CPA.id()].to_vec(),
 		);
 
@@ -765,14 +749,26 @@ impl<T: Config> Pallet<T> {
 		authority: T::AccountId,
 		role: AfloatRole,
 	) -> DispatchResult {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
 		<T as pallet::Config>::Rbac::assign_role_to_user(
 			authority,
 			Self::pallet_id(),
-			&marketplace_id,
+			&Self::scope_id(),
 			role.id(),
 		)?;
 
+		Ok(())
+	}
+
+	pub fn do_add_afloat_admin(
+		authority: T::AccountId,
+		user_address: T::AccountId,
+	) -> DispatchResult {
+		//ensure user is registered
+		ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
+
+		Self::give_role_to_user(user_address.clone(), AfloatRole::Admin)?;
+
+		Self::deposit_event(Event::AdminAdded(authority, user_address));
 		Ok(())
 	}
 
@@ -780,21 +776,28 @@ impl<T: Config> Pallet<T> {
 		authority: T::AccountId,
 		role: AfloatRole,
 	) -> DispatchResult {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
 		<T as pallet::Config>::Rbac::remove_role_from_user(
 			authority,
 			Self::pallet_id(),
-			&marketplace_id,
+			&Self::scope_id(),
 			role.id(),
 		)?;
 
 		Ok(())
 	}
 
+	fn scope_id() -> [u8; 32] {
+		"AfloatScope".as_bytes().using_encoded(blake2_256)
+	}
+
+	fn pallet_id() -> IdOrVec {
+		IdOrVec::Vec("AfloatPallet".as_bytes().to_vec())
+	}
+
 	pub fn initialize_rbac() -> DispatchResult {
-		let marketplace_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
 		let pallet_id = Self::pallet_id();
+		let scope_id = Self::scope_id();
+		<T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), scope_id)?;
 		let super_roles = vec![AfloatRole::Owner.to_vec(), AfloatRole::Admin.to_vec()];
 		let super_role_ids =
 		<T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
@@ -833,11 +836,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn get_all_roles_for_user(account_id: T::AccountId) -> Result<Vec<AfloatRole>, DispatchError> {
-		let pallet_id = Self::pallet_id();
-		let scope_id = AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
-
-		let roles_storage = <T as pallet::Config>::Rbac::get_roles_by_user(account_id.clone(), pallet_id, &scope_id);
-
+		let roles_storage = <T as pallet::Config>::Rbac::get_roles_by_user(account_id.clone(), Self::pallet_id(), &Self::scope_id());
 		Ok(roles_storage.into_iter().filter_map(Self::role_id_to_afloat_role).collect())
 	}
 

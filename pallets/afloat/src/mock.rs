@@ -245,6 +245,7 @@ impl pallet_mapped_assets::Config for Test {
 	type RemoveItemsLimit = ConstU32<5>;
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = u32;
+	type Rbac = RBAC;
 }
 
 // Build genesis storage according to the mock runtime.
@@ -255,7 +256,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	t.execute_with(|| {
 		Balances::make_free_balance_be(&1, 100);
 		Balances::make_free_balance_be(&2, 100);
-		Afloat::initial_setup(RawOrigin::Root.into(), 1, 2,CreateAsset::New{owner:1,asset_id:0,min_balance:1}).expect("Error on GatedMarketplace configuring initial setup");
+		Afloat::initial_setup(RawOrigin::Root.into(), 1, 2,CreateAsset::New{asset_id:0,min_balance:1}).expect("Error on GatedMarketplace configuring initial setup");
 	});
 	t
 }

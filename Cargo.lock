@@ -6100,6 +6100,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-balances",
+ "pallet-rbac",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

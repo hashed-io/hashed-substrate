@@ -23,7 +23,7 @@ use frame_support::{
 	traits::{fungible, tokens::BalanceConversion},
 };
 use sp_runtime::{traits::Convert, FixedPointNumber, FixedPointOperand, FixedU128};
-
+use frame_support::sp_io::hashing::blake2_256;
 pub(super) type DepositBalanceOf<T, I = ()> =
 	<<T as Config<I>>::Currency as Currency<<T as SystemConfig>::AccountId>>::Balance;
 pub(super) type AssetAccountOf<T, I> =
@@ -224,14 +224,14 @@ pub(super) struct TransferFlags {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub(super) struct DebitFlags {
+pub struct DebitFlags {
 	/// The debited account must stay alive at the end of the operation; an error is returned if
 	/// this cannot be achieved legally.
-	pub(super) keep_alive: bool,
+	pub keep_alive: bool,
 	/// Less than the amount specified needs be debited by the operation for it to be considered
 	/// successful. If `false`, then the amount debited will always be at least the amount
 	/// specified.
-	pub(super) best_effort: bool,
+	pub best_effort: bool,
 }
 
 impl From<TransferFlags> for DebitFlags {
@@ -305,4 +305,45 @@ pub struct ReserveData<ReserveIdentifier, Balance> {
 	pub id: ReserveIdentifier,
 	/// The amount of the named reserve.
 	pub amount: Balance,
+}
+
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
+pub enum AfloatRole {
+	Owner,
+	Admin,
+	BuyerOrSeller,
+	CPA,
+}
+
+impl Default for AfloatRole {
+	fn default() -> Self {
+		AfloatRole::BuyerOrSeller
+	}
+}
+
+impl AfloatRole {
+	pub fn to_vec(self) -> Vec<u8> {
+		match self {
+			Self::Owner => "Owner".as_bytes().to_vec(),
+			Self::Admin => "Admin".as_bytes().to_vec(),
+			Self::BuyerOrSeller => "BuyerOrSeller".as_bytes().to_vec(),
+			Self::CPA => "CPA".as_bytes().to_vec(),
+		}
+	}
+
+	pub fn id(&self) -> [u8; 32] {
+		self.to_vec().using_encoded(blake2_256)
+	}
+
+	pub fn enum_to_vec() -> Vec<Vec<u8>> {
+		use crate::types::AfloatRole::*;
+		[
+			Owner.to_vec(),
+			Admin.to_vec(),
+			BuyerOrSeller.to_vec(),
+			CPA.to_vec(),
+		]
+		.to_vec()
+	}
 }

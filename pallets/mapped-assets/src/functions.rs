@@ -19,6 +19,12 @@
 
 use super::*;
 use frame_support::{traits::{Get}, BoundedVec};
+use frame_support::sp_io::hashing::blake2_256;
+use scale_info::prelude::vec;
+use sp_runtime::sp_std::vec::Vec;
+use frame_support::pallet_prelude::Encode;
+use pallet_rbac::types::RoleBasedAccessControl;
+use pallet_rbac::types::IdOrVec;
 
 #[must_use]
 pub(super) enum DeadConsequence {
@@ -395,6 +401,48 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(())
 	}
 
+	pub fn afloat_do_mint(
+		id: T::AssetId,
+		beneficiary: &T::AccountId,
+		amount: T::Balance,
+		maybe_check_issuer: Option<T::AccountId>,
+	) -> DispatchResult {
+		Self::increase_balance(id, beneficiary, amount, |details| -> DispatchResult {
+			
+			if let Some(check_issuer) = maybe_check_issuer {
+				let is_owner = Self::is_admin_or_owner(check_issuer)?;
+				ensure!(is_owner, Error::<T, I>::NoPermission);
+			}
+			debug_assert!(
+				T::Balance::max_value() - details.supply >= amount,
+				"checked in prep; qed"
+			);
+			details.supply = details.supply.saturating_add(amount);
+			Ok(())
+		})?;
+		Self::deposit_event(Event::Issued {
+			asset_id: id,
+			owner: beneficiary.clone(),
+			total_supply: amount,
+		});
+		Ok(())
+	}
+
+
+	fn is_admin_or_owner(account: T::AccountId) -> Result<bool, DispatchError> {
+		let afloat_scope = "AfloatScope".as_bytes().using_encoded(blake2_256);		
+		let afloat_pallet_id = IdOrVec::Vec("AfloatPallet".as_bytes().to_vec());
+		let maybe_owner = <T>::Rbac::has_role(
+			account.clone(),
+			afloat_pallet_id,
+			&afloat_scope,
+			[AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
+		);
+		
+		Ok(maybe_owner.is_ok())
+	}
+
+
 	/// Increases the asset `id` balance of `beneficiary` by `amount`.
 	///
 	/// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_mint` if you need
@@ -467,6 +515,35 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 			// Check admin rights.
 			if let Some(check_admin) = maybe_check_admin {
 				ensure!(check_admin == details.admin, Error::<T, I>::NoPermission);
+			}
+
+			debug_assert!(details.supply >= actual, "checked in prep; qed");
+			details.supply = details.supply.saturating_sub(actual);
+
+			Ok(())
+		})?;
+		Self::deposit_event(Event::Burned { asset_id: id, owner: target.clone(), balance: actual });
+		Ok(actual)
+	}
+
+	pub fn afloat_do_burn(
+		id: T::AssetId,
+		target: &T::AccountId,
+		amount: T::Balance,
+		maybe_check_admin: Option<T::AccountId>,
+		f: DebitFlags,
+	) -> Result<T::Balance, DispatchError> {
+		let d = Asset::<T, I>::get(id).ok_or(Error::<T, I>::Unknown)?;
+		ensure!(
+			d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
+			Error::<T, I>::AssetNotLive
+		);
+
+		let actual = Self::decrease_balance(id, target, amount, f, |actual, details| {
+			// Check admin rights.
+			if let Some(check_admin) = maybe_check_admin {
+				let is_admin_or_owner = Self::is_admin_or_owner(check_admin)?;
+				ensure!(is_admin_or_owner, Error::<T, I>::NoPermission);
 			}
 
 			debug_assert!(details.supply >= actual, "checked in prep; qed");

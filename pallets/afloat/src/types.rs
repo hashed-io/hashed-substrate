@@ -198,7 +198,6 @@ pub struct Transaction<T: Config> {
 #[codec(mel_bound())]
 pub enum CreateAsset<T: Config> {
 	New {
-		owner: T::AccountId,
 		asset_id: T::AssetId,
 		min_balance: T::Balance,
 	},

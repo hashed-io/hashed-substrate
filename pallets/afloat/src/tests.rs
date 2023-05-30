@@ -225,7 +225,7 @@ fn set_afloat_balance_works(){
 }
 
 #[test]
-fn set_balance_by_other_than_owner_fails(){
+fn set_balance_by_other_than_owner_or_admin_fails(){
     new_test_ext().execute_with(|| {
         let user = new_account(3);
         let other_user = new_account(4);
@@ -241,7 +241,6 @@ fn set_balance_by_other_than_owner_fails(){
         assert_ok!(Afloat::sign_up(RawOrigin::Signed(user.clone()).into(), args.clone()));
 
         assert_noop!(Afloat::set_afloat_balance(RawOrigin::Signed(3).into(), other_user.clone(), 10000), Error::<Test>::Unauthorized);
-        assert_noop!(Afloat::set_afloat_balance(RawOrigin::Signed(2).into(), other_user.clone(), 10000), Error::<Test>::Unauthorized);
     });
 
 }

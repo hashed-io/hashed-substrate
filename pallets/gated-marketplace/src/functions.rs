@@ -57,7 +57,6 @@ impl<T: Config> Pallet<T> {
 		let owner = ensure_signed(origin.clone())?;
 		// Gen market id
 		let marketplace_id = marketplace.using_encoded(blake2_256);
-		let min_balance: T::Balance = T::Balance::from(1u32);
 
 
 		// ensure the generated id is unique

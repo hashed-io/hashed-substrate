@@ -62,6 +62,7 @@ pub mod pallet {
 		SellOrderTaken(T::AccountId),
 		BuyOrderTaken(T::AccountId),
 		AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
+		AdminAdded(T::AccountId, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -204,11 +205,11 @@ pub mod pallet {
 			// Ensure sudo origin
 			let _ = T::RemoveOrigin::ensure_origin(origin.clone())?;
 			let asset_id = match asset {
-				CreateAsset::New { owner, asset_id, min_balance } => {
+				CreateAsset::New { asset_id, min_balance } => {
 					pallet_mapped_assets::Pallet::<T>::create(
-						RawOrigin::Signed(owner.clone()).into(),
+						RawOrigin::Signed(creator.clone()).into(),
 						asset_id,
-						T::Lookup::unlookup(owner.clone()),
+						T::Lookup::unlookup(creator.clone()),
 						min_balance,
 					)?; 
 					asset_id
@@ -217,7 +218,6 @@ pub mod pallet {
 					ensure!(pallet_mapped_assets::Pallet::<T>::does_asset_exists(asset_id), Error::<T>::AssetNotFound);
 					asset_id
 				},
-				_ => return Err(Error::<T>::Unauthorized.into()),
 			};
 		
 			AfloatAssetId::<T>::put(asset_id.clone());
@@ -352,7 +352,7 @@ pub mod pallet {
 
 
 		#[pallet::call_index(8)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn create_tax_credit(
 			origin: OriginFor<T>,
 			metadata: CollectionDescription<T>,
@@ -366,7 +366,7 @@ pub mod pallet {
 		}
 
 		#[pallet::call_index(9)]
-		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn set_afloat_balance(
 			origin: OriginFor<T>,
 			beneficiary: T::AccountId,
@@ -374,15 +374,26 @@ pub mod pallet {
 		)
 		 -> DispatchResult
 		{
-			ensure_signed(origin.clone())?;
-
-			let is_owner = Self::is_owner(ensure_signed(origin.clone())?)?;
-
-			// Only the owner can set afloat balance
-			ensure!(is_owner, Error::<T>::Unauthorized);
-
+			let who = ensure_signed(origin.clone())?;
+			let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
+			ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
 			Self::do_set_afloat_balance(origin, beneficiary, amount)
 		}
+
+		#[pallet::call_index(10)]
+		#[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+		pub fn add_afloat_admin(
+			origin: OriginFor<T>,
+			admin: T::AccountId,
+		)
+		 -> DispatchResult
+		{
+			let who = ensure_signed(origin.clone())?;
+			let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
+			ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
+			Self::do_add_afloat_admin(who, admin)
+		}
+
 
 	}
 }

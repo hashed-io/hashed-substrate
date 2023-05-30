@@ -1065,6 +1065,7 @@ impl pallet_mapped_assets::Config for Runtime {
 	type RemoveItemsLimit = RemoveItemsLimit;
 	type AssetIdParameter = u32;
 	type CallbackHandle = DefaultCallback;
+	type Rbac = RBAC;
 }
 
 parameter_types! {
