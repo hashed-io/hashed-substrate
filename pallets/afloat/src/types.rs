@@ -75,18 +75,20 @@ pub enum SignUpArgs {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,)]
 pub enum OfferStatus {
+	CREATED,
 	MATCHED,
 	TF_FILLED,
 	TF_PENDING_SIGNATURE,
 	TF_SIGNED,
-	TF_AGENCY_SUBMITTED,
-	TF_AGENCY_APPROVED,
-	AFLOAT_APPROVED,
+	TF_SUBMITTED,
+	TF_APPROVED,
+	APPROVED,
+	FILLED,
 }
 
 impl Default for OfferStatus {
 	fn default() -> Self {
-		OfferStatus::TF_PENDING_SIGNATURE
+		OfferStatus::CREATED
 	}
 }
 
