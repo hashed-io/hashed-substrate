@@ -83,8 +83,25 @@ pub type Moment = u64;
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
 /// to even the core data structures.
-pub mod opaque {}
+pub mod opaque {
+  use super::*;
 
+  pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+
+  /// Opaque block header type.
+  pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
+  /// Opaque block type.
+  pub type Block = generic::Block<Header, UncheckedExtrinsic>;
+  /// Opaque block identifier type.
+  pub type BlockId = generic::BlockId<Block>;
+
+  impl_opaque_keys! {
+    pub struct SessionKeys {
+      pub aura: Aura,
+      pub grandpa: Grandpa,
+    }
+  }
+}
 // To learn more about runtime versioning and what each of the following value means:
 //   https://docs.substrate.io/v3/runtime/upgrades#runtime-versioning
 #[sp_version::runtime_version]
