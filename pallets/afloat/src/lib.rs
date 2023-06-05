@@ -283,12 +283,12 @@ pub mod pallet {
       ensure!(who.clone() == address || is_admin_or_owner, Error::<T>::Unauthorized);
 
       match args {
-        UpdateUserArgs::Edit { cid } => {
-          Self::do_edit_user(who, address, cid)?;
+        UpdateUserArgs::Edit { cid, cid_creator } => {
+          Self::do_edit_user(who, address, cid, cid_creator)?;
         },
-        UpdateUserArgs::AdminEdit { cid, group } => {
+        UpdateUserArgs::AdminEdit { cid, cid_creator, group } => {
           ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
-          Self::do_admin_edit_user(who, address, cid, group)?;
+          Self::do_admin_edit_user(who, address, cid, cid_creator, group)?;
         },
         UpdateUserArgs::Delete => {
           ensure!(is_admin_or_owner, Error::<T>::Unauthorized);

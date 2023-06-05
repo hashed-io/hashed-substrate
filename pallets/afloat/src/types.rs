@@ -16,6 +16,7 @@ pub type TransactionBoundedVec = BoundedVec<[u8; 32], ConstU32<100>>;
 #[codec(mel_bound())]
 pub struct User<T: Config> {
   pub cid: ShortString,
+  pub cid_creator: ShortString,
   pub group: ShortString, // only can be modified when the user is registered (can not be modified)
   pub created_by: Option<T::AccountId>,
   pub created_date: Option<Date>,
@@ -26,13 +27,14 @@ pub struct User<T: Config> {
 impl<T: Config> User<T> {
   pub fn new(
     cid: ShortString,
+    cid_creator: ShortString,
     group: ShortString,
     created_by: Option<T::AccountId>,
     created_date: Option<Date>,
     last_modified_by: Option<T::AccountId>,
     last_modified_date: Option<Date>,
   ) -> Self {
-    Self { cid, group, created_by, created_date, last_modified_by, last_modified_date }
+    Self { cid, cid_creator, group, created_by, created_date, last_modified_by, last_modified_date }
   }
 }
 
@@ -40,8 +42,8 @@ impl<T: Config> User<T> {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub enum UpdateUserArgs {
-  Edit { cid: ShortString },
-  AdminEdit { cid: ShortString, group: ShortString },
+  Edit { cid: ShortString, cid_creator: ShortString },
+  AdminEdit { cid: ShortString, cid_creator: ShortString, group: ShortString },
   Delete,
 }
 
@@ -49,8 +51,8 @@ pub enum UpdateUserArgs {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub enum SignUpArgs {
-  BuyerOrSeller { cid: ShortString, group: ShortString },
-  CPA { cid: ShortString, group: ShortString },
+  BuyerOrSeller { cid: ShortString, cid_creator: ShortString, group: ShortString },
+  CPA { cid: ShortString, cid_creator: ShortString, group: ShortString },
 }
 
 // ! Offer structures

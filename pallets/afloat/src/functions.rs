@@ -78,9 +78,10 @@ impl<T: Config> Pallet<T> {
   ) -> DispatchResult {
     ensure!(!<UserInfo<T>>::contains_key(user_address.clone()), Error::<T>::UserAlreadyExists);
     match args {
-      SignUpArgs::BuyerOrSeller { cid, group } => {
+      SignUpArgs::BuyerOrSeller { cid, cid_creator, group } => {
         let user: User<T> = User {
           cid,
+          cid_creator,
           group,
           created_by: Some(actor.clone()),
           created_date: Some(T::TimeProvider::now().as_secs()),
@@ -91,9 +92,10 @@ impl<T: Config> Pallet<T> {
         Self::give_role_to_user(user_address.clone(), AfloatRole::BuyerOrSeller)?;
         Self::deposit_event(Event::NewUser(user_address.clone()));
       },
-      SignUpArgs::CPA { cid, group } => {
+      SignUpArgs::CPA { cid, cid_creator, group } => {
         let user: User<T> = User {
           cid,
+          cid_creator,
           group,
           created_by: Some(actor.clone()),
           created_date: Some(T::TimeProvider::now().as_secs()),
@@ -139,6 +141,7 @@ impl<T: Config> Pallet<T> {
     actor: T::AccountId,
     user_address: T::AccountId,
     cid: ShortString,
+    cid_creator: ShortString,
   ) -> DispatchResult {
     <UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
       let user = user.as_mut().ok_or(Error::<T>::FailedToEditUserAccount)?;
@@ -146,6 +149,7 @@ impl<T: Config> Pallet<T> {
       user.last_modified_date = Some(T::TimeProvider::now().as_secs());
       user.last_modified_by = Some(actor.clone());
       user.cid = cid;
+      user.cid_creator = cid_creator;
 
       Ok(())
     })?;
@@ -157,6 +161,7 @@ impl<T: Config> Pallet<T> {
     actor: T::AccountId,
     user_address: T::AccountId,
     cid: ShortString,
+    cid_creator: ShortString,
     group: ShortString,
   ) -> DispatchResult {
     <UserInfo<T>>::try_mutate::<_, _, DispatchError, _>(user_address.clone(), |user| {
@@ -165,6 +170,7 @@ impl<T: Config> Pallet<T> {
       user.last_modified_date = Some(T::TimeProvider::now().as_secs());
       user.last_modified_by = Some(actor.clone());
       user.cid = cid;
+      user.cid_creator = cid_creator;
       user.group = group;
 
       Ok(())
