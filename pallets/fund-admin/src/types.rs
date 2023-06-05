@@ -1,6 +1,5 @@
 use super::*;
-use frame_support::pallet_prelude::*;
-use frame_support::sp_io::hashing::blake2_256;
+use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256};
 use sp_runtime::sp_std::vec::Vec;
 
 pub type FieldName = BoundedVec<u8, ConstU32<100>>;

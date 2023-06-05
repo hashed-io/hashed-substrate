@@ -83,25 +83,7 @@ pub type Moment = u64;
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
 /// to even the core data structures.
-pub mod opaque {
-  use super::*;
-
-  pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
-
-  /// Opaque block header type.
-  pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-  /// Opaque block type.
-  pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-  /// Opaque block identifier type.
-  pub type BlockId = generic::BlockId<Block>;
-
-  impl_opaque_keys! {
-    pub struct SessionKeys {
-      pub aura: Aura,
-      pub grandpa: Grandpa,
-    }
-  }
-}
+pub mod opaque {}
 
 // To learn more about runtime versioning and what each of the following value means:
 //   https://docs.substrate.io/v3/runtime/upgrades#runtime-versioning
@@ -115,7 +97,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
   //   `spec_version`, and `authoring_version` are the same between Wasm and native.
   // This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
   //   the compatible custom types.
-  spec_version: 150,
+  spec_version: 160,
   impl_version: 1,
   apis: RUNTIME_API_VERSIONS,
   transaction_version: 1,

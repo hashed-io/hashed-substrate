@@ -1,8 +1,7 @@
 use super::*;
 
 use crate::types::*;
-use frame_support::pallet_prelude::*;
-use frame_support::traits::UnixTime;
+use frame_support::{pallet_prelude::*, traits::UnixTime};
 use frame_system::pallet_prelude::*;
 use pallet_fruniques::types::{Attributes, CollectionDescription, FruniqueRole, ParentInfo};
 use pallet_gated_marketplace::types::MarketplaceRole;
@@ -23,10 +22,9 @@ impl<T: Config> Pallet<T> {
     Self::initialize_rbac()?;
 
     let creator_user: User<T> = User {
-      cid: ShortString::try_from(b"5HeWymtD558YYKHaZvipqysBHR6PCWgvy96Hg2oah2x7CEH5".to_vec())
-        .unwrap(),
-      group: ShortString::try_from(b"HCD:QmZcSrTcqBdHck73xYw2WHgEQ9tchPrwNq6hM3a3rvXAAV".to_vec())
-        .unwrap(),
+      cid: ShortString::try_from(b"afloat".to_vec()).unwrap(),
+      cid_creator: ShortString::try_from(b"HCD:afloat".to_vec()).unwrap(),
+      group: ShortString::try_from(b"afloat".to_vec()).unwrap(),
       created_by: Some(creator.clone()),
       created_date: Some(T::TimeProvider::now().as_secs()),
       last_modified_by: Some(creator.clone()),
@@ -37,12 +35,9 @@ impl<T: Config> Pallet<T> {
 
     if admin != creator {
       let admin_user: User<T> = User {
-        cid: ShortString::try_from(b"5E7RDXG1e98KFsY6qtjRsdnArSMPyRe8fYH9BWPLeLtFMA2w".to_vec())
-          .unwrap(),
-        group: ShortString::try_from(
-          b"HCD:QmbhAm22mGMVrTmAfkjUzbtZrSXVSLV28Xah5ca5NtwQ3U".to_vec(),
-        )
-        .unwrap(),
+        cid: ShortString::try_from(b"afloat".to_vec()).unwrap(),
+        cid_creator: ShortString::try_from(b"afloat".to_vec()).unwrap(),
+        group: ShortString::try_from(b"afloat".to_vec()).unwrap(),
         created_by: Some(admin.clone()),
         created_date: Some(T::TimeProvider::now().as_secs()),
         last_modified_by: Some(admin.clone()),

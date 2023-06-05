@@ -1,8 +1,7 @@
 use super::*;
 use frame_support::pallet_prelude::*;
 //use frame_system::pallet_prelude::*;
-use frame_support::sp_io::hashing::blake2_256;
-use frame_support::sp_std::borrow::ToOwned;
+use frame_support::{sp_io::hashing::blake2_256, sp_std::borrow::ToOwned};
 use sp_runtime::sp_std::vec::Vec;
 
 use crate::types::*;

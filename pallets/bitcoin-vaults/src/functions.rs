@@ -1,15 +1,16 @@
 use super::*;
 use crate::types::*;
-use frame_support::pallet_prelude::*;
-use frame_support::sp_io::hashing::blake2_256;
+use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256};
 use frame_system::offchain::{SendUnsignedTransaction, Signer};
-use lite_json::json::{JsonValue, NumberValue};
-use lite_json::parse_json;
-use lite_json::Serialize as jsonSerialize;
-use sp_runtime::offchain::{http, Duration};
-use sp_runtime::sp_std::str;
-use sp_runtime::sp_std::vec::Vec;
-use sp_runtime::traits::BlockNumberProvider;
+use lite_json::{
+  json::{JsonValue, NumberValue},
+  parse_json, Serialize as jsonSerialize,
+};
+use sp_runtime::{
+  offchain::{http, Duration},
+  sp_std::{str, vec::Vec},
+  traits::BlockNumberProvider,
+};
 
 impl<T: Config> Pallet<T> {
   /*---- Extrinsics  ----*/
@@ -486,7 +487,8 @@ impl<T: Config> Pallet<T> {
 
   /// Parse the descriptors from the given JSON string using `lite-json`.
   ///
-  /// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is successful.
+  /// Returns `None` when parsing failed or `Some((descriptor, change_descriptor))` when parsing is
+  /// successful.
   fn parse_vault_descriptors(body_str: &str) -> Result<(Vec<u8>, Vec<u8>), OffchainStatus> {
     let val = parse_json(body_str);
     match val.ok() {
@@ -683,13 +685,14 @@ impl<T: Config> Pallet<T> {
   // pub fn bdk_gen_finalized_proposal(proposal_id: [u8;32])-> Result<Vec<u8>,OffchainStatus >{
   //     let raw_json = Self::gen_finalize_json_body(proposal_id)?;
   //     let request_body =
-  //         str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request body is not UTF-8") )?;
+  //         str::from_utf8(raw_json.as_slice()).map_err(|_| Self::build_offchain_err(false, "Request
+  // body is not UTF-8") )?;
 
   //     let url = [<BDKServicesURL<T>>::get().to_vec(), b"/finalize_trx".encode()].concat();
 
   //     let response_body = Self::http_post(
-  //         str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not UTF-8") )?,
-  //         request_body
+  //         str::from_utf8(url.as_slice()).map_err(|_| Self::build_offchain_err(false, "URL is not
+  // UTF-8") )?,         request_body
   //     )?;
   //     // The psbt is not a json object, its a byte blob
   //     Ok(response_body)
@@ -787,7 +790,7 @@ impl<T: Config> Pallet<T> {
   }
 }
 
-/*--- Block Number provider section. Needed to implement locks on offchain storage*/
+/* --- Block Number provider section. Needed to implement locks on offchain storage */
 impl<T: Config> BlockNumberProvider for Pallet<T> {
   type BlockNumber = T::BlockNumber;
 

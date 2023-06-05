@@ -3,8 +3,7 @@ use super::*;
 use frame_support::pallet_prelude::*;
 
 use frame_support::sp_io::hashing::blake2_256;
-use sp_runtime::sp_std::vec::Vec;
-use sp_runtime::Permill;
+use sp_runtime::{sp_std::vec::Vec, Permill};
 
 pub type AttributeKey<T> = BoundedVec<u8, <T as pallet_uniques::Config>::KeyLimit>;
 pub type AttributeValue<T> = BoundedVec<u8, <T as pallet_uniques::Config>::ValueLimit>;

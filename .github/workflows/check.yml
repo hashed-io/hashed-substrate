@@ -39,6 +39,9 @@ jobs:
       - name: Check Build
         run: |
           SKIP_WASM_BUILD=1 cargo check --release
+
+      - name: Check format
+        run: cargo fmt --all -- --check
       # - name: Check Build for Benchmarking
       #   run: >
       #     pushd node &&

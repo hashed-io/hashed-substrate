@@ -1,6 +1,5 @@
 use super::*;
-use frame_support::pallet_prelude::*;
-use frame_support::sp_io::hashing::blake2_256;
+use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256};
 use frame_system::offchain::{SignedPayload, SigningTypes};
 use sp_core::crypto::KeyTypeId;
 use sp_runtime::sp_std::vec::Vec;
@@ -8,7 +7,7 @@ use sp_runtime::sp_std::vec::Vec;
 pub type Description<T> = BoundedVec<u8, <T as Config>::VaultDescriptionMaxLen>;
 pub type PSBT<T> = BoundedVec<u8, <T as Config>::PSBTMaxLen>;
 //pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-/*--- Constants section ---*/
+/* --- Constants section --- */
 //pub const BDK_SERVICES_URL: &[u8] = b"https://bdk.hashed.systems";
 pub const UNSIGNED_TXS_PRIORITY: u64 = 100;
 pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
@@ -16,7 +15,7 @@ pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"bdks");
 pub const LOCK_BLOCK_EXPIRATION: u32 = 5; // in block number
 pub const LOCK_TIMEOUT_EXPIRATION: u64 = 10000; // in milli-seconds
 
-/*--- Crypto module section---*/
+/* --- Crypto module section--- */
 pub mod crypto {
   use super::KEY_TYPE;
   use sp_core::sr25519::Signature as Sr25519Signature;
