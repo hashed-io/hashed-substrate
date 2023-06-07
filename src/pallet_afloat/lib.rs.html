@@ -337,6 +337,71 @@
 <a href="#337" id="337">337</a>
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -352,14 +417,15 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-  <span class="kw">use </span>frame_support::{
-    pallet_prelude::<span class="kw-2">*</span>,
-    sp_io::hashing::blake2_256,
-    traits::{Currency, UnixTime},
-  };
-  <span class="kw">use </span>frame_system::{pallet_prelude::<span class="kw-2">*</span>, RawOrigin};
+  <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+  <span class="kw">use </span>frame_support::traits::Currency;
+  <span class="kw">use </span>frame_support::traits::UnixTime;
+  <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_system::RawOrigin;
   <span class="kw">use </span>pallet_fruniques::types::{Attributes, CollectionDescription, FruniqueRole, ParentInfo};
   <span class="kw">use </span>pallet_gated_marketplace::types::<span class="kw-2">*</span>;
+  <span class="kw">use </span>sp_runtime::traits::StaticLookup;
   <span class="kw">use </span>sp_runtime::Permill;
   <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
@@ -381,8 +447,8 @@
     <span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
     <span class="kw">type </span>TimeProvider: UnixTime;
     <span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
-    <span class="kw">type </span>RemoveOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
-    <span class="kw">type </span>Currency: Currency&lt;<span class="self">Self</span>::AccountId&gt;;
+    <span class="comment">//type RemoveOrigin: EnsureOrigin&lt;Self::RuntimeOrigin&gt;;
+    </span><span class="kw">type </span>Currency: Currency&lt;<span class="self">Self</span>::AccountId&gt;;
     <span class="kw">type </span>ItemId: Parameter + Member + Default;
   }
 
@@ -405,6 +471,7 @@
     SellOrderTaken(T::AccountId),
     BuyOrderTaken(T::AccountId),
     AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
+    AdminAdded(T::AccountId, T::AccountId),
   }
 
   <span class="comment">// Errors inform users that something went wrong.
@@ -416,6 +483,12 @@
     </span>StorageOverflow,
     <span class="doccomment">/// Marketplace not initialized
     </span>MarketplaceNotInitialized,
+    <span class="comment">// Marketplace id not found
+    </span>MarketPlaceIdNotFound,
+    <span class="comment">//Asset id not found
+    </span>AssetNotFound,
+    <span class="comment">// Collection id not found
+    </span>CollectionIdNotFound,
     <span class="doccomment">/// User not found
     </span>UserNotFound,
     <span class="doccomment">/// User already exists
@@ -432,6 +505,44 @@
     </span>NotInitialized,
     <span class="comment">// Failed to remove afloat role
     </span>FailedToRemoveAfloatRole,
+    <span class="comment">// Maxiumum number of transactions per offer reached
+    </span>MaxTransactionsReached,
+    <span class="comment">// Offer not found
+    </span>OfferNotFound,
+    <span class="comment">// Offer&#39;s type is not correct
+    </span>WrongOfferType,
+    <span class="comment">// Offer has expired
+    </span>OfferExpired,
+    <span class="comment">// Offer has been cancelled
+    </span>OfferCancelled,
+    <span class="comment">// Offer has been taken already
+    </span>OfferTaken,
+    <span class="comment">// Transaction not found
+    </span>TransactionNotFound,
+    <span class="comment">// Transaction has expired
+    </span>TransactionExpired,
+    <span class="comment">// Transaction has been cancelled
+    </span>TransactionCancelled,
+    <span class="comment">// Transaction has not been confirmed yet
+    </span>TransactionNotConfirmed,
+    <span class="comment">// Transaction already confirmed by buyer
+    </span>TransactionAlreadyConfirmedByBuyer,
+    <span class="comment">// Transaction already confirmed by seller
+    </span>TransactionAlreadyConfirmedBySeller,
+    <span class="comment">// Transaction not confirmed by buyer
+    </span>TransactionNotConfirmedByBuyer,
+    <span class="comment">// Not enough tax credits available for sale
+    </span>NotEnoughTaxCreditsAvailable,
+    <span class="comment">// Not enough afloat balance available
+    </span>NotEnoughAfloatBalanceAvailable,
+    <span class="comment">// Tax credit amount overflow
+    </span>TaxCreditAmountOverflow,
+    <span class="comment">// Child offer id not found
+    </span>ChildOfferIdNotFound,
+    <span class="comment">// Tax credit amount underflow
+    </span>Underflow,
+    <span class="comment">// Afloat marketplace label too long
+    </span>LabelTooLong,
   }
 
   <span class="attr">#[pallet::storage]
@@ -463,7 +574,7 @@
   #[pallet::getter(<span class="kw">fn </span>asset_id)]
   </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>AfloatAssetId&lt;T: Config&gt; = StorageValue&lt;
     <span class="kw">_</span>,
-    &lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s mapped collection asset_id
+    &lt;T <span class="kw">as </span>pallet_mapped_assets::Config&gt;::AssetId, <span class="comment">// Afloat&#39;s frunique collection id
   </span>&gt;;
 
   <span class="attr">#[pallet::storage]
@@ -488,26 +599,44 @@
       origin: OriginFor&lt;T&gt;,
       creator: T::AccountId,
       admin: T::AccountId,
+      asset: CreateAsset&lt;T&gt;,
     ) -&gt; DispatchResult {
-      ensure_signed(origin.clone())<span class="question-mark">?</span>;
-      <span class="kw">let </span>asset_id: T::AssetId = Default::default();
+      <span class="comment">// Ensure sudo origin
+      </span><span class="kw">let _ </span>= T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let </span>asset_id = <span class="kw">match </span>asset {
+        CreateAsset::New { asset_id, min_balance } =&gt; {
+          pallet_mapped_assets::Pallet::&lt;T&gt;::create(
+            RawOrigin::Signed(creator.clone()).into(),
+            asset_id,
+            T::Lookup::unlookup(creator.clone()),
+            min_balance,
+          )<span class="question-mark">?</span>;
+          asset_id
+        },
+        CreateAsset::Existing { asset_id } =&gt; {
+          <span class="macro">ensure!</span>(
+            pallet_mapped_assets::Pallet::&lt;T&gt;::does_asset_exists(asset_id),
+            Error::&lt;T&gt;::AssetNotFound
+          );
+          asset_id
+        },
+      };
+
       AfloatAssetId::&lt;T&gt;::put(asset_id.clone());
 
       <span class="kw">let </span>metadata: CollectionDescription&lt;T&gt; =
-        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
-
+        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::LabelTooLong)<span class="question-mark">?</span>;
       pallet_fruniques::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
 
       <span class="self">Self</span>::create_afloat_collection(
         RawOrigin::Signed(creator.clone()).into(),
-        metadata,
+        metadata.clone(),
         admin.clone(),
       )<span class="question-mark">?</span>;
-
       pallet_gated_marketplace::Pallet::&lt;T&gt;::do_initial_setup()<span class="question-mark">?</span>;
 
       <span class="kw">let </span>label: BoundedVec&lt;u8, T::LabelMaxLen&gt; =
-        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).expect(<span class="string">&quot;Label too long&quot;</span>);
+        BoundedVec::try_from(<span class="string">b&quot;Afloat&quot;</span>.to_vec()).map_err(|<span class="kw">_</span>| Error::&lt;T&gt;::LabelTooLong)<span class="question-mark">?</span>;
       <span class="kw">let </span>marketplace: Marketplace&lt;T&gt; = Marketplace {
         label,
         buy_fee: Permill::from_percent(<span class="number">2</span>),
@@ -524,26 +653,17 @@
         admin.clone(),
         marketplace,
       )<span class="question-mark">?</span>;
-
       <span class="self">Self</span>::do_initial_setup(creator, admin)<span class="question-mark">?</span>;
 
-      <span class="prelude-val">Ok</span>(())
+      <span class="prelude-val">Ok</span>(().into())
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">1</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
-      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
-      <span class="comment">// Self::do_delete_all_users()?;
-
-      </span><span class="kw">let _ </span>= &lt;UserInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-      <span class="kw">let _ </span>= &lt;AfloatMarketPlaceId&lt;T&gt;&gt;::kill();
-      <span class="kw">let _ </span>= &lt;AfloatCollectionId&lt;T&gt;&gt;::kill();
-      <span class="kw">let _ </span>= &lt;AfloatOffers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-      <span class="kw">let _ </span>= &lt;AfloatTransactions&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
-
-      &lt;T <span class="kw">as </span>Config&gt;::Rbac::remove_pallet_storage(<span class="self">Self</span>::pallet_id())<span class="question-mark">?</span>;
-
+      <span class="comment">// ensure sudo origin
+      </span>T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_delete_all_users()<span class="question-mark">?</span>;
       <span class="prelude-val">Ok</span>(())
     }
 
@@ -562,23 +682,20 @@
       args: UpdateUserArgs,
     ) -&gt; DispatchResult {
       <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-
+      <span class="kw">let </span>is_admin_or_owner = <span class="self">Self</span>::is_admin_or_owner(who.clone())<span class="question-mark">?</span>;
       <span class="macro">ensure!</span>(&lt;UserInfo&lt;T&gt;&gt;::contains_key(address.clone()), Error::&lt;T&gt;::UserNotFound);
-      <span class="macro">ensure!</span>(
-        who.clone() == address || <span class="self">Self</span>::is_admin_or_owner(who.clone()),
-        Error::&lt;T&gt;::Unauthorized
-      );
+      <span class="macro">ensure!</span>(who.clone() == address || is_admin_or_owner, Error::&lt;T&gt;::Unauthorized);
 
       <span class="kw">match </span>args {
         UpdateUserArgs::Edit { cid, cid_creator } =&gt; {
           <span class="self">Self</span>::do_edit_user(who, address, cid, cid_creator)<span class="question-mark">?</span>;
         },
         UpdateUserArgs::AdminEdit { cid, cid_creator, group } =&gt; {
-          <span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
+          <span class="macro">ensure!</span>(is_admin_or_owner, Error::&lt;T&gt;::Unauthorized);
           <span class="self">Self</span>::do_admin_edit_user(who, address, cid, cid_creator, group)<span class="question-mark">?</span>;
         },
         UpdateUserArgs::Delete =&gt; {
-          <span class="macro">ensure!</span>(<span class="self">Self</span>::is_admin_or_owner(who.clone()), Error::&lt;T&gt;::Unauthorized);
+          <span class="macro">ensure!</span>(is_admin_or_owner, Error::&lt;T&gt;::Unauthorized);
           <span class="self">Self</span>::do_delete_user(who, address)<span class="question-mark">?</span>;
         },
       }
@@ -625,31 +742,37 @@
 
     <span class="attr">#[pallet::call_index(<span class="number">5</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-    </span><span class="kw">pub fn </span>accept_offer(
+    </span><span class="kw">pub fn </span>start_take_sell_order(
       origin: OriginFor&lt;T&gt;,
       offer_id: [u8; <span class="number">32</span>],
-      amount: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+      tax_credit_amount: T::Balance,
     ) -&gt; DispatchResult {
       ensure_signed(origin.clone())<span class="question-mark">?</span>;
-      <span class="prelude-val">Ok</span>(())
+      <span class="self">Self</span>::do_start_take_sell_order(origin, offer_id, tax_credit_amount)
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">6</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-    </span><span class="kw">pub fn </span>take_sell_order(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
+    </span><span class="kw">pub fn </span>confirm_sell_transaction(
+      origin: OriginFor&lt;T&gt;,
+      transaction_id: [u8; <span class="number">32</span>],
+    ) -&gt; DispatchResult {
       ensure_signed(origin.clone())<span class="question-mark">?</span>;
-      <span class="self">Self</span>::do_take_sell_order(origin, offer_id)
+      <span class="self">Self</span>::do_confirm_sell_transaction(origin, transaction_id)
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">7</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
-    </span><span class="kw">pub fn </span>take_buy_order(origin: OriginFor&lt;T&gt;, offer_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
-      <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
-      <span class="self">Self</span>::do_take_buy_order(who, offer_id)
+    </span><span class="kw">pub fn </span>finish_take_sell_transaction(
+      origin: OriginFor&lt;T&gt;,
+      transaction_id: [u8; <span class="number">32</span>],
+    ) -&gt; DispatchResult {
+      ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="self">Self</span>::do_finish_take_sell_transaction(origin, transaction_id)
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">8</span>)]
-    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>create_tax_credit(
       origin: OriginFor&lt;T&gt;,
       metadata: CollectionDescription&lt;T&gt;,
@@ -661,18 +784,25 @@
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">9</span>)]
-    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">2</span>,<span class="number">1</span>))]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>set_afloat_balance(
       origin: OriginFor&lt;T&gt;,
       beneficiary: T::AccountId,
       amount: T::Balance,
     ) -&gt; DispatchResult {
-      ensure_signed(origin.clone())<span class="question-mark">?</span>;
-
-      <span class="comment">// Only the owner can set afloat balance
-      </span><span class="macro">ensure!</span>(<span class="self">Self</span>::is_owner(ensure_signed(origin.clone())<span class="question-mark">?</span>), Error::&lt;T&gt;::Unauthorized);
-
+      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let </span>is_admin_or_owner = <span class="self">Self</span>::is_admin_or_owner(who.clone())<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(is_admin_or_owner, Error::&lt;T&gt;::Unauthorized);
       <span class="self">Self</span>::do_set_afloat_balance(origin, beneficiary, amount)
+    }
+
+    <span class="attr">#[pallet::call_index(<span class="number">10</span>)]
+    #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().reads_writes(<span class="number">1</span>,<span class="number">1</span>))]
+    </span><span class="kw">pub fn </span>add_afloat_admin(origin: OriginFor&lt;T&gt;, admin: T::AccountId) -&gt; DispatchResult {
+      <span class="kw">let </span>who = ensure_signed(origin.clone())<span class="question-mark">?</span>;
+      <span class="kw">let </span>is_admin_or_owner = <span class="self">Self</span>::is_admin_or_owner(who.clone())<span class="question-mark">?</span>;
+      <span class="macro">ensure!</span>(is_admin_or_owner, Error::&lt;T&gt;::Unauthorized);
+      <span class="self">Self</span>::do_add_afloat_admin(who, admin)
     }
   }
 }

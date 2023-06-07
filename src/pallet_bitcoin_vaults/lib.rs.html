@@ -834,6 +834,11 @@
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
 <a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -856,23 +861,25 @@
   <span class="comment">//#[cfg(feature = &quot;std&quot;)]
   //use frame_support::serde::{Deserialize, Serialize};
   </span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-  <span class="kw">use </span>frame_support::{pallet_prelude::BoundedVec, sp_io::hashing::blake2_256, traits::Get};
+  <span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
+  <span class="kw">use </span>frame_support::{pallet_prelude::BoundedVec, traits::Get};
   <span class="kw">use </span>frame_system::{
     offchain::{AppCrypto, CreateSignedTransaction, SignedPayload, Signer},
     pallet_prelude::<span class="kw-2">*</span>,
   };
+  <span class="kw">use </span>sp_runtime::sp_std::str;
+  <span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
   <span class="kw">use </span>sp_runtime::{
     offchain::{
       storage_lock::{BlockAndTime, StorageLock},
       Duration,
     },
-    sp_std::{str, vec::Vec},
     transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
   };
 
   <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
-  <span class="comment">/* --- Genesis Structs Section --- */
+  <span class="comment">/*--- Genesis Structs Section ---*/
 
   </span><span class="attr">#[pallet::genesis_config]
   </span><span class="kw">pub struct </span>GenesisConfig {
@@ -903,12 +910,12 @@
     <span class="doccomment">/// Because this pallet emits events, it depends on the runtime&#39;s definition of an event.
     </span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
     <span class="kw">type </span>ChangeBDKOrigin: EnsureOrigin&lt;<span class="self">Self</span>::RuntimeOrigin&gt;;
-    <span class="comment">/* --- PSBT params --- */
+    <span class="comment">/*--- PSBT params ---*/
     </span><span class="attr">#[pallet::constant]
     </span><span class="kw">type </span>XPubLen: Get&lt;u32&gt;;
     <span class="attr">#[pallet::constant]
     </span><span class="kw">type </span>PSBTMaxLen: Get&lt;u32&gt;;
-    <span class="comment">/* --- Vault params --- */
+    <span class="comment">/*--- Vault params ---*/
     </span><span class="doccomment">/// It counts both owned vaults and vaults where the user is a cosigner
     </span><span class="attr">#[pallet::constant]
     </span><span class="kw">type </span>MaxVaultsPerUser: Get&lt;u32&gt;;
@@ -1019,7 +1026,7 @@
     </span>AlreadyBroadcasted,
   }
 
-  <span class="comment">/* --- Onchain storage section --- */
+  <span class="comment">/*--- Onchain storage section ---*/
   </span><span class="doccomment">/// Stores hash-xpub pairs
   </span><span class="attr">#[pallet::storage]
   #[pallet::getter(<span class="kw">fn </span>xpubs)]
@@ -1079,6 +1086,7 @@
   &gt;;
 
   <span class="doccomment">/// Stores vaults proof-of-reserve
+  ///
   </span><span class="attr">#[pallet::storage]
   #[pallet::getter(<span class="kw">fn </span>proof_of_reserve)]
   </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">type </span>ProofOfReserves&lt;T: Config&gt; = StorageMap&lt;
@@ -1173,10 +1181,8 @@
     /// - `xpub`: Extended public key, it can be sent with or without fingerprint/derivation path
     ///
     /// ### Considerations
-    /// - The origin must be Signed and the sender must have sufficient funds free for the transaction
-    ///   fee.
-    /// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first
-    ///   and insert
+    /// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
+    /// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
     /// a new one.
     </span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
@@ -1219,6 +1225,7 @@
     /// The xpub will be removed from both the pallet storage and identity registration.
     ///
     /// This tx does not takes any parameters.
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">2</span>))]
     </span><span class="kw">pub fn </span>remove_xpub(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
@@ -1254,6 +1261,7 @@
     ///
     /// ### Considerations
     /// - Do not include the vault owner on the `cosigners` list.
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>create_vault(
@@ -1301,6 +1309,7 @@
     ///
     /// ### Considerations:
     /// - Only the vault owner can perform this extrinsic
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>remove_vault(origin: OriginFor&lt;T&gt;, vault_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
@@ -1354,6 +1363,7 @@
     ///
     /// ### Parameters:
     /// - `proposal_id`: the proposal identifier
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">6</span>)]
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>remove_proposal(origin: OriginFor&lt;T&gt;, proposal_id: [u8; <span class="number">32</span>]) -&gt; DispatchResult {
@@ -1413,8 +1423,7 @@
 
     <span class="doccomment">/// Finalize PSBT
     ///
-    /// Queries a proposal to be finalized generating a tx_id in the process, it can also be
-    /// broadcasted if specified.
+    /// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
     ///
     /// ### Parameters:
     /// - `proposal_id`: the proposal identifier
@@ -1543,6 +1552,7 @@
     <span class="doccomment">/// Extrinsic to insert a valid vault descriptor
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">15</span>)]
     #[pallet::weight(<span class="number">0</span>)]
     </span><span class="kw">pub fn </span>ocw_insert_descriptors(
@@ -1582,6 +1592,7 @@
     <span class="doccomment">/// Extrinsic to insert a valid proposal PSBT
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">16</span>)]
     #[pallet::weight(<span class="number">0</span>)]
     </span><span class="kw">pub fn </span>ocw_insert_psbts(
@@ -1610,15 +1621,14 @@
     <span class="doccomment">/// Extrinsic to insert a valid proposal TX_ID
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     </span><span class="attr">#[pallet::call_index(<span class="number">17</span>)]
     #[pallet::weight(<span class="number">0</span>)]
     </span><span class="kw">pub fn </span>ocw_finalize_psbts(
       origin: OriginFor&lt;T&gt;,
       payload: ProposalsPayload&lt;T::Public&gt;, <span class="comment">// here the payload
-      </span>_signature: T::Signature,             <span class="comment">/* we don&#39;t need to verify the signature here because
-                                             * it has been verified in
-                                             *   `validate_unsigned` function when sending out the
-                                             * unsigned tx. */
+      </span>_signature: T::Signature, <span class="comment">// we don&#39;t need to verify the signature here because it has been verified in
+                                //   `validate_unsigned` function when sending out the unsigned tx.
     </span>) -&gt; DispatchResult {
       ensure_none(origin.clone())<span class="question-mark">?</span>;
       <span class="macro">log::info!</span>(<span class="string">&quot;Extrinsic recibido payload de: {:?}&quot;</span>, payload);

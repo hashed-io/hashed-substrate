@@ -1233,6 +1233,84 @@
 <a href="#1233" id="1233">1233</a>
 <a href="#1234" id="1234">1234</a>
 <a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
 </pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) 2017-2022 Parity Technologies (UK) Ltd.
@@ -1253,7 +1331,13 @@
 </span><span class="doccomment">//! Functions for the Assets pallet.
 
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>frame_support::pallet_prelude::Encode;
+<span class="kw">use </span>frame_support::sp_io::hashing::blake2_256;
 <span class="kw">use </span>frame_support::{traits::Get, BoundedVec};
+<span class="kw">use </span>pallet_rbac::types::IdOrVec;
+<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
+<span class="kw">use </span>scale_info::prelude::vec;
+<span class="kw">use </span>sp_runtime::sp_std::vec::Vec;
 
 <span class="attr">#[must_use]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>DeadConsequence {
@@ -1369,8 +1453,8 @@
   /// - `id`: The id of the asset that should be increased.
   /// - `who`: The account of which the balance should be increased.
   /// - `amount`: The amount by which the balance should be increased.
-  /// - `increase_supply`: Will the supply of the asset be increased by `amount` at the same time as
-  ///   crediting the `account`.
+  /// - `increase_supply`: Will the supply of the asset be increased by `amount` at the same time
+  ///   as crediting the `account`.
   </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>can_increase(
     id: T::AssetId,
     who: <span class="kw-2">&amp;</span>T::AccountId,
@@ -1493,8 +1577,9 @@
   <span class="doccomment">/// Make preparatory checks for debiting some funds from an account. Flags indicate requirements
   /// of the debit.
   ///
-  /// - `amount`: The amount desired to be debited. The actual amount returned for debit may be less
-  ///   (in the case of `best_effort` being `true`) or greater by up to the minimum balance less one.
+  /// - `amount`: The amount desired to be debited. The actual amount returned for debit may be
+  ///   less (in the case of `best_effort` being `true`) or greater by up to the minimum balance
+  ///   less one.
   /// - `keep_alive`: Require that `target` must stay alive.
   /// - `respect_freezer`: Respect any freezes on the account or token (or not).
   /// - `best_effort`: The debit amount may be less than `amount`.
@@ -1627,6 +1712,42 @@
     <span class="prelude-val">Ok</span>(())
   }
 
+  <span class="kw">pub fn </span>afloat_do_mint(
+    id: T::AssetId,
+    beneficiary: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_check_issuer: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+  ) -&gt; DispatchResult {
+    <span class="self">Self</span>::increase_balance(id, beneficiary, amount, |details| -&gt; DispatchResult {
+      <span class="kw">if let </span><span class="prelude-val">Some</span>(check_issuer) = maybe_check_issuer {
+        <span class="kw">let </span>is_owner = <span class="self">Self</span>::is_admin_or_owner(check_issuer)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(is_owner, Error::&lt;T, I&gt;::NoPermission);
+      }
+      <span class="macro">debug_assert!</span>(T::Balance::max_value() - details.supply &gt;= amount, <span class="string">&quot;checked in prep; qed&quot;</span>);
+      details.supply = details.supply.saturating_add(amount);
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::Issued {
+      asset_id: id,
+      owner: beneficiary.clone(),
+      total_supply: amount,
+    });
+    <span class="prelude-val">Ok</span>(())
+  }
+
+  <span class="kw">fn </span>is_admin_or_owner(account: T::AccountId) -&gt; <span class="prelude-ty">Result</span>&lt;bool, DispatchError&gt; {
+    <span class="kw">let </span>afloat_scope = <span class="string">&quot;AfloatScope&quot;</span>.as_bytes().using_encoded(blake2_256);
+    <span class="kw">let </span>afloat_pallet_id = IdOrVec::Vec(<span class="string">&quot;AfloatPallet&quot;</span>.as_bytes().to_vec());
+    <span class="kw">let </span>maybe_owner = &lt;T&gt;::Rbac::has_role(
+      account.clone(),
+      afloat_pallet_id,
+      <span class="kw-2">&amp;</span>afloat_scope,
+      [AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
+    );
+
+    <span class="prelude-val">Ok</span>(maybe_owner.is_ok())
+  }
+
   <span class="doccomment">/// Increases the asset `id` balance of `beneficiary` by `amount`.
   ///
   /// LOW-LEVEL: Does not alter the supply of asset or emit an event. Use `do_mint` if you need
@@ -1699,6 +1820,35 @@
       <span class="comment">// Check admin rights.
       </span><span class="kw">if let </span><span class="prelude-val">Some</span>(check_admin) = maybe_check_admin {
         <span class="macro">ensure!</span>(check_admin == details.admin, Error::&lt;T, I&gt;::NoPermission);
+      }
+
+      <span class="macro">debug_assert!</span>(details.supply &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
+      details.supply = details.supply.saturating_sub(actual);
+
+      <span class="prelude-val">Ok</span>(())
+    })<span class="question-mark">?</span>;
+    <span class="self">Self</span>::deposit_event(Event::Burned { asset_id: id, owner: target.clone(), balance: actual });
+    <span class="prelude-val">Ok</span>(actual)
+  }
+
+  <span class="kw">pub fn </span>afloat_do_burn(
+    id: T::AssetId,
+    target: <span class="kw-2">&amp;</span>T::AccountId,
+    amount: T::Balance,
+    maybe_check_admin: <span class="prelude-ty">Option</span>&lt;T::AccountId&gt;,
+    f: DebitFlags,
+  ) -&gt; <span class="prelude-ty">Result</span>&lt;T::Balance, DispatchError&gt; {
+    <span class="kw">let </span>d = Asset::&lt;T, I&gt;::get(id).ok_or(Error::&lt;T, I&gt;::Unknown)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(
+      d.status == AssetStatus::Live || d.status == AssetStatus::Frozen,
+      Error::&lt;T, I&gt;::AssetNotLive
+    );
+
+    <span class="kw">let </span>actual = <span class="self">Self</span>::decrease_balance(id, target, amount, f, |actual, details| {
+      <span class="comment">// Check admin rights.
+      </span><span class="kw">if let </span><span class="prelude-val">Some</span>(check_admin) = maybe_check_admin {
+        <span class="kw">let </span>is_admin_or_owner = <span class="self">Self</span>::is_admin_or_owner(check_admin)<span class="question-mark">?</span>;
+        <span class="macro">ensure!</span>(is_admin_or_owner, Error::&lt;T, I&gt;::NoPermission);
       }
 
       <span class="macro">debug_assert!</span>(details.supply &gt;= actual, <span class="string">&quot;checked in prep; qed&quot;</span>);
@@ -1887,8 +2037,8 @@
   ///
   /// * `id`: The `AssetId` you want the new asset to have. Must not already be in use.
   /// * `owner`: The owner, issuer, admin, and freezer of this asset upon creation.
-  /// * `is_sufficient`: Whether this asset needs users to have an existential deposit to hold this
-  ///   asset.
+  /// * `is_sufficient`: Whether this asset needs users to have an existential deposit to hold
+  ///   this asset.
   /// * `min_balance`: The minimum balance a user is allowed to have of this asset before they are
   ///   considered dust and cleaned up.
   </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>do_force_create(
@@ -2031,8 +2181,8 @@
   /// * `id`: The asset you want to destroy.
   /// * `witness`: Witness data needed about the current state of the asset, used to confirm
   ///   complexity of the operation.
-  /// * `maybe_check_owner`: An optional check before destroying the asset, if the provided account
-  ///   is the owner of that asset. Can be used for authorization checks.
+  /// * `maybe_check_owner`: An optional check before destroying the asset, if the provided
+  ///   account is the owner of that asset. Can be used for authorization checks.
   </span><span class="comment">/* 	pub(super) fn do_destroy(
     id: T::AssetId,
     witness: DestroyWitness,
@@ -2280,7 +2430,9 @@
           account.reserved.checked_add(<span class="kw-2">&amp;</span>amount).ok_or(ArithmeticError::Overflow)<span class="question-mark">?</span>;
         Reserves::&lt;T, I&gt;::try_mutate(asset_id, who, |reserves| -&gt; DispatchResult {
           <span class="kw">match </span>reserves.binary_search_by_key(id, |data| data.id) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T, I&gt;::ReserveAlreadyExists.into()),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+              <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T, I&gt;::ReserveAlreadyExists.into());
+            },
             <span class="prelude-val">Err</span>(index) =&gt; {
               reserves
                 .try_insert(index, ReserveData { id: <span class="kw-2">*</span>id, amount })
@@ -2466,6 +2618,10 @@
     admin: T::AccountId,
   ) -&gt; DispatchResult {
     <span class="self">Self</span>::burn_named_reserve(id, asset_id, who, <span class="prelude-val">Some</span>(admin))
+  }
+
+  <span class="kw">pub fn </span>does_asset_exists(asset_id: T::AssetId) -&gt; bool {
+    Asset::&lt;T, I&gt;::contains_key(asset_id)
   }
 }
 </code></pre></div>

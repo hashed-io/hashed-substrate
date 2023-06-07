@@ -288,8 +288,6 @@
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="doccomment">/// Edit this file to define custom logic or remove it if it is not needed.
@@ -440,11 +438,9 @@
     </span>RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
     <span class="doccomment">/// The user now has that role [pallet_id, scope_id, role_id, account_id]
     </span>RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
-    <span class="doccomment">/// The role no longer has the permission in the pallet context [pallet_id, role_id,
-    /// permission_id]
+    <span class="doccomment">/// The role no longer has the permission in the pallet context [pallet_id, role_id, permission_id]
     </span>PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
-    <span class="doccomment">/// The permission was removed from the pallet and all the roles that had it [pallet_id,
-    /// permission_id, affected_roles]
+    <span class="doccomment">/// The permission was removed from the pallet and all the roles that had it [pallet_id, permission_id, affected_roles]
     </span>PermissionRemovedFromPallet(PalletId, PermissionId, BoundedVec&lt;RoleId, T::MaxRolesPerPallet&gt;),
   }
 

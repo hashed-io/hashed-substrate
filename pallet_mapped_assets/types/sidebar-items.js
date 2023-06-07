@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ConversionError","ExistenceReason"],"struct":["Approval","AssetAccount","AssetDetails","AssetMetadata","BalanceToAssetBalance","ReserveData"],"trait":["FrozenBalance"]};
+window.SIDEBAR_ITEMS = {"enum":["AfloatRole","ConversionError","ExistenceReason"],"struct":["Approval","AssetAccount","AssetDetails","AssetMetadata","BalanceToAssetBalance","DebitFlags","ReserveData"],"trait":["FrozenBalance"]};

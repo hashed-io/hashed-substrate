@@ -836,6 +836,7 @@
 <a href="#836" id="836">836</a>
 <a href="#837" id="837">837</a>
 <a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -851,12 +852,11 @@
 
 <span class="attr">#[frame_support::pallet]
 </span><span class="kw">pub mod </span>pallet {
-  <span class="kw">use </span>frame_support::{
-    pallet_prelude::<span class="kw-2">*</span>,
-    traits::{Currency, Time},
-  };
+  <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
+  <span class="kw">use </span>frame_support::traits::{Currency, Time};
   <span class="kw">use </span>frame_system::pallet_prelude::<span class="kw-2">*</span>;
-  <span class="kw">use </span>sp_runtime::{traits::Scale, Permill};
+  <span class="kw">use </span>sp_runtime::traits::Scale;
+  <span class="kw">use </span>sp_runtime::Permill;
 
   <span class="kw">const </span>STORAGE_VERSION: StorageVersion = StorageVersion::new(<span class="number">1</span>);
 
@@ -917,7 +917,7 @@
   #[pallet::generate_store(<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">trait </span>Store)]
   </span><span class="kw">pub struct </span>Pallet&lt;T&gt;(<span class="kw">_</span>);
 
-  <span class="comment">/* --- Onchain storage section --- */
+  <span class="comment">/*--- Onchain storage section ---*/
 
   </span><span class="attr">#[pallet::storage]
   #[pallet::getter(<span class="kw">fn </span>marketplaces)]
@@ -1042,8 +1042,7 @@
     </span>MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
     <span class="doccomment">/// Application stored on the specified marketplace. [application_id, market_id]
     </span>ApplicationStored(ApplicationId, MarketplaceId),
-    <span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id,
-    /// status]
+    <span class="doccomment">/// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
     </span>ApplicationProcessed(AccountOrApplication&lt;T&gt;, MarketplaceId, ApplicationStatus),
     <span class="doccomment">/// Add a new authority to the selected marketplace [account, authority]
     </span>AuthorityAdded(T::AccountId, MarketplaceRole),
@@ -1217,6 +1216,12 @@
         asset_id,
         creator: who.clone(),
       };
+
+      <span class="macro">ensure!</span>(
+        pallet_mapped_assets::Pallet::&lt;T&gt;::does_asset_exists(asset_id),
+        Error::&lt;T&gt;::AssetNotFound
+      );
+
       <span class="self">Self</span>::do_create_marketplace(origin, admin, m)
     }
 
@@ -1293,8 +1298,7 @@
     /// - `custodian_fields`: The custodian account and their documents.
     ///
     /// ### Considerations:
-    /// - Since this is a second chance, you can replace your previous documents, up to the maximum
-    ///   allowed (10).
+    /// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
     /// - The custodian account is optional. You can replace the previous custodian.
     /// - Since we know the application exists, we can check the current status of the application.
     </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
@@ -1407,8 +1411,7 @@
 
     <span class="doccomment">/// Remove an Authority type
     ///
-    /// This extrinsic removes an authority type for the selected account from the selected
-    /// marketplace.
+    /// This extrinsic removes an authority type for the selected account from the selected marketplace.
     ///
     /// ### Parameters:
     /// - `origin`: The user who performs the action.
@@ -1445,8 +1448,7 @@
     /// - `label`: The new label for the selected marketplace.
     ///
     /// ### Considerations:
-    /// - You can only update the label of the marketplace where you are the owner/admin of the
-    ///   marketplace.
+    /// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
     /// - The label must be less than or equal to `T::LabelMaxLen
     /// - If the selected marketplace doesn&#39;t exist, it will throw an error.
     </span><span class="attr">#[pallet::call_index(<span class="number">9</span>)]
@@ -1595,8 +1597,8 @@
 
     <span class="doccomment">/// Accepts a buy order.
     ///
-    /// This extrinsic is called by the owner of the item who accepts the buy offer created by a
-    /// market participant. Accepts a buy order in the selected marketplace.
+    /// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
+    /// Accepts a buy order in the selected marketplace.
     ///
     /// ### Parameters:
     /// - `origin`: The user who performs the action.
@@ -1635,10 +1637,10 @@
       <span class="kw">let </span>who = ensure_signed(origin)<span class="question-mark">?</span>;
       <span class="kw">match </span>redeem {
         RedeemArgs::AskForRedemption { collection_id, item_id } =&gt; {
-          <span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id)
+          <span class="kw">return </span><span class="self">Self</span>::do_ask_for_redeem(who, marketplace, collection_id, item_id);
         },
         RedeemArgs::AcceptRedemption(redemption_id) =&gt; {
-          <span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id)
+          <span class="kw">return </span><span class="self">Self</span>::do_accept_redeem(who, marketplace, redemption_id);
         },
       }
     }

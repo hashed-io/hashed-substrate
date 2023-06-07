@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"hashed_parachain":[["impl SubstrateCli for <a class=\"struct\" href=\"hashed_parachain/cli/struct.RelayChainCli.html\" title=\"struct hashed_parachain::cli::RelayChainCli\">RelayChainCli</a>"],["impl SubstrateCli for <a class=\"struct\" href=\"hashed_parachain/cli/struct.Cli.html\" title=\"struct hashed_parachain::cli::Cli\">Cli</a>"]]
+"hashed_parachain":[["impl SubstrateCli for <a class=\"struct\" href=\"hashed_parachain/cli/struct.Cli.html\" title=\"struct hashed_parachain::cli::Cli\">Cli</a>"],["impl SubstrateCli for <a class=\"struct\" href=\"hashed_parachain/cli/struct.RelayChainCli.html\" title=\"struct hashed_parachain::cli::RelayChainCli\">RelayChainCli</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

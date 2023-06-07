@@ -592,7 +592,6 @@
 <a href="#592" id="592">592</a>
 <a href="#593" id="593">593</a>
 <a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::pallet_prelude::<span class="kw-2">*</span>;
 <span class="comment">//use frame_system::pallet_prelude::*;
@@ -602,7 +601,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 
 <span class="kw">impl</span>&lt;T: Config&gt; RoleBasedAccessControl&lt;T::AccountId&gt; <span class="kw">for </span>Pallet&lt;T&gt; {
-  <span class="comment">/* ---- Basic Insertion of individual storage maps --- */
+  <span class="comment">/*---- Basic Insertion of individual storage maps ---*/
   </span><span class="doccomment">/// Scope creation
   ///
   /// Creates a scope within a external pallet using the pallet index.
@@ -1005,13 +1004,12 @@
     <span class="self">Self</span>::deposit_event(Event::PermissionRemovedFromPallet(
       pallet_id,
       permission,
-      <span class="self">Self</span>::bound(affected_roles, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>, <span class="comment">/* this bound should never
-                                                                          * fail */
+      <span class="self">Self</span>::bound(affected_roles, Error::&lt;T&gt;::ExceedMaxRolesPerPallet)<span class="question-mark">?</span>, <span class="comment">// this bound should never fail
     </span>));
     <span class="prelude-val">Ok</span>(())
   }
 
-  <span class="comment">/* ---- Helper functions ---- */
+  <span class="comment">/*---- Helper functions ----*/
 
   </span><span class="doccomment">/// Authorization function
   ///

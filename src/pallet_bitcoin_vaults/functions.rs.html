@@ -813,7 +813,7 @@
 };
 
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
-  <span class="comment">/* ---- Extrinsics  ---- */
+  <span class="comment">/*---- Extrinsics  ----*/
   </span><span class="doccomment">/// Use with caution
   </span><span class="kw">pub fn </span>do_remove_xpub(who: T::AccountId) -&gt; DispatchResult {
     <span class="kw">let </span>old_hash = &lt;XpubsByOwner&lt;T&gt;&gt;::take(who.clone()).ok_or(Error::&lt;T&gt;::XPubNotFound)<span class="question-mark">?</span>;
@@ -1048,7 +1048,7 @@
   <span class="kw">pub fn </span>do_remove_proof(vault_id: [u8; <span class="number">32</span>]) {
     &lt;ProofOfReserves&lt;T&gt;&gt;::remove(vault_id)
   }
-  <span class="comment">/* ---- Utilities ---- */
+  <span class="comment">/*---- Utilities ----*/
 
   // check if the xpub is free to take/update or if its owned by the account
   </span><span class="kw">pub fn </span>get_xpub_status(who: T::AccountId, xpub_hash: [u8; <span class="number">32</span>]) -&gt; XpubStatus {
@@ -1075,7 +1075,7 @@
     <span class="prelude-val">Ok</span>(())
   }
 
-  <span class="comment">/* ---- Offchain extrinsics ---- */
+  <span class="comment">/*---- Offchain extrinsics ----*/
 
   </span><span class="kw">pub fn </span>do_insert_descriptors(
     vault_id: [u8; <span class="number">32</span>],
@@ -1128,7 +1128,7 @@
     <span class="self">Self</span>::deposit_event(Event::ProposalTxIdStored(proposal_id));
     <span class="prelude-val">Ok</span>(())
   }
-  <span class="comment">/* ---- Offchain utilities ---- */
+  <span class="comment">/*---- Offchain utilities ----*/
 
   </span><span class="kw">pub fn </span>get_pending_vaults() -&gt; Vec&lt;[u8; <span class="number">32</span>]&gt; {
     &lt;Vaults&lt;T&gt;&gt;::iter()

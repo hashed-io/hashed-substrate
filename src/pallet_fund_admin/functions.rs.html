@@ -3606,13 +3606,6 @@
 <a href="#3606" id="3606">3606</a>
 <a href="#3607" id="3607">3607</a>
 <a href="#3608" id="3608">3608</a>
-<a href="#3609" id="3609">3609</a>
-<a href="#3610" id="3610">3610</a>
-<a href="#3611" id="3611">3611</a>
-<a href="#3612" id="3612">3612</a>
-<a href="#3613" id="3613">3613</a>
-<a href="#3614" id="3614">3614</a>
-<a href="#3615" id="3615">3615</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, sp_io::hashing::blake2_256};
 <span class="kw">use </span>scale_info::prelude::vec;
@@ -4273,11 +4266,11 @@
           Error::&lt;T&gt;::UserHasAssignedProjectsCannotDelete
         );
 
-        <span class="comment">// Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs
-        // to unassign the user from all its projects.
+        <span class="comment">// Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs to
+        // unassign the user from all its projects.
 
-        // Remove user from UsersByProject storagemap. No longer required, the admnistator first needs
-        // to unassign the user from all its projects.
+        // Remove user from UsersByProject storagemap. No longer required, the admnistator first needs to
+        // unassign the user from all its projects.
 
         // Remove user from UsersInfo storagemap
         </span>&lt;UsersInfo&lt;T&gt;&gt;::remove(user.clone());
@@ -4295,8 +4288,7 @@
   /// that the user is registered. This is because permissions are granted to the
   /// user&#39;s account when the user is assigned to a project.
   ///
-  /// WARNING: Editing your own user data does not allow you to change your role. Only the
-  /// administrator can do it usign the `users` extrinsic.
+  /// WARNING: Editing your own user data does not allow you to change your role. Only the administrator can do it usign the `users` extrinsic.
   </span><span class="kw">pub fn </span>do_edit_user(
     user: T::AccountId,
     name: <span class="prelude-ty">Option</span>&lt;FieldName&gt;,
@@ -4931,8 +4923,7 @@
     <span class="comment">// Ensure admin or builder permissions
     </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::ExecuteTransactions)<span class="question-mark">?</span>;
 
-    <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it
-    // again
+    <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again
     </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
     <span class="comment">// Ensure drawdown exists so helper private functions doesn&#39;t need to check it again
@@ -5150,8 +5141,7 @@
     <span class="comment">// Ensure drawdown is not completed
     </span><span class="self">Self</span>::is_drawdown_editable(user, drawdown_id)<span class="question-mark">?</span>;
 
-    <span class="comment">// Ensure only Construction loan &amp; developer equity drawdowns are able to call bulk upload
-    // extrinsic
+    <span class="comment">// Ensure only Construction loan &amp; developer equity drawdowns are able to call bulk upload extrinsic
     </span><span class="kw">let </span>drawdown_data = DrawdownsInfo::&lt;T&gt;::get(drawdown_id).ok_or(Error::&lt;T&gt;::DrawdownNotFound)<span class="question-mark">?</span>;
 
     <span class="macro">ensure!</span>(
@@ -5454,8 +5444,7 @@
     <span class="comment">// Ensure builder permission
     </span><span class="self">Self</span>::is_authorized(user.clone(), <span class="kw-2">&amp;</span>project_id, ProxyPermission::RevenueTransaction)<span class="question-mark">?</span>;
 
-    <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it
-    // again
+    <span class="comment">// Ensure project exists &amp; is not completed so helper private functions doesn&#39;t need to check it again
     </span><span class="self">Self</span>::is_project_completed(project_id)<span class="question-mark">?</span>;
 
     <span class="comment">// Ensure revenue exists so helper private functions doesn&#39;t need to check it again
@@ -6332,8 +6321,7 @@
     <span class="comment">//  Ensure user is registered &amp; get user data
     </span><span class="kw">let </span>user_data = UsersInfo::&lt;T&gt;::get(user.clone()).ok_or(Error::&lt;T&gt;::UserNotRegistered)<span class="question-mark">?</span>;
 
-    <span class="comment">// Check if the user role trying to be assigned matches the actual user role from UsersInfo
-    // storage
+    <span class="comment">// Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
     </span><span class="kw">if </span>user_data.role != role {
       <span class="kw">return </span><span class="prelude-val">Err</span>(Error::&lt;T&gt;::UserCannotHaveMoreThanOneRole.into());
     }
@@ -6354,8 +6342,7 @@
         );
         <span class="prelude-val">Ok</span>(())
       },
-      <span class="comment">// Builders, Issuers &amp; Regional Centers don&#39;t have a limit on how many projects they can be
-      // assigned to
+      <span class="comment">// Builders, Issuers &amp; Regional Centers don&#39;t have a limit on how many projects they can be assigned to
       </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
     }
   }
@@ -6525,8 +6512,8 @@
 
   <span class="doccomment">/// # Checks if the caller has the permission to perform an action
   ///
-  /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks
-  ///   the global scope
+  /// - This version of is_authorized checks if the caller is an Administrator and if so, it
+  ///   checks the global scope
   /// otherwise it checks the project scope
   /// - This is useful for functions that are called by both administrators and project users
   /// - Scope is always required. In workflows where the caller is an administrator,
@@ -7075,12 +7062,11 @@
     <span class="comment">// Do execute transactions
     </span><span class="self">Self</span>::do_execute_transactions(user.clone(), project_id, drawdown_id, transactions)<span class="question-mark">?</span>;
 
-    <span class="comment">// If the administrator adds more transactions to the given drawdown, update the added transaction
-    // to the drawdown&#39;s transactions status
+    <span class="comment">// If the administrator adds more transactions to the given drawdown, update the added transaction to
+    // the drawdown&#39;s transactions status
     // Get drawdown transactions
     </span><span class="kw">if </span>!&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(project_id, drawdown_id).is_empty() {
-      <span class="comment">// If a transaction is in a diffferent status than Approved or Confirmed, set it to the current
-      // drawdown status
+      <span class="comment">// If a transaction is in a diffferent status than Approved or Confirmed, set it to the current drawdown status
       </span><span class="kw">for </span>transaction_id <span class="kw">in
         </span>&lt;TransactionsByDrawdown&lt;T&gt;&gt;::get(project_id, drawdown_id).iter().cloned()
       {
@@ -7153,8 +7139,8 @@
     <span class="comment">// Do execute revenue transactions
     </span><span class="self">Self</span>::do_execute_revenue_transactions(user.clone(), project_id, revenue_id, transactions)<span class="question-mark">?</span>;
 
-    <span class="comment">// If the administrator adds more transactions to the given revenue, update the added transaction
-    // to the revenue&#39;s transactions status
+    <span class="comment">// If the administrator adds more transactions to the given revenue, update the added transaction to
+    // the revenue&#39;s transactions status
     // Get revenue transactions
     </span><span class="kw">if </span>!&lt;TransactionsByRevenue&lt;T&gt;&gt;::get(project_id, revenue_id).is_empty() {
       <span class="comment">// If a transaction is in a diffferent status than Approved, set it to the current revenue status

@@ -241,6 +241,7 @@
 <a href="#241" id="241">241</a>
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Various pieces of common functionality.
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -292,7 +293,8 @@
 }
 
 <span class="kw">pub mod </span>v1 {
-  <span class="kw">pub use </span><span class="kw">super</span>::v0::{OldDrawdownData, OldRevenueData};
+  <span class="kw">pub use </span><span class="kw">super</span>::v0::OldDrawdownData;
+  <span class="kw">pub use </span><span class="kw">super</span>::v0::OldRevenueData;
   <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
   <span class="kw">impl</span>&lt;T: Config&gt; OldDrawdownData&lt;T&gt; {

@@ -1653,6 +1653,12 @@
 <a href="#1653" id="1653">1653</a>
 <a href="#1654" id="1654">1654</a>
 <a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
+<a href="#1658" id="1658">1658</a>
+<a href="#1659" id="1659">1659</a>
+<a href="#1660" id="1660">1660</a>
+<a href="#1661" id="1661">1661</a>
 </pre><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) 2017-2022 Parity Technologies (UK) Ltd.
@@ -1817,6 +1823,7 @@
 <span class="kw">use </span>sp_runtime::AccountId32;
 
 <span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
+<span class="kw">use </span>pallet_rbac::types::RoleBasedAccessControl;
 <span class="kw">pub use </span>weights::WeightInfo;
 
 <span class="kw">type </span>AccountIdLookupOf&lt;T&gt; = &lt;&lt;T <span class="kw">as </span>frame_system::Config&gt;::Lookup <span class="kw">as </span>StaticLookup&gt;::Source;
@@ -1862,6 +1869,7 @@
     <span class="doccomment">/// The overarching event type.
     </span><span class="kw">type </span>RuntimeEvent: From&lt;Event&lt;<span class="self">Self</span>, I&gt;&gt; + IsType&lt;&lt;<span class="self">Self </span><span class="kw">as </span>frame_system::Config&gt;::RuntimeEvent&gt;;
 
+    <span class="kw">type </span>Rbac: RoleBasedAccessControl&lt;<span class="self">Self</span>::AccountId&gt;;
     <span class="doccomment">/// The units in which we record balances.
     </span><span class="kw">type </span>Balance: Member
       + Parameter
@@ -2368,9 +2376,9 @@
     /// - `a = witness.approvals`
     </span><span class="comment">/* 		#[pallet::weight(T::WeightInfo::destroy(
       witness.accounts.saturating_sub(witness.sufficients),
-        witness.sufficients,
-        witness.approvals,
-      ))]
+       witness.sufficients,
+       witness.approvals,
+     ))]
     pub fn destroy(
       origin: OriginFor&lt;T&gt;,
       #[pallet::compact] id: T::AssetId,
@@ -2396,7 +2404,8 @@
     ///
     /// The origin must conform to `ForceOrigin` or must be `Signed` by the asset&#39;s `owner`.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// The asset class must be frozen before calling `start_destroy`.
     </span><span class="attr">#[pallet::call_index(<span class="number">2</span>)]
@@ -2418,7 +2427,8 @@
     /// Due to weight restrictions, this function may need to be called multiple times to fully
     /// destroy all accounts. It will destroy `RemoveItemsLimit` accounts at a time.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each call emits the `Event::DestroyedAccounts` event.
     </span><span class="attr">#[pallet::call_index(<span class="number">3</span>)]
@@ -2441,7 +2451,8 @@
     /// Due to weight restrictions, this function may need to be called multiple times to fully
     /// destroy all approvals. It will destroy `RemoveItemsLimit` approvals at a time.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each call emits the `Event::DestroyedApprovals` event.
     </span><span class="attr">#[pallet::call_index(<span class="number">4</span>)]
@@ -2462,7 +2473,8 @@
     /// asset is in a `Destroying` state. All accounts or approvals should be destroyed before
     /// hand.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each successful call emits the `Event::Destroyed` event.
     </span><span class="attr">#[pallet::call_index(<span class="number">5</span>)]
@@ -3193,8 +3205,8 @@
     ///
     /// A deposit will be taken from the signer account.
     ///
-    /// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit to be
-    ///   taken.
+    /// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit
+    ///   to be taken.
     /// - `id`: The identifier of the asset for the account to be created.
     ///
     /// Emits `Touched` event when successful.
@@ -3233,8 +3245,8 @@
     /// - `who`: The account on which the assets are to be reserved.
     /// - `amount`: The amount to reserve
     /// `who`&#39;s free balance is decreased by amount and the reserve balance increased by amount.
-    /// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id
-    /// is added to reserves.
+    /// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id is
+    /// added to reserves.
     ///
     /// Emits `Reserved` with the reserved amount.
     ///
@@ -3261,8 +3273,8 @@
     /// - `asset_id`: The identifier of the asset.
     /// - `who`: The account on which the assets are to be unreserved.
     /// `who`&#39;s free balance is increased by amount and the reserve balance decreased by amount.
-    /// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with
-    /// id is removed.
+    /// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with id is
+    /// removed.
     ///
     /// Emits `Uneserved` with the reserved amount.
     ///
@@ -3288,8 +3300,8 @@
     /// - `asset_id`: The identifier of the asset.
     /// - `who`: The account on which the reserved assets are to be burned.
     /// `who`&#39;s reserve balance is decreased by amount.
-    /// The reserve balance of the asset with asset_id is decreased by amount and the supply is
-    /// decreased by amount. The named reserve with id is removed.
+    /// The reserve balance of the asset with asset_id is decreased by amount and the supply is decreased by amount. The named reserve with id is
+    /// removed.
     ///
     /// Emits `BurnedReserve` with the reserved amount.
     ///
