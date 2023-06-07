@@ -498,6 +498,20 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
@@ -508,6 +522,7 @@
 <span class="kw">use </span>pallet_rbac::types::<span class="kw-2">*</span>;
 
 <span class="kw">use </span>frame_support::{pallet_prelude::<span class="kw-2">*</span>, traits::EnsureOriginWithArg, PalletId};
+<span class="kw">use </span>scale_info::prelude::vec;
 <span class="comment">// use frame_support::traits::OriginTrait;
 </span><span class="kw">use </span>sp_runtime::{sp_std::vec::Vec, traits::AccountIdConversion, Permill};
 <span class="comment">// use sp_runtime::traits::StaticLookup;
@@ -552,6 +567,19 @@
     account_id: <span class="kw-2">&amp;</span>T::AccountId,
   ) -&gt; &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::Source {
     &lt;T::Lookup <span class="kw">as </span>sp_runtime::traits::StaticLookup&gt;::unlookup(account_id.clone())
+  }
+
+  <span class="kw">pub fn </span>dummy_description() -&gt; CollectionDescription&lt;T&gt; {
+    CollectionDescription::&lt;T&gt;::try_from(<span class="string">b&quot;dummy description&quot;</span>.to_vec()).unwrap()
+  }
+
+  <span class="kw">pub fn </span>dummy_attributes() -&gt; Vec&lt;(AttributeKey&lt;T&gt;, AttributeValue&lt;T&gt;)&gt; {
+    <span class="macro">vec!</span>[(
+      AttributeKey::&lt;T&gt;::try_from(<span class="string">b&quot;dummy key&quot;</span>.encode())
+        .expect(<span class="string">&quot;Error on encoding key to BoundedVec&quot;</span>),
+      AttributeValue::&lt;T&gt;::try_from(<span class="string">b&quot;dummy value&quot;</span>.encode())
+        .expect(<span class="string">&quot;Error on encoding value to BoundedVec&quot;</span>),
+    )]
   }
 
   <span class="doccomment">/// Helper function for printing purposes

@@ -503,6 +503,17 @@
 <a href="#503" id="503">503</a>
 <a href="#504" id="504">504</a>
 <a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -997,14 +1008,25 @@
     #[pallet::weight(Weight::from_ref_time(<span class="number">10_000</span>) + T::DbWeight::get().writes(<span class="number">1</span>))]
     </span><span class="kw">pub fn </span>spam_spawning(
       origin: OriginFor&lt;T&gt;,
-      class_id: T::CollectionId,
-      instances: u32,
+      number_of_classes: u32,
+      number_of_instances: u32,
     ) -&gt; DispatchResult {
-      <span class="kw">let _ </span>= ensure_signed(origin)<span class="question-mark">?</span>;
-      <span class="comment">// for instance in instances {
-      // 	let _ = Self::mint(instance, class_id, None, None, None, None, None, None, None)?;
-      // }
-      </span><span class="prelude-val">Ok</span>(())
+      <span class="kw">let _ </span>= ensure_signed(origin.clone())<span class="question-mark">?</span>;
+
+      <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..number_of_classes {
+        <span class="self">Self</span>::create_collection(origin.clone(), <span class="self">Self</span>::dummy_description());
+
+        <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..number_of_instances {
+          <span class="self">Self</span>::spawn(
+            origin.clone(),
+            i,
+            <span class="self">Self</span>::dummy_description(),
+            <span class="prelude-val">Some</span>(<span class="self">Self</span>::dummy_attributes()),
+            <span class="prelude-val">None</span>,
+          );
+        }
+      }
+      <span class="prelude-val">Ok</span>(())
     }
   }
 }
