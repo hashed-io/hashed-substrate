@@ -49,7 +49,8 @@ mod v0 {
 }
 
 pub mod v1 {
-  pub use super::v0::{OldDrawdownData, OldRevenueData};
+  pub use super::v0::OldDrawdownData;
+  pub use super::v0::OldRevenueData;
   use super::*;
 
   impl<T: Config> OldDrawdownData<T> {

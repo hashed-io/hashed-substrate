@@ -13,7 +13,7 @@ use sp_runtime::{
 };
 
 impl<T: Config> Pallet<T> {
-  /* ---- Extrinsics  ---- */
+  /*---- Extrinsics  ----*/
   /// Use with caution
   pub fn do_remove_xpub(who: T::AccountId) -> DispatchResult {
     let old_hash = <XpubsByOwner<T>>::take(who.clone()).ok_or(Error::<T>::XPubNotFound)?;
@@ -248,7 +248,7 @@ impl<T: Config> Pallet<T> {
   pub fn do_remove_proof(vault_id: [u8; 32]) {
     <ProofOfReserves<T>>::remove(vault_id)
   }
-  /* ---- Utilities ---- */
+  /*---- Utilities ----*/
 
   // check if the xpub is free to take/update or if its owned by the account
   pub fn get_xpub_status(who: T::AccountId, xpub_hash: [u8; 32]) -> XpubStatus {
@@ -275,7 +275,7 @@ impl<T: Config> Pallet<T> {
     Ok(())
   }
 
-  /* ---- Offchain extrinsics ---- */
+  /*---- Offchain extrinsics ----*/
 
   pub fn do_insert_descriptors(
     vault_id: [u8; 32],
@@ -328,7 +328,7 @@ impl<T: Config> Pallet<T> {
     Self::deposit_event(Event::ProposalTxIdStored(proposal_id));
     Ok(())
   }
-  /* ---- Offchain utilities ---- */
+  /*---- Offchain utilities ----*/
 
   pub fn get_pending_vaults() -> Vec<[u8; 32]> {
     <Vaults<T>>::iter()

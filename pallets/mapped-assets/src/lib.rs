@@ -162,6 +162,7 @@ use frame_system::Config as SystemConfig;
 use sp_runtime::AccountId32;
 
 pub use pallet::*;
+use pallet_rbac::types::RoleBasedAccessControl;
 pub use weights::WeightInfo;
 
 type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup>::Source;
@@ -207,6 +208,7 @@ pub mod pallet {
     /// The overarching event type.
     type RuntimeEvent: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
+    type Rbac: RoleBasedAccessControl<Self::AccountId>;
     /// The units in which we record balances.
     type Balance: Member
       + Parameter
@@ -713,9 +715,9 @@ pub mod pallet {
     /// - `a = witness.approvals`
     /* 		#[pallet::weight(T::WeightInfo::destroy(
       witness.accounts.saturating_sub(witness.sufficients),
-        witness.sufficients,
-        witness.approvals,
-      ))]
+       witness.sufficients,
+       witness.approvals,
+     ))]
     pub fn destroy(
       origin: OriginFor<T>,
       #[pallet::compact] id: T::AssetId,
@@ -741,7 +743,8 @@ pub mod pallet {
     ///
     /// The origin must conform to `ForceOrigin` or must be `Signed` by the asset's `owner`.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// The asset class must be frozen before calling `start_destroy`.
     #[pallet::call_index(2)]
@@ -763,7 +766,8 @@ pub mod pallet {
     /// Due to weight restrictions, this function may need to be called multiple times to fully
     /// destroy all accounts. It will destroy `RemoveItemsLimit` accounts at a time.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each call emits the `Event::DestroyedAccounts` event.
     #[pallet::call_index(3)]
@@ -786,7 +790,8 @@ pub mod pallet {
     /// Due to weight restrictions, this function may need to be called multiple times to fully
     /// destroy all approvals. It will destroy `RemoveItemsLimit` approvals at a time.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each call emits the `Event::DestroyedApprovals` event.
     #[pallet::call_index(4)]
@@ -807,7 +812,8 @@ pub mod pallet {
     /// asset is in a `Destroying` state. All accounts or approvals should be destroyed before
     /// hand.
     ///
-    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing asset.
+    /// - `id`: The identifier of the asset to be destroyed. This must identify an existing
+    ///   asset.
     ///
     /// Each successful call emits the `Event::Destroyed` event.
     #[pallet::call_index(5)]
@@ -1538,8 +1544,8 @@ pub mod pallet {
     ///
     /// A deposit will be taken from the signer account.
     ///
-    /// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit to be
-    ///   taken.
+    /// - `origin`: Must be Signed; the signer account must have sufficient funds for a deposit
+    ///   to be taken.
     /// - `id`: The identifier of the asset for the account to be created.
     ///
     /// Emits `Touched` event when successful.
@@ -1578,8 +1584,8 @@ pub mod pallet {
     /// - `who`: The account on which the assets are to be reserved.
     /// - `amount`: The amount to reserve
     /// `who`'s free balance is decreased by amount and the reserve balance increased by amount.
-    /// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id
-    /// is added to reserves.
+    /// The reserve balance of the asset with asset_id is increased by amount. A named reserve with id is
+    /// added to reserves.
     ///
     /// Emits `Reserved` with the reserved amount.
     ///
@@ -1606,8 +1612,8 @@ pub mod pallet {
     /// - `asset_id`: The identifier of the asset.
     /// - `who`: The account on which the assets are to be unreserved.
     /// `who`'s free balance is increased by amount and the reserve balance decreased by amount.
-    /// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with
-    /// id is removed.
+    /// The reserve balance of the asset with asset_id is decreased by amount. The named reserve with id is
+    /// removed.
     ///
     /// Emits `Uneserved` with the reserved amount.
     ///
@@ -1633,8 +1639,8 @@ pub mod pallet {
     /// - `asset_id`: The identifier of the asset.
     /// - `who`: The account on which the reserved assets are to be burned.
     /// `who`'s reserve balance is decreased by amount.
-    /// The reserve balance of the asset with asset_id is decreased by amount and the supply is
-    /// decreased by amount. The named reserve with id is removed.
+    /// The reserve balance of the asset with asset_id is decreased by amount and the supply is decreased by amount. The named reserve with id is
+    /// removed.
     ///
     /// Emits `BurnedReserve` with the reserved amount.
     ///

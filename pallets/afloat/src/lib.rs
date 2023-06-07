@@ -13,14 +13,15 @@ pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-  use frame_support::{
-    pallet_prelude::*,
-    sp_io::hashing::blake2_256,
-    traits::{Currency, UnixTime},
-  };
-  use frame_system::{pallet_prelude::*, RawOrigin};
+  use frame_support::pallet_prelude::*;
+  use frame_support::sp_io::hashing::blake2_256;
+  use frame_support::traits::Currency;
+  use frame_support::traits::UnixTime;
+  use frame_system::pallet_prelude::*;
+  use frame_system::RawOrigin;
   use pallet_fruniques::types::{Attributes, CollectionDescription, FruniqueRole, ParentInfo};
   use pallet_gated_marketplace::types::*;
+  use sp_runtime::traits::StaticLookup;
   use sp_runtime::Permill;
   const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -42,7 +43,7 @@ pub mod pallet {
     type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
     type TimeProvider: UnixTime;
     type Rbac: RoleBasedAccessControl<Self::AccountId>;
-    type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+    //type RemoveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
     type Currency: Currency<Self::AccountId>;
     type ItemId: Parameter + Member + Default;
   }
@@ -66,6 +67,7 @@ pub mod pallet {
     SellOrderTaken(T::AccountId),
     BuyOrderTaken(T::AccountId),
     AfloatBalanceSet(T::AccountId, T::AccountId, T::Balance),
+    AdminAdded(T::AccountId, T::AccountId),
   }
 
   // Errors inform users that something went wrong.
@@ -77,6 +79,12 @@ pub mod pallet {
     StorageOverflow,
     /// Marketplace not initialized
     MarketplaceNotInitialized,
+    // Marketplace id not found
+    MarketPlaceIdNotFound,
+    //Asset id not found
+    AssetNotFound,
+    // Collection id not found
+    CollectionIdNotFound,
     /// User not found
     UserNotFound,
     /// User already exists
@@ -93,6 +101,44 @@ pub mod pallet {
     NotInitialized,
     // Failed to remove afloat role
     FailedToRemoveAfloatRole,
+    // Maxiumum number of transactions per offer reached
+    MaxTransactionsReached,
+    // Offer not found
+    OfferNotFound,
+    // Offer's type is not correct
+    WrongOfferType,
+    // Offer has expired
+    OfferExpired,
+    // Offer has been cancelled
+    OfferCancelled,
+    // Offer has been taken already
+    OfferTaken,
+    // Transaction not found
+    TransactionNotFound,
+    // Transaction has expired
+    TransactionExpired,
+    // Transaction has been cancelled
+    TransactionCancelled,
+    // Transaction has not been confirmed yet
+    TransactionNotConfirmed,
+    // Transaction already confirmed by buyer
+    TransactionAlreadyConfirmedByBuyer,
+    // Transaction already confirmed by seller
+    TransactionAlreadyConfirmedBySeller,
+    // Transaction not confirmed by buyer
+    TransactionNotConfirmedByBuyer,
+    // Not enough tax credits available for sale
+    NotEnoughTaxCreditsAvailable,
+    // Not enough afloat balance available
+    NotEnoughAfloatBalanceAvailable,
+    // Tax credit amount overflow
+    TaxCreditAmountOverflow,
+    // Child offer id not found
+    ChildOfferIdNotFound,
+    // Tax credit amount underflow
+    Underflow,
+    // Afloat marketplace label too long
+    LabelTooLong,
   }
 
   #[pallet::storage]
@@ -124,7 +170,7 @@ pub mod pallet {
   #[pallet::getter(fn asset_id)]
   pub(super) type AfloatAssetId<T: Config> = StorageValue<
     _,
-    <T as pallet_mapped_assets::Config>::AssetId, // Afloat's mapped collection asset_id
+    <T as pallet_mapped_assets::Config>::AssetId, // Afloat's frunique collection id
   >;
 
   #[pallet::storage]
@@ -149,26 +195,44 @@ pub mod pallet {
       origin: OriginFor<T>,
       creator: T::AccountId,
       admin: T::AccountId,
+      asset: CreateAsset<T>,
     ) -> DispatchResult {
-      ensure_signed(origin.clone())?;
-      let asset_id: T::AssetId = Default::default();
+      // Ensure sudo origin
+      let _ = T::RemoveOrigin::ensure_origin(origin.clone())?;
+      let asset_id = match asset {
+        CreateAsset::New { asset_id, min_balance } => {
+          pallet_mapped_assets::Pallet::<T>::create(
+            RawOrigin::Signed(creator.clone()).into(),
+            asset_id,
+            T::Lookup::unlookup(creator.clone()),
+            min_balance,
+          )?;
+          asset_id
+        },
+        CreateAsset::Existing { asset_id } => {
+          ensure!(
+            pallet_mapped_assets::Pallet::<T>::does_asset_exists(asset_id),
+            Error::<T>::AssetNotFound
+          );
+          asset_id
+        },
+      };
+
       AfloatAssetId::<T>::put(asset_id.clone());
 
       let metadata: CollectionDescription<T> =
-        BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
-
+        BoundedVec::try_from(b"Afloat".to_vec()).map_err(|_| Error::<T>::LabelTooLong)?;
       pallet_fruniques::Pallet::<T>::do_initial_setup()?;
 
       Self::create_afloat_collection(
         RawOrigin::Signed(creator.clone()).into(),
-        metadata,
+        metadata.clone(),
         admin.clone(),
       )?;
-
       pallet_gated_marketplace::Pallet::<T>::do_initial_setup()?;
 
       let label: BoundedVec<u8, T::LabelMaxLen> =
-        BoundedVec::try_from(b"Afloat".to_vec()).expect("Label too long");
+        BoundedVec::try_from(b"Afloat".to_vec()).map_err(|_| Error::<T>::LabelTooLong)?;
       let marketplace: Marketplace<T> = Marketplace {
         label,
         buy_fee: Permill::from_percent(2),
@@ -185,26 +249,17 @@ pub mod pallet {
         admin.clone(),
         marketplace,
       )?;
-
       Self::do_initial_setup(creator, admin)?;
 
-      Ok(())
+      Ok(().into())
     }
 
     #[pallet::call_index(1)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
     pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
-      let who = ensure_signed(origin.clone())?;
-      // Self::do_delete_all_users()?;
-
-      let _ = <UserInfo<T>>::clear(1000, None);
-      let _ = <AfloatMarketPlaceId<T>>::kill();
-      let _ = <AfloatCollectionId<T>>::kill();
-      let _ = <AfloatOffers<T>>::clear(1000, None);
-      let _ = <AfloatTransactions<T>>::clear(1000, None);
-
-      <T as Config>::Rbac::remove_pallet_storage(Self::pallet_id())?;
-
+      // ensure sudo origin
+      T::RemoveOrigin::ensure_origin(origin.clone())?;
+      Self::do_delete_all_users()?;
       Ok(())
     }
 
@@ -223,23 +278,20 @@ pub mod pallet {
       args: UpdateUserArgs,
     ) -> DispatchResult {
       let who = ensure_signed(origin)?;
-
+      let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
       ensure!(<UserInfo<T>>::contains_key(address.clone()), Error::<T>::UserNotFound);
-      ensure!(
-        who.clone() == address || Self::is_admin_or_owner(who.clone()),
-        Error::<T>::Unauthorized
-      );
+      ensure!(who.clone() == address || is_admin_or_owner, Error::<T>::Unauthorized);
 
       match args {
         UpdateUserArgs::Edit { cid, cid_creator } => {
           Self::do_edit_user(who, address, cid, cid_creator)?;
         },
         UpdateUserArgs::AdminEdit { cid, cid_creator, group } => {
-          ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+          ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
           Self::do_admin_edit_user(who, address, cid, cid_creator, group)?;
         },
         UpdateUserArgs::Delete => {
-          ensure!(Self::is_admin_or_owner(who.clone()), Error::<T>::Unauthorized);
+          ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
           Self::do_delete_user(who, address)?;
         },
       }
@@ -286,31 +338,37 @@ pub mod pallet {
 
     #[pallet::call_index(5)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-    pub fn accept_offer(
+    pub fn start_take_sell_order(
       origin: OriginFor<T>,
       offer_id: [u8; 32],
-      amount: Option<u64>,
+      tax_credit_amount: T::Balance,
     ) -> DispatchResult {
       ensure_signed(origin.clone())?;
-      Ok(())
+      Self::do_start_take_sell_order(origin, offer_id, tax_credit_amount)
     }
 
     #[pallet::call_index(6)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-    pub fn take_sell_order(origin: OriginFor<T>, offer_id: [u8; 32]) -> DispatchResult {
+    pub fn confirm_sell_transaction(
+      origin: OriginFor<T>,
+      transaction_id: [u8; 32],
+    ) -> DispatchResult {
       ensure_signed(origin.clone())?;
-      Self::do_take_sell_order(origin, offer_id)
+      Self::do_confirm_sell_transaction(origin, transaction_id)
     }
 
     #[pallet::call_index(7)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
-    pub fn take_buy_order(origin: OriginFor<T>, offer_id: [u8; 32]) -> DispatchResult {
-      let who = ensure_signed(origin)?;
-      Self::do_take_buy_order(who, offer_id)
+    pub fn finish_take_sell_transaction(
+      origin: OriginFor<T>,
+      transaction_id: [u8; 32],
+    ) -> DispatchResult {
+      ensure_signed(origin.clone())?;
+      Self::do_finish_take_sell_transaction(origin, transaction_id)
     }
 
     #[pallet::call_index(8)]
-    #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+    #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
     pub fn create_tax_credit(
       origin: OriginFor<T>,
       metadata: CollectionDescription<T>,
@@ -322,18 +380,25 @@ pub mod pallet {
     }
 
     #[pallet::call_index(9)]
-    #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(2,1))]
+    #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
     pub fn set_afloat_balance(
       origin: OriginFor<T>,
       beneficiary: T::AccountId,
       amount: T::Balance,
     ) -> DispatchResult {
-      ensure_signed(origin.clone())?;
-
-      // Only the owner can set afloat balance
-      ensure!(Self::is_owner(ensure_signed(origin.clone())?), Error::<T>::Unauthorized);
-
+      let who = ensure_signed(origin.clone())?;
+      let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
+      ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
       Self::do_set_afloat_balance(origin, beneficiary, amount)
+    }
+
+    #[pallet::call_index(10)]
+    #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().reads_writes(1,1))]
+    pub fn add_afloat_admin(origin: OriginFor<T>, admin: T::AccountId) -> DispatchResult {
+      let who = ensure_signed(origin.clone())?;
+      let is_admin_or_owner = Self::is_admin_or_owner(who.clone())?;
+      ensure!(is_admin_or_owner, Error::<T>::Unauthorized);
+      Self::do_add_afloat_admin(who, admin)
     }
   }
 }

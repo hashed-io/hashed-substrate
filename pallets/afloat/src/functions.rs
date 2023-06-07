@@ -6,14 +6,17 @@ use frame_system::pallet_prelude::*;
 use pallet_fruniques::types::{Attributes, CollectionDescription, FruniqueRole, ParentInfo};
 use pallet_gated_marketplace::types::MarketplaceRole;
 // use frame_support::traits::OriginTrait;
+use core::convert::TryInto;
 use frame_support::sp_io::hashing::blake2_256;
-use pallet_rbac::types::{IdOrVec, RoleBasedAccessControl, RoleId};
+use frame_support::traits::Time;
+use pallet_mapped_assets::DebitFlags;
+use pallet_rbac::types::IdOrVec;
+use pallet_rbac::types::RoleBasedAccessControl;
+use pallet_rbac::types::RoleId;
 use scale_info::prelude::vec;
-use sp_runtime::{
-  sp_std::{str, vec::Vec},
-  traits::StaticLookup,
-};
-
+use sp_runtime::sp_std::str;
+use sp_runtime::sp_std::vec::Vec;
+use sp_runtime::traits::Zero;
 impl<T: Config> Pallet<T> {
   pub fn do_initial_setup(creator: T::AccountId, admin: T::AccountId) -> DispatchResult {
     Self::initialize_rbac()?;
@@ -55,8 +58,8 @@ impl<T: Config> Pallet<T> {
   ///
   /// * `actor` - An account ID of the user who initiated this action.
   /// * `user_address` - An account ID of the user to be created.
-  /// * `args` - Sign up arguments. It could be either a `BuyerOrSeller` or a `CPA`, and contains the
-  ///   first name, last name, email, and state of the user.
+  /// * `args` - Sign up arguments. It could be either a `BuyerOrSeller` or a `CPA`, and contains
+  ///            the first name, last name, email, and state of the user.
   ///
   /// # Errors
   ///
@@ -67,6 +70,7 @@ impl<T: Config> Pallet<T> {
   /// # Returns
   ///
   /// Returns `Ok(())` on success.
+  ///
   pub fn do_create_user(
     actor: T::AccountId,
     user_address: T::AccountId,
@@ -104,7 +108,8 @@ impl<T: Config> Pallet<T> {
       },
     }
 
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+    let marketplace_id =
+      AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
 
     Self::add_to_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
     pallet_gated_marketplace::Pallet::<T>::self_enroll(user_address, marketplace_id)?;
@@ -119,10 +124,8 @@ impl<T: Config> Pallet<T> {
   /// - `last_name`: An optional `ShortString` containing the user's last name.
   /// - `email`: An optional `LongString` containing the user's email address.
   /// - `lang_key`: An optional `ShortString` containing the language code for the user.
-  /// - `phone`: An optional `Option<ShortString>` containing the user's phone number, or None if no
-  ///   phone number is provided.
-  /// - `credits_needed`: An optional `u32` containing the number of credits needed for the user's
-  ///   account.
+  /// - `phone`: An optional `Option<ShortString>` containing the user's phone number, or None if no phone number is provided.
+  /// - `credits_needed`: An optional `u32` containing the number of credits needed for the user's account.
   /// - `cpa_id`: An optional `ShortString` containing the user's CPA ID.
   /// - `state`: An optional `u32` containing the user's state tax authority ID.
   ///
@@ -133,6 +136,7 @@ impl<T: Config> Pallet<T> {
   /// # Returns
   ///
   /// Returns `Ok(())` on success.
+  ///
   pub fn do_edit_user(
     actor: T::AccountId,
     user_address: T::AccountId,
@@ -176,8 +180,7 @@ impl<T: Config> Pallet<T> {
   }
   /// Function for deleting a user account.
   ///
-  /// - _actor: The AccountId of the actor performing the deletion. This parameter is currently
-  ///   unused.
+  /// - _actor: The AccountId of the actor performing the deletion. This parameter is currently unused.
   /// - user_address: The AccountId of the user account to delete.
   ///
   /// # Errors
@@ -187,11 +190,12 @@ impl<T: Config> Pallet<T> {
   /// # Returns
   ///
   /// Returns Ok(()) on success.
+  ///
   pub fn do_delete_user(_actor: T::AccountId, user_address: T::AccountId) -> DispatchResult {
     Self::remove_from_afloat_collection(user_address.clone(), FruniqueRole::Collaborator)?;
     Self::remove_from_afloat_marketplace(user_address.clone())?;
 
-    let user_roles = Self::get_all_roles_for_user(user_address.clone());
+    let user_roles = Self::get_all_roles_for_user(user_address.clone())?;
 
     if !user_roles.is_empty() {
       for role in user_roles {
@@ -210,26 +214,26 @@ impl<T: Config> Pallet<T> {
   ) -> DispatchResult {
     let authority = ensure_signed(origin.clone())?;
     let asset_id = AfloatAssetId::<T>::get().expect("AfloatAssetId should be set");
-
+    let debit_flags = DebitFlags { keep_alive: false, best_effort: true };
     ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
 
     let current_balance = Self::do_get_afloat_balance(user_address.clone());
-
     if current_balance > amount {
       let diff = current_balance - amount;
-      pallet_mapped_assets::Pallet::<T>::burn(
-        origin.clone(),
+      pallet_mapped_assets::Pallet::<T>::afloat_do_burn(
         asset_id.into(),
-        T::Lookup::unlookup(user_address.clone()),
+        &user_address.clone(),
         diff,
+        Some(authority.clone()),
+        debit_flags,
       )?;
     } else if current_balance < amount {
       let diff = amount - current_balance;
-      pallet_mapped_assets::Pallet::<T>::mint(
-        origin.clone(),
+      pallet_mapped_assets::Pallet::<T>::afloat_do_mint(
         asset_id.into(),
-        T::Lookup::unlookup(user_address.clone()),
+        &user_address.clone(),
         diff,
+        Some(authority.clone()),
       )?;
     }
 
@@ -249,27 +253,14 @@ impl<T: Config> Pallet<T> {
     tax_credit_amount: u32,
     expiration_date: Date,
   ) -> DispatchResult {
-    ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
+    let maybe_roles = Self::get_all_roles_for_user(authority.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    let collection_id = AfloatCollectionId::<T>::get().unwrap();
-
-    /*
-      TODO: at the moment we are not going to list anything in marketplace yet
-      the offers on marketplace will be created once both users create a transaction
-    */
-    // let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
-    //   authority.clone(),
-    //   marketplace_id,
-    //   collection_id,
-    //   item_id,
-    //   price,
-    //   tax_credit_amount,
-    // )?;
+    let transactions = TransactionBoundedVec::default();
 
     let offer: Offer<T> = Offer {
       tax_credit_amount,
-      tax_credit_amount_remaining: tax_credit_amount,
+      tax_credit_amount_remaining: tax_credit_amount.into(),
       price_per_credit: price,
       creation_date: T::TimeProvider::now().as_secs(),
       expiration_date,
@@ -278,10 +269,10 @@ impl<T: Config> Pallet<T> {
       status: OfferStatus::default(),
       offer_type: OfferType::Sell,
       cancellation_date: None,
+      transactions,
     };
 
     let offer_id = offer.using_encoded(blake2_256);
-
     <AfloatOffers<T>>::insert(offer_id, offer);
 
     Self::deposit_event(Event::SellOrderCreated(authority));
@@ -296,27 +287,14 @@ impl<T: Config> Pallet<T> {
     tax_credit_amount: u32,
     expiration_date: Date,
   ) -> DispatchResult {
-    ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
+    let maybe_roles = Self::get_all_roles_for_user(authority.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    let collection_id = AfloatCollectionId::<T>::get().unwrap();
-
-    /*
-      TODO: at the moment we are not going to list anything in marketplace yet
-      the offers on marketplace will be created once both users create a transaction
-    */
-    // let offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_buy_offer(
-    //   authority.clone(),
-    //   marketplace_id,
-    //   collection_id,
-    //   item_id,
-    //   price,
-    //   tax_credit_amount,
-    // )?;
+    let transactions = TransactionBoundedVec::default();
 
     let offer: Offer<T> = Offer {
       tax_credit_amount,
-      tax_credit_amount_remaining: tax_credit_amount,
+      tax_credit_amount_remaining: tax_credit_amount.into(),
       price_per_credit: price,
       creation_date: T::TimeProvider::now().as_secs(),
       expiration_date,
@@ -325,6 +303,7 @@ impl<T: Config> Pallet<T> {
       status: OfferStatus::default(),
       offer_type: OfferType::Buy,
       cancellation_date: None,
+      transactions,
     };
 
     let offer_id = offer.using_encoded(blake2_256);
@@ -336,15 +315,323 @@ impl<T: Config> Pallet<T> {
     Ok(())
   }
 
-  pub fn do_take_sell_order(authority: OriginFor<T>, order_id: [u8; 32]) -> DispatchResult
+  /// Starts the process of taking a sell order.
+  ///
+  /// # Arguments
+  ///
+  /// * `authority` - The origin of the call, from where the function is triggered.
+  /// * `order_id` - The unique identifier of the order.
+  /// * `tax_credit_amount` - The amount of tax credit to to take/buy from the original offer.
+  ///
+  /// # Return
+  ///
+  /// * Returns a `DispatchResult` to indicate the success or failure of the operation.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if:
+  /// * The caller does not have any roles.
+  /// * The specified offer does not exist.
+  /// * The specified offer is not a sell offer.
+  /// * The specified offer has expired.
+  /// * The specified offer has been cancelled.
+  /// * The specified offer has already been taken.
+  /// * The specified offer does not have enough tax credits available for sale.
+  /// * The caller does not have enough afloat balance to take the offer.
+  ///
+  /// # Side Effects
+  ///
+  /// * If the function is successful, it will mutate the state of the order and create a transaction.
+  ///
+  /// # Panics
+  ///
+  /// * This function does not panic.
+  ///
+  /// # Safety
+  ///
+  /// * This function does not use any unsafe blocks.
+  ///
+  pub fn do_start_take_sell_order(
+    authority: OriginFor<T>,
+    order_id: [u8; 32],
+    tax_credit_amount: T::Balance,
+  ) -> DispatchResult
   where
     <T as pallet_uniques::Config>::ItemId: From<u32>,
   {
     let who = ensure_signed(authority.clone())?;
 
-    ensure!(!Self::get_all_roles_for_user(who.clone()).is_empty(), Error::<T>::Unauthorized);
+    let maybe_roles = Self::get_all_roles_for_user(who.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
+    // ensure offer exists
+    ensure!(<AfloatOffers<T>>::contains_key(order_id), Error::<T>::OfferNotFound);
+    //get offer details
+    let offer = <AfloatOffers<T>>::get(order_id).unwrap();
+    //ensure offer is a sell offer
+    ensure!(offer.offer_type == OfferType::Sell, Error::<T>::WrongOfferType);
+    //ensure offer is not expired
+    ensure!(offer.expiration_date > T::TimeProvider::now().as_secs(), Error::<T>::OfferExpired);
+    //ensure offer is not cancelled
+    ensure!(offer.cancellation_date.is_none(), Error::<T>::OfferCancelled);
+    //ensure offer is not taken
+    ensure!(offer.status == OfferStatus::default(), Error::<T>::OfferTaken);
+    //ensure offer has enough tax credits for sale
+    ensure!(
+      offer.tax_credit_amount_remaining >= tax_credit_amount,
+      Error::<T>::NotEnoughTaxCreditsAvailable
+    );
+    //ensure user has enough afloat balance
+    ensure!(
+      Self::do_get_afloat_balance(who.clone()) >= offer.price_per_credit * tax_credit_amount.into(),
+      Error::<T>::NotEnoughAfloatBalanceAvailable
+    );
+    let zero_balance: T::Balance = Zero::zero();
+    //ensure tax credit amount is greater than zero
+    ensure!(tax_credit_amount > zero_balance, Error::<T>::Underflow);
 
-    pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(authority.clone(), order_id)?;
+    let creation_date: u64 = T::Timestamp::now().into();
+    let price_per_credit: T::Balance = offer.price_per_credit.into();
+    let total_price: T::Balance = price_per_credit * tax_credit_amount;
+    let fee: Option<T::Balance> = None;
+    let tax_credit_id: <T as pallet_uniques::Config>::ItemId = offer.tax_credit_id;
+    let seller_id: T::AccountId = offer.creator_id;
+    let buyer_id: T::AccountId = who.clone();
+    let offer_id: StorageId = order_id;
+    let seller_confirmation_date: Option<Date> = None;
+    let buyer_confirmation_date: Option<Date> = Some(creation_date);
+    let confirmed: bool = false;
+    let completed: bool = false;
+    let child_offer_id: Option<StorageId> = None;
+
+    let transaction = Transaction {
+      tax_credit_amount,
+      price_per_credit,
+      total_price,
+      fee,
+      creation_date,
+      cancellation_date: None,
+      tax_credit_id,
+      seller_id,
+      buyer_id,
+      offer_id,
+      child_offer_id,
+      seller_confirmation_date,
+      buyer_confirmation_date,
+      confirmed,
+      completed,
+    };
+
+    let transaction_id = transaction.clone().using_encoded(blake2_256);
+
+    <AfloatOffers<T>>::try_mutate(order_id, |offer| -> DispatchResult {
+      let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
+      offer
+        .transactions
+        .try_push(transaction_id.clone())
+        .map_err(|_| Error::<T>::MaxTransactionsReached)?;
+      Ok(())
+    })?;
+
+    <AfloatTransactions<T>>::insert(transaction_id, transaction);
+
+    Ok(())
+  }
+
+  /// Confirms a sell transaction.
+  ///
+  /// # Arguments
+  ///
+  /// * `authority` - The origin of the call, from where the function is triggered.
+  /// * `transaction_id` - The unique identifier of the transaction.
+  ///
+  /// # Return
+  ///
+  /// * Returns a `DispatchResult` to indicate the success or failure of the operation.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if:
+  /// * The caller does not have any roles.
+  /// * The specified transaction does not exist.
+  /// * The caller is not the seller in the transaction.
+  /// * The specified transaction has been cancelled.
+  /// * The specified transaction has already been confirmed by the seller.
+  /// * The specified transaction has not been confirmed by the buyer.
+  /// * The `AfloatMarketPlaceId` or `AfloatCollectionId` does not exist.
+  /// * The tax credit amount overflows when converting from ``T::Balance`` to `u32`.
+  ///
+  /// # Side Effects
+  ///
+  /// * If the function is successful, it will mutate the state of the transaction, setting the seller confirmation date,
+  /// confirming the transaction, and linking the transaction to a new child offer.
+  ///
+  /// # Panics
+  ///
+  /// * This function does not panic.
+  ///
+  /// # Safety
+  ///
+  /// * This function does not use any unsafe blocks.
+  ///
+  /// # Note
+  ///
+  /// * Before calling this function, make sure that the transaction_id exists and the caller is the seller.
+  ///
+  pub fn do_confirm_sell_transaction(
+    authority: OriginFor<T>,
+    transaction_id: [u8; 32],
+  ) -> DispatchResult
+  where
+    <T as pallet_uniques::Config>::ItemId: From<u32>,
+  {
+    let who = ensure_signed(authority.clone())?;
+
+    let maybe_roles = Self::get_all_roles_for_user(who.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
+
+    // Ensure the transaction exists before trying to get it
+    ensure!(<AfloatTransactions<T>>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+    // Get transaction details
+    let transaction =
+      <AfloatTransactions<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+    // Ensure user is the seller
+    ensure!(transaction.seller_id == who.clone(), Error::<T>::Unauthorized);
+
+    // Ensure transaction is not cancelled
+    ensure!(transaction.cancellation_date.is_none(), Error::<T>::TransactionCancelled);
+
+    // Ensure transaction is not already confirmed by the seller
+    ensure!(
+      transaction.seller_confirmation_date.is_none(),
+      Error::<T>::TransactionAlreadyConfirmedBySeller
+    );
+
+    // Ensure transaction has buyer confirmation
+    ensure!(
+      transaction.buyer_confirmation_date.is_some(),
+      Error::<T>::TransactionNotConfirmedByBuyer
+    );
+
+    let confirmation_date: u64 = T::Timestamp::now().into();
+    let confirmed: bool = true;
+
+    let marketplace_id =
+      <AfloatMarketPlaceId<T>>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
+    let collection_id = <AfloatCollectionId<T>>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
+
+    let tax_credit_amount_u32 = if let Ok(amount) = transaction.tax_credit_amount.try_into() {
+      amount
+    } else {
+      return Err(Error::<T>::TaxCreditAmountOverflow.into());
+    };
+
+    let child_offer_id = pallet_gated_marketplace::Pallet::<T>::do_enlist_sell_offer(
+      who,
+      marketplace_id,
+      collection_id,
+      transaction.tax_credit_id,
+      transaction.total_price,
+      tax_credit_amount_u32,
+    )?;
+
+    <AfloatTransactions<T>>::try_mutate(transaction_id, |transaction| -> DispatchResult {
+      let mut transaction = transaction.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+      transaction.seller_confirmation_date = Some(confirmation_date);
+      transaction.confirmed = confirmed;
+      transaction.child_offer_id = Some(child_offer_id);
+      Ok(())
+    })?;
+
+    Ok(())
+  }
+
+  /// Finishes the process of taking a sell transaction.
+  ///
+  /// # Arguments
+  ///
+  /// * `authority` - The origin of the call, from where the function is triggered.
+  /// * `transaction_id` - The unique identifier of the transaction.
+  ///
+  /// # Return
+  ///
+  /// * Returns a `DispatchResult` to indicate the success or failure of the operation.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if:
+  /// * The caller does not have any roles.
+  /// * The specified transaction does not exist.
+  /// * The specified transaction has been cancelled.
+  /// * The specified transaction has not been confirmed.
+  /// * The child offer id in the transaction does not exist.
+  /// * The specified offer does not exist.
+  /// * The tax credit amount in the offer is less than the tax credit amount in the transaction (underflow).
+  ///
+  /// # Side Effects
+  ///
+  /// * If the function is successful, it will trigger the transfer of tax credits and Balance between buyer and seller,
+  ///  mutate the state of the offer and transaction and emit a `SellOrderTaken` event.
+  ///
+  /// # Panics
+  ///
+  /// * This function does not panic.
+  ///
+  /// # Safety
+  ///
+  /// * This function does not use any unsafe blocks.
+  ///
+  /// # Note
+  ///
+  /// * Before calling this function, make sure that the transaction id exists, the transaction is confirmed, and the caller is authorized.
+  ///
+  pub fn do_finish_take_sell_transaction(
+    authority: OriginFor<T>,
+    transaction_id: [u8; 32],
+  ) -> DispatchResult
+  where
+    <T as pallet_uniques::Config>::ItemId: From<u32>,
+  {
+    let who = ensure_signed(authority.clone())?;
+
+    let maybe_roles = Self::get_all_roles_for_user(who.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
+
+    // Ensure the transaction exists before trying to get it
+    ensure!(<AfloatTransactions<T>>::contains_key(transaction_id), Error::<T>::TransactionNotFound);
+
+    // Get transaction details
+    let transaction =
+      <AfloatTransactions<T>>::get(transaction_id).ok_or(Error::<T>::TransactionNotFound)?;
+
+    // Ensure transaction is not cancelled
+    ensure!(transaction.cancellation_date.is_none(), Error::<T>::TransactionCancelled);
+
+    // Ensure transaction is confirmed
+    ensure!(transaction.confirmed, Error::<T>::TransactionNotConfirmed);
+
+    // Ensure the child offer id exists
+    let child_offer_id = transaction.child_offer_id.ok_or(Error::<T>::ChildOfferIdNotFound)?;
+    let offer_id = transaction.offer_id;
+
+    pallet_gated_marketplace::Pallet::<T>::do_take_sell_offer(authority.clone(), child_offer_id)?;
+
+    <AfloatOffers<T>>::try_mutate(offer_id, |offer| -> DispatchResult {
+      let offer = offer.as_mut().ok_or(Error::<T>::OfferNotFound)?;
+      if transaction.tax_credit_amount > offer.tax_credit_amount_remaining {
+        return Err(Error::<T>::Underflow.into());
+      }
+      offer.tax_credit_amount_remaining =
+        offer.tax_credit_amount_remaining - transaction.tax_credit_amount;
+      Ok(())
+    })?;
+
+    <AfloatTransactions<T>>::try_mutate(transaction_id, |transaction| -> DispatchResult {
+      let mut transaction = transaction.as_mut().ok_or(Error::<T>::TransactionNotFound)?;
+      transaction.completed = true;
+      Ok(())
+    })?;
 
     Self::deposit_event(Event::SellOrderTaken(who));
     Ok(())
@@ -354,7 +641,8 @@ impl<T: Config> Pallet<T> {
   where
     <T as pallet_uniques::Config>::ItemId: From<u32>,
   {
-    ensure!(!Self::get_all_roles_for_user(authority.clone()).is_empty(), Error::<T>::Unauthorized);
+    let maybe_roles = Self::get_all_roles_for_user(authority.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
     pallet_gated_marketplace::Pallet::<T>::do_take_buy_offer(authority.clone(), order_id)?;
 
@@ -372,9 +660,10 @@ impl<T: Config> Pallet<T> {
     <T as pallet_uniques::Config>::ItemId: From<u32>,
     <T as pallet_uniques::Config>::CollectionId: From<u32>,
   {
-    ensure!(!Self::get_all_roles_for_user(owner.clone()).is_empty(), Error::<T>::Unauthorized);
+    let maybe_roles = Self::get_all_roles_for_user(owner.clone())?;
+    ensure!(!maybe_roles.is_empty(), Error::<T>::Unauthorized);
 
-    let collection = AfloatCollectionId::<T>::get().unwrap();
+    let collection = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
 
     pallet_fruniques::Pallet::<T>::do_spawn(collection, owner, metadata, attributes, parent_info)
   }
@@ -398,7 +687,7 @@ impl<T: Config> Pallet<T> {
   }
 
   pub fn add_to_afloat_collection(invitee: T::AccountId, role: FruniqueRole) -> DispatchResult {
-    let collection_id = AfloatCollectionId::<T>::get().unwrap();
+    let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
     pallet_fruniques::Pallet::<T>::insert_auth_in_frunique_collection(invitee, collection_id, role)
   }
 
@@ -406,7 +695,7 @@ impl<T: Config> Pallet<T> {
     invitee: T::AccountId,
     role: FruniqueRole,
   ) -> DispatchResult {
-    let collection_id = AfloatCollectionId::<T>::get().unwrap();
+    let collection_id = AfloatCollectionId::<T>::get().ok_or(Error::<T>::CollectionIdNotFound)?;
     pallet_fruniques::Pallet::<T>::remove_auth_from_frunique_collection(
       invitee,
       collection_id,
@@ -415,7 +704,8 @@ impl<T: Config> Pallet<T> {
   }
 
   pub fn remove_from_afloat_marketplace(invitee: T::AccountId) -> DispatchResult {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
+    let marketplace_id =
+      AfloatMarketPlaceId::<T>::get().ok_or(Error::<T>::MarketPlaceIdNotFound)?;
     pallet_gated_marketplace::Pallet::<T>::remove_from_market_lists(
       invitee,
       MarketplaceRole::Participant,
@@ -423,71 +713,86 @@ impl<T: Config> Pallet<T> {
     )
   }
 
-  pub fn pallet_id() -> IdOrVec {
-    IdOrVec::Vec(Self::module_name().as_bytes().to_vec())
-  }
-
-  pub fn is_admin_or_owner(account: T::AccountId) -> bool {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    <T as pallet::Config>::Rbac::has_role(
+  pub fn is_admin_or_owner(account: T::AccountId) -> Result<bool, DispatchError> {
+    let maybe_super_role = <T as pallet::Config>::Rbac::has_role(
       account.clone(),
       Self::pallet_id(),
-      &marketplace_id,
+      &Self::scope_id(),
       [AfloatRole::Admin.id(), AfloatRole::Owner.id()].to_vec(),
-    )
-    .is_ok()
+    );
+
+    Ok(maybe_super_role.is_ok())
   }
 
-  pub fn is_owner(account: T::AccountId) -> bool {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    <T as pallet::Config>::Rbac::has_role(
+  pub fn is_owner(account: T::AccountId) -> Result<bool, DispatchError> {
+    let maybe_owner = <T as pallet::Config>::Rbac::has_role(
       account.clone(),
       Self::pallet_id(),
-      &marketplace_id,
+      &Self::scope_id(),
       [AfloatRole::Owner.id()].to_vec(),
-    )
-    .is_ok()
+    );
+
+    Ok(maybe_owner.is_ok())
   }
 
-  pub fn is_cpa(account: T::AccountId) -> bool {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    <T as pallet::Config>::Rbac::has_role(
+  pub fn is_cpa(account: T::AccountId) -> Result<bool, DispatchError> {
+    let maybe_cpa = <T as pallet::Config>::Rbac::has_role(
       account.clone(),
       Self::pallet_id(),
-      &marketplace_id,
+      &Self::scope_id(),
       [AfloatRole::CPA.id()].to_vec(),
-    )
-    .is_ok()
+    );
+
+    Ok(maybe_cpa.is_ok())
   }
 
   pub fn give_role_to_user(authority: T::AccountId, role: AfloatRole) -> DispatchResult {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
     <T as pallet::Config>::Rbac::assign_role_to_user(
       authority,
       Self::pallet_id(),
-      &marketplace_id,
+      &Self::scope_id(),
       role.id(),
     )?;
 
+    Ok(())
+  }
+
+  pub fn do_add_afloat_admin(
+    authority: T::AccountId,
+    user_address: T::AccountId,
+  ) -> DispatchResult {
+    //ensure user is registered
+    ensure!(UserInfo::<T>::contains_key(user_address.clone()), Error::<T>::UserNotFound);
+
+    Self::give_role_to_user(user_address.clone(), AfloatRole::Admin)?;
+
+    Self::deposit_event(Event::AdminAdded(authority, user_address));
     Ok(())
   }
 
   pub fn remove_role_from_user(authority: T::AccountId, role: AfloatRole) -> DispatchResult {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
     <T as pallet::Config>::Rbac::remove_role_from_user(
       authority,
       Self::pallet_id(),
-      &marketplace_id,
+      &Self::scope_id(),
       role.id(),
     )?;
 
     Ok(())
   }
 
+  fn scope_id() -> [u8; 32] {
+    "AfloatScope".as_bytes().using_encoded(blake2_256)
+  }
+
+  fn pallet_id() -> IdOrVec {
+    IdOrVec::Vec("AfloatPallet".as_bytes().to_vec())
+  }
+
   pub fn initialize_rbac() -> DispatchResult {
-    let marketplace_id = AfloatMarketPlaceId::<T>::get().unwrap();
-    <T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
     let pallet_id = Self::pallet_id();
+    let scope_id = Self::scope_id();
+    <T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), scope_id)?;
     let super_roles = vec![AfloatRole::Owner.to_vec(), AfloatRole::Admin.to_vec()];
     let super_role_ids =
       <T as pallet::Config>::Rbac::create_and_set_roles(pallet_id.clone(), super_roles)?;
@@ -522,20 +827,21 @@ impl<T: Config> Pallet<T> {
       })
   }
 
-  fn get_all_roles_for_user(account_id: T::AccountId) -> Vec<AfloatRole> {
-    let pallet_id = Self::pallet_id();
-    let scope_id = AfloatMarketPlaceId::<T>::get().unwrap();
-
-    let roles_storage =
-      <T as pallet::Config>::Rbac::get_roles_by_user(account_id.clone(), pallet_id, &scope_id);
-
-    roles_storage.into_iter().filter_map(Self::role_id_to_afloat_role).collect()
+  fn get_all_roles_for_user(account_id: T::AccountId) -> Result<Vec<AfloatRole>, DispatchError> {
+    let roles_storage = <T as pallet::Config>::Rbac::get_roles_by_user(
+      account_id.clone(),
+      Self::pallet_id(),
+      &Self::scope_id(),
+    );
+    Ok(roles_storage.into_iter().filter_map(Self::role_id_to_afloat_role).collect())
   }
 
   pub fn do_delete_all_users() -> DispatchResult {
     UserInfo::<T>::iter_keys().try_for_each(|account_id| {
-      if !Self::is_admin_or_owner(account_id.clone()) {
-        let user_roles = Self::get_all_roles_for_user(account_id.clone());
+      let is_admin_or_owner = Self::is_admin_or_owner(account_id.clone())?;
+
+      if !is_admin_or_owner {
+        let user_roles = Self::get_all_roles_for_user(account_id.clone())?;
 
         if !user_roles.is_empty() {
           for role in user_roles {

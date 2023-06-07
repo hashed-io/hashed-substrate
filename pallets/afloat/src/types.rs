@@ -1,5 +1,6 @@
 use super::*;
-use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256};
+use frame_support::pallet_prelude::*;
+use frame_support::sp_io::hashing::blake2_256;
 use sp_runtime::sp_std::vec::Vec;
 
 pub type ShortString = BoundedVec<u8, ConstU32<55>>;
@@ -7,7 +8,7 @@ pub type LongString = BoundedVec<u8, ConstU32<255>>;
 pub type Date = u64;
 pub type CollectionId = u32;
 pub type StorageId = [u8; 32];
-
+pub type TransactionBoundedVec = BoundedVec<[u8; 32], ConstU32<100>>;
 // ! User structures
 
 #[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
@@ -60,18 +61,20 @@ pub enum SignUpArgs {
   Encode, Decode, Clone, Eq, PartialEq, RuntimeDebugNoBound, MaxEncodedLen, TypeInfo, Copy,
 )]
 pub enum OfferStatus {
+  CREATED,
   MATCHED,
   TF_FILLED,
   TF_PENDING_SIGNATURE,
   TF_SIGNED,
-  TF_AGENCY_SUBMITTED,
-  TF_AGENCY_APPROVED,
-  AFLOAT_APPROVED,
+  TF_SUBMITTED,
+  TF_APPROVED,
+  APPROVED,
+  FILLED,
 }
 
 impl Default for OfferStatus {
   fn default() -> Self {
-    OfferStatus::TF_PENDING_SIGNATURE
+    OfferStatus::CREATED
   }
 }
 
@@ -94,7 +97,7 @@ impl Default for OfferType {
 #[codec(mel_bound())]
 pub struct Offer<T: Config> {
   pub tax_credit_amount: u32,
-  pub tax_credit_amount_remaining: u32,
+  pub tax_credit_amount_remaining: T::Balance,
   pub price_per_credit: T::Balance,
   pub expiration_date: Date,
   pub creation_date: Date,
@@ -104,12 +107,13 @@ pub struct Offer<T: Config> {
   pub creator_id: T::AccountId,
   pub status: OfferStatus,
   pub offer_type: OfferType,
+  pub transactions: TransactionBoundedVec,
 }
 
 impl<T: Config> Offer<T> {
   pub fn new(
     tax_credit_amount: u32,
-    tax_credit_amount_remaining: u32,
+    tax_credit_amount_remaining: T::Balance,
     price_per_credit: T::Balance,
     creation_date: Date,
     cancellation_date: Option<Date>,
@@ -119,6 +123,7 @@ impl<T: Config> Offer<T> {
     expiration_date: Date,
     status: OfferStatus,
     offer_type: OfferType,
+    transactions: BoundedVec<[u8; 32], ConstU32<100>>,
   ) -> Self {
     Self {
       tax_credit_amount,
@@ -132,6 +137,7 @@ impl<T: Config> Offer<T> {
       creator_id,
       status,
       offer_type,
+      transactions,
     }
   }
 }
@@ -160,19 +166,29 @@ pub enum CreateOfferArgs<T: Config> {
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct Transaction<T: Config> {
-  pub tax_credit_amount: u32,
-  pub price_per_credit: u32,
-  pub total_price: u32,
-  pub fee: u32,
+  pub tax_credit_amount: T::Balance,
+  pub price_per_credit: T::Balance,
+  pub total_price: T::Balance,
+  pub fee: Option<T::Balance>,
   pub creation_date: Date,
   pub cancellation_date: Option<Date>,
-  pub tax_credit_id: u32,
+  pub tax_credit_id: <T as pallet_uniques::Config>::ItemId,
   pub seller_id: T::AccountId,
   pub buyer_id: T::AccountId,
   pub offer_id: StorageId,
-  pub marketplace_offer_id: StorageId,
+  pub child_offer_id: Option<StorageId>,
   pub seller_confirmation_date: Option<Date>,
   pub buyer_confirmation_date: Option<Date>,
+  pub confirmed: bool,
+  pub completed: bool,
+}
+
+#[derive(CloneNoBound, Encode, Decode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen, PartialEq)]
+#[scale_info(skip_type_params(T))]
+#[codec(mel_bound())]
+pub enum CreateAsset<T: Config> {
+  New { asset_id: T::AssetId, min_balance: T::Balance },
+  Existing { asset_id: T::AssetId },
 }
 
 // ! Roles structures

@@ -14,8 +14,8 @@ type Block = frame_system::mocking::MockBlock<Test>;
 use frame_system::EnsureRoot;
 use system::EnsureSigned;
 
+use crate::types::CreateAsset;
 use frame_system::RawOrigin;
-
 type AssetId = u32;
 
 parameter_types! {
@@ -72,7 +72,7 @@ impl system::Config for Test {
 impl pallet_afloat::Config for Test {
   type RuntimeEvent = RuntimeEvent;
   type TimeProvider = pallet_timestamp::Pallet<Self>;
-  type RemoveOrigin = frame_system::EnsureSigned<Self::AccountId>;
+  //type RemoveOrigin = frame_system::EnsureSigned<Self::AccountId>;
   type Currency = pallet_balances::Pallet<Self>;
   type Rbac = RBAC;
   type ItemId = u32;
@@ -185,6 +185,7 @@ parameter_types! {
 }
 impl pallet_rbac::Config for Test {
   type RuntimeEvent = RuntimeEvent;
+  type RemoveOrigin = EnsureRoot<Self::AccountId>;
   type MaxScopesPerPallet = MaxScopesPerPallet;
   type MaxRolesPerPallet = MaxRolesPerPallet;
   type RoleMaxLen = RoleMaxLen;
@@ -237,6 +238,7 @@ impl pallet_mapped_assets::Config for Test {
   type RemoveItemsLimit = ConstU32<5>;
   type MaxReserves = MaxReserves;
   type ReserveIdentifier = u32;
+  type Rbac = RBAC;
 }
 
 // Build genesis storage according to the mock runtime.
@@ -247,8 +249,13 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
   t.execute_with(|| {
     Balances::make_free_balance_be(&1, 100);
     Balances::make_free_balance_be(&2, 100);
-    Afloat::initial_setup(RawOrigin::Signed(1).into(), 1, 2)
-      .expect("Error on GatedMarketplace configuring initial setup");
+    Afloat::initial_setup(
+      RawOrigin::Root.into(),
+      1,
+      2,
+      CreateAsset::New { asset_id: 0, min_balance: 1 },
+    )
+    .expect("Error on GatedMarketplace configuring initial setup");
   });
   t
 }

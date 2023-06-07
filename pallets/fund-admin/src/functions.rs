@@ -658,11 +658,11 @@ impl<T: Config> Pallet<T> {
           Error::<T>::UserHasAssignedProjectsCannotDelete
         );
 
-        // Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs
-        // to unassign the user from all its projects.
+        // Remove user from ProjectsByUser storagemap. No longer required, the admnistator first needs to
+        // unassign the user from all its projects.
 
-        // Remove user from UsersByProject storagemap. No longer required, the admnistator first needs
-        // to unassign the user from all its projects.
+        // Remove user from UsersByProject storagemap. No longer required, the admnistator first needs to
+        // unassign the user from all its projects.
 
         // Remove user from UsersInfo storagemap
         <UsersInfo<T>>::remove(user.clone());
@@ -680,8 +680,7 @@ impl<T: Config> Pallet<T> {
   /// that the user is registered. This is because permissions are granted to the
   /// user's account when the user is assigned to a project.
   ///
-  /// WARNING: Editing your own user data does not allow you to change your role. Only the
-  /// administrator can do it usign the `users` extrinsic.
+  /// WARNING: Editing your own user data does not allow you to change your role. Only the administrator can do it usign the `users` extrinsic.
   pub fn do_edit_user(
     user: T::AccountId,
     name: Option<FieldName>,
@@ -1316,8 +1315,7 @@ impl<T: Config> Pallet<T> {
     // Ensure admin or builder permissions
     Self::is_authorized(user.clone(), &project_id, ProxyPermission::ExecuteTransactions)?;
 
-    // Ensure project exists & is not completed so helper private functions doesn't need to check it
-    // again
+    // Ensure project exists & is not completed so helper private functions doesn't need to check it again
     Self::is_project_completed(project_id)?;
 
     // Ensure drawdown exists so helper private functions doesn't need to check it again
@@ -1535,8 +1533,7 @@ impl<T: Config> Pallet<T> {
     // Ensure drawdown is not completed
     Self::is_drawdown_editable(user, drawdown_id)?;
 
-    // Ensure only Construction loan & developer equity drawdowns are able to call bulk upload
-    // extrinsic
+    // Ensure only Construction loan & developer equity drawdowns are able to call bulk upload extrinsic
     let drawdown_data = DrawdownsInfo::<T>::get(drawdown_id).ok_or(Error::<T>::DrawdownNotFound)?;
 
     ensure!(
@@ -1839,8 +1836,7 @@ impl<T: Config> Pallet<T> {
     // Ensure builder permission
     Self::is_authorized(user.clone(), &project_id, ProxyPermission::RevenueTransaction)?;
 
-    // Ensure project exists & is not completed so helper private functions doesn't need to check it
-    // again
+    // Ensure project exists & is not completed so helper private functions doesn't need to check it again
     Self::is_project_completed(project_id)?;
 
     // Ensure revenue exists so helper private functions doesn't need to check it again
@@ -2717,8 +2713,7 @@ impl<T: Config> Pallet<T> {
     //  Ensure user is registered & get user data
     let user_data = UsersInfo::<T>::get(user.clone()).ok_or(Error::<T>::UserNotRegistered)?;
 
-    // Check if the user role trying to be assigned matches the actual user role from UsersInfo
-    // storage
+    // Check if the user role trying to be assigned matches the actual user role from UsersInfo storage
     if user_data.role != role {
       return Err(Error::<T>::UserCannotHaveMoreThanOneRole.into());
     }
@@ -2739,8 +2734,7 @@ impl<T: Config> Pallet<T> {
         );
         Ok(())
       },
-      // Builders, Issuers & Regional Centers don't have a limit on how many projects they can be
-      // assigned to
+      // Builders, Issuers & Regional Centers don't have a limit on how many projects they can be assigned to
       _ => Ok(()),
     }
   }
@@ -2910,8 +2904,8 @@ impl<T: Config> Pallet<T> {
 
   /// # Checks if the caller has the permission to perform an action
   ///
-  /// - This version of is_authorized checks if the caller is an Administrator and if so, it checks
-  ///   the global scope
+  /// - This version of is_authorized checks if the caller is an Administrator and if so, it
+  ///   checks the global scope
   /// otherwise it checks the project scope
   /// - This is useful for functions that are called by both administrators and project users
   /// - Scope is always required. In workflows where the caller is an administrator,
@@ -3460,12 +3454,11 @@ impl<T: Config> Pallet<T> {
     // Do execute transactions
     Self::do_execute_transactions(user.clone(), project_id, drawdown_id, transactions)?;
 
-    // If the administrator adds more transactions to the given drawdown, update the added transaction
-    // to the drawdown's transactions status
+    // If the administrator adds more transactions to the given drawdown, update the added transaction to
+    // the drawdown's transactions status
     // Get drawdown transactions
     if !<TransactionsByDrawdown<T>>::get(project_id, drawdown_id).is_empty() {
-      // If a transaction is in a diffferent status than Approved or Confirmed, set it to the current
-      // drawdown status
+      // If a transaction is in a diffferent status than Approved or Confirmed, set it to the current drawdown status
       for transaction_id in
         <TransactionsByDrawdown<T>>::get(project_id, drawdown_id).iter().cloned()
       {
@@ -3538,8 +3531,8 @@ impl<T: Config> Pallet<T> {
     // Do execute revenue transactions
     Self::do_execute_revenue_transactions(user.clone(), project_id, revenue_id, transactions)?;
 
-    // If the administrator adds more transactions to the given revenue, update the added transaction
-    // to the revenue's transactions status
+    // If the administrator adds more transactions to the given revenue, update the added transaction to
+    // the revenue's transactions status
     // Get revenue transactions
     if !<TransactionsByRevenue<T>>::get(project_id, revenue_id).is_empty() {
       // If a transaction is in a diffferent status than Approved, set it to the current revenue status

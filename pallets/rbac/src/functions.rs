@@ -7,7 +7,7 @@ use sp_runtime::sp_std::vec::Vec;
 use crate::types::*;
 
 impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
-  /* ---- Basic Insertion of individual storage maps --- */
+  /*---- Basic Insertion of individual storage maps ---*/
   /// Scope creation
   ///
   /// Creates a scope within a external pallet using the pallet index.
@@ -410,13 +410,12 @@ impl<T: Config> RoleBasedAccessControl<T::AccountId> for Pallet<T> {
     Self::deposit_event(Event::PermissionRemovedFromPallet(
       pallet_id,
       permission,
-      Self::bound(affected_roles, Error::<T>::ExceedMaxRolesPerPallet)?, /* this bound should never
-                                                                          * fail */
+      Self::bound(affected_roles, Error::<T>::ExceedMaxRolesPerPallet)?, // this bound should never fail
     ));
     Ok(())
   }
 
-  /* ---- Helper functions ---- */
+  /*---- Helper functions ----*/
 
   /// Authorization function
   ///

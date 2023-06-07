@@ -1,7 +1,7 @@
 use crate as pallet_gated_marketplace;
 use frame_support::{
   construct_runtime, parameter_types,
-  traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, GenesisBuild},
+  traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, Currency, GenesisBuild},
 };
 use frame_system as system;
 use sp_core::H256;
@@ -15,11 +15,14 @@ type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 use frame_system::EnsureRoot;
 use pallet_mapped_assets::DefaultCallback;
+use sp_runtime::traits::Lookup;
+use sp_runtime::traits::StaticLookup;
+use sp_runtime::AccountId32;
 use sp_runtime::{
   create_runtime_str, generic, impl_opaque_keys,
   traits::{AccountIdLookup, Block as BlockT, IdentifyAccount, NumberFor, Verify},
   transaction_validity::{TransactionSource, TransactionValidity},
-  AccountId32, ApplyExtrinsicResult, MultiSignature, Percent,
+  ApplyExtrinsicResult, MultiSignature, Percent,
 };
 use system::EnsureSigned;
 type AccountId = u64;
@@ -200,6 +203,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     GatedMarketplace::do_initial_setup()
       .expect("Error on GatedMarketplace configuring initial setup");
     Fruniques::do_initial_setup().expect("Error on Fruniques configuring initial setup");
+    Balances::make_free_balance_be(&1, 10000);
+    Assets::force_create(RuntimeOrigin::root(), 1, 1, true, 1)
   });
   t
 }

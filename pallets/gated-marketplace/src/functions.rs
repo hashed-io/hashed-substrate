@@ -1,11 +1,15 @@
 use super::*;
 use crate::types::*;
-use frame_support::{pallet_prelude::*, sp_io::hashing::blake2_256, traits::Time};
-use frame_system::{pallet_prelude::*, RawOrigin};
+use frame_support::pallet_prelude::*;
+use frame_support::sp_io::hashing::blake2_256;
+use frame_support::traits::Time;
+use frame_system::pallet_prelude::*;
+use frame_system::RawOrigin;
 use pallet_rbac::types::*;
 use scale_info::prelude::vec; // vec![] macro
 use sp_runtime::sp_std::vec::Vec; // vec primitive
-use sp_runtime::{traits::StaticLookup, Permill};
+use sp_runtime::traits::StaticLookup;
+use sp_runtime::Permill;
 
 impl<T: Config> Pallet<T> {
   pub fn do_initial_setup() -> DispatchResult {
@@ -53,19 +57,10 @@ impl<T: Config> Pallet<T> {
     let owner = ensure_signed(origin.clone())?;
     // Gen market id
     let marketplace_id = marketplace.using_encoded(blake2_256);
-    //Get asset id
-    let asset_id = marketplace.asset_id;
-    let min_balance: T::Balance = T::Balance::from(1u32);
 
     // ensure the generated id is unique
     ensure!(!<Marketplaces<T>>::contains_key(marketplace_id), Error::<T>::MarketplaceAlreadyExists);
-    // Create asset
-    // pallet_mapped_assets::Pallet::<T>::create(
-    // 	origin,
-    // 	asset_id,
-    // 	T::Lookup::unlookup(owner.clone()),
-    // 	min_balance,
-    // )?;
+
     //Insert on marketplaces and marketplaces by auth
     <T as pallet::Config>::Rbac::create_scope(Self::pallet_id(), marketplace_id)?;
     Self::insert_in_auth_market_lists(owner.clone(), MarketplaceRole::Owner, marketplace_id)?;
@@ -203,8 +198,7 @@ impl<T: Config> Pallet<T> {
     Self::is_authorized(authority, &marketplace_id, Permission::AddAuth)?;
     //ensure the account is not already an authority
     // handled by <T as pallet::Config>::Rbac::assign_role_to_user
-    //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type),
-    // Error::<T>::AlreadyApplied);
+    //ensure!(!Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AlreadyApplied);
 
     // ensure the account is not blocked
     ensure!(!Self::is_user_blocked(account.clone(), marketplace_id), Error::<T>::UserIsBlocked);
@@ -259,8 +253,7 @@ impl<T: Config> Pallet<T> {
     Self::is_authorized(authority.clone(), &marketplace_id, Permission::RemoveAuth)?;
     //ensure the account has the selected authority before to try to remove
     // <T as pallet::Config>::Rbac handles the if role doesnt hasnt been asigned to the user
-    //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type),
-    // Error::<T>::AuthorityNotFoundForUser);
+    //ensure!(Self::does_exist_authority(account.clone(), marketplace_id, authority_type), Error::<T>::AuthorityNotFoundForUser);
 
     match authority_type {
       MarketplaceRole::Owner => {
@@ -341,10 +334,6 @@ impl<T: Config> Pallet<T> {
     //Add timestamp to the offer
     let creation_date = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-    //create an offer_id
-    let offer_id =
-      (marketplace_id, authority.clone(), collection_id, creation_date).using_encoded(blake2_256);
-
     //create offer structure
 
     let marketplace =
@@ -364,8 +353,8 @@ impl<T: Config> Pallet<T> {
       buyer: None,
     };
 
-    //ensure there is no a previous sell offer for this item
-    Self::can_this_item_receive_sell_orders(collection_id, item_id, marketplace_id)?;
+    //create an offer_id
+    let offer_id = offer_data.using_encoded(blake2_256);
 
     //insert in OffersByItem
     <OffersByItem<T>>::try_mutate(collection_id, item_id, |offers| offers.try_push(offer_id))
@@ -435,10 +424,6 @@ impl<T: Config> Pallet<T> {
     //Add timestamp to the offer
     let creation_date = Self::get_timestamp_in_milliseconds().ok_or(Error::<T>::TimestampError)?;
 
-    //create an offer_id
-    let offer_id =
-      (marketplace_id, authority.clone(), collection_id, creation_date).using_encoded(blake2_256);
-
     //create offer structure
     let marketplace =
       <Marketplaces<T>>::get(marketplace_id).ok_or(Error::<T>::MarketplaceNotFound)?;
@@ -455,6 +440,9 @@ impl<T: Config> Pallet<T> {
       offer_type: OfferType::BuyOrder,
       buyer: None,
     };
+
+    //create an offer_id
+    let offer_id = offer_data.using_encoded(blake2_256);
 
     //insert in OffersByItem
     //An item can receive multiple buy offers
@@ -523,6 +511,7 @@ impl<T: Config> Pallet<T> {
     let marketplace =
       <Marketplaces<T>>::get(offer_data.marketplace_id).ok_or(Error::<T>::OfferNotFound)?;
     let owners_cut: T::Balance = offer_data.price - offer_data.fee;
+
     //Transfer the balance
     pallet_mapped_assets::Pallet::<T>::transfer(
       origin.clone(),
@@ -530,7 +519,6 @@ impl<T: Config> Pallet<T> {
       T::Lookup::unlookup(owner_item.clone()),
       owners_cut,
     )?;
-    //T::Currency::transfer(&buyer, &owner_item, owners_cut, KeepAlive)?;
 
     pallet_mapped_assets::Pallet::<T>::transfer(
       origin.clone(),
@@ -538,7 +526,6 @@ impl<T: Config> Pallet<T> {
       T::Lookup::unlookup(marketplace.creator.clone()),
       offer_data.fee,
     )?;
-    //T::Currency::transfer(&buyer, &marketplace.creator, offer_data.fee, KeepAlive)?;
 
     pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
     if offer_data.percentage == Permill::from_percent(100) {
@@ -589,8 +576,8 @@ impl<T: Config> Pallet<T> {
   where
     <T as pallet_uniques::Config>::ItemId: From<u32>,
   {
-    //This extrinsic is called by the owner of the item who accepts the buy offer created by a
-    // marketparticipant get offer data
+    //This extrinsic is called by the owner of the item who accepts the buy offer created by a marketparticipant
+    //get offer data
     let offer_data = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
 
     Self::is_authorized(authority.clone(), &offer_data.marketplace_id, Permission::TakeBuyOffer)?;
@@ -638,7 +625,6 @@ impl<T: Config> Pallet<T> {
       T::Lookup::unlookup(owner_item.clone()),
       owners_cut,
     )?;
-    //T::Currency::transfer(&offer_data.creator, &owner_item, owners_cut, KeepAlive)?;
 
     pallet_mapped_assets::Pallet::<T>::transfer(
       RawOrigin::Signed(offer_data.creator.clone()).into(),
@@ -646,13 +632,6 @@ impl<T: Config> Pallet<T> {
       T::Lookup::unlookup(marketplace.creator.clone()),
       offer_data.fee,
     )?;
-
-    /* T::Currency::transfer(
-      &offer_data.creator,
-      &marketplace.creator,
-      offer_data.fee,
-      KeepAlive,
-    )?; */
 
     pallet_fruniques::Pallet::<T>::do_thaw(&offer_data.collection_id, offer_data.item_id)?;
 
@@ -760,7 +739,7 @@ impl<T: Config> Pallet<T> {
     Ok(())
   }
 
-  /* ---- Helper functions ---- */
+  /*---- Helper functions ----*/
 
   pub fn set_up_application(
     fields: Fields<T>,
@@ -1002,9 +981,9 @@ impl<T: Config> Pallet<T> {
 
   /// Let us know if the selected account has the selected authority type.
   /// It returns true if the account has the authority type, false otherwise
-  // fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type:
-  // MarketplaceRole) -> bool{     let roles = match <MarketplacesByAuthority<T>>::try_get(account,
-  // marketplace_id){         Ok(roles) => roles,
+  // fn  does_exist_authority(account: T::AccountId, marketplace_id: [u8;32], authority_type: MarketplaceRole) -> bool{
+  //     let roles = match <MarketplacesByAuthority<T>>::try_get(account, marketplace_id){
+  //         Ok(roles) => roles,
   //         Err(_) => return false,
   //     };
 
@@ -1014,8 +993,8 @@ impl<T: Config> Pallet<T> {
   /// Let us know if there's an owner for the selected marketplace.
   /// It returns true if there's an owner, false otherwise
   fn owner_exist(marketplace_id: [u8; 32]) -> bool {
-    // let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id,
-    // MarketplaceAuthority::Owner){     Ok(owners) => owners,
+    // let owners =  match <AuthoritiesByMarketplace<T>>::try_get( marketplace_id, MarketplaceAuthority::Owner){
+    //     Ok(owners) => owners,
     //     Err(_) => return false,
     // };
 
@@ -1106,8 +1085,7 @@ impl<T: Config> Pallet<T> {
         return Err(Error::<T>::ApplicationHasAlreadyBeenApproved.into())
       },
       ApplicationStatus::Rejected => {
-        //If status is Rejected, we need to delete the previous application from all the storage
-        // sources.
+        //If status is Rejected, we need to delete the previous application from all the storage sources.
         <Applications<T>>::remove(application_id);
         <ApplicationsByAccount<T>>::remove(account.clone(), marketplace_id);
         Self::remove_from_applicants_lists(account, ApplicationStatus::Rejected, marketplace_id)?;
@@ -1166,9 +1144,9 @@ impl<T: Config> Pallet<T> {
   }
 
   fn is_the_offer_valid(price: T::Balance, percentage: Permill) -> DispatchResult {
-    let minimun_amount: T::Balance = 1000u32.into();
+    let minimun_amount: T::Balance = 0u32.into();
     ensure!(price > minimun_amount, Error::<T>::PriceMustBeGreaterThanZero);
-    ensure!(percentage <= Permill::from_percent(99), Error::<T>::ExceedMaxPercentage);
+    ensure!(percentage <= Permill::from_percent(100), Error::<T>::ExceedMaxPercentage);
     ensure!(percentage >= Permill::from_percent(1), Error::<T>::ExceedMinPercentage);
     Ok(())
   }
@@ -1227,8 +1205,7 @@ impl<T: Config> Pallet<T> {
 
     for offer_id in offers_ids {
       let offer_info = <OffersInfo<T>>::get(offer_id).ok_or(Error::<T>::OfferNotFound)?;
-      //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder
-      // OfferType.
+      //ensure the offer_type is SellOrder, because this vector also contains offers of BuyOrder OfferType.
       if offer_info.offer_type != OfferType::SellOrder {
         buy_offer_ids.try_push(offer_id).map_err(|_| Error::<T>::LimitExceeded)?;
       }

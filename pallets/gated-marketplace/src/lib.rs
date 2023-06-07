@@ -13,12 +13,11 @@ pub mod types;
 
 #[frame_support::pallet]
 pub mod pallet {
-  use frame_support::{
-    pallet_prelude::*,
-    traits::{Currency, Time},
-  };
+  use frame_support::pallet_prelude::*;
+  use frame_support::traits::{Currency, Time};
   use frame_system::pallet_prelude::*;
-  use sp_runtime::{traits::Scale, Permill};
+  use sp_runtime::traits::Scale;
+  use sp_runtime::Permill;
 
   const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
@@ -79,7 +78,7 @@ pub mod pallet {
   #[pallet::generate_store(pub(super) trait Store)]
   pub struct Pallet<T>(_);
 
-  /* --- Onchain storage section --- */
+  /*--- Onchain storage section ---*/
 
   #[pallet::storage]
   #[pallet::getter(fn marketplaces)]
@@ -204,8 +203,7 @@ pub mod pallet {
     MarketplaceStored(T::AccountId, T::AccountId, MarketplaceId),
     /// Application stored on the specified marketplace. [application_id, market_id]
     ApplicationStored(ApplicationId, MarketplaceId),
-    /// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id,
-    /// status]
+    /// An applicant was accepted or rejected on the marketplace. [AccountOrApplication, market_id, status]
     ApplicationProcessed(AccountOrApplication<T>, MarketplaceId, ApplicationStatus),
     /// Add a new authority to the selected marketplace [account, authority]
     AuthorityAdded(T::AccountId, MarketplaceRole),
@@ -379,6 +377,12 @@ pub mod pallet {
         asset_id,
         creator: who.clone(),
       };
+
+      ensure!(
+        pallet_mapped_assets::Pallet::<T>::does_asset_exists(asset_id),
+        Error::<T>::AssetNotFound
+      );
+
       Self::do_create_marketplace(origin, admin, m)
     }
 
@@ -455,8 +459,7 @@ pub mod pallet {
     /// - `custodian_fields`: The custodian account and their documents.
     ///
     /// ### Considerations:
-    /// - Since this is a second chance, you can replace your previous documents, up to the maximum
-    ///   allowed (10).
+    /// - Since this is a second chance, you can replace your previous documents, up to the maximum allowed (10).
     /// - The custodian account is optional. You can replace the previous custodian.
     /// - Since we know the application exists, we can check the current status of the application.
     #[pallet::call_index(4)]
@@ -569,8 +572,7 @@ pub mod pallet {
 
     /// Remove an Authority type
     ///
-    /// This extrinsic removes an authority type for the selected account from the selected
-    /// marketplace.
+    /// This extrinsic removes an authority type for the selected account from the selected marketplace.
     ///
     /// ### Parameters:
     /// - `origin`: The user who performs the action.
@@ -607,8 +609,7 @@ pub mod pallet {
     /// - `label`: The new label for the selected marketplace.
     ///
     /// ### Considerations:
-    /// - You can only update the label of the marketplace where you are the owner/admin of the
-    ///   marketplace.
+    /// - You can only update the label of the marketplace where you are the owner/admin of the marketplace.
     /// - The label must be less than or equal to `T::LabelMaxLen
     /// - If the selected marketplace doesn't exist, it will throw an error.
     #[pallet::call_index(9)]
@@ -757,8 +758,8 @@ pub mod pallet {
 
     /// Accepts a buy order.
     ///
-    /// This extrinsic is called by the owner of the item who accepts the buy offer created by a
-    /// market participant. Accepts a buy order in the selected marketplace.
+    /// This extrinsic is called by the owner of the item who accepts the buy offer created by a market participant.
+    /// Accepts a buy order in the selected marketplace.
     ///
     /// ### Parameters:
     /// - `origin`: The user who performs the action.
@@ -797,10 +798,10 @@ pub mod pallet {
       let who = ensure_signed(origin)?;
       match redeem {
         RedeemArgs::AskForRedemption { collection_id, item_id } => {
-          return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id)
+          return Self::do_ask_for_redeem(who, marketplace, collection_id, item_id);
         },
         RedeemArgs::AcceptRedemption(redemption_id) => {
-          return Self::do_accept_redeem(who, marketplace, redemption_id)
+          return Self::do_accept_redeem(who, marketplace, redemption_id);
         },
       }
     }

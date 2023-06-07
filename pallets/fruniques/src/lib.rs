@@ -416,9 +416,8 @@ pub mod pallet {
     /// - `instance_id` must be a valid instance of the asset class.
     ///
     /// ### Considerations:
-    /// This function is only used for testing purposes. Or in case someone calls uniques pallet
-    /// directly. This function it's not expected to be used in production as it can lead to
-    /// unexpected results.
+    /// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
+    /// This function it's not expected to be used in production as it can lead to unexpected results.
     #[pallet::call_index(7)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn force_set_counter(
@@ -443,14 +442,11 @@ pub mod pallet {
     /// ### Parameters:
     /// - `origin` must be signed by the Root origin.
     /// - `class_id` must be a valid class of the asset class.
-    /// - `witness` the witness data to destroy the collection. This is used to prevent accidental
-    ///   destruction of the collection. The witness data is retrieved from the `class` storage.
-    /// - `maybe_check_owner` Optional value to check if the owner of the collection is the same as
-    ///   the signer.
+    /// - `witness` the witness data to destroy the collection. This is used to prevent accidental destruction of the collection. The witness data is retrieved from the `class` storage.
+    /// - `maybe_check_owner` Optional value to check if the owner of the collection is the same as the signer.
     /// ### Considerations:
-    /// This function is only used for testing purposes. Or in case someone calls uniques pallet
-    /// directly. This function it's not expected to be used in production as it can lead to
-    /// unexpected results.
+    /// This function is only used for testing purposes. Or in case someone calls uniques pallet directly.
+    /// This function it's not expected to be used in production as it can lead to unexpected results.
     #[pallet::call_index(8)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn force_destroy_collection(

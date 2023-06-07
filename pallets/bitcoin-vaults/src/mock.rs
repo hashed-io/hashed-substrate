@@ -1,8 +1,6 @@
 use crate as pallet_bitcoin_vaults;
-use frame_support::{
-  parameter_types,
-  traits::{ConstU32, ConstU64},
-};
+use frame_support::traits::ConstU64;
+use frame_support::{parameter_types, traits::ConstU32};
 use frame_system::EnsureRoot;
 //use frame_system as system;
 use pallet_balances;

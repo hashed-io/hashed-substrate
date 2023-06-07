@@ -20,23 +20,25 @@ pub mod pallet {
   //#[cfg(feature = "std")]
   //use frame_support::serde::{Deserialize, Serialize};
   use crate::types::*;
-  use frame_support::{pallet_prelude::BoundedVec, sp_io::hashing::blake2_256, traits::Get};
+  use frame_support::sp_io::hashing::blake2_256;
+  use frame_support::{pallet_prelude::BoundedVec, traits::Get};
   use frame_system::{
     offchain::{AppCrypto, CreateSignedTransaction, SignedPayload, Signer},
     pallet_prelude::*,
   };
+  use sp_runtime::sp_std::str;
+  use sp_runtime::sp_std::vec::Vec;
   use sp_runtime::{
     offchain::{
       storage_lock::{BlockAndTime, StorageLock},
       Duration,
     },
-    sp_std::{str, vec::Vec},
     transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
   };
 
   const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
-  /* --- Genesis Structs Section --- */
+  /*--- Genesis Structs Section ---*/
 
   #[pallet::genesis_config]
   pub struct GenesisConfig {
@@ -67,12 +69,12 @@ pub mod pallet {
     /// Because this pallet emits events, it depends on the runtime's definition of an event.
     type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
     type ChangeBDKOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-    /* --- PSBT params --- */
+    /*--- PSBT params ---*/
     #[pallet::constant]
     type XPubLen: Get<u32>;
     #[pallet::constant]
     type PSBTMaxLen: Get<u32>;
-    /* --- Vault params --- */
+    /*--- Vault params ---*/
     /// It counts both owned vaults and vaults where the user is a cosigner
     #[pallet::constant]
     type MaxVaultsPerUser: Get<u32>;
@@ -183,7 +185,7 @@ pub mod pallet {
     AlreadyBroadcasted,
   }
 
-  /* --- Onchain storage section --- */
+  /*--- Onchain storage section ---*/
   /// Stores hash-xpub pairs
   #[pallet::storage]
   #[pallet::getter(fn xpubs)]
@@ -243,6 +245,7 @@ pub mod pallet {
   >;
 
   /// Stores vaults proof-of-reserve
+  ///
   #[pallet::storage]
   #[pallet::getter(fn proof_of_reserve)]
   pub(super) type ProofOfReserves<T: Config> = StorageMap<
@@ -337,10 +340,8 @@ pub mod pallet {
     /// - `xpub`: Extended public key, it can be sent with or without fingerprint/derivation path
     ///
     /// ### Considerations
-    /// - The origin must be Signed and the sender must have sufficient funds free for the transaction
-    ///   fee.
-    /// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first
-    ///   and insert
+    /// - The origin must be Signed and the sender must have sufficient funds free for the transaction fee.
+    /// - This extrinsic cannot handle a xpub update (yet). if it needs to be updated, remove it first and insert
     /// a new one.
     #[pallet::call_index(1)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
@@ -383,6 +384,7 @@ pub mod pallet {
     /// The xpub will be removed from both the pallet storage and identity registration.
     ///
     /// This tx does not takes any parameters.
+    ///
     #[pallet::call_index(2)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(2))]
     pub fn remove_xpub(origin: OriginFor<T>) -> DispatchResult {
@@ -418,6 +420,7 @@ pub mod pallet {
     ///
     /// ### Considerations
     /// - Do not include the vault owner on the `cosigners` list.
+    ///
     #[pallet::call_index(3)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn create_vault(
@@ -465,6 +468,7 @@ pub mod pallet {
     ///
     /// ### Considerations:
     /// - Only the vault owner can perform this extrinsic
+    ///
     #[pallet::call_index(4)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn remove_vault(origin: OriginFor<T>, vault_id: [u8; 32]) -> DispatchResult {
@@ -518,6 +522,7 @@ pub mod pallet {
     ///
     /// ### Parameters:
     /// - `proposal_id`: the proposal identifier
+    ///
     #[pallet::call_index(6)]
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn remove_proposal(origin: OriginFor<T>, proposal_id: [u8; 32]) -> DispatchResult {
@@ -577,8 +582,7 @@ pub mod pallet {
 
     /// Finalize PSBT
     ///
-    /// Queries a proposal to be finalized generating a tx_id in the process, it can also be
-    /// broadcasted if specified.
+    /// Queries a proposal to be finalized generating a tx_id in the process, it can also be broadcasted if specified.
     ///
     /// ### Parameters:
     /// - `proposal_id`: the proposal identifier
@@ -707,6 +711,7 @@ pub mod pallet {
     /// Extrinsic to insert a valid vault descriptor
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     #[pallet::call_index(15)]
     #[pallet::weight(0)]
     pub fn ocw_insert_descriptors(
@@ -746,6 +751,7 @@ pub mod pallet {
     /// Extrinsic to insert a valid proposal PSBT
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     #[pallet::call_index(16)]
     #[pallet::weight(0)]
     pub fn ocw_insert_psbts(
@@ -774,15 +780,14 @@ pub mod pallet {
     /// Extrinsic to insert a valid proposal TX_ID
     ///
     /// Meant to be unsigned with signed payload and used by an offchain worker
+    ///
     #[pallet::call_index(17)]
     #[pallet::weight(0)]
     pub fn ocw_finalize_psbts(
       origin: OriginFor<T>,
       payload: ProposalsPayload<T::Public>, // here the payload
-      _signature: T::Signature,             /* we don't need to verify the signature here because
-                                             * it has been verified in
-                                             *   `validate_unsigned` function when sending out the
-                                             * unsigned tx. */
+      _signature: T::Signature, // we don't need to verify the signature here because it has been verified in
+                                //   `validate_unsigned` function when sending out the unsigned tx.
     ) -> DispatchResult {
       ensure_none(origin.clone())?;
       log::info!("Extrinsic recibido payload de: {:?}", payload);

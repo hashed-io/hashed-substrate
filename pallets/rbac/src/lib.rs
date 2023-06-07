@@ -148,11 +148,9 @@ pub mod pallet {
     RoleRemovedFromUser(PalletId, ScopeId, RoleId, T::AccountId),
     /// The user now has that role [pallet_id, scope_id, role_id, account_id]
     RoleAssignedToUser(PalletId, ScopeId, RoleId, T::AccountId),
-    /// The role no longer has the permission in the pallet context [pallet_id, role_id,
-    /// permission_id]
+    /// The role no longer has the permission in the pallet context [pallet_id, role_id, permission_id]
     PermissionRevokedFromRole(PalletId, RoleId, PermissionId),
-    /// The permission was removed from the pallet and all the roles that had it [pallet_id,
-    /// permission_id, affected_roles]
+    /// The permission was removed from the pallet and all the roles that had it [pallet_id, permission_id, affected_roles]
     PermissionRemovedFromPallet(PalletId, PermissionId, BoundedVec<RoleId, T::MaxRolesPerPallet>),
   }
 

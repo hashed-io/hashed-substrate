@@ -1,6 +1,7 @@
 use crate as pallet_fruniques;
 use frame_support::{construct_runtime, parameter_types, traits::AsEnsureOriginWithArg};
-use frame_system::{EnsureRoot, EnsureSigned};
+use frame_system::EnsureRoot;
+use frame_system::EnsureSigned;
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
