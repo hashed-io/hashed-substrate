@@ -492,13 +492,24 @@ pub mod pallet {
     #[pallet::weight(Weight::from_ref_time(10_000) + T::DbWeight::get().writes(1))]
     pub fn spam_spawning(
       origin: OriginFor<T>,
-      class_id: T::CollectionId,
-      instances: u32,
+      number_of_classes: u32,
+      number_of_instances: u32,
     ) -> DispatchResult {
-      let _ = ensure_signed(origin)?;
-      // for instance in instances {
-      // 	let _ = Self::mint(instance, class_id, None, None, None, None, None, None, None)?;
-      // }
+      let _ = ensure_signed(origin.clone())?;
+
+      for i in 0..number_of_classes {
+        Self::create_collection(origin.clone(), Self::dummy_description());
+
+        for j in 0..number_of_instances {
+          Self::spawn(
+            origin.clone(),
+            i,
+            Self::dummy_description(),
+            Some(Self::dummy_attributes()),
+            None,
+          );
+        }
+      }
       Ok(())
     }
   }

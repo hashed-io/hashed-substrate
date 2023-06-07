@@ -8,6 +8,7 @@ use scale_info::prelude::string::String;
 use pallet_rbac::types::*;
 
 use frame_support::{pallet_prelude::*, traits::EnsureOriginWithArg, PalletId};
+use scale_info::prelude::vec;
 // use frame_support::traits::OriginTrait;
 use sp_runtime::{sp_std::vec::Vec, traits::AccountIdConversion, Permill};
 // use sp_runtime::traits::StaticLookup;
@@ -52,6 +53,19 @@ impl<T: Config> Pallet<T> {
     account_id: &T::AccountId,
   ) -> <T::Lookup as sp_runtime::traits::StaticLookup>::Source {
     <T::Lookup as sp_runtime::traits::StaticLookup>::unlookup(account_id.clone())
+  }
+
+  pub fn dummy_description() -> CollectionDescription<T> {
+    CollectionDescription::<T>::try_from(b"dummy description".to_vec()).unwrap()
+  }
+
+  pub fn dummy_attributes() -> Vec<(AttributeKey<T>, AttributeValue<T>)> {
+    vec![(
+      AttributeKey::<T>::try_from(b"dummy key".encode())
+        .expect("Error on encoding key to BoundedVec"),
+      AttributeValue::<T>::try_from(b"dummy value".encode())
+        .expect("Error on encoding value to BoundedVec"),
+    )]
   }
 
   /// Helper function for printing purposes
