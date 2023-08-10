@@ -781,6 +781,21 @@ impl pallet_afloat::Config for Runtime {
 }
 
 parameter_types! {
+  pub const MaxRecordsAtTime:u32 = 50;
+}
+
+impl pallet_fund_admin_records::Config for Runtime {
+  type RuntimeEvent = RuntimeEvent;
+  type RemoveOrigin = EitherOfDiverse<
+    EnsureRoot<AccountId>,
+    pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+  >;
+  type Timestamp = Timestamp;
+  type Moment = u64;
+  type MaxRecordsAtTime = MaxRecordsAtTime;
+}
+
+parameter_types! {
   pub const MaxRecursions: u32 = 10;
   pub const ResourceSymbolLimit: u32 = 10;
   pub const PartsLimit: u32 = 3;
@@ -875,6 +890,7 @@ construct_runtime!(
     FundAdmin: pallet_fund_admin,
     Afloat: pallet_afloat,
     MappedAssets: pallet_mapped_assets,
+  FundAdminRecords: pallet_fund_admin_records,
   }
 );
 
