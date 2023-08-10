@@ -13,8 +13,7 @@ repository = "https://github.com/hashed-io/hashed-substrate"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.38" }
-
+frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true, branch = "polkadot-v0.9.38" }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
 	"derive"
 ] }
@@ -71,7 +70,7 @@ pallet-confidential-docs = { default-features = false, path = "../pallets/confid
 pallet-fund-admin = { default-features = false, path = "../pallets/fund-admin" }
 pallet-afloat = { default-features = false, path = "../pallets/afloat" }
 pallet-mapped-assets = { default-features = false, path = "../pallets/mapped-assets" }
-
+pallet-fund-admin-records = { git = "https://github.com/hashed-io/hashed-pallets", branch = "develop", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.38" }
@@ -115,6 +114,7 @@ std = [
 	"pallet-fund-admin/std",
 	"pallet-mapped-assets/std",
 	"pallet-afloat/std",
+	"pallet-fund-admin-records/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -161,7 +161,7 @@ try-runtime = [
 	"pallet-bounties/try-runtime",
 	"pallet-uniques/try-runtime",
 	"pallet-assets/try-runtime",
-#	"pallet-transaction-payment-rpc-runtime-api/try-runtime",
+	#	"pallet-transaction-payment-rpc-runtime-api/try-runtime",
 	"pallet-bitcoin-vaults/try-runtime",
 	"pallet-confidential-docs/try-runtime",
 	"pallet-fruniques/try-runtime",
@@ -171,4 +171,5 @@ try-runtime = [
 	"pallet-template/try-runtime",
 	"pallet-mapped-assets/try-runtime",
 	"pallet-afloat/try-runtime",
+	"pallet-fund-admin-records/try-runtime",
 ]
