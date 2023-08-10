@@ -45,7 +45,7 @@ fn hashed_properties() -> sc_chain_spec::Properties {
   p.insert("tokenSymbol".into(), "HSD".into());
   p.insert("tokenDecimals".into(), 12.into());
   p.insert("standardAccount".into(), "*25519".into());
-  p.insert("ss58Format".into(), 51.into());
+  p.insert("ss58Format".into(), 9072.into());
   p.insert("website".into(), "https://hashed.systems".into());
   p
 }
