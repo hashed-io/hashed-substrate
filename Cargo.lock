@@ -3412,6 +3412,7 @@ dependencies = [
  "pallet-confidential-docs",
  "pallet-fruniques",
  "pallet-fund-admin",
+ "pallet-fund-admin-records",
  "pallet-gated-marketplace",
  "pallet-grandpa",
  "pallet-identity",
@@ -5978,6 +5979,21 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-fund-admin-records"
+version = "4.0.0-dev"
+source = "git+https://github.com/hashed-io/hashed-pallets?branch=develop#04dbeca46168e3fdea660bad81beb07482faea19"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
 ]
 
 [[package]]

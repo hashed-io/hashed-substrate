@@ -80,7 +80,7 @@ pub fn development_config() -> ChainSpec {
   let mut properties = sc_chain_spec::Properties::new();
   properties.insert("tokenSymbol".into(), "HDEV".into());
   properties.insert("tokenDecimals".into(), 18.into());
-  properties.insert("ss58Format".into(), 42.into());
+  properties.insert("ss58Format".into(), 9072.into());
 
   ChainSpec::from_genesis(
     // Name
@@ -133,7 +133,7 @@ pub fn local_testnet_config() -> ChainSpec {
   let mut properties = sc_chain_spec::Properties::new();
   properties.insert("tokenSymbol".into(), "HDEV".into());
   properties.insert("tokenDecimals".into(), 18.into());
-  properties.insert("ss58Format".into(), 42.into());
+  properties.insert("ss58Format".into(), 9072.into());
 
   ChainSpec::from_genesis(
     // Name
