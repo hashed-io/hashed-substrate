@@ -18,7 +18,7 @@ pub fn get_chain_spec() -> HashedChainSpec {
   let mut properties = sc_chain_spec::Properties::new();
   properties.insert("tokenSymbol".into(), "HASH".into());
   properties.insert("tokenDecimals".into(), 18.into());
-  properties.insert("ss58Format".into(), 3000.into());
+  properties.insert("ss58Format".into(), 9072.into());
 
   // REVIEW: this is where the Hashed genesis is customized, for now,
   //  it is just a duplicate of the development configuration
