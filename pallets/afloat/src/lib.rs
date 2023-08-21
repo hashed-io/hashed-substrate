@@ -259,7 +259,7 @@ pub mod pallet {
     pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
       // ensure sudo origin
       T::RemoveOrigin::ensure_origin(origin.clone())?;
-      Self::do_delete_all_users()?;
+      //   Self::do_delete_all_users()?;
       Ok(())
     }
 
