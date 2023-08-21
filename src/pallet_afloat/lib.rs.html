@@ -663,8 +663,8 @@
     </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
       <span class="comment">// ensure sudo origin
       </span>T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-      <span class="self">Self</span>::do_delete_all_users()<span class="question-mark">?</span>;
-      <span class="prelude-val">Ok</span>(())
+      <span class="comment">//   Self::do_delete_all_users()?;
+      </span><span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">2</span>)]
