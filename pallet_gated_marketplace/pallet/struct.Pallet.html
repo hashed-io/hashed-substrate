@@ -46,14 +46,14 @@ the on-chain logic.</p>
     marketplace_id: [<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>],
     collection_id: T::CollectionId,
     item_id: T::ItemId,
-    price: T::Balance,
+    price: T::<a class="associatedtype" href="../../pallet_mapped_assets/pallet/trait.Config.html#associatedtype.Balance" title="type pallet_mapped_assets::pallet::Config::Balance">Balance</a>,
     percentage: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>], DispatchError&gt;</h4></section><section id="method.do_enlist_buy_offer" class="method"><a class="srclink rightside" href="../../src/pallet_gated_marketplace/functions.rs.html#382-468">source</a><h4 class="code-header">pub fn <a href="#method.do_enlist_buy_offer" class="fn">do_enlist_buy_offer</a>(
     authority: T::AccountId,
     marketplace_id: [<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>],
     collection_id: T::CollectionId,
     item_id: T::ItemId,
-    price: T::Balance,
+    price: T::<a class="associatedtype" href="../../pallet_mapped_assets/pallet/trait.Config.html#associatedtype.Balance" title="type pallet_mapped_assets::pallet::Config::Balance">Balance</a>,
     percentage: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;[<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>], DispatchError&gt;</h4></section><section id="method.do_take_sell_offer" class="method"><a class="srclink rightside" href="../../src/pallet_gated_marketplace/functions.rs.html#470-573">source</a><h4 class="code-header">pub fn <a href="#method.do_take_sell_offer" class="fn">do_take_sell_offer</a>(
     origin: OriginFor&lt;T&gt;,
@@ -105,7 +105,7 @@ It doesn’t affect any other storage source/workflow.</p>
     label: BoundedVec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>, T::<a class="associatedtype" href="trait.Config.html#associatedtype.LabelMaxLen" title="type pallet_gated_marketplace::pallet::Config::LabelMaxLen">LabelMaxLen</a>&gt;,
     buy_fee: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>,
     sell_fee: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>,
-    asset_id: T::AssetId
+    asset_id: T::<a class="associatedtype" href="../../pallet_mapped_assets/pallet/trait.Config.html#associatedtype.AssetId" title="type pallet_mapped_assets::pallet::Config::AssetId">AssetId</a>
 ) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Create a new marketplace.</p>
 <p>Creates a new marketplace with the given label
 .</p>
@@ -294,7 +294,7 @@ It removes all the authorities from the lists of the marketplace.</p>
     marketplace_id: [<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>],
     collection_id: T::CollectionId,
     item_id: T::ItemId,
-    price: T::Balance,
+    price: T::<a class="associatedtype" href="../../pallet_mapped_assets/pallet/trait.Config.html#associatedtype.Balance" title="type pallet_mapped_assets::pallet::Config::Balance">Balance</a>,
     percentage: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>
 ) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Enlist a sell order.</p>
 <p>This extrinsic creates a sell order in the selected marketplace.</p>
@@ -351,7 +351,7 @@ delete them one by one.</li>
     marketplace_id: [<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.array.html">32</a>],
     collection_id: T::CollectionId,
     item_id: T::ItemId,
-    price: T::Balance,
+    price: T::<a class="associatedtype" href="../../pallet_mapped_assets/pallet/trait.Config.html#associatedtype.Balance" title="type pallet_mapped_assets::pallet::Config::Balance">Balance</a>,
     percentage: <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.u32.html">u32</a>
 ) -&gt; DispatchResult</h4></section></summary><div class="docblock"><p>Enlist a buy order.</p>
 <p>This extrinsic creates a buy order in the selected marketplace.</p>
