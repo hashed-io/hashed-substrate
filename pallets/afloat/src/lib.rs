@@ -259,7 +259,12 @@ pub mod pallet {
     pub fn kill_storage(origin: OriginFor<T>) -> DispatchResult {
       // ensure sudo origin
       T::RemoveOrigin::ensure_origin(origin.clone())?;
-      //   Self::do_delete_all_users()?;
+      <AfloatMarketPlaceId<T>>::kill();
+      <AfloatCollectionId<T>>::kill();
+      <AfloatAssetId<T>>::kill();
+      let _ = <UserInfo<T>>::clear(1000, None);
+      let _ = <AfloatOffers<T>>::clear(1000, None);
+      let _ = <AfloatTransactions<T>>::clear(1000, None);
       Ok(())
     }
 
