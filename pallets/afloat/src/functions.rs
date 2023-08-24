@@ -789,6 +789,11 @@ impl<T: Config> Pallet<T> {
     IdOrVec::Vec("AfloatPallet".as_bytes().to_vec())
   }
 
+  pub fn remove_rbac_permissions() -> DispatchResult {
+    <T as pallet::Config>::Rbac::remove_pallet_storage(Self::pallet_id())?;
+    Ok(())
+  }
+
   pub fn initialize_rbac() -> DispatchResult {
     let pallet_id = Self::pallet_id();
     let scope_id = Self::scope_id();

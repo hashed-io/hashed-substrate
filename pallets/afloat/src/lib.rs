@@ -265,6 +265,8 @@ pub mod pallet {
       let _ = <UserInfo<T>>::clear(1000, None);
       let _ = <AfloatOffers<T>>::clear(1000, None);
       let _ = <AfloatTransactions<T>>::clear(1000, None);
+
+      Self::remove_rbac_permissions()?;
       Ok(())
     }
 
