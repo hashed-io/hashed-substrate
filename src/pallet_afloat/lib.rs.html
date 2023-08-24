@@ -402,6 +402,11 @@
 <a href="#402" id="402">402</a>
 <a href="#403" id="403">403</a>
 <a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 </span><span class="kw">pub use </span>pallet::<span class="kw-2">*</span>;
@@ -663,8 +668,13 @@
     </span><span class="kw">pub fn </span>kill_storage(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult {
       <span class="comment">// ensure sudo origin
       </span>T::RemoveOrigin::ensure_origin(origin.clone())<span class="question-mark">?</span>;
-      <span class="comment">//   Self::do_delete_all_users()?;
-      </span><span class="prelude-val">Ok</span>(())
+      &lt;AfloatMarketPlaceId&lt;T&gt;&gt;::kill();
+      &lt;AfloatCollectionId&lt;T&gt;&gt;::kill();
+      &lt;AfloatAssetId&lt;T&gt;&gt;::kill();
+      <span class="kw">let _ </span>= &lt;UserInfo&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;AfloatOffers&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="kw">let _ </span>= &lt;AfloatTransactions&lt;T&gt;&gt;::clear(<span class="number">1000</span>, <span class="prelude-val">None</span>);
+      <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[pallet::call_index(<span class="number">2</span>)]
