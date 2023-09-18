@@ -1,4 +1,4 @@
 (function() {var implementors = {
-"hashed_parachain_runtime":[["impl Config&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.71.1/std/primitive.unit.html\">()</a>&gt; for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.Runtime.html\" title=\"struct hashed_parachain_runtime::Runtime\">Runtime</a>"]],
-"hashed_runtime":[["impl Config&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.71.1/std/primitive.unit.html\">()</a>&gt; for <a class=\"struct\" href=\"hashed_runtime/struct.Runtime.html\" title=\"struct hashed_runtime::Runtime\">Runtime</a>"]]
+"hashed_parachain_runtime":[["impl Config&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.72.0/std/primitive.unit.html\">()</a>&gt; for <a class=\"struct\" href=\"hashed_parachain_runtime/struct.Runtime.html\" title=\"struct hashed_parachain_runtime::Runtime\">Runtime</a>"]],
+"hashed_runtime":[["impl Config&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.72.0/std/primitive.unit.html\">()</a>&gt; for <a class=\"struct\" href=\"hashed_runtime/struct.Runtime.html\" title=\"struct hashed_runtime::Runtime\">Runtime</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
